@@ -44,3 +44,6 @@ workflows:
     jobs:
       - build
       - post_build
+	  requires:
+	    - build
+
