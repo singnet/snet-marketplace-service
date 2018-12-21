@@ -34,9 +34,9 @@ def request_handler(event, context):
             data = set_user_vote(payload_dict['vote'])
         elif "group-info" == path.lower():
             data = service_instance.get_group_info()
-        elif "channel_info" == path.lower():
+        elif "channel-info" == path.lower():
             channel_instance = Channel()
-            channel_instance.get_channel_info(payload_dict['user_address'], payload_dict['service_id'], payload_dict['org_name'])
+            data = channel_instance.get_channel_info(payload_dict['user_address'], payload_dict['service_id'], payload_dict['org_name'])
         elif "update-service-status" == path.lower():
             s = ServiceStatus(service_instance.repo)
             s.update_service_status()
