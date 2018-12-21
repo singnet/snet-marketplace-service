@@ -34,7 +34,7 @@ class Repository:
         result = None
         try:
             with self.connection.cursor() as cursor:
-                cursor.execute(query, params)
+                qry_resp = cursor.execute(query, params)
                 db_rows = cursor.fetchall()
                 if cursor.description is not None:
                     field_name = [field[0] for field in cursor.description]
@@ -44,7 +44,10 @@ class Repository:
                     for values in db_rows:
                         row = dict(zip(field_name, values))
                         result.append(row)
-                self.connection.commit()
+                else:
+                    self.connection.commit()
+                    result = list()
+                    result.append(qry_resp)
         except Exception as e:
             self.connection.rollback()
             print("DB Error in %s, error: %s" % (str(query), repr(e)))

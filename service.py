@@ -177,6 +177,7 @@ class Service:
         for service in services:
             self.__clean_row(service)
             service_id = service['service_id']
+            service['service_name'] = service['service_idfier']
             service['groups'] = self.__get_group_with_endpoints(groups_map[service_id])
             if service_id in tag_map:
                 service['tags'] = [tag['tag_name'] for tag in tag_map[service_id]]

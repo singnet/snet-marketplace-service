@@ -8,6 +8,7 @@ class Channel:
         self.objSrvc = Service()
 
     def get_channel_info(self, user_address, service_id, org_name=None):
+        print('Inside get_channel_info::user_address', user_address, '|', service_id, '|', org_name)
         try:
             if user_address is not None and service_id is not None:
                 query = 'SELECT M.*, T.endpoint, T.is_available FROM service_group G, mpe_channel M, service_status T, service S ' \
@@ -21,18 +22,27 @@ class Channel:
                         if group_id not in channels_data.keys():
                             channels_data[group_id] = {}
                             channels_data[group_id]['endpoint'] = []
+                            channels_data[group_id]['channelId'] = {}
+
+                        channel_id = rec['channel_id']
+                        if channel_id not in channels_data[group_id]['channelId'].keys():
+                            channels_data[group_id]['channelId'][channel_id] = {}
+
+                        channels_data[group_id]['channelId'][channel_id].update({'channelId': channel_id,
+                                                                                 'balance': str(rec['balance']),
+                                                                                 'pending': str(rec['pending']),
+                                                                                 'nonce': rec['nonce'],
+                                                                                 'expiration': rec['expiration'],
+                                                                                 'signer': rec['signer']})
                         channels_data[group_id].update({'groupId': group_id,
-                                                        'channelID': rec['channel_id'],
                                                         'sender': rec['sender'],
-                                                        'recipient': rec['recipient'],
-                                                        'balance': rec['balance'],
-                                                        'pending': rec['pending'],
-                                                        'nonce': rec['nonce'],
-                                                        'expiration': rec['expiration'],
-                                                        'signer': rec['signer']})
+                                                        'recipient': rec['recipient']})
                         channels_data[group_id]['endpoint'].append(rec['endpoint'])
-                        format_channel_data = [val for val in channels_data.values()]
-                    return format_channel_data
+
+                    channels_data[group_id]['channelId'] = [val for val in
+                                                            channels_data[group_id]['channelId'].values()]
+                    channels_data = [val for val in channels_data.values()]
+                    return channels_data
                 else:
                     query = ' SELECT T.group_id, T.endpoint, T.is_available FROM service_group G, service_status T, service S ' \
                             'WHERE G.group_id = T.group_id AND S.row_id = T.service_id AND T.service_id = G.service_id ' \
@@ -46,9 +56,10 @@ class Channel:
                             channels_data[group_id] = {}
                             channels_data[group_id]['groupId'] = group_id
                             channels_data[group_id]['endpoint'] = []
+                        channels_data[group_id]['channelId'] = []
                         channels_data[group_id]['endpoint'].append(rec['endpoint'])
-                        format_channel_data = [val for val in channels_data.values()]
-                        return format_channel_data
+                        channels_data = [val for val in channels_data.values()]
+                        return channels_data
             return []
         except Exception as err:
             print('Error in get_channel_info: ', err)
