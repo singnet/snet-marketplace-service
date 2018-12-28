@@ -44,7 +44,7 @@ class Channel:
                     channels_data = [val for val in channels_data.values()]
                     return channels_data
                 else:
-                    query = ' SELECT T.group_id, T.endpoint, T.is_available FROM service_group G, service_status T, service S ' \
+                    query = ' SELECT T.group_id, T.endpoint, T.is_available, G.payment_address as recipient FROM service_group G, service_status T, service S ' \
                             'WHERE G.group_id = T.group_id AND S.row_id = T.service_id AND T.service_id = G.service_id ' \
                             'AND T.is_available = 1 AND G.service_id = %s '
                     result = self.repo.execute(query, service_id)
@@ -55,6 +55,7 @@ class Channel:
                         if group_id not in channels_data.keys():
                             channels_data[group_id] = {}
                             channels_data[group_id]['groupId'] = group_id
+                            channels_data[group_id]['recipient'] = rec['recipient']
                             channels_data[group_id]['endpoint'] = []
                         channels_data[group_id]['channelId'] = []
                         channels_data[group_id]['endpoint'].append(rec['endpoint'])
