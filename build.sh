@@ -1,2 +1,2 @@
-rm marketplace.zip
-zip -r markeplace.zip * -x \*venv\*
+rm contract_index.zip
+zip -r contract_index.zip * -x \*venv\*

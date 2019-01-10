@@ -1,17 +1,18 @@
 import pymysql
-import os
+from constant import NETWORKS
 
-DB_HOST=os.environ['DB_HOST']
-DB_USER=os.environ['DB_USER']
-DB_PASSWORD=os.environ['DB_PASSWORD']
-DB_NAME=os.environ['DB_NAME']
-DB_PORT=int(os.environ['DB_PORT'])
 
 class Repository:
     connection = None
 
-    def __init__(self):
+    def __init__(self, netId):
+        self.DB_HOST = NETWORKS[netId]['db']['DB_HOST']
+        self.DB_USER = NETWORKS[netId]['db']['DB_USER']
+        self.DB_PASSWORD = NETWORKS[netId]['db']['DB_PASSWORD']
+        self.DB_NAME = NETWORKS[netId]['db']['DB_NAME']
+        self.DB_PORT = 3306
         self.connection = self.__get_connection()
+        self.auto_commit = True
 
     def execute(self, query, params=None):
         return self.__execute_query(query, params)
@@ -26,28 +27,26 @@ class Repository:
                 open = True
 
         if open:
-            self.connection = pymysql.connect(DB_HOST, user=DB_USER,
-                                              passwd=DB_PASSWORD, db=DB_NAME, port=DB_PORT)
+            self.connection = pymysql.connect(self.DB_HOST, user=self.DB_USER,
+                                              passwd=self.DB_PASSWORD, db=self.DB_NAME, port=self.DB_PORT)
         return self.connection
 
     def __execute_query(self, query, params=None):
-        result = None
+        result = list()
         try:
             with self.connection.cursor() as cursor:
                 qry_resp = cursor.execute(query, params)
                 db_rows = cursor.fetchall()
                 if cursor.description is not None:
                     field_name = [field[0] for field in cursor.description]
-                    self.connection.commit()
-
-                    result = list()
                     for values in db_rows:
                         row = dict(zip(field_name, values))
                         result.append(row)
                 else:
-                    self.connection.commit()
-                    result = list()
                     result.append(qry_resp)
+                    result.append({'last_row_id': cursor.lastrowid})
+                if self.auto_commit:
+                    self.connection.commit()
         except Exception as e:
             self.connection.rollback()
             print("DB Error in %s, error: %s" % (str(query), repr(e)))

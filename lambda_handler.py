@@ -1,13 +1,15 @@
 import json
+import re
 import traceback
 
-from schema import Schema, And
-
 from channel import Channel
+from schema import Schema, And
 from service import Service
 from service_status import ServiceStatus
+from constant import NETWORKS_NAME, NETWORKS
 
-service_instance = Service()
+service_instance = None
+route_path = {}
 
 
 def request_handler(event, context):
@@ -16,38 +18,52 @@ def request_handler(event, context):
         return get_response("400", "Bad Request")
     try:
         payload_dict = None
-        path = event['path'].replace('/', '')
+        path = event['path'].lower()
         payload = event['body']
         if payload is not None and len(payload) > 0:
             payload_dict = json.loads(payload)
 
         print("Processing [" + str(path) + "] with body [" + str(payload) + "]")
-
+        netId = NETWORKS_NAME["Kovan"]
+        service_instance = Service(netId)
         data = None
-        if "service" == path.lower():
+        if "/service" == path:
             data = service_instance.get_curated_services()
-        elif "fetch-profile" == path.lower():
-            data = get_profile_details(payload_dict['user_address'])
-        elif "fetch-vote" == path.lower():
+        elif "/fetch-profile" == path:
+            data = get_profile_details(user_address=payload_dict['user_address'])
+        elif "/fetch-vote" == path:
             data = get_user_vote(payload_dict['user_address'])
-        elif "vote" == path.lower():
+        elif "/vote" == path:
             data = set_user_vote(payload_dict['vote'])
-        elif "group-info" == path.lower():
+        elif "/group-info" == path:
             data = service_instance.get_group_info()
-        elif "channel-info" == path.lower():
-            channel_instance = Channel()
-            data = channel_instance.get_channel_info(payload_dict['user_address'], payload_dict['service_id'], payload_dict['org_name'])
-        elif "update-service-status" == path.lower():
+        elif "/channel-info" == path:
+            channel_instance = Channel(netId)
+            data = channel_instance.get_channel_info(payload_dict['user_address'], payload_dict['service_id'],
+                                                     payload_dict['org_id'])
+        elif "/organizations" == path:
+            data = {"organizations": []}
+        elif re.match("^(/organizations)[/][[a-z0-9]+$", path):
+            data = []
+        elif re.match("^(/organizations)[/][a-zA-Z0-9]{1,}[/](services)$", path):
+            data = {"services": []}
+        elif re.match("^(/organizations)[/][a-zA-Z0-9]{1,}[/](services)[/][a-z0-9]+$", path):
+            data = {"service_id": 1}
+        elif re.match("^(/tags)[/][[a-z0-9]+$", path):
+            data = {"services": []}
+        elif "update-service-status" == path:
+            print('update service status')
             s = ServiceStatus(service_instance.repo)
             s.update_service_status()
-            data = []
+            data = {}
 
         if data is None:
-            response = get_response("400", "Bad Request")
+            response = get_response("400", {"status": "failed", "error": "Bad Request"})
         else:
-            response = get_response("200", data)
+            response = get_response("200", {"status": "success", "data": data})
     except Exception as e:
-        response = get_response(500, repr(e))
+        response = get_response(500, {"status": "failed",
+                                      "error": repr(e)})
         traceback.print_exc()
 
     print(response)
@@ -61,8 +77,8 @@ def get_profile_details(user_address):
 
 def set_user_vote(vote_info):
     schema = Schema([{'user_address': And(str),
-                      'organization_name': And(str),
-                      'service_name': And(str),
+                      'org_id': And(str),
+                      'service_id': And(str),
                       'up_vote': bool,
                       'down_vote': bool
                       }])
@@ -97,11 +113,3 @@ def get_response(status_code, message):
                                             'GET,OPTIONS,POST'
         }
     }
-
-
-# Generate error message payload
-def get_error_response(error):
-    response = dict()
-    response['message'] = error
-    response['status'] = "failure"
-    return response

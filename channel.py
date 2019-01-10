@@ -3,20 +3,21 @@ from service import Service
 
 
 class Channel:
-    def __init__(self):
-        self.repo = Repository()
-        self.objSrvc = Service()
+    def __init__(self, netId):
+        self.repo = Repository(netId)
+        self.objSrvc = Service(netId)
 
-    def get_channel_info(self, user_address, service_id, org_name=None):
-        print('Inside get_channel_info::user_address', user_address, '|', service_id, '|', org_name)
+    def get_channel_info(self, user_address, service_id, org_id):
+        print('Inside get_channel_info::user_address', user_address, '|', service_id, '|', org_id)
         try:
-            if user_address is not None and service_id is not None:
+            if user_address is not None and service_id is not None and org_id is not None:
                 query = 'SELECT M.*, T.endpoint, T.is_available FROM service_group G, mpe_channel M, service_status T, service S ' \
-                        'WHERE G.group_id = M.groupid AND G.group_id = T.group_id and S.row_id = T.service_id and T.service_id = G.service_id ' \
-                        'AND T.is_available = 1 AND G.service_id = %s AND M.sender = %s ORDER BY M.expiration DESC '
-                result = self.repo.execute(query, [service_id, user_address])
+                        'WHERE G.group_id = M.groupId AND G.group_id = T.group_id and S.row_id = T.service_row_id and T.service_row_id = G.service_row_id ' \
+                        'AND T.is_available = 1 AND G.service_id = %s AND G.org_id = %s AND M.sender = %s ORDER BY M.expiration DESC '
+                print('query: ', query)
+                result = self.repo.execute(query, [service_id, org_id, user_address])
+                channels_data = {}
                 if result is not None and result != []:
-                    channels_data = {}
                     for rec in result:
                         group_id = rec['groupId']
                         if group_id not in channels_data.keys():
@@ -45,11 +46,11 @@ class Channel:
                     return channels_data
                 else:
                     query = ' SELECT T.group_id, T.endpoint, T.is_available, G.payment_address as recipient FROM service_group G, service_status T, service S ' \
-                            'WHERE G.group_id = T.group_id AND S.row_id = T.service_id AND T.service_id = G.service_id ' \
-                            'AND T.is_available = 1 AND G.service_id = %s '
-                    result = self.repo.execute(query, service_id)
+                            'WHERE G.group_id = T.group_id AND S.row_id = T.service_row_id AND T.service_row_id = G.service_row_id ' \
+                            'AND T.is_available = 1 AND G.service_id = %s AND G.org_id = %s '
+                    print('query: ', query)
+                    result = self.repo.execute(query, [service_id, org_id])
                     if result is not None and result != []:
-                        channels_data = {}
                         for rec in result:
                             group_id = rec['group_id']
                         if group_id not in channels_data.keys():
