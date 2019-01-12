@@ -1,4 +1,4 @@
-from constant import ERROR_MSG
+from common.constant import ERROR_MSG
 
 
 class ErrorHandler:

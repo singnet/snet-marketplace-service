@@ -1,9 +1,8 @@
 import base64
 from datetime import datetime as dt
 
-from constant import EVNTS_LIMIT
-from error import ErrorHandler
-from repository import Repository
+from common.constant import EVNTS_LIMIT
+from common.repository import Repository
 
 
 class HandleContractsDB:

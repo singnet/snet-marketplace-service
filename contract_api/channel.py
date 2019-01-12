@@ -1,5 +1,5 @@
-from repository import Repository
-from service import Service
+from common.repository import Repository
+from contract_events_service.service import Service
 
 
 class Channel:

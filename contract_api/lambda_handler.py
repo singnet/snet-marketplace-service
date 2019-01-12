@@ -2,12 +2,13 @@ import json
 import re
 import traceback
 
-from channel import Channel
+from contract_events_service.channel import Channel
 from schema import Schema, And
-from service import Service
-from service_status import ServiceStatus
-from constant import NETWORKS_NAME, NETWORKS
+from contract_events_service.service import Service
+from contract_events_service.service_status import ServiceStatus
+from common.constant import NETWORKS
 
+NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys())
 service_instance = None
 route_path = {}
 

@@ -1,8 +1,7 @@
 import datetime
 import decimal
-import json
 
-from repository import Repository
+from common.repository import Repository
 
 IGNORED_LIST = ['row_id', 'row_created', 'row_updated']
 

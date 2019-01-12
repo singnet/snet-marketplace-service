@@ -4,9 +4,6 @@ IPFS_URL = {
     'port': '80',
     'protocol': 'http'
 }
-NETWORKS_NAME = {
-    'Kovan': 42
-}
 NETWORKS = {
     1: {
         'name': 'mainnet',

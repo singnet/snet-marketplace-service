@@ -6,10 +6,10 @@ import web3.eth
 import web3.utils.events
 from web3 import Web3
 
-from constant import IPFS_URL, NETWORKS, MPE_EVTS, REG_EVTS, REG_CNTRCT_PATH, MPE_CNTRCT_PATH, REG_ADDR_PATH
-from constant import MPE_ADDR_PATH
-from error import ErrorHandler
-from handle_contracts_db import HandleContractsDB
+from common.constant import IPFS_URL, NETWORKS, MPE_EVTS, REG_EVTS, REG_CNTRCT_PATH, MPE_CNTRCT_PATH, REG_ADDR_PATH
+from common.constant import MPE_ADDR_PATH
+from common.error import ErrorHandler
+from parse_contract_events.handle_contracts_db import HandleContractsDB
 
 
 class HandleContracts:

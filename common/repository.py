@@ -1,5 +1,5 @@
 import pymysql
-from constant import NETWORKS
+from common.constant import NETWORKS
 
 
 class Repository:
