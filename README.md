@@ -12,7 +12,9 @@ These instructions are intended to facilitate the development and testing of Sin
 
 * [python 3.6.5+](https://www.python.org/downloads/)
 * pip 9.0.1+
-* Additionally you should install the following dependency package present in requirement.txt.
+* Additionally you should install the python dependency package present in requirement.txt.
+* [npm 3.5.2+](#)
+* Additionally you should install the external dependency package present in package.json.
 
 ### Installation
 If you use Ubuntu (or any Linux distribution with APT package support) you should do the following:
@@ -26,6 +28,7 @@ $ cd snet-marketplace-service
 #### Install snet-marketplace-service dependency using pip
 ```bash
 $ pip install -r requirements.txt
+$ npm install
 ```
 #### Environment variables
 Provide following environment variable in repository.py
