@@ -2,10 +2,10 @@ import json
 import re
 import traceback
 
-from contract_events_service.channel import Channel
+from contract_api.channel import Channel
 from schema import Schema, And
-from contract_events_service.service import Service
-from contract_events_service.service_status import ServiceStatus
+from contract_api.service import Service
+from contract_api.service_status import ServiceStatus
 from common.constant import NETWORKS
 
 NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys())
@@ -26,6 +26,7 @@ def request_handler(event, context):
 
         print("Processing [" + str(path) + "] with body [" + str(payload) + "]")
         netId = NETWORKS_NAME["Kovan"]
+        global service_instance
         service_instance = Service(netId)
         data = None
         if "/service" == path:
@@ -81,14 +82,15 @@ def set_user_vote(vote_info):
                       'org_id': And(str),
                       'service_id': And(str),
                       'up_vote': bool,
-                      'down_vote': bool
+                      'down_vote': bool,
+                      'signature': And(str)
                       }])
     try:
         vote_info = schema.validate([vote_info])
     except Exception as err:
         print("Invalid Input ", err)
-        return {'Success': False}
-    return {'Success': service_instance.set_user_vote(vote_info[0])}
+        return {'success': False}
+    return {'success': service_instance.set_user_vote(vote_info[0])}
 
 
 def get_user_vote(user_address):
