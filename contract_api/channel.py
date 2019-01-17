@@ -3,9 +3,9 @@ from contract_api.service import Service
 
 
 class Channel:
-    def __init__(self, netId):
-        self.repo = Repository(netId)
-        self.objSrvc = Service(netId)
+    def __init__(self, net_id):
+        self.repo = Repository(net_id)
+        self.objSrvc = Service(net_id)
 
     def get_channel_info(self, user_address, service_id, org_id):
         print('Inside get_channel_info::user_address', user_address, '|', service_id, '|', org_id)

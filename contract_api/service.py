@@ -1,20 +1,17 @@
 import datetime
 import decimal
-import web3
 
-from common.constant import NETWORKS
-from eth_account.messages import defunct_hash_message
 from common.repository import Repository
 
 IGNORED_LIST = ['row_id', 'row_created', 'row_updated']
 
 
 class Service:
-    def __init__(self, netId):
-        self.netId = netId
+    def __init__(self, net_id):
+        self.netId = net_id
         self.repo = Repository(self.netId)
 
-    def get_group_info(self, org_id=None):
+    def get_group_info(self, org_id=None, srvc_id=None):
         print('Inside grp info')
         service_status_dict = {}
         try:
@@ -23,11 +20,17 @@ class Service:
                     "SELECT G.*, S.endpoint, S.is_available, S.last_check_timestamp FROM service_group G, " \
                     "service_status S WHERE G.service_row_id = S.service_row_id AND G.group_id = S.group_id " \
                     "AND G.service_row_id IN (SELECT row_id FROM service WHERE is_curated = 1)")
+            elif org_id is not None and srvc_id is None:
+                query = "SELECT G.*, S.endpoint, S.is_available, S.last_check_timestamp FROM service_group G, " \
+                        "service_status S WHERE G.service_row_id = S.service_row_id AND G.group_id = S.group_id " \
+                        "AND G.service_row_id IN (SELECT row_id FROM service WHERE is_curated = 1 and org_id = %s)"
+                status = self.repo.execute(query, org_id)
             else:
-                status = self.repo.execute(
-                    "SELECT G.*, S.endpoint, S.is_available, S.last_check_timestamp FROM service_group G, " \
-                    "service_status S WHERE G.service_row_id = S.service_row_id AND G.group_id = S.group_id " \
-                    "AND G.service_row_id IN (SELECT row_id FROM service WHERE is_curated = 1 and org_id = %s)")
+                query = "SELECT G.*, S.endpoint, S.is_available, S.last_check_timestamp FROM service_group G, " \
+                        "service_status S WHERE G.service_row_id = S.service_row_id AND G.group_id = S.group_id " \
+                        "AND G.service_row_id IN (SELECT row_id FROM service WHERE is_curated = 1 and org_id = %s " \
+                        "AND service_id = %s ) "
+                status = self.repo.execute(query, [org_id, srvc_id])
 
             self.__clean(status)
             for rec in status:
@@ -152,34 +155,15 @@ class Service:
                 vote = 1
             elif vote_info_dict['down_vote']:
                 vote = 0
-            if self.is_valid_vote(vote_info_dict):
-                query = "Insert into user_service_vote (user_address, org_id, service_id, vote, row_created) VALUES (%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE VOTE = %s"
-                q_params = [vote_info_dict['user_address'], vote_info_dict['org_id'], vote_info_dict['service_id'], vote,
+            query = "Insert into user_service_vote (user_address, org_id, service_id, vote, row_created) VALUES (%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE VOTE = %s"
+            q_params = [vote_info_dict['user_address'], vote_info_dict['org_id'], vote_info_dict['service_id'], vote,
                         datetime.datetime.utcnow(), vote]
-                self.repo.execute(query, q_params)
-            else:
-                raise Exception("Signature of the vote is not valid")
+            res = self.repo.execute(query, q_params)
+            print(res)
         except Exception as e:
             print(repr(e))
             raise e
         return True
-
-    def is_valid_vote(self, vote_info_dict):
-        try:
-            provider = web3.HTTPProvider(NETWORKS[self.netId]['http_provider'])
-            w3 = web3.Web3(provider)
-
-            message_text = str(vote_info_dict['user_address']) + str(vote_info_dict['org_id']) + \
-                           str(vote_info_dict['up_vote']).lower() + str(vote_info_dict['service_id']) + \
-                           str(vote_info_dict['down_vote']).lower()
-            message = w3.sha3(text=message_text)
-            message_hash = defunct_hash_message(primitive=message)
-            recovered = str(w3.eth.account.recoverHash(message_hash, signature=vote_info_dict['signature']))
-            return str(vote_info_dict['user_address']).lower() == recovered.lower()
-        except Exception as e:
-            print(repr(e))
-            raise e
-        return False
 
     def get_curated_services(self):
         try:
