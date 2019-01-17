@@ -51,7 +51,7 @@ Please follow the instruction from the [docker link](https://docs.docker.com/ins
 
 #### Prerequisites
 1. Download the snet-marketplace-service and then snet-contract-event-consumer in the root directory.
-```bash
+```console
 $ git clone https://github.com/singnet/snet-marketplace-service.git
 $ cd snet-marketplace-service
 $ git clone https://github.com/singnet/snet-contract-event-consumer.git
@@ -61,12 +61,12 @@ $ git clone https://github.com/singnet/snet-contract-event-consumer.git
 
 #### Building the Docker Image and Running the Container
  1. Build the Docker image.
- ```bash
+ ```console
  $ cd snet-marketplace-service
  $ docker build -t marketplace-event-consumer .
  ```
 
  2. Once the image is built, run the container with the below command.
- ```bash
+ ```console
  $ docker run marketplace-event-consumer:latest
  ```
