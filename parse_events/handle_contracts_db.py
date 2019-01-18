@@ -154,8 +154,9 @@ class HandleContractsDB:
 
     def _create_tags(self, srvc_rw_id, org_id, service_id, tag_name, conn):
         insrt_tag = "INSERT INTO service_tags (service_row_id, org_id, service_id, tag_name, row_created, row_updated) " \
-                    "VALUES(%s, %s, %s, %s, %s, %s)"
-        insrt_tag_params = [srvc_rw_id, org_id, service_id, tag_name, dt.utcnow(), dt.utcnow()]
+                    "VALUES(%s, %s, %s, %s, %s, %s) " \
+                    "ON DUPLICATE KEY UPDATE tag_name = %s, row_updated = %s "
+        insrt_tag_params = [srvc_rw_id, org_id, service_id, tag_name, dt.utcnow(), dt.utcnow(), tag_name, dt.utcnow()]
         qry_res = conn.execute(insrt_tag, insrt_tag_params)
 
     def _updt_raw_evts(self, row_id, type, err_cd, err_msg, conn):
