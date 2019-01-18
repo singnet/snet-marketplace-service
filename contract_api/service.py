@@ -7,11 +7,11 @@ IGNORED_LIST = ['row_id', 'row_created', 'row_updated']
 
 
 class Service:
-    def __init__(self, netId):
-        self.netId = netId
+    def __init__(self, net_id):
+        self.netId = net_id
         self.repo = Repository(self.netId)
 
-    def get_group_info(self, org_id=None):
+    def get_group_info(self, org_id=None, srvc_id=None):
         print('Inside grp info')
         service_status_dict = {}
         try:
@@ -20,11 +20,17 @@ class Service:
                     "SELECT G.*, S.endpoint, S.is_available, S.last_check_timestamp FROM service_group G, " \
                     "service_status S WHERE G.service_row_id = S.service_row_id AND G.group_id = S.group_id " \
                     "AND G.service_row_id IN (SELECT row_id FROM service WHERE is_curated = 1)")
+            elif org_id is not None and srvc_id is None:
+                query = "SELECT G.*, S.endpoint, S.is_available, S.last_check_timestamp FROM service_group G, " \
+                        "service_status S WHERE G.service_row_id = S.service_row_id AND G.group_id = S.group_id " \
+                        "AND G.service_row_id IN (SELECT row_id FROM service WHERE is_curated = 1 and org_id = %s)"
+                status = self.repo.execute(query, org_id)
             else:
-                status = self.repo.execute(
-                    "SELECT G.*, S.endpoint, S.is_available, S.last_check_timestamp FROM service_group G, " \
-                    "service_status S WHERE G.service_row_id = S.service_row_id AND G.group_id = S.group_id " \
-                    "AND G.service_row_id IN (SELECT row_id FROM service WHERE is_curated = 1 and org_id = %s)")
+                query = "SELECT G.*, S.endpoint, S.is_available, S.last_check_timestamp FROM service_group G, " \
+                        "service_status S WHERE G.service_row_id = S.service_row_id AND G.group_id = S.group_id " \
+                        "AND G.service_row_id IN (SELECT row_id FROM service WHERE is_curated = 1 and org_id = %s " \
+                        "AND service_id = %s ) "
+                status = self.repo.execute(query, [org_id, srvc_id])
 
             self.__clean(status)
             for rec in status:

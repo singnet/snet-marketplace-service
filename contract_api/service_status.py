@@ -3,7 +3,6 @@ from datetime import datetime
 
 import requests
 
-
 class ServiceStatus:
     def __init__(self, repo):
         self.repo = repo

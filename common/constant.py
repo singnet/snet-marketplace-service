@@ -11,29 +11,38 @@ NETWORKS = {
         'db':{}
     },
     3: {
-        'name': 'Ropsten',
+        'name': 'ropsten',
         'ws_provider': 'wss: // ropsten.infura.io / ws',
         'db':{}
     },
     42: {
-        'name': 'Kovan',
+        'name': 'kovan',
         'ws_provider': 'wss://kovan.infura.io/ws',
-        'db': {'DB_HOST': os.environ['DB_HOST'],
-               'DB_USER': os.environ['DB_USER'],
-               'DB_PASSWORD': os.environ['DB_PASSWORD'],
-               'DB_NAME': os.environ['DB_NAME'],
-               'DB_PORT': int(os.environ['DB_PORT'])
+        'db': {'DB_HOST': '',
+               'DB_USER': '',
+               'DB_PASSWORD': '',
+               'DB_NAME': '',
+               'DB_PORT': 3306
                }
     }
 }
 MPE_EVTS = ['ChannelOpen', 'ChannelClaim', 'ChannelSenderClaim', 'ChannelExtend', 'ChannelAddFunds']
 REG_EVTS = ['OrganizationCreated', 'OrganizationModified', 'OrganizationDeleted', 'ServiceCreated',
             'ServiceMetadataModified', 'ServiceTagsModified', 'ServiceDeleted']
-REG_CNTRCT_PATH = './singularitynet-platform-contracts/abi/Registry.json'
-MPE_CNTRCT_PATH = './singularitynet-platform-contracts/abi/MultiPartyEscrow.json'
-REG_ADDR_PATH = './singularitynet-platform-contracts/networks/Registry.json'
-MPE_ADDR_PATH = './singularitynet-platform-contracts/networks/MultiPartyEscrow.json'
-
+COMMON_CNTRCT_PATH = '../node_modules/singularitynet-platform-contracts'
+REG_CNTRCT_PATH = COMMON_CNTRCT_PATH + '/abi/Registry.json'
+MPE_CNTRCT_PATH = COMMON_CNTRCT_PATH + '/abi/MultiPartyEscrow.json'
+REG_ADDR_PATH = COMMON_CNTRCT_PATH + '/networks/Registry.json'
+MPE_ADDR_PATH = COMMON_CNTRCT_PATH + '/networks/MultiPartyEscrow.json'
+SLACK_HOOK = {
+    'hostname' : '',
+    'port': 443,
+    'path': '',
+    'method': 'POST',
+    'headers': {
+        'Content-Type': 'application/json'
+    }
+}
 ERROR_MSG = {
     1001: "Error Code: {} Network Id is Invalid !!",
     1002: "Error Code: {} Unable to process _init_w3.",

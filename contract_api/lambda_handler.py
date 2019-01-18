@@ -2,14 +2,18 @@ import json
 import re
 import traceback
 
-from contract_events_service.channel import Channel
+from contract_api.channel import Channel
 from schema import Schema, And
-from contract_events_service.service import Service
-from contract_events_service.service_status import ServiceStatus
+from contract_api.service import Service
+from contract_api.service_status import ServiceStatus
+from common.utils import Utils
+from contract_api.search import Search
 from common.constant import NETWORKS
 
 NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys())
-service_instance = None
+obj_srvc = None
+obj_srch = None
+obj_util = Utils()
 route_path = {}
 
 
@@ -25,11 +29,13 @@ def request_handler(event, context):
             payload_dict = json.loads(payload)
 
         print("Processing [" + str(path) + "] with body [" + str(payload) + "]")
-        netId = NETWORKS_NAME["Kovan"]
-        service_instance = Service(netId)
+        net_id = NETWORKS_NAME["Kovan"]
+        global obj_srvc, obj_srch
+        obj_srvc = Service(net_id)
+        obj_srch = Search(net_id)
         data = None
         if "/service" == path:
-            data = service_instance.get_curated_services()
+            data = obj_srvc.get_curated_services()
         elif "/fetch-profile" == path:
             data = get_profile_details(user_address=payload_dict['user_address'])
         elif "/fetch-vote" == path:
@@ -37,34 +43,37 @@ def request_handler(event, context):
         elif "/vote" == path:
             data = set_user_vote(payload_dict['vote'])
         elif "/group-info" == path:
-            data = service_instance.get_group_info()
+            data = obj_srvc.get_group_info()
         elif "/channel-info" == path:
-            channel_instance = Channel(netId)
+            channel_instance = Channel(net_id)
             data = channel_instance.get_channel_info(payload_dict['user_address'], payload_dict['service_id'],
                                                      payload_dict['org_id'])
         elif "/organizations" == path:
-            data = {"organizations": []}
+            data = {"organizations": obj_srch.get_all_org()}
         elif re.match("^(/organizations)[/][[a-z0-9]+$", path):
-            data = []
+            data = obj_srch.get_org(org_id = payload_dict['org_id'])
         elif re.match("^(/organizations)[/][a-zA-Z0-9]{1,}[/](services)$", path):
-            data = {"services": []}
+            data = {"services": obj_srch.get_all_srvc(org_id = payload_dict['org_id'])}
         elif re.match("^(/organizations)[/][a-zA-Z0-9]{1,}[/](services)[/][a-z0-9]+$", path):
-            data = {"service_id": 1}
+            data = []
         elif re.match("^(/tags)[/][[a-z0-9]+$", path):
-            data = {"services": []}
+            data = {"services": obj_srch.get_all_srvc_by_tag(tag_name=payload_dict['tag_name'])}
         elif "update-service-status" == path:
             print('update service status')
-            s = ServiceStatus(service_instance.repo)
+            s = ServiceStatus(obj_srvc.repo)
             s.update_service_status()
             data = {}
 
         if data is None:
-            response = get_response("400", {"status": "failed", "error": "Bad Request"})
+            err_msg = {'status': 'failed', 'error': 'Bad Request'}
+            obj_util.report_slack(1, str(err_msg))
+            response = get_response("400", err_msg)
         else:
             response = get_response("200", {"status": "success", "data": data})
     except Exception as e:
-        response = get_response(500, {"status": "failed",
-                                      "error": repr(e)})
+        err_msg = {"status": "failed", "error": repr(e)}
+        obj_util.report_slack(1, str(err_msg))
+        response = get_response(500, err_msg)
         traceback.print_exc()
 
     print(response)
@@ -73,7 +82,7 @@ def request_handler(event, context):
 def get_profile_details(user_address):
     if user_address is None or len(user_address) == 0:
         return []
-    return service_instance.get_profile_details(user_address)
+    return obj_srvc.get_profile_details(user_address)
 
 
 def set_user_vote(vote_info):
@@ -88,16 +97,16 @@ def set_user_vote(vote_info):
     except Exception as err:
         print("Invalid Input ", err)
         return {'Success': False}
-    return {'Success': service_instance.set_user_vote(vote_info[0])}
+    return {'Success': obj_srvc.set_user_vote(vote_info[0])}
 
 
 def get_user_vote(user_address):
     if user_address is None or len(user_address) == 0:
         return []
-    return service_instance.get_user_vote(user_address)
+    return obj_srvc.get_user_vote(user_address)
 
 def get_curated_services_by_tag():
-    return service_instance.get_curated_services()
+    return obj_srvc.get_curated_services()
 
 
 # Generate response JSON that API gateway expects from the lambda function
