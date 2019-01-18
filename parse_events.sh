@@ -3,8 +3,8 @@
 . ./config.sh
 
 cd /opt/snet/snet-contract-event-consumer/
-nohup node contractevents.js 42 &
+nohup node contractevents.js 42 > /var/log/snet-contract-event-consumer/contract.log 2>&1 &
 cd -
 export PYTHONPATH=/opt/snet/snet-marketplace-service
-python3 parse_events/handle_contracts.py
+nohup python3 parse_events/handle_contracts.py > /var/log/snet-marketplace-service/handler.log 2>&1 &
 sleep infinity
