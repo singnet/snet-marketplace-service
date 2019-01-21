@@ -278,7 +278,6 @@ class HandleContractsDB:
                 srvc_rw_id = srvc_data[0]['row_id']
                 for tag in tags:
                     tag = tag.decode("utf-8")
-                    print('tag===',tag)
                     self._create_tags(srvc_rw_id=srvc_rw_id, org_id=org_id, service_id=service_id, tag_name=tag,
                                       conn=conn)
                 self._commit(conn)
