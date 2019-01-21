@@ -1,8 +1,9 @@
 import datetime
 import decimal
-
+import web3
 from common.repository import Repository
-
+from common.repository import NETWORKS
+from eth_account.messages import defunct_hash_message
 IGNORED_LIST = ['row_id', 'row_created', 'row_updated']
 
 
@@ -148,6 +149,24 @@ class Service:
             raise e
         return vote_list
 
+    def is_valid_vote(self, vote_info_dict):
+        try:
+            provider = web3.HTTPProvider(NETWORKS[self.netId]['http_provider'])
+            w3 = web3.Web3(provider)
+
+            message_text = str(vote_info_dict['user_address']) + str(vote_info_dict['org_id']) + \
+                           str(vote_info_dict['up_vote']).lower() + str(vote_info_dict['service_id']) + \
+                           str(vote_info_dict['down_vote']).lower()
+            message = w3.sha3(text=message_text)
+            message_hash = defunct_hash_message(primitive=message)
+            recovered = str(w3.eth.account.recoverHash(message_hash, signature=vote_info_dict['signature']))
+            return str(vote_info_dict['user_address']).lower() == recovered.lower()
+        except Exception as e:
+            print(repr(e))
+            raise e
+
+        return False
+
     def set_user_vote(self, vote_info_dict):
         try:
             vote = -1
@@ -155,11 +174,14 @@ class Service:
                 vote = 1
             elif vote_info_dict['down_vote']:
                 vote = 0
-            query = "Insert into user_service_vote (user_address, org_id, service_id, vote, row_created) VALUES (%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE VOTE = %s"
-            q_params = [vote_info_dict['user_address'], vote_info_dict['org_id'], vote_info_dict['service_id'], vote,
-                        datetime.datetime.utcnow(), vote]
-            res = self.repo.execute(query, q_params)
-            print(res)
+            if self.is_valid_vote(vote_info_dict):
+                query = "Insert into user_service_vote (user_address, org_id, service_id, vote, row_created) VALUES (%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE VOTE = %s"
+                q_params = [vote_info_dict['user_address'], vote_info_dict['org_id'], vote_info_dict['service_id'], vote,
+                            datetime.datetime.utcnow(), vote]
+                res = self.repo.execute(query, q_params)
+                print(res)
+            else:
+                raise Exception("Signature of the vote is not valid")
         except Exception as e:
             print(repr(e))
             raise e
@@ -200,7 +222,6 @@ class Service:
         for service in services:
             self.__clean_row(service)
             service_row_id = service['service_row_id']
-            print(service_row_id, groups_map)
             service['groups'] = self.__get_group_with_endpoints(groups_map[service_row_id])
             if service_row_id in tag_map:
                 service['tags'] = [tag['tag_name'] for tag in tag_map[service_row_id]]

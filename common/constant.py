@@ -18,6 +18,7 @@ NETWORKS = {
     42: {
         'name': 'kovan',
         'ws_provider': 'wss://kovan.infura.io/ws',
+	'http_provider': 'https://kovan.infura.io',
         'db': {'DB_HOST': '',
                'DB_USER': '',
                'DB_PASSWORD': '',
