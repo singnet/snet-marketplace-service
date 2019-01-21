@@ -20,44 +20,49 @@ route_path = {}
 def request_handler(event, context):
     print(event)
     if 'path' not in event:
+        print("request_handler::path: ", None)
         return get_response("400", "Bad Request")
     try:
         payload_dict = None
         path = event['path'].lower()
-        payload = event['body']
-        if payload is not None and len(payload) > 0:
-            payload_dict = json.loads(payload)
-
-        print("Processing [" + str(path) + "] with body [" + str(payload) + "]")
-        net_id = NETWORKS_NAME["Kovan"]
+        if event['httpMethod'] == 'POST':
+            body = event['body']
+            if body is not None and len(body) > 0:
+                payload_dict = json.loads(body)
+                print("Processing [" + str(path) + "] with body [" + str(body) + "]")
+        elif event['httpMethod'] == 'GET':
+            payload_dict = event.get('queryStringParameters')
+            print("Processing [" + str(path) + "] with queryStringParameters [" + str(payload_dict) + "]")
+        stage = event['requestContext']['stage']
+        net_id = NETWORKS_NAME[stage]
         global obj_srvc, obj_srch
         obj_srvc = Service(net_id)
         obj_srch = Search(net_id)
         data = None
         if "/service" == path:
             data = obj_srvc.get_curated_services()
-        elif "/fetch-profile" == path:
+        elif "/channels" == path:
             data = get_profile_details(user_address=payload_dict['user_address'])
         elif "/fetch-vote" == path:
             data = get_user_vote(payload_dict['user_address'])
-        elif "/vote" == path:
+        elif "/user-vote" == path:
             data = set_user_vote(payload_dict['vote'])
         elif "/group-info" == path:
             data = obj_srvc.get_group_info()
-        elif "/channel-info" == path:
+        elif "/available-channels" == path:
             channel_instance = Channel(net_id)
             data = channel_instance.get_channel_info(payload_dict['user_address'], payload_dict['service_id'],
                                                      payload_dict['org_id'])
         elif "/organizations" == path:
             data = {"organizations": obj_srch.get_all_org()}
         elif re.match("^(/organizations)[/][[a-z0-9]+$", path):
-            data = obj_srch.get_org(org_id = payload_dict['org_id'])
+            data = obj_srch.get_org(org_id = event['path'].split("/")[2])
         elif re.match("^(/organizations)[/][a-zA-Z0-9]{1,}[/](services)$", path):
-            data = {"services": obj_srch.get_all_srvc(org_id = payload_dict['org_id'])}
+            data = {"services": obj_srch.get_all_srvc(org_id = event['path'].split("/")[2])}
         elif re.match("^(/organizations)[/][a-zA-Z0-9]{1,}[/](services)[/][a-z0-9]+$", path):
             data = []
         elif re.match("^(/tags)[/][[a-z0-9]+$", path):
-            data = {"services": obj_srch.get_all_srvc_by_tag(tag_name=payload_dict['tag_name'])}
+            data = {"services": obj_srch.get_all_srvc_by_tag(tag_name=event['path'].split("/")[2])}
         elif "update-service-status" == path:
             print('update service status')
             s = ServiceStatus(obj_srvc.repo)
@@ -90,13 +95,14 @@ def set_user_vote(vote_info):
                       'org_id': And(str),
                       'service_id': And(str),
                       'up_vote': bool,
-                      'down_vote': bool
+                      'down_vote': bool,
+                      'signature': And(str)
                       }])
     try:
         vote_info = schema.validate([vote_info])
     except Exception as err:
         print("Invalid Input ", err)
-        return {'Success': False}
+        return None
     return {'Success': obj_srvc.set_user_vote(vote_info[0])}
 
 

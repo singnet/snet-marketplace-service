@@ -23,14 +23,14 @@ class Channel:
                         if group_id not in channels_data.keys():
                             channels_data[group_id] = {}
                             channels_data[group_id]['endpoint'] = []
-                            channels_data[group_id]['channelId'] = {}
+                            channels_data[group_id]['channels'] = {}
 
                         channel_id = rec['channel_id']
-                        if channel_id not in channels_data[group_id]['channelId'].keys():
-                            channels_data[group_id]['channelId'][channel_id] = {}
+                        if channel_id not in channels_data[group_id]['channels'].keys():
+                            channels_data[group_id]['channels'][channel_id] = {}
 
-                        channels_data[group_id]['channelId'][channel_id].update({'channelId': channel_id,
-                                                                                 'balance': str(rec['balance']),
+                        channels_data[group_id]['channels'][channel_id].update({'channelId': channel_id,
+                                                                                 'balance': str(rec['balance_in_cogs']),
                                                                                  'pending': str(rec['pending']),
                                                                                  'nonce': rec['nonce'],
                                                                                  'expiration': rec['expiration'],
@@ -40,8 +40,8 @@ class Channel:
                                                         'recipient': rec['recipient']})
                         channels_data[group_id]['endpoint'].append(rec['endpoint'])
 
-                    channels_data[group_id]['channelId'] = [val for val in
-                                                            channels_data[group_id]['channelId'].values()]
+                    channels_data[group_id]['channels'] = [val for val in
+                                                            channels_data[group_id]['channels'].values()]
                     channels_data = [val for val in channels_data.values()]
                     return channels_data
                 else:
@@ -58,7 +58,7 @@ class Channel:
                             channels_data[group_id]['groupId'] = group_id
                             channels_data[group_id]['recipient'] = rec['recipient']
                             channels_data[group_id]['endpoint'] = []
-                        channels_data[group_id]['channelId'] = []
+                        channels_data[group_id]['channels'] = []
                         channels_data[group_id]['endpoint'].append(rec['endpoint'])
                         channels_data = [val for val in channels_data.values()]
                         return channels_data

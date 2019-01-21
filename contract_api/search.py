@@ -1,7 +1,6 @@
 from common.repository import Repository
 from contract_api.service import Service
 
-
 class Search:
     def __init__(self, net_id):
         self.repo = Repository(net_id=net_id)
@@ -9,17 +8,19 @@ class Search:
 
     def get_all_org(self):
         try:
-            all_orgs_data = self.repo.execute("SELECT * FROM organization ")
+            all_orgs_data = self.repo.execute("SELECT org_id, organization_name, owner_address FROM organization ")
             return all_orgs_data
         except Exception as e:
             print(repr(e))
+            raise e
 
     def get_org(self, org_id):
         try:
-            org_data = self.repo.execute("SELECT * FROM organization WHERE org_id = %s ", org_id)
+            org_data = self.repo.execute("SELECT org_id, organization_name, owner_address FROM organization WHERE org_id = %s ", org_id)
             return org_data
         except Exception as e:
             print(repr(e))
+            raise e
 
     def get_all_srvc(self, org_id):
         try:
@@ -27,6 +28,7 @@ class Search:
             return srvcs_data
         except Exception as e:
             print(repr(e))
+            raise e
 
     def get_all_srvc_by_tag(self, tag_name):
         try:
@@ -40,3 +42,4 @@ class Search:
             return result
         except Exception as e:
             print(repr(e))
+            raise e
