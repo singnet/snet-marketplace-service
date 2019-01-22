@@ -142,4 +142,4 @@ if __name__ == '__main__':
     while True :
         obj.handle_contract()
         time.sleep(20)
-    	obj = HandleContracts(net_id=net_id)
+        obj = HandleContracts(net_id=net_id)
