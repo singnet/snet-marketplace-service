@@ -91,6 +91,7 @@ def get_profile_details(user_address):
 
 
 def set_user_vote(vote_info):
+    voted = False
     schema = Schema([{'user_address': And(str),
                       'org_id': And(str),
                       'service_id': And(str),
@@ -100,10 +101,13 @@ def set_user_vote(vote_info):
                       }])
     try:
         vote_info = schema.validate([vote_info])
+        voted = obj_srvc.set_user_vote(vote_info[0])
     except Exception as err:
         print("Invalid Input ", err)
         return None
-    return {'Success': obj_srvc.set_user_vote(vote_info[0])}
+    if voted:
+        return []
+    return None
 
 
 def get_user_vote(user_address):
