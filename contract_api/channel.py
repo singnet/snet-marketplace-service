@@ -30,7 +30,7 @@ class Channel:
                             channels_data[group_id]['channels'][channel_id] = {}
 
                         channels_data[group_id]['channels'][channel_id].update({'channelId': channel_id,
-                                                                                 'balance': str(rec['balance_in_cogs']),
+                                                                                 'balance_in_cogs': str(rec['balance_in_cogs']),
                                                                                  'pending': str(rec['pending']),
                                                                                  'nonce': rec['nonce'],
                                                                                  'expiration': rec['expiration'],
