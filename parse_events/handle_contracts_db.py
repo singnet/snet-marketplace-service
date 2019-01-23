@@ -115,7 +115,7 @@ class HandleContractsDB:
         upsrt_srvc_mdata = "INSERT INTO service_metadata (service_row_id, org_id, service_id, price_model, " \
                            "price_in_cogs, display_name, model_ipfs_hash, description, url, json, encoding, type, " \
                            "mpe_address, payment_expiration_threshold, row_updated, row_created) " \
-                           "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) " \
+                           "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) " \
                            "ON DUPLICATE KEY UPDATE service_row_id = %s, price_model  = %s, price_in_cogs = %s, " \
                            "display_name = %s, model_ipfs_hash = %s, description = %s, url = %s, json = %s, " \
                            "encoding = %s, type = %s, mpe_address = %s, payment_expiration_threshold = %s, row_updated = %s "
