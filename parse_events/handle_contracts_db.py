@@ -160,6 +160,7 @@ class HandleContractsDB:
                     "ON DUPLICATE KEY UPDATE tag_name = %s, row_updated = %s "
         insrt_tag_params = [srvc_rw_id, org_id, service_id, tag_name, dt.utcnow(), dt.utcnow(), tag_name, dt.utcnow()]
         qry_res = conn.execute(insrt_tag, insrt_tag_params)
+        print('_create_tags::qry_res: ', qry_res)
 
     def _updt_raw_evts(self, row_id, type, err_cd, err_msg, conn):
         try:
@@ -279,6 +280,7 @@ class HandleContractsDB:
                 srvc_data = self._get_srvc_row_id(service_id=service_id, org_id=org_id)
                 srvc_rw_id = srvc_data[0]['row_id']
                 for tag in tags:
+                    tag = tag.decode('utf-8')
                     tag = tag.rstrip("\u0000")
                     self._create_tags(srvc_rw_id=srvc_rw_id, org_id=org_id, service_id=service_id, tag_name=tag,
                                       conn=conn)
