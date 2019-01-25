@@ -54,7 +54,7 @@ class HandleContracts:
         return json.loads(ipfs_data.decode('utf8'))
 
     def _hex_to_str(self, hex_str):
-        return Web3.toText(hex_str.rstrip("0"))
+        return Web3.toText(hex_str).rstrip("\u0000")
 
     def _process_srvc_evts(self, srvc_data):
         print('process_srvc_evts::srvc_data: ', srvc_data)
