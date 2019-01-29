@@ -211,7 +211,7 @@ class HandleContractsDB:
             'amount': channel_data[5]
         }, conn=self.repo)
 
-    def process_srvc_data(self, org_id, service_id, ipfs_hash, ipfs_data):
+    def process_srvc_data(self, org_id, service_id, ipfs_hash, ipfs_data, tags_data):
         self.repo.auto_commit = False
         conn = self.repo
         try:
@@ -247,11 +247,13 @@ class HandleContractsDB:
                 cnt = cnt + qry_data[0]
             print('rows insert in endpt: ', cnt)
 
-            tags = ipfs_data.get('tags', [])
-            print('tags==', tags)
-            for tag in tags:
-                self._create_tags(service_row_id=service_row_id, org_id=org_id, service_id=service_id, tag_name=tag,
-                                  conn=conn)
+            if (tags_data is not None and tags_data[0]):
+                tags = tags_data[3]
+                for tag in tags:
+                    tag = tag.decode('utf-8')
+                    tag = tag.rstrip("\u0000")
+                    self._create_tags(srvc_rw_id=service_row_id, org_id=org_id, service_id=service_id, tag_name=tag,
+                                      conn=conn)
             self._commit(conn=conn)
         except Exception as e:
             self.util_obj.report_slack(type=1, slack_msg=repr(e))

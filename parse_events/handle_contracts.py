@@ -56,14 +56,19 @@ class HandleContracts:
     def _hex_to_str(self, hex_str):
         return Web3.toText(hex_str).rstrip("\u0000")
 
-    def _process_srvc_evts(self, srvc_data):
+    def _process_srvc_evts(self, srvc_data, inst_cntrct):
         print('process_srvc_evts::srvc_data: ', srvc_data)
         org_id = self._hex_to_str(srvc_data['orgId'])
         service_id = self._hex_to_str(srvc_data['serviceId'])
         metadata_uri = self._hex_to_str(srvc_data['metadataURI'])[7:]
         ipfs_data = self._read_ipfs_node(metadata_uri)
+        tags_data = self._fetch_tags(inst_cntrct=inst_cntrct, org_id_hex=srvc_data['orgId'], srvc_id_hex=srvc_data['serviceId'])
         self.db_obj.process_srvc_data(org_id=org_id, service_id=service_id, ipfs_hash=metadata_uri,
-                                      ipfs_data=ipfs_data)
+                                      ipfs_data=ipfs_data, tags_data=tags_data)
+
+    def _fetch_tags(self, inst_cntrct, org_id_hex, srvc_id_hex):
+        tags_data = inst_cntrct.functions.getServiceRegistrationById(org_id_hex, srvc_id_hex).call()
+        return tags_data
 
     def __handle_events(self, evt_data):
         print('_handle_events::evt_data: ', evt_data['event'], 'start')
@@ -98,12 +103,11 @@ class HandleContracts:
             elif event == 'OrganizationDeleted':
                 self.db_obj.del_org(org_id)
             elif event in ['ServiceCreated', 'ServiceMetadataModified']:
-                self._process_srvc_evts(evt_data['returnValues'])
+                self._process_srvc_evts(srvc_data=reg_data, inst_cntrct=inst_cntrct)
             elif event == 'ServiceTagsModified':
                 srvc_id_hex = reg_data['serviceId']
                 srvc_id = self._hex_to_str(srvc_id_hex)
-                tags_data = inst_cntrct.functions.getServiceRegistrationById(org_id_hex, srvc_id_hex).call()
-                self.db_obj.update_tags(org_id=org_id, service_id=srvc_id, tags_data=tags_data)
+                self.db_obj.update_tags(org_id=org_id, service_id=srvc_id, tags_data=self._fetch_tags(inst_cntrct=inst_cntrct, org_id_hex=org_id_hex, srvc_id_hex=srvc_id_hex ))
             elif event == 'ServiceDeleted':
                 self.db_obj.del_srvc(org_id=org_id, service_id=self._hex_to_str(reg_data['serviceId']))
         print('_handle_events::evt_data: ', evt_data['event'], 'end')
