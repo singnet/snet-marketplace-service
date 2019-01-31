@@ -73,6 +73,7 @@ class Channel:
                     channels_data[group_id]['endpoint'].append(rec['endpoint'])
                 channels_data = [val for val in channels_data.values()]
                 return channels_data
+        return []
 
     def get_latest_block_no(self):
         w3Obj = Web3(web3.providers.WebsocketProvider(self.ws_provider))
