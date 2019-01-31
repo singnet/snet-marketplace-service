@@ -73,7 +73,7 @@ class HandleContractsDB:
 
     def _del_srvc(self, org_id, service_id, conn):
         del_srvc = 'DELETE FROM service WHERE service_id = %s AND org_id = %s '
-        qry_res = conn.execute(del_srvc, [org_id, service_id])
+        qry_res = conn.execute(del_srvc, [service_id, org_id])
         print('_del_srvc::rows deleted: ', qry_res)
 
     def _del_org(self, org_id, conn):
@@ -99,8 +99,12 @@ class HandleContractsDB:
         del_srvc_endpts = 'DELETE FROM service_endpoint WHERE service_id = %s AND org_id = %s '
         del_srvc_endpts_count = conn.execute(del_srvc_endpts, [service_id, org_id])
 
+        del_srvc_st = 'DELETE FROM service_status WHERE service_id = %s AND org_id = %s '
+        del_srvc_st_count = conn.execute(del_srvc_st, [service_id, org_id])
+
         self._del_tags(org_id=org_id, service_id=service_id, conn=conn)
-        print('_del_srvc_dpndts::del_srvc_grps', del_srvc_grps_count, 'del_srvc_endpts', del_srvc_endpts_count)
+        print('_del_srvc_dpndts::del_srvc_grps: ', del_srvc_grps_count, '|del_srvc_endpts: ', del_srvc_endpts_count,
+              '|del_srvc_st_count: ', del_srvc_st_count)
 
     def _create_or_updt_srvc(self, org_id, service_id, ipfs_hash, conn):
         upsrt_srvc = "INSERT INTO service (org_id, service_id, is_curated, ipfs_hash, row_created, row_updated) " \
@@ -160,6 +164,7 @@ class HandleContractsDB:
                     "ON DUPLICATE KEY UPDATE tag_name = %s, row_updated = %s "
         insrt_tag_params = [srvc_rw_id, org_id, service_id, tag_name, dt.utcnow(), dt.utcnow(), tag_name, dt.utcnow()]
         qry_res = conn.execute(insrt_tag, insrt_tag_params)
+        print('_create_tags::qry_res: ', qry_res)
 
     def _updt_raw_evts(self, row_id, type, err_cd, err_msg, conn):
         try:
@@ -210,7 +215,7 @@ class HandleContractsDB:
             'amount': channel_data[5]
         }, conn=self.repo)
 
-    def process_srvc_data(self, org_id, service_id, ipfs_hash, ipfs_data):
+    def process_srvc_data(self, org_id, service_id, ipfs_hash, ipfs_data, tags_data):
         self.repo.auto_commit = False
         conn = self.repo
         try:
@@ -246,11 +251,13 @@ class HandleContractsDB:
                 cnt = cnt + qry_data[0]
             print('rows insert in endpt: ', cnt)
 
-            tags = ipfs_data.get('tags', [])
-            print('tags==', tags)
-            for tag in tags:
-                self._create_tags(service_row_id=service_row_id, org_id=org_id, service_id=service_id, tag_name=tag,
-                                  conn=conn)
+            if (tags_data is not None and tags_data[0]):
+                tags = tags_data[3]
+                for tag in tags:
+                    tag = tag.decode('utf-8')
+                    tag = tag.rstrip("\u0000")
+                    self._create_tags(srvc_rw_id=service_row_id, org_id=org_id, service_id=service_id, tag_name=tag,
+                                      conn=conn)
             self._commit(conn=conn)
         except Exception as e:
             self.util_obj.report_slack(type=1, slack_msg=repr(e))
@@ -279,6 +286,7 @@ class HandleContractsDB:
                 srvc_data = self._get_srvc_row_id(service_id=service_id, org_id=org_id)
                 srvc_rw_id = srvc_data[0]['row_id']
                 for tag in tags:
+                    tag = tag.decode('utf-8')
                     tag = tag.rstrip("\u0000")
                     self._create_tags(srvc_rw_id=srvc_rw_id, org_id=org_id, service_id=service_id, tag_name=tag,
                                       conn=conn)

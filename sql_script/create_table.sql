@@ -140,7 +140,6 @@ CREATE TABLE `service_status` (
   `user_address` varchar(256) NOT NULL,
   `org_id` varchar(128) NOT NULL,
   `service_id` varchar(128) NOT NULL,
-  `signature` varchar(128) DEFAULT NULL,
   `vote` int(1) NOT NULL,
   `row_created` timestamp DEFAULT NULL,
   `row_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
