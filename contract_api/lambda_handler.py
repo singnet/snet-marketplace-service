@@ -53,6 +53,9 @@ def request_handler(event, context):
             channel_instance = Channel(net_id)
             data = channel_instance.get_channel_info(payload_dict['user_address'], payload_dict['service_id'],
                                                      payload_dict['org_id'])
+        elif "/expired-channels" == path:
+            channel_instance = Channel(net_id)
+            data = channel_instance.get_expired_channel_info(payload_dict['user_address'])
         elif "/organizations" == path:
             data = {"organizations": obj_srch.get_all_org()}
         elif re.match("^(/organizations)[/][[a-z0-9]+$", path):
