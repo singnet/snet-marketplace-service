@@ -73,7 +73,7 @@ def request_handler(event, context):
             data = {}
 
         if data is None:
-            err_msg = {'status': 'failed', 'error': 'Bad Request'}
+            err_msg = {'status': 'failed', 'error': 'Bad Request', 'api': event['path']}
             obj_util.report_slack(1, str(err_msg))
             response = get_response("400", err_msg)
         else:
@@ -130,9 +130,8 @@ def get_response(status_code, message):
         'headers': {
             'Content-Type': 'application/json',
             "X-Requested-With": '*',
-            "Access-Control-Allow-Headers": 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,x-requested-with',
+            "Access-Control-Allow-Headers": 'Access-Control-Allow-Origin, Content-Type,X-Amz-Date,Authorization,X-Api-Key,x-requested-with',
             "Access-Control-Allow-Origin": '*',
-            "Access-Control-Allow-Methods": ''
-                                            'GET,OPTIONS,POST'
+            "Access-Control-Allow-Methods": 'GET,OPTIONS,POST'
         }
     }

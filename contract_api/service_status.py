@@ -1,5 +1,6 @@
 import re
 from datetime import datetime
+from common.utils import Utils
 
 import requests
 
@@ -7,7 +8,8 @@ class ServiceStatus:
     def __init__(self, repo):
         self.repo = repo
         self.route = '/encoding'
-        self.rex_for_pb_ip = '^localhost|^192.|^172.|^10.'
+        self.rex_for_pb_ip = '^(http://)*(https://)*127.0.0.1|^(http://)*(https://)*localhost|^(http://)*(https://)*192.|^(http://)*(https://)*172.|^(http://)*(https://)*10.'
+        self.obj_util = Utils()
 
     def ping_url(self, url):
         srch_count = re.subn(self.rex_for_pb_ip, '', url)[1]
@@ -17,6 +19,7 @@ class ServiceStatus:
             url = url + self.route
             try:
                 res = requests.get(url, timeout=5)
+                # res = requests.get(url, timeout=5, verify=False)
                 if res.status_code == 200:
                     return 1
             except Exception as err:

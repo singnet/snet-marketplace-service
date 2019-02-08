@@ -1,5 +1,6 @@
 import datetime
 import decimal
+import time
 import web3
 from common.repository import Repository
 from common.repository import NETWORKS
@@ -120,7 +121,8 @@ class Service:
             for rec in votes:
                 org_id = rec['org_id']
                 service_id = rec['service_id']
-                user_vote_dict[org_id] = {}
+                if org_id not in user_vote_dict.keys():
+                    user_vote_dict[org_id] = {}
                 user_vote_dict[org_id][service_id] = {'user_address': rec['user_address'],
                                                       'org_id': rec['org_id'],
                                                       'service_id': service_id}
@@ -136,14 +138,19 @@ class Service:
         try:
             count_details = self.fetch_total_count()
             votes = self.fetch_user_vote(user_address)
-            for org_id in votes.keys():
-                srvcs_data = votes[org_id]
+            print(votes)
+            for org_id in count_details.keys():
+                srvcs_data = count_details[org_id]
                 for service_id in srvcs_data.keys():
-                    user = {}
-                    user.update(votes[org_id][service_id])
-                    user['up_vote_count'] = count_details[org_id].get(service_id).get(1, 0)
-                    user['down_vote_count'] = count_details[org_id].get(service_id).get(0, 0)
-                    vote_list.append(user)
+                    rec = {
+                        'org_id': org_id,
+                        'service_id': service_id,
+                        'up_vote_count': srvcs_data.get(service_id).get(1, 0),
+                        'down_vote_count': srvcs_data.get(service_id).get(0, 0),
+                        "up_vote": votes.get(org_id, {}).get(service_id, {}).get('up_vote', False),
+                        "down_vote": votes.get(org_id, {}).get(service_id, {}).get('down_vote', False)
+                    }
+                    vote_list.append(rec)
         except Exception as e:
             print(repr(e))
             raise e
