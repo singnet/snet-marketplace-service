@@ -281,6 +281,7 @@ class HandleContractsDB:
         self.repo.auto_commit = False
         conn = self.repo
         try:
+            self._del_tags(org_id=org_id, service_id=service_id, conn=conn)
             if (tags_data is not None and tags_data[0]):
                 tags = tags_data[3]
                 srvc_data = self._get_srvc_row_id(service_id=service_id, org_id=org_id)
