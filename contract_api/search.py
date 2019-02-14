@@ -1,10 +1,10 @@
-from common.repository import Repository
 from contract_api.service import Service
 
+
 class Search:
-    def __init__(self, net_id):
-        self.repo = Repository(net_id=net_id)
-        self.obj_srvc = Service(net_id=net_id)
+    def __init__(self, obj_repo):
+        self.repo = obj_repo
+        self.obj_srvc = Service(obj_repo=obj_repo)
 
     def get_all_org(self):
         try:
@@ -16,7 +16,8 @@ class Search:
 
     def get_org(self, org_id):
         try:
-            org_data = self.repo.execute("SELECT org_id, organization_name, owner_address FROM organization WHERE org_id = %s ", org_id)
+            org_data = self.repo.execute(
+                "SELECT org_id, organization_name, owner_address FROM organization WHERE org_id = %s ", org_id)
             return org_data
         except Exception as e:
             print(repr(e))

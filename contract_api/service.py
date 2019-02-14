@@ -1,17 +1,15 @@
 import datetime
-import decimal
-import time
+
 import web3
-from common.repository import Repository
 from common.repository import NETWORKS
+from common.utils import Utils
 from eth_account.messages import defunct_hash_message
-IGNORED_LIST = ['row_id', 'row_created', 'row_updated']
 
 
 class Service:
-    def __init__(self, net_id):
-        self.netId = net_id
-        self.repo = Repository(self.netId)
+    def __init__(self, obj_repo):
+        self.repo = obj_repo
+        self.obj_utils = Utils()
 
     def get_group_info(self, org_id=None, srvc_id=None):
         print('Inside grp info')
@@ -34,7 +32,7 @@ class Service:
                         "AND service_id = %s ) "
                 status = self.repo.execute(query, [org_id, srvc_id])
 
-            self.__clean(status)
+            self.obj_utils.clean(status)
             for rec in status:
                 srvc_rw_id = rec['service_row_id']
                 grp_id = rec['group_id']
@@ -117,7 +115,7 @@ class Service:
         try:
             votes = self.repo.execute(
                 "select * from user_service_vote where user_address = %s", (user_address))
-            self.__clean(votes)
+            self.obj_utils.clean(votes)
             for rec in votes:
                 org_id = rec['org_id']
                 service_id = rec['service_id']
@@ -156,9 +154,9 @@ class Service:
             raise e
         return vote_list
 
-    def is_valid_vote(self, vote_info_dict):
+    def is_valid_vote(self, net_id, vote_info_dict):
         try:
-            provider = web3.HTTPProvider(NETWORKS[self.netId]['http_provider'])
+            provider = web3.HTTPProvider(NETWORKS[net_id]['http_provider'])
             w3 = web3.Web3(provider)
 
             message_text = str(vote_info_dict['user_address']) + str(vote_info_dict['org_id']) + \
@@ -174,17 +172,17 @@ class Service:
 
         return False
 
-    def set_user_vote(self, vote_info_dict):
+    def set_user_vote(self, vote_info_dict, net_id):
         try:
             vote = -1
             if vote_info_dict['up_vote']:
                 vote = 1
             elif vote_info_dict['down_vote']:
                 vote = 0
-            if self.is_valid_vote(vote_info_dict):
+            if self.is_valid_vote(net_id=net_id, vote_info_dict=vote_info_dict):
                 query = "Insert into user_service_vote (user_address, org_id, service_id, vote, row_created) VALUES (%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE VOTE = %s"
-                q_params = [vote_info_dict['user_address'], vote_info_dict['org_id'], vote_info_dict['service_id'], vote,
-                            datetime.datetime.utcnow(), vote]
+                q_params = [vote_info_dict['user_address'], vote_info_dict['org_id'], vote_info_dict['service_id'],
+                            vote, datetime.datetime.utcnow(), vote]
                 res = self.repo.execute(query, q_params)
                 print(res)
             else:
@@ -217,7 +215,7 @@ class Service:
                   "D.service_row_id =  G.service_row_id AND O.org_id = G.org_id AND sender = %s "
             channel_details = self.repo.execute(qry, (user_address))
             for detail in channel_details:
-                mpe_details.append(self.__clean_row(detail))
+                mpe_details.append(self.obj_utils.clean_row(detail))
         except Exception as e:
             print(repr(e))
             raise e
@@ -227,7 +225,7 @@ class Service:
         tag_map = self.__map_to_service(tags)
         groups_map = self.__map_to_service(groups)
         for service in services:
-            self.__clean_row(service)
+            self.obj_utils.clean_row(service)
             service_row_id = service['service_row_id']
             service['groups'] = self.__get_group_with_endpoints(groups_map[service_row_id])
             if service_row_id in tag_map:
@@ -261,24 +259,3 @@ class Service:
             group_details['group_id'] = group['group_id']
             group_details['endpoints'].append(group['endpoint'])
         return segregated_groups
-
-    def __clean(self, value_list):
-        for value in value_list:
-            self.__clean_row(value)
-
-    def __clean_row(self, row):
-        for item in IGNORED_LIST:
-            del row[item]
-
-        for key in row:
-            if isinstance(row[key], decimal.Decimal) or isinstance(row[key], datetime.datetime):
-                row[key] = str(row[key])
-            elif isinstance(row[key], bytes):
-                if row[key] == b'\x01':
-                    row[key] = 1
-                elif row[key] == b'\x00':
-                    row[key] = 0
-                else:
-                    raise Exception("Unsupported bytes object. Key " + str(key) + " value " + str(row[key]))
-
-        return row
