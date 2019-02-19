@@ -199,7 +199,9 @@ class HandleContractsDB:
         self._del_srvc(org_id=org_id, service_id=service_id, conn=self.repo)
 
     def create_channel(self, q_dta):
-        q_dta['groupId'] = base64.b64encode(bytes.fromhex(q_dta['groupId'].lstrip('0x'))).decode('utf8')
+        if q_dta['groupId'][0:2] == '0x':
+            q_dta['groupId'] = q_dta['groupId'][2:]
+        q_dta['groupId'] = base64.b64encode(bytes.fromhex(q_dta['groupId'])).decode('utf8')
         self._create_channel(q_dta, self.repo)
 
     def update_channel(self, channel_id, group_id, channel_data):
