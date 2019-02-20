@@ -2,18 +2,18 @@ import json
 import re
 import traceback
 
+from common.constant import NETWORKS
+from common.repository import Repository
+from common.utils import Utils
 from contract_api.channel import Channel
-from schema import Schema, And
+from contract_api.search import Search
 from contract_api.service import Service
 from contract_api.service_status import ServiceStatus
-from common.utils import Utils
-from contract_api.search import Search
-from common.constant import NETWORKS
+from schema import Schema, And
 
 NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys())
-obj_srvc = None
-obj_srch = None
 obj_util = Utils()
+db = dict((netId, Repository(net_id=netId)) for netId in NETWORKS.keys())
 route_path = {}
 
 
@@ -35,41 +35,51 @@ def request_handler(event, context):
             print("Processing [" + str(path) + "] with queryStringParameters [" + str(payload_dict) + "]")
         stage = event['requestContext']['stage']
         net_id = NETWORKS_NAME[stage]
-        global obj_srvc, obj_srch
-        obj_srvc = Service(net_id)
-        obj_srch = Search(net_id)
+        if db[net_id].connection is None:
+            db[net_id] = None
+            db[net_id] = Repository(net_id=net_id)
+
         data = None
         if "/service" == path:
+            obj_srvc = Service(obj_repo=db[net_id])
             data = obj_srvc.get_curated_services()
         elif "/channels" == path:
-            data = get_profile_details(user_address=payload_dict['user_address'])
+            obj_srvc = Service(obj_repo=db[net_id])
+            data = get_profile_details(user_address=payload_dict['user_address'], obj_srvc=obj_srvc)
         elif "/fetch-vote" == path:
-            data = get_user_vote(payload_dict['user_address'])
+            obj_srvc = Service(obj_repo=db[net_id])
+            data = get_user_vote(payload_dict['user_address'], obj_srvc=obj_srvc)
         elif "/user-vote" == path:
-            data = set_user_vote(payload_dict['vote'])
+            obj_srvc = Service(obj_repo=db[net_id])
+            data = set_user_vote(payload_dict['vote'], obj_srvc=obj_srvc, net_id=net_id)
         elif "/group-info" == path:
+            obj_srvc = Service(obj_repo=db[net_id])
             data = obj_srvc.get_group_info()
         elif "/available-channels" == path:
-            channel_instance = Channel(net_id)
-            data = channel_instance.get_channel_info(payload_dict['user_address'], payload_dict['service_id'],
-                                                     payload_dict['org_id'])
+            obj_chnnl = Channel(net_id, obj_repo=db[net_id])
+            data = obj_chnnl.get_channel_info(payload_dict['user_address'], payload_dict['service_id'],
+                                              payload_dict['org_id'])
         elif "/expired-channels" == path:
-            channel_instance = Channel(net_id)
-            data = channel_instance.get_expired_channel_info(payload_dict['user_address'])
+            obj_chnnl = Channel(net_id, obj_repo=db[net_id])
+            data = obj_chnnl.get_expired_channel_info(payload_dict['user_address'])
         elif "/organizations" == path:
+            obj_srch = Search(obj_repo=db[net_id])
             data = {"organizations": obj_srch.get_all_org()}
         elif re.match("^(/organizations)[/][[a-z0-9]+$", path):
-            data = obj_srch.get_org(org_id = event['path'].split("/")[2])
+            obj_srch = Search(obj_repo=db[net_id])
+            data = obj_srch.get_org(org_id=event['path'].split("/")[2])
         elif re.match("^(/organizations)[/][a-zA-Z0-9]{1,}[/](services)$", path):
-            data = {"services": obj_srch.get_all_srvc(org_id = event['path'].split("/")[2])}
+            obj_srch = Search(obj_repo=db[net_id])
+            data = {"services": obj_srch.get_all_srvc(org_id=event['path'].split("/")[2])}
         elif re.match("^(/organizations)[/][a-zA-Z0-9]{1,}[/](services)[/][a-z0-9]+$", path):
             data = []
         elif re.match("^(/tags)[/][[a-z0-9]+$", path):
+            obj_srch = Search(obj_repo=db[net_id])
             data = {"services": obj_srch.get_all_srvc_by_tag(tag_name=event['path'].split("/")[2])}
         elif "update-service-status" == path:
             print('update service status')
-            s = ServiceStatus(obj_srvc.repo)
-            s.update_service_status()
+            obj_srvc_st = ServiceStatus(db[net_id])
+            obj_srvc_st.update_service_status()
             data = {}
 
         if data is None:
@@ -87,13 +97,26 @@ def request_handler(event, context):
     print(response)
     return response
 
-def get_profile_details(user_address):
-    if user_address is None or len(user_address) == 0:
+
+def check_for_blank(field):
+    if field is None or len(field) == 0:
+        return True
+    return False
+
+
+def get_profile_details(user_address, obj_srvc):
+    if check_for_blank(user_address):
         return []
     return obj_srvc.get_profile_details(user_address)
 
 
-def set_user_vote(vote_info):
+def get_user_vote(user_address, obj_srvc):
+    if check_for_blank(user_address):
+        return []
+    return obj_srvc.get_user_vote(user_address)
+
+
+def set_user_vote(vote_info, obj_srvc, net_id):
     voted = False
     schema = Schema([{'user_address': And(str),
                       'org_id': And(str),
@@ -104,22 +127,13 @@ def set_user_vote(vote_info):
                       }])
     try:
         vote_info = schema.validate([vote_info])
-        voted = obj_srvc.set_user_vote(vote_info[0])
+        voted = obj_srvc.set_user_vote(vote_info[0], net_id=net_id)
     except Exception as err:
         print("Invalid Input ", err)
         return None
     if voted:
         return []
     return None
-
-
-def get_user_vote(user_address):
-    if user_address is None or len(user_address) == 0:
-        return []
-    return obj_srvc.get_user_vote(user_address)
-
-def get_curated_services_by_tag():
-    return obj_srvc.get_curated_services()
 
 
 # Generate response JSON that API gateway expects from the lambda function
