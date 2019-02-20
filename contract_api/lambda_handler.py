@@ -40,45 +40,41 @@ def request_handler(event, context):
             db[net_id] = Repository(net_id=net_id)
 
         data = None
-        if "/service" == path:
+        if path in ["/service", "/channels", "/fetch-vote", "/user-vote", "/group-info"]:
             obj_srvc = Service(obj_repo=db[net_id])
+        elif path in ["/available-channels", "/expired-channels"]:
+            obj_chnnl = Channel(net_id, obj_repo=db[net_id])
+        elif path[0:14] in ["/organizations"] or path[0:5] in ["/tags"]:
+            obj_srch = Search(obj_repo=db[net_id])
+
+        if "/service" == path:
             data = obj_srvc.get_curated_services()
         elif "/channels" == path:
-            obj_srvc = Service(obj_repo=db[net_id])
             data = get_profile_details(user_address=payload_dict['user_address'], obj_srvc=obj_srvc)
         elif "/fetch-vote" == path:
-            obj_srvc = Service(obj_repo=db[net_id])
             data = get_user_vote(payload_dict['user_address'], obj_srvc=obj_srvc)
         elif "/user-vote" == path:
-            obj_srvc = Service(obj_repo=db[net_id])
             data = set_user_vote(payload_dict['vote'], obj_srvc=obj_srvc, net_id=net_id)
         elif "/group-info" == path:
-            obj_srvc = Service(obj_repo=db[net_id])
             data = obj_srvc.get_group_info()
         elif "/available-channels" == path:
-            obj_chnnl = Channel(net_id, obj_repo=db[net_id])
             data = obj_chnnl.get_channel_info(payload_dict['user_address'], payload_dict['service_id'],
                                               payload_dict['org_id'])
         elif "/expired-channels" == path:
-            obj_chnnl = Channel(net_id, obj_repo=db[net_id])
             data = obj_chnnl.get_expired_channel_info(payload_dict['user_address'])
         elif "/organizations" == path:
-            obj_srch = Search(obj_repo=db[net_id])
             data = {"organizations": obj_srch.get_all_org()}
         elif re.match("^(/organizations)[/][[a-z0-9]+$", path):
-            obj_srch = Search(obj_repo=db[net_id])
             data = obj_srch.get_org(org_id=event['path'].split("/")[2])
         elif re.match("^(/organizations)[/][a-zA-Z0-9]{1,}[/](services)$", path):
-            obj_srch = Search(obj_repo=db[net_id])
             data = {"services": obj_srch.get_all_srvc(org_id=event['path'].split("/")[2])}
         elif re.match("^(/organizations)[/][a-zA-Z0-9]{1,}[/](services)[/][a-z0-9]+$", path):
             data = []
         elif re.match("^(/tags)[/][[a-z0-9]+$", path):
-            obj_srch = Search(obj_repo=db[net_id])
             data = {"services": obj_srch.get_all_srvc_by_tag(tag_name=event['path'].split("/")[2])}
         elif "update-service-status" == path:
             print('update service status')
-            obj_srvc_st = ServiceStatus(db[net_id])
+            obj_srvc_st = ServiceStatus(repo=db[net_id])
             obj_srvc_st.update_service_status()
             data = {}
 
