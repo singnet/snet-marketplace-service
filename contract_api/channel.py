@@ -1,15 +1,14 @@
 import web3
-from web3 import Web3
 from common.constant import NETWORKS
-from common.repository import Repository
 from common.utils import Utils
 from contract_api.service import Service
+from web3 import Web3
 
 
 class Channel:
-    def __init__(self, net_id):
-        self.repo = Repository(net_id)
-        self.objSrvc = Service(net_id)
+    def __init__(self, net_id, obj_repo):
+        self.repo = obj_repo
+        self.objSrvc = Service(obj_repo=obj_repo)
         self.ws_provider = NETWORKS[net_id]['ws_provider']
         self.obj_util = Utils()
 
