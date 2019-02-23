@@ -67,6 +67,7 @@ CREATE TABLE `service_metadata` (
   `encoding` varchar(128) DEFAULT NULL,
   `type` varchar(128) DEFAULT NULL,
   `mpe_address` varchar(256) DEFAULT NULL,
+  `payment_expiration_threshold` int(11) DEFAULT NULL,
   `row_created` timestamp NULL DEFAULT NULL,
   `row_updated` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`row_id`),
