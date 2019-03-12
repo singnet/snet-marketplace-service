@@ -1,8 +1,8 @@
 import re
 from datetime import datetime
 from common.utils import Utils
-from service_status.state_service_pb2_grpc import PaymentChannelStateServiceStub
-from service_status.state_service_pb2 import ChannelStateRequest
+from grpc_health.v1 import health_pb2 as heartb_pb2
+from grpc_health.v1 import health_pb2_grpc as  heartb_pb2_grpc
 import grpc
 
 
@@ -22,16 +22,17 @@ class ServiceStatus:
             else:
                 channel = grpc.insecure_channel(url)
 
-            stub = PaymentChannelStateServiceStub(channel)
+            stub = heartb_pb2_grpc.HealthStub(channel)
             try:
-                response = stub.GetChannelState(ChannelStateRequest())
+                response = stub.Check(heartb_pb2.HealthCheckRequest(service=""))
             except grpc.RpcError as err:
                 err_code = str(err.code())
                 print(err_code)
-                if err_code == "StatusCode.UNAVAILABLE":
-                    return 0
+            print(response)
+            if response!=None and response.status == 1:
+                print(response.status)
                 return 1
-            return 1
+            return 0
         except Exception as e:
             print("error in making grpc call::url: ", url, "|err: ", e)
             return 0
