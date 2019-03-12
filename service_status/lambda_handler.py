@@ -19,21 +19,11 @@ def request_handler(event, context):
         print("request_handler::path: ", None)
         return get_response("400", "Bad Request")
     try:
-        payload_dict = None
         path = event['path'].lower()
-        if event['httpMethod'] == 'POST':
-            body = event['body']
-            if body is not None and len(body) > 0:
-                payload_dict = json.loads(body)
-                print("Processing [" + str(path) + "] with body [" + str(body) + "]")
-        elif event['httpMethod'] == 'GET':
-            payload_dict = event.get('queryStringParameters')
-            print("Processing [" + str(path) + "] with queryStringParameters [" + str(payload_dict) + "]")
         stage = event['requestContext']['stage']
         net_id = NETWORKS_NAME[stage]
         if db[net_id].connection is None:
-            db[net_id] = None
-            db[net_id] = Repository(net_id=net_id)
+            raise Exception('database connection is not initialized')
 
         data = None
 
