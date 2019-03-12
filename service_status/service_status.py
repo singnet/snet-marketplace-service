@@ -14,10 +14,10 @@ class ServiceStatus:
         self.obj_util = Utils()
         self.net_id = net_id
 
-    def _make_grpc_call(self, url, secure=1):
+    def _make_grpc_call(self, url, secure=True):
         channel = None
         try:
-            if secure==1:
+            if secure:
                 channel = grpc.secure_channel(url, grpc.ssl_channel_credentials())
             else:
                 channel = grpc.insecure_channel(url)
@@ -40,9 +40,9 @@ class ServiceStatus:
     def ping_url(self, url):
         srch_count = re.subn(self.rex_for_pb_ip, '', url)[1]
         if srch_count == 0:
-            secure = 1
+            secure = True
             if url[:4].lower() == 'http' and url[:5].lower() != 'https':
-                secure = 0
+                secure = False
             url = self.obj_util.remove_http_https_prefix(url=url)
             return self._make_grpc_call(url=url, secure=secure)
         return 0
