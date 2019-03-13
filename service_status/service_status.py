@@ -1,29 +1,50 @@
 import re
 from datetime import datetime
 from common.utils import Utils
+from grpc_health.v1 import health_pb2 as heartb_pb2
+from grpc_health.v1 import health_pb2_grpc as  heartb_pb2_grpc
+import grpc
 
-import requests
 
 class ServiceStatus:
-    def __init__(self, repo):
+    def __init__(self, repo, net_id):
         self.repo = repo
         self.route = '/encoding'
         self.rex_for_pb_ip = '^(http://)*(https://)*127.0.0.1|^(http://)*(https://)*localhost|^(http://)*(https://)*192.|^(http://)*(https://)*172.|^(http://)*(https://)*10.'
         self.obj_util = Utils()
+        self.net_id = net_id
+
+    def _make_grpc_call(self, url, secure=True):
+        channel = None
+        try:
+            if secure:
+                channel = grpc.secure_channel(url, grpc.ssl_channel_credentials())
+            else:
+                channel = grpc.insecure_channel(url)
+
+            stub = heartb_pb2_grpc.HealthStub(channel)
+            try:
+                response = stub.Check(heartb_pb2.HealthCheckRequest(service=""))
+            except grpc.RpcError as err:
+                err_code = str(err.code())
+                print(err_code)
+            print(response)
+            if response!=None and response.status == 1:
+                print(response.status)
+                return 1
+            return 0
+        except Exception as e:
+            print("error in making grpc call::url: ", url, "|err: ", e)
+            return 0
 
     def ping_url(self, url):
         srch_count = re.subn(self.rex_for_pb_ip, '', url)[1]
         if srch_count == 0:
-            if url[:4].lower() != 'http':
-                url = 'http://' + url
-            url = url + self.route
-            try:
-                res = requests.get(url, timeout=5)
-                # res = requests.get(url, timeout=5, verify=False)
-                if res.status_code == 200:
-                    return 1
-            except Exception as err:
-                print("Error {}".format(err))
+            secure = True
+            if url[:4].lower() == 'http' and url[:5].lower() != 'https':
+                secure = False
+            url = self.obj_util.remove_http_https_prefix(url=url)
+            return self._make_grpc_call(url=url, secure=secure)
         return 0
 
     def update_service_status(self):

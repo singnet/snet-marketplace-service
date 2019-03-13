@@ -46,3 +46,8 @@ class Utils:
                     raise Exception("Unsupported bytes object. Key " + str(key) + " value " + str(row[key]))
 
         return row
+
+    def remove_http_https_prefix(self, url):
+        url = url.replace("https://","")
+        url = url.replace("http://","")
+        return url
