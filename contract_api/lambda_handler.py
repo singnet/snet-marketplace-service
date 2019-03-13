@@ -8,7 +8,6 @@ from common.utils import Utils
 from contract_api.channel import Channel
 from contract_api.search import Search
 from contract_api.service import Service
-from contract_api.service_status import ServiceStatus
 from schema import Schema, And
 
 NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys())
@@ -72,11 +71,6 @@ def request_handler(event, context):
             data = []
         elif re.match("^(/tags)[/][[a-z0-9]+$", path):
             data = {"services": obj_srch.get_all_srvc_by_tag(tag_name=event['path'].split("/")[2])}
-        elif "update-service-status" == path:
-            print('update service status')
-            obj_srvc_st = ServiceStatus(repo=db[net_id])
-            obj_srvc_st.update_service_status()
-            data = {}
 
         if data is None:
             err_msg = {'status': 'failed', 'error': 'Bad Request', 'api': event['path']}
