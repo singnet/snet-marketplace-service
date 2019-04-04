@@ -18,7 +18,7 @@ NETWORKS = {
     42: {
         'name': 'kovan',
         'ws_provider': 'wss://kovan.infura.io/ws',
-	'http_provider': 'https://kovan.infura.io',
+        'http_provider': 'https://kovan.infura.io',
         'db': {'DB_HOST': '',
                'DB_USER': '',
                'DB_PASSWORD': '',
@@ -52,3 +52,4 @@ ERROR_MSG = {
 }
 
 EVNTS_LIMIT = "100"
+SRVC_STATUS_GRPC_TIMEOUT = 10
