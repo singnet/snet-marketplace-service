@@ -8,21 +8,32 @@ NETWORKS = {
     1: {
         'name': 'mainnet',
         'ws_provider': 'wss://mainnet.infura.io/ws',
-        'db':{}
+        'http_provider': 'https://kovan.infura.io',
+        'db': {'DB_HOST': '127.0.0.1',
+               'DB_USER': 'unittest_root',
+               'DB_PASSWORD': 'unittest_pwd',
+               'DB_NAME': 'unittest_db',
+               'DB_PORT': 3306
+               }
     },
     3: {
         'name': 'ropsten',
-        'ws_provider': 'wss: // ropsten.infura.io / ws',
-        'db':{}
+        'ws_provider': 'wss://ropsten.infura.io/ws',
+        'db': {'DB_HOST': '127.0.0.1',
+               'DB_USER': 'unittest_root',
+               'DB_PASSWORD': 'unittest_pwd',
+               'DB_NAME': 'unittest_db',
+               'DB_PORT': 3306
+               }
     },
     42: {
         'name': 'kovan',
         'ws_provider': 'wss://kovan.infura.io/ws',
         'http_provider': 'https://kovan.infura.io',
-        'db': {'DB_HOST': '',
-               'DB_USER': '',
-               'DB_PASSWORD': '',
-               'DB_NAME': '',
+        'db': {'DB_HOST': '127.0.0.1',
+               'DB_USER': 'unittest_root',
+               'DB_PASSWORD': 'unittest_pwd',
+               'DB_NAME': 'unittest_db',
                'DB_PORT': 3306
                }
     }
