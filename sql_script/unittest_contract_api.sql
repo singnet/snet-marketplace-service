@@ -142,7 +142,7 @@ INSERT INTO `mpe_channel` (`row_id`,`channel_id`,`sender`,`recipient`,`groupId`,
   `service_id` varchar(128) NOT NULL,
   `signature` varchar(128) DEFAULT NULL,
   `vote` int(1) NOT NULL,
-  `row_created` timestamp DEFAULT NULL,
+  `row_created` timestamp NULL DEFAULT NULL,
   `row_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`row_id`),
   UNIQUE KEY `unique_vote` (`user_address`,`org_id`,`service_id`)
