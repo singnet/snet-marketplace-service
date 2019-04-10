@@ -18,7 +18,6 @@ def request_handler(event, context):
         net_id = NETWORKS_NAME[stage]
         if db[net_id].connection is None:
             raise Exception('database connection is not initialized')
-
         print('update service status', net_id)
         obj_srvc_st = ServiceStatus(repo=db[net_id], net_id=net_id)
         obj_srvc_st.update_service_status()
