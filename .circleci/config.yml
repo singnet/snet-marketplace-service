@@ -40,4 +40,5 @@ jobs:
             python3 -m coverage run ./test/test_contract_api_2.py
             python3 -m coverage report
             python3 -m coverage html
-
+      - store_artifacts:
+        path: htmlcov
