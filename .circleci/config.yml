@@ -3,46 +3,41 @@ jobs:
   build:
     docker:
       - image: circleci/python:3.6.6-node
+      - image: circleci/mysql:5.7.25
+        environment:
+          MYSQL_ROOT_PASSWORD: rootpass
+          MYSQL_DATABASE: unittest_db
+          MYSQL_USER: unittest_root
+          MYSQL_PASSWORD: unittest_pwd
     working_directory: ~/singnet/marketplace
     environment:
       TRIGGER_BUILD_BRANCH: master
+      PYTHONPATH: /home/circleci/singnet/marketplace
     steps:
-      - run:
-          name: Install all the dependencies
-          command: |
-              sudo apt-get update
-              sudo apt-get install python3-pip
       - checkout
       - run:
-          name: Build the marketplace
+          name: Install MySQL Client
           command: |
-              pip3 install -r requirement.txt -t .
-              sudo python3 -m compileall *.py
-  post_build:
-    docker:
-      - image: circleci/python:3.6.6-node
-    working_directory: ~/singnet/marketplace
-    environment:
-      TRIGGER_BUILD_BRANCH: master
-    steps:
+            sudo apt-get update
+            sudo apt-get install -y mysql-client --no-install-recommends
       - run:
-          name: Trigger platform-pipeline build
+          name: Check Connection & Execute SQL Scripts
           command: |
-              if [ "$CIRCLE_BRANCH" == "$TRIGGER_BUILD_BRANCH" ]
-              then
-                echo "Triggering Pipeline Project"
-                #curl -u ${CIRCLECI_PLATFORM_PIPELINE_TOKEN}: \
-                #  -d build_parameters[CIRCLE_JOB]=build \
-                #  -d build_parameters[PARENT_PROJECT_REPONAME]="$CIRCLE_PROJECT_REPONAME" \
-                #  -d build_parameters[PARENT_BRANCH]="$CIRCLE_BRANCH" \
-                #  -d build_parameters[PARENT_BUILD_URL]="$CIRCLE_BUILD_URL" \
-                #  https://circleci.com/api/v1.1/project/github/singnet/platform-pipeline/tree/${TRIGGER_BUILD_BRANCH}
-              fi
-workflows:
-  version: 2
-  build_and_test:
-    jobs:
-      - build
-      - post_build:
-          requires:
-            - build
+            /bin/bash ./waitformysql.sh
+      - run:
+          name: Install Requirements
+          command: |
+            sudo apt-get update
+            sudo apt-get install python3-pip
+            python3 -m compileall .
+            sudo pip3 install -r requirement.txt
+            sudo pip3 install coverage
+            export PYTHONPATH=$PATH:`pwd`
+      - run:
+          name: Run Test Coverage
+          command: |
+            echo $PYTHONPATH
+            python3 -m coverage run ./test/test_contract_api_2.py
+            python3 -m coverage report
+            python3 -m coverage html
+
