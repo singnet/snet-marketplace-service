@@ -41,4 +41,4 @@ jobs:
             python3 -m coverage report
             python3 -m coverage html
       - store_artifacts:
-        path: htmlcov
+          path: htmlcov
