@@ -3,6 +3,7 @@ import re
 import traceback
 
 from common.constant import NETWORKS
+from common.constant import FEEDBK_COMMENT_LENGTH
 from common.repository import Repository
 from common.utils import Utils
 from contract_api.channel import Channel
@@ -144,6 +145,9 @@ def set_user_feedback(feedbk_info, obj_srvc, net_id):
                       }])
     try:
         feedback_data = schema.validate([feedbk_info])
+        comment = feedback_data[0]['comment']
+        if len(comment) > FEEDBK_COMMENT_LENGTH:
+            raise Exception("Feedback comment exceeded the allowed size limit.")
         feedbk_recorded = obj_srvc.set_usr_feedbk(feedback_data[0], net_id=net_id)
     except Exception as err:
         print("Invalid Input ", err)
