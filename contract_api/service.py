@@ -119,11 +119,13 @@ class Service:
             for rec in votes:
                 org_id = rec['org_id']
                 service_id = rec['service_id']
+                comment = rec.get('comment', None)
                 if org_id not in user_vote_dict.keys():
                     user_vote_dict[org_id] = {}
                 user_vote_dict[org_id][service_id] = {'user_address': rec['user_address'],
                                                       'org_id': rec['org_id'],
-                                                      'service_id': service_id}
+                                                      'service_id': service_id,
+                                                      'comment': comment}
                 user_vote_dict[org_id][service_id].update(self.vote_mapping(rec['vote']))
 
         except Exception as e:
@@ -147,6 +149,30 @@ class Service:
                         'down_vote_count': srvcs_data.get(service_id).get(0, 0),
                         "up_vote": votes.get(org_id, {}).get(service_id, {}).get('up_vote', False),
                         "down_vote": votes.get(org_id, {}).get(service_id, {}).get('down_vote', False)
+                    }
+                    vote_list.append(rec)
+        except Exception as e:
+            print(repr(e))
+            raise e
+        return vote_list
+
+    def get_usr_feedbk(self, user_address):
+        vote_list = []
+        try:
+            count_details = self.fetch_total_count()
+            votes = self.fetch_user_vote(user_address)
+            print(votes)
+            for org_id in count_details.keys():
+                srvcs_data = count_details[org_id]
+                for service_id in srvcs_data.keys():
+                    rec = {
+                        'org_id': org_id,
+                        'service_id': service_id,
+                        'up_vote_count': srvcs_data.get(service_id).get(1, 0),
+                        'down_vote_count': srvcs_data.get(service_id).get(0, 0),
+                        "up_vote": votes.get(org_id, {}).get(service_id, {}).get('up_vote', False),
+                        "down_vote": votes.get(org_id, {}).get(service_id, {}).get('down_vote', False),
+                        "comment": votes.get(org_id, {}).get(service_id, {}).get('comment', None)
                     }
                     vote_list.append(rec)
         except Exception as e:
@@ -186,7 +212,49 @@ class Service:
                 res = self.repo.execute(query, q_params)
                 print(res)
             else:
-                raise Exception("Signature of the vote is not valid")
+                raise Exception("Signature of the vote is not valid.")
+        except Exception as e:
+            print(repr(e))
+            raise e
+        return True
+
+    def is_valid_feedbk(self, net_id, usr_addr, msg_txt, sign):
+        try:
+            provider = web3.HTTPProvider(NETWORKS[net_id]['http_provider'])
+            w3 = web3.Web3(provider)
+            message = w3.sha3(text=msg_txt)
+            message_hash = defunct_hash_message(primitive=message)
+            recovered = str(w3.eth.account.recoverHash(message_hash, signature=sign))
+            return str(usr_addr).lower() == recovered.lower()
+        except Exception as e:
+            print(repr(e))
+            raise e
+        return False
+
+    def set_usr_feedbk(self, feedbk_info, net_id):
+        try:
+            vote = -1
+            if feedbk_info['up_vote']:
+                vote = 1
+            elif feedbk_info['down_vote']:
+                vote = 0
+            curr_dt = datetime.datetime.utcnow()
+            usr_addr = feedbk_info['user_address']
+            org_id = feedbk_info['org_id']
+            srvc_id = feedbk_info['service_id']
+            comment = feedbk_info['comment']
+            msg_txt = str(usr_addr) + str(org_id) + str(feedbk_info['up_vote']).lower() + str(srvc_id) + \
+                      str(feedbk_info['down_vote']).lower() + str(comment).lower()
+            print(msg_txt)
+            if self.is_valid_feedbk(net_id=net_id, usr_addr=usr_addr, msg_txt=msg_txt, sign=feedbk_info['signature']):
+                query = "INSERT INTO user_service_vote (user_address, org_id, service_id, vote, comment, row_updated, row_created) " \
+                        "VALUES (%s, %s, %s, %s, %s, %s, %s) " \
+                        "ON DUPLICATE KEY UPDATE vote = %s, comment = %s, row_updated = %s"
+                q_params = [usr_addr, org_id, srvc_id, vote, comment, curr_dt, curr_dt, vote, comment, curr_dt]
+                res = self.repo.execute(query, q_params)
+                print(res)
+            else:
+                raise Exception("signature of the vote is not valid.")
         except Exception as e:
             print(repr(e))
             raise e
