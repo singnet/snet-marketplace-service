@@ -1,6 +1,7 @@
 import re
 from datetime import datetime
 from common.utils import Utils
+from common.constant import SRVC_STATUS_GRPC_TIMEOUT
 from grpc_health.v1 import health_pb2 as heartb_pb2
 from grpc_health.v1 import health_pb2_grpc as  heartb_pb2_grpc
 import grpc
@@ -14,8 +15,7 @@ class ServiceStatus:
         self.obj_util = Utils()
         self.net_id = net_id
 
-    def _make_grpc_call(self, url, secure=True):
-        channel = None
+    def _check_service_status(self, url, secure=True):
         try:
             if secure:
                 channel = grpc.secure_channel(url, grpc.ssl_channel_credentials())
@@ -23,12 +23,7 @@ class ServiceStatus:
                 channel = grpc.insecure_channel(url)
 
             stub = heartb_pb2_grpc.HealthStub(channel)
-            try:
-                response = stub.Check(heartb_pb2.HealthCheckRequest(service=""))
-            except grpc.RpcError as err:
-                err_code = str(err.code())
-                print(err_code)
-            print(response)
+            response = stub.Check(heartb_pb2.HealthCheckRequest(service=""), timeout=SRVC_STATUS_GRPC_TIMEOUT)
             if response!=None and response.status == 1:
                 print(response.status)
                 return 1
@@ -44,7 +39,7 @@ class ServiceStatus:
             if url[:4].lower() == 'http' and url[:5].lower() != 'https':
                 secure = False
             url = self.obj_util.remove_http_https_prefix(url=url)
-            return self._make_grpc_call(url=url, secure=secure)
+            return self._check_service_status(url=url, secure=secure)
         return 0
 
     def update_service_status(self):
