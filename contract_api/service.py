@@ -138,7 +138,6 @@ class Service:
         try:
             count_details = self.fetch_total_count()
             votes = self.fetch_user_vote(user_address)
-            print(votes)
             for org_id in count_details.keys():
                 srvcs_data = count_details[org_id]
                 for service_id in srvcs_data.keys():
@@ -161,7 +160,6 @@ class Service:
         try:
             count_details = self.fetch_total_count()
             votes = self.fetch_user_vote(user_address)
-            print(votes)
             for org_id in count_details.keys():
                 srvcs_data = count_details[org_id]
                 for service_id in srvcs_data.keys():
@@ -210,7 +208,6 @@ class Service:
                 q_params = [vote_info_dict['user_address'], vote_info_dict['org_id'], vote_info_dict['service_id'],
                             vote, datetime.datetime.utcnow(), vote]
                 res = self.repo.execute(query, q_params)
-                print(res)
             else:
                 raise Exception("Signature of the vote is not valid.")
         except Exception as e:
@@ -245,14 +242,12 @@ class Service:
             comment = feedbk_info['comment']
             msg_txt = str(usr_addr) + str(org_id) + str(feedbk_info['up_vote']).lower() + str(srvc_id) + \
                       str(feedbk_info['down_vote']).lower() + str(comment).lower()
-            print(msg_txt)
             if self.is_valid_feedbk(net_id=net_id, usr_addr=usr_addr, msg_txt=msg_txt, sign=feedbk_info['signature']):
                 query = "INSERT INTO user_service_vote (user_address, org_id, service_id, vote, comment, row_updated, row_created) " \
                         "VALUES (%s, %s, %s, %s, %s, %s, %s) " \
                         "ON DUPLICATE KEY UPDATE vote = %s, comment = %s, row_updated = %s"
                 q_params = [usr_addr, org_id, srvc_id, vote, comment, curr_dt, curr_dt, vote, comment, curr_dt]
                 res = self.repo.execute(query, q_params)
-                print(res)
             else:
                 raise Exception("signature of the vote is not valid.")
         except Exception as e:
