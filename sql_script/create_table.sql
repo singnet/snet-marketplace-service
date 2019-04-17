@@ -142,6 +142,7 @@ CREATE TABLE `service_status` (
   `org_id` varchar(128) NOT NULL,
   `service_id` varchar(128) NOT NULL,
   `vote` int(1) NOT NULL,
+  `comment` varchar(1024) DEFAULT NULL,
   `row_created` timestamp DEFAULT NULL,
   `row_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`row_id`),
