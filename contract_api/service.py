@@ -4,7 +4,7 @@ import web3
 from common.repository import NETWORKS
 from common.utils import Utils
 from eth_account.messages import defunct_hash_message
-
+from pymysql import MySQLError
 
 class Service:
     def __init__(self, obj_repo):
@@ -114,16 +114,18 @@ class Service:
         user_vote_dict = {}
         try:
             votes = self.repo.execute(
-                "select * from user_service_vote where user_address = %s", (user_address))
+                "SELECT * FROM user_service_vote WHERE user_address = %s", (user_address))
             self.obj_utils.clean(votes)
             for rec in votes:
                 org_id = rec['org_id']
                 service_id = rec['service_id']
+                comment = rec.get('comment', None)
                 if org_id not in user_vote_dict.keys():
                     user_vote_dict[org_id] = {}
                 user_vote_dict[org_id][service_id] = {'user_address': rec['user_address'],
                                                       'org_id': rec['org_id'],
-                                                      'service_id': service_id}
+                                                      'service_id': service_id,
+                                                      'comment': comment}
                 user_vote_dict[org_id][service_id].update(self.vote_mapping(rec['vote']))
 
         except Exception as e:
@@ -136,7 +138,6 @@ class Service:
         try:
             count_details = self.fetch_total_count()
             votes = self.fetch_user_vote(user_address)
-            print(votes)
             for org_id in count_details.keys():
                 srvcs_data = count_details[org_id]
                 for service_id in srvcs_data.keys():
@@ -147,6 +148,62 @@ class Service:
                         'down_vote_count': srvcs_data.get(service_id).get(0, 0),
                         "up_vote": votes.get(org_id, {}).get(service_id, {}).get('up_vote', False),
                         "down_vote": votes.get(org_id, {}).get(service_id, {}).get('down_vote', False)
+                    }
+                    vote_list.append(rec)
+        except Exception as e:
+            print(repr(e))
+            raise e
+        return vote_list
+
+
+    def fetch_user_feedbk(self, user_address):
+        user_vote_dict = {}
+        try:
+            votes = self.repo.execute(
+                "SELECT * FROM user_service_vote WHERE user_address = %s", (user_address))
+            self.obj_utils.clean(votes)
+            feedbk = self.repo.execute(
+                "SELECT A.* FROM user_service_feedback A INNER JOIN (SELECT user_address,org_id, service_id,  "
+                "max(row_updated) latest_dt FROM user_service_feedback WHERE user_address = %s GROUP BY user_address, "
+                "org_id, service_id) B  on A.user_address = B.user_address AND A.org_id = B.org_id AND A.service_id = "
+                "B.service_id AND A.row_updated = B.latest_dt", (user_address))
+            self.obj_utils.clean(feedbk)
+            for rec in votes:
+                org_id = rec['org_id']
+                service_id = rec['service_id']
+                if org_id not in user_vote_dict.keys():
+                    user_vote_dict[org_id] = {}
+                user_vote_dict[org_id][service_id] = {'user_address': rec['user_address'],
+                                                      'org_id': rec['org_id'],
+                                                      'service_id': service_id
+                                                      }
+                user_vote_dict[org_id][service_id].update(self.vote_mapping(rec['vote']))
+            for rec in feedbk:
+                org_id = rec['org_id']
+                service_id = rec['service_id']
+                user_vote_dict[org_id][service_id]['comment'] = rec['comment']
+
+        except Exception as e:
+            print(repr(e))
+            raise e
+        return user_vote_dict
+
+    def get_usr_feedbk(self, user_address):
+        vote_list = []
+        try:
+            count_details = self.fetch_total_count()
+            votes = self.fetch_user_feedbk(user_address)
+            for org_id in count_details.keys():
+                srvcs_data = count_details[org_id]
+                for service_id in srvcs_data.keys():
+                    rec = {
+                        'org_id': org_id,
+                        'service_id': service_id,
+                        'up_vote_count': srvcs_data.get(service_id).get(1, 0),
+                        'down_vote_count': srvcs_data.get(service_id).get(0, 0),
+                        "up_vote": votes.get(org_id, {}).get(service_id, {}).get('up_vote', False),
+                        "down_vote": votes.get(org_id, {}).get(service_id, {}).get('down_vote', False),
+                        "comment": votes.get(org_id, {}).get(service_id, {}).get('comment', None)
                     }
                     vote_list.append(rec)
         except Exception as e:
@@ -184,14 +241,64 @@ class Service:
                 q_params = [vote_info_dict['user_address'], vote_info_dict['org_id'], vote_info_dict['service_id'],
                             vote, datetime.datetime.utcnow(), vote]
                 res = self.repo.execute(query, q_params)
-                print(res)
             else:
-                raise Exception("Signature of the vote is not valid")
+                raise Exception("Signature of the vote is not valid.")
         except Exception as e:
             print(repr(e))
             raise e
         return True
 
+    def is_valid_feedbk(self, net_id, usr_addr, msg_txt, sign):
+        try:
+            provider = web3.HTTPProvider(NETWORKS[net_id]['http_provider'])
+            w3 = web3.Web3(provider)
+            message = w3.sha3(text=msg_txt)
+            message_hash = defunct_hash_message(primitive=message)
+            recovered = str(w3.eth.account.recoverHash(message_hash, signature=sign))
+            return str(usr_addr).lower() == recovered.lower()
+        except Exception as e:
+            print(repr(e))
+            raise e
+        return False
+
+    def set_usr_feedbk(self, feedbk_info, net_id):
+        try:
+            vote = -1
+            if feedbk_info['up_vote']:
+                vote = 1
+            elif feedbk_info['down_vote']:
+                vote = 0
+            curr_dt = datetime.datetime.utcnow()
+            usr_addr = feedbk_info['user_address']
+            org_id = feedbk_info['org_id']
+            srvc_id = feedbk_info['service_id']
+            comment = feedbk_info['comment']
+            msg_txt = str(usr_addr) + str(org_id) + str(feedbk_info['up_vote']).lower() + str(srvc_id) + \
+                      str(feedbk_info['down_vote']).lower() + str(comment).lower()
+            if self.is_valid_feedbk(net_id=net_id, usr_addr=usr_addr, msg_txt=msg_txt, sign=feedbk_info['signature']):
+                self.repo.auto_commit = False
+
+                insrt_vote = "INSERT INTO user_service_vote (user_address, org_id, service_id, vote, row_updated, row_created) " \
+                             "VALUES (%s, %s, %s, %s, %s, %s) " \
+                             "ON DUPLICATE KEY UPDATE vote = %s, row_updated = %s"
+                insrt_vote_params = [usr_addr, org_id, srvc_id, vote, curr_dt, curr_dt, vote, curr_dt]
+                self.repo.execute(insrt_vote, insrt_vote_params)
+
+                insrt_feedbk = "INSERT INTO user_service_feedback (user_address, org_id, service_id, comment, " \
+                               "row_updated, row_created)" \
+                               "VALUES (%s, %s, %s, %s, %s, %s) "
+                insrt_feedbk_params = [usr_addr, org_id, srvc_id, comment, curr_dt, curr_dt]
+                self.repo.execute(insrt_feedbk, insrt_feedbk_params)
+                self._commit(conn=self.repo)
+            else:
+                raise Exception("signature of the vote is not valid.")
+        except MySQLError as e:
+            self._rollback(conn=self.repo, err=repr(e))
+            raise e
+        except Exception as err:
+            print(repr(err))
+            raise err
+        return True
     def get_curated_services(self):
         try:
             services = self.repo.execute(
@@ -259,3 +366,14 @@ class Service:
             group_details['group_id'] = group['group_id']
             group_details['endpoints'].append(group['endpoint'])
         return segregated_groups
+
+    def _commit(self, conn):
+        conn.auto_commit = True
+        conn.connection.commit()
+        print('_commit')
+        print(conn.connection)
+
+    def _rollback(self, conn, err):
+        print('_rollback ::error: ', err)
+        conn.auto_commit = True
+        conn.connection.rollback()
