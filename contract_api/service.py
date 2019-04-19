@@ -276,8 +276,7 @@ class Service:
             msg_txt = str(usr_addr) + str(org_id) + str(feedbk_info['up_vote']).lower() + str(srvc_id) + \
                       str(feedbk_info['down_vote']).lower() + str(comment).lower()
             if self.is_valid_feedbk(net_id=net_id, usr_addr=usr_addr, msg_txt=msg_txt, sign=feedbk_info['signature']):
-                self.repo.auto_commit = False
-
+                self.repo.begin_transaction()
                 insrt_vote = "INSERT INTO user_service_vote (user_address, org_id, service_id, vote, row_updated, row_created) " \
                              "VALUES (%s, %s, %s, %s, %s, %s) " \
                              "ON DUPLICATE KEY UPDATE vote = %s, row_updated = %s"
@@ -289,16 +288,17 @@ class Service:
                                "VALUES (%s, %s, %s, %s, %s, %s) "
                 insrt_feedbk_params = [usr_addr, org_id, srvc_id, comment, curr_dt, curr_dt]
                 self.repo.execute(insrt_feedbk, insrt_feedbk_params)
-                self._commit(conn=self.repo)
+                self.repo.commit_transaction()
             else:
                 raise Exception("signature of the vote is not valid.")
         except MySQLError as e:
-            self._rollback(conn=self.repo, err=repr(e))
+            self.repo.rollback_transaction()
             raise e
         except Exception as err:
             print(repr(err))
             raise err
         return True
+
     def get_curated_services(self):
         try:
             services = self.repo.execute(
@@ -366,14 +366,3 @@ class Service:
             group_details['group_id'] = group['group_id']
             group_details['endpoints'].append(group['endpoint'])
         return segregated_groups
-
-    def _commit(self, conn):
-        conn.auto_commit = True
-        conn.connection.commit()
-        print('_commit')
-        print(conn.connection)
-
-    def _rollback(self, conn, err):
-        print('_rollback ::error: ', err)
-        conn.auto_commit = True
-        conn.connection.rollback()
