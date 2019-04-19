@@ -4,7 +4,7 @@ import web3
 from common.repository import NETWORKS
 from common.utils import Utils
 from eth_account.messages import defunct_hash_message
-
+from pymysql import MySQLError
 
 class Service:
     def __init__(self, obj_repo):
@@ -114,7 +114,7 @@ class Service:
         user_vote_dict = {}
         try:
             votes = self.repo.execute(
-                "select * from user_service_vote where user_address = %s", (user_address))
+                "SELECT * FROM user_service_vote WHERE user_address = %s", (user_address))
             self.obj_utils.clean(votes)
             for rec in votes:
                 org_id = rec['org_id']
@@ -155,11 +155,41 @@ class Service:
             raise e
         return vote_list
 
+
+    def fetch_user_feedbk(self, user_address):
+        user_vote_dict = {}
+        try:
+            votes = self.repo.execute(
+                "SELECT * FROM user_service_vote WHERE user_address = %s", (user_address))
+            self.obj_utils.clean(votes)
+            feedbk = self.repo.execute(
+                "SELECT org_id, service_id, comment, max(row_updated) FROM user_service_feedback group by user_address, org_id, service_id "
+                "HAVING user_address = %s", (user_address))
+            for rec in votes:
+                org_id = rec['org_id']
+                service_id = rec['service_id']
+                if org_id not in user_vote_dict.keys():
+                    user_vote_dict[org_id] = {}
+                user_vote_dict[org_id][service_id] = {'user_address': rec['user_address'],
+                                                      'org_id': rec['org_id'],
+                                                      'service_id': service_id
+                                                      }
+                user_vote_dict[org_id][service_id].update(self.vote_mapping(rec['vote']))
+            for rec in feedbk:
+                org_id = rec['org_id']
+                service_id = rec['service_id']
+                user_vote_dict[org_id][service_id]['comment'] = rec['comment']
+
+        except Exception as e:
+            print(repr(e))
+            raise e
+        return user_vote_dict
+
     def get_usr_feedbk(self, user_address):
         vote_list = []
         try:
             count_details = self.fetch_total_count()
-            votes = self.fetch_user_vote(user_address)
+            votes = self.fetch_user_feedbk(user_address)
             for org_id in count_details.keys():
                 srvcs_data = count_details[org_id]
                 for service_id in srvcs_data.keys():
@@ -243,16 +273,28 @@ class Service:
             msg_txt = str(usr_addr) + str(org_id) + str(feedbk_info['up_vote']).lower() + str(srvc_id) + \
                       str(feedbk_info['down_vote']).lower() + str(comment).lower()
             if self.is_valid_feedbk(net_id=net_id, usr_addr=usr_addr, msg_txt=msg_txt, sign=feedbk_info['signature']):
-                query = "INSERT INTO user_service_vote (user_address, org_id, service_id, vote, comment, row_updated, row_created) " \
-                        "VALUES (%s, %s, %s, %s, %s, %s, %s) " \
-                        "ON DUPLICATE KEY UPDATE vote = %s, comment = %s, row_updated = %s"
-                q_params = [usr_addr, org_id, srvc_id, vote, comment, curr_dt, curr_dt, vote, comment, curr_dt]
-                res = self.repo.execute(query, q_params)
+                self.repo.auto_commit = False
+
+                insrt_vote = "INSERT INTO user_service_vote (user_address, org_id, service_id, vote, row_updated, row_created) " \
+                             "VALUES (%s, %s, %s, %s, %s, %s) " \
+                             "ON DUPLICATE KEY UPDATE vote = %s, row_updated = %s"
+                insrt_vote_params = [usr_addr, org_id, srvc_id, vote, curr_dt, curr_dt, vote, curr_dt]
+                self.repo.execute(insrt_vote, insrt_vote_params)
+
+                insrt_feedbk = "INSERT INTO user_service_feedback (user_address, org_id, service_id, comment, " \
+                               "row_updated, row_created)" \
+                               "VALUES (%s, %s, %s, %s, %s, %s) "
+                insrt_feedbk_params = [usr_addr, org_id, srvc_id, comment, curr_dt, curr_dt]
+                self.repo.execute(insrt_feedbk, insrt_feedbk_params)
+                self._commit(conn=self.repo)
             else:
                 raise Exception("signature of the vote is not valid.")
-        except Exception as e:
-            print(repr(e))
+        except MySQLError as e:
+            self._rollback(conn=self.repo, err=repr(e))
             raise e
+        except Exception as err:
+            print(repr(err))
+            raise err
         return True
 
     def get_curated_services(self):
@@ -322,3 +364,14 @@ class Service:
             group_details['group_id'] = group['group_id']
             group_details['endpoints'].append(group['endpoint'])
         return segregated_groups
+
+    def _commit(self, conn):
+        conn.auto_commit = True
+        conn.connection.commit()
+        print('_commit')
+        print(conn.connection)
+
+    def _rollback(self, conn, err):
+        print('_rollback ::error: ', err)
+        conn.auto_commit = True
+        conn.connection.rollback()
