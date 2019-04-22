@@ -77,13 +77,13 @@ def request_handler(event, context):
             data = {"services": obj_srch.get_all_srvc_by_tag(tag_name=event['path'].split("/")[2])}
 
         if data is None:
-            err_msg = {'status': 'failed', 'error': 'Bad Request', 'api': event['path']}
+            err_msg = {'status': 'failed', 'error': 'Bad Request', 'api': event['path'], 'payload' : payload_dict}
             obj_util.report_slack(1, str(err_msg))
             response = get_response("400", err_msg)
         else:
             response = get_response("200", {"status": "success", "data": data})
     except Exception as e:
-        err_msg = {"status": "failed", "error": repr(e)}
+        err_msg = {"status": "failed", "error": repr(e), 'api': event['path'], 'payload': payload_dict}
         obj_util.report_slack(1, str(err_msg))
         response = get_response(500, err_msg)
         traceback.print_exc()
