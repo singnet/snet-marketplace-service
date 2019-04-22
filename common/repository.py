@@ -61,3 +61,14 @@ class Repository:
         except Exception as err:
             self.connection.rollback()
             print("DB Error in %s, error: %s" % (str(query), repr(err)))
+
+    def begin_transaction(self):
+        self.auto_commit = False
+
+    def commit_transaction(self):
+        self.connection.commit()
+        self.auto_commit = True
+
+    def rollback_transaction(self):
+        self.connection.rollback()
+        self.auto_commit = True
