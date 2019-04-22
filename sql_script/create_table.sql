@@ -147,7 +147,18 @@ CREATE TABLE `service_status` (
   PRIMARY KEY (`row_id`),
   UNIQUE KEY `unique_vote` (`user_address`,`org_id`,`service_id`)
 ) ;
- -- -----------------------------------------
+-- -----------------------------------------
+CREATE TABLE `user_service_feedback` (
+  `row_id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_address` varchar(256) NOT NULL,
+  `org_id` varchar(128) NOT NULL,
+  `service_id` varchar(128) NOT NULL,
+  `comment` varchar(1024) DEFAULT NULL,
+  `row_created` timestamp NULL DEFAULT NULL,
+  `row_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`row_id`)
+);
+-- -----------------------------------------
 CREATE TABLE `daemon_token` (
   `row_id` int(11) NOT NULL AUTO_INCREMENT,
   `daemon_id` varchar(256) NOT NULL,
