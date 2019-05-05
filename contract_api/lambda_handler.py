@@ -75,7 +75,8 @@ def request_handler(event, context):
             data = []
         elif re.match("^(/tags)[/][[a-z0-9]+$", path):
             data = {"services": obj_srch.get_all_srvc_by_tag(tag_name=event['path'].split("/")[2])}
-
+        else:
+            return get_response(500, "Invalid URL path.")
         if data is None:
             err_msg = {'status': 'failed', 'error': 'Bad Request', 'api': event['path'], 'payload' : payload_dict}
             obj_util.report_slack(1, str(err_msg))
