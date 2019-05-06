@@ -18,13 +18,10 @@ jobs:
     - run:
         name: Build and Test marketplace
         command: |
-          pwd
-          ls -ltr
           git clone https://github.com/prashantramangupta/snet-marketplace-service.git
           cd snet-marketplace-service
           mysql -h localhost -u root < ./test/unittest_db.sql
           pip3 install -r requirement.txt
-          pwd
           export PYTHONPATH=$PATH:/root/singnet/snet-marketplace-service
           cp ./test/constant.py ./common/constant.py
           cp ./test/.coveragerc ./
