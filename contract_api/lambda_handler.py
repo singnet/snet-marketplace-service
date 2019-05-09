@@ -43,7 +43,7 @@ def request_handler(event, context):
             obj_srvc = Service(obj_repo=db[net_id])
         elif path in ["/available-channels", "/expired-channels"]:
             obj_chnnl = Channel(net_id, obj_repo=db[net_id])
-        elif path[0:14] in ["/organizations"] or path[0:5] in ["/tags"]:
+        elif path[0:14] in ["/organizations"] or path[0:5] in ["/tags"] or path == "/search":
             obj_srch = Search(obj_repo=db[net_id])
 
         if "/service" == path:
@@ -65,6 +65,8 @@ def request_handler(event, context):
                                               payload_dict['org_id'])
         elif "/expired-channels" == path:
             data = obj_chnnl.get_expired_channel_info(payload_dict['user_address'])
+        elif "/search" == path:
+            data = obj_srch.get_srch_rslt(payload_dict)
         elif "/organizations" == path:
             data = {"organizations": obj_srch.get_all_org()}
         elif re.match("^(/organizations)[/][[a-z0-9]+$", path):
