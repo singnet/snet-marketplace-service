@@ -2,13 +2,14 @@ import json
 import re
 import traceback
 
+from schema import Schema, And
+
 from common.constant import NETWORKS
 from common.repository import Repository
 from common.utils import Utils
 from contract_api.channel import Channel
 from contract_api.search import Search
 from contract_api.service import Service
-from schema import Schema, And
 
 NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys())
 obj_util = Utils()
@@ -50,14 +51,10 @@ def request_handler(event, context):
             data = obj_srvc.get_curated_services()
         elif "/channels" == path:
             data = get_profile_details(user_address=payload_dict['user_address'], obj_srvc=obj_srvc)
-        elif "/fetch-vote" == path:
-            data = get_user_vote(payload_dict['user_address'], obj_srvc=obj_srvc)
         elif "/feedback" == path and event['httpMethod'] == 'GET':
             data = get_user_feedback(payload_dict['user_address'], obj_srvc=obj_srvc)
         elif "/feedback" == path and event['httpMethod'] == 'POST':
             data = set_user_feedback(payload_dict['feedback'], obj_srvc=obj_srvc, net_id=net_id)
-        elif "/user-vote" == path:
-            data = set_user_vote(payload_dict['vote'], obj_srvc=obj_srvc, net_id=net_id)
         elif "/group-info" == path:
             data = obj_srvc.get_group_info()
         elif "/available-channels" == path:
@@ -104,34 +101,11 @@ def get_profile_details(user_address, obj_srvc):
     return obj_srvc.get_profile_details(user_address)
 
 
-def get_user_vote(user_address, obj_srvc):
-    if check_for_blank(user_address):
-        return []
-    return obj_srvc.get_user_vote(user_address)
-
 def get_user_feedback(user_address, obj_srvc):
     if check_for_blank(user_address):
         return []
     return obj_srvc.get_usr_feedbk(user_address)
 
-def set_user_vote(vote_info, obj_srvc, net_id):
-    voted = False
-    schema = Schema([{'user_address': And(str),
-                      'org_id': And(str),
-                      'service_id': And(str),
-                      'up_vote': bool,
-                      'down_vote': bool,
-                      'signature': And(str)
-                      }])
-    try:
-        vote_info = schema.validate([vote_info])
-        voted = obj_srvc.set_user_vote(vote_info[0], net_id=net_id)
-    except Exception as err:
-        print("Invalid Input ", err)
-        return None
-    if voted:
-        return []
-    return None
 
 def set_user_feedback(feedbk_info, obj_srvc, net_id):
     feedbk_recorded = False

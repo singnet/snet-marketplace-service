@@ -1,10 +1,12 @@
 import datetime
 
 import web3
-from common.repository import NETWORKS
-from common.utils import Utils
 from eth_account.messages import defunct_hash_message
 from pymysql import MySQLError
+
+from common.repository import NETWORKS
+from common.utils import Utils
+
 
 class Service:
     def __init__(self, obj_repo):
@@ -110,52 +112,6 @@ class Service:
         return {'up_vote': (vote == 1),
                 'down_vote': (vote == 0)}
 
-    def fetch_user_vote(self, user_address):
-        user_vote_dict = {}
-        try:
-            votes = self.repo.execute(
-                "SELECT * FROM user_service_vote WHERE user_address = %s", (user_address))
-            self.obj_utils.clean(votes)
-            for rec in votes:
-                org_id = rec['org_id']
-                service_id = rec['service_id']
-                comment = rec.get('comment', None)
-                if org_id not in user_vote_dict.keys():
-                    user_vote_dict[org_id] = {}
-                user_vote_dict[org_id][service_id] = {'user_address': rec['user_address'],
-                                                      'org_id': rec['org_id'],
-                                                      'service_id': service_id,
-                                                      'comment': comment}
-                user_vote_dict[org_id][service_id].update(self.vote_mapping(rec['vote']))
-
-        except Exception as e:
-            print(repr(e))
-            raise e
-        return user_vote_dict
-
-    def get_user_vote(self, user_address):
-        vote_list = []
-        try:
-            count_details = self.fetch_total_count()
-            votes = self.fetch_user_vote(user_address)
-            for org_id in count_details.keys():
-                srvcs_data = count_details[org_id]
-                for service_id in srvcs_data.keys():
-                    rec = {
-                        'org_id': org_id,
-                        'service_id': service_id,
-                        'up_vote_count': srvcs_data.get(service_id).get(1, 0),
-                        'down_vote_count': srvcs_data.get(service_id).get(0, 0),
-                        "up_vote": votes.get(org_id, {}).get(service_id, {}).get('up_vote', False),
-                        "down_vote": votes.get(org_id, {}).get(service_id, {}).get('down_vote', False)
-                    }
-                    vote_list.append(rec)
-        except Exception as e:
-            print(repr(e))
-            raise e
-        return vote_list
-
-
     def fetch_user_feedbk(self, user_address):
         user_vote_dict = {}
         try:
@@ -210,43 +166,6 @@ class Service:
             print(repr(e))
             raise e
         return vote_list
-
-    def is_valid_vote(self, net_id, vote_info_dict):
-        try:
-            provider = web3.HTTPProvider(NETWORKS[net_id]['http_provider'])
-            w3 = web3.Web3(provider)
-
-            message_text = str(vote_info_dict['user_address']) + str(vote_info_dict['org_id']) + \
-                           str(vote_info_dict['up_vote']).lower() + str(vote_info_dict['service_id']) + \
-                           str(vote_info_dict['down_vote']).lower()
-            message = w3.sha3(text=message_text)
-            message_hash = defunct_hash_message(primitive=message)
-            recovered = str(w3.eth.account.recoverHash(message_hash, signature=vote_info_dict['signature']))
-            return str(vote_info_dict['user_address']).lower() == recovered.lower()
-        except Exception as e:
-            print(repr(e))
-            raise e
-
-        return False
-
-    def set_user_vote(self, vote_info_dict, net_id):
-        try:
-            vote = -1
-            if vote_info_dict['up_vote']:
-                vote = 1
-            elif vote_info_dict['down_vote']:
-                vote = 0
-            if self.is_valid_vote(net_id=net_id, vote_info_dict=vote_info_dict):
-                query = "Insert into user_service_vote (user_address, org_id, service_id, vote, row_created) VALUES (%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE VOTE = %s"
-                q_params = [vote_info_dict['user_address'], vote_info_dict['org_id'], vote_info_dict['service_id'],
-                            vote, datetime.datetime.utcnow(), vote]
-                res = self.repo.execute(query, q_params)
-            else:
-                raise Exception("Signature of the vote is not valid.")
-        except Exception as e:
-            print(repr(e))
-            raise e
-        return True
 
     def is_valid_feedbk(self, net_id, usr_addr, msg_txt, sign):
         try:
