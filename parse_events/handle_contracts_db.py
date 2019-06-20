@@ -1,4 +1,5 @@
 import base64
+import json
 from datetime import datetime as dt
 
 from common.constant import EVNTS_LIMIT
@@ -116,25 +117,23 @@ class HandleContractsDB:
         return qry_res[len(qry_res) - 1]
 
     def _create_or_updt_srvc_mdata(self, srvc_rw_id, org_id, service_id, ipfs_data, conn):
-        upsrt_srvc_mdata = "INSERT INTO service_metadata (service_row_id, org_id, service_id, price_model, " \
-                           "price_in_cogs, display_name, model_ipfs_hash, description, url, json, encoding, type, " \
+        upsrt_srvc_mdata = "INSERT INTO service_metadata (service_row_id, org_id, service_id, " \
+                           "pricing, display_name, model_ipfs_hash, description, url, json, encoding, type, " \
                            "mpe_address, payment_expiration_threshold, row_updated, row_created) " \
-                           "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) " \
-                           "ON DUPLICATE KEY UPDATE service_row_id = %s, price_model  = %s, price_in_cogs = %s, " \
+                           "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) " \
+                           "ON DUPLICATE KEY UPDATE service_row_id = %s, pricing = %s, " \
                            "display_name = %s, model_ipfs_hash = %s, description = %s, url = %s, json = %s, " \
                            "encoding = %s, type = %s, mpe_address = %s, payment_expiration_threshold = %s, row_updated = %s "
-        price = ipfs_data['pricing']
-        price_model = price.get('price_model', '')
-        price_in_cogs = price.get('price_in_cogs', '')
+        pricing = json.dumps(ipfs_data['pricing'])
         pm_exp_th = ipfs_data.get('payment_expiration_threshold')
         srvc_desc = ipfs_data.get('service_description', {})
         desc = srvc_desc.get('description', '')
         url = srvc_desc.get('url', '')
         json_str = ipfs_data.get('json', '')
-        upsrt_srvc_mdata_params = [srvc_rw_id, org_id, service_id, price_model, price_in_cogs, ipfs_data['display_name'],
+        upsrt_srvc_mdata_params = [srvc_rw_id, org_id, service_id, pricing, ipfs_data['display_name'],
                                    ipfs_data['model_ipfs_hash'], desc, url, json_str, ipfs_data['encoding'],
                                    ipfs_data['service_type'], ipfs_data['mpe_address'], pm_exp_th, dt.utcnow(), dt.utcnow(),
-                                   srvc_rw_id, price_model, price_in_cogs, ipfs_data['display_name'],
+                                   srvc_rw_id, pricing, ipfs_data['display_name'],
                                    ipfs_data['model_ipfs_hash'],desc, url, json_str, ipfs_data['encoding'],
                                    ipfs_data['service_type'], ipfs_data['mpe_address'], pm_exp_th, dt.utcnow()]
 
