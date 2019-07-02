@@ -177,4 +177,35 @@ CREATE TABLE `service_status` (
 ) ;
 INSERT INTO `service_status` (`row_id`,`service_row_id`,`org_id`,`service_id`,`group_id`,`endpoint`,`is_available`,`last_check_timestamp`,`row_created`,`row_updated`) VALUES (28,149,'test-snet','tests','7nnoltEWnwv9w1qRE/Vym/rWiCXqeRQC7s8p0SlkjgQ=','localhost:8080',1,'2019-01-17 06:25:19','2019-01-17 06:25:19','2019-01-17 11:55:19');
 -- -----------------------------------------
+CREATE TABLE `user` (
+  `row_id` int(11) NOT NULL AUTO_INCREMENT,
+  `username` varchar(128) NOT NULL,
+  `account_id` varchar(128) NOT NULL,
+  `name` varchar(128) NOT NULL,
+  `email` varchar(128) NOT NULL,
+  `email_verified` bit(1) DEFAULT b''0'',
+  `status` bit(1) DEFAULT b''0'',
+  `request_id` varchar(128) NOT NULL,
+  `request_time_epoch` varchar(128) NOT NULL,
+  `row_created` timestamp NULL DEFAULT NULL,
+  `row_updated` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`row_id`),
+  UNIQUE KEY `uq_usr` (`username`),
+  UNIQUE KEY `uq_usr_email` (`email`)
+);
+-- -----------------------------------------
+CREATE TABLE `wallet` (
+  `row_id` int(11) NOT NULL AUTO_INCREMENT,
+  `username` varchar(128) DEFAULT NULL,
+  `address` varchar(128) NOT NULL,
+  `private_key` varchar(128) NOT NULL,
+  `row_created` timestamp NULL DEFAULT NULL,
+  `row_updated` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`row_id`),
+  UNIQUE KEY `uq_w_addr` (`address`),
+  UNIQUE KEY `uq_w_usr` (`username`)
+);
+INSERT INTO `wallet` (`address`, `private_key`) VALUES( '5B1783A683127A8F4351C0B4E4ECAEF761E220D1A5482F64515828080F6BB25E', 'XpvbmF3cy5jb21cL3VzLWVhc3QtMV82NU1IZWRZSGoiLCJuYW1lIjoiVml2ZWsyMDU');
+INSERT INTO `wallet` (`address`, `private_key`) VALUES( 'Q9oL7k8D8Lc0LqRe28mC1yacFYp8bn4U1-1Nt5D2L3nYcsLCYAd43nSIYhc_Al9Z', 'sppkvHXqkL-KEx7qtRqw6FskXBJ3LWjD8GNZueKw1OERGRXcv8SG5PopG3xoAAOvwQ');
+-- ----------------------------------------
 QUIT
