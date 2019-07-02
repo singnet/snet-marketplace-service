@@ -20,7 +20,7 @@ def request_handler(event, context):
         path = event['path'].lower()
         stage = event['requestContext']['stage']
         net_id = NETWORKS_NAME[stage]
-        obj_factory = Client()
+        obj_cli = Client(dapp_user_address=payload_dict['dapp_user_address'])
 
         if event['httpMethod'] == 'POST':
             body = event['body']
@@ -32,7 +32,7 @@ def request_handler(event, context):
             return get_response(400, "Bad Request")
 
         if "/call-service" == path:
-            resp_dta = obj_factory.call_service(payload_dict['org_id'], payload_dict['service_id'],
+            resp_dta = obj_cli.call_service(payload_dict['org_id'], payload_dict['service_id'],
                                                 payload_dict['user_address'], payload_dict['input'],
                                                 payload_dict['method'])
         else:
