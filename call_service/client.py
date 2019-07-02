@@ -4,6 +4,7 @@ from snet_sdk import SnetSDK
 
 from config.config import config
 from stub import *
+from proxy_channel_management_strategies.default import ProxyChannelManagementStrategy
 
 
 class Client:
