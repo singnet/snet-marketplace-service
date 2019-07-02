@@ -30,6 +30,9 @@ def request_handler(event, context):
             return get_response(400, "Bad Request")
         if "/signup" == path:
             resp_dta = usr_obj.user_signup(event['requestContext'])
+        elif "/wallet" == path:
+            status = usr_obj.check_for_existing_address(payload_dict['username'])
+            resp_dta = {"isAssigned": status, "username": payload_dict['username']}
         elif re.match("(\/delete-user\/)[^\/]*$", path):
             username = path.split("/")[2]
             resp_dta = usr_obj.del_user_data(username=username)

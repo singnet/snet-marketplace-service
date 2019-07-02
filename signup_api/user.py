@@ -29,7 +29,7 @@ class User:
             print(repr(e))
             raise e
 
-    def wallet_exist(self, username):
+    def check_for_existing_address(self, username):
         """ Method to check for existing wallet address. """
         try:
             srch_dta = self.repo.execute("SELECT * FROM wallet WHERE username = %s", username)
@@ -57,7 +57,7 @@ class User:
             username = usr_dta['authorizer']['claims']['cognito:username']
             set_usr_dta = self.set_user_info(usr_dta)
             if set_usr_dta:
-                address_exist = self.wallet_exist(username=username)
+                address_exist = self.check_for_existing_address(username=username)
                 if address_exist:
                     raise Exception('Useraname is already linked to wallet.')
                 else:
