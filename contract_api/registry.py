@@ -70,6 +70,9 @@ class Registry:
             raise err
 
     def _get_total_count(self, sub_qry):
+        """
+            This methods calculates the service count based on given search condition.
+        """
         try:
             count_qry = "SELECT * FROM service A, (SELECT DISTINCT M.org_id, M.service_id FROM service_metadata M " \
                         "LEFT JOIN service_tags T ON M.service_row_id = T.service_row_id WHERE (" \

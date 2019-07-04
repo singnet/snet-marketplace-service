@@ -15,8 +15,7 @@ class Client:
         self.sdk = SnetSDK(config)
 
     def call_service(self, user_address, org_id, service_id, service_name, method, input):
-        """ Method to invoke AI service for given org_id, service_id and user_address.
-            Using python-sdk to call the
+        """ Method to invoke AI service using python-sdk.
         """
         try:
             pb2 = self.mapping[org_id][service_id]['pb2']
