@@ -33,7 +33,8 @@ def request_handler(event, context):
         else:
             return get_response(400, "Bad Request")
 
-        if path in ["/service", "/feedback"] or path[0:4] == "/org" or path[0:5] == "/user":
+        prefix_path = path.split("/")[1]
+        if prefix_path in ["service", "feedback", "org", "user"]:
             obj_reg = Registry(obj_repo=db[net_id])
 
         if "/org" == path:
