@@ -66,6 +66,7 @@ class User:
                 if updt_resp[0] == 1:
                     self.repo.commit_transaction()
                     result = self.repo.execute("SELECT * FROM wallet WHERE username = %s", username)
+                    self.repo.execute("UPDATE wallet SET private_key = NULL WHERE username = %s", [username])
                     return {"success": "success", "data": result}
                 return None
             else:
@@ -83,7 +84,7 @@ class User:
         try:
             self.repo.begin_transaction()
             del_user = self.repo.execute("DELETE FROM user WHERE username = %s ", [username])
-            del_wallet = self.repo.execute("DELETE FROM wallet WHERE username = %s ", [username])
+            updt_wallet = self.repo.execute("UPDATE wallet SET status=0, username=NULL WHERE username = %s ", [username])
             self.repo.commit_transaction()
             return []
         except Exception as e:
