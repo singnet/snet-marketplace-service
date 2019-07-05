@@ -6,7 +6,8 @@ from common.constant import NETWORKS
 from common.repository import Repository
 from client import Client
 
-NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys())
+NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId)
+                     for netId in NETWORKS.keys())
 db = dict((netId, Repository(net_id=netId)) for netId in NETWORKS.keys())
 
 
@@ -33,17 +34,20 @@ def request_handler(event, context):
 
         if "/call-service" == path:
             resp_dta = obj_cli.call_service(payload_dict['org_id'], payload_dict['service_id'],
-                                                payload_dict['user_address'], payload_dict['input'],
-                                                payload_dict['method'])
+                                            payload_dict['user_address'], payload_dict['input'],
+                                            payload_dict['method'])
         else:
             return get_response(400, "Invalid URL path.")
         if resp_dta is None:
-            err_msg = {'status': 'failed', 'error': 'Bad Request', 'api': event['path'], 'payload': payload_dict}
+            err_msg = {'status': 'failed', 'error': 'Bad Request',
+                       'api': event['path'], 'payload': payload_dict}
             response = get_response(500, err_msg)
         else:
-            response = get_response(200, {"status": "success", "data": resp_dta})
+            response = get_response(
+                200, {"status": "success", "data": resp_dta})
     except Exception as e:
-        err_msg = {"status": "failed", "error": repr(e), 'api': event['path'], 'payload': payload_dict}
+        err_msg = {"status": "failed", "error": repr(
+            e), 'api': event['path'], 'payload': payload_dict}
         response = get_response(500, err_msg)
         traceback.print_exc()
     return response

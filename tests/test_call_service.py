@@ -20,14 +20,16 @@ class TestSignUPAPI(unittest.TestCase):
     @patch('common.utils.Utils.report_slack')
     def test_request_handler(self, mock_get):
         # event dict is {}
-        response = lambda_handler.request_handler(event=self.event, context=None)
+        response = lambda_handler.request_handler(
+            event=self.event, context=None)
         assert (response["statusCode"] == 400)
         assert (response["body"] == '"Bad Request"')
 
         # event dict has invalid path
         test_event = {"path": "/dummy", "httpMethod": "GET"}
         test_event.update(self.event)
-        response = lambda_handler.request_handler(event=test_event, context=None)
+        response = lambda_handler.request_handler(
+            event=test_event, context=None)
         assert (response["statusCode"] == 400)
         assert (response["body"] == '"Invalid URL path."')
 
@@ -36,7 +38,8 @@ class TestSignUPAPI(unittest.TestCase):
         self.call_service.update(self.event)
         self.call_service['body'] = json.dumps(self.call_service['body'])
         mock_get.return_value = {'status': 'StatusCode.OK'}
-        response = lambda_handler.request_handler(event=self.call_service, context=None)
+        response = lambda_handler.request_handler(
+            event=self.call_service, context=None)
         assert(response["statusCode"] == 200)
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")

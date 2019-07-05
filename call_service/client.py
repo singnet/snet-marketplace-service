@@ -8,6 +8,7 @@ from proxy_channel_management_strategies.default import ProxyChannelManagementSt
 from google.protobuf import json_format
 from grpc_service_stub import mapping
 
+
 class Client:
     def __init__(self, dapp_user_address):
         self.mapping = mapping
@@ -25,19 +26,20 @@ class Client:
                 output_type = None
                 stub = service_name + "Stub"
                 for rec in getattr(pb2, "_"+service_name.upper()).methods:
-                    if rec.name==method:
+                    if rec.name == method:
                         input_type = rec.input_type.name
                         output_type = rec.output_type.fields
                 service_client = self.sdk.create_service_client(
                     org_id, service_id, getattr(pb2_grpc, stub), payment_channel_management_strategy=ProxyChannelManagementStrategy)
 
-
-                messageObj = json_format.Parse(input, getattr(pb2, input_type)())
+                messageObj = json_format.Parse(
+                    input, getattr(pb2, input_type)())
                 obj = service_client.service
                 result = getattr(obj, method)(messageObj)
                 return json_format.MessageToJson(result)
             else:
-                raise Exception("Service %s is not supported under organization %s and service_id %s", service_name, org_id, service_id)
+                raise Exception(
+                    "Service %s is not supported under organization %s and service_id %s", service_name, org_id, service_id)
         except Exception as e:
             print(repr(e))
             raise e

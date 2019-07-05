@@ -17,7 +17,8 @@ class ProxyChannelManagementStrategy:
 
     def load_open_channels(self, service_client):
 
-        account = ProxyAccount(self.dapp_user_address, self.signer_address, self.signer_private_key);
+        account = ProxyAccount(self.dapp_user_address,
+                               self.signer_address, self.signer_private_key)
         payment_channels = self.sdk_context.mpe_contract.get_past_open_channels(account, service_client,
                                                                                 self.starting_block_no)
         return payment_channels
@@ -31,4 +32,5 @@ class ProxyChannelManagementStrategy:
         if payment_channel is not None:
             payment_channel.sync_state()
             return payment_channel
-        raise Exception("Unable to find Channel for given address %s.", self.dapp_user_address)
+        raise Exception(
+            "Unable to find Channel for given address %s.", self.dapp_user_address)

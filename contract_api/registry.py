@@ -22,7 +22,8 @@ class Registry:
                 if rec['org_id'] not in all_orgs_srvcs.keys():
                     all_orgs_srvcs[rec['org_id']] = {'service_id': [],
                                                      'owner_address': rec['owner_address']}
-                all_orgs_srvcs[rec['org_id']]['service_id'].append(rec['service_id'])
+                all_orgs_srvcs[rec['org_id']]['service_id'].append(
+                    rec['service_id'])
             return all_orgs_srvcs
         except Exception as e:
             print(repr(e))
@@ -30,7 +31,8 @@ class Registry:
 
     def _get_all_members(self):
         try:
-            all_orgs_members_raw = self.repo.execute("SELECT org_id, member FROM members M")
+            all_orgs_members_raw = self.repo.execute(
+                "SELECT org_id, member FROM members M")
             all_orgs_members = defaultdict(list)
             for rec in all_orgs_members_raw:
                 all_orgs_members[rec['org_id']].append(rec['member'])
@@ -77,7 +79,7 @@ class Registry:
             count_qry = "SELECT * FROM service A, (SELECT DISTINCT M.org_id, M.service_id FROM service_metadata M " \
                         "LEFT JOIN service_tags T ON M.service_row_id = T.service_row_id WHERE (" \
                         + sub_qry.replace('%', '%%') + ")) B WHERE A.service_id = B.service_id AND A.org_id = B.org_id " \
-                                                       "AND A.is_curated=1 ";
+                                                       "AND A.is_curated=1 "
             print(count_qry)
             res = self.repo.execute(count_qry)
             return len(res)
@@ -91,7 +93,8 @@ class Registry:
                        + sub_qry.replace('%', '%%') + " GROUP BY M.org_id, M.service_id ORDER BY %s %s ) B WHERE " \
                                                       "A.service_id = B.service_id AND A.org_id=B.org_id AND A.is_curated= 1 LIMIT %s , %s"
             print(srch_qry)
-            qry_dta = self.repo.execute(srch_qry, [sort_by, order_by, int(offset), int(limit)])
+            qry_dta = self.repo.execute(
+                srch_qry, [sort_by, order_by, int(offset), int(limit)])
             org_srvc_tuple = ()
             rslt = {}
             for rec in qry_dta:
@@ -106,7 +109,8 @@ class Registry:
                                            'tags': tags
                                            }
 
-            qry_part = " AND (S.org_id, S.service_id) IN " + str(org_srvc_tuple).replace(',)', ')')
+            qry_part = " AND (S.org_id, S.service_id) IN " + \
+                str(org_srvc_tuple).replace(',)', ')')
             services = self.repo.execute("SELECT M.* FROM service_metadata M, service S WHERE "
                                          "S.row_id = M.service_row_id " + qry_part)
             obj_utils = Utils()
@@ -122,14 +126,14 @@ class Registry:
                 is_available = 0
                 if rslt[org_id]["tags"]is not None:
                     tags = rslt[org_id]["tags"].split(",")
-                if (org_id,service_id) in available_srvc:
+                if (org_id, service_id) in available_srvc:
                     is_available = 1
-                rec.update({"up_votes_count": votes_count.get(org_id, {}).get(service_id, {}).get(1, 0)})
+                rec.update({"up_votes_count": votes_count.get(
+                    org_id, {}).get(service_id, {}).get(1, 0)})
                 rec.update(
                     {"down_votes_count": votes_count.get(org_id, {}).get(service_id, {}).get(0, 0)})
                 rec.update({"tags": tags})
                 rec.update({"is_available": is_available})
-
 
             return services
         except Exception as err:
@@ -143,12 +147,14 @@ class Registry:
 
     def get_all_srvcs(self, qry_param):
         try:
-            fields_mapping = {"dn": "display_name", "tg": "tag_name", "org": "org_id"}
+            fields_mapping = {"dn": "display_name",
+                              "tg": "tag_name", "org": "org_id"}
             s = qry_param.get('s', 'all')
             q = qry_param.get('q', '')
             offset = qry_param.get('offset', 0)
             limit = qry_param.get('limit', 15)
-            sort_by = fields_mapping.get(qry_param.get('sort_by', None), "display_name")
+            sort_by = fields_mapping.get(
+                qry_param.get('sort_by', None), "display_name")
             order_by = qry_param.get('order_by', 'asc')
             sub_qry = self._prepare_subquery(s=s, q=q, fm=fields_mapping)
             print(sub_qry)
@@ -179,7 +185,7 @@ class Registry:
                                          }
                               }
                     groups[group_id]['endpoints'].append({"endpoint": rec['endpoint'], "is_available":
-                        rec['is_available'], "last_check_timestamp": rec["last_check_timestamp"]})
+                                                          rec['is_available'], "last_check_timestamp": rec["last_check_timestamp"]})
             return list(groups.values())
         except Exception as e:
             print(repr(e))
@@ -230,7 +236,8 @@ class Registry:
                                                       'org_id': rec['org_id'],
                                                       'service_id': service_id
                                                       }
-                user_vote_dict[org_id][service_id].update(self.vote_mapping(rec['vote']))
+                user_vote_dict[org_id][service_id].update(
+                    self.vote_mapping(rec['vote']))
             for rec in feedbk:
                 org_id = rec['org_id']
                 service_id = rec['service_id']
@@ -270,7 +277,8 @@ class Registry:
             w3 = web3.Web3(provider)
             message = w3.sha3(text=msg_txt)
             message_hash = defunct_hash_message(primitive=message)
-            recovered = str(w3.eth.account.recoverHash(message_hash, signature=sign))
+            recovered = str(w3.eth.account.recoverHash(
+                message_hash, signature=sign))
             return str(usr_addr).lower() == recovered.lower()
         except Exception as e:
             print(repr(e))
@@ -290,19 +298,21 @@ class Registry:
             srvc_id = feedbk_info['service_id']
             comment = feedbk_info['comment']
             msg_txt = str(usr_addr) + str(org_id) + str(feedbk_info['up_vote']).lower() + str(srvc_id) + \
-                      str(feedbk_info['down_vote']).lower() + str(comment).lower()
+                str(feedbk_info['down_vote']).lower() + str(comment).lower()
             if self.is_valid_feedbk(net_id=net_id, usr_addr=usr_addr, msg_txt=msg_txt, sign=feedbk_info['signature']):
                 self.repo.begin_transaction()
                 insrt_vote = "INSERT INTO user_service_vote (user_address, org_id, service_id, vote, row_updated, row_created) " \
                              "VALUES (%s, %s, %s, %s, %s, %s) " \
                              "ON DUPLICATE KEY UPDATE vote = %s, row_updated = %s"
-                insrt_vote_params = [usr_addr, org_id, srvc_id, vote, curr_dt, curr_dt, vote, curr_dt]
+                insrt_vote_params = [usr_addr, org_id, srvc_id,
+                                     vote, curr_dt, curr_dt, vote, curr_dt]
                 self.repo.execute(insrt_vote, insrt_vote_params)
 
                 insrt_feedbk = "INSERT INTO user_service_feedback (user_address, org_id, service_id, comment, " \
                                "row_updated, row_created)" \
                                "VALUES (%s, %s, %s, %s, %s, %s) "
-                insrt_feedbk_params = [usr_addr, org_id, srvc_id, comment, curr_dt, curr_dt]
+                insrt_feedbk_params = [usr_addr, org_id,
+                                       srvc_id, comment, curr_dt, curr_dt]
                 self.repo.execute(insrt_feedbk, insrt_feedbk_params)
                 self.repo.commit_transaction()
             else:
