@@ -1,16 +1,29 @@
 import base64
 import json
+import logging
 from datetime import datetime as dt
 
-from common.constant import EVNTS_LIMIT
+import log_setup
+
+from common.constant import EVNTS_LIMIT, IPFS_URL, ASSETS_BUCKET_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY
+from common.ipfs_util import IPFSUtil
 from common.repository import Repository
+from common.s3_util import S3Util
+
 from common.utils import Utils
+from repository.service_metadata_repository import ServiceMetadataRepository
+
+logger=logging.getLogger()
+log_setup.configure_log(logger)
+
 
 class HandleContractsDB:
     def __init__(self, err_obj, net_id):
         self.err_obj = err_obj
         self.repo = Repository(net_id)
         self.util_obj = Utils()
+        self.ipfs_utll=IPFSUtil(IPFS_URL['url'],IPFS_URL['port'])
+        self.s3_util=S3Util(S3_BUCKET_ACCESS_KEY,S3_BUCKET_SECRET_KEY)
 
     # read operations
     def read_registry_events(self):
@@ -216,6 +229,80 @@ class HandleContractsDB:
             'amount': channel_data[5]
         }, conn=self.repo)
 
+
+    def _push_asset_to_s3_using_hash(self,hash,org_id,service_id):
+        io_bytes = self.ipfs_utll.read_bytesio_from_ipfs(hash)
+        filename = hash.split("/")[1]
+        new_url = self.s3_util.push_io_bytes_to_s3(org_id + "/" + service_id + "/" + filename + ASSETS_BUCKET_NAME,
+                                                   io_bytes)
+        return new_url
+
+    def _comapre_assets_and_push_to_s3(self, existing_assets_hash, new_assets_hash, existing_assets_url, org_id,
+                                       service_id):
+        """
+
+        :param existing_assets_hash: contains asset_type and its has value stored in ipfs
+        :param new_assets_hash:  contains asset type and its updated hash value in ipfs
+        :param existing_assets_url:  contains asset type and s3_url value for given asset_type
+        :param org_id:
+        :param service_id:
+        :return: dict of asset_type and new_s3_url
+        """
+        # this function compare assets and deletes and update the new assets
+
+        assets_url_mapping = {}
+
+        for new_asset_type, new_asset_hash in new_assets_hash.items():
+
+            if isinstance(new_asset_hash, list):
+                # if this asset_type contains list of assets than remove all existing assetes from s3 and add all new assets to s3
+                #
+                new_urls_list = []
+
+                # remove all existing assets if exits
+                if new_asset_type in existing_assets_url:
+                    for url in existing_assets_url[new_asset_type]:
+                        self.s3_util.delete_file_from_s3(url)
+
+                # add new files to s3 and update the url
+                for hash in new_assets_hash[new_asset_type]:
+                    new_urls_list.append(self._push_asset_to_s3_using_hash(hash,org_id,service_id))
+
+                assets_url_mapping[new_asset_type] = new_urls_list
+
+            elif isinstance(new_asset_hash, str):
+                # if this asset_type has single value
+                if existing_assets_hash[new_asset_type] == new_assets_hash:
+                    # file is not updated
+                    pass
+                else:
+                    url_of_file_to_be_removed = existing_assets_url[new_asset_type]
+                    hash_of_file_to_be_pushed_to_s3 = new_assets_hash[new_asset_type]
+
+                    self.s3_util.delete_file_from_s3(url_of_file_to_be_removed)
+                    assets_url_mapping[new_asset_type] = self._push_asset_to_s3_using_hash(hash_of_file_to_be_pushed_to_s3,org_id,service_id)
+
+            else:
+                logger.info("unknown type assets for org_id %s  service_id %s", org_id, service_id)
+
+
+
+        return assets_url_mapping
+
+
+
+    def _process_assets(self, org_id, service_id, new_ipfs_data):
+        new_assets_hash = new_ipfs_data.get('assets', {})
+        service_metadata_repo=ServiceMetadataRepository()
+        existing_assets = service_metadata_repo.get_service_metatdata_by_servcie_id_and_org_id(service_id, org_id)
+        existing_assets_hash = existing_assets.assets_hash
+        existing_assets_url = existing_assets.assets_url
+        assets_url_mapping=self._comapre_assets_and_push_to_s3(existing_assets_hash, new_assets_hash, existing_assets_url, org_id,
+                                            service_id)
+        service_metadata_repo.update_assets_url(service_id,org_id,assets_url_mapping)
+
+
+
     def process_srvc_data(self, org_id, service_id, ipfs_hash, ipfs_data, tags_data):
         self.repo.auto_commit = False
         conn = self.repo
@@ -260,6 +347,9 @@ class HandleContractsDB:
                     self._create_tags(srvc_rw_id=service_row_id, org_id=org_id, service_id=service_id, tag_name=tag,
                                       conn=conn)
             self._commit(conn=conn)
+
+            self._process_assets(org_id,service_id,ipfs_data)
+
         except Exception as e:
             self.util_obj.report_slack(type=1, slack_msg=repr(e))
             self._rollback(conn=conn, err=repr(e))
