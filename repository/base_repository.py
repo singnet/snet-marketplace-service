@@ -1,7 +1,10 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-engine = create_engine('mysql+pymysql://root:test@localhost/marketplace', echo=True)
+from common.constant import NETWORKS, NET_ID
+
+net_id=NET_ID
+engine = create_engine('mysql+pymysql://'+NETWORKS[net_id]['db']['DB_USER']+':'+NETWORKS[net_id]['db']['DB_PASSWORD']+'@'+NETWORKS[net_id]['db']['DB_HOST']+'/'+NETWORKS[net_id]['db']['DB_NAME'], echo=True)
 
 Session = sessionmaker(bind=engine)
 default_session = Session()
