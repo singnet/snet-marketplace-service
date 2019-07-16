@@ -52,9 +52,11 @@ class S3Util(object):
             print(bucket.name)
 
     def push_io_bytes_to_s3(self,key,bucket_name,io_bytes):
+        s3_url='https://{}.s3.amazonaws.com/{}'.format(bucket_name,key)
         s3_resource=self.get_s3_resource_from_key()
         object = s3_resource.Object(bucket_name, key)
-        object.upload_fileobj(io_bytes)
+        result =object.upload_fileobj(io_bytes)
+        return s3_url
 
 
 
@@ -66,7 +68,8 @@ class S3Util(object):
     def delete_file_from_s3(self,url):
         s3_resource = self.get_s3_resource_from_key()
         bucket,key=self.get_bucket_and_key_from_url(url)
-        s3_resource.Object(bucket, key).delete()
+        result=s3_resource.Object(bucket, key).delete()
+        return result
 
 
 if __name__ == '__main__':

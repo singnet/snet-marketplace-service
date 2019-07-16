@@ -129,26 +129,28 @@ class HandleContractsDB:
         print('_create_or_updt_srvc::row upserted', qry_res)
         return qry_res[len(qry_res) - 1]
 
-    def _create_or_updt_srvc_mdata(self, srvc_rw_id, org_id, service_id, ipfs_data, conn):
+    def _create_or_updt_srvc_mdata(self, srvc_rw_id, org_id, service_id, ipfs_data,assets_url,conn):
         upsrt_srvc_mdata = "INSERT INTO service_metadata (service_row_id, org_id, service_id, " \
                            "pricing, display_name, model_ipfs_hash, description, url, json, encoding, type, " \
-                           "mpe_address, payment_expiration_threshold, row_updated, row_created) " \
-                           "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) " \
+                           "mpe_address, payment_expiration_threshold, assets_hash , assets_url, row_updated, row_created) " \
+                           "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s ,%s ,%s ) " \
                            "ON DUPLICATE KEY UPDATE service_row_id = %s, pricing = %s, " \
                            "display_name = %s, model_ipfs_hash = %s, description = %s, url = %s, json = %s, " \
-                           "encoding = %s, type = %s, mpe_address = %s, payment_expiration_threshold = %s, row_updated = %s "
+                           "encoding = %s, type = %s, mpe_address = %s, payment_expiration_threshold = %s, row_updated = %s ,assets_hash = %s ,assets_url = %s"
         pricing = json.dumps(ipfs_data['pricing'])
         pm_exp_th = ipfs_data.get('payment_expiration_threshold')
         srvc_desc = ipfs_data.get('service_description', {})
         desc = srvc_desc.get('description', '')
         url = srvc_desc.get('url', '')
         json_str = ipfs_data.get('json', '')
+        assets_hash = json.dumps(ipfs_data.get('assets', {}))
+        assets_url_str= json.dumps(assets_url)
         upsrt_srvc_mdata_params = [srvc_rw_id, org_id, service_id, pricing, ipfs_data['display_name'],
                                    ipfs_data['model_ipfs_hash'], desc, url, json_str, ipfs_data['encoding'],
-                                   ipfs_data['service_type'], ipfs_data['mpe_address'], pm_exp_th, dt.utcnow(), dt.utcnow(),
+                                   ipfs_data['service_type'], ipfs_data['mpe_address'], pm_exp_th, assets_hash, assets_url_str,dt.utcnow(), dt.utcnow(),
                                    srvc_rw_id, pricing, ipfs_data['display_name'],
                                    ipfs_data['model_ipfs_hash'],desc, url, json_str, ipfs_data['encoding'],
-                                   ipfs_data['service_type'], ipfs_data['mpe_address'], pm_exp_th, dt.utcnow()]
+                                   ipfs_data['service_type'], ipfs_data['mpe_address'], pm_exp_th, dt.utcnow(), assets_hash ,assets_url_str]
 
         qry_res = conn.execute(upsrt_srvc_mdata, upsrt_srvc_mdata_params)
         print('_create_or_updt_srvc_mdata::row upserted', qry_res)
@@ -233,7 +235,7 @@ class HandleContractsDB:
     def _push_asset_to_s3_using_hash(self,hash,org_id,service_id):
         io_bytes = self.ipfs_utll.read_bytesio_from_ipfs(hash)
         filename = hash.split("/")[1]
-        new_url = self.s3_util.push_io_bytes_to_s3(org_id + "/" + service_id + "/" + filename + ASSETS_BUCKET_NAME,
+        new_url = self.s3_util.push_io_bytes_to_s3(org_id + "/" + service_id + "/" + filename ,ASSETS_BUCKET_NAME,
                                                    io_bytes)
         return new_url
 
@@ -250,14 +252,7 @@ class HandleContractsDB:
         """
         # this function compare assets and deletes and update the new assets
 
-        if existing_assets_hash is None:
-            existing_assets_hash={}
 
-        if existing_assets_url is None:
-            existing_assets_url={}
-
-        if new_assets_hash is None:
-            new_assets_hash={}
 
         assets_url_mapping = {}
 
@@ -281,14 +276,17 @@ class HandleContractsDB:
 
             elif isinstance(new_asset_hash, str):
                 # if this asset_type has single value
-                if existing_assets_hash[new_asset_type] == new_assets_hash:
+                if new_asset_type in existing_assets_hash and existing_assets_hash[new_asset_type] == new_asset_hash:
                     # file is not updated
                     pass
                 else:
-                    url_of_file_to_be_removed = existing_assets_url[new_asset_type]
+                    if new_asset_type in existing_assets_url:
+                        url_of_file_to_be_removed = existing_assets_url[new_asset_type]
+                        self.s3_util.delete_file_from_s3(url_of_file_to_be_removed)
+
                     hash_of_file_to_be_pushed_to_s3 = new_assets_hash[new_asset_type]
 
-                    self.s3_util.delete_file_from_s3(url_of_file_to_be_removed)
+
                     assets_url_mapping[new_asset_type] = self._push_asset_to_s3_using_hash(hash_of_file_to_be_pushed_to_s3,org_id,service_id)
 
             else:
@@ -300,15 +298,21 @@ class HandleContractsDB:
 
 
 
-    def _process_assets(self, org_id, service_id, new_ipfs_data):
+    def _get_new_assets_url(self, org_id, service_id, new_ipfs_data):
         new_assets_hash = new_ipfs_data.get('assets', {})
+        existing_assets_hash={}
+        existing_assets_url={}
+
+
         service_metadata_repo=ServiceMetadataRepository()
-        existing_assets = service_metadata_repo.get_service_metatdata_by_servcie_id_and_org_id(service_id, org_id)
-        existing_assets_hash = existing_assets.assets_hash
-        existing_assets_url = existing_assets.assets_url
+        existing_service_metadata = service_metadata_repo.get_service_metatdata_by_servcie_id_and_org_id(service_id, org_id)
+
+        if  existing_service_metadata:
+            existing_assets_hash = existing_service_metadata.assets_hash
+            existing_assets_url = existing_service_metadata.assets_url
         assets_url_mapping=self._comapre_assets_and_push_to_s3(existing_assets_hash, new_assets_hash, existing_assets_url, org_id,
                                             service_id)
-        service_metadata_repo.update_assets_url(service_id,org_id,assets_url_mapping)
+        return assets_url_mapping
 
 
 
@@ -316,12 +320,15 @@ class HandleContractsDB:
         self.repo.auto_commit = False
         conn = self.repo
         try:
+
+            assets_url=self._get_new_assets_url(org_id, service_id, ipfs_data)
+
             self._del_srvc_dpndts(org_id=org_id, service_id=service_id, conn=conn)
             qry_data = self._create_or_updt_srvc(org_id=org_id, service_id=service_id, ipfs_hash=ipfs_hash, conn=conn)
             service_row_id = qry_data['last_row_id']
             print('service_row_id == ', service_row_id)
             self._create_or_updt_srvc_mdata(srvc_rw_id=service_row_id, org_id=org_id, service_id=service_id,
-                                            ipfs_data=ipfs_data, conn=conn)
+                                            ipfs_data=ipfs_data,assets_url=assets_url ,conn=conn)
             grps = ipfs_data.get('groups', [])
             cnt = 0
             grp_name_id_dict = {}
@@ -357,7 +364,7 @@ class HandleContractsDB:
                                       conn=conn)
             self._commit(conn=conn)
 
-            self._process_assets(org_id,service_id,ipfs_data)
+
 
         except Exception as e:
             self.util_obj.report_slack(type=1, slack_msg=repr(e))
