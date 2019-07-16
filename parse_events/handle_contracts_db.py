@@ -250,6 +250,15 @@ class HandleContractsDB:
         """
         # this function compare assets and deletes and update the new assets
 
+        if existing_assets_hash is None:
+            existing_assets_hash={}
+
+        if existing_assets_url is None:
+            existing_assets_url={}
+
+        if new_assets_hash is None:
+            new_assets_hash={}
+
         assets_url_mapping = {}
 
         for new_asset_type, new_asset_hash in new_assets_hash.items():
