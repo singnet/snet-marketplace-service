@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 
 from common.constant import NETWORKS
 
-net_id = os.environ.get('NETWORK_ID', 3)
+net_id = int(os.environ.get('NETWORK_ID', '3'))
 engine = create_engine('mysql+pymysql://'+NETWORKS[net_id]['db']['DB_USER']+':'+NETWORKS[net_id]['db']
                        ['DB_PASSWORD']+'@'+NETWORKS[net_id]['db']['DB_HOST']+'/'+NETWORKS[net_id]['db']['DB_NAME'], echo=True)
 
