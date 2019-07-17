@@ -16,7 +16,3 @@ class ServiceRepository(BaseRepository):
         return result
 
 
-
-if __name__=='__main__':
-    result=ServiceRepository().get_service_by_servcie_id_and_org_id(123,123)
-    print(789)

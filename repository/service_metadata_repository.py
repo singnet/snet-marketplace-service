@@ -24,10 +24,3 @@ class ServiceMetadataRepository(BaseRepository):
         result.assets_url=new_assets_url
 
         session.commit()
-
-
-
-
-if __name__=='__main__':
-    result=ServiceMetadataRepository().get_service_metatdata_by_servcie_id_and_org_id('abc',123)
-    print(789)

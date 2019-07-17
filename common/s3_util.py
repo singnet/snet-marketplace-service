@@ -45,8 +45,11 @@ class S3Util(object):
         return s3_resource
 
     def read_buckets(self):
-        # Use the Amazon S3 resource object that is now configured with the
-        # credentials to access your S3 buckets.
+        """
+            Use the Amazon S3 resource object that is now configured with the
+            credentials to access your S3 buckets.
+        """
+
         s3_resource = self.get_s3_resource_from_key()
         for bucket in s3_resource.buckets.all():
             print(bucket.name)
@@ -72,10 +75,3 @@ class S3Util(object):
         return result
 
 
-if __name__ == '__main__':
-    S3Util().read_buckets()
-# import boto3
-# s3 = boto3.client('s3')
-# bucket_name = "YOUR-BUCKET-NAME"
-# directory_name = "DIRECTORY/THAT/YOU/WANT/TO/CREATE" #it's name of your folders
-# s3.put_object(Bucket=bucket_name, Key=(directory_name+'/'))
