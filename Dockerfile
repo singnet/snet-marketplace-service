@@ -5,6 +5,7 @@ RUN apt-get install nodejs npm git -y
 RUN mkdir -p /opt/snet/snet-marketplace-service
 RUN mkdir -p /var/log/snet-marketplace-service
 RUN mkdir -p /var/log/snet-contract-event-consumer
+RUN mkdir -p  /var/log/marketplace
 WORKDIR /opt/snet/snet-marketplace-service
 COPY . .
 RUN pip3 install -r requirement.txt
