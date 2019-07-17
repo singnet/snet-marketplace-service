@@ -4,11 +4,12 @@ from urllib.parse import urlparse
 # create an STS client object that represents a live connection to the
 # STS service
 
+
 class S3Util(object):
 
-    def __init__(self, aws_access_key,aws_secrete_key):
+    def __init__(self, aws_access_key, aws_secrete_key):
         self.aws_access_key = aws_access_key
-        self.aws_secrete_key=aws_secrete_key
+        self.aws_secrete_key = aws_secrete_key
 
     def get_s3_resource_from_key(self):
         s3_resource = boto3.resource(
@@ -54,24 +55,20 @@ class S3Util(object):
         for bucket in s3_resource.buckets.all():
             print(bucket.name)
 
-    def push_io_bytes_to_s3(self,key,bucket_name,io_bytes):
-        s3_url='https://{}.s3.amazonaws.com/{}'.format(bucket_name,key)
-        s3_resource=self.get_s3_resource_from_key()
+    def push_io_bytes_to_s3(self, key, bucket_name, io_bytes):
+        s3_url = 'https://{}.s3.amazonaws.com/{}'.format(bucket_name, key)
+        s3_resource = self.get_s3_resource_from_key()
         object = s3_resource.Object(bucket_name, key)
-        result =object.upload_fileobj(io_bytes)
+        result = object.upload_fileobj(io_bytes)
         return s3_url
 
-
-
-    def get_bucket_and_key_from_url(self,url):
+    def get_bucket_and_key_from_url(self, url):
 
         parsed_url = urlparse(url)
-        return parsed_url.hostname.split(".")[0],parsed_url.path[1:]
+        return parsed_url.hostname.split(".")[0], parsed_url.path[1:]
 
-    def delete_file_from_s3(self,url):
+    def delete_file_from_s3(self, url):
         s3_resource = self.get_s3_resource_from_key()
-        bucket,key=self.get_bucket_and_key_from_url(url)
-        result=s3_resource.Object(bucket, key).delete()
+        bucket, key = self.get_bucket_and_key_from_url(url)
+        result = s3_resource.Object(bucket, key).delete()
         return result
-
-
