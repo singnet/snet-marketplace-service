@@ -263,6 +263,13 @@ class HandleContractsDB:
 
         assets_url_mapping = {}
 
+        if not existing_assets_hash:
+            existing_assets_hash = {}
+        if not existing_assets_url:
+            existing_assets_url = {}
+        if not new_assets_hash:
+            new_assets_hash = {}
+
         for new_asset_type, new_asset_hash in new_assets_hash.items():
 
             if isinstance(new_asset_hash, list):
