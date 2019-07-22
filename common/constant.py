@@ -8,12 +8,12 @@ NETWORKS = {
     1: {
         'name': 'mainnet',
         'ws_provider': 'wss://mainnet.infura.io/ws',
-        'db':{}
+        'db': {}
     },
     3: {
         'name': 'ropsten',
         'ws_provider': 'wss: // ropsten.infura.io / ws',
-        'db':{}
+        'db': {}
     },
     42: {
         'name': 'kovan',
@@ -27,7 +27,8 @@ NETWORKS = {
                }
     }
 }
-MPE_EVTS = ['ChannelOpen', 'ChannelClaim', 'ChannelSenderClaim', 'ChannelExtend', 'ChannelAddFunds']
+MPE_EVTS = ['ChannelOpen', 'ChannelClaim',
+            'ChannelSenderClaim', 'ChannelExtend', 'ChannelAddFunds']
 REG_EVTS = ['OrganizationCreated', 'OrganizationModified', 'OrganizationDeleted', 'ServiceCreated',
             'ServiceMetadataModified', 'ServiceTagsModified', 'ServiceDeleted']
 COMMON_CNTRCT_PATH = '../node_modules/singularitynet-platform-contracts'
@@ -36,7 +37,7 @@ MPE_CNTRCT_PATH = COMMON_CNTRCT_PATH + '/abi/MultiPartyEscrow.json'
 REG_ADDR_PATH = COMMON_CNTRCT_PATH + '/networks/Registry.json'
 MPE_ADDR_PATH = COMMON_CNTRCT_PATH + '/networks/MultiPartyEscrow.json'
 SLACK_HOOK = {
-    'hostname' : '',
+    'hostname': '',
     'port': 443,
     'path': '',
     'method': 'POST',
@@ -53,3 +54,7 @@ ERROR_MSG = {
 
 EVNTS_LIMIT = "100"
 SRVC_STATUS_GRPC_TIMEOUT = 10
+
+
+ASSETS_BUCKET_NAME = "enhanced-marketplace"
+NET_ID = ''
