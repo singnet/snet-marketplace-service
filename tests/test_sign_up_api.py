@@ -32,18 +32,18 @@ class TestSignUPAPI(unittest.TestCase):
                                 {"authorizer":
                                     {"claims":
                                      {"cognito:username": "Dummy"}
-                                    }
-                                }
+                                     }
+                                 }
                             }
 
         self.get_user_profile = {"path": "/profile",
                                  "httpMethod": "GET",
                                  "requestContext":
-                                    {"authorizer":
-                                        {"claims":
+                                 {"authorizer":
+                                  {"claims":
                                          {"cognito:username": "Dummy"}
-                                        }
-                                    }
+                                   }
+                                  }
                                  }
 
         self.update_user_profile = {"path": "/profile",
@@ -53,8 +53,8 @@ class TestSignUPAPI(unittest.TestCase):
                                         {"authorizer":
                                             {"claims":
                                              {"cognito:username": "Dummy"}
-                                            }
-                                        }
+                                             }
+                                         }
                                     }
 
     @patch('common.utils.Utils.report_slack')
@@ -94,21 +94,26 @@ class TestSignUPAPI(unittest.TestCase):
 
     def test_del_user_data(self):
         self.delete_user['requestContext'].update(self.event['requestContext'])
-        response = lambda_handler.request_handler(event=self.delete_user, context=None)
+        response = lambda_handler.request_handler(
+            event=self.delete_user, context=None)
         assert (response["statusCode"] == 200)
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
 
     def test_get_user_profile(self):
-        self.get_user_profile['requestContext'].update(self.event['requestContext'])
-        response = lambda_handler.request_handler(event=self.get_user_profile, context=None)
+        self.get_user_profile['requestContext'].update(
+            self.event['requestContext'])
+        response = lambda_handler.request_handler(
+            event=self.get_user_profile, context=None)
         assert (response["statusCode"] == 200)
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
 
     def test_update_user_profile(self):
-        self.update_user_profile['requestContext'].update(self.event['requestContext'])
-        response = lambda_handler.request_handler(event=self.update_user_profile, context=None)
+        self.update_user_profile['requestContext'].update(
+            self.event['requestContext'])
+        response = lambda_handler.request_handler(
+            event=self.update_user_profile, context=None)
         assert (response["statusCode"] == 200)
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
