@@ -14,9 +14,9 @@ class TestSignUPAPI(unittest.TestCase):
                        "requestContext":
                            {"authorizer":
                             {"claims":
-                                     {"cognito:username": "Vivek205",
+                                     {"cognito:username": "Dummy",
                                       "email_verified": True,
-                                      "name": "Vivek",
+                                      "name": "Dummy",
                                       "email": "test@abc.com"
                                       }
                              },
@@ -26,17 +26,36 @@ class TestSignUPAPI(unittest.TestCase):
                             }
                        }
 
-        self.delete_user = {"path": "/delete-user/Vivek205",
-                            "httpMethod": "GET", }
+        self.delete_user = {"path": "/delete-user",
+                            "httpMethod": "GET",
+                            "requestContext":
+                                {"authorizer":
+                                    {"claims":
+                                     {"cognito:username": "Dummy"}
+                                     }
+                                 }
+                            }
 
         self.get_user_profile = {"path": "/profile",
-                                 "queryStringParameters": {"username": "Vivek"},
-                                 "httpMethod": "GET"}
+                                 "httpMethod": "GET",
+                                 "requestContext":
+                                 {"authorizer":
+                                  {"claims":
+                                         {"cognito:username": "Dummy"}
+                                   }
+                                  }
+                                 }
 
         self.update_user_profile = {"path": "/profile",
                                     "httpMethod": "POST",
-                                    "body": '{"username": "Vivek",'
-                                            '"email_alerts": true }'}
+                                    "body": '{"email_alerts": true }',
+                                    "requestContext":
+                                        {"authorizer":
+                                            {"claims":
+                                             {"cognito:username": "Dummy"}
+                                             }
+                                         }
+                                    }
 
     @patch('common.utils.Utils.report_slack')
     def test_request_handler(self, mock_get):
@@ -55,7 +74,11 @@ class TestSignUPAPI(unittest.TestCase):
         assert (response["body"] == '"Not Found"')
 
     @patch('common.utils.Utils.report_slack')
-    def test_user_signup(self, mock_get):
+    @patch('sign_up.user.User.fetch_private_key_from_ssm')
+    def test_user_signup(self, fetch_private_key_from_ssm_mock, report_slack_mock):
+        self.test_del_user_data()
+        fetch_private_key_from_ssm_mock.return_value = "mock_address"
+        report_slack_mock.return_value = "mock_address"
         self.signup['requestContext'].update(self.event['requestContext'])
         response = lambda_handler.request_handler(
             event=self.signup, context=None)
@@ -70,7 +93,7 @@ class TestSignUPAPI(unittest.TestCase):
         assert (response_body["status"] == "failed")
 
     def test_del_user_data(self):
-        self.delete_user.update(self.event)
+        self.delete_user['requestContext'].update(self.event['requestContext'])
         response = lambda_handler.request_handler(
             event=self.delete_user, context=None)
         assert (response["statusCode"] == 200)
@@ -78,7 +101,8 @@ class TestSignUPAPI(unittest.TestCase):
         assert (response_body["status"] == "success")
 
     def test_get_user_profile(self):
-        self.get_user_profile.update(self.event)
+        self.get_user_profile['requestContext'].update(
+            self.event['requestContext'])
         response = lambda_handler.request_handler(
             event=self.get_user_profile, context=None)
         assert (response["statusCode"] == 200)
@@ -86,7 +110,8 @@ class TestSignUPAPI(unittest.TestCase):
         assert (response_body["status"] == "success")
 
     def test_update_user_profile(self):
-        self.update_user_profile.update(self.event)
+        self.update_user_profile['requestContext'].update(
+            self.event['requestContext'])
         response = lambda_handler.request_handler(
             event=self.update_user_profile, context=None)
         assert (response["statusCode"] == 200)

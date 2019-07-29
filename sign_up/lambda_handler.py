@@ -33,25 +33,24 @@ def request_handler(event, context):
             return get_response(405, "Method Not Allowed")
 
         if "/signup" == path:
-            resp_dta = usr_obj.user_signup(event['requestContext'])
+            resp_dta = usr_obj.user_signup(user_data=event['requestContext'])
 
         elif "/profile" == path and event['httpMethod'] == 'POST':
             resp_dta = usr_obj.update_user_profile(
-                username=payload_dict['username'], email_alerts=payload_dict['email_alerts'])
+                user_data=event['requestContext'], email_alerts=payload_dict['email_alerts'])
 
         elif "/profile" == path and event['httpMethod'] == 'GET':
             resp_dta = usr_obj.get_user_profile(
-                username=payload_dict['username'])
+                user_data=event['requestContext'])
 
         elif "/wallet" == path:
             status = usr_obj.check_for_existing_wallet(
-                payload_dict['username'])
+                user_data=event['requestContext'])
             resp_dta = {"isAssigned": status,
                         "username": payload_dict['username']}
 
-        elif re.match("(\/delete-user\/)[^\/]*$", path):
-            username = path.split("/")[2]
-            resp_dta = usr_obj.del_user_data(username=username)
+        elif "/delete-user" == path:
+            resp_dta = usr_obj.del_user_data(user_data=event['requestContext'])
 
         else:
             return get_response(404, "Not Found")

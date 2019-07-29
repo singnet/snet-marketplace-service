@@ -58,3 +58,4 @@ SRVC_STATUS_GRPC_TIMEOUT = 10
 
 ASSETS_BUCKET_NAME = "enhanced-marketplace"
 NET_ID = ''
+PATH_PREFIX = ""
