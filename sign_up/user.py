@@ -139,8 +139,6 @@ class User:
         try:
             username = user_data['authorizer']['claims']['cognito:username']
             result = self.repo.execute("UPDATE user SET email_alerts = %s WHERE username = %s", [int(email_alerts==True), username])
-            result = self.repo.execute("UPDATE user SET email_alerts = %s WHERE username = %s", [
-                                       int(email_alerts == True), username])
             return {"success": "success", "data": []}
         except Exception as e:
             print(repr(e))

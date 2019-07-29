@@ -14,9 +14,9 @@ class TestSignUPAPI(unittest.TestCase):
                        "requestContext":
                            {"authorizer":
                             {"claims":
-                                     {"cognito:username": "Vivek205",
+                                     {"cognito:username": "Dummy",
                                       "email_verified": True,
-                                      "name": "Vivek",
+                                      "name": "Dummy",
                                       "email": "test@abc.com"
                                       }
                              },
@@ -31,7 +31,7 @@ class TestSignUPAPI(unittest.TestCase):
                             "requestContext":
                                 {"authorizer":
                                     {"claims":
-                                     {"cognito:username": "Vivek205"}
+                                     {"cognito:username": "Dummy"}
                                     }
                                 }
                             }
@@ -41,7 +41,7 @@ class TestSignUPAPI(unittest.TestCase):
                                  "requestContext":
                                     {"authorizer":
                                         {"claims":
-                                         {"cognito:username": "Vivek205"}
+                                         {"cognito:username": "Dummy"}
                                         }
                                     }
                                  }
@@ -52,7 +52,7 @@ class TestSignUPAPI(unittest.TestCase):
                                     "requestContext":
                                         {"authorizer":
                                             {"claims":
-                                             {"cognito:username": "Vivek205"}
+                                             {"cognito:username": "Dummy"}
                                             }
                                         }
                                     }
