@@ -26,7 +26,7 @@ class User:
                      status, user_data['requestId'], user_data['requestTimeEpoch'], dt.utcnow(), dt.utcnow()]
             set_usr_dta = self.repo.execute(
                 "INSERT INTO user (username, account_id, name, email, email_verified, status, request_id, "
-                "request_time_epoch, row_created, row_updated) " \
+                "request_time_epoch, row_created, row_updated) "
                 "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", q_dta)
             if len(set_usr_dta) > 0:
                 return "success"
@@ -39,10 +39,12 @@ class User:
     def check_for_existing_wallet(self, username):
         """ Method to check for existing wallet address. """
         try:
-            srch_dta = self.repo.execute("SELECT * FROM wallet WHERE username = %s", username)
-            search_data = self.repo.execute("SELECT count(*) FROM wallet WHERE username = %s", username)
+            srch_dta = self.repo.execute(
+                "SELECT * FROM wallet WHERE username = %s", username)
+            search_data = self.repo.execute(
+                "SELECT count(*) FROM wallet WHERE username = %s", username)
             if srch_dta == []:
-                print('Username not found');
+                print('Username not found')
                 return False
             return True
         except Exception as e:
@@ -76,7 +78,8 @@ class User:
             set_usr_dta = self.set_user_info(user_data)
             if set_usr_dta == "success":
                 print(set_usr_dta)
-                address_exist = self.check_for_existing_wallet(username=username)
+                address_exist = self.check_for_existing_wallet(
+                    username=username)
                 if address_exist:
                     raise Exception('Useraname is already linked to wallet')
                 else:
@@ -105,8 +108,10 @@ class User:
         try:
             username = user_data['authorizer']['claims']['cognito:username']
             self.repo.begin_transaction()
-            del_user = self.repo.execute("DELETE FROM user WHERE username = %s ", [username])
-            updt_wallet = self.repo.execute("UPDATE wallet SET status=0, username=NULL WHERE username = %s ", [username])
+            del_user = self.repo.execute(
+                "DELETE FROM user WHERE username = %s ", [username])
+            updt_wallet = self.repo.execute(
+                "UPDATE wallet SET status=0, username=NULL WHERE username = %s ", [username])
             self.repo.commit_transaction()
             return []
         except Exception as e:
@@ -134,6 +139,8 @@ class User:
         try:
             username = user_data['authorizer']['claims']['cognito:username']
             result = self.repo.execute("UPDATE user SET email_alerts = %s WHERE username = %s", [int(email_alerts==True), username])
+            result = self.repo.execute("UPDATE user SET email_alerts = %s WHERE username = %s", [
+                                       int(email_alerts == True), username])
             return {"success": "success", "data": []}
         except Exception as e:
             print(repr(e))
