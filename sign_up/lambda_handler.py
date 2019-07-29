@@ -7,9 +7,11 @@ from common.utils import Utils
 
 from sign_up.user import User
 
-NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys())
+NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId)
+                     for netId in NETWORKS.keys())
 db = dict((netId, Repository(net_id=netId)) for netId in NETWORKS.keys())
 obj_util = Utils()
+
 
 def request_handler(event, context):
     print(event)
@@ -50,13 +52,16 @@ def request_handler(event, context):
             return get_response(404, "Not Found")
 
         if resp_dta is None:
-            err_msg = {'status': 'failed', 'error': 'Bad Request', 'api': event['path'], 'payload': payload_dict, 'network_id': net_id}
+            err_msg = {'status': 'failed', 'error': 'Bad Request',
+                       'api': event['path'], 'payload': payload_dict, 'network_id': net_id}
             obj_util.report_slack(1, str(err_msg))
             response = get_response(500, err_msg)
         else:
-            response = get_response(200, {"status": "success", "data": resp_dta})
+            response = get_response(
+                200, {"status": "success", "data": resp_dta})
     except Exception as e:
-        err_msg = {"status": "failed", "error": repr(e), 'api': event['path'], 'payload': payload_dict, 'network_id': net_id}
+        err_msg = {"status": "failed", "error": repr(
+            e), 'api': event['path'], 'payload': payload_dict, 'network_id': net_id}
         obj_util.report_slack(1, str(err_msg))
         response = get_response(500, err_msg)
         traceback.print_exc()
