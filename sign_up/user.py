@@ -1,23 +1,29 @@
 from datetime import datetime as dt
+
+import boto3
+
+from common.constant import PATH_PREFIX
 from common.utils import Utils
+
 
 class User:
     def __init__(self, obj_repo):
         self.repo = obj_repo
         self.obj_utils = Utils()
+        self.ssm_client = boto3.client('ssm', region_name="us-east-1")
 
-    def set_user_info(self, usr_dta):
+    def set_user_info(self, user_data):
         """ Method to set user information. """
         try:
-            claims = usr_dta['authorizer']['claims']
+            claims = user_data['authorizer']['claims']
             email_verified = claims['email_verified']
             status = 0
             if email_verified:
                 status = 1
             else:
                 raise Exception("Email verification is pending.")
-            q_dta = [claims['cognito:username'], usr_dta['accountId'], claims['name'], claims['email'], status,
-                     status, usr_dta['requestId'], usr_dta['requestTimeEpoch'], dt.utcnow(), dt.utcnow()]
+            q_dta = [claims['cognito:username'], user_data['accountId'], claims['name'], claims['email'], status,
+                     status, user_data['requestId'], user_data['requestTimeEpoch'], dt.utcnow(), dt.utcnow()]
             set_usr_dta = self.repo.execute(
                 "INSERT INTO user (username, account_id, name, email, email_verified, status, request_id, "
                 "request_time_epoch, row_created, row_updated) " \
@@ -51,14 +57,23 @@ class User:
             print(repr(e))
             raise e
 
-    def user_signup(self, usr_dta):
+    def fetch_private_key_from_ssm(self, address):
+        try:
+            store = self.ssm_client.get_parameter(Name=PATH_PREFIX + str(address), WithDecryption=True)
+            return store['Parameter']['Value']
+        except Exception as e:
+            print(repr(e))
+            raise Exception("Error fetching value from parameter store.")
+
+
+    def user_signup(self, user_data):
         """ Method to assign pre-seeded wallet to user.
             This is one time process.
         """
         try:
             self.repo.begin_transaction()
-            username = usr_dta['authorizer']['claims']['cognito:username']
-            set_usr_dta = self.set_user_info(usr_dta)
+            username = user_data['authorizer']['claims']['cognito:username']
+            set_usr_dta = self.set_user_info(user_data)
             if set_usr_dta == "success":
                 print(set_usr_dta)
                 address_exist = self.check_for_existing_wallet(username=username)
@@ -69,8 +84,10 @@ class User:
 
                     if updt_resp[0] == 1:
                         result = self.repo.execute("SELECT * FROM wallet where username = %s", username)
-                        self.repo.execute("UPDATE wallet SET private_key = NULL WHERE username = %s", [username])
+                        address = result[0].get("address", None)
+                        private_key = self.fetch_private_key_from_ssm(address=address)
                         self.obj_utils.clean(result)
+                        result[0].update({"private_key": private_key})
                         self.repo.commit_transaction()
                         return {"success": "success", "data": result}
                     raise Exception("Error in assigning pre-seeded wallet")
@@ -81,11 +98,12 @@ class User:
             print(repr(e))
             raise e
 
-    def del_user_data(self, username):
+    def del_user_data(self, user_data):
         """ Method to delete user data and wallet address.
             Deregister User.
         """
         try:
+            username = user_data['authorizer']['claims']['cognito:username']
             self.repo.begin_transaction()
             del_user = self.repo.execute("DELETE FROM user WHERE username = %s ", [username])
             updt_wallet = self.repo.execute("UPDATE wallet SET status=0, username=NULL WHERE username = %s ", [username])
@@ -96,11 +114,12 @@ class User:
             print(repr(e))
             raise e
 
-    def get_user_profile(self, username):
+    def get_user_profile(self, user_data):
         '''
             Method to fetch user profile data.
         '''
         try:
+            username = user_data['authorizer']['claims']['cognito:username']
             result = self.repo.execute("SELECT * FROM user WHERE username = %s", [username])
             self.obj_utils.clean(result)
             return {"success": "success", "data": result}
@@ -108,11 +127,12 @@ class User:
             print(repr(e))
             raise e
 
-    def update_user_profile(self, email_alerts, username):
+    def update_user_profile(self, email_alerts, user_data):
         '''
             Method to update user profile data.
         '''
         try:
+            username = user_data['authorizer']['claims']['cognito:username']
             result = self.repo.execute("UPDATE user SET email_alerts = %s WHERE username = %s", [int(email_alerts==True), username])
             return {"success": "success", "data": []}
         except Exception as e:
