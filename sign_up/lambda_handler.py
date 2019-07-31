@@ -23,7 +23,7 @@ def request_handler(event, context):
         stage = event['requestContext']['stage']
         net_id = NETWORKS_NAME[stage]
         usr_obj = User(obj_repo=db[net_id])
-        resp_dta = None
+        response_data = None
 
         if event['httpMethod'] == 'POST':
             payload_dict = json.loads(event['body'])
@@ -33,32 +33,38 @@ def request_handler(event, context):
             return get_response(405, "Method Not Allowed")
 
         if "/signup" == path:
-            resp_dta = usr_obj.user_signup(user_data=event['requestContext'])
+            response_data = usr_obj.user_signup(user_data=event['requestContext'])
 
         elif "/profile" == path and event['httpMethod'] == 'POST':
-            resp_dta = usr_obj.update_user_profile(user_data=event['requestContext'], email_alerts=payload_dict['email_alerts'])
+            response_data = usr_obj.update_user_profile(user_data=event['requestContext'], email_alerts=payload_dict['email_alerts'])
 
         elif "/profile" == path and event['httpMethod'] == 'GET':
-            resp_dta = usr_obj.get_user_profile(user_data=event['requestContext'])
+            response_data = usr_obj.get_user_profile(user_data=event['requestContext'])
 
         elif "/wallet" == path:
             status = usr_obj.check_for_existing_wallet(user_data=event['requestContext'])
-            resp_dta = {"isAssigned": status, "username": payload_dict['username']}
+            response_data = {"isAssigned": status, "username": payload_dict['username']}
 
         elif "/delete-user" == path:
-            resp_dta = usr_obj.del_user_data(user_data=event['requestContext'])
+            response_data = usr_obj.del_user_data(user_data=event['requestContext'])
+
+        elif "/feedback" == path and event['httpMethod'] == 'GET':
+            response_data = usr_obj.get_user_feedback(user_data=event['requestContext'], org_id=payload_dict.get("org_id", None),
+                                                      service_id=payload_dict.get("service_id", None))
+        elif "/feedback" == path and event['httpMethod'] == 'POST':
+            response_data = usr_obj.validate_user_feedback_schema(feedback_data=payload_dict['feedback'], user_data=event['requestContext'])
 
         else:
             return get_response(404, "Not Found")
 
-        if resp_dta is None:
+        if response_data is None:
             err_msg = {'status': 'failed', 'error': 'Bad Request',
                        'api': event['path'], 'payload': payload_dict, 'network_id': net_id}
             obj_util.report_slack(1, str(err_msg))
             response = get_response(500, err_msg)
         else:
             response = get_response(
-                200, {"status": "success", "data": resp_dta})
+                200, {"status": "success", "data": response_data})
     except Exception as e:
         err_msg = {"status": "failed", "error": repr(
             e), 'api': event['path'], 'payload': payload_dict, 'network_id': net_id}
