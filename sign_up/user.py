@@ -62,12 +62,12 @@ class User:
 
     def _fetch_private_key_from_ssm(self, address):
         try:
-            store = self.ssm_client.get_parameter(Name=PATH_PREFIX + str(address), WithDecryption=True)
+            store = self.ssm_client.get_parameter(
+                Name=PATH_PREFIX + str(address), WithDecryption=True)
             return store['Parameter']['Value']
         except Exception as e:
             print(repr(e))
             raise Exception("Error fetching value from parameter store.")
-
 
     def user_signup(self, user_data):
         """ Method to assign pre-seeded wallet to user.
@@ -87,7 +87,8 @@ class User:
                     updt_resp = self._link_wallet(username=username)
 
                     if updt_resp[0] == 1:
-                        result = self.repo.execute("SELECT * FROM wallet where username = %s", username)
+                        result = self.repo.execute(
+                            "SELECT * FROM wallet where username = %s", username)
                         address = result[0].get("address", None)
                         private_key = self._fetch_private_key_from_ssm(address=address)
                         self.obj_utils.clean(result)
@@ -126,7 +127,8 @@ class User:
         '''
         try:
             username = user_data['authorizer']['claims']['cognito:username']
-            result = self.repo.execute("SELECT * FROM user WHERE username = %s", [username])
+            result = self.repo.execute(
+                "SELECT * FROM user WHERE username = %s", [username])
             self.obj_utils.clean(result)
             return {"success": "success", "data": result}
         except Exception as e:
@@ -139,7 +141,8 @@ class User:
         '''
         try:
             username = user_data['authorizer']['claims']['cognito:username']
-            result = self.repo.execute("UPDATE user SET email_alerts = %s WHERE username = %s", [int(email_alerts==True), username])
+            result = self.repo.execute("UPDATE user SET email_alerts = %s WHERE username = %s", [
+                                       int(email_alerts == True), username])
             return {"success": "success", "data": []}
         except Exception as e:
             print(repr(e))
