@@ -69,7 +69,7 @@ class TestSignUPAPI(unittest.TestCase):
         self.set_user_feedback = {"path": "/feedback",
                                   "httpMethod": "POST",
                                   "body": '{"feedback": {"org_id": "test-snet", "service_id": "test-service",'
-                                          ' "user_rating": "4.0", "comments": "Good Job!"} }',
+                                          ' "user_rating": "4.0", "comment": "Good Job!"} }',
                                   "requestContext":
                                         {"authorizer":
                                             {"claims":
