@@ -4,6 +4,6 @@
   "description": "index to display curated services on the SingularityNet DApp",
   "author": "SingularityNet",
   "dependencies": {
-    "singularitynet-platform-contracts": "  "
+  	"singularitynet-platform-contracts": "0.3.0"
   }
 }

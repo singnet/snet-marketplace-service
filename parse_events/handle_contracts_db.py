@@ -1,14 +1,29 @@
 import base64
+import json
+import logging
 from datetime import datetime as dt
 
-from common.constant import EVNTS_LIMIT
+import log_setup
+
+from common.constant import EVNTS_LIMIT, IPFS_URL, ASSETS_BUCKET_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY
+from common.ipfs_util import IPFSUtil
 from common.repository import Repository
+from common.s3_util import S3Util
+
+from common.utils import Utils
+from repository.service_metadata_repository import ServiceMetadataRepository
+
+logger = logging.getLogger()
+log_setup.configure_log(logger)
 
 
 class HandleContractsDB:
-    def __init__(self, err_obj, netId):
+    def __init__(self, err_obj, net_id):
         self.err_obj = err_obj
-        self.repo = Repository(netId)
+        self.repo = Repository(net_id)
+        self.util_obj = Utils()
+        self.ipfs_utll = IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
+        self.s3_util = S3Util(S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY)
 
     # read operations
     def read_registry_events(self):
@@ -53,27 +68,28 @@ class HandleContractsDB:
                         "ON DUPLICATE KEY UPDATE row_updated = %s "
         cnt = 0
         for member in members:
-            upsrt_members_params = [org_id, member, dt.utcnow(), dt.utcnow(), dt.utcnow()]
+            upsrt_members_params = [org_id, member,
+                                    dt.utcnow(), dt.utcnow(), dt.utcnow()]
             qry_res = conn.execute(upsrt_members, upsrt_members_params)
             cnt = cnt + qry_res[0]
         print('create_or_updt_members::row upserted', cnt)
 
     def _create_channel(self, q_dta, conn):
-        upsrt_mpe_chnl = "INSERT INTO mpe_channel (channel_id, sender, recipient, groupId, balance, pending, nonce, " \
+        upsrt_mpe_chnl = "INSERT INTO mpe_channel (channel_id, sender, recipient, groupId, balance_in_cogs, pending, nonce, " \
                          "expiration, signer, row_created, row_updated) " \
                          "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) " \
-                         "ON DUPLICATE KEY UPDATE groupID = %s, balance = %s, pending = %s, nonce = %s, " \
+                         "ON DUPLICATE KEY UPDATE balance_in_cogs = %s, pending = %s, nonce = %s, " \
                          "expiration = %s, row_updated = %s"
         upsrt_mpe_chnl_params = [q_dta['channelId'], q_dta['sender'], q_dta['recipient'], q_dta['groupId'],
-                                 q_dta['amount'], 0.0, q_dta['nonce'], q_dta['expiration'], q_dta['signer'], dt.utcnow(),
-                                 dt.utcnow(), q_dta['groupId'], q_dta['amount'], 0.0, q_dta['nonce'], q_dta['expiration'],
-                                 dt.utcnow()]
+                                 q_dta['amount'], 0.0, q_dta['nonce'], q_dta['expiration'], q_dta['signer'], dt.utcnow(
+        ),
+            dt.utcnow(), q_dta['amount'], 0.0, q_dta['nonce'], q_dta['expiration'], dt.utcnow()]
         qry_res = conn.execute(upsrt_mpe_chnl, upsrt_mpe_chnl_params)
         print('_create_channel::row upserted', qry_res)
 
     def _del_srvc(self, org_id, service_id, conn):
         del_srvc = 'DELETE FROM service WHERE service_id = %s AND org_id = %s '
-        qry_res = conn.execute(del_srvc, [org_id, service_id])
+        qry_res = conn.execute(del_srvc, [service_id, org_id])
         print('_del_srvc::rows deleted: ', qry_res)
 
     def _del_org(self, org_id, conn):
@@ -92,40 +108,55 @@ class HandleContractsDB:
         print('_del_tags::del_srvc_tags: ', del_srvc_tags_count)
 
     def _del_srvc_dpndts(self, org_id, service_id, conn):
-        print("_del_srvc_dpndts::service_id: ", service_id, '|org_id: ', org_id)
+        print("_del_srvc_dpndts::service_id: ",
+              service_id, '|org_id: ', org_id)
         del_srvc_grps = 'DELETE FROM service_group WHERE service_id = %s AND org_id = %s '
         del_srvc_grps_count = conn.execute(del_srvc_grps, [service_id, org_id])
 
         del_srvc_endpts = 'DELETE FROM service_endpoint WHERE service_id = %s AND org_id = %s '
-        del_srvc_endpts_count = conn.execute(del_srvc_endpts, [service_id, org_id])
+        del_srvc_endpts_count = conn.execute(
+            del_srvc_endpts, [service_id, org_id])
+
+        del_srvc_st = 'DELETE FROM service_status WHERE service_id = %s AND org_id = %s '
+        del_srvc_st_count = conn.execute(del_srvc_st, [service_id, org_id])
 
         self._del_tags(org_id=org_id, service_id=service_id, conn=conn)
-        print('_del_srvc_dpndts::del_srvc_grps', del_srvc_grps_count, 'del_srvc_endpts', del_srvc_endpts_count)
+        print('_del_srvc_dpndts::del_srvc_grps: ', del_srvc_grps_count, '|del_srvc_endpts: ', del_srvc_endpts_count,
+              '|del_srvc_st_count: ', del_srvc_st_count)
 
     def _create_or_updt_srvc(self, org_id, service_id, ipfs_hash, conn):
         upsrt_srvc = "INSERT INTO service (org_id, service_id, is_curated, ipfs_hash, row_created, row_updated) " \
                      "VALUES (%s, %s, %s, %s, %s, %s) " \
                      "ON DUPLICATE KEY UPDATE ipfs_hash = %s, row_updated = %s "
-        upsrt_srvc_params = [org_id, service_id, 0, ipfs_hash, dt.utcnow(), dt.utcnow(), ipfs_hash, dt.utcnow()]
+        upsrt_srvc_params = [org_id, service_id, 0, ipfs_hash,
+                             dt.utcnow(), dt.utcnow(), ipfs_hash, dt.utcnow()]
         qry_res = conn.execute(upsrt_srvc, upsrt_srvc_params)
         print('_create_or_updt_srvc::row upserted', qry_res)
         return qry_res[len(qry_res) - 1]
 
-    def _create_or_updt_srvc_mdata(self, srvc_rw_id, org_id, service_id, ipfs_data, conn):
-        upsrt_srvc_mdata = "INSERT INTO service_metadata (service_row_id, org_id, service_id, price_model, price_in_cogs, " \
-                           "display_name, model_ipfs_hash, encoding, type, mpe_address, row_updated, row_created) " \
-                           "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) " \
-                           "ON DUPLICATE KEY UPDATE service_row_id = %s, price_model  = %s, price_in_cogs = %s, display_name = %s, " \
-                           "model_ipfs_hash = %s, encoding = %s, type = %s, mpe_address = %s, row_updated = %s "
-        price = ipfs_data['pricing']
-        price_model = price.get('price_model', '')
-        price_in_cogs = price.get('price_in_cogs', '')
-        upsrt_srvc_mdata_params = [srvc_rw_id, org_id, service_id, price_model, price_in_cogs,
-                                   ipfs_data['display_name'], ipfs_data['model_ipfs_hash'], ipfs_data['encoding'],
-                                   ipfs_data['service_type'], ipfs_data['mpe_address'], dt.utcnow(), dt.utcnow(),
-                                   srvc_rw_id, price_model, price_in_cogs, ipfs_data['display_name'],
-                                   ipfs_data['model_ipfs_hash'], ipfs_data['encoding'], ipfs_data['service_type'],
-                                   ipfs_data['mpe_address'], dt.utcnow()]
+    def _create_or_updt_srvc_mdata(self, srvc_rw_id, org_id, service_id, ipfs_data, assets_url, conn):
+        upsrt_srvc_mdata = "INSERT INTO service_metadata (service_row_id, org_id, service_id, " \
+                           "pricing, display_name, model_ipfs_hash, description, url, json, encoding, type, " \
+                           "mpe_address, payment_expiration_threshold, assets_hash , assets_url, row_updated, row_created) " \
+                           "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s ,%s ,%s ) " \
+                           "ON DUPLICATE KEY UPDATE service_row_id = %s, pricing = %s, " \
+                           "display_name = %s, model_ipfs_hash = %s, description = %s, url = %s, json = %s, " \
+                           "encoding = %s, type = %s, mpe_address = %s, payment_expiration_threshold = %s, row_updated = %s ,assets_hash = %s ,assets_url = %s"
+        pricing = json.dumps(ipfs_data['pricing'])
+        pm_exp_th = ipfs_data.get('payment_expiration_threshold')
+        srvc_desc = ipfs_data.get('service_description', {})
+        desc = srvc_desc.get('description', '')
+        url = srvc_desc.get('url', '')
+        json_str = ipfs_data.get('json', '')
+        assets_hash = json.dumps(ipfs_data.get('assets', {}))
+        assets_url_str = json.dumps(assets_url)
+        upsrt_srvc_mdata_params = [srvc_rw_id, org_id, service_id, pricing, ipfs_data['display_name'],
+                                   ipfs_data['model_ipfs_hash'], desc, url, json_str, ipfs_data['encoding'],
+                                   ipfs_data['service_type'], ipfs_data['mpe_address'], pm_exp_th, assets_hash, assets_url_str, dt.utcnow(
+        ), dt.utcnow(),
+            srvc_rw_id, pricing, ipfs_data['display_name'],
+            ipfs_data['model_ipfs_hash'], desc, url, json_str, ipfs_data['encoding'],
+            ipfs_data['service_type'], ipfs_data['mpe_address'], pm_exp_th, dt.utcnow(), assets_hash, assets_url_str]
 
         qry_res = conn.execute(upsrt_srvc_mdata, upsrt_srvc_mdata_params)
         print('_create_or_updt_srvc_mdata::row upserted', qry_res)
@@ -149,9 +180,12 @@ class HandleContractsDB:
 
     def _create_tags(self, srvc_rw_id, org_id, service_id, tag_name, conn):
         insrt_tag = "INSERT INTO service_tags (service_row_id, org_id, service_id, tag_name, row_created, row_updated) " \
-                    "VALUES(%s, %s, %s, %s, %s, %s)"
-        insrt_tag_params = [srvc_rw_id, org_id, service_id, tag_name, dt.utcnow(), dt.utcnow()]
+                    "VALUES(%s, %s, %s, %s, %s, %s) " \
+                    "ON DUPLICATE KEY UPDATE tag_name = %s, row_updated = %s "
+        insrt_tag_params = [srvc_rw_id, org_id, service_id,
+                            tag_name, dt.utcnow(), dt.utcnow(), tag_name, dt.utcnow()]
         qry_res = conn.execute(insrt_tag, insrt_tag_params)
+        print('_create_tags::qry_res: ', qry_res)
 
     def _updt_raw_evts(self, row_id, type, err_cd, err_msg, conn):
         try:
@@ -159,9 +193,11 @@ class HandleContractsDB:
                 updt_evts = 'UPDATE registry_events_raw SET processed = 1, error_code = %s, error_msg = %s WHERE row_id = %s '
             elif type == 'MPE':
                 updt_evts = 'UPDATE mpe_events_raw SET processed = 1, error_code = %s, error_msg = %s WHERE row_id = %s '
-            updt_evts_resp = self.repo.execute(updt_evts, [err_cd, err_msg, row_id])
+            updt_evts_resp = self.repo.execute(
+                updt_evts, [err_cd, err_msg, row_id])
             print('updt_raw_evts::row updated: ', updt_evts_resp, '|', type)
         except Exception as e:
+            self.util_obj.report_slack(type=1, slack_msg=repr(e))
             print('Error in updt_reg_evts_raw::error: ', e)
 
     def updt_raw_evts(self, row_id, type, err_cd, err_msg):
@@ -175,16 +211,21 @@ class HandleContractsDB:
             self._del_org(org_id=org_id, conn=conn)
             srvcs = self._get_srvcs(org_id=org_id)
             for rec in srvcs:
-                self._del_srvc(org_id=org_id, service_id=rec['service_id'], conn=conn)
+                self._del_srvc(
+                    org_id=org_id, service_id=rec['service_id'], conn=conn)
             self._commit(conn=conn)
         except Exception as e:
+            self.util_obj.report_slack(type=1, slack_msg=repr(e))
             self._rollback(conn=conn, err=repr(e))
 
     def del_srvc(self, org_id, service_id):
         self._del_srvc(org_id=org_id, service_id=service_id, conn=self.repo)
 
     def create_channel(self, q_dta):
-        q_dta['groupId'] = base64.b64encode(bytes.fromhex(q_dta['groupId'].lstrip('0x'))).decode('utf8')
+        if q_dta['groupId'][0:2] == '0x':
+            q_dta['groupId'] = q_dta['groupId'][2:]
+        q_dta['groupId'] = base64.b64encode(
+            bytes.fromhex(q_dta['groupId'])).decode('utf8')
         self._create_channel(q_dta, self.repo)
 
     def update_channel(self, channel_id, group_id, channel_data):
@@ -200,16 +241,108 @@ class HandleContractsDB:
             'amount': channel_data[5]
         }, conn=self.repo)
 
-    def process_srvc_data(self, org_id, service_id, ipfs_hash, ipfs_data):
+    def _push_asset_to_s3_using_hash(self, hash, org_id, service_id):
+        io_bytes = self.ipfs_utll.read_bytesio_from_ipfs(hash)
+        filename = hash.split("/")[1]
+        new_url = self.s3_util.push_io_bytes_to_s3(org_id + "/" + service_id + "/" + filename, ASSETS_BUCKET_NAME,
+                                                   io_bytes)
+        return new_url
+
+    def _comapre_assets_and_push_to_s3(self, existing_assets_hash, new_assets_hash, existing_assets_url, org_id,
+                                       service_id):
+        """
+
+        :param existing_assets_hash: contains asset_type and its has value stored in ipfs
+        :param new_assets_hash:  contains asset type and its updated hash value in ipfs
+        :param existing_assets_url:  contains asset type and s3_url value for given asset_type
+        :param org_id:
+        :param service_id:
+        :return: dict of asset_type and new_s3_url
+        """
+        # this function compare assets and deletes and update the new assets
+
+        assets_url_mapping = {}
+
+        if not existing_assets_hash:
+            existing_assets_hash = {}
+        if not existing_assets_url:
+            existing_assets_url = {}
+        if not new_assets_hash:
+            new_assets_hash = {}
+
+        for new_asset_type, new_asset_hash in new_assets_hash.items():
+
+            if isinstance(new_asset_hash, list):
+                # if this asset_type contains list of assets than remove all existing assetes from s3 and add all new assets to s3
+                #
+                new_urls_list = []
+
+                # remove all existing assets if exits
+                if new_asset_type in existing_assets_url:
+                    for url in existing_assets_url[new_asset_type]:
+                        self.s3_util.delete_file_from_s3(url)
+
+                # add new files to s3 and update the url
+                for hash in new_assets_hash[new_asset_type]:
+                    new_urls_list.append(
+                        self._push_asset_to_s3_using_hash(hash, org_id, service_id))
+
+                assets_url_mapping[new_asset_type] = new_urls_list
+
+            elif isinstance(new_asset_hash, str):
+                # if this asset_type has single value
+                if new_asset_type in existing_assets_hash and existing_assets_hash[new_asset_type] == new_asset_hash:
+                    # file is not updated
+                    pass
+                else:
+                    if new_asset_type in existing_assets_url:
+                        url_of_file_to_be_removed = existing_assets_url[new_asset_type]
+                        self.s3_util.delete_file_from_s3(
+                            url_of_file_to_be_removed)
+
+                    hash_of_file_to_be_pushed_to_s3 = new_assets_hash[new_asset_type]
+
+                    assets_url_mapping[new_asset_type] = self._push_asset_to_s3_using_hash(
+                        hash_of_file_to_be_pushed_to_s3, org_id, service_id)
+
+            else:
+                logger.info(
+                    "unknown type assets for org_id %s  service_id %s", org_id, service_id)
+
+        return assets_url_mapping
+
+    def _get_new_assets_url(self, org_id, service_id, new_ipfs_data):
+        new_assets_hash = new_ipfs_data.get('assets', {})
+        existing_assets_hash = {}
+        existing_assets_url = {}
+
+        service_metadata_repo = ServiceMetadataRepository()
+        existing_service_metadata = service_metadata_repo.get_service_metatdata_by_servcie_id_and_org_id(
+            service_id, org_id)
+
+        if existing_service_metadata:
+            existing_assets_hash = existing_service_metadata.assets_hash
+            existing_assets_url = existing_service_metadata.assets_url
+        assets_url_mapping = self._comapre_assets_and_push_to_s3(existing_assets_hash, new_assets_hash, existing_assets_url, org_id,
+                                                                 service_id)
+        return assets_url_mapping
+
+    def process_srvc_data(self, org_id, service_id, ipfs_hash, ipfs_data, tags_data):
         self.repo.auto_commit = False
         conn = self.repo
         try:
-            self._del_srvc_dpndts(org_id=org_id, service_id=service_id, conn=conn)
-            qry_data = self._create_or_updt_srvc(org_id=org_id, service_id=service_id, ipfs_hash=ipfs_hash, conn=conn)
+
+            assets_url = self._get_new_assets_url(
+                org_id, service_id, ipfs_data)
+
+            self._del_srvc_dpndts(
+                org_id=org_id, service_id=service_id, conn=conn)
+            qry_data = self._create_or_updt_srvc(
+                org_id=org_id, service_id=service_id, ipfs_hash=ipfs_hash, conn=conn)
             service_row_id = qry_data['last_row_id']
             print('service_row_id == ', service_row_id)
             self._create_or_updt_srvc_mdata(srvc_rw_id=service_row_id, org_id=org_id, service_id=service_id,
-                                            ipfs_data=ipfs_data, conn=conn)
+                                            ipfs_data=ipfs_data, assets_url=assets_url, conn=conn)
             grps = ipfs_data.get('groups', [])
             cnt = 0
             grp_name_id_dict = {}
@@ -236,13 +369,17 @@ class HandleContractsDB:
                 cnt = cnt + qry_data[0]
             print('rows insert in endpt: ', cnt)
 
-            tags = ipfs_data.get('tags', [])
-            print('tags==', tags)
-            for tag in tags:
-                self._create_tags(service_row_id=service_row_id, org_id=org_id, service_id=service_id, tag_name=tag,
-                                  conn=conn)
+            if (tags_data is not None and tags_data[0]):
+                tags = tags_data[3]
+                for tag in tags:
+                    tag = tag.decode('utf-8')
+                    tag = tag.rstrip("\u0000")
+                    self._create_tags(srvc_rw_id=service_row_id, org_id=org_id, service_id=service_id, tag_name=tag,
+                                      conn=conn)
             self._commit(conn=conn)
+
         except Exception as e:
+            self.util_obj.report_slack(type=1, slack_msg=repr(e))
             self._rollback(conn=conn, err=repr(e))
 
     def process_org_data(self, org_id, org_data):
@@ -256,23 +393,27 @@ class HandleContractsDB:
                 self._create_or_updt_members(org_id, org_data[4], conn)
                 self._commit(conn)
         except Exception as e:
+            self.util_obj.report_slack(type=1, slack_msg=repr(e))
             self._rollback(conn=conn, err=repr(e))
 
     def update_tags(self, org_id, service_id, tags_data):
         self.repo.auto_commit = False
         conn = self.repo
         try:
+            self._del_tags(org_id=org_id, service_id=service_id, conn=conn)
             if (tags_data is not None and tags_data[0]):
                 tags = tags_data[3]
-                srvc_data = self._get_srvc_row_id(service_id=service_id, org_id=org_id)
+                srvc_data = self._get_srvc_row_id(
+                    service_id=service_id, org_id=org_id)
                 srvc_rw_id = srvc_data[0]['row_id']
                 for tag in tags:
-                    tag = tag.decode("utf-8")
-                    print('tag===',tag)
+                    tag = tag.decode('utf-8')
+                    tag = tag.rstrip("\u0000")
                     self._create_tags(srvc_rw_id=srvc_rw_id, org_id=org_id, service_id=service_id, tag_name=tag,
                                       conn=conn)
                 self._commit(conn)
         except Exception as e:
+            self.util_obj.report_slack(type=1, slack_msg=repr(e))
             self._rollback(conn=conn, err=repr(e))
 
     #

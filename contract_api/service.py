@@ -1,20 +1,19 @@
 import datetime
-import decimal
+
 import web3
-
-from common.constant import NETWORKS
 from eth_account.messages import defunct_hash_message
-from common.repository import Repository
+from pymysql import MySQLError
 
-IGNORED_LIST = ['row_id', 'row_created', 'row_updated']
+from common.repository import NETWORKS
+from common.utils import Utils
 
 
 class Service:
-    def __init__(self, netId):
-        self.netId = netId
-        self.repo = Repository(self.netId)
+    def __init__(self, obj_repo):
+        self.repo = obj_repo
+        self.obj_utils = Utils()
 
-    def get_group_info(self, org_id=None):
+    def get_group_info(self, org_id=None, srvc_id=None):
         print('Inside grp info')
         service_status_dict = {}
         try:
@@ -23,13 +22,19 @@ class Service:
                     "SELECT G.*, S.endpoint, S.is_available, S.last_check_timestamp FROM service_group G, " \
                     "service_status S WHERE G.service_row_id = S.service_row_id AND G.group_id = S.group_id " \
                     "AND G.service_row_id IN (SELECT row_id FROM service WHERE is_curated = 1)")
+            elif org_id is not None and srvc_id is None:
+                query = "SELECT G.*, S.endpoint, S.is_available, S.last_check_timestamp FROM service_group G, " \
+                        "service_status S WHERE G.service_row_id = S.service_row_id AND G.group_id = S.group_id " \
+                        "AND G.service_row_id IN (SELECT row_id FROM service WHERE is_curated = 1 and org_id = %s)"
+                status = self.repo.execute(query, org_id)
             else:
-                status = self.repo.execute(
-                    "SELECT G.*, S.endpoint, S.is_available, S.last_check_timestamp FROM service_group G, " \
-                    "service_status S WHERE G.service_row_id = S.service_row_id AND G.group_id = S.group_id " \
-                    "AND G.service_row_id IN (SELECT row_id FROM service WHERE is_curated = 1 and org_id = %s)")
+                query = "SELECT G.*, S.endpoint, S.is_available, S.last_check_timestamp FROM service_group G, " \
+                        "service_status S WHERE G.service_row_id = S.service_row_id AND G.group_id = S.group_id " \
+                        "AND G.service_row_id IN (SELECT row_id FROM service WHERE is_curated = 1 and org_id = %s " \
+                        "AND service_id = %s ) "
+                status = self.repo.execute(query, [org_id, srvc_id])
 
-            self.__clean(status)
+            self.obj_utils.clean(status)
             for rec in status:
                 srvc_rw_id = rec['service_row_id']
                 grp_id = rec['group_id']
@@ -107,79 +112,111 @@ class Service:
         return {'up_vote': (vote == 1),
                 'down_vote': (vote == 0)}
 
-    def fetch_user_vote(self, user_address):
+    def fetch_user_feedbk(self, user_address):
         user_vote_dict = {}
         try:
             votes = self.repo.execute(
-                "select * from user_service_vote where user_address = %s", (user_address))
-            self.__clean(votes)
+                "SELECT * FROM user_service_vote WHERE user_address = %s", (user_address))
+            self.obj_utils.clean(votes)
+            feedbk = self.repo.execute(
+                "SELECT A.* FROM user_service_feedback A INNER JOIN (SELECT user_address,org_id, service_id,  "
+                "max(row_updated) latest_dt FROM user_service_feedback WHERE user_address = %s GROUP BY user_address, "
+                "org_id, service_id) B  on A.user_address = B.user_address AND A.org_id = B.org_id AND A.service_id = "
+                "B.service_id AND A.row_updated = B.latest_dt", (user_address))
+            self.obj_utils.clean(feedbk)
             for rec in votes:
                 org_id = rec['org_id']
                 service_id = rec['service_id']
-                user_vote_dict[org_id] = {}
+                if org_id not in user_vote_dict.keys():
+                    user_vote_dict[org_id] = {}
                 user_vote_dict[org_id][service_id] = {'user_address': rec['user_address'],
                                                       'org_id': rec['org_id'],
-                                                      'service_id': service_id}
+                                                      'service_id': service_id
+                                                      }
                 user_vote_dict[org_id][service_id].update(self.vote_mapping(rec['vote']))
+            for rec in feedbk:
+                org_id = rec['org_id']
+                service_id = rec['service_id']
+                user_vote_dict[org_id][service_id]['comment'] = rec['comment']
 
         except Exception as e:
             print(repr(e))
             raise e
         return user_vote_dict
 
-    def get_user_vote(self, user_address):
+    def get_usr_feedbk(self, user_address):
         vote_list = []
         try:
             count_details = self.fetch_total_count()
-            votes = self.fetch_user_vote(user_address)
-            for org_id in votes.keys():
-                srvcs_data = votes[org_id]
+            votes = self.fetch_user_feedbk(user_address)
+            for org_id in count_details.keys():
+                srvcs_data = count_details[org_id]
                 for service_id in srvcs_data.keys():
-                    user = {}
-                    user.update(votes[org_id][service_id])
-                    user['up_vote_count'] = count_details[org_id].get(service_id).get(1, 0)
-                    user['down_vote_count'] = count_details[org_id].get(service_id).get(0, 0)
-                    vote_list.append(user)
+                    rec = {
+                        'org_id': org_id,
+                        'service_id': service_id,
+                        'up_vote_count': srvcs_data.get(service_id).get(1, 0),
+                        'down_vote_count': srvcs_data.get(service_id).get(0, 0),
+                        "up_vote": votes.get(org_id, {}).get(service_id, {}).get('up_vote', False),
+                        "down_vote": votes.get(org_id, {}).get(service_id, {}).get('down_vote', False),
+                        "comment": votes.get(org_id, {}).get(service_id, {}).get('comment', None)
+                    }
+                    vote_list.append(rec)
         except Exception as e:
             print(repr(e))
             raise e
         return vote_list
 
-    def set_user_vote(self, vote_info_dict):
+    def is_valid_feedbk(self, net_id, usr_addr, msg_txt, sign):
         try:
-            vote = -1
-            if vote_info_dict['up_vote']:
-                vote = 1
-            elif vote_info_dict['down_vote']:
-                vote = 0
-            if self.is_valid_vote(vote_info_dict):
-                query = "Insert into user_service_vote (user_address, org_id, service_id, vote, row_created) VALUES (%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE VOTE = %s"
-                q_params = [vote_info_dict['user_address'], vote_info_dict['org_id'], vote_info_dict['service_id'], vote,
-                        datetime.datetime.utcnow(), vote]
-                self.repo.execute(query, q_params)
-            else:
-                raise Exception("Signature of the vote is not valid")
-        except Exception as e:
-            print(repr(e))
-            raise e
-        return True
-
-    def is_valid_vote(self, vote_info_dict):
-        try:
-            provider = web3.HTTPProvider(NETWORKS[self.netId]['http_provider'])
+            provider = web3.HTTPProvider(NETWORKS[net_id]['http_provider'])
             w3 = web3.Web3(provider)
-
-            message_text = str(vote_info_dict['user_address']) + str(vote_info_dict['org_id']) + \
-                           str(vote_info_dict['up_vote']).lower() + str(vote_info_dict['service_id']) + \
-                           str(vote_info_dict['down_vote']).lower()
-            message = w3.sha3(text=message_text)
+            message = w3.sha3(text=msg_txt)
             message_hash = defunct_hash_message(primitive=message)
-            recovered = str(w3.eth.account.recoverHash(message_hash, signature=vote_info_dict['signature']))
-            return str(vote_info_dict['user_address']).lower() == recovered.lower()
+            recovered = str(w3.eth.account.recoverHash(message_hash, signature=sign))
+            return str(usr_addr).lower() == recovered.lower()
         except Exception as e:
             print(repr(e))
             raise e
         return False
+
+    def set_usr_feedbk(self, feedbk_info, net_id):
+        try:
+            vote = -1
+            if feedbk_info['up_vote']:
+                vote = 1
+            elif feedbk_info['down_vote']:
+                vote = 0
+            curr_dt = datetime.datetime.utcnow()
+            usr_addr = feedbk_info['user_address']
+            org_id = feedbk_info['org_id']
+            srvc_id = feedbk_info['service_id']
+            comment = feedbk_info['comment']
+            msg_txt = str(usr_addr) + str(org_id) + str(feedbk_info['up_vote']).lower() + str(srvc_id) + \
+                      str(feedbk_info['down_vote']).lower() + str(comment).lower()
+            if self.is_valid_feedbk(net_id=net_id, usr_addr=usr_addr, msg_txt=msg_txt, sign=feedbk_info['signature']):
+                self.repo.begin_transaction()
+                insrt_vote = "INSERT INTO user_service_vote (user_address, org_id, service_id, vote, row_updated, row_created) " \
+                             "VALUES (%s, %s, %s, %s, %s, %s) " \
+                             "ON DUPLICATE KEY UPDATE vote = %s, row_updated = %s"
+                insrt_vote_params = [usr_addr, org_id, srvc_id, vote, curr_dt, curr_dt, vote, curr_dt]
+                self.repo.execute(insrt_vote, insrt_vote_params)
+
+                insrt_feedbk = "INSERT INTO user_service_feedback (user_address, org_id, service_id, comment, " \
+                               "row_updated, row_created)" \
+                               "VALUES (%s, %s, %s, %s, %s, %s) "
+                insrt_feedbk_params = [usr_addr, org_id, srvc_id, comment, curr_dt, curr_dt]
+                self.repo.execute(insrt_feedbk, insrt_feedbk_params)
+                self.repo.commit_transaction()
+            else:
+                raise Exception("signature of the vote is not valid.")
+        except MySQLError as e:
+            self.repo.rollback_transaction()
+            raise e
+        except Exception as err:
+            print(repr(err))
+            raise err
+        return True
 
     def get_curated_services(self):
         try:
@@ -204,7 +241,7 @@ class Service:
                   "D.service_row_id =  G.service_row_id AND O.org_id = G.org_id AND sender = %s "
             channel_details = self.repo.execute(qry, (user_address))
             for detail in channel_details:
-                mpe_details.append(self.__clean_row(detail))
+                mpe_details.append(self.obj_utils.clean_row(detail))
         except Exception as e:
             print(repr(e))
             raise e
@@ -214,9 +251,8 @@ class Service:
         tag_map = self.__map_to_service(tags)
         groups_map = self.__map_to_service(groups)
         for service in services:
-            self.__clean_row(service)
+            self.obj_utils.clean_row(service)
             service_row_id = service['service_row_id']
-            print(service_row_id, groups_map)
             service['groups'] = self.__get_group_with_endpoints(groups_map[service_row_id])
             if service_row_id in tag_map:
                 service['tags'] = [tag['tag_name'] for tag in tag_map[service_row_id]]
@@ -249,24 +285,3 @@ class Service:
             group_details['group_id'] = group['group_id']
             group_details['endpoints'].append(group['endpoint'])
         return segregated_groups
-
-    def __clean(self, value_list):
-        for value in value_list:
-            self.__clean_row(value)
-
-    def __clean_row(self, row):
-        for item in IGNORED_LIST:
-            del row[item]
-
-        for key in row:
-            if isinstance(row[key], decimal.Decimal) or isinstance(row[key], datetime.datetime):
-                row[key] = str(row[key])
-            elif isinstance(row[key], bytes):
-                if row[key] == b'\x01':
-                    row[key] = 1
-                elif row[key] == b'\x00':
-                    row[key] = 0
-                else:
-                    raise Exception("Unsupported bytes object. Key " + str(key) + " value " + str(row[key]))
-
-        return row
