@@ -23,7 +23,7 @@ class User:
                 status = 1
             else:
                 raise Exception("Email verification is pending.")
-            q_dta = [claims['cognito:username'], user_data['accountId'], claims['name'], claims['email'], status,
+            q_dta = [claims['email'], user_data['accountId'], claims['name'], claims['email'], status,
                      status, user_data['requestId'], user_data['requestTimeEpoch'], dt.utcnow(), dt.utcnow()]
             set_usr_dta = self.repo.execute(
                 "INSERT INTO user (username, account_id, name, email, email_verified, status, request_id, "
@@ -75,7 +75,7 @@ class User:
         """
         try:
             self.repo.begin_transaction()
-            username = user_data['authorizer']['claims']['cognito:username']
+            username = user_data['authorizer']['claims']['email']
             set_usr_dta = self._set_user_data(user_data)
             if set_usr_dta == "success":
                 print(set_usr_dta)
@@ -108,7 +108,7 @@ class User:
             Deregister User.
         """
         try:
-            username = user_data['authorizer']['claims']['cognito:username']
+            username = user_data['authorizer']['claims']['email']
             self.repo.begin_transaction()
             del_user = self.repo.execute(
                 "DELETE FROM user WHERE username = %s ", [username])
@@ -126,7 +126,7 @@ class User:
             Method to fetch user profile data.
         '''
         try:
-            username = user_data['authorizer']['claims']['cognito:username']
+            username = user_data['authorizer']['claims']['email']
             result = self.repo.execute(
                 "SELECT * FROM user WHERE username = %s", [username])
             self.obj_utils.clean(result)
@@ -140,7 +140,7 @@ class User:
             Method to update user profile data.
         '''
         try:
-            username = user_data['authorizer']['claims']['cognito:username']
+            username = user_data['authorizer']['claims']['email']
             result = self.repo.execute("UPDATE user SET email_alerts = %s WHERE username = %s", [
                                        int(email_alerts == True), username])
             return {"success": "success", "data": []}
@@ -173,7 +173,7 @@ class User:
         """
         try:
             user_rating_dict = {}
-            username = user_data['authorizer']['claims']['cognito:username']
+            username = user_data['authorizer']['claims']['email']
             user_address = self._get_user_address_from_username(username=username)
             query_part = ""
             query_part_values = []
@@ -222,7 +222,7 @@ class User:
             if float(user_rating) > 5.0 or float(user_rating) < 1.0:
                 raise Exception("Invalid Rating. Provided user rating should be between 1.0 and 5.0 .")
             curr_dt = dt.utcnow()
-            username = user_data['authorizer']['claims']['cognito:username']
+            username = user_data['authorizer']['claims']['email']
             user_address = self._get_user_address_from_username(username=username)
             org_id = feedback_data['org_id']
             service_id = feedback_data['service_id']
