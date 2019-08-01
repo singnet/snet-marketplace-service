@@ -1,7 +1,7 @@
 import web3
 from common.constant import NETWORKS
 from common.utils import Utils
-from marketplace_api.registry import Registry
+from contract_api.registry import Registry
 from web3 import Web3
 
 
