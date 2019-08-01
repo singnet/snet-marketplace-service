@@ -56,6 +56,27 @@ class TestSignUPAPI(unittest.TestCase):
                                              }
                                          }
                                     }
+        self.get_user_feedback = {"path": "/feedback",
+                                  "httpMethod": "GET",
+                                  "queryStringParameters": {},
+                                  "requestContext":
+                                  {"authorizer":
+                                   {"claims":
+                                    {"cognito:username": "Dummy"}
+                                    }
+                                   }
+                                  }
+        self.set_user_feedback = {"path": "/feedback",
+                                  "httpMethod": "POST",
+                                  "body": '{"feedback": {"org_id": "test-snet", "service_id": "test-service",'
+                                          ' "user_rating": "4.0", "comment": "Good Job!"} }',
+                                  "requestContext":
+                                  {"authorizer":
+                                   {"claims":
+                                    {"cognito:username": "Dummy"}
+                                    }
+                                   }
+                                  }
 
     @patch('common.utils.Utils.report_slack')
     def test_request_handler(self, mock_get):
@@ -114,6 +135,24 @@ class TestSignUPAPI(unittest.TestCase):
             self.event['requestContext'])
         response = lambda_handler.request_handler(
             event=self.update_user_profile, context=None)
+        assert (response["statusCode"] == 200)
+        response_body = json.loads(response["body"])
+        assert (response_body["status"] == "success")
+
+    def test_get_user_feedback(self):
+        self.get_user_feedback['requestContext'].update(
+            self.event['requestContext'])
+        response = lambda_handler.request_handler(
+            event=self.get_user_feedback, context=None)
+        assert (response["statusCode"] == 200)
+        response_body = json.loads(response["body"])
+        assert (response_body["status"] == "success")
+
+    def test_set_user_feedback(self):
+        self.set_user_feedback['requestContext'].update(
+            self.event['requestContext'])
+        response = lambda_handler.request_handler(
+            event=self.set_user_feedback, context=None)
         assert (response["statusCode"] == 200)
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
