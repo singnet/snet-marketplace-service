@@ -33,26 +33,33 @@ def request_handler(event, context):
             return get_response(405, "Method Not Allowed")
 
         if "/signup" == path:
-            response_data = usr_obj.user_signup(user_data=event['requestContext'])
+            response_data = usr_obj.user_signup(
+                user_data=event['requestContext'])
 
         elif "/profile" == path and event['httpMethod'] == 'POST':
-            response_data = usr_obj.update_user_profile(user_data=event['requestContext'], email_alerts=payload_dict['email_alerts'])
+            response_data = usr_obj.update_user_profile(
+                user_data=event['requestContext'], email_alerts=payload_dict['email_alerts'])
 
         elif "/profile" == path and event['httpMethod'] == 'GET':
-            response_data = usr_obj.get_user_profile(user_data=event['requestContext'])
+            response_data = usr_obj.get_user_profile(
+                user_data=event['requestContext'])
 
         elif "/wallet" == path:
-            status = usr_obj.check_for_existing_wallet(user_data=event['requestContext'])
-            response_data = {"isAssigned": status, "username": payload_dict['username']}
+            status = usr_obj.check_for_existing_wallet(
+                user_data=event['requestContext'])
+            response_data = {"isAssigned": status,
+                             "username": payload_dict['username']}
 
         elif "/delete-user" == path:
-            response_data = usr_obj.del_user_data(user_data=event['requestContext'])
+            response_data = usr_obj.del_user_data(
+                user_data=event['requestContext'])
 
         elif "/feedback" == path and event['httpMethod'] == 'GET':
             response_data = usr_obj.get_user_feedback(user_data=event['requestContext'], org_id=payload_dict.get("org_id", None),
                                                       service_id=payload_dict.get("service_id", None))
         elif "/feedback" == path and event['httpMethod'] == 'POST':
-            response_data = usr_obj.validate_and_set_user_feedback(feedback_data=payload_dict['feedback'], user_data=event['requestContext'])
+            response_data = usr_obj.validate_and_set_user_feedback(
+                feedback_data=payload_dict['feedback'], user_data=event['requestContext'])
 
         else:
             return get_response(404, "Not Found")

@@ -90,7 +90,8 @@ class User:
                         result = self.repo.execute(
                             "SELECT * FROM wallet where username = %s", username)
                         address = result[0].get("address", None)
-                        private_key = self._fetch_private_key_from_ssm(address=address)
+                        private_key = self._fetch_private_key_from_ssm(
+                            address=address)
                         self.obj_utils.clean(result)
                         result[0].update({"private_key": private_key})
                         self.repo.commit_transaction()
@@ -159,7 +160,8 @@ class User:
                           }])
         try:
             feedback_data = schema.validate([feedback_data])
-            feedback_recorded = self._set_user_feedback(feedback_data[0], user_data=user_data)
+            feedback_recorded = self._set_user_feedback(
+                feedback_data[0], user_data=user_data)
             if feedback_recorded:
                 return []
             return None
@@ -174,7 +176,8 @@ class User:
         try:
             user_rating_dict = {}
             username = user_data['authorizer']['claims']['cognito:username']
-            user_address = self._get_user_address_from_username(username=username)
+            user_address = self._get_user_address_from_username(
+                username=username)
             query_part = ""
             query_part_values = []
             if org_id is not None:
@@ -185,11 +188,13 @@ class User:
                     query_part_values.append(service_id)
 
             rating_query = "SELECT * FROM user_service_vote WHERE user_address = %s " + query_part
-            rating = self.repo.execute(rating_query, [user_address] + query_part_values)
+            rating = self.repo.execute(
+                rating_query, [user_address] + query_part_values)
             self.obj_utils.clean(rating)
 
             feedback_query = "SELECT * FROM user_service_feedback WHERE user_address = %s " + query_part
-            feedback = self.repo.execute(feedback_query, [user_address] + query_part_values)
+            feedback = self.repo.execute(
+                feedback_query, [user_address] + query_part_values)
             self.obj_utils.clean(feedback)
 
             for record in feedback:
@@ -200,14 +205,15 @@ class User:
                 if service_id not in user_rating_dict.keys():
                     user_rating_dict[org_id][service_id] = {}
                     user_rating_dict[org_id][service_id]['comment'] = []
-                user_rating_dict[org_id][service_id]['comment'].append(record['comment'])
+                user_rating_dict[org_id][service_id]['comment'].append(
+                    record['comment'])
 
             for record in rating:
                 org_id = record['org_id']
                 service_id = record['service_id']
                 record.update({'comment': user_rating_dict.get(org_id, {})
-                              .get(service_id, {})
-                              .get("comment", [])})
+                               .get(service_id, {})
+                               .get("comment", [])})
             return rating
         except Exception as e:
             print(repr(e))
@@ -220,10 +226,12 @@ class User:
         try:
             user_rating = str(feedback_data['user_rating'])
             if float(user_rating) > 5.0 or float(user_rating) < 1.0:
-                raise Exception("Invalid Rating. Provided user rating should be between 1.0 and 5.0 .")
+                raise Exception(
+                    "Invalid Rating. Provided user rating should be between 1.0 and 5.0 .")
             curr_dt = dt.utcnow()
             username = user_data['authorizer']['claims']['cognito:username']
-            user_address = self._get_user_address_from_username(username=username)
+            user_address = self._get_user_address_from_username(
+                username=username)
             org_id = feedback_data['org_id']
             service_id = feedback_data['service_id']
             comment = feedback_data['comment']
@@ -231,11 +239,13 @@ class User:
             set_rating = "INSERT INTO user_service_vote (user_address, org_id, service_id, rating, row_updated, row_created) " \
                          "VALUES (%s, %s, %s, %s, %s, %s) " \
                          "ON DUPLICATE KEY UPDATE rating = %s, row_updated = %s"
-            set_rating_params = [user_address, org_id, service_id, user_rating, curr_dt, curr_dt, user_rating, curr_dt]
+            set_rating_params = [user_address, org_id, service_id,
+                                 user_rating, curr_dt, curr_dt, user_rating, curr_dt]
             self.repo.execute(set_rating, set_rating_params)
             set_feedback = "INSERT INTO user_service_feedback (user_address, org_id, service_id, comment, row_updated, row_created)" \
                            "VALUES (%s, %s, %s, %s, %s, %s)"
-            set_feedback_params = [user_address, org_id, service_id, comment, curr_dt, curr_dt]
+            set_feedback_params = [user_address, org_id,
+                                   service_id, comment, curr_dt, curr_dt]
             self.repo.execute(set_feedback, set_feedback_params)
             self._update_service_rating(org_id=org_id, service_id=service_id)
             self.repo.commit_transaction()
@@ -250,7 +260,8 @@ class User:
             Method to get user_address for a given username
         """
         try:
-            wallet_details = self.repo.execute("SELECT * FROM wallet WHERE username = %s ", [username])
+            wallet_details = self.repo.execute(
+                "SELECT * FROM wallet WHERE username = %s ", [username])
             if len(wallet_details) > 0:
                 return wallet_details[0].get("address", None)
             else:
