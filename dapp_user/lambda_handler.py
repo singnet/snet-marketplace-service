@@ -5,7 +5,7 @@ from common.constant import NETWORKS
 from common.repository import Repository
 from common.utils import Utils
 
-from sign_up.user import User
+from dapp_user.user import User
 
 NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId)
                      for netId in NETWORKS.keys())

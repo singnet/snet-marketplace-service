@@ -14,10 +14,9 @@ class TestSignUPAPI(unittest.TestCase):
                        "requestContext":
                            {"authorizer":
                             {"claims":
-                                     {"cognito:username": "Dummy",
-                                      "email_verified": True,
+                                     {"email_verified": True,
                                       "name": "Dummy",
-                                      "email": "test@abc.com"
+                                      "email": "dummy@dummy.com"
                                       }
                              },
                             "accountId": "123456",
@@ -31,7 +30,7 @@ class TestSignUPAPI(unittest.TestCase):
                             "requestContext":
                                 {"authorizer":
                                     {"claims":
-                                     {"cognito:username": "Dummy"}
+                                     {"email": "dummy@dummy.com"}
                                      }
                                  }
                             }
@@ -41,7 +40,7 @@ class TestSignUPAPI(unittest.TestCase):
                                  "requestContext":
                                  {"authorizer":
                                   {"claims":
-                                         {"cognito:username": "Dummy"}
+                                         {"email": "dummy@dummy.com"}
                                    }
                                   }
                                  }
@@ -52,7 +51,7 @@ class TestSignUPAPI(unittest.TestCase):
                                     "requestContext":
                                         {"authorizer":
                                             {"claims":
-                                             {"cognito:username": "Dummy"}
+                                             {"email": "dummy@dummy.com"}
                                              }
                                          }
                                     }
@@ -62,7 +61,7 @@ class TestSignUPAPI(unittest.TestCase):
                                   "requestContext":
                                   {"authorizer":
                                    {"claims":
-                                    {"cognito:username": "Dummy"}
+                                    {"email": "dummy@dummy.com"}
                                     }
                                    }
                                   }
@@ -73,7 +72,7 @@ class TestSignUPAPI(unittest.TestCase):
                                   "requestContext":
                                   {"authorizer":
                                    {"claims":
-                                    {"cognito:username": "Dummy"}
+                                    {"email": "dummy@dummy.com"}
                                     }
                                    }
                                   }
