@@ -148,7 +148,7 @@ class User:
             print(repr(e))
             raise e
 
-    def validate_user_feedback_schema(self, feedback_data, user_data):
+    def validate_and_set_user_feedback(self, feedback_data, user_data):
         """
             Method to validate and set user feedback data.
         """
