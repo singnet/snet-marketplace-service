@@ -139,15 +139,19 @@ class TestSignUPAPI(unittest.TestCase):
         assert (response_body["status"] == "success")
 
     def test_get_user_feedback(self):
-        self.get_user_feedback['requestContext'].update(self.event['requestContext'])
-        response = lambda_handler.request_handler(event=self.get_user_feedback, context=None)
+        self.get_user_feedback['requestContext'].update(
+            self.event['requestContext'])
+        response = lambda_handler.request_handler(
+            event=self.get_user_feedback, context=None)
         assert (response["statusCode"] == 200)
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
 
     def test_set_user_feedback(self):
-        self.set_user_feedback['requestContext'].update(self.event['requestContext'])
-        response = lambda_handler.request_handler(event=self.set_user_feedback, context=None)
+        self.set_user_feedback['requestContext'].update(
+            self.event['requestContext'])
+        response = lambda_handler.request_handler(
+            event=self.set_user_feedback, context=None)
         assert (response["statusCode"] == 200)
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
