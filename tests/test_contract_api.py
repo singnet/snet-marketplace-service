@@ -18,16 +18,6 @@ class TestContractAPI(unittest.TestCase):
                                "queryStringParameters": {"user_address": "0xFF2a327ed1Ca40CE93F116C5d6646b56991c0ddE"}
                                }
 
-        self.api_get_user_feedback = {"path": "/user/0xFF2a327ed1Ca40CE93F116C5d6646b56991c0ddE/feedback",
-                                      "httpMethod": "GET"
-                                      }
-        self.api_set_user_feedback = {"path": "/feedback",
-                                      "httpMethod": "POST",
-                                      "body": '{"feedback": {"user_address": "0xFF2a327ed1Ca40CE93F116C5d6646b56991c0ddE", '
-                                              '"org_id": "test-snet", "service_id": "tests", "user_rating": "3.0", '
-                                              '"comment": "Good Work."}}'
-                                      }
-
     @patch('common.utils.Utils.report_slack')
     def test_request_handler(self, mock_get):
         # event dict is {}
@@ -67,11 +57,4 @@ class TestContractAPI(unittest.TestCase):
         assert (response["statusCode"] == 200)
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
-        assert (len(response_body["data"]) > 0)
-
-    def test_api_get_user_feedback(self):
-        self.api_get_user_feedback.update(self.event)
-        response = lambda_handler.request_handler(event=self.api_get_user_feedback, context=None)
-        assert (response["statusCode"] == 200)
-        response_body = json.loads(response["body"])
-        assert (response_body["status"] == "success")
+        assert (len(response_body["data"]) > 0
