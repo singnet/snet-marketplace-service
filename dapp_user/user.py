@@ -37,7 +37,6 @@ class User:
             print(repr(e))
             raise e
 
-
     def get_wallet_details(self, user_data):
         """ Method to get wallet details for a given username. """
         try:
@@ -172,7 +171,8 @@ class User:
         try:
             user_rating_dict = {}
             username = user_data['authorizer']['claims']['email']
-            user_address = self._get_user_address_from_username(username=username)
+            user_address = self._get_user_address_from_username(
+                username=username)
             query_part = ""
             query_part_values = []
             if org_id is not None:
@@ -225,7 +225,8 @@ class User:
                     "Invalid Rating. Provided user rating should be between 1.0 and 5.0 .")
             curr_dt = dt.utcnow()
             username = user_data['authorizer']['claims']['email']
-            user_address = self._get_user_address_from_username(username=username)
+            user_address = self._get_user_address_from_username(
+                username=username)
             org_id = feedback_data['org_id']
             service_id = feedback_data['service_id']
             comment = feedback_data['comment']

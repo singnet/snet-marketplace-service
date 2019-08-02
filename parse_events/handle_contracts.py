@@ -58,6 +58,13 @@ class HandleContracts:
     def _hex_to_str(self, hex_str):
         return Web3.toText(hex_str).rstrip("\u0000")
 
+    def _process_organization_event(self, org_id, org_data):
+        print('_process_organization_event::org_data: ', org_data)
+        org_metadata_uri = self._hex_to_str(org_data[2])[7:]
+        ipfs_data = self._read_ipfs_node(org_metadata_uri)
+        self.db_obj.process_org_data(
+            org_id=org_id, org_data=org_data, ipfs_data=ipfs_data, org_metadata_uri=org_metadata_uri)
+
     def _process_srvc_evts(self, srvc_data, inst_cntrct):
         print('process_srvc_evts::srvc_data: ', srvc_data)
         org_id = self._hex_to_str(srvc_data['orgId'])
@@ -110,7 +117,8 @@ class HandleContracts:
                 org_data = inst_cntrct.functions.getOrganizationById(
                     org_id_hex).call()
                 print('__handle_events::org_data: ', org_data)
-                self.db_obj.process_org_data(org_id=org_id, org_data=org_data)
+                self._process_organization_event(
+                    org_id=org_id, org_data=org_data)
             elif event == 'OrganizationDeleted':
                 self.db_obj.del_org(org_id)
             elif event in ['ServiceCreated', 'ServiceMetadataModified']:
