@@ -50,6 +50,7 @@ class Repository:
         except Exception as e:
             self.connection.rollback()
             print("DB Error in %s, error: %s" % (str(query), repr(e)))
+            raise e
         return result
 
     def bulk_query(self, query, params=None):

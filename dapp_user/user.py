@@ -42,7 +42,7 @@ class User:
         """ Method to get wallet details for a given username. """
         try:
             username = user_data['authorizer']['claims']['email']
-            search_data = self.repo.execute("SELECT row_id, address, status FROM wallet WHERE username = %s", username)
+            search_data = self.repo.execute("SELECT * FROM wallet WHERE username = %s", username)
             self.obj_utils.clean(search_data)
             return search_data
         except Exception as e:
@@ -76,7 +76,7 @@ class User:
             set_usr_dta = self._set_user_data(user_data)
             if set_usr_dta == "success":
                 print(set_usr_dta)
-                address_exist = (len(self.get_wallet_details(username=username)) > 0 )
+                address_exist = (len(self.get_wallet_details(user_data=user_data)) > 0 )
                 if address_exist:
                     raise Exception('Useraname is already linked to wallet')
                 else:
