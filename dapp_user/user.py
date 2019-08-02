@@ -37,17 +37,14 @@ class User:
             print(repr(e))
             raise e
 
-    def check_for_existing_wallet(self, username):
-        """ Method to check for existing wallet address. """
+
+    def get_wallet_details(self, user_data):
+        """ Method to get wallet details for a given username. """
         try:
-            srch_dta = self.repo.execute(
-                "SELECT * FROM wallet WHERE username = %s", username)
-            search_data = self.repo.execute(
-                "SELECT count(*) FROM wallet WHERE username = %s", username)
-            if srch_dta == []:
-                print('Username not found')
-                return False
-            return True
+            username = user_data['authorizer']['claims']['email']
+            search_data = self.repo.execute("SELECT row_id, address, status FROM wallet WHERE username = %s", username)
+            self.obj_utils.clean(search_data)
+            return search_data
         except Exception as e:
             print(repr(e))
             raise e
@@ -79,8 +76,7 @@ class User:
             set_usr_dta = self._set_user_data(user_data)
             if set_usr_dta == "success":
                 print(set_usr_dta)
-                address_exist = self.check_for_existing_wallet(
-                    username=username)
+                address_exist = (len(self.get_wallet_details(username=username)) > 0 )
                 if address_exist:
                     raise Exception('Useraname is already linked to wallet')
                 else:

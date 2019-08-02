@@ -45,10 +45,8 @@ def request_handler(event, context):
                 user_data=event['requestContext'])
 
         elif "/wallet" == path:
-            status = usr_obj.check_for_existing_wallet(
+            response_data = usr_obj.get_wallet_details(
                 user_data=event['requestContext'])
-            response_data = {"isAssigned": status,
-                             "username": payload_dict['username']}
 
         elif "/delete-user" == path:
             response_data = usr_obj.del_user_data(
