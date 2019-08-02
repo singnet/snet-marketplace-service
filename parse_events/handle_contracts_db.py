@@ -5,7 +5,7 @@ from datetime import datetime as dt
 
 import log_setup
 
-from common.constant import EVNTS_LIMIT, IPFS_URL, ASSETS_BUCKET_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY
+from common.constant import EVNTS_LIMIT, IPFS_URL, ASSETS_BUCKET_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY, ASSETS_PREFIX
 from common.ipfs_util import IPFSUtil
 from common.repository import Repository
 from common.s3_util import S3Util
@@ -259,7 +259,7 @@ class HandleContractsDB:
     def _push_asset_to_s3_using_hash(self, hash, org_id, service_id):
         io_bytes = self.ipfs_utll.read_bytesio_from_ipfs(hash)
         filename = hash.split("/")[1]
-        new_url = self.s3_util.push_io_bytes_to_s3(org_id + "/" + service_id + "/" + filename, ASSETS_BUCKET_NAME,
+        new_url = self.s3_util.push_io_bytes_to_s3(ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename, ASSETS_BUCKET_NAME,
                                                    io_bytes)
         return new_url
 
