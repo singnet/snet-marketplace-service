@@ -42,7 +42,7 @@ class User:
         try:
             username = user_data['authorizer']['claims']['email']
             search_data = self.repo.execute(
-                "SELECT row_id, address, status FROM wallet WHERE username = %s", username)
+                "SELECT * FROM wallet WHERE username = %s", username)
             self.obj_utils.clean(search_data)
             return search_data
         except Exception as e:
@@ -77,7 +77,7 @@ class User:
             if set_usr_dta == "success":
                 print(set_usr_dta)
                 address_exist = (
-                    len(self.get_wallet_details(username=username)) > 0)
+                    len(self.get_wallet_details(user_data=user_data)) > 0)
                 if address_exist:
                     raise Exception('Useraname is already linked to wallet')
                 else:
