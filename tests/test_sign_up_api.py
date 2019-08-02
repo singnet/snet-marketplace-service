@@ -59,22 +59,22 @@ class TestSignUPAPI(unittest.TestCase):
                                   "httpMethod": "GET",
                                   "queryStringParameters": {},
                                   "requestContext":
-                                        {"authorizer":
-                                            {"claims":
-                                             {"email": "dummy@dummy.com"}
-                                            }
-                                        }
+                                  {"authorizer":
+                                   {"claims":
+                                    {"email": "dummy@dummy.com"}
+                                    }
+                                   }
                                   }
         self.set_user_feedback = {"path": "/feedback",
                                   "httpMethod": "POST",
                                   "body": '{"feedback": {"org_id": "test-snet", "service_id": "test-service",'
                                           ' "user_rating": "4.0", "comment": "Good Job!"} }',
                                   "requestContext":
-                                        {"authorizer":
-                                            {"claims":
-                                             {"email": "dummy@dummy.com"}
-                                            }
-                                        }
+                                  {"authorizer":
+                                   {"claims":
+                                    {"email": "dummy@dummy.com"}
+                                    }
+                                   }
                                   }
 
     @patch('common.utils.Utils.report_slack')
