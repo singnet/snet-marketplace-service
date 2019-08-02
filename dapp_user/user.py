@@ -37,12 +37,12 @@ class User:
             print(repr(e))
             raise e
 
-
     def get_wallet_details(self, user_data):
         """ Method to get wallet details for a given username. """
         try:
             username = user_data['authorizer']['claims']['email']
-            search_data = self.repo.execute("SELECT row_id, address, status FROM wallet WHERE username = %s", username)
+            search_data = self.repo.execute(
+                "SELECT row_id, address, status FROM wallet WHERE username = %s", username)
             self.obj_utils.clean(search_data)
             return search_data
         except Exception as e:
@@ -76,7 +76,8 @@ class User:
             set_usr_dta = self._set_user_data(user_data)
             if set_usr_dta == "success":
                 print(set_usr_dta)
-                address_exist = (len(self.get_wallet_details(username=username)) > 0 )
+                address_exist = (
+                    len(self.get_wallet_details(username=username)) > 0)
                 if address_exist:
                     raise Exception('Useraname is already linked to wallet')
                 else:
@@ -172,7 +173,8 @@ class User:
         try:
             user_rating_dict = {}
             username = user_data['authorizer']['claims']['email']
-            user_address = self._get_user_address_from_username(username=username)
+            user_address = self._get_user_address_from_username(
+                username=username)
             query_part = ""
             query_part_values = []
             if org_id is not None:
@@ -225,7 +227,8 @@ class User:
                     "Invalid Rating. Provided user rating should be between 1.0 and 5.0 .")
             curr_dt = dt.utcnow()
             username = user_data['authorizer']['claims']['email']
-            user_address = self._get_user_address_from_username(username=username)
+            user_address = self._get_user_address_from_username(
+                username=username)
             org_id = feedback_data['org_id']
             service_id = feedback_data['service_id']
             comment = feedback_data['comment']
