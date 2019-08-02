@@ -52,11 +52,11 @@ class HandleContractsDB:
         return srvc_data
 
     # write operations
-    def _create_or_updt_org(self, org_id, org_name, owner_address, ipfs_hash, conn):
-        upsert_qry = "Insert into organization (org_id, organization_name, owner_address, ipfs_hash, row_updated, row_created) " \
+    def _create_or_updt_org(self, org_id, org_name, owner_address, org_metadata_uri, conn):
+        upsert_qry = "Insert into organization (org_id, organization_name, owner_address, org_metadata_uri, row_updated, row_created) " \
                      "VALUES ( %s, %s, %s, %s, %s , %s) " \
-                     "ON DUPLICATE KEY UPDATE organization_name = %s, owner_address = %s, ipfs_hash = %s, row_updated = %s  "
-        upsert_params = [org_id, org_name, owner_address, ipfs_hash, dt.utcnow(), dt.utcnow(), org_name, owner_address, ipfs_hash,
+                     "ON DUPLICATE KEY UPDATE organization_name = %s, owner_address = %s, org_metadata_uri = %s, row_updated = %s  "
+        upsert_params = [org_id, org_name, owner_address, ipfs_hash, dt.utcnow(), dt.utcnow(), org_name, owner_address, org_metadata_uri,
                          dt.utcnow()]
         print('upsert_qry: ', upsert_qry)
         qry_resp = conn.execute(upsert_qry, upsert_params)
@@ -392,13 +392,13 @@ class HandleContractsDB:
             self.util_obj.report_slack(type=1, slack_msg=repr(e))
             self._rollback(conn=conn, err=repr(e))
 
-    def process_org_data(self, org_id, org_data, ipfs_data, ipfs_hash):
+    def process_org_data(self, org_id, org_data, ipfs_data, org_metadata_uri):
         self.repo.auto_commit = False
         conn = self.repo
         try:
 
             if (org_data is not None and org_data[0]):
-                self._create_or_updt_org(org_id=org_id, org_name=ipfs_data["org_name"], owner_address=org_data[3], ipfs_hash=ipfs_hash, conn=conn)
+                self._create_or_updt_org(org_id=org_id, org_name=ipfs_data["org_name"], owner_address=org_data[3], org_metadata_uri=org_metadata_uri, conn=conn)
                 self._del_org_groups(org_id=org_id, conn=conn)
                 self._create_org_groups(org_id=org_id, groups=ipfs_data["groups"], conn=conn)
                 self._del_members(org_id=org_id, conn=conn)
