@@ -191,8 +191,8 @@ class Registry:
                 available_service.append((rec['org_id'], rec['service_id']), )
             return available_service
         except Exception as err:
-            print(repr(err)
-            raise err)
+            print(repr(err))
+            raise err
 
     def _filter_condition_to_query(self, filter_condition):
         value = []
