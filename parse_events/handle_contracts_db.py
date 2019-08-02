@@ -52,11 +52,11 @@ class HandleContractsDB:
         return srvc_data
 
     # write operations
-    def _create_or_updt_org(self, org_id, org_name, owner_address, conn):
-        upsert_qry = "Insert into organization (org_id, organization_name, owner_address, row_updated, row_created) " \
-                     "VALUES ( %s, %s, %s, %s, %s ) " \
-                     "ON DUPLICATE KEY UPDATE organization_name = %s, owner_address = %s, row_updated = %s  "
-        upsert_params = [org_id, org_name, owner_address, dt.utcnow(), dt.utcnow(), org_name, owner_address,
+    def _create_or_updt_org(self, org_id, org_name, owner_address, ipfs_hash, conn):
+        upsert_qry = "Insert into organization (org_id, organization_name, owner_address, ipfs_hash, row_updated, row_created) " \
+                     "VALUES ( %s, %s, %s, %s, %s , %s) " \
+                     "ON DUPLICATE KEY UPDATE organization_name = %s, owner_address = %s, ipfs_hash = %s, row_updated = %s  "
+        upsert_params = [org_id, org_name, owner_address, ipfs_hash, dt.utcnow(), dt.utcnow(), org_name, owner_address, ipfs_hash,
                          dt.utcnow()]
         print('upsert_qry: ', upsert_qry)
         qry_resp = conn.execute(upsert_qry, upsert_params)
@@ -175,10 +175,10 @@ class HandleContractsDB:
         print('_create_or_updt_srvc_mdata::row upserted', qry_res)
 
     def _create_grp(self, srvc_rw_id, org_id, service_id, grp_data, conn):
-        insrt_grp = "INSERT INTO service_group (service_row_id, org_id, service_id, group_id, group_name, " \
+        insrt_grp = "INSERT INTO service_group (service_row_id, org_id, service_id, group_id, " \
                     "pricing, row_updated, row_created)" \
-                    "VALUES(%s, %s, %s, %s, %s, %s, %s, %s)"
-        insrt_grp_params = [srvc_rw_id, org_id, service_id, grp_data['group_id'], grp_data['group_name'],
+                    "VALUES(%s, %s, %s, %s, %s, %s, %s)"
+        insrt_grp_params = [srvc_rw_id, org_id, service_id, grp_data['group_id'],
                             grp_data['pricing'], dt.utcnow(), dt.utcnow()]
 
         return conn.execute(insrt_grp, insrt_grp_params)
@@ -363,7 +363,6 @@ class HandleContractsDB:
                 qry_data = self._create_grp(srvc_rw_id=service_row_id, org_id=org_id, service_id=service_id, conn=conn,
                                             grp_data={
                                                 'group_id': grp['group_id'],
-                                                'group_name': grp['group_name'],
                                                 'pricing': json.dumps(grp['pricing'])
                                             })
                 group_insert_count = group_insert_count + qry_data[0]
@@ -393,13 +392,13 @@ class HandleContractsDB:
             self.util_obj.report_slack(type=1, slack_msg=repr(e))
             self._rollback(conn=conn, err=repr(e))
 
-    def process_org_data(self, org_id, org_data, ipfs_data):
+    def process_org_data(self, org_id, org_data, ipfs_data, ipfs_hash):
         self.repo.auto_commit = False
         conn = self.repo
         try:
 
             if (org_data is not None and org_data[0]):
-                self._create_or_updt_org(org_id=org_id, org_name=ipfs_data["org_name"], owner_address=org_data[3], conn=conn)
+                self._create_or_updt_org(org_id=org_id, org_name=ipfs_data["org_name"], owner_address=org_data[3], ipfs_hash=ipfs_hash, conn=conn)
                 self._del_org_groups(org_id=org_id, conn=conn)
                 self._create_org_groups(org_id=org_id, groups=ipfs_data["groups"], conn=conn)
                 self._del_members(org_id=org_id, conn=conn)
