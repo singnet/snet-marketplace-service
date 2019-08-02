@@ -63,15 +63,16 @@ class HandleContractsDB:
         print('_create_or_updt_org::row upserted: ', qry_resp)
 
     def _del_org_groups(self, org_id, conn):
-        delete_query = conn.execute("DELETE FROM org_group WHERE org_id = %s ", [org_id])
-
+        delete_query = conn.execute(
+            "DELETE FROM org_group WHERE org_id = %s ", [org_id])
 
     def _create_org_groups(self, org_id, groups, conn):
         insert_qry = "Insert into org_group (org_id, group_id, group_name, payment, row_updated, row_created) " \
                      "VALUES ( %s, %s, %s, %s, %s, %s ) "
-        cnt=0
+        cnt = 0
         for group in groups:
-            insert_params = [org_id, group['group_id'], group['group_name'], json.dumps(group['payment']), dt.utcnow(), dt.utcnow()]
+            insert_params = [org_id, group['group_id'], group['group_name'], json.dumps(
+                group['payment']), dt.utcnow(), dt.utcnow()]
             qry_res = conn.execute(insert_qry, insert_params)
             cnt = cnt + qry_res[0]
         print('_create_org_groups::row inserted', cnt)
@@ -156,7 +157,7 @@ class HandleContractsDB:
                            "ON DUPLICATE KEY UPDATE service_row_id = %s, " \
                            "display_name = %s, model_ipfs_hash = %s, description = %s, url = %s, json = %s, " \
                            "encoding = %s, type = %s, mpe_address = %s, row_updated = %s ,assets_hash = %s ,assets_url = %s"
-        
+
         srvc_desc = ipfs_data.get('service_description', {})
         desc = srvc_desc.get('description', '')
         url = srvc_desc.get('url', '')
@@ -398,9 +399,11 @@ class HandleContractsDB:
         try:
 
             if (org_data is not None and org_data[0]):
-                self._create_or_updt_org(org_id=org_id, org_name=ipfs_data["org_name"], owner_address=org_data[3], org_metadata_uri=org_metadata_uri, conn=conn)
+                self._create_or_updt_org(
+                    org_id=org_id, org_name=ipfs_data["org_name"], owner_address=org_data[3], org_metadata_uri=org_metadata_uri, conn=conn)
                 self._del_org_groups(org_id=org_id, conn=conn)
-                self._create_org_groups(org_id=org_id, groups=ipfs_data["groups"], conn=conn)
+                self._create_org_groups(
+                    org_id=org_id, groups=ipfs_data["groups"], conn=conn)
                 self._del_members(org_id=org_id, conn=conn)
                 self._create_or_updt_members(org_id, org_data[4], conn)
                 self._commit(conn)
