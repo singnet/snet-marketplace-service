@@ -152,7 +152,7 @@ class Registry:
             total_count = self._get_total_count(sub_qry=sub_qry, filter_query=filter_query, values=values)
             if total_count == 0:
                 return self._search_response_format(total_count, offset, limit, [])
-            q_dta = self._srch_qry_dta(sub_qry=sub_qry, sort_by=sort_by, order_by=order_by,
+            q_dta = self._search_query_data(sub_qry=sub_qry, sort_by=sort_by, order_by=order_by,
                                        offset=offset, limit=limit, filter_query=filter_query, values=values)
             return self._search_response_format(total_count, offset, limit, q_dta)
         except Exception as e:
@@ -191,9 +191,10 @@ class Registry:
                 available_service.append((rec['org_id'], rec['service_id']), )
             return available_service
         except Exception as err:
-            print(repr(err))
+            print(repr(err)
+            raise err)
 
-    def _filter_condition_to__query(self, filter_condition):
+    def _filter_condition_to_query(self, filter_condition):
         value = []
         if filter_condition.attr in ["org_id", "service_id"]:
             filter_condition.attr = "M." + filter_condition.attr
@@ -216,7 +217,7 @@ class Registry:
         for filter in filters:
             query += "("
             for filter_condition in filter.get_filter().get("filter"):
-                sub_query , value = self.filter_condition_to__query(filter_condition)
+                sub_query , value = self._filter_condition_to_query(filter_condition)
                 values +=  value
                 query = query + "(" + sub_query + ") AND "
             if query.endswith(" AND "):
