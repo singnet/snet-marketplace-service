@@ -21,38 +21,44 @@ class TestContractAPI(unittest.TestCase):
     @patch('common.utils.Utils.report_slack')
     def test_request_handler(self, mock_get):
         # event dict is {}
-        response = lambda_handler.request_handler(event=self.event, context=None)
+        response = lambda_handler.request_handler(
+            event=self.event, context=None)
         assert (response["statusCode"] == 400)
         assert (response["body"] == '"Bad Request"')
         # event dict has invalid path
         test_event = {"path": "/dummy", "httpMethod": "GET"}
         test_event.update(self.event)
-        response = lambda_handler.request_handler(event=test_event, context=None)
+        response = lambda_handler.request_handler(
+            event=test_event, context=None)
         print(response)
         assert (response["statusCode"] == 404)
         assert (response["body"] == '"Not Found"')
         # event with invalid method
         test_event["httpMethod"] = "PUT"
-        response = lambda_handler.request_handler(event=test_event, context=None)
+        response = lambda_handler.request_handler(
+            event=test_event, context=None)
         assert (response["statusCode"] == 405)
         assert (response["body"] == '"Method Not Allowed"')
 
     def test_get_all_org(self):
         self.get_all_org.update(self.event)
-        response = lambda_handler.request_handler(event=self.get_all_org, context=None)
+        response = lambda_handler.request_handler(
+            event=self.get_all_org, context=None)
         assert (response["statusCode"] == 200)
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
 
     def test_get_all_srvcs(self):
         self.get_all_srvcs.update(self.event)
-        response = lambda_handler.request_handler(event=self.get_all_srvcs, context=None)
+        response = lambda_handler.request_handler(
+            event=self.get_all_srvcs, context=None)
         print(response)
         assert (response["statusCode"] == 200)
 
     def test_api_group_info(self):
         self.api_group_info.update(self.event)
-        response = lambda_handler.request_handler(event=self.api_group_info, context=None)
+        response = lambda_handler.request_handler(
+            event=self.api_group_info, context=None)
         print(response)
         assert (response["statusCode"] == 200)
         response_body = json.loads(response["body"])

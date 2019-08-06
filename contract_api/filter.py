@@ -16,4 +16,5 @@ class Filter:
 
     def set_filter(self):
         for rec in self.filter:
-            self.filter_conditions.append(FilterCondition(rec["filter_condition"]))
+            self.filter_conditions.append(
+                FilterCondition(rec["filter_condition"]))
