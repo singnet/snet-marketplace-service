@@ -60,3 +60,5 @@ ASSETS_BUCKET_NAME = "enhanced-marketplace"
 ASSETS_PREFIX = "assets"
 NET_ID = ''
 PATH_PREFIX = ""
+PREFIX_FREE_CALL=""
+METERING_ARN=""
