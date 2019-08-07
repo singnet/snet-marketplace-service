@@ -52,7 +52,7 @@ class User:
     def _link_wallet(self, username):
         """ Method to assign wallet address to a user. """
         try:
-            return self.repo.execute("UPDATE wallet SET username = %s WHERE username is NULL LIMIT 1", username)
+            return self.repo.execute("UPDATE wallet SET username = %s WHERE username IS NULL AND status = 1 LIMIT 1", username)
         except Exception as e:
             print(repr(e))
             raise e
@@ -73,27 +73,10 @@ class User:
         try:
             self.repo.begin_transaction()
             username = user_data['authorizer']['claims']['email']
-            set_usr_dta = self._set_user_data(user_data)
-            if set_usr_dta == "success":
-                print(set_usr_dta)
-                address_exist = (
-                    len(self.get_wallet_details(user_data=user_data)) > 0)
-                if address_exist:
-                    raise Exception('Useraname is already linked to wallet')
-                else:
-                    updt_resp = self._link_wallet(username=username)
-
-                    if updt_resp[0] == 1:
-                        result = self.repo.execute(
-                            "SELECT * FROM wallet where username = %s", username)
-                        address = result[0].get("address", None)
-                        private_key = self._fetch_private_key_from_ssm(
-                            address=address)
-                        self.obj_utils.clean(result)
-                        result[0].update({"private_key": private_key})
-                        self.repo.commit_transaction()
-                        return {"success": "success", "data": result}
-                    raise Exception("Error in assigning pre-seeded wallet")
+            set_user_data = self._set_user_data(user_data)
+            if set_user_data == "success":
+                print(set_user_data)
+                return set_user_data
             elif set_usr_dta == "failed":
                 return "User already exist"
         except Exception as e:
