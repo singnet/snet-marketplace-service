@@ -21,7 +21,7 @@ class Signer:
             Call monitoring service to get the details
         """
         #lambda_payload = {"username": username}
-        #response = self.lambda_client.invoke(FunctionName=METERING_ARN, InvocationType='RequestResponse',
+        # response = self.lambda_client.invoke(FunctionName=METERING_ARN, InvocationType='RequestResponse',
         #                                    Payload= json.dumps(lambda_payload))
         free_calls_allowed = True
         return free_calls_allowed
@@ -32,17 +32,21 @@ class Signer:
         """
         try:
             username = user_data['authorizer']['claims']['email']
-            current_block_no = self.obj_utils.get_current_block_no(ws_provider=NETWORKS[self.net_id]['ws_provider'])
+            current_block_no = self.obj_utils.get_current_block_no(
+                ws_provider=NETWORKS[self.net_id]['ws_provider'])
             if self._free_calls_allowed(username=username):
-                message_text = PREFIX_FREE_CALL + username + org_id + service_id + str(current_block_no)
-                provider = Web3.HTTPProvider(NETWORKS[self.net_id]['http_provider'])
+                message_text = PREFIX_FREE_CALL + username + \
+                    org_id + service_id + str(current_block_no)
+                provider = Web3.HTTPProvider(
+                    NETWORKS[self.net_id]['http_provider'])
                 w3 = Web3(provider)
                 message = w3.sha3(text=message_text)
                 signature = w3.eth.account.signHash(defunct_hash_message(primitive=message),
                                                     config["signer_private_key"]).signature
                 return {"signature": signature.hex()}
             else:
-                raise Exception("Free calls expired for username %s.", username)
+                raise Exception(
+                    "Free calls expired for username %s.", username)
         except Exception as e:
             print(repr(e))
             raise e
@@ -53,7 +57,8 @@ class Signer:
                                                     "LIMIT 1", [username])
             if len(wallet_address_data) == 1:
                 return wallet_address_data[0]['address']
-            raise Exception("Unable to find wallet address for username %s", username)
+            raise Exception(
+                "Unable to find wallet address for username %s", username)
         except Exception as e:
             print(repr(e))
             raise e
@@ -75,7 +80,8 @@ class Signer:
                 metadata["pricing"] = pricing
                 return metadata
             else:
-                raise Exception("Unable to find service for service_id %s", service_id)
+                raise Exception(
+                    "Unable to find service for service_id %s", service_id)
         except Exception as e:
             print(repr(e))
             raise e
@@ -103,12 +109,15 @@ class Signer:
         try:
             username = user_data['authorizer']['claims']['email']
             user_address = self._get_user_address(username=username)
-            metadata = self._get_service_metadata(org_id=org_id, service_id=service_id)
+            metadata = self._get_service_metadata(
+                org_id=org_id, service_id=service_id)
             recipient_address = metadata['payment']['payment_address']
             channel_id = self._get_channel_id(sender_address=user_address, recipient_address=recipient_address,
                                               group_id=metadata['group_id'], signer_address=config["signer_address"])
-            object_service_client = ServiceClient(config=config, metadata=metadata, options=dict())
+            object_service_client = ServiceClient(
+                config=config, metadata=metadata, options=dict())
             return object_service_client.get_service_call_metadata(channel_id=channel_id)
         except Exception as e:
             print(repr(e))
-            raise Exception("Unable to sign regular call for username %s", username)
+            raise Exception(
+                "Unable to sign regular call for username %s", username)

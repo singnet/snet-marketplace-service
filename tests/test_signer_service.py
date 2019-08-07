@@ -14,9 +14,9 @@ class TestSignUPAPI(unittest.TestCase):
                                         "queryStringParameters": {"org_id": "test-org", "service_id": "test-service-id"},
                                         "requestContext":
                                             {"authorizer":
-                                                 {"claims":
+                                             {"claims":
                                                       {"email": "dummy@dummy.com"}
-                                                  }
+                                              }
                                              }
                                         }
         self.signature_for_regular_call = {"path": "/regular-call",
@@ -25,16 +25,18 @@ class TestSignUPAPI(unittest.TestCase):
                                                                      "service_id": "test-service-id"},
                                            "requestContext":
                                                {"authorizer":
-                                                    {"claims":
+                                                {"claims":
                                                          {"email": "dummy@dummy.com"}
-                                                     }
+                                                 }
                                                 }
                                            }
 
     @patch('common.utils.Utils.report_slack')
     def test_signature_for_free_call(self, report_slack_mock):
-        self.signature_for_free_call['requestContext'].update(self.event['requestContext'])
-        response = lambda_handler.request_handler(event=self.signature_for_free_call, context=None)
+        self.signature_for_free_call['requestContext'].update(
+            self.event['requestContext'])
+        response = lambda_handler.request_handler(
+            event=self.signature_for_free_call, context=None)
         print(response)
         assert (response["statusCode"] == 200)
         response_body = json.loads(response["body"])
