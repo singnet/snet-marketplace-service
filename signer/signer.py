@@ -5,6 +5,7 @@ from config import config
 from eth_account.messages import defunct_hash_message
 from sdk.service_client import ServiceClient
 from web3 import Web3
+from common.utils import Utils
 
 
 class Signer:
@@ -12,6 +13,7 @@ class Signer:
         self.repo = obj_repo
         self.net_id = net_id
         self.lambda_client = boto3.client('lambda')
+        self.obj_utils = Utils()
 
     def _free_calls_allowed(self, username):
         """
@@ -24,12 +26,13 @@ class Signer:
         free_calls_allowed = True
         return free_calls_allowed
 
-    def signature_for_free_call(self, user_data, org_id, service_id, current_block_no):
+    def signature_for_free_call(self, user_data, org_id, service_id):
         """
             Method to generate signature for free call.
         """
         try:
             username = user_data['authorizer']['claims']['email']
+            current_block_no = self.obj_utils.get_latest_block_no(ws_provider=NETWORKS[self.net_id]['ws_provider'])
             if self._free_calls_allowed(username=username):
                 message_text = PREFIX_FREE_CALL + username + org_id + service_id + str(current_block_no)
                 provider = Web3.HTTPProvider(NETWORKS[self.net_id]['http_provider'])

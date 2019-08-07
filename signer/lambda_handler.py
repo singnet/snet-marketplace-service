@@ -35,8 +35,7 @@ def request_handler(event, context):
         if "/free-call" == path:
             response_data = signer_object.signature_for_free_call(user_data=event['requestContext'],
                                                                   org_id=payload_dict['org_id'],
-                                                                  service_id=payload_dict['service_id'],
-                                                                  current_block_no=payload_dict['current_block_no'])
+                                                                  service_id=payload_dict['service_id'])
 
         elif "/regular-call" == path:
 

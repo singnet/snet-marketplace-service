@@ -11,8 +11,7 @@ class TestSignUPAPI(unittest.TestCase):
 
         self.signature_for_free_call = {"path": "/free-call",
                                         "httpMethod": "GET",
-                                        "queryStringParameters": {"org_id": "test-org", "service_id": "test-service-id",
-                                                                  "current_block_no": 0000000},
+                                        "queryStringParameters": {"org_id": "test-org", "service_id": "test-service-id"},
                                         "requestContext":
                                             {"authorizer":
                                                  {"claims":
