@@ -32,7 +32,7 @@ class User:
             if len(set_usr_dta) > 0:
                 return "success"
             else:
-                return "failed"
+                return "User already exist"
         except Exception as e:
             print(repr(e))
             raise e
@@ -71,14 +71,10 @@ class User:
             This is one time process.
         """
         try:
-            self.repo.begin_transaction()
             username = user_data['authorizer']['claims']['email']
             set_user_data = self._set_user_data(user_data)
-            if set_user_data == "success":
-                print(set_user_data)
-                return set_user_data
-            elif set_usr_dta == "failed":
-                return "User already exist"
+            print(set_user_data)
+            return set_user_data
         except Exception as e:
             self.repo.rollback_transaction()
             print(repr(e))
