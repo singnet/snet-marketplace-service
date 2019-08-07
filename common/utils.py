@@ -52,6 +52,6 @@ class Utils:
         url = url.replace("http://","")
         return url
 
-    def get_latest_block_no(self, ws_provider):
+    def get_current_block_no(self, ws_provider):
         w3Obj = Web3(web3.providers.WebsocketProvider(ws_provider))
         return w3Obj.eth.blockNumber

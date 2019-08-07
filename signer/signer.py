@@ -32,7 +32,7 @@ class Signer:
         """
         try:
             username = user_data['authorizer']['claims']['email']
-            current_block_no = self.obj_utils.get_latest_block_no(ws_provider=NETWORKS[self.net_id]['ws_provider'])
+            current_block_no = self.obj_utils.get_current_block_no(ws_provider=NETWORKS[self.net_id]['ws_provider'])
             if self._free_calls_allowed(username=username):
                 message_text = PREFIX_FREE_CALL + username + org_id + service_id + str(current_block_no)
                 provider = Web3.HTTPProvider(NETWORKS[self.net_id]['http_provider'])
