@@ -6,11 +6,12 @@ import requests
 from common.constant import SLACK_HOOK
 IGNORED_LIST = ['row_id', 'row_created', 'row_updated']
 
+
 class Utils:
     def __init__(self):
         self.msg_type = {
-            0 : 'info:: ',
-            1 : 'err:: '
+            0: 'info:: ',
+            1: 'err:: '
         }
 
     def report_slack(self, type, slack_msg):
@@ -43,11 +44,16 @@ class Utils:
                 elif row[key] == b'\x00':
                     row[key] = 0
                 else:
-                    raise Exception("Unsupported bytes object. Key " + str(key) + " value " + str(row[key]))
+                    raise Exception("Unsupported bytes object. Key " +
+                                    str(key) + " value " + str(row[key]))
 
         return row
 
     def remove_http_https_prefix(self, url):
-        url = url.replace("https://","")
-        url = url.replace("http://","")
+        url = url.replace("https://", "")
+        url = url.replace("http://", "")
         return url
+
+    def get_current_block_no(self, ws_provider):
+        w3Obj = Web3(web3.providers.WebsocketProvider(ws_provider))
+        return w3Obj.eth.blockNumber
