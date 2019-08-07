@@ -49,7 +49,7 @@ class User:
             print(repr(e))
             raise e
 
-    #def _link_wallet(self, username):
+    # def _link_wallet(self, username):
     #    """ Method to assign wallet address to a user. """
     #    try:
     #        return self.repo.execute("UPDATE wallet SET username = %s WHERE username IS NULL AND status = 1 LIMIT 1", username)
