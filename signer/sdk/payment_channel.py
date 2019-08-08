@@ -27,7 +27,8 @@ class PaymentChannel:
         return self.mpe_contract.channel_extend_and_add_funds(self.account, self.channel_id, expiration, amount)
 
     def sync_state(self):
-        channel_blockchain_data = self.mpe_contract.contract.functions.channels(self.channel_id).call()
+        channel_blockchain_data = self.mpe_contract.contract.functions.channels(
+            self.channel_id).call()
         (current_nonce, last_signed_amount) = self._get_current_channel_state()
         nonce = channel_blockchain_data[0]
         total_amount = channel_blockchain_data[5]
@@ -45,9 +46,11 @@ class PaymentChannel:
     def _get_current_channel_state(self):
         stub = self.payment_channel_state_service_client
         message = web3.Web3.soliditySha3(["uint256"], [self.channel_id])
-        signature = self.web3.eth.account.signHash(defunct_hash_message(message), self.account.signer_private_key).signature
+        signature = self.web3.eth.account.signHash(defunct_hash_message(
+            message), self.account.signer_private_key).signature
         with add_to_path(str(RESOURCES_PATH.joinpath("proto"))):
             state_service_pb2 = importlib.import_module("state_service_pb2")
-        request = state_service_pb2.ChannelStateRequest(channel_id=web3.Web3.toBytes(self.channel_id), signature=bytes(signature))
+        request = state_service_pb2.ChannelStateRequest(
+            channel_id=web3.Web3.toBytes(self.channel_id), signature=bytes(signature))
         response = stub.GetChannelState(request)
         return int.from_bytes(response.current_nonce, byteorder="big"), int.from_bytes(response.current_signed_amount, byteorder="big")
