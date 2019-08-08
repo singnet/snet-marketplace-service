@@ -29,18 +29,19 @@ def request_handler(event, context):
             payload_dict = event.get('queryStringParameters')
         else:
             return get_response(405, "Method Not Allowed")
-
-        if path.split("/")[1] in ["/org", "/service"]:
+        
+        sub_path = path.split("/")
+        if sub_path[1] in ["/org", "/service"]:
             obj_reg = Registry(obj_repo=db[net_id])
 
-        elif path.split("/")[1] in ["/channel"]:
+        elif sub_path[1] in ["/channel"]:
             obj_mpe = MPE(net_id=net_id, obj_repo=db[net_id])
 
         if "/org" == path:
             response_data = obj_reg.get_all_org()
 
         elif re.match("(\/org\/)[^\/]*(\/group)[/]{0,1}$", path):
-            org_id = path.split("/")[2]
+            org_id = sub_path[2]
             response_data = obj_reg.get_all_group_for_org_id(org_id=org_id)
 
         elif "/service" == path and method == 'POST':
@@ -51,9 +52,8 @@ def request_handler(event, context):
             response_data = obj_reg.get_filter_attribute(attribute=payload_dict["attribute"])
 
         elif re.match("(\/org\/)[^\/]*(\/service\/)[^\/]*(\/group)[/]{0,1}$", path):
-            params = path.split("/")
-            org_id = params[2]
-            service_id = params[4]
+            org_id = sub_path[2]
+            service_id = sub_path[4]
             response_data = obj_reg.get_group_info(org_id=org_id, service_id=service_id)
 
         elif "/channel" == path:

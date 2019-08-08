@@ -4,6 +4,7 @@ from collections import defaultdict
 from common.utils import Utils
 from pymysql import MySQLError
 from contract_api.filter import Filter
+from common.constant import GET_ALL_SERVICE_OFFSET_LIMIT, GET_ALL_SERVICE_LIMIT
 
 class Registry:
     def __init__(self, obj_repo):
@@ -137,8 +138,8 @@ class Registry:
             fields_mapping = {"dn": "display_name", "tg": "tag_name", "org": "org_id"}
             s = qry_param.get('s', 'all')
             q = qry_param.get('q', '')
-            offset = qry_param.get('offset', 0)
-            limit = qry_param.get('limit', 15)
+            offset = qry_param.get('offset', GET_ALL_SERVICE_OFFSET_LIMIT)
+            limit = qry_param.get('limit', GET_ALL_SERVICE_LIMIT)
             sort_by = fields_mapping.get(qry_param.get('sort_by', None), "display_name")
             order_by = qry_param.get('order_by', 'asc')
 
