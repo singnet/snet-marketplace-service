@@ -43,7 +43,8 @@ class Signer:
                                                  ["PREFIX_FREE_CALL", username, org_id, service_id, current_block_no])
                 if not config['private_key'].startswith("0x"):
                     config['private_key'] = "0x" + config['private_key']
-                signature = bytes(w3.eth.account.signHash(defunct_hash_message(message), config['private_key']).signature)
+                signature = bytes(w3.eth.account.signHash(
+                    defunct_hash_message(message), config['private_key']).signature)
                 return {"snet-free-call-user-id": username, "snet-payment-channel-signature-bin": signature.hex(),
                         "snet-current-block-number": current_block_no}
             else:
