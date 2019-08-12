@@ -64,7 +64,8 @@ def request_handler(event, context):
             lambda_client = boto3.client('lambda')
             response = lambda_client.invoke(FunctionName=GET_FREE_CALLS_METERING_ARN, InvocationType='RequestResponse',
                                                  Payload= json.dumps(event))
-            return response
+            result = json.loads(response.get('Payload').read()) 
+            return result
 
         else:
             return get_response(404, "Not Found")
