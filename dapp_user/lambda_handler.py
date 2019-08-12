@@ -1,7 +1,8 @@
 import json
 import re
 import traceback
-from common.constant import NETWORKS
+import boto3
+from common.constant import NETWORKS, GET_FREE_CALLS_METERING_ARN
 from common.repository import Repository
 from common.utils import Utils
 
@@ -58,6 +59,12 @@ def request_handler(event, context):
         elif "/feedback" == path and event['httpMethod'] == 'POST':
             response_data = usr_obj.validate_and_set_user_feedback(
                 feedback_data=payload_dict['feedback'], user_data=event['requestContext'])
+
+        elif "/usage/freecalls" == path:
+            lambda_client = boto3.client('lambda')
+            response = lambda_client.invoke(FunctionName=GET_FREE_CALLS_METERING_ARN, InvocationType='RequestResponse',
+                                                 Payload= json.dumps(event))
+            return response
 
         else:
             return get_response(404, "Not Found")
