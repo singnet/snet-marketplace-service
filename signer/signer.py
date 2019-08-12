@@ -1,6 +1,7 @@
 import json
 import boto3
-from common.constant import PREFIX_FREE_CALL, METERING_ARN, NETWORKS
+import web3
+from common.constant import PREFIX_FREE_CALL, GET_FREE_CALLS_METERING_ARN, NETWORKS
 from config import config
 from eth_account.messages import defunct_hash_message
 from sdk.service_client import ServiceClient
@@ -35,14 +36,14 @@ class Signer:
             current_block_no = self.obj_utils.get_current_block_no(
                 ws_provider=NETWORKS[self.net_id]['ws_provider'])
             if self._free_calls_allowed(username=username):
-                message_text = PREFIX_FREE_CALL + username + \
-                    org_id + service_id + str(current_block_no)
                 provider = Web3.HTTPProvider(
                     NETWORKS[self.net_id]['http_provider'])
                 w3 = Web3(provider)
-                message = w3.sha3(text=message_text)
-                signature = w3.eth.account.signHash(defunct_hash_message(primitive=message),
-                                                    config["signer_private_key"]).signature
+                message = web3.Web3.soliditySha3(["string", "string", "string", "string", "uint256"],
+                                                 ["PREFIX_FREE_CALL", username, org_id, service_id, current_block_no])
+                if not config['private_key'].startswith("0x"):
+                    config['private_key'] = "0x" + config['private_key']
+                signature = bytes(w3.eth.account.signHash(defunct_hash_message(message), config['private_key']).signature)
                 return {"snet-free-call-user-id": username, "snet-payment-channel-signature-bin": signature.hex(),
                         "snet-current-block-number": current_block_no}
             else:
