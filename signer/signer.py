@@ -40,7 +40,7 @@ class Signer:
                     NETWORKS[self.net_id]['http_provider'])
                 w3 = Web3(provider)
                 message = web3.Web3.soliditySha3(["string", "string", "string", "string", "uint256"],
-                                                 ["PREFIX_FREE_CALL", username, org_id, service_id, current_block_no])
+                                                 [PREFIX_FREE_CALL, username, org_id, service_id, current_block_no])
                 if not config['private_key'].startswith("0x"):
                     config['private_key'] = "0x" + config['private_key']
                 signature = bytes(w3.eth.account.signHash(defunct_hash_message(message), config['private_key']).signature)
