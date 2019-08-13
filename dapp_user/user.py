@@ -112,14 +112,14 @@ class User:
             print(repr(e))
             raise e
 
-    def update_user_profile(self, email_alerts, user_data):
+    def update_user_profile(self, email_alerts, is_terms_accepted, user_data):
         '''
             Method to update user profile data.
         '''
         try:
             username = user_data['authorizer']['claims']['email']
-            result = self.repo.execute("UPDATE user SET email_alerts = %s WHERE username = %s", [
-                                       int(email_alerts == True), username])
+            result = self.repo.execute("UPDATE user SET email_alerts = %s, is_terms_accepted = %s WHERE username = %s", [
+                                       int(email_alerts == True), int(is_terms_accepted == True), username])
             return {"success": "success", "data": []}
         except Exception as e:
             print(repr(e))
