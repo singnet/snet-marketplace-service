@@ -39,7 +39,7 @@ def request_handler(event, context):
 
         elif "/profile" == path and event['httpMethod'] == 'POST':
             response_data = usr_obj.update_user_profile(
-                user_data=event['requestContext'], email_alerts=payload_dict['email_alerts'])
+                user_data=event['requestContext'], email_alerts=payload_dict['email_alerts'], is_terms_accepted=payload_dict['is_terms_accepted'])
 
         elif "/profile" == path and event['httpMethod'] == 'GET':
             response_data = usr_obj.get_user_profile(
