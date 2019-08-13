@@ -63,8 +63,8 @@ def request_handler(event, context):
         elif "/usage/freecalls" == path:
             lambda_client = boto3.client('lambda')
             response = lambda_client.invoke(FunctionName=GET_FREE_CALLS_METERING_ARN, InvocationType='RequestResponse',
-                                                 Payload= json.dumps(event))
-            result = json.loads(response.get('Payload').read()) 
+                                            Payload=json.dumps(event))
+            result = json.loads(response.get('Payload').read())
             return result
 
         else:
