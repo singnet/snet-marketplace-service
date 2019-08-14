@@ -1,6 +1,7 @@
 import json
 import boto3
-from common.constant import PREFIX_FREE_CALL, METERING_ARN, NETWORKS
+import web3
+from common.constant import PREFIX_FREE_CALL, GET_FREE_CALLS_METERING_ARN, NETWORKS
 from config import config
 from eth_account.messages import defunct_hash_message
 from sdk.service_client import ServiceClient
@@ -15,16 +16,27 @@ class Signer:
         self.lambda_client = boto3.client('lambda')
         self.obj_utils = Utils()
 
-    def _free_calls_allowed(self, username):
+    def _free_calls_allowed(self, username, org_id, service_id):
         """
             Method to check free calls exists for given user or not.
             Call monitoring service to get the details
         """
-        #lambda_payload = {"username": username}
-        # response = self.lambda_client.invoke(FunctionName=METERING_ARN, InvocationType='RequestResponse',
-        #                                    Payload= json.dumps(lambda_payload))
-        free_calls_allowed = True
-        return free_calls_allowed
+        try:
+            lambda_payload = {"httpMethod": "GET",
+                              "queryStringParameters": {"organization_id": org_id,
+                                                        "service_id": service_id,
+                                                        "username": username}}
+            response = self.lambda_client.invoke(FunctionName=GET_FREE_CALLS_METERING_ARN, InvocationType='RequestResponse',
+                                                 Payload= json.dumps(lambda_payload))
+            response_body_raw = json.loads(response.get('Payload').read())['body']
+            response_body = json.loads(response_body_raw)
+            free_calls_allowed = response_body["free_calls_allowed"]
+            total_calls_made = response_body["total_calls_made"]
+            is_free_calls_allowed = True if ((free_calls_allowed - total_calls_made) > 0) else False
+            return is_free_calls_allowed
+        except Exception as e:
+            print(repr(e))
+            raise e
 
     def signature_for_free_call(self, user_data, org_id, service_id):
         """
@@ -32,18 +44,19 @@ class Signer:
         """
         try:
             username = user_data['authorizer']['claims']['email']
-            current_block_no = self.obj_utils.get_current_block_no(
+            if self._free_calls_allowed(username=username, org_id=org_id, service_id=service_id):
+                current_block_no = self.obj_utils.get_current_block_no(
                 ws_provider=NETWORKS[self.net_id]['ws_provider'])
-            if self._free_calls_allowed(username=username):
-                message_text = PREFIX_FREE_CALL + username + \
-                    org_id + service_id + str(current_block_no)
                 provider = Web3.HTTPProvider(
                     NETWORKS[self.net_id]['http_provider'])
                 w3 = Web3(provider)
-                message = w3.sha3(text=message_text)
-                signature = w3.eth.account.signHash(defunct_hash_message(primitive=message),
-                                                    config["signer_private_key"]).signature
-                return {"signature": signature.hex()}
+                message = web3.Web3.soliditySha3(["string", "string", "string", "string", "uint256"],
+                                                 [PREFIX_FREE_CALL, username, org_id, service_id, current_block_no])
+                if not config['private_key'].startswith("0x"):
+                    config['private_key'] = "0x" + config['private_key']
+                signature = bytes(w3.eth.account.signHash(defunct_hash_message(message), config['private_key']).signature)
+                return {"snet-free-call-user-id": username, "snet-payment-channel-signature-bin": signature.hex(),
+                        "snet-current-block-number": current_block_no}
             else:
                 raise Exception(
                     "Free calls expired for username %s.", username)

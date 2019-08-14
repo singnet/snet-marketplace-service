@@ -2,7 +2,8 @@ import json
 import datetime
 import decimal
 import requests
-
+import web3
+from web3 import Web3
 from common.constant import SLACK_HOOK
 IGNORED_LIST = ['row_id', 'row_created', 'row_updated']
 
