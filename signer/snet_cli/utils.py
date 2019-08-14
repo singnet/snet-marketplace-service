@@ -13,7 +13,8 @@ import pkg_resources
 # from grpc_tools.protoc import main as protoc
 
 
-RESOURCES_PATH = PurePath(os.path.realpath(__file__)).parent.joinpath("resources")
+RESOURCES_PATH = PurePath(os.path.realpath(
+    __file__)).parent.joinpath("resources")
 
 
 class DefaultAttributeObject(object):
@@ -71,7 +72,8 @@ def serializable(o):
 
 def safe_address_converter(a):
     if not web3.eth.is_checksum_address(a):
-        raise Exception("%s is not is not a valid Ethereum checksum address"%a)
+        raise Exception(
+            "%s is not is not a valid Ethereum checksum address" % a)
     return a
 
 
@@ -101,13 +103,15 @@ def _add_next_paths(path, entry_path, seen_paths, next_paths):
             if line.strip().startswith("import"):
                 import_statement = "".join(line.split('"')[1::2])
                 if not import_statement.startswith("google/protobuf"):
-                    import_statement_path = Path(path.parent.joinpath(import_statement)).resolve()
+                    import_statement_path = Path(
+                        path.parent.joinpath(import_statement)).resolve()
                     if entry_path.parent in path.parents:
                         if import_statement_path not in seen_paths:
                             seen_paths.add(import_statement_path)
                             next_paths.append(import_statement_path)
                     else:
-                        raise ValueError("Path must not be a parent of entry path")
+                        raise ValueError(
+                            "Path must not be a parent of entry path")
 
 
 def walk_imports(entry_path):
@@ -196,8 +200,9 @@ def abi_get_element_by_name(abi, name):
                 return a
     return None
 
+
 def abi_decode_struct_to_dict(abi, struct_list):
-    return {el_abi["name"] : el for el_abi, el in zip(abi["outputs"], struct_list)}
+    return {el_abi["name"]: el for el_abi, el in zip(abi["outputs"], struct_list)}
 
 
 def int4bytes_big(b):
@@ -233,8 +238,8 @@ def is_valid_endpoint(url):
 
 def remove_http_https_prefix(endpoint):
     """remove http:// or https:// prefix if presented in endpoint"""
-    endpoint = endpoint.replace("https://","")
-    endpoint = endpoint.replace("http://","")
+    endpoint = endpoint.replace("https://", "")
+    endpoint = endpoint.replace("http://", "")
     return endpoint
 
 
@@ -293,8 +298,10 @@ def get_address_from_private(private_key):
 class add_to_path():
     def __init__(self, path):
         self.path = path
+
     def __enter__(self):
         sys.path.insert(0, self.path)
+
     def __exit__(self, exc_type, exc_value, traceback):
         try:
             sys.path.remove(self.path)
