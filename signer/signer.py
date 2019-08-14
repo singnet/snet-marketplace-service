@@ -27,12 +27,14 @@ class Signer:
                                                         "service_id": service_id,
                                                         "username": username}}
             response = self.lambda_client.invoke(FunctionName=GET_FREE_CALLS_METERING_ARN, InvocationType='RequestResponse',
-                                                 Payload= json.dumps(lambda_payload))
-            response_body_raw = json.loads(response.get('Payload').read())['body']
+                                                 Payload=json.dumps(lambda_payload))
+            response_body_raw = json.loads(
+                response.get('Payload').read())['body']
             response_body = json.loads(response_body_raw)
             free_calls_allowed = response_body["free_calls_allowed"]
             total_calls_made = response_body["total_calls_made"]
-            is_free_calls_allowed = True if ((free_calls_allowed - total_calls_made) > 0) else False
+            is_free_calls_allowed = True if (
+                (free_calls_allowed - total_calls_made) > 0) else False
             return is_free_calls_allowed
         except Exception as e:
             print(repr(e))
@@ -46,7 +48,7 @@ class Signer:
             username = user_data['authorizer']['claims']['email']
             if self._free_calls_allowed(username=username, org_id=org_id, service_id=service_id):
                 current_block_no = self.obj_utils.get_current_block_no(
-                ws_provider=NETWORKS[self.net_id]['ws_provider'])
+                    ws_provider=NETWORKS[self.net_id]['ws_provider'])
                 provider = Web3.HTTPProvider(
                     NETWORKS[self.net_id]['http_provider'])
                 w3 = Web3(provider)
@@ -54,7 +56,8 @@ class Signer:
                                                  [PREFIX_FREE_CALL, username, org_id, service_id, current_block_no])
                 if not config['private_key'].startswith("0x"):
                     config['private_key'] = "0x" + config['private_key']
-                signature = bytes(w3.eth.account.signHash(defunct_hash_message(message), config['private_key']).signature)
+                signature = bytes(w3.eth.account.signHash(
+                    defunct_hash_message(message), config['private_key']).signature)
                 return {"snet-free-call-user-id": username, "snet-payment-channel-signature-bin": signature.hex(),
                         "snet-current-block-number": current_block_no}
             else:
