@@ -18,7 +18,8 @@ class MPE:
 
     def get_channels_by_user_address(self, user_address, org_id=None, service_id=None):
         try:
-            print('Inside get_channel_info::user_address', user_address, '|', org_id, '|', service_id)
+            print('Inside get_channel_info::user_address',
+                  user_address, '|', org_id, '|', service_id)
             last_block_no = self.get_latest_block_no()
             params = [last_block_no]
             sub_qry = ""
