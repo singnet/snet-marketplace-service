@@ -16,16 +16,27 @@ class Signer:
         self.lambda_client = boto3.client('lambda')
         self.obj_utils = Utils()
 
-    def _free_calls_allowed(self, username):
+    def _free_calls_allowed(self, username, org_id, service_id):
         """
             Method to check free calls exists for given user or not.
             Call monitoring service to get the details
         """
-        #lambda_payload = {"username": username}
-        # response = self.lambda_client.invoke(FunctionName=METERING_ARN, InvocationType='RequestResponse',
-        #                                    Payload= json.dumps(lambda_payload))
-        free_calls_allowed = True
-        return free_calls_allowed
+        try:
+            lambda_payload = {"httpMethod": "GET",
+                              "queryStringParameters": {"organization_id": org_id,
+                                                        "service_id": service_id,
+                                                        "username": username}}
+            response = self.lambda_client.invoke(FunctionName=GET_FREE_CALLS_METERING_ARN, InvocationType='RequestResponse',
+                                                 Payload= json.dumps(lambda_payload))
+            response_body_raw = json.loads(response.get('Payload').read())['body']
+            response_body = json.loads(response_body_raw)
+            free_calls_allowed = response_body["free_calls_allowed"]
+            total_calls_made = response_body["total_calls_made"]
+            is_free_calls_allowed = True if ((free_calls_allowed - total_calls_made) > 0) else False
+            return is_free_calls_allowed
+        except Exception as e:
+            print(repr(e))
+            raise e
 
     def signature_for_free_call(self, user_data, org_id, service_id):
         """
@@ -33,9 +44,9 @@ class Signer:
         """
         try:
             username = user_data['authorizer']['claims']['email']
-            current_block_no = self.obj_utils.get_current_block_no(
+            if self._free_calls_allowed(username=username, org_id=org_id, service_id=service_id):
+                current_block_no = self.obj_utils.get_current_block_no(
                 ws_provider=NETWORKS[self.net_id]['ws_provider'])
-            if self._free_calls_allowed(username=username):
                 provider = Web3.HTTPProvider(
                     NETWORKS[self.net_id]['http_provider'])
                 w3 = Web3(provider)
