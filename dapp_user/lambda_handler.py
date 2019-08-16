@@ -21,6 +21,7 @@ def request_handler(event, context):
     try:
         payload_dict = None
         path = event['path'].lower()
+        path = re.sub(r"^(\/contract-api)", "", path)
         stage = event['requestContext']['stage']
         net_id = NETWORKS_NAME[stage]
         usr_obj = User(obj_repo=db[net_id])
