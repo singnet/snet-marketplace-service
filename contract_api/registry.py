@@ -147,8 +147,8 @@ class Registry:
             offset = qry_param.get('offset', GET_ALL_SERVICE_OFFSET_LIMIT)
             limit = qry_param.get('limit', GET_ALL_SERVICE_LIMIT)
             sort_by = fields_mapping.get(
-                qry_param.get('sort_by', None), "display_name")
-            order_by = qry_param.get('order_by', 'asc')
+                qry_param.get('sort_by', None), "ranking")
+            order_by = qry_param.get('order_by', 'desc')
 
             sub_qry = self._prepare_subquery(s=s, q=q, fm=fields_mapping)
             print("get_all_srvcs::sub_qry: ", sub_qry)

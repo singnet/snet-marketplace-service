@@ -33,10 +33,10 @@ def request_handler(event, context):
             return get_response(405, "Method Not Allowed")
 
         sub_path = path.split("/")
-        if sub_path[1] in ["/org", "/service"]:
+        if sub_path[1] in ["org", "service"]:
             obj_reg = Registry(obj_repo=db[net_id])
 
-        elif sub_path[1] in ["/channel"]:
+        elif sub_path[1] in ["channel"]:
             obj_mpe = MPE(net_id=net_id, obj_repo=db[net_id])
 
         if "/org" == path:
