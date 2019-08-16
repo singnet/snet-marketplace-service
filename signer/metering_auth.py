@@ -2,7 +2,8 @@ import json
 
 from web3.auto import w3
 from common.repository import Repository
-from signer.constant import StatusCode, StatusMessage
+from common.constant import StatusCode, StatusMessage
+from common.utils import validate_request, make_response
 
 required_data = ['demon_id', 'message_data_', 'signature']
 
@@ -10,21 +11,6 @@ required_data = ['demon_id', 'message_data_', 'signature']
 def extract_public_key(message_data, signature):
     public_key = w3.eth.account.recoverHash(message_data, signature=signature)
     return public_key
-
-
-def make_response(status_code, body, header=None):
-    return {
-        "statusCode": status_code,
-        "headers": header,
-        "body": body
-    }
-
-
-def validate_request(required_keys, request_body):
-    for key in required_keys:
-        if key not in request_body:
-            return False
-    return True
 
 
 def main(event, context):
