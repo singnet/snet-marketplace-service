@@ -41,7 +41,8 @@ class DeamonAuthenticator(SignatureAuthenticator):
         service_id = self.event['headers']['x-serviceid']
 
         query = 'SELECT public_key FROM demon_auth_keys WHERE org_id = %s AND service_id = %s AND group_id = %s '
-        public_key = Repository().execute(query, [organization_id, service_id, group_id])
+        public_key = Repository().execute(
+            query, [organization_id, service_id, group_id])
         return public_key[0]
 
     def get_signature(self):
