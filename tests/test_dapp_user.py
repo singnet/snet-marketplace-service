@@ -47,7 +47,7 @@ class TestSignUPAPI(unittest.TestCase):
 
         self.update_user_profile = {"path": "/profile",
                                     "httpMethod": "POST",
-                                    "body": '{"email_alerts": true }',
+                                    "body": '{"email_alerts": true, "is_terms_accepted": true}',
                                     "requestContext":
                                         {"authorizer":
                                             {"claims":

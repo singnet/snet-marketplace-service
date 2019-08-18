@@ -1,5 +1,7 @@
 -- common database schema across all networks
 -- -----------------------------------------
+-- Contract Level
+
 CREATE TABLE `mpe_channel` (
   `row_id` int(11) NOT NULL AUTO_INCREMENT,
   `channel_id` int(11) NOT NULL,
@@ -19,18 +21,31 @@ CREATE TABLE `mpe_channel` (
 -- -----------------------------------------
 CREATE TABLE `organization` (
   `row_id` int(11) NOT NULL AUTO_INCREMENT,
-  `org_id` varchar(256) NOT NULL,
+  `org_id` varchar(128) NOT NULL,
   `organization_name` varchar(128) DEFAULT NULL,
   `owner_address` varchar(256) DEFAULT NULL,
+  `org_metadata_uri` varchar(128) DEFAULT NULL,
   `row_created` timestamp NULL DEFAULT NULL,
   `row_updated` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`row_id`),
   UNIQUE KEY `uq_org` (`org_id`)
 ) ;
 -- -----------------------------------------
+CREATE TABLE `org_group` (
+  `row_id` int(11) NOT NULL AUTO_INCREMENT,
+  `org_id` varchar(128) NOT NULL,
+  `group_id` varchar(128) DEFAULT NULL,
+  `group_name` varchar(128) DEFAULT NULL,
+  `payment` json DEFAULT NULL,
+  `row_created` timestamp NULL DEFAULT NULL,
+  `row_updated` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`row_id`),
+  UNIQUE KEY `uq_org_grp` (`org_id`,`group_id`)
+) ;
+-- -----------------------------------------
 CREATE TABLE `members` (
   `row_id` int(11) NOT NULL AUTO_INCREMENT,
-  `org_id` varchar(256) NOT NULL,
+  `org_id` varchar(128) NOT NULL,
   `member` varchar(128) NOT NULL,
   `row_created` timestamp NULL DEFAULT NULL,
   `row_updated` timestamp NULL DEFAULT NULL,
@@ -41,10 +56,10 @@ CREATE TABLE `members` (
 -- -----------------------------------------
 CREATE TABLE `service` (
   `row_id` int(11) NOT NULL AUTO_INCREMENT,
-  `org_id` varchar(256) NOT NULL,
-  `service_id` varchar(256) NOT NULL,
+  `org_id` varchar(128) NOT NULL,
+  `service_id` varchar(128) NOT NULL,
   `service_path` varchar(128) DEFAULT NULL,
-  `ipfs_hash` varchar(256) DEFAULT NULL,
+  `ipfs_hash` varchar(128) DEFAULT NULL,
   `is_curated` tinyint(1) DEFAULT NULL,
   `row_created` timestamp NULL DEFAULT NULL,
   `row_updated` timestamp NULL DEFAULT NULL,
@@ -55,10 +70,8 @@ CREATE TABLE `service` (
 CREATE TABLE `service_metadata` (
   `row_id` int(11) NOT NULL AUTO_INCREMENT,
   `service_row_id` int(11) NOT NULL,
-  `org_id` varchar(256) NOT NULL,
-  `service_id` varchar(256) NOT NULL,
-  `price_model` varchar(128) DEFAULT NULL,
-  `price_in_cogs` decimal(19,8) DEFAULT NULL,
+  `org_id` varchar(128) NOT NULL,
+  `service_id` varchar(128) NOT NULL,
   `display_name` varchar(256) DEFAULT NULL,
   `description` varchar(1024) DEFAULT NULL,     
   `url` varchar(256) DEFAULT NULL,      
@@ -67,10 +80,8 @@ CREATE TABLE `service_metadata` (
   `encoding` varchar(128) DEFAULT NULL,
   `type` varchar(128) DEFAULT NULL,
   `mpe_address` varchar(256) DEFAULT NULL,
-  `payment_expiration_threshold` int(11) DEFAULT NULL,
-  `assets_url` JSON,
-  `assets_hash` JSON,
-  `display_image_url`varchar(256) DEFAULT NULL,
+  `assets_url` json DEFAULT NULL,
+  `assets_hash` json DEFAULT NULL,
   `row_created` timestamp NULL DEFAULT NULL,
   `row_updated` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`row_id`),
@@ -82,11 +93,10 @@ CREATE TABLE `service_metadata` (
 CREATE TABLE `service_group` (
   `row_id` int(11) NOT NULL AUTO_INCREMENT,
   `service_row_id` int(11) NOT NULL,
-  `org_id` varchar(256) NOT NULL,
-  `service_id` varchar(256) NOT NULL,
+  `org_id` varchar(128) NOT NULL,
+  `service_id` varchar(128) NOT NULL,
   `group_id` varchar(256) NOT NULL,
-  `group_name` varchar(128) DEFAULT NULL,
-  `payment_address` varchar(256) DEFAULT NULL,
+  `pricing` json DEFAULT NULL,
   `row_created` timestamp NULL DEFAULT NULL,
   `row_updated` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`row_id`),
@@ -98,10 +108,12 @@ CREATE TABLE `service_group` (
 CREATE TABLE `service_endpoint` (
   `row_id` int(11) NOT NULL AUTO_INCREMENT,
   `service_row_id` int(11) NOT NULL,
-  `org_id` varchar(256) NOT NULL,
-  `service_id` varchar(256) NOT NULL,
+  `org_id` varchar(128) NOT NULL,
+  `service_id` varchar(128) NOT NULL,
   `group_id` varchar(256) NOT NULL,
   `endpoint` varchar(256) DEFAULT NULL,
+  `is_available` bit(1) DEFAULT NULL,
+  `last_check_timestamp` timestamp NULL DEFAULT NULL,
   `row_created` timestamp NULL DEFAULT NULL,
   `row_updated` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`row_id`),
@@ -112,8 +124,8 @@ CREATE TABLE `service_endpoint` (
 CREATE TABLE `service_tags` (
   `row_id` int(11) NOT NULL AUTO_INCREMENT,
   `service_row_id` int(11) NOT NULL,
-  `org_id` varchar(256) NOT NULL,
-  `service_id` varchar(256) DEFAULT NULL,
+  `org_id` varchar(128) NOT NULL,
+  `service_id` varchar(128) DEFAULT NULL,
   `tag_name` varchar(128) DEFAULT NULL,
   `row_created` timestamp NULL DEFAULT NULL,
   `row_updated` timestamp NULL DEFAULT NULL,
@@ -123,20 +135,35 @@ CREATE TABLE `service_tags` (
   CONSTRAINT `ServiceFK` FOREIGN KEY (`service_row_id`) REFERENCES `service` (`row_id`) ON DELETE CASCADE
 ) ;
 -- -----------------------------------------
-CREATE TABLE `service_status` (
+-- User Level
+CREATE TABLE `user` (
   `row_id` int(11) NOT NULL AUTO_INCREMENT,
-  `service_row_id` int(11) DEFAULT NULL,
-  `org_id` varchar(256) DEFAULT NULL,
-  `service_id` varchar(256) DEFAULT NULL,
-  `group_id` varchar(256) DEFAULT NULL,
-  `endpoint` varchar(256) DEFAULT NULL,
-  `is_available` bit(1) DEFAULT NULL,
-  `last_check_timestamp` timestamp NULL DEFAULT NULL,
+  `username` varchar(128) NOT NULL,
+  `account_id` varchar(128) NOT NULL,
+  `name` varchar(128) NOT NULL,
+  `email` varchar(128) NOT NULL,
+  `email_verified` bit(1) DEFAULT b'0',
+  `email_alerts` bit(1) DEFAULT b'0',
+  `status` bit(1) DEFAULT b'0',
+  `request_id` varchar(128) NOT NULL,
+  `request_time_epoch` varchar(128) NOT NULL,
   `row_created` timestamp NULL DEFAULT NULL,
-  `row_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `row_updated` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`row_id`),
-  KEY `ServiceStatusFK_idx` (`service_row_id`),
-  CONSTRAINT `ServiceStatusFK` FOREIGN KEY (`service_row_id`) REFERENCES `service` (`row_id`) ON DELETE CASCADE
+  UNIQUE KEY `uq_usr` (`username`),
+  UNIQUE KEY `uq_usr_email` (`email`)
+) ;
+-- -----------------------------------------
+CREATE TABLE `wallet` (
+  `row_id` int(11) NOT NULL AUTO_INCREMENT,
+  `username` varchar(128) DEFAULT NULL,
+  `address` varchar(256) NOT NULL,
+  `status` bit(1) DEFAULT b'1',
+  `row_created` timestamp NULL DEFAULT NULL,
+  `row_updated` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`row_id`),
+  UNIQUE KEY `uq_w_addr` (`address`),
+  UNIQUE KEY `uq_w_usr` (`username`)
 ) ;
 -- -----------------------------------------
  CREATE TABLE `user_service_vote` (
@@ -144,7 +171,7 @@ CREATE TABLE `service_status` (
   `user_address` varchar(256) NOT NULL,
   `org_id` varchar(128) NOT NULL,
   `service_id` varchar(128) NOT NULL,
-  `vote` int(1) NOT NULL,
+  `rating` float(2,1) DEFAULT NULL,
   `row_created` timestamp DEFAULT NULL,
   `row_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`row_id`),

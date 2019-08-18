@@ -32,7 +32,7 @@ class User:
             if len(set_usr_dta) > 0:
                 return "success"
             else:
-                return "failed"
+                return "User already exist"
         except Exception as e:
             print(repr(e))
             raise e
@@ -42,20 +42,20 @@ class User:
         try:
             username = user_data['authorizer']['claims']['email']
             search_data = self.repo.execute(
-                "SELECT row_id, address, status FROM wallet WHERE username = %s", username)
+                "SELECT * FROM wallet WHERE username = %s", username)
             self.obj_utils.clean(search_data)
             return search_data
         except Exception as e:
             print(repr(e))
             raise e
 
-    def _link_wallet(self, username):
-        """ Method to assign wallet address to a user. """
-        try:
-            return self.repo.execute("UPDATE wallet SET username = %s WHERE username is NULL LIMIT 1", username)
-        except Exception as e:
-            print(repr(e))
-            raise e
+    # def _link_wallet(self, username):
+    #    """ Method to assign wallet address to a user. """
+    #    try:
+    #        return self.repo.execute("UPDATE wallet SET username = %s WHERE username IS NULL AND status = 1 LIMIT 1", username)
+    #    except Exception as e:
+    #        print(repr(e))
+    #        raise e
 
     def _fetch_private_key_from_ssm(self, address):
         try:
@@ -71,31 +71,10 @@ class User:
             This is one time process.
         """
         try:
-            self.repo.begin_transaction()
             username = user_data['authorizer']['claims']['email']
-            set_usr_dta = self._set_user_data(user_data)
-            if set_usr_dta == "success":
-                print(set_usr_dta)
-                address_exist = (
-                    len(self.get_wallet_details(username=username)) > 0)
-                if address_exist:
-                    raise Exception('Useraname is already linked to wallet')
-                else:
-                    updt_resp = self._link_wallet(username=username)
-
-                    if updt_resp[0] == 1:
-                        result = self.repo.execute(
-                            "SELECT * FROM wallet where username = %s", username)
-                        address = result[0].get("address", None)
-                        private_key = self._fetch_private_key_from_ssm(
-                            address=address)
-                        self.obj_utils.clean(result)
-                        result[0].update({"private_key": private_key})
-                        self.repo.commit_transaction()
-                        return {"success": "success", "data": result}
-                    raise Exception("Error in assigning pre-seeded wallet")
-            elif set_usr_dta == "failed":
-                return "User already exist"
+            set_user_data = self._set_user_data(user_data)
+            print(set_user_data)
+            return set_user_data
         except Exception as e:
             self.repo.rollback_transaction()
             print(repr(e))
@@ -133,14 +112,14 @@ class User:
             print(repr(e))
             raise e
 
-    def update_user_profile(self, email_alerts, user_data):
+    def update_user_profile(self, email_alerts, is_terms_accepted, user_data):
         '''
             Method to update user profile data.
         '''
         try:
             username = user_data['authorizer']['claims']['email']
-            result = self.repo.execute("UPDATE user SET email_alerts = %s WHERE username = %s", [
-                                       int(email_alerts == True), username])
+            result = self.repo.execute("UPDATE user SET email_alerts = %s, is_terms_accepted = %s WHERE username = %s", [
+                                       int(email_alerts == True), int(is_terms_accepted == True), username])
             return {"success": "success", "data": []}
         except Exception as e:
             print(repr(e))

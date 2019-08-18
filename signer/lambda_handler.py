@@ -1,11 +1,10 @@
 import json
-import re
 import traceback
+
 from common.constant import NETWORKS
 from common.repository import Repository
 from common.utils import Utils
-from contract_api.registry import Registry
-from contract_api.mpe import MPE
+from signer.signer import Signer
 
 NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId)
                      for netId in NETWORKS.keys())
@@ -22,6 +21,7 @@ def request_handler(event, context):
         path = event['path'].lower()
         stage = event['requestContext']['stage']
         net_id = NETWORKS_NAME[stage]
+        signer_object = Signer(obj_repo=db[net_id], net_id=net_id)
         method = event['httpMethod']
         response_data = None
 
@@ -32,40 +32,16 @@ def request_handler(event, context):
         else:
             return get_response(405, "Method Not Allowed")
 
-        sub_path = path.split("/")
-        if sub_path[1] in ["/org", "/service"]:
-            obj_reg = Registry(obj_repo=db[net_id])
+        if "/free-call" == path:
+            response_data = signer_object.signature_for_free_call(user_data=event['requestContext'],
+                                                                  org_id=payload_dict['org_id'],
+                                                                  service_id=payload_dict['service_id'])
 
-        elif sub_path[1] in ["/channel"]:
-            obj_mpe = MPE(net_id=net_id, obj_repo=db[net_id])
+        elif "/regular-call" == path:
 
-        if "/org" == path:
-            response_data = obj_reg.get_all_org()
-
-        elif re.match("(\/org\/)[^\/]*(\/group)[/]{0,1}$", path):
-            org_id = sub_path[2]
-            response_data = obj_reg.get_all_group_for_org_id(org_id=org_id)
-
-        elif "/service" == path and method == 'POST':
-            payload_dict = {} if payload_dict is None else payload_dict
-            response_data = obj_reg.get_all_srvcs(qry_param=payload_dict)
-
-        elif "/service" == path and method == 'GET':
-            response_data = obj_reg.get_filter_attribute(
-                attribute=payload_dict["attribute"])
-
-        elif re.match("(\/org\/)[^\/]*(\/service\/)[^\/]*(\/group)[/]{0,1}$", path):
-            org_id = sub_path[2]
-            service_id = sub_path[4]
-            response_data = obj_reg.get_group_info(
-                org_id=org_id, service_id=service_id)
-
-        elif "/channel" == path:
-            response_data = obj_mpe.get_channels_by_user_address(user_address=payload_dict["user_address"],
-                                                                 org_id=payload_dict.get(
-                                                                     "org_id", None),
-                                                                 service_id=payload_dict.get("service_id", None))
-
+            response_data = signer_object.signature_for_regular_call(user_data=event['requestContext'],
+                                                                     org_id=payload_dict['org_id'],
+                                                                     service_id=payload_dict['service_id'])
         else:
             return get_response(404, "Not Found")
 
