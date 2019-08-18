@@ -273,3 +273,41 @@ class Registry:
         except Exception as e:
             print(repr(e))
             raise e
+
+    def get_service_data_by_org_id_and_service_id(self, org_id, service_id):
+        try:
+            """ Method to get all service data for given org_id and service_id"""
+            tags= []
+            org_groups_dict = {}
+            basic_service_data = self.repo.execute(
+                "SELECT * FROM service S, service_metadata M WHERE S.row_id = M.service_row_id AND S.org_id = %s "
+                "AND S.service_id = %s AND S.is_curated = 1", [org_id, service_id]);
+            if len(basic_service_data) == 0:
+                return []
+            self.obj_utils.clean(basic_service_data)
+
+            org_group_data = self.repo.execute("SELECT * FROM org_group WHERE org_id = %s", [org_id]);
+            self.obj_utils.clean(org_group_data)
+
+            service_group_data = self.get_group_info(org_id=org_id, service_id=service_id)
+
+            tags = self.repo.execute("SELECT tag_name FROM service_tags WHERE org_id = %s AND service_id = %s",
+                                          [org_id, service_id])
+
+            result = basic_service_data[0]
+            result["service_rating"] = json.loads(result["service_rating"])
+            result["assets_url"] = json.loads(result["assets_url"])
+            result["assets_hash"] = json.loads(result["assets_hash"])
+
+            for rec in org_group_data:
+                org_groups_dict[rec['group_id']] = {"payment": json.loads(rec["payment"])}
+
+            for rec in service_group_data:
+                rec.update(org_groups_dict.get(rec['group_id'], {}))
+
+            result.update({"groups": service_group_data})
+            result.update({"tags": tags})
+            return result
+        except Exception as e:
+            print(repr(e))
+            raise e
