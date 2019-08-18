@@ -38,12 +38,15 @@ def main(event, context):
     else:
         authenticator = DeamonAuthenticator(event)
 
-    message = authenticator.get_signature_message()
-    signature = authenticator.get_signature()
-    public_key = authenticator.get_public_key()
-    principal = authenticator.get_principal()
-    derived_public_key = extract_public_key(message, signature)
-    verification = (public_key == derived_public_key)
+    try:
+        message = authenticator.get_signature_message()
+        signature = authenticator.get_signature()
+        public_key = authenticator.get_public_key()
+        principal = authenticator.get_principal()
+        derived_public_key = extract_public_key(message, signature)
+        verification = (public_key == derived_public_key)
+    except Exception:
+        generatePolicy('exception', 'Deny', event['methodArn'])
 
     if verification:
         return generatePolicy(principal, 'Allow', event['methodArn'])
