@@ -1,5 +1,7 @@
 import web3
+import base64
 from eth_account.messages import defunct_hash_message
+from common.constant import SIGN_AUTH_NETTID
 
 from common.repository import Repository
 
@@ -30,9 +32,9 @@ class DeamonAuthenticator(SignatureAuthenticator):
         group_id = self.event['headers']['x-groupid']
         service_id = self.event['headers']['x-serviceid']
         block_number = self.event['headers']['x-currentblocknumber']
+        message = web3.Web3.soliditySha3(["string","string", "string", "string", "string", "uint256"],
+                                         ['_usage', username, organization_id, service_id, group_id, block_number])
 
-        message = web3.Web3.soliditySha3(["string", "string", "string", "string", "uint256"],
-                                         [username, organization_id, service_id, group_id, block_number])
         return defunct_hash_message(message)
 
     def get_public_key(self):
@@ -41,11 +43,12 @@ class DeamonAuthenticator(SignatureAuthenticator):
         service_id = self.event['headers']['x-serviceid']
 
         query = 'SELECT public_key FROM demon_auth_keys WHERE org_id = %s AND service_id = %s AND group_id = %s '
-        public_key = Repository().execute(query, [organization_id, service_id, group_id])
-        return public_key[0]
+        public_key = Repository(net_id=SIGN_AUTH_NETTID).execute(query, [organization_id, service_id, group_id])
+        return public_key[0]['public_key']
 
     def get_signature(self):
-        return self.event['headers']['x-signature']
+        base64_sign = self.event['headers']['x-signature']
+        return base64.b64decode(base64_sign)
 
     def get_principal(self):
         return self.event['headers']['x-username']

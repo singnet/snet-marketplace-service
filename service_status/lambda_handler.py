@@ -11,6 +11,7 @@ NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys
 obj_util = Utils()
 db = dict((netId, Repository(net_id=netId)) for netId in NETWORKS.keys())
 
+
 def request_handler(event, context):
     print(event)
     try:
