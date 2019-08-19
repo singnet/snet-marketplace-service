@@ -89,6 +89,11 @@ class Registry:
         except Exception as err:
             raise err
 
+    def _convert_service_metadata_str_to_json(self, record):
+        record["service_rating"] = json.loads(record["service_rating"])
+        record["assets_url"] = json.loads(record["assets_url"])
+        record["assets_hash"] = json.loads(record["assets_hash"])
+
     def _search_query_data(self, sub_qry, sort_by, order_by, offset, limit, filter_query, values):
         try:
             if filter_query != "":
@@ -120,6 +125,8 @@ class Registry:
             obj_utils.clean(services)
             available_service = self._get_is_available_service()
             for rec in services:
+                self._convert_service_metadata_str_to_json(rec)
+
                 org_id = rec["org_id"]
                 service_id = rec["service_id"]
                 tags = []
@@ -300,9 +307,7 @@ class Registry:
                                      [org_id, service_id])
 
             result = basic_service_data[0]
-            result["service_rating"] = json.loads(result["service_rating"])
-            result["assets_url"] = json.loads(result["assets_url"])
-            result["assets_hash"] = json.loads(result["assets_hash"])
+            self._convert_service_metadata_str_to_json(result)
 
             for rec in org_group_data:
                 org_groups_dict[rec['group_id']] = {
