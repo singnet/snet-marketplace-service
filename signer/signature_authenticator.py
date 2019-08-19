@@ -45,8 +45,9 @@ def main(event, context):
         principal = authenticator.get_principal()
         derived_public_key = extract_public_key(message, signature)
         verification = (public_key == derived_public_key)
-    except Exception:
-        generatePolicy('exception', 'Deny', event['methodArn'])
+    except Exception as e:
+        print(e)
+        return generatePolicy('exception', 'Deny', event['methodArn'])
 
     if verification:
         return generatePolicy(principal, 'Allow', event['methodArn'])
