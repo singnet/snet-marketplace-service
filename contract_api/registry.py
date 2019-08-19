@@ -308,9 +308,17 @@ class Registry:
                 org_groups_dict[rec['group_id']] = {
                     "payment": json.loads(rec["payment"])}
 
+            is_available = 0
             for rec in service_group_data:
+                if is_available == 0:
+                    endpoints = rec['endpoints']
+                    for endpoint in endpoints:
+                        is_available = endpoint['is_available']
+                        if is_available == 1:
+                            break
                 rec.update(org_groups_dict.get(rec['group_id'], {}))
 
+            result.update({"is_available": is_available})
             result.update({"groups": service_group_data})
             result.update({"tags": tags})
             return result
