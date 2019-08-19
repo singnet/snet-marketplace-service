@@ -101,6 +101,7 @@ CREATE TABLE `service_group` (
   `org_id` varchar(128) NOT NULL,
   `service_id` varchar(128) NOT NULL,
   `group_id` varchar(256) NOT NULL,
+  `group_name` varchar(128) NOT NULL,
   `pricing` json DEFAULT NULL,
   `row_created` timestamp NULL DEFAULT NULL,
   `row_updated` timestamp NULL DEFAULT NULL,
