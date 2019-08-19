@@ -58,3 +58,18 @@ class Utils:
     def get_current_block_no(self, ws_provider):
         w3Obj = Web3(web3.providers.WebsocketProvider(ws_provider))
         return w3Obj.eth.blockNumber
+
+
+def make_response(status_code, body, header=None):
+    return {
+        "statusCode": status_code,
+        "headers": header,
+        "body": body
+    }
+
+
+def validate_request(required_keys, request_body):
+    for key in required_keys:
+        if key not in request_body:
+            return False
+    return True
