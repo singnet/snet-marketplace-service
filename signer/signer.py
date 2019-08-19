@@ -62,7 +62,7 @@ class Signer:
                 if not signature.startswith("0x"):
                     signature = "0x" + signature
                 return {"snet-free-call-user-id": username, "snet-payment-channel-signature-bin": signature,
-                        "snet-current-block-number": current_block_no, "snet-payment-type":"free-call"}
+                        "snet-current-block-number": current_block_no, "snet-payment-type": "free-call"}
             else:
                 raise Exception(
                     "Free calls expired for username %s.", username)
