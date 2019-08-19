@@ -1,6 +1,6 @@
 import json
 import traceback
-
+import re
 from common.constant import NETWORKS
 from common.repository import Repository
 from common.utils import Utils
@@ -19,6 +19,7 @@ def request_handler(event, context):
     try:
         payload_dict = None
         path = event['path'].lower()
+        path = re.sub(r"^(\/signer)", "", path)
         stage = event['requestContext']['stage']
         net_id = NETWORKS_NAME[stage]
         signer_object = Signer(obj_repo=db[net_id], net_id=net_id)
