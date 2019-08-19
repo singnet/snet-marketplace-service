@@ -59,7 +59,7 @@ class Signer:
                 signature = bytes(w3.eth.account.signHash(
                     defunct_hash_message(message), config['private_key']).signature)
                 return {"snet-free-call-user-id": username, "snet-payment-channel-signature-bin": signature.hex(),
-                        "snet-current-block-number": current_block_no}
+                        "snet-current-block-number": current_block_no, "snet-payment-type":"free-call"}
             else:
                 raise Exception(
                     "Free calls expired for username %s.", username)
