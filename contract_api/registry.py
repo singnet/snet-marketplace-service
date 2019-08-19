@@ -1,8 +1,6 @@
-import datetime
 import json
 from collections import defaultdict
 from common.utils import Utils
-from pymysql import MySQLError
 from contract_api.filter import Filter
 from common.constant import GET_ALL_SERVICE_OFFSET_LIMIT, GET_ALL_SERVICE_LIMIT
 
@@ -15,7 +13,7 @@ class Registry:
     def _get_all_service(self):
         """ Method to generate org_id and service mapping."""
         try:
-            all_orgs_srvcs_raw = self.repo.execute("SELECT O.org_id, O.owner_address, S.service_id  FROM service S, "
+            all_orgs_srvcs_raw = self.repo.execute("SELECT O.org_id, O.organization_name, O.owner_address, S.service_id  FROM service S, "
                                                    "organization O WHERE S.org_id = O.org_id AND S.is_curated = 1")
             all_orgs_srvcs = {}
             for rec in all_orgs_srvcs_raw:
@@ -29,11 +27,16 @@ class Registry:
             print(repr(e))
             raise e
 
-    def _get_all_members(self):
+    def _get_all_members(self, org_id=None):
         """ Method to generate org_id and members mapping."""
         try:
-            all_orgs_members_raw = self.repo.execute(
-                "SELECT org_id, member FROM members M")
+            query = "SELECT org_id, member FROM members M"
+            params = None
+            if org_id is not None:
+                query += " where M.org_id = %s"
+                params = [org_id]
+
+            all_orgs_members_raw = self.repo.execute(query, params)
             all_orgs_members = defaultdict(list)
             for rec in all_orgs_members_raw:
                 all_orgs_members[rec['org_id']].append(rec['member'])
@@ -86,6 +89,11 @@ class Registry:
         except Exception as err:
             raise err
 
+    def _convert_service_metadata_str_to_json(self, record):
+        record["service_rating"] = json.loads(record["service_rating"])
+        record["assets_url"] = json.loads(record["assets_url"])
+        record["assets_hash"] = json.loads(record["assets_hash"])
+
     def _search_query_data(self, sub_qry, sort_by, order_by, offset, limit, filter_query, values):
         try:
             if filter_query != "":
@@ -117,6 +125,8 @@ class Registry:
             obj_utils.clean(services)
             available_service = self._get_is_available_service()
             for rec in services:
+                self._convert_service_metadata_str_to_json(rec)
+
                 org_id = rec["org_id"]
                 service_id = rec["service_id"]
                 tags = []
@@ -297,17 +307,23 @@ class Registry:
                                      [org_id, service_id])
 
             result = basic_service_data[0]
-            result["service_rating"] = json.loads(result["service_rating"])
-            result["assets_url"] = json.loads(result["assets_url"])
-            result["assets_hash"] = json.loads(result["assets_hash"])
+            self._convert_service_metadata_str_to_json(result)
 
             for rec in org_group_data:
                 org_groups_dict[rec['group_id']] = {
                     "payment": json.loads(rec["payment"])}
 
+            is_available = 0
             for rec in service_group_data:
+                if is_available == 0:
+                    endpoints = rec['endpoints']
+                    for endpoint in endpoints:
+                        is_available = endpoint['is_available']
+                        if is_available == 1:
+                            break
                 rec.update(org_groups_dict.get(rec['group_id'], {}))
 
+            result.update({"is_available": is_available})
             result.update({"groups": service_group_data})
             result.update({"tags": tags})
             return result

@@ -33,7 +33,7 @@ class DeamonAuthenticator(SignatureAuthenticator):
         service_id = self.event['headers']['x-serviceid']
         block_number = self.event['headers']['x-currentblocknumber']
         message = web3.Web3.soliditySha3(["string", "string", "string", "string", "string", "uint256"],
-                                         ['_usage', username, organization_id, service_id, group_id, block_number])
+                                         ['_usage', username, organization_id, service_id, group_id, int(block_number)])
         return defunct_hash_message(message)
 
     def get_public_key(self):
