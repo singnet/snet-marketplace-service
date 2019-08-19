@@ -46,7 +46,7 @@ class ServiceMetadata (Base):
     assets_hash = Column(JSON)
     service_rating = Column(JSON)
     contributors = Column(String)
-    ranking = Column(String)
+    ranking = Column(INTEGER)
     row_created = Column(TIMESTAMP)
     row_updated = Column(TIMESTAMP)
 
