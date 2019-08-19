@@ -13,7 +13,7 @@ class Registry:
     def _get_all_service(self):
         """ Method to generate org_id and service mapping."""
         try:
-            all_orgs_srvcs_raw = self.repo.execute("SELECT O.org_id, O.owner_address, S.service_id  FROM service S, "
+            all_orgs_srvcs_raw = self.repo.execute("SELECT O.org_id, O.organization_name, O.owner_address, S.service_id  FROM service S, "
                                                    "organization O WHERE S.org_id = O.org_id AND S.is_curated = 1")
             all_orgs_srvcs = {}
             for rec in all_orgs_srvcs_raw:
