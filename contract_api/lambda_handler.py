@@ -20,6 +20,7 @@ def request_handler(event, context):
     try:
         payload_dict = None
         path = event['path'].lower()
+        path = re.sub(r"^(\/contract-api)", "", path)
         stage = event['requestContext']['stage']
         net_id = NETWORKS_NAME[stage]
         method = event['httpMethod']
@@ -33,10 +34,10 @@ def request_handler(event, context):
             return get_response(405, "Method Not Allowed")
 
         sub_path = path.split("/")
-        if sub_path[1] in ["/org", "/service"]:
+        if sub_path[1] in ["org", "service"]:
             obj_reg = Registry(obj_repo=db[net_id])
 
-        elif sub_path[1] in ["/channel"]:
+        elif sub_path[1] in ["channel"]:
             obj_mpe = MPE(net_id=net_id, obj_repo=db[net_id])
 
         if "/org" == path:
@@ -65,6 +66,12 @@ def request_handler(event, context):
                                                                  org_id=payload_dict.get(
                                                                      "org_id", None),
                                                                  service_id=payload_dict.get("service_id", None))
+
+        elif re.match("(\/org\/)[^\/]*(\/service\/)[^\/]*[/]{0,1}$", path):
+            org_id = sub_path[2]
+            service_id = sub_path[4]
+            response_data = obj_reg.get_service_data_by_org_id_and_service_id(
+                org_id=org_id, service_id=service_id)
 
         else:
             return get_response(404, "Not Found")
