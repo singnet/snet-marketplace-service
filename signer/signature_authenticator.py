@@ -32,6 +32,7 @@ def generatePolicy(principalId, effect, methodArn):
 
 def main(event, context):
     # default is Deamon authenticator, in future we will introduce new authentications
+    print(event)
     authenticator = None
     if 'x-authtype' in event:
         pass
