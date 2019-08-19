@@ -16,6 +16,7 @@ class Service(Base):
     service_path = Column(String)
     ipfs_hash = Column(String)
     is_curated = Column(INTEGER)
+    service_email = Column(String)
     row_created = Column(TIMESTAMP)
     row_updated = Column(TIMESTAMP)
 
@@ -44,6 +45,8 @@ class ServiceMetadata (Base):
     assets_url = Column(JSON)
     assets_hash = Column(JSON)
     service_rating = Column(JSON)
+    contributors = Column(String)
+    ranking = Column(String)
     row_created = Column(TIMESTAMP)
     row_updated = Column(TIMESTAMP)
 
