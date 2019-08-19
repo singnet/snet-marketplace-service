@@ -56,7 +56,7 @@ class HandleContractsDB:
         upsert_qry = "Insert into organization (org_id, organization_name, owner_address, org_metadata_uri, row_updated, row_created) " \
                      "VALUES ( %s, %s, %s, %s, %s , %s) " \
                      "ON DUPLICATE KEY UPDATE organization_name = %s, owner_address = %s, org_metadata_uri = %s, row_updated = %s  "
-        upsert_params = [org_id, org_name, owner_address, ipfs_hash, dt.utcnow(), dt.utcnow(), org_name, owner_address, org_metadata_uri,
+        upsert_params = [org_id, org_name, owner_address, org_metadata_uri, dt.utcnow(), dt.utcnow(), org_name, owner_address, org_metadata_uri,
                          dt.utcnow()]
         print('upsert_qry: ', upsert_qry)
         qry_resp = conn.execute(upsert_qry, upsert_params)
@@ -152,8 +152,8 @@ class HandleContractsDB:
     def _create_or_updt_srvc_mdata(self, srvc_rw_id, org_id, service_id, ipfs_data, assets_url, conn):
         upsrt_srvc_mdata = "INSERT INTO service_metadata (service_row_id, org_id, service_id, " \
                            "display_name, model_ipfs_hash, description, url, json, encoding, type, " \
-                           "mpe_address, assets_hash , assets_url, row_updated, row_created) " \
-                           "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s ) " \
+                           "mpe_address, assets_hash , assets_url, service_rating, row_updated, row_created) " \
+                           "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s ) " \
                            "ON DUPLICATE KEY UPDATE service_row_id = %s, " \
                            "display_name = %s, model_ipfs_hash = %s, description = %s, url = %s, json = %s, " \
                            "encoding = %s, type = %s, mpe_address = %s, row_updated = %s ,assets_hash = %s ,assets_url = %s"
@@ -166,7 +166,7 @@ class HandleContractsDB:
         assets_url_str = json.dumps(assets_url)
         upsrt_srvc_mdata_params = [srvc_rw_id, org_id, service_id, ipfs_data['display_name'],
                                    ipfs_data['model_ipfs_hash'], desc, url, json_str, ipfs_data['encoding'],
-                                   ipfs_data['service_type'], ipfs_data['mpe_address'], assets_hash, assets_url_str, dt.utcnow(
+                                   ipfs_data['service_type'], ipfs_data['mpe_address'], assets_hash, assets_url_str, '{"rating": 0.0 , "total_users_rated": 0 }', dt.utcnow(
         ), dt.utcnow(),
             srvc_rw_id, ipfs_data['display_name'],
             ipfs_data['model_ipfs_hash'], desc, url, json_str, ipfs_data['encoding'],
@@ -176,10 +176,10 @@ class HandleContractsDB:
         print('_create_or_updt_srvc_mdata::row upserted', qry_res)
 
     def _create_grp(self, srvc_rw_id, org_id, service_id, grp_data, conn):
-        insrt_grp = "INSERT INTO service_group (service_row_id, org_id, service_id, group_id, " \
+        insrt_grp = "INSERT INTO service_group (service_row_id, org_id, service_id, group_id, group_name," \
                     "pricing, row_updated, row_created)" \
-                    "VALUES(%s, %s, %s, %s, %s, %s, %s)"
-        insrt_grp_params = [srvc_rw_id, org_id, service_id, grp_data['group_id'],
+                    "VALUES(%s, %s, %s, %s, %s, %s, %s, %s)"
+        insrt_grp_params = [srvc_rw_id, org_id, service_id, grp_data['group_id'], grp_data['group_name'],
                             grp_data['pricing'], dt.utcnow(), dt.utcnow()]
 
         return conn.execute(insrt_grp, insrt_grp_params)
@@ -364,6 +364,7 @@ class HandleContractsDB:
                 qry_data = self._create_grp(srvc_rw_id=service_row_id, org_id=org_id, service_id=service_id, conn=conn,
                                             grp_data={
                                                 'group_id': grp['group_id'],
+                                                'group_name': grp['group_name'],
                                                 'pricing': json.dumps(grp['pricing'])
                                             })
                 group_insert_count = group_insert_count + qry_data[0]
@@ -373,7 +374,7 @@ class HandleContractsDB:
                     qry_data = self._create_edpts(srvc_rw_id=service_row_id, org_id=org_id, service_id=service_id,
                                                   conn=conn,
                                                   endpt_data={
-                                                      'endpoint': endpt['endpoint'],
+                                                      'endpoint': endpt,
                                                       'group_id': grp['group_id'],
                                                   })
                     endpt_insert_count = endpt_insert_count + qry_data[0]
