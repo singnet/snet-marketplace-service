@@ -58,7 +58,10 @@ class Signer:
                     config['private_key'] = "0x" + config['private_key']
                 signature = bytes(w3.eth.account.signHash(
                     defunct_hash_message(message), config['private_key']).signature)
-                return {"snet-free-call-user-id": username, "snet-payment-channel-signature-bin": signature.hex(),
+                signature = signature.hex()
+                if not signature.startswith("0x"):
+                    signature = "0x" + signature
+                return {"snet-free-call-user-id": username, "snet-payment-channel-signature-bin": signature,
                         "snet-current-block-number": current_block_no, "snet-payment-type": "free-call"}
             else:
                 raise Exception(
