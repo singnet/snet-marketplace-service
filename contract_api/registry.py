@@ -89,13 +89,10 @@ class Registry:
         except Exception as err:
             raise err
 
-    def __convert_str_to_json(self, record):
-        if "service_rating" in record and record["service_rating"] is not None:
-            record["service_rating"] = json.loads(record["service_rating"])
-        if "assets_url" in record and record["assets_url"] is not None:
-            record["assets_url"] = json.loads(record["assets_url"])
-        if "assets_hash" in record and record["assets_hash"] is not None:
-            record["assets_hash"] = json.loads(record["assets_hash"])
+    def _convert_service_metadata_str_to_json(self, record):
+        record["service_rating"] = json.loads(record["service_rating"])
+        record["assets_url"] = json.loads(record["assets_url"])
+        record["assets_hash"] = json.loads(record["assets_hash"])
 
     def _search_query_data(self, sub_qry, sort_by, order_by, offset, limit, filter_query, values):
         try:
@@ -128,7 +125,7 @@ class Registry:
             obj_utils.clean(services)
             available_service = self._get_is_available_service()
             for rec in services:
-                self.__convert_str_to_json(rec)
+                self._convert_service_metadata_str_to_json(rec)
 
                 org_id = rec["org_id"]
                 service_id = rec["service_id"]
@@ -310,7 +307,7 @@ class Registry:
                                      [org_id, service_id])
 
             result = basic_service_data[0]
-            self.__convert_str_to_json(result)
+            self._convert_service_metadata_str_to_json(result)
 
             for rec in org_group_data:
                 org_groups_dict[rec['group_id']] = {
