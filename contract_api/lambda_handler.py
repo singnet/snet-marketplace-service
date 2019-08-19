@@ -65,7 +65,9 @@ def request_handler(event, context):
                                                                  org_id=payload_dict.get(
                                                                      "org_id", None),
                                                                  service_id=payload_dict.get("service_id", None))
-
+        elif re.match("(\/org\/)[^\/]*[/]{0,1}$", path):
+            org_id = sub_path[2]
+            response_data = obj_reg.get_org_details(org_id=org_id)
         else:
             return get_response(404, "Not Found")
 

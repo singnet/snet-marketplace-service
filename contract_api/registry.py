@@ -1,8 +1,6 @@
-import datetime
 import json
 from collections import defaultdict
 from common.utils import Utils
-from pymysql import MySQLError
 from contract_api.filter import Filter
 from common.constant import GET_ALL_SERVICE_OFFSET_LIMIT, GET_ALL_SERVICE_LIMIT
 
@@ -29,11 +27,16 @@ class Registry:
             print(repr(e))
             raise e
 
-    def _get_all_members(self):
+    def _get_all_members(self, org_id=None):
         """ Method to generate org_id and members mapping."""
         try:
-            all_orgs_members_raw = self.repo.execute(
-                "SELECT org_id, member FROM members M")
+            query = "SELECT org_id, member FROM members M"
+            params = None
+            if org_id is not None:
+                query += " where M.org_id = %s"
+                params = [org_id]
+
+            all_orgs_members_raw = self.repo.execute(query, params)
             all_orgs_members = defaultdict(list)
             for rec in all_orgs_members_raw:
                 all_orgs_members[rec['org_id']].append(rec['member'])
@@ -270,6 +273,23 @@ class Registry:
             groups = {"org_id": org_id,
                       "groups": groups_data}
             return groups
+        except Exception as e:
+            print(repr(e))
+            raise e
+
+    def get_org_details(self, org_id):
+        """ Method to get org details for given org_id. """
+        try:
+            org_details = self.repo.execute(
+                "SELECT * from organization o, (select org_id, count(*) as service_count "
+                "from service where org_id = %s) s where o.org_id = %s and o.org_id = s.org_id", [org_id, org_id])
+
+            obj_utils = Utils()
+            obj_utils.clean(org_details)
+            if len(org_details) > 0:
+                members = self._get_all_members(org_id)
+                org_details[0]["members"] = members
+            return org_details
         except Exception as e:
             print(repr(e))
             raise e
