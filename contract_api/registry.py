@@ -183,7 +183,7 @@ class Registry:
     def get_group_info(self, org_id, service_id):
         try:
             group_data = self.repo.execute(
-                "SELECT G.*, E.* FROM service_group G INNER JOIN service_endpoint E ON G.group_id = E.group_id WHERE "
+                "SELECT G.*, E.* FROM service_group G INNER JOIN service_endpoint E ON G.group_id = E.group_id AND G.service_row_id = E.service_row_id WHERE "
                 "G.org_id = %s AND G.service_id = %s ", [org_id, service_id])
             self.obj_utils.clean(group_data)
             groups = {}
