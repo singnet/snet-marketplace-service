@@ -175,19 +175,19 @@ CREATE TABLE `wallet` (
 -- -----------------------------------------
  CREATE TABLE `user_service_vote` (
   `row_id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_address` varchar(256) NOT NULL,
+  `username` varchar(128) NOT NULL,
   `org_id` varchar(128) NOT NULL,
   `service_id` varchar(128) NOT NULL,
   `rating` float(2,1) DEFAULT NULL,
   `row_created` timestamp DEFAULT NULL,
   `row_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`row_id`),
-  UNIQUE KEY `unique_vote` (`user_address`,`org_id`,`service_id`)
+  UNIQUE KEY `unique_vote` (`username`,`org_id`,`service_id`)
 ) ;
 -- -----------------------------------------
 CREATE TABLE `user_service_feedback` (
   `row_id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_address` varchar(256) NOT NULL,
+  `username` varchar(128) NOT NULL,
   `org_id` varchar(128) NOT NULL,
   `service_id` varchar(128) NOT NULL,
   `comment` varchar(1024) DEFAULT NULL,
