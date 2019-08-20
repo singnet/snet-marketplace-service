@@ -152,8 +152,6 @@ class User:
         try:
             user_rating_dict = {}
             username = user_data['authorizer']['claims']['email']
-            user_address = self._get_user_address_from_username(
-                username=username)
             query_part = ""
             query_part_values = []
             if org_id is not None:
@@ -163,14 +161,14 @@ class User:
                     query_part += "AND service_id = %s "
                     query_part_values.append(service_id)
 
-            rating_query = "SELECT * FROM user_service_vote WHERE user_address = %s " + query_part
+            rating_query = "SELECT * FROM user_service_vote WHERE username = %s " + query_part
             rating = self.repo.execute(
-                rating_query, [user_address] + query_part_values)
+                rating_query, [username] + query_part_values)
             self.obj_utils.clean(rating)
 
-            feedback_query = "SELECT * FROM user_service_feedback WHERE user_address = %s " + query_part
+            feedback_query = "SELECT * FROM user_service_feedback WHERE username = %s " + query_part
             feedback = self.repo.execute(
-                feedback_query, [user_address] + query_part_values)
+                feedback_query, [username] + query_part_values)
             self.obj_utils.clean(feedback)
 
             for record in feedback:
@@ -206,21 +204,19 @@ class User:
                     "Invalid Rating. Provided user rating should be between 1.0 and 5.0 .")
             curr_dt = dt.utcnow()
             username = user_data['authorizer']['claims']['email']
-            user_address = self._get_user_address_from_username(
-                username=username)
             org_id = feedback_data['org_id']
             service_id = feedback_data['service_id']
             comment = feedback_data['comment']
             self.repo.begin_transaction()
-            set_rating = "INSERT INTO user_service_vote (user_address, org_id, service_id, rating, row_updated, row_created) " \
+            set_rating = "INSERT INTO user_service_vote (username, org_id, service_id, rating, row_updated, row_created) " \
                          "VALUES (%s, %s, %s, %s, %s, %s) " \
                          "ON DUPLICATE KEY UPDATE rating = %s, row_updated = %s"
-            set_rating_params = [user_address, org_id, service_id,
+            set_rating_params = [username, org_id, service_id,
                                  user_rating, curr_dt, curr_dt, user_rating, curr_dt]
             self.repo.execute(set_rating, set_rating_params)
-            set_feedback = "INSERT INTO user_service_feedback (user_address, org_id, service_id, comment, row_updated, row_created)" \
+            set_feedback = "INSERT INTO user_service_feedback (username, org_id, service_id, comment, row_updated, row_created)" \
                            "VALUES (%s, %s, %s, %s, %s, %s)"
-            set_feedback_params = [user_address, org_id,
+            set_feedback_params = [username, org_id,
                                    service_id, comment, curr_dt, curr_dt]
             self.repo.execute(set_feedback, set_feedback_params)
             self._update_service_rating(org_id=org_id, service_id=service_id)
