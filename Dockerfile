@@ -1,4 +1,5 @@
-FROM ubuntu:18.04
+ARG MYAPP_IMAGE=ubuntu:18.04
+FROM $MYAPP_IMAGE
 RUN apt-get update
 RUN apt-get install python3 python3-pip git logrotate -y
 RUN apt-get install nodejs npm git -y
