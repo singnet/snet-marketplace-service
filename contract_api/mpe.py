@@ -68,7 +68,8 @@ class MPE:
 
     def get_channel_data_by_group_id_and_channel_id(self, group_id, channel_id):
         try:
-            result = self.repo.execute("SELECT * FROM mpe_channel WHERE groupId = %s AND channel_id = %s", [group_id, channel_id])
+            result = self.repo.execute(
+                "SELECT * FROM mpe_channel WHERE groupId = %s AND channel_id = %s", [group_id, channel_id])
             self.obj_util.clean(result)
             return result
         except Exception as e:
