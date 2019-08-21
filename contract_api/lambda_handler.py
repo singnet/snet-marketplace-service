@@ -37,7 +37,7 @@ def request_handler(event, context):
         if sub_path[1] in ["org", "service"]:
             obj_reg = Registry(obj_repo=db[net_id])
 
-        elif sub_path[1] in ["channel"]:
+        elif sub_path[1] in ["channel", "group"]:
             obj_mpe = MPE(net_id=net_id, obj_repo=db[net_id])
 
         if "/org" == path:
@@ -72,6 +72,12 @@ def request_handler(event, context):
             service_id = sub_path[4]
             response_data = obj_reg.get_service_data_by_org_id_and_service_id(
                 org_id=org_id, service_id=service_id)
+
+        elif re.match("(\/group\/)[^\/]*(\/channel\/)[^\/]*[/]{0,1}$", path):
+            group_id = sub_path[2]
+            channel_id = sub_path[4]
+            response_data = obj_mpe.get_channel_data_by_group_id_and_channel_id(
+                group_id=group_id, channel_id=channel_id)
 
         else:
             return get_response(404, "Not Found")
