@@ -23,7 +23,7 @@ class User:
                 status = 1
             else:
                 raise Exception("Email verification is pending.")
-            q_dta = [claims['email'], user_data['accountId'], claims['name'], claims['email'], status,
+            q_dta = [claims['email'], user_data['accountId'], claims['nickname'], claims['email'], status,
                      status, user_data['requestId'], user_data['requestTimeEpoch'], dt.utcnow(), dt.utcnow()]
             set_usr_dta = self.repo.execute(
                 "INSERT INTO user (username, account_id, name, email, email_verified, status, request_id, "
