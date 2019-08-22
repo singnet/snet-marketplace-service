@@ -118,7 +118,7 @@ CREATE TABLE `service_endpoint` (
   `service_id` varchar(128) NOT NULL,
   `group_id` varchar(256) NOT NULL,
   `endpoint` varchar(256) DEFAULT NULL,
-  `is_available` bit(1) DEFAULT NULL,
+  `is_available` bit(1) DEFAULT b'1',
   `last_check_timestamp` timestamp NULL DEFAULT NULL,
   `row_created` timestamp NULL DEFAULT NULL,
   `row_updated` timestamp NULL DEFAULT NULL,
