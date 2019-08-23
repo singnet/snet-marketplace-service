@@ -132,12 +132,9 @@ class HandleContractsDB:
         del_srvc_endpts_count = conn.execute(
             del_srvc_endpts, [service_id, org_id])
 
-        del_srvc_st = 'DELETE FROM service_status WHERE service_id = %s AND org_id = %s '
-        del_srvc_st_count = conn.execute(del_srvc_st, [service_id, org_id])
-
         self._del_tags(org_id=org_id, service_id=service_id, conn=conn)
-        print('_del_srvc_dpndts::del_srvc_grps: ', del_srvc_grps_count, '|del_srvc_endpts: ', del_srvc_endpts_count,
-              '|del_srvc_st_count: ', del_srvc_st_count)
+        print('_del_srvc_dpndts::del_srvc_grps: ', del_srvc_grps_count,
+              '|del_srvc_endpts: ', del_srvc_endpts_count)
 
     def _create_or_updt_srvc(self, org_id, service_id, ipfs_hash, conn):
         upsrt_srvc = "INSERT INTO service (org_id, service_id, is_curated, ipfs_hash, row_created, row_updated) " \
