@@ -79,6 +79,10 @@ def request_handler(event, context):
             response_data = obj_mpe.get_channel_data_by_group_id_and_channel_id(
                 group_id=group_id, channel_id=channel_id)
 
+        elif re.match("(\/org\/)[^\/]*[/]{0,1}$", path):
+            org_id = sub_path[2]
+            response_data = obj_reg.get_org_details(org_id=org_id)
+
         else:
             return get_response(404, "Not Found")
 

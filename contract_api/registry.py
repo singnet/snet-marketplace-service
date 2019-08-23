@@ -330,3 +330,20 @@ class Registry:
         except Exception as e:
             print(repr(e))
             raise e
+
+    def get_org_details(self, org_id):
+        """ Method to get org details for given org_id. """
+        try:
+            org_details = self.repo.execute(
+                "SELECT * from organization o, (select org_id, count(*) as service_count "
+                "from service where org_id = %s) s where o.org_id = %s and o.org_id = s.org_id", [org_id, org_id])
+
+            obj_utils = Utils()
+            obj_utils.clean(org_details)
+            if len(org_details) > 0:
+                members = self._get_all_members(org_id)
+                org_details[0]["members"] = members
+            return org_details
+        except Exception as e:
+            print(repr(e))
+            raise e
