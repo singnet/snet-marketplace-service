@@ -9,6 +9,7 @@ from schema import Schema, And
 DEFAULT_WALLET_TYPE = "METAMASK"
 CREATED_BY = "snet"
 
+
 class User:
     def __init__(self, obj_repo):
         self.repo = obj_repo
@@ -278,13 +279,15 @@ class User:
             print(is_default)
             if is_default == 1:
                 self.repo.begin_transaction()
-                self.set_wallet_details(username=username, address=address, is_default=is_default)
+                self.set_wallet_details(
+                    username=username, address=address, is_default=is_default)
                 self.repo.execute(
                     "UPDATE wallet SET is_default = 0 WHERE username = %s AND address != %s", [username, address])
                 self.repo.commit_transaction()
                 # need to be cleaned
             else:
-                self.set_wallet_details(username=username, address=address, is_default=is_default)
+                self.set_wallet_details(
+                    username=username, address=address, is_default=is_default)
 
             return []
         except Exception as e:
