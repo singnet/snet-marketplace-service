@@ -165,13 +165,15 @@ CREATE TABLE `wallet` (
   `row_id` int(11) NOT NULL AUTO_INCREMENT,
   `username` varchar(128) DEFAULT NULL,
   `address` varchar(256) NOT NULL,
+  `is_default` bit(1) DEFAULT b'0',
+  `type` varchar(128) DEFAULT NULL,
   `status` bit(1) DEFAULT b'1',
+  `created_by` varchar(256) DEFAULT NULL,
   `row_created` timestamp NULL DEFAULT NULL,
   `row_updated` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`row_id`),
-  UNIQUE KEY `uq_w_addr` (`address`),
-  UNIQUE KEY `uq_w_usr` (`username`)
-) ;
+  UNIQUE KEY `uq_w_addr` (`username`, `address`)
+);
 -- -----------------------------------------
  CREATE TABLE `user_service_vote` (
   `row_id` int(11) NOT NULL AUTO_INCREMENT,
