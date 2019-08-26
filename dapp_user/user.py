@@ -6,6 +6,9 @@ from common.constant import PATH_PREFIX
 from common.utils import Utils
 from schema import Schema, And
 
+DEFAULT_WALLET_TYPE = "METAMASK"
+CREATED_BY = "snet"
+
 
 class User:
     def __init__(self, obj_repo):
@@ -255,5 +258,40 @@ class User:
                 "= CONCAT('{\"rating\":', B.service_rating, ' , \"total_users_rated\":', B.total_users_rated, '}') "
                 "WHERE A.org_id = %s AND A.service_id = %s ", [org_id, service_id])
         except Exception as e:
+            print(repr(e))
+            raise e
+
+    def set_wallet_details(self, username, address, is_default, status=1, type=DEFAULT_WALLET_TYPE, created_by=CREATED_BY):
+        try:
+            self.repo.execute(
+                "INSERT INTO wallet (username, address, type, is_default, status, created_by, row_updated, row_created) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                [username, address, type, is_default, status, created_by, dt.utcnow(), dt.utcnow()])
+        except Exception as e:
+            print(repr(e))
+            raise e
+
+    def register_wallet(self, user_data, wallet_data):
+        try:
+            is_default = wallet_data["is_default"]
+            username = user_data['authorizer']['claims']['email']
+            address = wallet_data['address']
+            print(is_default)
+            if is_default == 1:
+                self.repo.begin_transaction()
+                self.set_wallet_details(
+                    username=username, address=address, is_default=is_default)
+                self.repo.execute(
+                    "UPDATE wallet SET is_default = 0 WHERE username = %s AND address != %s", [username, address])
+                self.repo.commit_transaction()
+                # need to be cleaned
+            else:
+                self.set_wallet_details(
+                    username=username, address=address, is_default=is_default)
+
+            return []
+        except Exception as e:
+            if is_default is not None and is_default == 1:
+                self.repo.rollback_transaction()
             print(repr(e))
             raise e
