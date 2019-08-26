@@ -1,8 +1,7 @@
----
 plugins:
   - serverless-offline
   - serverless-python-requirements
-    
+
 service: signer
 custom:
   pythonRequirements:
