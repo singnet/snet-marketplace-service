@@ -10,7 +10,8 @@ from service_status.service_status import ServiceStatus
 NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId)
                      for netId in NETWORKS.keys())
 obj_util = Utils()
-db = dict((netId, Repository(net_id=netId, NETWORKS)) for netId in NETWORKS.keys())
+db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS))
+          for netId in NETWORKS.keys())
 
 
 def request_handler(event, context):
