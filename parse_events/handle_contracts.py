@@ -7,12 +7,11 @@ import web3.eth
 import sys
 import web3.utils.events
 from web3 import Web3
-from parse_events.config import IPFS_URL, NETWORKS
+from parse_events.config import IPFS_URL, NETWORKS, SLACK_HOOK
 from parse_events.constant import MPE_EVTS, REG_EVTS, REG_CNTRCT_PATH, MPE_CNTRCT_PATH, REG_ADDR_PATH, MPE_ADDR_PATH, ERROR_MSG
 from common.error import ErrorHandler
 from parse_events.handle_contracts_db import HandleContractsDB
 from common.utils import Utils
-
 
 class HandleContracts:
     def __init__(self, net_id):
@@ -30,10 +29,10 @@ class HandleContracts:
             self.web3_pvdr = NETWORKS[self.net_id]['ws_provider']
             self.w3 = Web3(web3.providers.WebsocketProvider(self.web3_pvdr))
         except KeyError as e:
-            self.util_obj.report_slack(type=1, slack_msg=repr(e))
+            self.util_obj.report_slack(type=1, slack_msg=repr(e), SLACK_HOOK=SLACK_HOOK)
             raise KeyError(self.err_obj.get_err_msg(err_cd=1001), repr(e))
         except Exception as e:
-            self.util_obj.report_slack(type=1, slack_msg=repr(e))
+            self.util_obj.report_slack(type=1, slack_msg=repr(e), SLACK_HOOK=SLACK_HOOK)
             raise Exception(self.err_obj.get_err_msg(err_cd=1002), repr(e))
 
     def _loadContract(self, path):
@@ -147,7 +146,7 @@ class HandleContracts:
             except Exception as e:
                 err_msg = self.err_obj.log_err_msg(
                     err=e, fn_nme='_process_events')
-                self.util_obj.report_slack(type=1, slack_msg=err_msg)
+                self.util_obj.report_slack(type=1, slack_msg=err_msg, SLACK_HOOK=SLACK_HOOK
                 print('writing error for row_id: ', evt_data['row_id'])
                 self.db_obj.updt_raw_evts(
                     evt_data['row_id'], type, err_cd=1, err_msg=err_msg)
@@ -158,7 +157,7 @@ class HandleContracts:
             self._process_events(self.db_obj.read_registry_events(), 'REG')
             self._process_events(self.db_obj.read_mpe_events(), 'MPE')
         except Exception as e:
-            self.util_obj.report_slack(type=1, slack_msg=repr(e))
+            self.util_obj.report_slack(type=1, slack_msg=repr(e), SLACK_HOOK=SLACK_HOOK)
             self.err_obj.log_err_msg(err=e, fn_nme='handle_contract')
         finally:
             if self.db_obj.repo.connection is not None:
@@ -170,7 +169,7 @@ if __name__ == '__main__':
     os.environ["NETWORK_ID"] = str(net_id)
     obj = HandleContracts(net_id=net_id)
     obj.util_obj.report_slack(
-        type=0, slack_msg="start of the parse_events service")
+        type=0, slack_msg="start of the parse_events service", SLACK_HOOK=SLACK_HOOK)
     while True:
         obj.handle_contract()
         time.sleep(20)
