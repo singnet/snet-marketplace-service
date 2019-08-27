@@ -1,4 +1,5 @@
-MPE_EVTS = ['ChannelOpen', 'ChannelClaim', 'ChannelSenderClaim', 'ChannelExtend', 'ChannelAddFunds']
+MPE_EVTS = ['ChannelOpen', 'ChannelClaim',
+            'ChannelSenderClaim', 'ChannelExtend', 'ChannelAddFunds']
 REG_EVTS = ['OrganizationCreated', 'OrganizationModified', 'OrganizationDeleted', 'ServiceCreated',
             'ServiceMetadataModified', 'ServiceTagsModified', 'ServiceDeleted']
 COMMON_CNTRCT_PATH = './node_modules/singularitynet-platform-contracts'
