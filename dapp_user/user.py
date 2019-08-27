@@ -2,7 +2,7 @@ from datetime import datetime as dt
 
 import boto3
 
-from common.constant import PATH_PREFIX
+from dapp_user.config import PATH_PREFIX
 from common.utils import Utils
 from schema import Schema, And
 
