@@ -146,7 +146,7 @@ class HandleContracts:
             except Exception as e:
                 err_msg = self.err_obj.log_err_msg(
                     err=e, fn_nme='_process_events')
-                self.util_obj.report_slack(type=1, slack_msg=err_msg, SLACK_HOOK=SLACK_HOOK
+                self.util_obj.report_slack(type=1, slack_msg=err_msg, SLACK_HOOK=SLACK_HOOK)
                 print('writing error for row_id: ', evt_data['row_id'])
                 self.db_obj.updt_raw_evts(
                     evt_data['row_id'], type, err_cd=1, err_msg=err_msg)
