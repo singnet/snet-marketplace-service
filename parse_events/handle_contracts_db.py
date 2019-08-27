@@ -6,7 +6,7 @@ from datetime import datetime as dt
 import log_setup
 
 from parse_events.constant import EVNTS_LIMIT
-from parse_events.config import IPFS_URL, ASSETS_BUCKET_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY, ASSETS_PREFIX
+from parse_events.config import NETWORKS, IPFS_URL, ASSETS_BUCKET_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY, ASSETS_PREFIX
 from common.ipfs_util import IPFSUtil
 from common.repository import Repository
 from common.s3_util import S3Util
@@ -21,7 +21,7 @@ log_setup.configure_log(logger)
 class HandleContractsDB:
     def __init__(self, err_obj, net_id):
         self.err_obj = err_obj
-        self.repo = Repository(net_id)
+        self.repo = Repository(net_id, NETWORKS)
         self.util_obj = Utils()
         self.ipfs_utll = IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
         self.s3_util = S3Util(S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY)
