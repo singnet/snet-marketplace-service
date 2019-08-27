@@ -68,6 +68,10 @@ def request_handler(event, context):
             result = json.loads(response.get('Payload').read())
             return result
 
+        elif "/wallet/register" == path:
+            response_data = usr_obj.register_wallet(
+                user_data=event['requestContext'], wallet_data=payload_dict)
+
         else:
             return get_response(404, "Not Found")
 
