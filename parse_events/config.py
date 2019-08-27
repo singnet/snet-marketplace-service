@@ -11,7 +11,7 @@ S3_BUCKET_SECRET_KEY = ""
 ASSETS_BUCKET_NAME = ""
 ASSETS_PREFIX = ""
 SLACK_HOOK = {
-    'hostname' : '',
+    'hostname': '',
     'port': 443,
     'path': '',
     'method': 'POST',

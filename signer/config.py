@@ -3,7 +3,7 @@ GET_FREE_CALLS_METERING_ARN = ""
 PREFIX_FREE_CALL = ""
 NET_ID = 0
 SLACK_HOOK = {
-    'hostname' : '',
+    'hostname': '',
     'port': 443,
     'path': '',
     'method': 'POST',
