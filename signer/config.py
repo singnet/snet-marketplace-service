@@ -11,3 +11,5 @@ SLACK_HOOK = {
         'Content-Type': 'application/json'
     }
 }
+
+signer={}
