@@ -10,4 +10,6 @@ class ServiceRepository(BaseRepository):
         result = session.query(Service).filter(Service.service_id == service_id).\
             filter(Service.org_id == org_id).first()
 
+        session.commit()
+
         return result
