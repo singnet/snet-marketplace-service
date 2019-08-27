@@ -8,7 +8,7 @@ import sys
 import web3.utils.events
 from web3 import Web3
 from parse_events.config import IPFS_URL, NETWORKS
-from parse_events.constant import MPE_EVTS, REG_EVTS, REG_CNTRCT_PATH, MPE_CNTRCT_PATH, REG_ADDR_PATH, MPE_ADDR_PATH
+from parse_events.constant import MPE_EVTS, REG_EVTS, REG_CNTRCT_PATH, MPE_CNTRCT_PATH, REG_ADDR_PATH, MPE_ADDR_PATH, ERROR_MSG
 from common.error import ErrorHandler
 from parse_events.handle_contracts_db import HandleContractsDB
 from common.utils import Utils
@@ -21,7 +21,7 @@ class HandleContracts:
         self.mpe_cntrct_addr = None
         self.reg_cntrct = None
         self.reg_cntrct_addr = None
-        self.err_obj = ErrorHandler()
+        self.err_obj = ErrorHandler(ERROR_MSG)
         self.db_obj = HandleContractsDB(err_obj=self.err_obj, net_id=net_id)
         self.util_obj = Utils()
 

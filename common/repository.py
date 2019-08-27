@@ -1,11 +1,10 @@
 import pymysql
-from common.constant import NETWORKS
 
 
 class Repository:
     connection = None
 
-    def __init__(self, net_id):
+    def __init__(self, net_id, NETWORKS):
         self.DB_HOST = NETWORKS[net_id]['db']['DB_HOST']
         self.DB_USER = NETWORKS[net_id]['db']['DB_USER']
         self.DB_PASSWORD = NETWORKS[net_id]['db']['DB_PASSWORD']
