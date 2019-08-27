@@ -5,7 +5,8 @@ from datetime import datetime as dt
 
 import log_setup
 
-from common.constant import EVNTS_LIMIT, IPFS_URL, ASSETS_BUCKET_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY, ASSETS_PREFIX
+from parse_events.constant import EVNTS_LIMIT
+from parse_events.config import IPFS_URL, ASSETS_BUCKET_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY, ASSETS_PREFIX
 from common.ipfs_util import IPFSUtil
 from common.repository import Repository
 from common.s3_util import S3Util

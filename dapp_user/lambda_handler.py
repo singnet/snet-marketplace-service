@@ -2,7 +2,7 @@ import json
 import re
 import traceback
 import boto3
-from common.constant import NETWORKS, GET_FREE_CALLS_METERING_ARN
+from dapp_user.config import NETWORKS, GET_FREE_CALLS_METERING_ARN
 from common.repository import Repository
 from common.utils import Utils
 

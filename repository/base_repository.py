@@ -3,7 +3,7 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from common.constant import NETWORKS, NETWORK_ID
+from parse_events.config import NETWORKS, NETWORK_ID
 
 net_id = int(NETWORK_ID)
 engine = create_engine('mysql+pymysql://'+NETWORKS[net_id]['db']['DB_USER']+':'+NETWORKS[net_id]['db']

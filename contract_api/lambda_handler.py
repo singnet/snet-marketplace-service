@@ -1,7 +1,7 @@
 import json
 import re
 import traceback
-from common.constant import NETWORKS
+from contract_api.config import NETWORKS
 from common.repository import Repository
 from common.utils import Utils
 from contract_api.registry import Registry

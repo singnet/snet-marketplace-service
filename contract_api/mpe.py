@@ -1,5 +1,5 @@
 import web3
-from common.constant import NETWORKS
+from contract_api.config import NETWORKS
 from common.utils import Utils
 from contract_api.registry import Registry
 from web3 import Web3

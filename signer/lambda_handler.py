@@ -1,7 +1,7 @@
 import json
 import traceback
 import re
-from common.constant import NETWORKS
+from signer.config import NETWORKS
 from common.repository import Repository
 from common.utils import Utils
 from signer.signer import Signer
