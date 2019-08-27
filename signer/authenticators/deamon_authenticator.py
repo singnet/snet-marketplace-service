@@ -2,7 +2,7 @@ import web3
 import base64
 from eth_account.messages import defunct_hash_message
 
-from common.constant import NET_ID
+from signer.config import NET_ID
 from common.repository import Repository
 
 

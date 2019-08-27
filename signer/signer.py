@@ -1,7 +1,7 @@
 import json
 import boto3
 import web3
-from common.constant import PREFIX_FREE_CALL, GET_FREE_CALLS_METERING_ARN, NETWORKS
+from signer.config import PREFIX_FREE_CALL, GET_FREE_CALLS_METERING_ARN, NETWORKS
 from config import config
 from eth_account.messages import defunct_hash_message
 from sdk.service_client import ServiceClient
