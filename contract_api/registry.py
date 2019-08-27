@@ -2,7 +2,7 @@ import json
 from collections import defaultdict
 from common.utils import Utils
 from contract_api.filter import Filter
-from common.constant import GET_ALL_SERVICE_OFFSET_LIMIT, GET_ALL_SERVICE_LIMIT
+from contract_api.constant import GET_ALL_SERVICE_OFFSET_LIMIT, GET_ALL_SERVICE_LIMIT
 
 
 class Registry:
