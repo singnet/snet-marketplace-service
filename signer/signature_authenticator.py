@@ -51,7 +51,7 @@ def main(event, context):
     try:
         message = authenticator.get_signature_message()
         signature = authenticator.get_signature()
-        public_keys = authenticator.get_public_key()
+        public_keys = authenticator.get_public_keys()
         principal = authenticator.get_principal()
         derived_public_key = extract_public_key(message, signature)
         verified = verify_public_key(public_keys, derived_public_key)
