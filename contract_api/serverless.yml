@@ -76,6 +76,23 @@ functions:
               - x-requested-with
       - http:
           method: GET
+          path: /org/{orgId}
+          request:
+            parameters:
+              paths:
+                orgId: true
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+      - http:
+          method: GET
           path: /org/{orgId}/group
           request:
             parameters:

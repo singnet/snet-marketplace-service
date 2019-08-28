@@ -1,7 +1,7 @@
 import json
 import re
 import traceback
-from common.constant import NETWORKS
+from contract_api.config import NETWORKS, SLACK_HOOK
 from common.repository import Repository
 from common.utils import Utils
 from contract_api.registry import Registry
@@ -9,7 +9,8 @@ from contract_api.mpe import MPE
 
 NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId)
                      for netId in NETWORKS.keys())
-db = dict((netId, Repository(net_id=netId)) for netId in NETWORKS.keys())
+db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS))
+          for netId in NETWORKS.keys())
 obj_util = Utils()
 
 
@@ -89,7 +90,7 @@ def request_handler(event, context):
         if response_data is None:
             err_msg = {'status': 'failed', 'error': 'Bad Request',
                        'api': event['path'], 'payload': payload_dict, 'network_id': net_id}
-            obj_util.report_slack(1, str(err_msg))
+            obj_util.report_slack(1, str(err_msg), SLACK_HOOK)
             response = get_response(500, err_msg)
         else:
             response = get_response(
@@ -97,7 +98,7 @@ def request_handler(event, context):
     except Exception as e:
         err_msg = {"status": "failed", "error": repr(
             e), 'api': event['path'], 'payload': payload_dict, 'network_id': net_id}
-        obj_util.report_slack(1, str(err_msg))
+        obj_util.report_slack(1, str(err_msg), SLACK_HOOK)
         response = get_response(500, err_msg)
         traceback.print_exc()
     return response

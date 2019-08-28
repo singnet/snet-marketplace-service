@@ -4,7 +4,6 @@ import decimal
 import requests
 import web3
 from web3 import Web3
-from common.constant import SLACK_HOOK
 IGNORED_LIST = ['row_id', 'row_created', 'row_updated']
 
 
@@ -15,7 +14,7 @@ class Utils:
             1: 'err:: '
         }
 
-    def report_slack(self, type, slack_msg):
+    def report_slack(self, type, slack_msg, SLACK_HOOK):
         url = SLACK_HOOK['hostname'] + SLACK_HOOK['path']
         prefix = self.msg_type.get(type, "")
         print(url)

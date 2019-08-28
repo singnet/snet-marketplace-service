@@ -2,7 +2,7 @@ import json
 import re
 import traceback
 import boto3
-from common.constant import NETWORKS, GET_FREE_CALLS_METERING_ARN
+from dapp_user.config import NETWORKS, GET_FREE_CALLS_METERING_ARN, SLACK_HOOK
 from common.repository import Repository
 from common.utils import Utils
 
@@ -10,7 +10,8 @@ from dapp_user.user import User
 
 NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId)
                      for netId in NETWORKS.keys())
-db = dict((netId, Repository(net_id=netId)) for netId in NETWORKS.keys())
+db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS))
+          for netId in NETWORKS.keys())
 obj_util = Utils()
 
 
@@ -78,7 +79,7 @@ def request_handler(event, context):
         if response_data is None:
             err_msg = {'status': 'failed', 'error': 'Bad Request',
                        'api': event['path'], 'payload': payload_dict, 'network_id': net_id}
-            obj_util.report_slack(1, str(err_msg))
+            obj_util.report_slack(1, str(err_msg), SLACK_HOOK)
             response = get_response(500, err_msg)
         else:
             response = get_response(
@@ -86,7 +87,7 @@ def request_handler(event, context):
     except Exception as e:
         err_msg = {"status": "failed", "error": repr(
             e), 'api': event['path'], 'payload': payload_dict, 'network_id': net_id}
-        obj_util.report_slack(1, str(err_msg))
+        obj_util.report_slack(1, str(err_msg), SLACK_HOOK)
         response = get_response(500, err_msg)
         traceback.print_exc()
     return response

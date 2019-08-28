@@ -5,7 +5,8 @@ from datetime import datetime as dt
 
 import log_setup
 
-from common.constant import EVNTS_LIMIT, IPFS_URL, ASSETS_BUCKET_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY, ASSETS_PREFIX
+from parse_events.constant import EVNTS_LIMIT
+from parse_events.config import NETWORKS, IPFS_URL, ASSETS_BUCKET_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY, ASSETS_PREFIX, SLACK_HOOK
 from common.ipfs_util import IPFSUtil
 from common.repository import Repository
 from common.s3_util import S3Util
@@ -20,7 +21,7 @@ log_setup.configure_log(logger)
 class HandleContractsDB:
     def __init__(self, err_obj, net_id):
         self.err_obj = err_obj
-        self.repo = Repository(net_id)
+        self.repo = Repository(net_id, NETWORKS)
         self.util_obj = Utils()
         self.ipfs_utll = IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
         self.s3_util = S3Util(S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY)
@@ -208,7 +209,8 @@ class HandleContractsDB:
                 updt_evts, [err_cd, err_msg, row_id])
             print('updt_raw_evts::row updated: ', updt_evts_resp, '|', type)
         except Exception as e:
-            self.util_obj.report_slack(type=1, slack_msg=repr(e))
+            self.util_obj.report_slack(
+                type=1, slack_msg=repr(e), SLACK_HOOK=SLACK_HOOK)
             print('Error in updt_reg_evts_raw::error: ', e)
 
     def updt_raw_evts(self, row_id, type, err_cd, err_msg):
@@ -227,7 +229,8 @@ class HandleContractsDB:
                     org_id=org_id, service_id=rec['service_id'], conn=conn)
             self._commit(conn=conn)
         except Exception as e:
-            self.util_obj.report_slack(type=1, slack_msg=repr(e))
+            self.util_obj.report_slack(
+                type=1, slack_msg=repr(e), SLACK_HOOK=SLACK_HOOK)
             self._rollback(conn=conn, err=repr(e))
 
     def del_srvc(self, org_id, service_id):
@@ -388,7 +391,8 @@ class HandleContractsDB:
             self._commit(conn=conn)
 
         except Exception as e:
-            self.util_obj.report_slack(type=1, slack_msg=repr(e))
+            self.util_obj.report_slack(
+                type=1, slack_msg=repr(e), SLACK_HOOK=SLACK_HOOK)
             self._rollback(conn=conn, err=repr(e))
 
     def process_org_data(self, org_id, org_data, ipfs_data, org_metadata_uri):
@@ -406,7 +410,8 @@ class HandleContractsDB:
                 self._create_or_updt_members(org_id, org_data[4], conn)
                 self._commit(conn)
         except Exception as e:
-            self.util_obj.report_slack(type=1, slack_msg=repr(e))
+            self.util_obj.report_slack(
+                type=1, slack_msg=repr(e), SLACK_HOOK=SLACK_HOOK)
             self._rollback(conn=conn, err=repr(e))
 
     def update_tags(self, org_id, service_id, tags_data):
@@ -426,7 +431,8 @@ class HandleContractsDB:
                                       conn=conn)
                 self._commit(conn)
         except Exception as e:
-            self.util_obj.report_slack(type=1, slack_msg=repr(e))
+            self.util_obj.report_slack(
+                type=1, slack_msg=repr(e), SLACK_HOOK=SLACK_HOOK)
             self._rollback(conn=conn, err=repr(e))
 
     #

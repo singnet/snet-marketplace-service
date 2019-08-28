@@ -1,7 +1,7 @@
 import json
 import boto3
 import web3
-from common.constant import PREFIX_FREE_CALL, GET_FREE_CALLS_METERING_ARN, NETWORKS
+from signer.config import PREFIX_FREE_CALL, GET_FREE_CALLS_METERING_ARN, NETWORKS
 from config import config
 from eth_account.messages import defunct_hash_message
 from sdk.service_client import ServiceClient
@@ -23,9 +23,10 @@ class Signer:
         """
         try:
             lambda_payload = {"httpMethod": "GET",
-                              "queryStringParameters": {"organization_id": org_id,
-                                                        "service_id": service_id,
-                                                        "username": username}}
+                              "queryStringParameters": {"organization_id": org_id, "service_id": service_id,
+                                                            "username": username}}
+
+
             response = self.lambda_client.invoke(FunctionName=GET_FREE_CALLS_METERING_ARN, InvocationType='RequestResponse',
                                                  Payload=json.dumps(lambda_payload))
             response_body_raw = json.loads(
