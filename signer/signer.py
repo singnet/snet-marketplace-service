@@ -24,8 +24,7 @@ class Signer:
         try:
             lambda_payload = {"httpMethod": "GET",
                               "queryStringParameters": {"organization_id": org_id, "service_id": service_id,
-                                                            "username": username}}
-
+                                                        "username": username}}
 
             response = self.lambda_client.invoke(FunctionName=GET_FREE_CALLS_METERING_ARN, InvocationType='RequestResponse',
                                                  Payload=json.dumps(lambda_payload))

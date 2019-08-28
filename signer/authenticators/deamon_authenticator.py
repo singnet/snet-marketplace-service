@@ -2,9 +2,8 @@ import web3
 import base64
 from eth_account.messages import defunct_hash_message
 
-from signer.config import NET_ID,NETWORKS
+from signer.config import NET_ID, NETWORKS
 from common.repository import Repository
-
 
 
 class SignatureAuthenticator(object):
@@ -43,7 +42,7 @@ class DeamonAuthenticator(SignatureAuthenticator):
         service_id = self.event['headers']['x-serviceid']
 
         query = 'SELECT public_key FROM demon_auth_keys WHERE org_id = %s AND service_id = %s AND group_id = %s '
-        public_key = Repository(net_id=NET_ID,NETWORKS=NETWORKS).execute(
+        public_key = Repository(net_id=NET_ID, NETWORKS=NETWORKS).execute(
             query, [organization_id, service_id, group_id])
         return public_key[0]['public_key']
 
