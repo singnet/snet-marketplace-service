@@ -12,4 +12,4 @@ SLACK_HOOK = {
     }
 }
 
-signer={}
+signer = {}

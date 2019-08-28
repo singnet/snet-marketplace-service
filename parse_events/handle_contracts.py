@@ -170,12 +170,12 @@ class HandleContracts:
 
 
 if __name__ == '__main__':
-    net_id=int(sys.argv[1])
-    os.environ["NETWORK_ID"]=str(net_id)
-    obj=HandleContracts(net_id=net_id)
+    net_id = int(sys.argv[1])
+    os.environ["NETWORK_ID"] = str(net_id)
+    obj = HandleContracts(net_id=net_id)
     obj.util_obj.report_slack(
         type=0, slack_msg="start of the parse_events service", SLACK_HOOK=SLACK_HOOK)
     while True:
         obj.handle_contract()
         time.sleep(20)
-        obj=HandleContracts(net_id=net_id)
+        obj = HandleContracts(net_id=net_id)
