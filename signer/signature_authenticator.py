@@ -8,6 +8,15 @@ def extract_public_key(message_data, signature):
     return public_key
 
 
+def verify_public_key(public_keys, derived_public_key):
+    if public_keys is None:
+        return False
+    for public_key in public_keys:
+        if public_key == derived_public_key:
+            return True
+    return False
+
+
 def generatePolicy(principalId, effect, methodArn):
     authResponse = {}
     authResponse['principalId'] = principalId
@@ -42,15 +51,15 @@ def main(event, context):
     try:
         message = authenticator.get_signature_message()
         signature = authenticator.get_signature()
-        public_key = authenticator.get_public_key()
+        public_keys = authenticator.get_public_keys()
         principal = authenticator.get_principal()
         derived_public_key = extract_public_key(message, signature)
-        verification = (public_key == derived_public_key)
+        verified = verify_public_key(public_keys, derived_public_key)
     except Exception as e:
         print(e)
         return generatePolicy('exception', 'Deny', event['methodArn'])
 
-    if verification:
+    if verified:
         return generatePolicy(principal, 'Allow', event['methodArn'])
 
     return generatePolicy(principal, 'Deny', event['methodArn'])
