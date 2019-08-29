@@ -277,6 +277,7 @@ class Registry:
         try:
             groups_data = self.repo.execute(
                 "SELECT group_id, group_name, payment FROM org_group WHERE org_id = %s", [org_id])
+            [rec.update({'payment': json.loads(rec['payment'])}) for rec in groups_data]
             groups = {"org_id": org_id,
                       "groups": groups_data}
             return groups
