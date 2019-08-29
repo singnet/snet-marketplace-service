@@ -10,11 +10,11 @@ def extract_public_key(message_data, signature):
 
 def verify_public_key(public_keys, derived_public_key):
     if public_keys is None:
-        return False;
+        return False
     for public_key in public_keys:
         if public_key == derived_public_key:
-            return True;
-    return False;
+            return True
+    return False
 
 
 def generatePolicy(principalId, effect, methodArn):
