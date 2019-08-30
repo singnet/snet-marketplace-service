@@ -9,7 +9,7 @@ NETWORKS = {
                'DB_NAME': 'unittest_db',
                'DB_PORT': 3306
                }
-    } 
+    }
 }
 GET_FREE_CALLS_METERING_ARN = ""
 PATH_PREFIX = ""

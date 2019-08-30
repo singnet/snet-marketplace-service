@@ -122,7 +122,7 @@ class Registry:
                 str(org_srvc_tuple).replace(',)', ')')
             services = self.repo.execute("SELECT M.* FROM service_metadata M, service S WHERE "
                                          "S.row_id = M.service_row_id " + qry_part)
-            print("services::",services)
+            print("services::", services)
             obj_utils = Utils()
             obj_utils.clean(services)
             available_service = self._get_is_available_service()
