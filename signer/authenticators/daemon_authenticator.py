@@ -2,17 +2,23 @@ import web3
 import base64
 from eth_account.messages import defunct_hash_message
 
-from signer.config import NET_ID,NETWORKS
+from common.blockchain_util import BlockChainUtil
 from common.repository import Repository
-
+from signer.config import NETWORKS, NET_ID
 
 
 class SignatureAuthenticator(object):
+    BLOCK_LIMIT = 10
+
+    def __init__(self, event, networks, net_id):
+        self.event = event
+        self.networks = networks
+        self.net_id = net_id
 
     def get_signature_message(self):
         pass
 
-    def get_public_key(self):
+    def get_public_keys(self):
         pass
 
     def get_signature(self):
@@ -21,11 +27,21 @@ class SignatureAuthenticator(object):
     def get_principal(self):
         pass
 
+    def verify_current_block_number(self):
+        signed_block_number = int(
+            self.event['headers']['x-currentblocknumber'])
+        blockchain_util = BlockChainUtil(
+            self.networks[self.net_id]['ws_provider'])
+        current_block_number = blockchain_util.get_current_block_no()
+        if current_block_number > signed_block_number + self.BLOCK_LIMIT or current_block_number < signed_block_number - self.BLOCK_LIMIT:
+            return False
+        return True
 
-class DeamonAuthenticator(SignatureAuthenticator):
 
-    def __init__(self, event):
-        self.event = event
+class DaemonAuthenticator(SignatureAuthenticator):
+
+    def __init__(self, events, networks, net_id):
+        super().__init__(events, networks, net_id)
 
     def get_signature_message(self):
         username = self.event['headers']['x-username']
@@ -37,15 +53,19 @@ class DeamonAuthenticator(SignatureAuthenticator):
                                          ['_usage', username, organization_id, service_id, group_id, int(block_number)])
         return defunct_hash_message(message)
 
-    def get_public_key(self):
+    def get_public_keys(self):
         organization_id = self.event['headers']['x-organizationid']
         group_id = self.event['headers']['x-groupid']
         service_id = self.event['headers']['x-serviceid']
 
         query = 'SELECT public_key FROM demon_auth_keys WHERE org_id = %s AND service_id = %s AND group_id = %s '
-        public_key = Repository(net_id=NET_ID,NETWORKS=NETWORKS).execute(
+        stored_public_keys = Repository(net_id=NET_ID, NETWORKS=NETWORKS).execute(
             query, [organization_id, service_id, group_id])
-        return public_key[0]['public_key']
+        public_keys = []
+        if stored_public_keys:
+            for stored_public_key in stored_public_keys:
+                public_keys.append(stored_public_key['public_key'])
+        return public_keys
 
     def get_signature(self):
         base64_sign = self.event['headers']['x-signature']
