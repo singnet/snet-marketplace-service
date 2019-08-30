@@ -2,11 +2,18 @@ import web3
 import base64
 from eth_account.messages import defunct_hash_message
 
-from signer.config import NET_ID, NETWORKS
+from common.blockchain_util import BlockChainUtil
 from common.repository import Repository
+from signer.config import NETWORKS, NET_ID
 
 
 class SignatureAuthenticator(object):
+    BLOCK_LIMIT = 10
+
+    def __init__(self, event, networks, net_id):
+        self.event = event
+        self.networks = networks
+        self.net_id = net_id
 
     def get_signature_message(self):
         pass
@@ -20,11 +27,20 @@ class SignatureAuthenticator(object):
     def get_principal(self):
         pass
 
+    def verify_current_block_number(self):
+        signed_block_number = self.event['headers']['x-currentblocknumber']
+        blockchain_util = BlockChainUtil(
+            self.networks[self.net_id]['ws_provider'])
+        current_block_number = blockchain_util.get_current_block_no()
+        if current_block_number > signed_block_number + self.BLOCK_LIMIT or current_block_number < signed_block_number - self.BLOCK_LIMIT:
+            return False
+        return True
 
-class DeamonAuthenticator(SignatureAuthenticator):
 
-    def __init__(self, event):
-        self.event = event
+class DaemonAuthenticator(SignatureAuthenticator):
+
+    def __init__(self, events, networks, net_id):
+        super().__init__(events, networks, net_id)
 
     def get_signature_message(self):
         username = self.event['headers']['x-username']
