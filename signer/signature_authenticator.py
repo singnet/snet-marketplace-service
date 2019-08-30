@@ -1,7 +1,7 @@
 from web3.auto import w3
 
-from signer.authenticators.daemon_authenticator import  DaemonAuthenticator
-from signer.config import NETWORKS,NET_ID
+from signer.authenticators.daemon_authenticator import DaemonAuthenticator
+from signer.config import NETWORKS, NET_ID
 
 
 def extract_public_key(message_data, signature):
@@ -47,8 +47,7 @@ def main(event, context):
     if 'x-authtype' in event:
         pass
     else:
-        authenticator = DaemonAuthenticator(event ,NETWORKS ,NET_ID)
-
+        authenticator = DaemonAuthenticator(event, NETWORKS, NET_ID)
 
     try:
         message = authenticator.get_signature_message()
@@ -56,7 +55,8 @@ def main(event, context):
         public_keys = authenticator.get_public_keys()
         principal = authenticator.get_principal()
         derived_public_key = extract_public_key(message, signature)
-        verified = (verify_public_key(public_keys, derived_public_key) and authenticator.verify_current_block_number())
+        verified = (verify_public_key(public_keys, derived_public_key)
+                    and authenticator.verify_current_block_number())
     except Exception as e:
         print(e)
         return generatePolicy('exception', 'Deny', event['methodArn'])
