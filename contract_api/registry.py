@@ -67,10 +67,10 @@ class Registry:
             sub_qry = ""
             if s == "all":
                 for rec in fm:
-                    sub_qry += fm[rec] + " LIKE '" + str(q) + "%' OR "
+                    sub_qry += fm[rec] + " LIKE '%" + str(q) + "%' OR "
                 sub_qry = sub_qry[:-3] if sub_qry.endswith("OR ") else sub_qry
             else:
-                sub_qry += fm[s] + " LIKE '" + str(q) + "%' "
+                sub_qry += fm[s] + " LIKE '%" + str(q) + "%' "
             return sub_qry.replace("org_id", "M.org_id")
         except Exception as err:
             raise err
@@ -105,6 +105,7 @@ class Registry:
 
             qry_dta = self.repo.execute(
                 srch_qry, values + [sort_by, order_by, int(offset), int(limit)])
+            print("query_data::", qry_dta)
             org_srvc_tuple = ()
             rslt = {}
             for rec in qry_dta:
@@ -119,8 +120,11 @@ class Registry:
                 rslt[org_id][service_id]["tags"] = tags
             qry_part = " AND (S.org_id, S.service_id) IN " + \
                 str(org_srvc_tuple).replace(',)', ')')
+            print("qry_part::", qry_part)
+            sort_by = sort_by.replace("org_id", "M.org_id")
             services = self.repo.execute("SELECT M.* FROM service_metadata M, service S WHERE "
-                                         "S.row_id = M.service_row_id " + qry_part)
+                                         "S.row_id = M.service_row_id " + qry_part + "ORDER BY %s %s", [sort_by, order_by])
+            print("services::", services)
             obj_utils = Utils()
             obj_utils.clean(services)
             available_service = self._get_is_available_service()
