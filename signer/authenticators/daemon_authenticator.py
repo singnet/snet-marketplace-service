@@ -8,7 +8,7 @@ from signer.config import NETWORKS, NET_ID
 
 
 class SignatureAuthenticator(object):
-    BLOCK_LIMIT=10
+    BLOCK_LIMIT = 10
 
     def __init__(self, event, networks, net_id):
         self.event = event
@@ -31,14 +31,15 @@ class SignatureAuthenticator(object):
         signed_block_number = self.event['headers']['x-currentblocknumber']
         blockchain_util = BlockChainUtil(self.networks[self.net_id]['ws_provider'])
         current_block_number = blockchain_util.get_current_block_no()
-        if current_block_number > signed_block_number + self.BLOCK_LIMIT or current_block_number <signed_block_number-self.BLOCK_LIMIT:
+        if current_block_number > signed_block_number + self.BLOCK_LIMIT or current_block_number < signed_block_number - self.BLOCK_LIMIT:
             return False
         return True
 
-class DeamonAuthenticator(SignatureAuthenticator):
 
-    def __init__(self,events,networks,net_id):
-        super().__init__(events,networks,net_id)
+class DaemonAuthenticator(SignatureAuthenticator):
+
+    def __init__(self, events, networks, net_id):
+        super().__init__(events, networks, net_id)
 
     def get_signature_message(self):
         username = self.event['headers']['x-username']
@@ -70,4 +71,3 @@ class DeamonAuthenticator(SignatureAuthenticator):
 
     def get_principal(self):
         return self.event['headers']['x-username']
-

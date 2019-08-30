@@ -1,6 +1,6 @@
 from web3.auto import w3
 
-from signer.authenticators.deamon_authenticator import DeamonAuthenticator
+from signer.authenticators.daemon_authenticator import  DaemonAuthenticator
 from signer.config import NETWORKS,NET_ID
 
 
@@ -47,7 +47,7 @@ def main(event, context):
     if 'x-authtype' in event:
         pass
     else:
-        authenticator = DeamonAuthenticator(event ,NETWORKS ,NET_ID)
+        authenticator = DaemonAuthenticator(event ,NETWORKS ,NET_ID)
 
 
     try:
