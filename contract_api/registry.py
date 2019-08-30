@@ -123,7 +123,7 @@ class Registry:
             print("qry_part::", qry_part)
             sort_by = sort_by.replace("org_id", "M.org_id")
             services = self.repo.execute("SELECT M.* FROM service_metadata M, service S WHERE "
-                                         "S.row_id = M.service_row_id " + qry_part + "ORDER BY %s %s", [sort_by, order_by]); 
+                                         "S.row_id = M.service_row_id " + qry_part + "ORDER BY %s %s", [sort_by, order_by])
             print("services::", services)
             obj_utils = Utils()
             obj_utils.clean(services)
