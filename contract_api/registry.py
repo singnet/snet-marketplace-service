@@ -67,10 +67,10 @@ class Registry:
             sub_qry = ""
             if s == "all":
                 for rec in fm:
-                    sub_qry += fm[rec] + " LIKE '" + str(q) + "%' OR "
+                    sub_qry += fm[rec] + " LIKE '%" + str(q) + "%' OR "
                 sub_qry = sub_qry[:-3] if sub_qry.endswith("OR ") else sub_qry
             else:
-                sub_qry += fm[s] + " LIKE '" + str(q) + "%' "
+                sub_qry += fm[s] + " LIKE '%" + str(q) + "%' "
             return sub_qry.replace("org_id", "M.org_id")
         except Exception as err:
             raise err
