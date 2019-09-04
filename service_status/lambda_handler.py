@@ -2,7 +2,7 @@ import json
 import re
 import traceback
 
-from common.constant import NETWORKS
+from service_status.config import NETWORKS
 from common.repository import Repository
 from common.utils import Utils
 from service_status.service_status import ServiceStatus
@@ -27,6 +27,6 @@ def request_handler(event, context):
         obj_srvc_st.update_service_status()
     except Exception as e:
         print(repr(e))
-        obj_util.report_slack(1, str(err_msg))
+        obj_util.report_slack(1, "Error in updating service status::err:" + e)
         traceback.print_exc()
     return
