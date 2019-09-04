@@ -152,8 +152,8 @@ class Registry:
 
     def get_all_srvcs(self, qry_param):
         try:
-            fields_mapping = {"dn": "display_name",
-                              "tg": "tag_name", "org": "org_id"}
+            fields_mapping = {"display_name": "display_name",
+                              "tag_name": "tag_name", "org_id": "org_id"}
             s = qry_param.get('s', 'all')
             q = qry_param.get('q', '')
             offset = qry_param.get('offset', GET_ALL_SERVICE_OFFSET_LIMIT)
