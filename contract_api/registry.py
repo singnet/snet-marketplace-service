@@ -67,10 +67,10 @@ class Registry:
             sub_qry = ""
             if s == "all":
                 for rec in fm:
-                    sub_qry += fm[rec] + " LIKE '" + str(q) + "%' OR "
+                    sub_qry += fm[rec] + " LIKE '%" + str(q) + "%' OR "
                 sub_qry = sub_qry[:-3] if sub_qry.endswith("OR ") else sub_qry
             else:
-                sub_qry += fm[s] + " LIKE '" + str(q) + "%' "
+                sub_qry += fm[s] + " LIKE '%" + str(q) + "%' "
             return sub_qry.replace("org_id", "M.org_id")
         except Exception as err:
             raise err
@@ -100,11 +100,11 @@ class Registry:
                 filter_query = " AND " + filter_query
             srch_qry = "SELECT * FROM service A, (SELECT M.org_id, M.service_id, group_concat(T.tag_name) AS tags FROM " \
                        "service_metadata M LEFT JOIN service_tags T ON M.service_row_id = T.service_row_id WHERE (" \
-                       + sub_qry.replace('%', '%%') + ")" + filter_query + " GROUP BY M.org_id, M.service_id ORDER BY %s %s ) B WHERE " \
+                       + sub_qry.replace('%', '%%') + ")" + filter_query + " GROUP BY M.org_id, M.service_id ORDER BY " + sort_by + " " + order_by + " ) B WHERE " \
                                                       "A.service_id = B.service_id AND A.org_id=B.org_id AND A.is_curated= 1 LIMIT %s , %s"
 
             qry_dta = self.repo.execute(
-                srch_qry, values + [sort_by, order_by, int(offset), int(limit)])
+                srch_qry, values + [int(offset), int(limit)])
             org_srvc_tuple = ()
             rslt = {}
             for rec in qry_dta:
@@ -119,8 +119,10 @@ class Registry:
                 rslt[org_id][service_id]["tags"] = tags
             qry_part = " AND (S.org_id, S.service_id) IN " + \
                 str(org_srvc_tuple).replace(',)', ')')
+            print("qry_part::", qry_part)
+            sort_by = sort_by.replace("org_id", "M.org_id")
             services = self.repo.execute("SELECT M.* FROM service_metadata M, service S WHERE "
-                                         "S.row_id = M.service_row_id " + qry_part)
+                                         "S.row_id = M.service_row_id " + qry_part + "ORDER BY " + sort_by + " " + order_by)
             obj_utils = Utils()
             obj_utils.clean(services)
             available_service = self._get_is_available_service()
@@ -150,8 +152,8 @@ class Registry:
 
     def get_all_srvcs(self, qry_param):
         try:
-            fields_mapping = {"dn": "display_name",
-                              "tg": "tag_name", "org": "org_id"}
+            fields_mapping = {"display_name": "display_name",
+                              "tag_name": "tag_name", "org_id": "org_id"}
             s = qry_param.get('s', 'all')
             q = qry_param.get('q', '')
             offset = qry_param.get('offset', GET_ALL_SERVICE_OFFSET_LIMIT)
@@ -159,6 +161,8 @@ class Registry:
             sort_by = fields_mapping.get(
                 qry_param.get('sort_by', None), "ranking")
             order_by = qry_param.get('order_by', 'desc')
+            if order_by.lower() != "desc":
+                order_by = "asc"
 
             sub_qry = self._prepare_subquery(s=s, q=q, fm=fields_mapping)
             print("get_all_srvcs::sub_qry: ", sub_qry)
