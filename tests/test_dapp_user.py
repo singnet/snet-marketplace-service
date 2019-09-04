@@ -2,10 +2,10 @@ import json
 import unittest
 from unittest.mock import patch
 
-from sign_up import lambda_handler
+from dapp_user import lambda_handler
 
 
-class TestSignUPAPI(unittest.TestCase):
+class TestDappUserAPI(unittest.TestCase):
     def setUp(self):
         self.event = {"requestContext": {"stage": "TEST"}}
 
@@ -15,7 +15,7 @@ class TestSignUPAPI(unittest.TestCase):
                            {"authorizer":
                             {"claims":
                                      {"email_verified": True,
-                                      "name": "Dummy",
+                                      "nickname": "Dummy",
                                       "email": "dummy@dummy.com"
                                       }
                              },
@@ -94,10 +94,8 @@ class TestSignUPAPI(unittest.TestCase):
         assert (response["body"] == '"Not Found"')
 
     @patch('common.utils.Utils.report_slack')
-    @patch('sign_up.user.User.fetch_private_key_from_ssm')
-    def test_user_signup(self, fetch_private_key_from_ssm_mock, report_slack_mock):
+    def test_user_signup(self, report_slack_mock):
         self.test_del_user_data()
-        fetch_private_key_from_ssm_mock.return_value = "mock_address"
         report_slack_mock.return_value = "mock_address"
         self.signup['requestContext'].update(self.event['requestContext'])
         response = lambda_handler.request_handler(

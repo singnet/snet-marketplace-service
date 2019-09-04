@@ -1,30 +1,38 @@
+---
 version: 2
 jobs:
   build:
     docker:
-    - image: circleci/mysql:5.7
-    working_directory: /root/singnet
-    environment:
-      PYTHONPATH: /root/singnet/snet-marketplace-service
+      - image: circleci/python:3.6.6-node
+      - image: circleci/mysql:8.0.4
+        command: [--default-authentication-plugin=mysql_native_password]
+        environment:
+          MYSQL_ROOT_PASSWORD: unittest_pwd
+          MYSQL_DATABASE: unittest_db
+          MYSQL_USER: unittest_root
+          MYSQL_PASSWORD: unittest_pwd
+    working_directory: ~/singnet
     steps:
-    - run:
-        name: Install Python and Git
-        command: |
-          mysql --version
-          service mysql start
-          apt-get update
-          apt-get -y install sudo wget git
-          apt-get -y install python3 python3-pip
-    - run:
-        name: Build and Test marketplace
-        command: |
-          git clone https://github.com/prashantramangupta/snet-marketplace-service.git
-          cd snet-marketplace-service
-          #mysql -h localhost -u root < ./test/unittest_db.sql
-          #pip3 install -r requirement.txt
-          #export PYTHONPATH=$PATH:/root/singnet/snet-marketplace-service
-          #cp ./test/constant.py ./common/constant.py
-          #cp ./test/.coveragerc ./
-          #pip3 install coveralls
-          #coverage run --source=/root/singnet/snet-marketplace-service ./test/test_contract_api.py
-          #COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} coveralls
+      - checkout
+      - run:
+      # Our primary container isn't MYSQL so run a sleep command until it's ready.
+          name: Waiting for MySQL to be ready
+          command: |
+            for i in `seq 1 30`;
+            do
+              nc -z 127.0.0.1 3306 && echo Success && exit 0
+              echo -n .
+              sleep 1
+            done
+            echo Failed waiting for MySQL && exit 1
+      - run:
+          name: Initialise tables.
+          command: |
+            sudo apt-get update
+            sudo apt-get install mysql-client -y
+            mysql -h 127.0.0.1 -u unittest_root -D unittest_db -punittest_pwd < tests/unittest_db.sql
+            sudo pip install -r ./dapp_user/requirement.txt 
+            export PYTHONPATH=$PATH:$pwd
+            sudo pip install coveralls
+            coverage run --source=`pwd` ./tests/test_dapp_user.py
+            COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} coveralls

@@ -1,0 +1,7 @@
+# .coveragerc to control coverage.py
+[run]
+branch = True
+omit =
+    */.circleci/*
+    /node_modules/*
+    /sql_script/*
