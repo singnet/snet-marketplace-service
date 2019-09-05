@@ -1,6 +1,6 @@
 NETWORKS = {}
 SLACK_HOOK = {
-    'hostname' : '',
+    'hostname': '',
     'port': 443,
     'path': '',
     'method': 'POST',
