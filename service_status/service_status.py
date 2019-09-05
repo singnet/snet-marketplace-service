@@ -3,7 +3,7 @@ from datetime import datetime
 from common.utils import Utils
 from service_status.constant import SRVC_STATUS_GRPC_TIMEOUT, LIMIT
 from grpc_health.v1 import health_pb2 as heartb_pb2
-from grpc_health.v1 import health_pb2_grpc as  heartb_pb2_grpc
+from grpc_health.v1 import health_pb2_grpc as heartb_pb2_grpc
 import grpc
 
 
@@ -18,13 +18,15 @@ class ServiceStatus:
     def _check_service_status(self, url, secure=True):
         try:
             if secure:
-                channel = grpc.secure_channel(url, grpc.ssl_channel_credentials())
+                channel = grpc.secure_channel(
+                    url, grpc.ssl_channel_credentials())
             else:
                 channel = grpc.insecure_channel(url)
 
             stub = heartb_pb2_grpc.HealthStub(channel)
-            response = stub.Check(heartb_pb2.HealthCheckRequest(service=""), timeout=SRVC_STATUS_GRPC_TIMEOUT)
-            if response!=None and response.status == 1:
+            response = stub.Check(heartb_pb2.HealthCheckRequest(
+                service=""), timeout=SRVC_STATUS_GRPC_TIMEOUT)
+            if response != None and response.status == 1:
                 print(response.status)
                 return 1
             return 0
@@ -53,7 +55,8 @@ class ServiceStatus:
             update_query = 'UPDATE service_endpoint SET is_available = %s, last_check_timestamp = current_timestamp WHERE row_id = %s '
             print('query: ', update_query)
             for rec in result:
-                res = self.repo.execute(update_query, [self.ping_url(rec['endpoint']), rec['row_id']])
+                res = self.repo.execute(
+                    update_query, [self.ping_url(rec['endpoint']), rec['row_id']])
             rows_updated = rows_updated + res[0]
             print('no of rows updated: ', rows_updated)
         except Exception as e:
