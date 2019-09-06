@@ -14,3 +14,4 @@ pymysql==0.9.2
 hexbytes==0.1.0
 pycparser==2.19
 idna==2.8
+web3==4.9.2
