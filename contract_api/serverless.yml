@@ -172,7 +172,7 @@ functions:
               - x-requested-with
 
       - http:
-          method: GET
+          method: POST
           path: /org/{orgId}/service/{serviceId}/rating
           request:
             parameters:
@@ -181,7 +181,7 @@ functions:
                 serviceId: true
 
       - http:
-          method: POST
+          method: GET
           path: /group/{groupId}/channel/{channelId}
           request:
             parameters:
