@@ -31,11 +31,11 @@ package:
     - requirement.txt
     - venv/**
     - config.ropsten.json
-    - dapp-users-serverless.yml
+    - serverless.yml
     - test/**
     - tests/**
     - sql_script/**
-    - service_status/**
+    - signer/**
     - contract_api/**
     - repository/**
     - Readme.md
