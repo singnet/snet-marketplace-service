@@ -170,6 +170,16 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+
+      - http:
+          method: GET
+          path: /org/{orgId}/service/{serviceId}/rating
+          request:
+            parameters:
+              paths:
+                orgId: true
+                serviceId: true
+
       - http:
           method: GET
           path: /group/{groupId}/channel/{channelId}
