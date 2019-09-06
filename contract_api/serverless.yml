@@ -181,7 +181,7 @@ functions:
                 serviceId: true
 
       - http:
-          method: GET
+          method: POST
           path: /group/{groupId}/channel/{channelId}
           request:
             parameters:
