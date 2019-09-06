@@ -353,3 +353,21 @@ class Registry:
         except Exception as e:
             print(repr(e))
             raise e
+
+    def update_service_rating(self, org_id, service_id):
+        """
+            Method updates service_rating and total_user_rated when user rating is changed for given service_id
+            and org_id.
+        """
+        try:
+            update_service_metadata = self.repo.execute(
+                "UPDATE service_metadata A  INNER JOIN "
+                "(SELECT U.org_id, U.service_id, AVG(U.rating) AS service_rating, count(*) AS total_users_rated "
+                "FROM user_service_vote AS U WHERE U.rating IS NOT NULL GROUP BY U.service_id, U.org_id ) AS B "
+                "ON A.org_id=B.org_id AND A.service_id=B.service_id SET A.service_rating "
+                "= CONCAT('{\"rating\":', B.service_rating, ' , \"total_users_rated\":', B.total_users_rated, '}') "
+                "WHERE A.org_id = %s AND A.service_id = %s ", [org_id, service_id])
+            return "success"
+        except Exception as e:
+            print(repr(e))
+            raise e
