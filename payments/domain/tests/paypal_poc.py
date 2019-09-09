@@ -1,8 +1,8 @@
 import paypalrestsdk
 my_api = paypalrestsdk.Api({
   'mode': 'sandbox',
-  'client_id': 'AcWMEZayVVXNksw5AZNE8U91pW2OQrMGiMfmFGfhdNGhdnjHwQEBzhCCOinDxXmwZflDodw2teWwQGKI',
-  'client_secret': 'EAP8f--0L0vVFgPB84W2p2JM4O_KIieR0cMQqEaDzywdgTlUzo07rnco9MfkvLqxDiUPekAWKwJMObPn'})
+  'client_id': '',
+  'client_secret': ''})
 #
 payment = paypalrestsdk.Payment({
     "intent": "sale",
