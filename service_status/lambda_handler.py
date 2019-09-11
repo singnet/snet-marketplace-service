@@ -8,11 +8,11 @@ from service_status.config import NETWORK_ID
 from service_status.config import NETWORKS
 from service_status.service_status import ServiceStatus
 
-NETWORKS_NAME = dict((NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
+NETWORKS_NAME = dict(
+    (NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
 obj_util = Utils()
-db = dict(
-    (netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys()
-)
+db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS))
+          for netId in NETWORKS.keys())
 
 
 def request_handler(event, context):
@@ -24,7 +24,8 @@ def request_handler(event, context):
         print(repr(e))
         obj_util.report_slack(
             1,
-            "Error in updating service status::NETWORK_ID:" + NETWORK_ID + "|err:" + e,
+            "Error in updating service status::NETWORK_ID:" + NETWORK_ID +
+            "|err:" + e,
         )
         traceback.print_exc()
     return

@@ -21,7 +21,8 @@ class ServiceStatus:
     def _check_service_status(self, url, secure=True):
         try:
             if secure:
-                channel = grpc.secure_channel(url, grpc.ssl_channel_credentials())
+                channel = grpc.secure_channel(url,
+                                              grpc.ssl_channel_credentials())
             else:
                 channel = grpc.insecure_channel(url)
 
@@ -60,8 +61,8 @@ class ServiceStatus:
             print("query: ", update_query)
             for rec in result:
                 res = self.repo.execute(
-                    update_query, [self.ping_url(rec["endpoint"]), rec["row_id"]]
-                )
+                    update_query,
+                    [self.ping_url(rec["endpoint"]), rec["row_id"]])
             rows_updated = rows_updated + res[0]
             print("no of rows updated: ", rows_updated)
         except Exception as e:

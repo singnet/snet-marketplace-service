@@ -30,13 +30,13 @@ class SignatureAuthenticator(object):
         pass
 
     def verify_current_block_number(self):
-        signed_block_number = int(self.event["headers"]["x-currentblocknumber"])
-        blockchain_util = BlockChainUtil(self.networks[self.net_id]["ws_provider"])
+        signed_block_number = int(
+            self.event["headers"]["x-currentblocknumber"])
+        blockchain_util = BlockChainUtil(
+            self.networks[self.net_id]["ws_provider"])
         current_block_number = blockchain_util.get_current_block_no()
-        if (
-            current_block_number > signed_block_number + self.BLOCK_LIMIT
-            or current_block_number < signed_block_number - self.BLOCK_LIMIT
-        ):
+        if (current_block_number > signed_block_number + self.BLOCK_LIMIT or
+                current_block_number < signed_block_number - self.BLOCK_LIMIT):
             print(
                 "current_block_number is more than signed block limit %s",
                 current_block_number,
@@ -74,9 +74,10 @@ class DaemonAuthenticator(SignatureAuthenticator):
         service_id = self.event["headers"]["x-serviceid"]
 
         query = "SELECT public_key FROM demon_auth_keys WHERE org_id = %s AND service_id = %s AND group_id = %s "
-        stored_public_keys = Repository(net_id=NET_ID, NETWORKS=NETWORKS).execute(
-            query, [organization_id, service_id, group_id]
-        )
+        stored_public_keys = Repository(
+            net_id=NET_ID,
+            NETWORKS=NETWORKS).execute(query,
+                                       [organization_id, service_id, group_id])
         public_keys = []
         if stored_public_keys:
             for stored_public_key in stored_public_keys:
