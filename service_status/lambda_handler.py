@@ -2,9 +2,10 @@ import json
 import re
 import traceback
 
-from service_status.config import NETWORKS, NETWORK_ID
 from common.repository import Repository
 from common.utils import Utils
+from service_status.config import NETWORK_ID
+from service_status.config import NETWORKS
 from service_status.service_status import ServiceStatus
 
 NETWORKS_NAME = dict((NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())

@@ -1,7 +1,8 @@
 from web3.auto import w3
 
 from signer.authenticators.daemon_authenticator import DaemonAuthenticator
-from signer.config import NETWORKS, NET_ID
+from signer.config import NET_ID
+from signer.config import NETWORKS
 
 
 def extract_public_key(message_data, signature):

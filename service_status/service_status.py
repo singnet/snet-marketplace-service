@@ -1,10 +1,13 @@
 import re
 from datetime import datetime
-from common.utils import Utils
-from service_status.constant import SRVC_STATUS_GRPC_TIMEOUT, LIMIT
+
+import grpc
 from grpc_health.v1 import health_pb2 as heartb_pb2
 from grpc_health.v1 import health_pb2_grpc as heartb_pb2_grpc
-import grpc
+
+from common.utils import Utils
+from service_status.constant import LIMIT
+from service_status.constant import SRVC_STATUS_GRPC_TIMEOUT
 
 
 class ServiceStatus:
