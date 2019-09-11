@@ -1,11 +1,13 @@
 import json
 import re
 import traceback
-from contract_api.config import NETWORKS, SLACK_HOOK
+
 from common.repository import Repository
 from common.utils import Utils
-from contract_api.registry import Registry
+from contract_api.config import NETWORKS
+from contract_api.config import SLACK_HOOK
 from contract_api.mpe import MPE
+from contract_api.registry import Registry
 
 NETWORKS_NAME = dict((NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
 db = dict(
