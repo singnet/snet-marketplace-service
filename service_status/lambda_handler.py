@@ -21,6 +21,7 @@ def request_handler(event, context):
         obj_srvc_st.update_service_status()
     except Exception as e:
         print(repr(e))
-        obj_util.report_slack(1, "Error in updating service status::NETWORK_ID:" + NETWORK_ID + "|err:" + e)
+        obj_util.report_slack(
+            1, "Error in updating service status::NETWORK_ID:" + NETWORK_ID + "|err:" + e)
         traceback.print_exc()
     return

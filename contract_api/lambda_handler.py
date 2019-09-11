@@ -87,7 +87,8 @@ def request_handler(event, context):
         elif re.match("(\/org\/)[^\/]*(\/service\/)[^\/]*(\/rating)[/]{0,1}$", path) and method == 'POST':
             org_id = sub_path[2]
             service_id = sub_path[4]
-            response_data = obj_reg.update_service_rating(org_id=org_id, service_id=service_id)
+            response_data = obj_reg.update_service_rating(
+                org_id=org_id, service_id=service_id)
 
         else:
             return get_response(404, "Not Found")
