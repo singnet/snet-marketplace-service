@@ -55,6 +55,7 @@ def main(event, context):
         public_keys = authenticator.get_public_keys()
         principal = authenticator.get_principal()
         derived_public_key = extract_public_key(message, signature)
+        print("Derived public key is %s", derived_public_key)
         verified = (verify_public_key(public_keys, derived_public_key)
                     and authenticator.verify_current_block_number())
     except Exception as e:
