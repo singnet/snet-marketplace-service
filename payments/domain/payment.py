@@ -1,11 +1,12 @@
 
-class Payment(object):
+class Payment:
 
     def __init__(self):
         self._payment_id = None
         self._amount = None
         self._payment_status = None
         self._created_at = None
+        self._payment_details = {}
 
     def __init__(self, payment_id, amount, payment_status, created_at, payment_details):
         self._payment_id = payment_id
@@ -23,8 +24,20 @@ class Payment(object):
     def get_amount(self):
         return self._amount
 
-    def get_payment_gateway(self):
-        return self._payment_gateway
+    def get_payment_details(self):
+        return self._payment_details
+
+    def set_payment_details(self, payment_details):
+        self._payment_details = payment_details
+
+    def get_created_at(self):
+        return self._created_at
 
     def set_payment_status(self, payment_status):
         self._payment_status = payment_status
+
+    def initiate_payment(self):
+        pass
+
+    def execute_transaction(self, paid_payment_details):
+        pass

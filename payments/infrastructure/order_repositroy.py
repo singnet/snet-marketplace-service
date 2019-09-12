@@ -3,22 +3,22 @@ from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from payments.domain.order_service import ObtainOrders, PersistOrders
 from payments.infrastructure.models import Order, Payment
 from payments.settings import DB_URL
 
-engine = create_engine(DB_URL, echo=True)
+engine = create_engine(DB_URL, echo=False)
 Session = sessionmaker(bind=engine)
 
 
-class OrderRepository(ObtainOrders, PersistOrders):
+class OrderRepository:
 
     def __init__(self):
         self.session = Session()
 
     def persist_order(self, order):
         order_model = Order(
-            id=order.get_order_id(), username=order.get_username(),
+            id=order.get_order_id(),
+            username=order.get_username(),
             amount=order.get_amount(),
             item_details=order.get_item_details(),
             created_at=datetime.now()
@@ -52,8 +52,16 @@ class OrderRepository(ObtainOrders, PersistOrders):
         payments = self.session.query(Payment).filter(Payment.order_id == order_id).all()
         return payments
 
-    def create_payment(self, order):
-        pass
+    def persist_payment(self, order_id, payment):
+        payment_model = Payment(
+            payment_id=payment.get_payment_id(),
+            amount=payment.get_amount(),
+            created_at=payment.get_created_at(),
+            payment_details=payment.get_payment_details(),
+            payment_status=payment.get_payment_status(),
+            order_id=order_id
+        )
+        self.add_model(payment_model)
 
     def update_payment_status(self, payment):
         try:

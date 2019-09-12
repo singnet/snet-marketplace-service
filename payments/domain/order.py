@@ -1,5 +1,7 @@
-# An order have multiplr payment and multiple refund in future
-from payments.domain.paypal import initiate_paypal_payment
+import uuid
+from datetime import datetime
+
+from payments.domain.paypal_payment import PaypalPayment
 
 
 class Order(object):
@@ -32,13 +34,39 @@ class Order(object):
 
     def create_payment(self, amount, payment_method):
         if payment_method == "paypal":
-            initiate_paypal_payment(amount)
+
+            payment = PaypalPayment(
+                payment_id=str(uuid.uuid1()),
+                amount=amount,
+                payment_details={
+                    "payment_method": payment_method
+                },
+                payment_status="pending",
+                created_at=datetime.now()
+            )
+
+            payment_response = payment.initiate_payment()
+            self._payments.append(payment)
         else:
-            raise Exception("Invalide payment gateway")
-        return
+            raise Exception("Invalid payment gateway")
+        return {
+            "payment_object": payment,
+            "payment": payment_response["payment"]
+        }
 
     def update_payment(self, payment_id, status):
         pass
 
-    def execute_payment(self, payment_id):
-        pass
+    def get_payment(self, payment_id):
+        for payment in self._payments:
+            if payment.get_payment_id() == payment_id:
+                return payment
+        return None
+
+    def execute_payment(self, payment_id, paid_payment_details, payment_method):
+        if payment_method == "paypal":
+            payment = self.get_payment(payment_id)
+            payment.execute_transaction(paid_payment_details)
+        else:
+            raise Exception("Invalid payment gateway")
+        return payment
