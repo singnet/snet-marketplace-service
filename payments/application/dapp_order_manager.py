@@ -36,7 +36,7 @@ class DappOrderMangaer:
             order = create_order_from_repository_order(self.order_repository.get_order_by_order_id(order_id))
             payment_details = order.create_payment(amount, payment_method)
             payment = payment_details["payment_object"]
-            self.order_repository.persist_payment(order_id, payment)
+            self.order_repository.persist_payment(order, payment.get_payment_id())
             response_body = {
                 "amount": payment.get_amount(),
                 "payment_id": payment.get_payment_id(),
@@ -55,7 +55,7 @@ class DappOrderMangaer:
         try:
             order = create_order_from_repository_order(self.order_repository.get_order_by_order_id(order_id))
             payment = order.execute_payment(payment_id, paid_payment_details, payment_method)
-            OrderRepository().update_payment_status(payment)
+            OrderRepository().update_payment_status(order, payment.get_payment_id())
             response_body = {
                 "payment_id": payment.get_payment_id(),
                 "payment": payment.get_payment_details(),

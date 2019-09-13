@@ -50,18 +50,25 @@ class OrderRepository:
         payments = order.payments.all()
         return order, payments
 
-    def persist_payment(self, order_id, payment):
+    def persist_payment(self, order, payment_id):
+        payment = order.get_payment(payment_id)
+        if payment is None:
+            raise Exception(f"Payment not found in order instance for the {payment_id}")
+
         payment_model = Payment(
             payment_id=payment.get_payment_id(),
             amount=payment.get_amount(),
             created_at=payment.get_created_at(),
             payment_details=payment.get_payment_details(),
             payment_status=payment.get_payment_status(),
-            order_id=order_id
+            order_id=order.get_order_id()
         )
         self.add_item(payment_model)
 
-    def update_payment_status(self, payment):
+    def update_payment_status(self, order, payment_id):
+        payment = order.get_payment(payment_id)
+        if payment is None:
+            raise Exception(f"Payment not found in order instance for the {payment_id}")
         try:
             payment_model = self.session.query(Payment).filter(Payment.payment_id == payment.get_payment_id()).first()
             payment_model.payment_status = payment.get_payment_status()
