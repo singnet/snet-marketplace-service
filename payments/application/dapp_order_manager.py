@@ -21,7 +21,8 @@ class DappOrderMangaer:
             self.order_repository.persist_order(order)
             response_body = {
                 "order_id": order.get_order_id(),
-                "item_details": order.get_item_details()
+                "item_details": order.get_item_details(),
+                "amount": amount
             }
             response_status = "success"
         except Exception as e:
@@ -33,7 +34,7 @@ class DappOrderMangaer:
     def initiate_payment(self, order_id, amount, payment_method):
         try:
             order = create_order_from_repository_order(self.order_repository.get_order_by_order_id(order_id))
-            payment_details = order.create_payment(payment_method)
+            payment_details = order.create_payment(amount, payment_method)
             payment = payment_details["payment_object"]
             self.order_repository.persist_payment(order_id, payment)
             response_body = {

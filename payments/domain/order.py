@@ -42,7 +42,7 @@ class Order(object):
                     "payment_method": payment_method
                 },
                 payment_status="pending",
-                created_at=datetime.now()
+                created_at=datetime.utcnow()
             )
 
             payment_response = payment.initiate_payment()

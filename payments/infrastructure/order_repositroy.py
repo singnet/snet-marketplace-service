@@ -21,11 +21,11 @@ class OrderRepository:
             username=order.get_username(),
             amount=order.get_amount(),
             item_details=order.get_item_details(),
-            created_at=datetime.now()
+            created_at=datetime.utcnow()
         )
-        self.add_model(order_model)
+        self.add_item(order_model)
 
-    def add_model(self, item):
+    def add_item(self, item):
         try:
             self.session.add(item)
             self.session.commit()
@@ -35,7 +35,7 @@ class OrderRepository:
 
         self.session.commit()
 
-    def add_all_model(self, items):
+    def add_all_items(self, items):
         try:
             self.session.add_all(items)
             self.session.commit()
@@ -45,12 +45,10 @@ class OrderRepository:
 
     def get_order_by_order_id(self, order_id):
         order = self.session.query(Order).filter(Order.id == order_id).first()
-        payments = self.get_payments_by_order_id(order_id)
+        if order is None:
+            raise Exception(f"No order found with id: {order_id}")
+        payments = order.payments.all()
         return order, payments
-
-    def get_payments_by_order_id(self, order_id):
-        payments = self.session.query(Payment).filter(Payment.order_id == order_id).all()
-        return payments
 
     def persist_payment(self, order_id, payment):
         payment_model = Payment(
@@ -61,7 +59,7 @@ class OrderRepository:
             payment_status=payment.get_payment_status(),
             order_id=order_id
         )
-        self.add_model(payment_model)
+        self.add_item(payment_model)
 
     def update_payment_status(self, payment):
         try:
