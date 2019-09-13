@@ -47,8 +47,7 @@ class OrderRepository:
         order = self.session.query(Order).filter(Order.id == order_id).first()
         if order is None:
             raise Exception(f"No order found with id: {order_id}")
-        payments = order.payments.all()
-        return order, payments
+        return order
 
     def persist_payment(self, order, payment_id):
         payment = order.get_payment(payment_id)
@@ -70,8 +69,11 @@ class OrderRepository:
         if payment is None:
             raise Exception(f"Payment not found in order instance for the {payment_id}")
         try:
-            payment_model = self.session.query(Payment).filter(Payment.payment_id == payment.get_payment_id()).first()
-            payment_model.payment_status = payment.get_payment_status()
+            order_item = self.session.query(Order).filter(Order.id == order.get_order_id()).first()
+            for payment_model in order_item.payments:
+                if payment_model.payment_id == payment.get_payment_id():
+                    payment_model.payment_status = payment.get_payment_status()
+                    break
             self.session.commit()
         except Exception as e:
             self.session.rollback()

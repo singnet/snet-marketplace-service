@@ -13,7 +13,7 @@ class Order(Base):
     username = Column("username", VARCHAR(225), nullable=False)
     created_at = Column("created_at", TIMESTAMP(timezone=False))
     item_details = Column("item_details", JSON)
-    payments = relationship('Payment', backref='order', lazy='dynamic')
+    payments = relationship('Payment', backref='order', lazy='joined')
 
 
 class Payment(Base):

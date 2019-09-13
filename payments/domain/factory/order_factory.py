@@ -5,12 +5,11 @@ from payments.domain.payment import Payment
 from payments.domain.paypal_payment import PaypalPayment
 
 
-def create_order_from_repository_order(order_payments):
-    order_model = order_payments[0]
-    payment_models = order_payments[1]
+def create_order_from_repository_order(order):
     payments = []
-    for payment_info in payment_models:
-        if ("payment_method" in payment_info.payment_details) and (payment_info.payment_details["payment_method"] == "paypal"):
+    for payment_info in order.payments:
+        if ("payment_method" in payment_info.payment_details) and \
+                (payment_info.payment_details["payment_method"] == "paypal"):
             payment = PaypalPayment(
                 payment_id=payment_info.payment_id,
                 amount=payment_info.amount,
@@ -28,10 +27,10 @@ def create_order_from_repository_order(order_payments):
             )
         payments.append(payment)
     order = Order(
-        order_id=order_model.id,
-        amount=order_model.amount,
-        item_details=order_model.item_details,
-        username=order_model.username,
+        order_id=order.id,
+        amount=order.amount,
+        item_details=order.item_details,
+        username=order.username,
         payments=payments
     )
     return order

@@ -49,9 +49,9 @@ class PaypalPayment(Payment):
         if payment.execute({"payer_id": payer_id}):
             self._payment_status = 'success'
             return True
-        else:
+        elif self._payment_status == "pending":
             self._payment_status = 'failed'
-            return False
+        return False
 
     def get_paypal_payload(self):
         paypal_payload = {
