@@ -1,14 +1,13 @@
 import traceback
 
 from common.repository import Repository
-from common.utils import (
-    Utils,
-    generate_lambda_response,
-    extract_payload,
-    validate_dict,
-    format_error_message,
-)
-from wallets.config import NETWORKS, NETWORK_ID
+from common.utils import extract_payload
+from common.utils import format_error_message
+from common.utils import generate_lambda_response
+from common.utils import Utils
+from common.utils import validate_dict
+from wallets.config import NETWORK_ID
+from wallets.config import NETWORKS
 from wallets.wallet_service import WalletService
 
 NETWORKS_NAME = dict((NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
