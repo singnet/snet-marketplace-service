@@ -1,6 +1,5 @@
 # An order have multiplr payment and multiple refund in future
 class Order(object):
-
     def __init__(self, amount, order_id):
         self._order_id = order_id
         self._payments = []
@@ -14,7 +13,6 @@ class Order(object):
 
 
 class PayPalOrder(Order):
-
     def __init__(self, amount, order_id):
         pass
 

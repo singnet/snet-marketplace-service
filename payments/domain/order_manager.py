@@ -1,6 +1,5 @@
 # this is port to accept different kinf of request from different application
 class OrderManager(object):
-
     def create_order(self, amount, payment_gateway):
         pass
 

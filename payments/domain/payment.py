@@ -1,5 +1,4 @@
 class Payment(object):
-
     def __init__(self):
         self._payment_id = ""
         self._amount = 0
@@ -7,6 +6,5 @@ class Payment(object):
 
 
 class PayPalPayment(object):
-
     def __init__(self):
         pass
