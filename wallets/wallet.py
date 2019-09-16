@@ -6,5 +6,9 @@ class Wallet:
         self.__type = type
 
     def get_wallet(self):
-        return {"address": self.__address, "private_key": self.__private_key, "status": self.__status,
-                "type": self.__type}
+        return {
+            "address": self.__address,
+            "private_key": self.__private_key,
+            "status": self.__status,
+            "type": self.__type,
+        }
