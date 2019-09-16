@@ -6,8 +6,8 @@ from payments.settings import MODE, PAYPAL_CLIENT, PAYPAL_SECRET, PAYMENT_CANCEL
 
 class PaypalPayment(Payment):
 
-    def __init__(self, payment_id, amount, payment_status, created_at, payment_details):
-        super().__init__(payment_id, amount, payment_status, created_at, payment_details)
+    def __init__(self, payment_id, amount, currency, payment_status, created_at, payment_details):
+        super().__init__(payment_id, amount, currency, payment_status, created_at, payment_details)
         self.payee_client_api = paypalrestsdk.Api({
           'mode': MODE,
           'client_id': PAYPAL_CLIENT,
@@ -78,7 +78,7 @@ class PaypalPayment(Payment):
                     },
                     "amount": {
                         "total": self._amount,
-                        "currency": "USD"
+                        "currency": self._currency
                     },
                     "description": "This is the payment transaction description."
                 }

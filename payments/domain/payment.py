@@ -4,13 +4,15 @@ class Payment:
     def __init__(self):
         self._payment_id = None
         self._amount = None
+        self._currency = None
         self._payment_status = None
         self._created_at = None
         self._payment_details = {}
 
-    def __init__(self, payment_id, amount, payment_status, created_at, payment_details):
+    def __init__(self, payment_id, amount, currency, payment_status, created_at, payment_details):
         self._payment_id = payment_id
         self._amount = amount
+        self._currency = currency
         self._payment_status = payment_status
         self._created_at = created_at
         self._payment_details = payment_details
@@ -20,6 +22,9 @@ class Payment:
 
     def get_payment_id(self):
         return self._payment_id
+
+    def get_currency(self):
+        return self._currency
 
     def get_amount(self):
         return self._amount

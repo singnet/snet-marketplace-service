@@ -19,7 +19,10 @@ class OrderRepository:
         order_model = Order(
             id=order.get_order_id(),
             username=order.get_username(),
-            amount=order.get_amount(),
+            amount={
+                "amount": order.get_amount(),
+                "currency": order.get_currency()
+            },
             item_details=order.get_item_details(),
             created_at=datetime.utcnow()
         )
@@ -56,7 +59,10 @@ class OrderRepository:
 
         payment_model = Payment(
             payment_id=payment.get_payment_id(),
-            amount=payment.get_amount(),
+            amount={
+                "amount": payment.get_amount(),
+                "currency": payment.get_currency()
+            },
             created_at=payment.get_created_at(),
             payment_details=payment.get_payment_details(),
             payment_status=payment.get_payment_status(),
@@ -78,3 +84,7 @@ class OrderRepository:
         except Exception as e:
             self.session.rollback()
             raise e
+
+    def get_order_by_username(self, username):
+        orders = self.session.query(Order).filter(Order.username == username).all()
+        return orders

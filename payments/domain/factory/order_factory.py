@@ -12,7 +12,8 @@ def create_order_from_repository_order(order):
                 (payment_info.payment_details["payment_method"] == "paypal"):
             payment = PaypalPayment(
                 payment_id=payment_info.payment_id,
-                amount=payment_info.amount,
+                amount=payment_info.amount["amount"],
+                currency=payment_info.amount["currency"],
                 created_at=payment_info.created_at,
                 payment_status=payment_info.payment_status,
                 payment_details=payment_info.payment_details
@@ -20,7 +21,8 @@ def create_order_from_repository_order(order):
         else:
             payment = Payment(
                 payment_id=payment_info.payment_id,
-                amount=payment_info.amount,
+                amount=payment_info.amount["amount"],
+                currency=payment_info.amount["currency"],
                 created_at=payment_info.created_at,
                 payment_status=payment_info.payment_status,
                 payment_details=payment_info.payment_details
@@ -28,7 +30,8 @@ def create_order_from_repository_order(order):
         payments.append(payment)
     order = Order(
         order_id=order.id,
-        amount=order.amount,
+        amount=order.amount["amount"],
+        currency=order.amount["currency"],
         item_details=order.item_details,
         username=order.username,
         payments=payments
@@ -36,7 +39,32 @@ def create_order_from_repository_order(order):
     return order
 
 
-def create_order(amount, item_details, username):
+def create_order(amount, currency, item_details, username):
     order_id = str(uuid.uuid1())
-    order = Order(order_id=order_id, amount=amount, item_details=item_details, username=username, payments=[])
+    order = Order(order_id=order_id, amount=amount, currency=currency,
+                  item_details=item_details, username=username, payments=[])
     return order
+
+
+def get_order_details(orders):
+    order_details = []
+    for order_item in orders:
+        order = {
+            "order_id": order_item.id,
+            "amount": order_item.amount,
+            "username": order_item.username,
+            "created_at": order_item.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "item_details": order_item.item_details,
+            "payments": []
+        }
+        for payment_item in order_item.payments:
+            payment = {
+                "payment_id": payment_item.payment_id,
+                "amount": payment_item.amount,
+                "payment_details": payment_item.payment_details,
+                "payment_status": payment_item.payment_status,
+                "created_at": payment_item.created_at.strftime("%Y-%m-%d %H:%M:%S")
+            }
+            order["payments"].append(payment)
+        order_details.append(order)
+    return order_details

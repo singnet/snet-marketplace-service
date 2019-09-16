@@ -12,13 +12,15 @@ class Order(object):
         self._amount = None
         self._item_details = None
         self._username = None
+        self._currency = None
 
-    def __init__(self, order_id, amount, item_details, username, payments):
+    def __init__(self, order_id, amount, currency, item_details, username, payments):
         self._order_id = order_id
         self._payments = payments
         self._amount = amount
         self._item_details = item_details
         self._username = username
+        self._currency = currency
 
     def get_order_id(self):
         return self._order_id
@@ -26,18 +28,22 @@ class Order(object):
     def get_username(self):
         return self._username
 
+    def get_currency(self):
+        return self._currency
+
     def get_amount(self):
         return self._amount
 
     def get_item_details(self):
         return self._item_details
 
-    def create_payment(self, amount, payment_method):
+    def create_payment(self, amount, currency, payment_method):
         if payment_method == "paypal":
 
             payment = PaypalPayment(
                 payment_id=str(uuid.uuid1()),
                 amount=amount,
+                currency=currency,
                 payment_details={
                     "payment_method": payment_method
                 },
