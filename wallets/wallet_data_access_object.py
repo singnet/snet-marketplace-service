@@ -7,7 +7,8 @@ class WalletDAO:
 
     def insert_wallet_details(self, address, type, status):
         query = "INSERT INTO wallet (address, type, status, row_created, row_updated) VALUES (%s, %s, %s, %s, %s)"
-        query_response = self.repo.execute(query, [address, type, status, dt.utcnow(), dt.utcnow()])
+        query_response = self.repo.execute(
+            query, [address, type, status, dt.utcnow(), dt.utcnow()])
         if query_response[0] == 1:
             return True
         return False
