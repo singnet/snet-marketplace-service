@@ -10,8 +10,8 @@ def create_order_from_repository_object(persisted_order, payment_gateway):
     return Order()
 
 
-def create_order(amount,payment_gateway):
+def create_order(amount, payment_gateway):
     if payment_gateway == 'paypal':
-        order_id= uuid()
+        order_id = uuid()
         return PayPalOrder()
     return Order()

@@ -23,6 +23,7 @@ class DappOrderMangaer(OrderManager):
         order.add_payment(payment_details)
 
     def execute_payment_for_order(self, order_id, payment_id):
-        order = create_order_from_repository_object(self.order_repository.get_order_by_order_id(order_id))
+        order = create_order_from_repository_object(
+            self.order_repository.get_order_by_order_id(order_id))
         order.execute_payment(payment_id)
         self.order_repository.update_order(order)

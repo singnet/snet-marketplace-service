@@ -6,7 +6,7 @@ class Order(object):
         self._payments = []
         self._amount = amount
 
-    def add_payment(self,payment_details={}):
+    def add_payment(self, payment_details={}):
         pass
 
     def update_payment(self, payment_id, status):

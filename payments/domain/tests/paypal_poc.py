@@ -1,8 +1,8 @@
 import paypalrestsdk
 my_api = paypalrestsdk.Api({
-  'mode': 'sandbox',
-  'client_id': '',
-  'client_secret': ''})
+    'mode': 'sandbox',
+    'client_id': '',
+    'client_secret': ''})
 #
 payment = paypalrestsdk.Payment({
     "intent": "sale",
@@ -43,4 +43,4 @@ print(payment)
 # else:
 #   print(payment.error) # Error Hash
 
-#http://localhost:3000/payment/execute?paymentId=PAYID-LVYN3OA15W11958Y04269841&token=EC-9B015759WS7028732&PayerID=4LM6PXZ37RGL6
+# http://localhost:3000/payment/execute?paymentId=PAYID-LVYN3OA15W11958Y04269841&token=EC-9B015759WS7028732&PayerID=4LM6PXZ37RGL6
