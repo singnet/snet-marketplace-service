@@ -11,7 +11,8 @@ class DappOrderMangaer(OrderManager):
     def __init__(self):
         self.order_repository = OrderRepository()
 
-    def initiate_order_and_payment(self, amount, payment_gateway, payment_details):
+    def initiate_order_and_payment(self, amount, payment_gateway,
+                                   payment_details):
         order = create_order(amount, payment_gateway)
         self.create_payment(order, payment_details)
         self.order_repository.persist_order(order)
@@ -25,7 +26,6 @@ class DappOrderMangaer(OrderManager):
 
     def execute_payment_for_order(self, order_id, payment_id):
         order = create_order_from_repository_object(
-            self.order_repository.get_order_by_order_id(order_id)
-        )
+            self.order_repository.get_order_by_order_id(order_id))
         order.execute_payment(payment_id)
         self.order_repository.update_order(order)

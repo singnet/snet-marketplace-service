@@ -1,36 +1,42 @@
 import paypalrestsdk
 
-my_api = paypalrestsdk.Api({"mode": "sandbox", "client_id": "", "client_secret": ""})
+my_api = paypalrestsdk.Api({
+    "mode": "sandbox",
+    "client_id": "",
+    "client_secret": ""
+})
 #
 payment = paypalrestsdk.Payment(
     {
-        "intent": "sale",
-        "payer": {"payment_method": "paypal"},
+        "intent":
+        "sale",
+        "payer": {
+            "payment_method": "paypal"
+        },
         "redirect_urls": {
             "return_url": "http://localhost:3000/payment/test/execute",
             "cancel_url": "http://localhost:3000/",
         },
-        "transactions": [
-            {
-                "item_list": {
-                    "items": [
-                        {
-                            "name": "item",
-                            "sku": "item",
-                            "price": "5.00",
-                            "currency": "USD",
-                            "quantity": 1,
-                        }
-                    ]
-                },
-                "amount": {"total": "5.00", "currency": "USD"},
-                "description": "This is the payment transaction description.",
-            }
-        ],
+        "transactions": [{
+            "item_list": {
+                "items": [{
+                    "name": "item",
+                    "sku": "item",
+                    "price": "5.00",
+                    "currency": "USD",
+                    "quantity": 1,
+                }]
+            },
+            "amount": {
+                "total": "5.00",
+                "currency": "USD"
+            },
+            "description":
+            "This is the payment transaction description.",
+        }],
     },
     api=my_api,
 )
-
 
 data = payment.create()
 

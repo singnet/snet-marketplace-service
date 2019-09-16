@@ -34,8 +34,7 @@ class HandleContractsDB:
     def read_registry_events(self):
         query = (
             "select * from registry_events_raw where processed = 0 order by block_no asc limit "
-            + EVNTS_LIMIT
-        )
+            + EVNTS_LIMIT)
         evts_dta = self.repo.execute(query)
         print("read_registry_events::read_count: ", len(evts_dta))
         return evts_dta
@@ -43,8 +42,7 @@ class HandleContractsDB:
     def read_mpe_events(self):
         query = (
             "select * from mpe_events_raw where processed = 0 order by block_no asc limit "
-            + EVNTS_LIMIT
-        )
+            + EVNTS_LIMIT)
         evts_dta = self.repo.execute(query)
         print("read_mpe_events::read_count: ", len(evts_dta))
         return evts_dta
@@ -63,9 +61,8 @@ class HandleContractsDB:
         return srvc_data
 
     # write operations
-    def _create_or_updt_org(
-        self, org_id, org_name, owner_address, org_metadata_uri, conn
-    ):
+    def _create_or_updt_org(self, org_id, org_name, owner_address,
+                            org_metadata_uri, conn):
         upsert_qry = (
             "Insert into organization (org_id, organization_name, owner_address, org_metadata_uri, row_updated, row_created) "
             "VALUES ( %s, %s, %s, %s, %s , %s) "
@@ -88,15 +85,13 @@ class HandleContractsDB:
         print("_create_or_updt_org::row upserted: ", qry_resp)
 
     def _del_org_groups(self, org_id, conn):
-        delete_query = conn.execute(
-            "DELETE FROM org_group WHERE org_id = %s ", [org_id]
-        )
+        delete_query = conn.execute("DELETE FROM org_group WHERE org_id = %s ",
+                                    [org_id])
 
     def _create_org_groups(self, org_id, groups, conn):
         insert_qry = (
             "Insert into org_group (org_id, group_id, group_name, payment, row_updated, row_created) "
-            "VALUES ( %s, %s, %s, %s, %s, %s ) "
-        )
+            "VALUES ( %s, %s, %s, %s, %s, %s ) ")
         cnt = 0
         for group in groups:
             insert_params = [
@@ -115,8 +110,7 @@ class HandleContractsDB:
         upsrt_members = (
             "INSERT INTO members (org_id, member, row_created, row_updated)"
             "VALUES ( %s, %s, %s, %s )"
-            "ON DUPLICATE KEY UPDATE row_updated = %s "
-        )
+            "ON DUPLICATE KEY UPDATE row_updated = %s ")
         cnt = 0
         for member in members:
             upsrt_members_params = [
@@ -136,8 +130,7 @@ class HandleContractsDB:
             "expiration, signer, row_created, row_updated) "
             "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
             "ON DUPLICATE KEY UPDATE balance_in_cogs = %s, pending = %s, nonce = %s, "
-            "expiration = %s, row_updated = %s"
-        )
+            "expiration = %s, row_updated = %s")
         upsrt_mpe_chnl_params = [
             q_dta["channelId"],
             q_dta["sender"],
@@ -176,22 +169,22 @@ class HandleContractsDB:
 
     def _del_tags(self, org_id, service_id, conn):
         del_srvc_tags = (
-            "DELETE FROM service_tags WHERE service_id = %s AND org_id = %s "
-        )
+            "DELETE FROM service_tags WHERE service_id = %s AND org_id = %s ")
         del_srvc_tags_count = conn.execute(del_srvc_tags, [service_id, org_id])
         print("_del_tags::del_srvc_tags: ", del_srvc_tags_count)
 
     def _del_srvc_dpndts(self, org_id, service_id, conn):
-        print("_del_srvc_dpndts::service_id: ", service_id, "|org_id: ", org_id)
+        print("_del_srvc_dpndts::service_id: ", service_id, "|org_id: ",
+              org_id)
         del_srvc_grps = (
-            "DELETE FROM service_group WHERE service_id = %s AND org_id = %s "
-        )
+            "DELETE FROM service_group WHERE service_id = %s AND org_id = %s ")
         del_srvc_grps_count = conn.execute(del_srvc_grps, [service_id, org_id])
 
         del_srvc_endpts = (
             "DELETE FROM service_endpoint WHERE service_id = %s AND org_id = %s "
         )
-        del_srvc_endpts_count = conn.execute(del_srvc_endpts, [service_id, org_id])
+        del_srvc_endpts_count = conn.execute(del_srvc_endpts,
+                                             [service_id, org_id])
 
         self._del_tags(org_id=org_id, service_id=service_id, conn=conn)
         print(
@@ -205,8 +198,7 @@ class HandleContractsDB:
         upsrt_srvc = (
             "INSERT INTO service (org_id, service_id, is_curated, ipfs_hash, row_created, row_updated) "
             "VALUES (%s, %s, %s, %s, %s, %s) "
-            "ON DUPLICATE KEY UPDATE ipfs_hash = %s, row_updated = %s "
-        )
+            "ON DUPLICATE KEY UPDATE ipfs_hash = %s, row_updated = %s ")
         upsrt_srvc_params = [
             org_id,
             service_id,
@@ -221,9 +213,8 @@ class HandleContractsDB:
         print("_create_or_updt_srvc::row upserted", qry_res)
         return qry_res[len(qry_res) - 1]
 
-    def _create_or_updt_srvc_mdata(
-        self, srvc_rw_id, org_id, service_id, ipfs_data, assets_url, conn
-    ):
+    def _create_or_updt_srvc_mdata(self, srvc_rw_id, org_id, service_id,
+                                   ipfs_data, assets_url, conn):
         upsrt_srvc_mdata = (
             "INSERT INTO service_metadata (service_row_id, org_id, service_id, "
             "display_name, model_ipfs_hash, description, url, json, encoding, type, "
@@ -278,8 +269,7 @@ class HandleContractsDB:
         insrt_grp = (
             "INSERT INTO service_group (service_row_id, org_id, service_id, group_id, group_name,"
             "pricing, row_updated, row_created)"
-            "VALUES(%s, %s, %s, %s, %s, %s, %s, %s)"
-        )
+            "VALUES(%s, %s, %s, %s, %s, %s, %s, %s)")
         insrt_grp_params = [
             srvc_rw_id,
             org_id,
@@ -297,8 +287,7 @@ class HandleContractsDB:
         insrt_endpt = (
             "INSERT INTO service_endpoint (service_row_id, org_id, service_id, group_id, endpoint, "
             "row_created, row_updated) "
-            "VALUES(%s, %s, %s, %s, %s, %s, %s)"
-        )
+            "VALUES(%s, %s, %s, %s, %s, %s, %s)")
         insrt_endpt_params = [
             srvc_rw_id,
             org_id,
@@ -314,8 +303,7 @@ class HandleContractsDB:
         insrt_tag = (
             "INSERT INTO service_tags (service_row_id, org_id, service_id, tag_name, row_created, row_updated) "
             "VALUES(%s, %s, %s, %s, %s, %s) "
-            "ON DUPLICATE KEY UPDATE tag_name = %s, row_updated = %s "
-        )
+            "ON DUPLICATE KEY UPDATE tag_name = %s, row_updated = %s ")
         insrt_tag_params = [
             srvc_rw_id,
             org_id,
@@ -335,10 +323,13 @@ class HandleContractsDB:
                 updt_evts = "UPDATE registry_events_raw SET processed = 1, error_code = %s, error_msg = %s WHERE row_id = %s "
             elif type == "MPE":
                 updt_evts = "UPDATE mpe_events_raw SET processed = 1, error_code = %s, error_msg = %s WHERE row_id = %s "
-            updt_evts_resp = self.repo.execute(updt_evts, [err_cd, err_msg, row_id])
+            updt_evts_resp = self.repo.execute(updt_evts,
+                                               [err_cd, err_msg, row_id])
             print("updt_raw_evts::row updated: ", updt_evts_resp, "|", type)
         except Exception as e:
-            self.util_obj.report_slack(type=1, slack_msg=repr(e), SLACK_HOOK=SLACK_HOOK)
+            self.util_obj.report_slack(type=1,
+                                       slack_msg=repr(e),
+                                       SLACK_HOOK=SLACK_HOOK)
             print("Error in updt_reg_evts_raw::error: ", e)
 
     def updt_raw_evts(self, row_id, type, err_cd, err_msg):
@@ -353,10 +344,14 @@ class HandleContractsDB:
             self._del_org_groups(org_id=org_id, conn=conn)
             srvcs = self._get_srvcs(org_id=org_id)
             for rec in srvcs:
-                self._del_srvc(org_id=org_id, service_id=rec["service_id"], conn=conn)
+                self._del_srvc(org_id=org_id,
+                               service_id=rec["service_id"],
+                               conn=conn)
             self._commit(conn=conn)
         except Exception as e:
-            self.util_obj.report_slack(type=1, slack_msg=repr(e), SLACK_HOOK=SLACK_HOOK)
+            self.util_obj.report_slack(type=1,
+                                       slack_msg=repr(e),
+                                       SLACK_HOOK=SLACK_HOOK)
             self._rollback(conn=conn, err=repr(e))
 
     def del_srvc(self, org_id, service_id):
@@ -365,9 +360,8 @@ class HandleContractsDB:
     def create_channel(self, q_dta):
         if q_dta["groupId"][0:2] == "0x":
             q_dta["groupId"] = q_dta["groupId"][2:]
-        q_dta["groupId"] = base64.b64encode(bytes.fromhex(q_dta["groupId"])).decode(
-            "utf8"
-        )
+        q_dta["groupId"] = base64.b64encode(bytes.fromhex(
+            q_dta["groupId"])).decode("utf8")
         self._create_channel(q_dta, self.repo)
 
     def update_channel(self, channel_id, group_id, channel_data):
@@ -397,12 +391,12 @@ class HandleContractsDB:
         return new_url
 
     def _comapre_assets_and_push_to_s3(
-        self,
-        existing_assets_hash,
-        new_assets_hash,
-        existing_assets_url,
-        org_id,
-        service_id,
+            self,
+            existing_assets_hash,
+            new_assets_hash,
+            existing_assets_url,
+            org_id,
+            service_id,
     ):
         """
 
@@ -439,34 +433,34 @@ class HandleContractsDB:
                 # add new files to s3 and update the url
                 for hash in new_assets_hash[new_asset_type]:
                     new_urls_list.append(
-                        self._push_asset_to_s3_using_hash(hash, org_id, service_id)
-                    )
+                        self._push_asset_to_s3_using_hash(
+                            hash, org_id, service_id))
 
                 assets_url_mapping[new_asset_type] = new_urls_list
 
             elif isinstance(new_asset_hash, str):
                 # if this asset_type has single value
-                if (
-                    new_asset_type in existing_assets_hash
-                    and existing_assets_hash[new_asset_type] == new_asset_hash
-                ):
+                if (new_asset_type in existing_assets_hash and
+                        existing_assets_hash[new_asset_type] == new_asset_hash
+                    ):
                     # file is not updated
                     # file is not updated , add existing url
                     assets_url_mapping[new_asset_type] = existing_assets_url[
-                        new_asset_type
-                    ]
+                        new_asset_type]
                 else:
                     if new_asset_type in existing_assets_url:
-                        url_of_file_to_be_removed = existing_assets_url[new_asset_type]
-                        self.s3_util.delete_file_from_s3(url_of_file_to_be_removed)
+                        url_of_file_to_be_removed = existing_assets_url[
+                            new_asset_type]
+                        self.s3_util.delete_file_from_s3(
+                            url_of_file_to_be_removed)
 
-                    hash_of_file_to_be_pushed_to_s3 = new_assets_hash[new_asset_type]
+                    hash_of_file_to_be_pushed_to_s3 = new_assets_hash[
+                        new_asset_type]
 
                     assets_url_mapping[
-                        new_asset_type
-                    ] = self._push_asset_to_s3_using_hash(
-                        hash_of_file_to_be_pushed_to_s3, org_id, service_id
-                    )
+                        new_asset_type] = self._push_asset_to_s3_using_hash(
+                            hash_of_file_to_be_pushed_to_s3, org_id,
+                            service_id)
 
             else:
                 logger.info(
@@ -484,8 +478,7 @@ class HandleContractsDB:
 
         service_metadata_repo = ServiceMetadataRepository()
         existing_service_metadata = service_metadata_repo.get_service_metatdata_by_servcie_id_and_org_id(
-            service_id, org_id
-        )
+            service_id, org_id)
 
         if existing_service_metadata:
             existing_assets_hash = existing_service_metadata.assets_hash
@@ -499,17 +492,22 @@ class HandleContractsDB:
         )
         return assets_url_mapping
 
-    def process_srvc_data(self, org_id, service_id, ipfs_hash, ipfs_data, tags_data):
+    def process_srvc_data(self, org_id, service_id, ipfs_hash, ipfs_data,
+                          tags_data):
         self.repo.auto_commit = False
         conn = self.repo
         try:
 
-            assets_url = self._get_new_assets_url(org_id, service_id, ipfs_data)
+            assets_url = self._get_new_assets_url(org_id, service_id,
+                                                  ipfs_data)
 
-            self._del_srvc_dpndts(org_id=org_id, service_id=service_id, conn=conn)
-            qry_data = self._create_or_updt_srvc(
-                org_id=org_id, service_id=service_id, ipfs_hash=ipfs_hash, conn=conn
-            )
+            self._del_srvc_dpndts(org_id=org_id,
+                                  service_id=service_id,
+                                  conn=conn)
+            qry_data = self._create_or_updt_srvc(org_id=org_id,
+                                                 service_id=service_id,
+                                                 ipfs_hash=ipfs_hash,
+                                                 conn=conn)
             service_row_id = qry_data["last_row_id"]
             print("service_row_id == ", service_row_id)
             self._create_or_updt_srvc_mdata(
@@ -543,7 +541,10 @@ class HandleContractsDB:
                         org_id=org_id,
                         service_id=service_id,
                         conn=conn,
-                        endpt_data={"endpoint": endpt, "group_id": grp["group_id"]},
+                        endpt_data={
+                            "endpoint": endpt,
+                            "group_id": grp["group_id"]
+                        },
                     )
                     endpt_insert_count = endpt_insert_count + qry_data[0]
                 print("rows insert in endpt: ", endpt_insert_count)
@@ -564,7 +565,9 @@ class HandleContractsDB:
             self._commit(conn=conn)
 
         except Exception as e:
-            self.util_obj.report_slack(type=1, slack_msg=repr(e), SLACK_HOOK=SLACK_HOOK)
+            self.util_obj.report_slack(type=1,
+                                       slack_msg=repr(e),
+                                       SLACK_HOOK=SLACK_HOOK)
             self._rollback(conn=conn, err=repr(e))
 
     def process_org_data(self, org_id, org_data, ipfs_data, org_metadata_uri):
@@ -581,14 +584,16 @@ class HandleContractsDB:
                     conn=conn,
                 )
                 self._del_org_groups(org_id=org_id, conn=conn)
-                self._create_org_groups(
-                    org_id=org_id, groups=ipfs_data["groups"], conn=conn
-                )
+                self._create_org_groups(org_id=org_id,
+                                        groups=ipfs_data["groups"],
+                                        conn=conn)
                 self._del_members(org_id=org_id, conn=conn)
                 self._create_or_updt_members(org_id, org_data[4], conn)
                 self._commit(conn)
         except Exception as e:
-            self.util_obj.report_slack(type=1, slack_msg=repr(e), SLACK_HOOK=SLACK_HOOK)
+            self.util_obj.report_slack(type=1,
+                                       slack_msg=repr(e),
+                                       SLACK_HOOK=SLACK_HOOK)
             self._rollback(conn=conn, err=repr(e))
 
     def update_tags(self, org_id, service_id, tags_data):
@@ -598,7 +603,8 @@ class HandleContractsDB:
             self._del_tags(org_id=org_id, service_id=service_id, conn=conn)
             if tags_data is not None and tags_data[0]:
                 tags = tags_data[3]
-                srvc_data = self._get_srvc_row_id(service_id=service_id, org_id=org_id)
+                srvc_data = self._get_srvc_row_id(service_id=service_id,
+                                                  org_id=org_id)
                 srvc_rw_id = srvc_data[0]["row_id"]
                 for tag in tags:
                     tag = tag.decode("utf-8")
@@ -612,7 +618,9 @@ class HandleContractsDB:
                     )
                 self._commit(conn)
         except Exception as e:
-            self.util_obj.report_slack(type=1, slack_msg=repr(e), SLACK_HOOK=SLACK_HOOK)
+            self.util_obj.report_slack(type=1,
+                                       slack_msg=repr(e),
+                                       SLACK_HOOK=SLACK_HOOK)
             self._rollback(conn=conn, err=repr(e))
 
     #
