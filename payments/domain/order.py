@@ -54,9 +54,6 @@ class Order(object):
             "payment": payment_response["payment"]
         }
 
-    def update_payment(self, payment_id, status):
-        pass
-
     def get_payment(self, payment_id):
         for payment in self._payments:
             if payment.get_payment_id() == payment_id:
@@ -66,7 +63,8 @@ class Order(object):
     def execute_payment(self, payment_id, paid_payment_details, payment_method):
         if payment_method == "paypal":
             payment = self.get_payment(payment_id)
-            payment.execute_transaction(paid_payment_details)
+            if not payment.execute_transaction(paid_payment_details):
+                raise Exception("Failed payment execution")
         else:
             raise Exception("Invalid payment gateway")
         return payment
