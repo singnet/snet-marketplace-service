@@ -3,6 +3,7 @@ import traceback
 from common.repository import Repository
 from common.utils import Utils, generate_lambda_response, extract_payload, validate_dict, format_error_message
 from wallets.config import NETWORKS, NETWORK_ID
+from wallets.constant import REQUIRED_KEYS_FOR_LAMBDA_EVENT
 from wallets.wallet_service import WalletService
 
 NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys())
@@ -42,7 +43,7 @@ def route_path(path, method, payload_dict):
 
 def request_handler(event, context):
     try:
-        valid_event = validate_dict(event=event, required_keys=required_keys)
+        valid_event = validate_dict(event=event, required_keys=REQUIRED_KEYS_FOR_LAMBDA_EVENT)
         if not valid_event:
             return generate_lambda_response(400, "Bad Request")
 
