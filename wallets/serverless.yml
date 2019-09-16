@@ -10,7 +10,7 @@ custom:
     dockerizePip: true
   customDomain:
     domainName: ${file(./config.${self:provider.stage}.json):DOMAIN_NAME}
-    basePath: '/wallets'
+    basePath: "/wallets"
     stage: ${opt:stage,'dev'}
 
 provider:
