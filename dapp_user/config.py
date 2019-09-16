@@ -1,6 +1,7 @@
 NETWORKS = {}
 GET_FREE_CALLS_METERING_ARN = ""
 PATH_PREFIX = ""
+REGION = ""
 SLACK_HOOK = {
     'hostname': '',
     'port': 443,

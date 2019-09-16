@@ -21,3 +21,4 @@ SLACK_HOOK = {
     }
 }
 NETWORK_ID = 0
+REGION = ""
