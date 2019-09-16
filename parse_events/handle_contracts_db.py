@@ -4,22 +4,18 @@ import logging
 from datetime import datetime as dt
 
 import log_setup
-
-from parse_events.constant import EVNTS_LIMIT
-from parse_events.config import (
-    NETWORKS,
-    IPFS_URL,
-    ASSETS_BUCKET_NAME,
-    S3_BUCKET_ACCESS_KEY,
-    S3_BUCKET_SECRET_KEY,
-    ASSETS_PREFIX,
-    SLACK_HOOK,
-)
 from common.ipfs_util import IPFSUtil
 from common.repository import Repository
 from common.s3_util import S3Util
-
 from common.utils import Utils
+from parse_events.config import ASSETS_BUCKET_NAME
+from parse_events.config import ASSETS_PREFIX
+from parse_events.config import IPFS_URL
+from parse_events.config import NETWORKS
+from parse_events.config import S3_BUCKET_ACCESS_KEY
+from parse_events.config import S3_BUCKET_SECRET_KEY
+from parse_events.config import SLACK_HOOK
+from parse_events.constant import EVNTS_LIMIT
 from repository.service_metadata_repository import ServiceMetadataRepository
 
 logger = logging.getLogger()

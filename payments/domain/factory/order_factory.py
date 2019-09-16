@@ -1,6 +1,7 @@
 import uuid
 
-from payments.domain.order import Order, PayPalOrder
+from payments.domain.order import Order
+from payments.domain.order import PayPalOrder
 
 
 def create_order_from_repository_object(persisted_order, payment_gateway):

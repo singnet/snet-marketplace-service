@@ -1,7 +1,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from payments.domain.order_service import ObtainOrders, PersistOrders
+from payments.domain.order_service import ObtainOrders
+from payments.domain.order_service import PersistOrders
 
 engine = create_engine("DB_URL", echo=True)
 Session = sessionmaker(bind=engine)

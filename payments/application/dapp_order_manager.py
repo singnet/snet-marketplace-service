@@ -1,9 +1,7 @@
 import uuid
 
-from payments.domain.factory.order_factory import (
-    create_order_from_repository_object,
-    create_order,
-)
+from payments.domain.factory.order_factory import create_order
+from payments.domain.factory.order_factory import create_order_from_repository_object
 from payments.domain.order import Order
 from payments.domain.order_manager import OrderManager
 from payments.infrastructure.order_repositroy import OrderRepository
