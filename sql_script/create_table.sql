@@ -161,20 +161,6 @@ CREATE TABLE `user` (
   UNIQUE KEY `uq_usr_email` (`email`)
 ) ;
 -- -----------------------------------------
-CREATE TABLE `wallet` (
-  `row_id` int(11) NOT NULL AUTO_INCREMENT,
-  `username` varchar(128) DEFAULT NULL,
-  `address` varchar(256) NOT NULL,
-  `is_default` bit(1) DEFAULT b'0',
-  `type` varchar(128) DEFAULT NULL,
-  `status` bit(1) DEFAULT b'1',
-  `created_by` varchar(256) DEFAULT NULL,
-  `row_created` timestamp NULL DEFAULT NULL,
-  `row_updated` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`row_id`),
-  UNIQUE KEY `uq_w_addr` (`username`, `address`)
-);
--- -----------------------------------------
  CREATE TABLE `user_service_vote` (
   `row_id` int(11) NOT NULL AUTO_INCREMENT,
   `username` varchar(128) NOT NULL,
@@ -209,4 +195,60 @@ CREATE TABLE `daemon_token` (
   KEY `daemon_id_idx` (`daemon_id`),
   UNIQUE KEY `uq_daemon_id` (`daemon_id`)
 ) ;
- -- -----------------------------------------
+-- ---------------Wallet Level------------------------------
+CREATE TABLE `user_wallet` (
+  `row_id` int(11) NOT NULL AUTO_INCREMENT,
+  `username` varchar(128) NOT NULL,
+  `address` varchar(256) NOT NULL,
+  `is_default` bit(1) DEFAULT b'0',
+  `row_created` timestamp NULL DEFAULT NULL,
+  `row_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`row_id`),
+  UNIQUE KEY `uq_user` (`username`),
+  UNIQUE KEY `uq_wallet` (`address`)
+);
+-- ----------------------------------------------------------
+CREATE TABLE `wallet` (
+  `row_id` int(11) NOT NULL AUTO_INCREMENT,
+  `address` varchar(256) NOT NULL,
+  `type` varchar(128) DEFAULT NULL,
+  `status` bit(1) DEFAULT b'1',
+  `row_created` timestamp NULL DEFAULT NULL,
+  `row_updated` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`row_id`),
+  UNIQUE KEY `uq_wallet` (`address`)
+);
+-- ----------------------------------------------------------
+CREATE TABLE `wallet_transaction_history` (
+  `row_id` int(11) NOT NULL AUTO_INCREMENT,
+  `order_id` varchar(128) NOT NULL,
+  `channel_id` int(11) NULL DEFAULT NULL,
+  `amount` int(11) NOT NULL,
+  `currency` varchar(64) NOT NULL,
+  `type` varchar(128) NULL DEFAULT NULL,
+  `address` varchar(256) NULL DEFAULT NULL,
+  `signature` varchar(256) NULL DEFAULT NULL,
+  `request_parameters` json DEFAULT NULL,
+  `transaction_type` varchar(128) NULL DEFAULT NULL,
+  `transaction_hash` varchar(256) NULL DEFAULT NULL,
+  `status` bit(1) DEFAULT b'1',
+  `row_created` timestamp NULL DEFAULT NULL,
+  `row_updated` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`row_id`)
+);
+-- ---------------Orchestrator Level---------------------------
+CREATE TABLE `purchase_history` (
+  `row_id` int(11) NOT NULL AUTO_INCREMENT,
+  `username` varchar(128) NOT NULL,
+  `raw_payment_data` json NOT NULL,
+  `type` varchar(64) NOT NULL,
+  `order_id` varchar(128) NULL DEFAULT NULL,
+  `payment_id` varchar(128) NULL DEFAULT NULL,
+  `payment_trasaction_id` varchar(256) NULL DEFAULT NULL,
+  `transaction_hash` varchar(256) NULL DEFAULT NULL,
+  `status` varchar(64) NOT NULL,
+  `row_created` timestamp NULL DEFAULT NULL,
+  `row_updated` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`row_id`)
+);
+-- ----------------------------------------------------------
