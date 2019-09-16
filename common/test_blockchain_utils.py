@@ -3,7 +3,7 @@ import unittest
 
 from web3 import Web3
 
-from common.blockchainutils import BlockChainUtil
+from common.blockchain_util import BlockChainUtil
 from common.config import EXECUTOR_ADDRESS, EXECUTOR_KEY, SIGNER_ADDRESS, NETWORKS
 from common.constant import MPE_CNTRCT_PATH, MPE_ADDR_PATH
 
@@ -12,7 +12,7 @@ class TestUtils(unittest.TestCase):
     def setUp(self):
         self.net_id = 3
         self.http_provider = Web3.HTTPProvider(NETWORKS[self.net_id]['http_provider'])
-        self.obj_utils = BlockChainUtil(http_provider=self.http_provider)
+        self.obj_utils = BlockChainUtil(type="HTTP_PROVIDER", provider=self.http_provider)
         self.mpe_address = self.obj_utils.read_contract_address(net_id=self.net_id, path=MPE_ADDR_PATH, key='address')
         self.recipient = "0x9c302750c50307D3Ad88eaA9a6506874a15cE4Cb"
         self.group_id = "0x" + base64.b64decode("DS2OoKSfGE/7hAO/023psl4Qdj0MJvYsreJbCoAHVSc=").hex()

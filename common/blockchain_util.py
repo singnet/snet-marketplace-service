@@ -13,8 +13,13 @@ class BlockChainUtil(object):
         self.provider = ws_provider
         self.web3_object = Web3(web3.providers.WebsocketProvider(self.provider))
 
-    def __init__(self, http_provider):
-        self.provider = http_provider
+    def __init__(self, type, provider):
+        if type == "HTTP_PROVIDER":
+            self.provider = Web3.HTTPProvider(provider)
+        elif type == "WS_PROVIDER":
+            self.provider = web3.providers.WebsocketProvider(provider)
+        else:
+            raise Exception("Only HTTP_PROVIDER and WS_PROVIDER type are supported.")
         self.web3_object = Web3(self.provider)
 
     def load_contract(self, path):
