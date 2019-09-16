@@ -3,17 +3,15 @@ plugins:
   - serverless-python-requirements
   - serverless-domain-manager
 
-custom:
-  customDomain:
-    domainName: ${file(./config.${self:provider.stage}.json):DOMAIN_NAME}
-    basePath: '/wallets'
-    stage: ${opt:stage,'dev'}
-
 service: wallets
 custom:
   pythonRequirements:
     fileName: wallets/requirement.txt
     dockerizePip: true
+  customDomain:
+    domainName: ${file(./config.${self:provider.stage}.json):DOMAIN_NAME}
+    basePath: '/wallets'
+    stage: ${opt:stage,'dev'}
 
 provider:
   name: aws
