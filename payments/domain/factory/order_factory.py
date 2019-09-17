@@ -67,4 +67,5 @@ def get_order_details(orders):
             }
             order["payments"].append(payment)
         order_details.append(order)
-    return order_details
+    return {"orders": order_details}
+
