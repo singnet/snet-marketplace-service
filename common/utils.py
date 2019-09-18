@@ -67,9 +67,9 @@ def make_response(status_code, body, header=None):
     }
 
 
-def validate_request(required_keys, request_body):
+def validate_dict(item, required_keys):
     for key in required_keys:
-        if key not in request_body:
+        if key not in item:
             return False
     return True
 
@@ -98,14 +98,6 @@ def extract_payload(method, event):
     else:
         method_found = False
     return method_found, payload_dict
-
-
-def validate_dict(event, required_keys):
-    valid = True
-    for key in required_keys:
-        if key not in event:
-            valid = False
-    return valid
 
 
 def format_error_message(status, error, resource, payload, net_id):
