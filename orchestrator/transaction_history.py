@@ -1,14 +1,14 @@
 class TransactionHistory:
     def __init__(
-        self,
-        username,
-        order_id,
-        order_type,
-        status,
-        payment_id=None,
-        payment_method=None,
-        raw_payment_data=None,
-        transaction_hash=None,
+            self,
+            username,
+            order_id,
+            order_type,
+            status,
+            payment_id=None,
+            payment_method=None,
+            raw_payment_data=None,
+            transaction_hash=None,
     ):
         self.__username = username
         self.__order_id = order_id
