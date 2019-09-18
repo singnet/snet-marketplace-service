@@ -1,16 +1,15 @@
 import traceback
 
 from common.repository import Repository
-from common.utils import (
-    Utils,
-    generate_lambda_response,
-    extract_payload,
-    validate_dict,
-    format_error_message,
-)
-from orchestrator.order_service import OrderService
-from orchestrator.config import NETWORKS, NETWORK_ID
+from common.utils import extract_payload
+from common.utils import format_error_message
+from common.utils import generate_lambda_response
+from common.utils import Utils
+from common.utils import validate_dict
+from orchestrator.config import NETWORK_ID
+from orchestrator.config import NETWORKS
 from orchestrator.constant import REQUIRED_KEYS_FOR_LAMBDA_EVENT
+from orchestrator.order_service import OrderService
 
 NETWORKS_NAME = dict((NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
 db = dict((netId, Repository(net_id=netId)) for netId in NETWORKS.keys())

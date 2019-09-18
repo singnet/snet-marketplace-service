@@ -1,8 +1,9 @@
 from enum import Enum
 
+from payments.application.dapp_order_manager import DappOrderManager
+
 from orchestrator.transaction_history import TransactionHistory
 from orchestrator.transaction_history_data_access_object import TransactionHistoryDAO
-from payments.application.dapp_order_manager import DappOrderManager
 from wallets.wallet_service import WalletService
 
 
