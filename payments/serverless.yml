@@ -54,6 +54,7 @@ package:
 functions:
   create-order:
     handler: payments/handlers/order_handlers/create
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
     events:
       - http:
           path: order/create
@@ -69,6 +70,7 @@ functions:
 
   initiate-payment:
     handler: payments/handlers/payment_handlers/initiate
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
     events:
       - http:
           path: order/{order_id}/payment/{payment_id}/initiate
@@ -84,6 +86,7 @@ functions:
 
   execute-payment:
     handler: payments/handlers/payment_handlers/execute
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
     events:
       - http:
           path: order/{order_id}/payment/{payment_id}/execute
@@ -99,6 +102,7 @@ functions:
 
   cancel-payment:
     handler: payments/handlers/payment_handlers/cancel
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
     events:
       - http:
           path: order/{order_id}/payment/{payment_id}/cancel
