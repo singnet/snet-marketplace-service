@@ -1,6 +1,15 @@
 class TransactionHistory:
-    def __init__(self, username, order_id, order_type, status, payment_id=None, payment_method=None,
-                 raw_payment_data=None, transaction_hash=None):
+    def __init__(
+        self,
+        username,
+        order_id,
+        order_type,
+        status,
+        payment_id=None,
+        payment_method=None,
+        raw_payment_data=None,
+        transaction_hash=None,
+    ):
         self.__username = username
         self.__order_id = order_id
         self.__order_type = order_type
@@ -11,6 +20,13 @@ class TransactionHistory:
         self.__transaction_hash = transaction_hash
 
     def get_transaction_history(self):
-        return {"username": self.__username, "order_id": self.__order_id, "order_type": self.__order_type,
-                "status": self.__status, "payment_id": self.__payment_id, "payment_method": self.__payment_method,
-                "raw_payment_data": self.__raw_payment_data, "transaction_hash": self.__transaction_hash}
+        return {
+            "username": self.__username,
+            "order_id": self.__order_id,
+            "order_type": self.__order_type,
+            "status": self.__status,
+            "payment_id": self.__payment_id,
+            "payment_method": self.__payment_method,
+            "raw_payment_data": self.__raw_payment_data,
+            "transaction_hash": self.__transaction_hash,
+        }
