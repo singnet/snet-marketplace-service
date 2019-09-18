@@ -1,14 +1,15 @@
 import json
 
-from common.utils import make_response, generate_lambda_response, validate_dict
+from common.utils import generate_lambda_response, validate_dict
 from payments.application.dapp_order_manager import OrderManager
-from common.constant import StatusCode, HEADER_POST_RESPONSE
+from common.constant import StatusCode
 
 
 def initiate(event, context):
     payload = json.loads(event['body'])
     if validate_dict(payload, ["amount", "payment_method"]) \
-            and validate_dict(event[event['pathParameters'], ["order_id"]]):
+            and validate_dict(event['pathParameters'], ["order_id"]):
+        order_id = event['pathParameters']["order_id"]
         amount = payload["amount"]["amount"]
         currency = payload["amount"]["currency"]
         payment_method = payload["payment_method"]
