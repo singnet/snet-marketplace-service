@@ -1,7 +1,10 @@
 from common.constant import STATUS_CODE_SUCCESS, STATUS_CODE_FAILED, STATUS_CODE_REDIRECT
 from common.utils import make_response
+from common.logger import get_logger
 from payments.domain.factory.order_factory import create_order_from_repository_order, create_order, get_order_details
 from payments.infrastructure.order_repositroy import OrderRepository
+
+logger = get_logger(__name__)
 
 
 class DappOrderMangaer:
@@ -22,7 +25,11 @@ class DappOrderMangaer:
         except Exception as e:
             response_body = "Failed to create order"
             response_status = STATUS_CODE_FAILED
-            print(e)
+            logger.error(f"Failed to create order for,\n"
+                         f"amount: {amount} {currency}\n"
+                         f"item_details: {item_details}\n"
+                         f"username: {username}")
+            logger.error(e)
         return make_response(response_status, response_body)
 
     def initiate_payment_against_order(self, order_id, amount, currency, payment_method):
@@ -43,7 +50,11 @@ class DappOrderMangaer:
         except Exception as e:
             response_body = "Failed to initiate payment"
             response_status = STATUS_CODE_FAILED
-            print(e)
+            logger.error(f"Failed to initiate payment for,\n"
+                         f"order_id: {order_id}\n"
+                         f"amount: {amount} {currency}\n"
+                         f"payment_method: {payment_method}")
+            logger.error(e)
         return make_response(response_status, response_body)
 
     def execute_payment_against_order(self, order_id, payment_id, paid_payment_details, payment_method):
@@ -60,7 +71,12 @@ class DappOrderMangaer:
         except Exception as e:
             response_body = "Failed to execute payment"
             response_status = STATUS_CODE_FAILED
-            print(e)
+            logger.error(e)
+            logger.error(f"Failed to execute payment for,\n"
+                         f"order_id: {order_id}\n"
+                         f"payment_id: {payment_id}\n"
+                         f"paid_payment_details: {paid_payment_details}\n"
+                         f"payment_method: {payment_method}")
         return make_response(response_status, response_body)
 
     def get_order_details_for_user(self, username):
@@ -71,5 +87,6 @@ class DappOrderMangaer:
         except Exception as e:
             response_body = "Failed to get orders"
             response_status = STATUS_CODE_FAILED
-            print(e)
+            logger.error(e)
+            logger.error(f"Failed to get order details for, username: {username}\n")
         return make_response(response_status, response_body)
