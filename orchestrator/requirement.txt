@@ -14,3 +14,4 @@ toolz==0.10.0
 urllib3==1.25.3
 websockets==6.0
 boto3==1.9.193
+pymysql==0.9.2
