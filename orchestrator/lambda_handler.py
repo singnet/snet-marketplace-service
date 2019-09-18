@@ -41,6 +41,7 @@ def request_handler(event, context):
             return generate_lambda_response(400, "Bad Request")
 
         path = event["path"].lower()
+        path = re.sub(r"^(\/orchestrator)", "", path)
         method = event["httpMethod"]
 
         method_found, payload_dict = extract_payload(method=method,
