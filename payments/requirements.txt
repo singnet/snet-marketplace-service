@@ -1,0 +1,4 @@
+paypalrestsdk==1.13.1
+PyMySQL==0.9.3
+SQLAlchemy==1.3.8
+web3==4.9.2
