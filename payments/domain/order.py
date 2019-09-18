@@ -5,7 +5,6 @@ from payments.domain.paypal_payment import PaypalPayment
 
 
 class Order(object):
-
     def __init__(self):
         self._order_id = None
         self._payments = None
@@ -44,21 +43,16 @@ class Order(object):
                 payment_id=str(uuid.uuid1()),
                 amount=amount,
                 currency=currency,
-                payment_details={
-                    "payment_method": payment_method
-                },
+                payment_details={"payment_method": payment_method},
                 payment_status="pending",
-                created_at=datetime.utcnow()
+                created_at=datetime.utcnow(),
             )
 
             payment_response = payment.initiate_payment(self.get_order_id())
             self._payments.append(payment)
         else:
             raise Exception("Invalid payment gateway")
-        return {
-            "payment_object": payment,
-            "payment": payment_response["payment"]
-        }
+        return {"payment_object": payment, "payment": payment_response["payment"]}
 
     def get_payment(self, payment_id):
         for payment in self._payments:
