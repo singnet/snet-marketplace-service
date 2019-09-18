@@ -114,6 +114,7 @@ functions:
 
   cancel-payment:
     handler: payments/handlers/payment_handlers/cancel
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
       Team: ${file(./config.${self:provider.stage}.json):TEAM}
