@@ -1,7 +1,7 @@
 import paypalrestsdk
 
 from payments.domain.payment import Payment
-from payments.settings import MODE, PAYPAL_CLIENT, PAYPAL_SECRET, PAYMENT_CANCEL_URL, PAYMENT_RETURN_URL
+from payments.config import MODE, PAYPAL_CLIENT, PAYPAL_SECRET, PAYMENT_CANCEL_URL, PAYMENT_RETURN_URL
 
 
 class PaypalPayment(Payment):

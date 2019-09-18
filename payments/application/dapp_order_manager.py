@@ -62,31 +62,45 @@ class OrderManager:
             order = create_order_from_repository_order(self.order_repository.get_order_by_order_id(order_id))
             payment = order.execute_payment(payment_id, payment_details, payment_method)
             OrderRepository().update_payment_status(order, payment.get_payment_id())
-            response_body = {
+            response = {
                 "payment_id": payment.get_payment_id(),
                 "payment": payment.get_payment_details(),
                 "order_id": order.get_order_id()
             }
-            response_status = STATUS_CODE_SUCCESS
+            status = True
         except Exception as e:
-            response_body = "Failed to execute payment"
-            response_status = STATUS_CODE_FAILED
+            response = "Failed to execute payment"
+            status = False
             logger.error(e)
             logger.error(f"Failed to execute payment for,\n"
                          f"order_id: {order_id}\n"
                          f"payment_id: {payment_id}\n"
                          f"paid_payment_details: {payment_details}\n"
                          f"payment_method: {payment_method}")
-        return make_response(response_status, response_body)
+        return status, response
 
     def get_order_details_for_user(self, username):
         try:
             orders = self.order_repository.get_order_by_username(username)
-            response_body = get_order_details(orders)
-            response_status = STATUS_CODE_SUCCESS
+            response = get_order_details(orders)
+            status = True
         except Exception as e:
-            response_body = "Failed to get orders"
-            response_status = STATUS_CODE_FAILED
+            response = "Failed to get orders"
+            status = False
             logger.error(e)
-            logger.error(f"Failed to get order details for, username: {username}\n")
-        return make_response(response_status, response_body)
+            logger.error(f"Failed to get order details for, username: {username}")
+        return status, response
+
+    def cancel_payment_against_order(self, order_id, payment_id):
+        try:
+            order = create_order_from_repository_order(self.order_repository.get_order_by_order_id(order_id))
+            order.cancel_payment(payment_id)
+            self.order_repository.update_payment_status(order, payment_id)
+            response = "Success"
+            status = True
+        except Exception as e:
+            response = "Failed to set payment failed"
+            status = False
+            logger.error(e)
+            logger.error(f"Failed to set payment failed for payment_id: {payment_id}")
+        return status, response

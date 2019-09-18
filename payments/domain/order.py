@@ -74,3 +74,7 @@ class Order(object):
         else:
             raise Exception("Invalid payment gateway")
         return payment
+
+    def cancel_payment(self, payment_id):
+        payment = self.get_payment(payment_id)
+        payment.set_payment_status("failed")
