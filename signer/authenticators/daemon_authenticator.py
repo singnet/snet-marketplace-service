@@ -30,8 +30,7 @@ class SignatureAuthenticator(object):
     def verify_current_block_number(self):
         signed_block_number = int(
             self.event['headers']['x-currentblocknumber'])
-        blockchain_util = BlockChainUtil(
-            self.networks[self.net_id]['ws_provider'])
+        blockchain_util = BlockChainUtil(provider_type="WS_PROVIDER", provider=self.networks[self.net_id]['ws_provider'])
         current_block_number = blockchain_util.get_current_block_no()
         if current_block_number > signed_block_number + self.BLOCK_LIMIT or current_block_number < signed_block_number - self.BLOCK_LIMIT:
             print("current_block_number is more than signed block limit %s",
