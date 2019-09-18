@@ -53,7 +53,7 @@ package:
 
 functions:
   create-order:
-    handler: payments/handlers/order_handlers/create
+    handler: payments/handlers/order_handler.create
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
@@ -73,7 +73,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
   initiate-payment:
-    handler: payments/handlers/payment_handlers/initiate
+    handler: payments/handlers/payment_handler.initiate
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
@@ -93,7 +93,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
   execute-payment:
-    handler: payments/handlers/payment_handlers/execute
+    handler: payments/handlers/payment_handler.execute
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
@@ -113,7 +113,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
   cancel-payment:
-    handler: payments/handlers/payment_handlers/cancel
+    handler: payments/handlers/payment_handler.cancel
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
