@@ -68,6 +68,7 @@ functions:
       - http:
           method: POST
           path: /wallet
+          private: true
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -86,6 +87,7 @@ functions:
       - http:
           method: POST
           path: /wallet/channel
+          private: true
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -104,6 +106,7 @@ functions:
       - http:
           method: GET
           path: /wallet/channel/deposit
+          private: true
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -122,6 +125,7 @@ functions:
       - http:
           method: POST
           path: /wallet/status
+          private: true
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
