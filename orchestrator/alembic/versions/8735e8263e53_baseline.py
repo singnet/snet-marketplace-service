@@ -19,23 +19,20 @@ depends_on = None
 def upgrade():
     conn = op.get_bind()
     conn.execute("""
-
-        CREATE TABLE `purchase_history` (
-        `row_id` int(11) NOT NULL AUTO_INCREMENT,
-        `username` varchar(128) NOT NULL,
-        `raw_payment_data` json NOT NULL,
-        `type` varchar(64) NOT NULL,
-        `order_id` varchar(128) NULL DEFAULT NULL,
-        `payment_id` varchar(128) NULL DEFAULT NULL,
-        `payment_trasaction_id` varchar(256) NULL DEFAULT NULL,
-        `transaction_hash` varchar(256) NULL DEFAULT NULL,
-        `status` varchar(64) NOT NULL,
-        `row_created` timestamp NULL DEFAULT NULL,
-        `row_updated` timestamp NULL DEFAULT NULL,
-        PRIMARY KEY (`row_id`)
-);
-
-        """)
+         CREATE TABLE `transaction_history` (
+            `row_id` int(11) NOT NULL AUTO_INCREMENT,
+            `username` varchar(128) NOT NULL,
+            `order_id` varchar(128) NOT NULL,
+            `order_type` varchar(64) NOT NULL,
+            `status` varchar(64) NOT NULL,
+            `payment_id` varchar(128) NULL DEFAULT NULL,
+            `payment_type` varchar(64) NULL DEFAULT NULL,
+            `raw_payment_data` json NOT NULL,
+            `transaction_hash` varchar(256) NULL DEFAULT NULL,
+            `row_created` timestamp NULL DEFAULT NULL,
+            `row_updated` timestamp NULL DEFAULT NULL,
+            PRIMARY KEY (`row_id`));
+            """)
 
 
 def downgrade():
