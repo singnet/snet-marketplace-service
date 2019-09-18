@@ -5,7 +5,7 @@ class TransactionHistoryDAO():
     def insert_transaction_history(self, obj_transaction_history):
         transaction_history = obj_transaction_history.get_transaction_history()
         query_response = self.__repo.execute(
-            "INSERT INTO transaction_history (username, order_id, order_type, status, payment_id, payment_method, " \
+            "INSERT INTO transaction_history (username, order_id, order_type, status, payment_id, payment_method, "
             "raw_payment_data, transaction_hash)"
             "VALUES(%s, %s, %s, %s, %s, %s, %s, %s) "
             "ON DUPLICATE_KEY UPDATE payment_id = %s, payment_method = %s, raw_payment_data = %s, transaction_hash = %s",

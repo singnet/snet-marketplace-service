@@ -26,7 +26,8 @@ class OrderType(Enum):
 class OrderService:
     def __init__(self, obj_repo):
         self.obj_repo = obj_repo
-        self.obj_transaction_history_dao = TransactionHistoryDAO(obj_repo=self.obj_repo)
+        self.obj_transaction_history_dao = TransactionHistoryDAO(
+            obj_repo=self.obj_repo)
 
     def initiate_order(self, user_data, payload_dict):
         """
@@ -47,14 +48,17 @@ class OrderService:
                                                              payment_method=payload_dict["payment_method"])
             obj_transaction_history = TransactionHistory(username=username, order_id=order_id, type=order_type,
                                                          payment_id=redirect_response["body"]["payment_id"],
-                                                         raw_payment_data=redirect_response["body"]["raw_payment_data"],
+                                                         raw_payment_data=redirect_response[
+                                                             "body"]["raw_payment_data"],
                                                          status=Status.SUCCESS)
-            self.obj_transaction_history_dao.insert_transaction_history(obj_transaction_history=obj_transaction_history)
+            self.obj_transaction_history_dao.insert_transaction_history(
+                obj_transaction_history=obj_transaction_history)
             return redirect_response
         except Exception as e:
             obj_transaction_history = TransactionHistory(username=username, order_id=order_id, type=order_type,
                                                          status=Status.PAYMENT_INITIATION_FAILED)
-            self.obj_transaction_history_dao.insert_transaction_history(obj_transaction_history=obj_transaction_history)
+            self.obj_transaction_history_dao.insert_transaction_history(
+                obj_transaction_history=obj_transaction_history)
             print(repr(e))
             raise e
 
@@ -87,13 +91,14 @@ class OrderService:
                                                          payment_method=payment_method,
                                                          raw_payment_data=payment_details,
                                                          transaction_hash=data["transaction_hash"])
-            self.obj_transaction_history_dao.insert_transaction_history(obj_transaction_history=obj_transaction_history)
-
+            self.obj_transaction_history_dao.insert_transaction_history(
+                obj_transaction_history=obj_transaction_history)
 
         except Exception as e:
             obj_transaction_history = TransactionHistory(username=username, order_id=order_id, type=order_type,
                                                          status=status)
-            self.obj_transaction_history_dao.insert_transaction_history(obj_transaction_history=obj_transaction_history)
+            self.obj_transaction_history_dao.insert_transaction_history(
+                obj_transaction_history=obj_transaction_history)
             print(repr(e))
             raise e
 
@@ -124,10 +129,12 @@ class OrderService:
         if payment_executed["status"] == 200:
             return payment_executed
         else:
-            raise Exception("Error executing payment for username %s aginst order_id %s", username, order_id)
+            raise Exception(
+                "Error executing payment for username %s aginst order_id %s", username, order_id)
 
     def manage_process_order(self, order_id, order_type, amount, currency, order_data):
-        obj_wallets_service = WalletService(obj_repo=self.obj_repo)  # how to create object
+        obj_wallets_service = WalletService(
+            obj_repo=self.obj_repo)  # how to create object
         if order_type == OrderType.CREATE_WALLET_AND_CHANNEL:
             wallet_details = obj_wallets_service.create_and_register_wallet()
             receipient = self.get_receipient_address()
