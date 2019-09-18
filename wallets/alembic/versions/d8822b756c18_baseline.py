@@ -9,7 +9,7 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = 'd8822b756c18'
+revision = "d8822b756c18"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -17,7 +17,8 @@ depends_on = None
 
 def upgrade():
     conn = op.get_bind()
-    conn.execute("""
+    conn.execute(
+        """
             
         CREATE TABLE `user_wallet` (
           `row_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -31,8 +32,10 @@ def upgrade():
           UNIQUE KEY `uq_wallet` (`address`)
            );
     
-    """)
-    conn.execute("""
+    """
+    )
+    conn.execute(
+        """
 
             CREATE TABLE `wallet_transaction_history` (
               `row_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -52,8 +55,10 @@ def upgrade():
               PRIMARY KEY (`row_id`)
             );
 
-       """)
-    conn.execute("""
+       """
+    )
+    conn.execute(
+        """
         
         CREATE TABLE `wallet` (
           `row_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -66,20 +71,24 @@ def upgrade():
           UNIQUE KEY `uq_wallet` (`address`)
             );
 
-       """)
+       """
+    )
 
 
 def downgrade():
     conn = op.get_bind()
-    conn.execute("""
+    conn.execute(
+        """
                 drop table wallet
             """
-                 )
-    conn.execute("""
+    )
+    conn.execute(
+        """
                 drop table wallet_transaction_history
                 """
-                 )
-    conn.execute("""
+    )
+    conn.execute(
+        """
                 drop table user_wallet
        """
-                 )
+    )
