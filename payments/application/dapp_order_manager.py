@@ -29,25 +29,23 @@ class DappOrderMangaer:
         except Exception as e:
             response_body = "Failed to create order"
             response_status = STATUS_CODE_FAILED
-            logger.error(
-                f"Failed to create order for,\n"
-                f"amount: {amount} {currency}\n"
-                f"item_details: {item_details}\n"
-                f"username: {username}"
-            )
+            logger.error(f"Failed to create order for,\n"
+                         f"amount: {amount} {currency}\n"
+                         f"item_details: {item_details}\n"
+                         f"username: {username}")
             logger.error(e)
         return make_response(response_status, response_body)
 
-    def initiate_payment_against_order(
-        self, order_id, amount, currency, payment_method
-    ):
+    def initiate_payment_against_order(self, order_id, amount, currency,
+                                       payment_method):
         try:
             order = create_order_from_repository_order(
-                self.order_repository.get_order_by_order_id(order_id)
-            )
-            payment_details = order.create_payment(amount, currency, payment_method)
+                self.order_repository.get_order_by_order_id(order_id))
+            payment_details = order.create_payment(amount, currency,
+                                                   payment_method)
             payment = payment_details["payment_object"]
-            self.order_repository.persist_payment(order, payment.get_payment_id())
+            self.order_repository.persist_payment(order,
+                                                  payment.get_payment_id())
             response_body = {
                 "amount": payment.get_amount(),
                 "currency": payment.get_currency(),
@@ -60,26 +58,22 @@ class DappOrderMangaer:
         except Exception as e:
             response_body = "Failed to initiate payment"
             response_status = STATUS_CODE_FAILED
-            logger.error(
-                f"Failed to initiate payment for,\n"
-                f"order_id: {order_id}\n"
-                f"amount: {amount} {currency}\n"
-                f"payment_method: {payment_method}"
-            )
+            logger.error(f"Failed to initiate payment for,\n"
+                         f"order_id: {order_id}\n"
+                         f"amount: {amount} {currency}\n"
+                         f"payment_method: {payment_method}")
             logger.error(e)
         return make_response(response_status, response_body)
 
-    def execute_payment_against_order(
-        self, order_id, payment_id, paid_payment_details, payment_method
-    ):
+    def execute_payment_against_order(self, order_id, payment_id,
+                                      paid_payment_details, payment_method):
         try:
             order = create_order_from_repository_order(
-                self.order_repository.get_order_by_order_id(order_id)
-            )
-            payment = order.execute_payment(
-                payment_id, paid_payment_details, payment_method
-            )
-            OrderRepository().update_payment_status(order, payment.get_payment_id())
+                self.order_repository.get_order_by_order_id(order_id))
+            payment = order.execute_payment(payment_id, paid_payment_details,
+                                            payment_method)
+            OrderRepository().update_payment_status(order,
+                                                    payment.get_payment_id())
             response_body = {
                 "payment_id": payment.get_payment_id(),
                 "payment": payment.get_payment_details(),
@@ -90,13 +84,11 @@ class DappOrderMangaer:
             response_body = "Failed to execute payment"
             response_status = STATUS_CODE_FAILED
             logger.error(e)
-            logger.error(
-                f"Failed to execute payment for,\n"
-                f"order_id: {order_id}\n"
-                f"payment_id: {payment_id}\n"
-                f"paid_payment_details: {paid_payment_details}\n"
-                f"payment_method: {payment_method}"
-            )
+            logger.error(f"Failed to execute payment for,\n"
+                         f"order_id: {order_id}\n"
+                         f"payment_id: {payment_id}\n"
+                         f"paid_payment_details: {paid_payment_details}\n"
+                         f"payment_method: {payment_method}")
         return make_response(response_status, response_body)
 
     def get_order_details_for_user(self, username):
@@ -108,5 +100,6 @@ class DappOrderMangaer:
             response_body = "Failed to get orders"
             response_status = STATUS_CODE_FAILED
             logger.error(e)
-            logger.error(f"Failed to get order details for, username: {username}\n")
+            logger.error(
+                f"Failed to get order details for, username: {username}\n")
         return make_response(response_status, response_body)

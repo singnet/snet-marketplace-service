@@ -19,7 +19,10 @@ class OrderRepository:
         order_model = Order(
             id=order.get_order_id(),
             username=order.get_username(),
-            amount={"amount": order.get_amount(), "currency": order.get_currency()},
+            amount={
+                "amount": order.get_amount(),
+                "currency": order.get_currency()
+            },
             item_details=order.get_item_details(),
             created_at=datetime.utcnow(),
         )
@@ -52,11 +55,15 @@ class OrderRepository:
     def persist_payment(self, order, payment_id):
         payment = order.get_payment(payment_id)
         if payment is None:
-            raise Exception(f"Payment not found in order instance for the {payment_id}")
+            raise Exception(
+                f"Payment not found in order instance for the {payment_id}")
 
         payment_model = Payment(
             payment_id=payment.get_payment_id(),
-            amount={"amount": payment.get_amount(), "currency": payment.get_currency()},
+            amount={
+                "amount": payment.get_amount(),
+                "currency": payment.get_currency()
+            },
             created_at=payment.get_created_at(),
             payment_details=payment.get_payment_details(),
             payment_status=payment.get_payment_status(),
@@ -67,13 +74,11 @@ class OrderRepository:
     def update_payment_status(self, order, payment_id):
         payment = order.get_payment(payment_id)
         if payment is None:
-            raise Exception(f"Payment not found in order instance for the {payment_id}")
+            raise Exception(
+                f"Payment not found in order instance for the {payment_id}")
         try:
-            order_item = (
-                self.session.query(Order)
-                .filter(Order.id == order.get_order_id())
-                .first()
-            )
+            order_item = (self.session.query(Order).filter(
+                Order.id == order.get_order_id()).first())
             for payment_model in order_item.payments:
                 if payment_model.payment_id == payment.get_payment_id():
                     payment_model.payment_status = payment.get_payment_status()
@@ -84,5 +89,6 @@ class OrderRepository:
             raise e
 
     def get_order_by_username(self, username):
-        orders = self.session.query(Order).filter(Order.username == username).all()
+        orders = self.session.query(Order).filter(
+            Order.username == username).all()
         return orders

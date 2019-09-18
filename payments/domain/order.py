@@ -13,7 +13,8 @@ class Order(object):
         self._username = None
         self._currency = None
 
-    def __init__(self, order_id, amount, currency, item_details, username, payments):
+    def __init__(self, order_id, amount, currency, item_details, username,
+                 payments):
         self._order_id = order_id
         self._payments = payments
         self._amount = amount
@@ -52,7 +53,10 @@ class Order(object):
             self._payments.append(payment)
         else:
             raise Exception("Invalid payment gateway")
-        return {"payment_object": payment, "payment": payment_response["payment"]}
+        return {
+            "payment_object": payment,
+            "payment": payment_response["payment"]
+        }
 
     def get_payment(self, payment_id):
         for payment in self._payments:
@@ -60,7 +64,8 @@ class Order(object):
                 return payment
         return None
 
-    def execute_payment(self, payment_id, paid_payment_details, payment_method):
+    def execute_payment(self, payment_id, paid_payment_details,
+                        payment_method):
         if payment_method == "paypal":
             payment = self.get_payment(payment_id)
             if not payment.execute_transaction(paid_payment_details):
