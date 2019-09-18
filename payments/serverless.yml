@@ -54,11 +54,11 @@ package:
 functions:
   create-order:
     handler: payments/handlers/order_handlers/create
-      events:
-        - http:
-            path: order/create
-            method: post
-            private: true
+    events:
+      - http:
+          path: order/create
+          method: post
+          private: true
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
@@ -69,11 +69,11 @@ functions:
 
   initiate-payment:
     handler: payments/handlers/payment_handlers/initiate
-      events:
-        - http:
-            path: order/{order_id}/payment/{payment_id}/initiate
-            method: post
-            private: true
+    events:
+      - http:
+          path: order/{order_id}/payment/{payment_id}/initiate
+          method: post
+          private: true
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
@@ -84,11 +84,11 @@ functions:
 
   execute-payment:
     handler: payments/handlers/payment_handlers/execute
-      events:
-        - http:
-            path: order/{order_id}/payment/{payment_id}/execute
-            method: post
-            private: true
+    events:
+      - http:
+          path: order/{order_id}/payment/{payment_id}/execute
+          method: post
+          private: true
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
@@ -99,11 +99,11 @@ functions:
 
   cancel-payment:
     handler: payments/handlers/payment_handlers/cancel
-      events:
-          - http:
-            path: order/{order_id}/payment/{payment_id}/cancel
-            method: post
-            private: true
+    events:
+        - http:
+          path: order/{order_id}/payment/{payment_id}/cancel
+          method: post
+          private: true
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
