@@ -27,7 +27,8 @@ class OrderType(Enum):
 class OrderService:
     def __init__(self, obj_repo):
         self.obj_repo = obj_repo
-        self.obj_transaction_history_dao = TransactionHistoryDAO(obj_repo=self.obj_repo)
+        self.obj_transaction_history_dao = TransactionHistoryDAO(
+            obj_repo=self.obj_repo)
 
     def initiate_order(self, user_data, payload_dict):
         """
@@ -63,8 +64,7 @@ class OrderService:
                 status=Status.SUCCESS,
             )
             self.obj_transaction_history_dao.insert_transaction_history(
-                obj_transaction_history=obj_transaction_history
-            )
+                obj_transaction_history=obj_transaction_history)
             return redirect_response
         except Exception as e:
             obj_transaction_history = TransactionHistory(
@@ -74,8 +74,7 @@ class OrderService:
                 status=Status.PAYMENT_INITIATION_FAILED,
             )
             self.obj_transaction_history_dao.insert_transaction_history(
-                obj_transaction_history=obj_transaction_history
-            )
+                obj_transaction_history=obj_transaction_history)
             print(repr(e))
             raise e
 
@@ -121,22 +120,20 @@ class OrderService:
                 transaction_hash=data["transaction_hash"],
             )
             self.obj_transaction_history_dao.insert_transaction_history(
-                obj_transaction_history=obj_transaction_history
-            )
+                obj_transaction_history=obj_transaction_history)
 
         except Exception as e:
-            obj_transaction_history = TransactionHistory(
-                username=username, order_id=order_id, type=order_type, status=status
-            )
+            obj_transaction_history = TransactionHistory(username=username,
+                                                         order_id=order_id,
+                                                         type=order_type,
+                                                         status=status)
             self.obj_transaction_history_dao.insert_transaction_history(
-                obj_transaction_history=obj_transaction_history
-            )
+                obj_transaction_history=obj_transaction_history)
             print(repr(e))
             raise e
 
-    def manage_initiate_payment(
-        self, username, order_id, amount, currency, payment_method
-    ):
+    def manage_initiate_payment(self, username, order_id, amount, currency,
+                                payment_method):
         obj_dapp_order_manager = DappOrderManager()
         initiate_payment_data = obj_dapp_order_manager.initiate_payment(
             order_id=order_id,
@@ -162,9 +159,8 @@ class OrderService:
         else:
             raise Exception("Error creating order for user %s", username)
 
-    def manage_execute_payment(
-        self, username, order_id, payment_id, payment_details, payment_method
-    ):
+    def manage_execute_payment(self, username, order_id, payment_id,
+                               payment_details, payment_method):
         obj_dapp_order_manager = DappOrderManager()  # make it global
         payment_executed = obj_dapp_order_manager.execute_payment_for_order(
             order_id=order_id,
@@ -181,10 +177,10 @@ class OrderService:
                 order_id,
             )
 
-    def manage_process_order(self, order_id, order_type, amount, currency, order_data):
+    def manage_process_order(self, order_id, order_type, amount, currency,
+                             order_data):
         obj_wallets_service = WalletService(
-            obj_repo=self.obj_repo
-        )  # how to create object
+            obj_repo=self.obj_repo)  # how to create object
         if order_type == OrderType.CREATE_WALLET_AND_CHANNEL:
             wallet_details = obj_wallets_service.create_and_register_wallet()
             receipient = self.get_receipient_address()
