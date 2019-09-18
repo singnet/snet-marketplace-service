@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch, Mock, MagicMock, PropertyMock
+from unittest.mock import patch, Mock
 from payments.domain.paypal_payment import PaypalPayment
 
 
