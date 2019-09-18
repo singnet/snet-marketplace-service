@@ -22,6 +22,7 @@ provider:
     tags: # Tags that will be added to each of the deployment resources
       key1: payment-service
   deploymentPrefix: serverless
+  endpointType: private
 
 package:
   exclude:
