@@ -1,10 +1,12 @@
-import web3
 import base64
+
+import web3
 from eth_account.messages import defunct_hash_message
 
 from common.blockchain_util import BlockChainUtil
 from common.repository import Repository
-from signer.config import NETWORKS, NET_ID
+from signer.config import NET_ID
+from signer.config import NETWORKS
 
 
 class SignatureAuthenticator(object):

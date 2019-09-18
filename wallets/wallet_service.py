@@ -1,14 +1,14 @@
 from web3 import Web3
 
 from common.blockchain_util import BlockChainUtil
-from wallets.config import (
-    NETWORK_ID,
-    NETWORKS,
-    EXECUTOR_ADDRESS,
-    SIGNER_ADDRESS,
-    EXECUTOR_KEY,
-)
-from wallets.constant import GENERAL_WALLET_TYPE, MPE_ADDR_PATH, MPE_CNTRCT_PATH
+from wallets.config import EXECUTOR_ADDRESS
+from wallets.config import EXECUTOR_KEY
+from wallets.config import NETWORK_ID
+from wallets.config import NETWORKS
+from wallets.config import SIGNER_ADDRESS
+from wallets.constant import GENERAL_WALLET_TYPE
+from wallets.constant import MPE_ADDR_PATH
+from wallets.constant import MPE_CNTRCT_PATH
 from wallets.wallet import Wallet
 from wallets.wallet_data_access_object import WalletDAO
 
