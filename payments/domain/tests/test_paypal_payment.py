@@ -13,7 +13,8 @@ class TestPaypal(unittest.TestCase):
         payment_status = ""
         created_at = "2000-01-01 00:00:00"
         payment_details = {}
-        response = PaypalPayment(payment_id, amount, payment_status, created_at, payment_details).initiate_payment()
+        currency = "USD"
+        response = PaypalPayment(payment_id, amount, currency, payment_status, created_at, payment_details).initiate_payment()
         expected_response = {'payment': {'id': 'PAYID-123', 'payment_url': 'url'}}
         self.assertDictEqual(response, expected_response)
 
@@ -24,8 +25,9 @@ class TestPaypal(unittest.TestCase):
         amount = 123
         payment_status = ""
         created_at = "2000-01-01 00:00:00"
+        currency = "USD"
         payment_details = {"payment_id": "PAYID-123"}
-        assert PaypalPayment(payment_id, amount, payment_status, created_at, payment_details) \
+        assert PaypalPayment(payment_id, amount, currency, payment_status, created_at, payment_details) \
             .execute_transaction({"payer_id": "PAYER-123"})
 
 

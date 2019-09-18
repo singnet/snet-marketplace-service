@@ -40,7 +40,7 @@ class TestDappMananger(unittest.TestCase):
                 username="user",
             )
         )
-        response = self.dapp_order_manager.initiate_payment("order_test_123", 100, "USD", "paypal")
+        response = self.dapp_order_manager.initiate_payment_against_order("order_test_123", 100, "USD", "paypal")
         assert "body" in response
         assert "headers" in response
         assert "statusCode" in response

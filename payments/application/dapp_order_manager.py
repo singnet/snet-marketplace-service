@@ -1,3 +1,4 @@
+from common.constant import STATUS_CODE_SUCCESS, STATUS_CODE_FAILED, STATUS_CODE_REDIRECT
 from common.utils import make_response
 from payments.domain.factory.order_factory import create_order_from_repository_order, create_order, get_order_details
 from payments.infrastructure.order_repositroy import OrderRepository
@@ -17,14 +18,14 @@ class DappOrderMangaer:
                 "amount": order.get_amount(),
                 "currency": order.get_currency()
             }
-            response_status = "success"
+            response_status = STATUS_CODE_SUCCESS
         except Exception as e:
             response_body = "Failed to create order"
-            response_status = "failed"
+            response_status = STATUS_CODE_FAILED
             print(e)
         return make_response(response_status, response_body)
 
-    def initiate_payment(self, order_id, amount, currency, payment_method):
+    def initiate_payment_against_order(self, order_id, amount, currency, payment_method):
         try:
             order = create_order_from_repository_order(self.order_repository.get_order_by_order_id(order_id))
             payment_details = order.create_payment(amount, currency, payment_method)
@@ -38,14 +39,14 @@ class DappOrderMangaer:
                 "order_id": order.get_order_id()
             }
             response_body["payment"]["payment_method"] = payment_method
-            response_status = "success"
+            response_status = STATUS_CODE_REDIRECT
         except Exception as e:
             response_body = "Failed to initiate payment"
-            response_status = "failed"
+            response_status = STATUS_CODE_FAILED
             print(e)
         return make_response(response_status, response_body)
 
-    def execute_payment_for_order(self, order_id, payment_id, paid_payment_details, payment_method):
+    def execute_payment_against_order(self, order_id, payment_id, paid_payment_details, payment_method):
         try:
             order = create_order_from_repository_order(self.order_repository.get_order_by_order_id(order_id))
             payment = order.execute_payment(payment_id, paid_payment_details, payment_method)
@@ -55,10 +56,10 @@ class DappOrderMangaer:
                 "payment": payment.get_payment_details(),
                 "order_id": order.get_order_id()
             }
-            response_status = "success"
+            response_status = STATUS_CODE_SUCCESS
         except Exception as e:
             response_body = "Failed to execute payment"
-            response_status = "failed"
+            response_status = STATUS_CODE_FAILED
             print(e)
         return make_response(response_status, response_body)
 
@@ -66,9 +67,9 @@ class DappOrderMangaer:
         try:
             orders = self.order_repository.get_order_by_username(username)
             response_body = get_order_details(orders)
-            response_status = "success"
+            response_status = STATUS_CODE_SUCCESS
         except Exception as e:
             response_body = "Failed to get orders"
-            response_status = "failed"
+            response_status = STATUS_CODE_FAILED
             print(e)
         return make_response(response_status, response_body)
