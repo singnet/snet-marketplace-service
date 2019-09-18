@@ -34,10 +34,13 @@ class DappOrderMangaer:
 
     def initiate_payment_against_order(self, order_id, amount, currency, payment_method):
         try:
-            order = create_order_from_repository_order(self.order_repository.get_order_by_order_id(order_id))
-            payment_details = order.create_payment(amount, currency, payment_method)
+            order = create_order_from_repository_order(
+                self.order_repository.get_order_by_order_id(order_id))
+            payment_details = order.create_payment(
+                amount, currency, payment_method)
             payment = payment_details["payment_object"]
-            self.order_repository.persist_payment(order, payment.get_payment_id())
+            self.order_repository.persist_payment(
+                order, payment.get_payment_id())
             response_body = {
                 "amount": payment.get_amount(),
                 "currency": payment.get_currency(),
@@ -59,8 +62,10 @@ class DappOrderMangaer:
 
     def execute_payment_against_order(self, order_id, payment_id, paid_payment_details, payment_method):
         try:
-            order = create_order_from_repository_order(self.order_repository.get_order_by_order_id(order_id))
-            payment = order.execute_payment(payment_id, paid_payment_details, payment_method)
+            order = create_order_from_repository_order(
+                self.order_repository.get_order_by_order_id(order_id))
+            payment = order.execute_payment(
+                payment_id, paid_payment_details, payment_method)
             OrderRepository().update_payment_status(order, payment.get_payment_id())
             response_body = {
                 "payment_id": payment.get_payment_id(),
@@ -88,5 +93,6 @@ class DappOrderMangaer:
             response_body = "Failed to get orders"
             response_status = STATUS_CODE_FAILED
             logger.error(e)
-            logger.error(f"Failed to get order details for, username: {username}\n")
+            logger.error(
+                f"Failed to get order details for, username: {username}\n")
         return make_response(response_status, response_body)

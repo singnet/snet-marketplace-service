@@ -68,4 +68,3 @@ def get_order_details(orders):
             order["payments"].append(payment)
         order_details.append(order)
     return {"orders": order_details}
-

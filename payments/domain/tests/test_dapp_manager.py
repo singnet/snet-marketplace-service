@@ -12,7 +12,8 @@ class TestDappMananger(unittest.TestCase):
     dapp_order_manager = DappOrderMangaer()
 
     def test_create_order(self):
-        response = self.dapp_order_manager.create_order(100, "USD", {"item": "item", "quantity": 2}, "user")
+        response = self.dapp_order_manager.create_order(
+            100, "USD", {"item": "item", "quantity": 2}, "user")
         assert "body" in response
         assert "headers" in response
         assert "statusCode" in response
@@ -36,11 +37,13 @@ class TestDappMananger(unittest.TestCase):
                     "amount": 100,
                     "currency": "USD"
                 },
-                created_at=datetime.strptime("2002-12-21 00:00:00", "%Y-%m-%d %H:%M:%S"),
+                created_at=datetime.strptime(
+                    "2002-12-21 00:00:00", "%Y-%m-%d %H:%M:%S"),
                 username="user",
             )
         )
-        response = self.dapp_order_manager.initiate_payment_against_order("order_test_123", 100, "USD", "paypal")
+        response = self.dapp_order_manager.initiate_payment_against_order(
+            "order_test_123", 100, "USD", "paypal")
         assert "body" in response
         assert "headers" in response
         assert "statusCode" in response
@@ -55,7 +58,8 @@ class TestDappMananger(unittest.TestCase):
 
     def test_order_details(self):
         username = "123"
-        order_details = self.dapp_order_manager.get_order_details_for_user(username)
+        order_details = self.dapp_order_manager.get_order_details_for_user(
+            username)
         assert "body" in order_details
         assert "headers" in order_details
         assert "statusCode" in order_details
