@@ -12,7 +12,7 @@ class WalletService:
         self.obj_repo = obj_repo
 
     def create_and_register_wallet(self):
-        self.obj_blockchain_util = BlockChainUtil(type="HTTP_PROVIDER", provider=NETWORKS[NETWORK_ID]['http_provider'])
+        self.obj_blockchain_util = BlockChainUtil(provider_type="HTTP_PROVIDER", provider=NETWORKS[NETWORK_ID]['http_provider'])
         address, private_key = self.obj_blockchain_util.create_account()
         obj_wallet = Wallet(address=address, private_key=private_key, type=GENERAL_WALLET_TYPE, status=0)
         registered = self.register_wallet(obj_wallet=obj_wallet)
@@ -51,7 +51,7 @@ class WalletService:
     def open_channel_by_third_party(self, order_id, sender, sender_private_key, group_id, amount, currency, recipient):
         obj_wallet_dao = WalletDAO(obj_repo=self.obj_repo)
         method_name = "openChannelByThirdParty"
-        self.obj_blockchain_util = BlockChainUtil(type="HTTP_PROVIDER", provider=NETWORKS[NETWORK_ID]['http_provider'])
+        self.obj_blockchain_util = BlockChainUtil(provider_type="HTTP_PROVIDER", provider=NETWORKS[NETWORK_ID]['http_provider'])
         current_block_no = self.obj_blockchain_util.get_current_block_no()
         # 1 block no is mined in 15 sec on average, setting expiration as 10 years
         expiration = current_block_no + (10 * 365 * 24 * 60 * 4)
