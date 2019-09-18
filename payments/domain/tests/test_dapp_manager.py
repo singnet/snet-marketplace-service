@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime
 
-from payments.application.dapp_order_manager import DappOrderMangaer
+from payments.application.dapp_order_manager import OrderManager
 from payments.infrastructure.models import Order
 from payments.infrastructure.order_repositroy import OrderRepository
 
@@ -9,7 +9,7 @@ from payments.infrastructure.order_repositroy import OrderRepository
 class TestDappMananger(unittest.TestCase):
 
     repo = OrderRepository()
-    dapp_order_manager = DappOrderMangaer()
+    dapp_order_manager = OrderManager()
 
     def test_create_order(self):
         response = self.dapp_order_manager.create_order(100, "USD", {"item": "item", "quantity": 2}, "user")
