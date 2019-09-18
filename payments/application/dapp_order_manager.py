@@ -1,5 +1,3 @@
-from common.constant import STATUS_CODE_SUCCESS, STATUS_CODE_FAILED, STATUS_CODE_REDIRECT
-from common.utils import make_response
 from common.logger import get_logger
 from payments.domain.factory.order_factory import create_order_from_repository_order, create_order, get_order_details
 from payments.infrastructure.order_repositroy import OrderRepository
@@ -15,22 +13,22 @@ class OrderManager:
         try:
             order = create_order(amount, currency, item_details, username)
             self.order_repository.persist_order(order)
-            response_body = {
+            response = {
                 "order_id": order.get_order_id(),
                 "item_details": order.get_item_details(),
                 "amount": order.get_amount(),
                 "currency": order.get_currency()
             }
-            response_status = STATUS_CODE_SUCCESS
+            status = True
         except Exception as e:
-            response_body = "Failed to create order"
-            response_status = STATUS_CODE_FAILED
+            response = "Failed to create order"
+            status = False
             logger.error(f"Failed to create order for,\n"
                          f"amount: {amount} {currency}\n"
                          f"item_details: {item_details}\n"
                          f"username: {username}")
             logger.error(e)
-        return make_response(response_status, response_body)
+        return status, response
 
     def initiate_payment_against_order(self, order_id, amount, currency, payment_method):
         try:
@@ -46,10 +44,10 @@ class OrderManager:
                 "order_id": order.get_order_id()
             }
             response["payment"]["payment_method"] = payment_method
-            status = STATUS_CODE_REDIRECT
+            status = True
         except Exception as e:
             response = "Failed to initiate payment"
-            status = STATUS_CODE_FAILED
+            status = False
             logger.error(f"Failed to initiate payment for,\n"
                          f"order_id: {order_id}\n"
                          f"amount: {amount} {currency}\n"
