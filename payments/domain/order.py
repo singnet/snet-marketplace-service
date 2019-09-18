@@ -51,7 +51,7 @@ class Order(object):
                 created_at=datetime.utcnow()
             )
 
-            payment_response = payment.initiate_payment()
+            payment_response = payment.initiate_payment(self.get_order_id())
             self._payments.append(payment)
         else:
             raise Exception("Invalid payment gateway")

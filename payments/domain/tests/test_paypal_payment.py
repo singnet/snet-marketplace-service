@@ -9,12 +9,14 @@ class TestPaypal(unittest.TestCase):
                                                       id="PAYID-123", create=Mock(return_value=True)))
     def test_initiate_payment(self, mock_object):
         payment_id = "123"
+        order_id = "order-123"
         amount = 123
         payment_status = ""
         created_at = "2000-01-01 00:00:00"
         payment_details = {}
         currency = "USD"
-        response = PaypalPayment(payment_id, amount, currency, payment_status, created_at, payment_details).initiate_payment()
+        response = PaypalPayment(payment_id, amount, currency,
+                                 payment_status, created_at, payment_details).initiate_payment(order_id)
         expected_response = {'payment': {'id': 'PAYID-123', 'payment_url': 'url'}}
         self.assertDictEqual(response, expected_response)
 

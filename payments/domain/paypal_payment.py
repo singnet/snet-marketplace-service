@@ -14,8 +14,8 @@ class PaypalPayment(Payment):
           'client_secret': PAYPAL_SECRET}
         )
 
-    def initiate_payment(self):
-        paypal_payload = self.get_paypal_payload()
+    def initiate_payment(self, order_id):
+        paypal_payload = self.get_paypal_payload(order_id)
         payment = paypalrestsdk.Payment(paypal_payload, api=self.payee_client_api)
 
         if not payment.create():
@@ -53,15 +53,15 @@ class PaypalPayment(Payment):
             self._payment_status = 'failed'
         return False
 
-    def get_paypal_payload(self):
+    def get_paypal_payload(self, order_id):
         paypal_payload = {
             "intent": "sale",
             "payer": {
                 "payment_method": "paypal"
             },
             "redirect_urls": {
-                "return_url": PAYMENT_RETURN_URL,
-                "cancel_url": PAYMENT_CANCEL_URL
+                "return_url": PAYMENT_RETURN_URL.format(order_id, self._payment_id),
+                "cancel_url": PAYMENT_CANCEL_URL.format(order_id, self._payment_id)
             },
             "transactions": [
                 {
@@ -71,7 +71,7 @@ class PaypalPayment(Payment):
                                 "name": "item",
                                 "sku": "item",
                                 "price": self._amount,
-                                "currency": "USD",
+                                "currency": self._currency,
                                 "quantity": 1
                             }
                         ]
