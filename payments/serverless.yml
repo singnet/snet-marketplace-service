@@ -100,7 +100,7 @@ functions:
   cancel-payment:
     handler: payments/handlers/payment_handlers/cancel
     events:
-        - http:
+      - http:
           path: order/{order_id}/payment/{payment_id}/cancel
           method: post
           private: true
