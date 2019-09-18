@@ -22,7 +22,6 @@ provider:
     tags: # Tags that will be added to each of the deployment resources
       key1: payment-service
   deploymentPrefix: serverless
-  endpointType: private
 
 package:
   exclude:
@@ -59,6 +58,7 @@ functions:
         - http:
             path: order/create
             method: post
+            private: true
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
@@ -73,6 +73,7 @@ functions:
         - http:
             path: order/{order_id}/payment/{payment_id}/initiate
             method: post
+            private: true
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
@@ -87,6 +88,7 @@ functions:
         - http:
             path: order/{order_id}/payment/{payment_id}/execute
             method: post
+            private: true
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
