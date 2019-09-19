@@ -26,8 +26,9 @@ def upgrade():
             `status` varchar(64) NOT NULL,
             `payment_id` varchar(128) NULL DEFAULT NULL,
             `payment_type` varchar(64) NULL DEFAULT NULL,
+            `payment_method` varchar(255) NULL DEFAULT NULL,
             `raw_payment_data` json NOT NULL,
-            `transaction_hash` varchar(256) NULL DEFAULT NULL,
+            `transaction_hash` varchar(255) NULL DEFAULT NULL,
             `row_created` timestamp NULL DEFAULT NULL,
             `row_updated` timestamp NULL DEFAULT NULL,
             PRIMARY KEY (`row_id`));
@@ -37,8 +38,5 @@ def upgrade():
 def downgrade():
     conn = op.get_bind()
     conn.execute("""
-
-           
-            drop table purchase_history;
-
+            drop table transaction_history;
             """)
