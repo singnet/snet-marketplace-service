@@ -81,7 +81,7 @@ functions:
       Owner: ${file(./config.${self:provider.stage}.json):OWNER}
     events:
       - http:
-          path: order/{order_id}/payment/{payment_id}/initiate
+          path: order/{order_id}/payment/initiate
           method: post
           private: true
     vpc:
