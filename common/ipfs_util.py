@@ -8,7 +8,7 @@ import io
 
 import logging
 
-from common.config import IPFS_URL
+from parse_events.config import IPFS_URL
 from common.s3_util import S3Util
 
 
