@@ -7,7 +7,7 @@ from payments.application.dapp_order_manager import OrderManager
 
 def create(event, context):
     payload = json.loads(event['body'])
-    if validate_dict(payload, ["amount", "username"]):
+    if validate_dict(payload, ["price", "username"]):
         amount = payload["price"]["amount"]
         currency = payload["price"]["currency"]
         username = payload["username"]
