@@ -51,7 +51,10 @@ def get_order_details(orders):
     for order_item in orders:
         order = {
             "order_id": order_item.id,
-            "amount": order_item.amount,
+            "price": {
+                "amount": order_item.amount["amount"],
+                "currency": order_item.amount["currency"]
+            },
             "username": order_item.username,
             "created_at": order_item.created_at.strftime("%Y-%m-%d %H:%M:%S"),
             "item_details": order_item.item_details,
@@ -60,7 +63,10 @@ def get_order_details(orders):
         for payment_item in order_item.payments:
             payment = {
                 "payment_id": payment_item.payment_id,
-                "amount": payment_item.amount,
+                "price": {
+                    "amount": payment_item.amount["amount"],
+                    "currency": payment_item.amount["currency"]
+                },
                 "payment_details": payment_item.payment_details,
                 "payment_status": payment_item.payment_status,
                 "created_at": payment_item.created_at.strftime("%Y-%m-%d %H:%M:%S")

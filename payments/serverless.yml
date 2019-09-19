@@ -5,7 +5,7 @@ plugins:
 service: payment-service
 custom:
   pythonRequirements:
-    fileName: payments/requirement.txt
+    fileName: payments/requirements.txt
     dockerizePip: true
 
 provider:
@@ -53,12 +53,17 @@ package:
 
 functions:
   create-order:
-    handler: payments/handlers/order_handlers/create
-      events:
-        - http:
-            path: order/create
-            method: post
-            private: true
+    handler: payments/handlers/order_handler.create
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    events:
+      - http:
+          path: order/create
+          method: post
+          private: true
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
@@ -68,12 +73,17 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
   initiate-payment:
-    handler: payments/handlers/payment_handlers/initiate
-      events:
-        - http:
-            path: order/{order_id}/payment/{payment_id}/initiate
-            method: post
-            private: true
+    handler: payments/handlers/payment_handler.initiate
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    events:
+      - http:
+          path: order/{order_id}/payment/{payment_id}/initiate
+          method: post
+          private: true
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
@@ -83,12 +93,17 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
   execute-payment:
-    handler: payments/handlers/payment_handlers/execute
-      events:
-        - http:
-            path: order/{order_id}/payment/{payment_id}/execute
-            method: post
-            private: true
+    handler: payments/handlers/payment_handler.execute
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    events:
+      - http:
+          path: order/{order_id}/payment/{payment_id}/execute
+          method: post
+          private: true
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
@@ -98,12 +113,17 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
   cancel-payment:
-    handler: payments/handlers/payment_handlers/cancel
-      events:
-          - http:
-            path: order/{order_id}/payment/{payment_id}/cancel
-            method: post
-            private: true
+    handler: payments/handlers/payment_handler.cancel
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    events:
+      - http:
+          path: order/{order_id}/payment/{payment_id}/cancel
+          method: post
+          private: true
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}

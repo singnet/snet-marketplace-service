@@ -16,8 +16,10 @@ class OrderManager:
             response = {
                 "order_id": order.get_order_id(),
                 "item_details": order.get_item_details(),
-                "amount": order.get_amount(),
-                "currency": order.get_currency()
+                "price": {
+                    "amount": order.get_amount(),
+                    "currency": order.get_currency()
+                }
             }
             status = True
         except Exception as e:
@@ -37,8 +39,10 @@ class OrderManager:
             payment = payment_details["payment_object"]
             self.order_repository.persist_payment(order, payment.get_payment_id())
             response = {
-                "amount": payment.get_amount(),
-                "currency": payment.get_currency(),
+                "price": {
+                    "amount": payment.get_amount(),
+                    "currency": payment.get_currency()
+                },
                 "payment_id": payment.get_payment_id(),
                 "payment": payment_details["payment"],
                 "order_id": order.get_order_id()
