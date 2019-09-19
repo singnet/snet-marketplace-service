@@ -6,13 +6,12 @@ from payments.application.dapp_order_manager import OrderManager
 
 
 def create(event, context):
-    payload = event["body"]
-    item_details = json.loads(event['body'])
+    payload = json.loads(event['body'])
     if validate_dict(payload, ["amount", "username"]):
-        amount = payload["amount"]["amount"]
-        currency = payload["amount"]["currency"]
+        amount = payload["price"]["amount"]
+        currency = payload["price"]["currency"]
         username = payload["username"]
-
+        item_details = payload["item_details"]
         status, response = OrderManager().create_order(amount, currency, item_details, username)
         if status:
             return generate_lambda_response(
