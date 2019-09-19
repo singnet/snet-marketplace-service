@@ -11,7 +11,7 @@ logger = get_logger(__name__)
 def initiate(event, context):
     try:
         payload = json.loads(event['body'])
-        path_parameters = json.loads(event["pathParameters"])
+        path_parameters = event["pathParameters"]
         if validate_dict(payload, ["price", "payment_method"]) \
                 and validate_dict(path_parameters, ["order_id"]):
             order_id = path_parameters["order_id"]
@@ -35,7 +35,7 @@ def initiate(event, context):
                 message="Bad Request"
             )
     except Exception as e:
-        logger(e)
+        logger.error(e)
         return generate_lambda_response(
             status_code=StatusCode.INTERNAL_SERVER_ERROR,
             message="Internal Server Error"
@@ -45,7 +45,7 @@ def initiate(event, context):
 def execute(event, context):
     try:
         payload = json.loads(event['body'])
-        path_parameters = json.loads(event["pathParameters"])
+        path_parameters = event["pathParameters"]
         if validate_dict(payload, ["payment_method", "payment_details"]) \
                 and validate_dict(path_parameters, ["order_id", "payment_id"]):
             order_id = path_parameters["order_id"]
@@ -69,7 +69,7 @@ def execute(event, context):
                 message="Bad Request"
             )
     except Exception as e:
-        logger(e)
+        logger.error(e)
         return generate_lambda_response(
             status_code=StatusCode.INTERNAL_SERVER_ERROR,
             message="Internal Server Error"
@@ -78,7 +78,7 @@ def execute(event, context):
 
 def cancel(event, context):
     try:
-        path_parameters = json.loads(event["pathParameters"])
+        path_parameters = event["pathParameters"]
         if validate_dict(path_parameters, ["order_id", "payment_id"]):
             order_id = path_parameters["order_id"]
             payment_id = path_parameters["payment_id"]
@@ -99,7 +99,7 @@ def cancel(event, context):
                 message="Bad Request"
             )
     except Exception as e:
-        logger(e)
+        logger.error(e)
         return generate_lambda_response(
             status_code=StatusCode.INTERNAL_SERVER_ERROR,
             message="Internal Server Error"
