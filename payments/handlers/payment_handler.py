@@ -12,7 +12,7 @@ def initiate(event, context):
     try:
         payload = json.loads(event['body'])
         path_parameters = json.loads(event["pathParameters"])
-        if validate_dict(payload, ["amount", "payment_method"]) \
+        if validate_dict(payload, ["price", "payment_method"]) \
                 and validate_dict(path_parameters, ["order_id"]):
             order_id = path_parameters["order_id"]
             amount = payload["price"]["amount"]
