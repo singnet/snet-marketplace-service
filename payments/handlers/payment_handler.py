@@ -15,8 +15,8 @@ def initiate(event, context):
         if validate_dict(payload, ["amount", "payment_method"]) \
                 and validate_dict(path_parameters, ["order_id"]):
             order_id = path_parameters["order_id"]
-            amount = payload["amount"]["amount"]
-            currency = payload["amount"]["currency"]
+            amount = payload["price"]["amount"]
+            currency = payload["price"]["currency"]
             payment_method = payload["payment_method"]
             status, response = OrderManager().initiate_payment_against_order(order_id, amount, currency, payment_method)
             if status:
