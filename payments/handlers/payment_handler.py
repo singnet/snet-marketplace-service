@@ -35,7 +35,7 @@ def initiate(event, context):
                 message="Bad Request"
             )
     except Exception as e:
-        logger(e)
+        logger.error(e)
         return generate_lambda_response(
             status_code=StatusCode.INTERNAL_SERVER_ERROR,
             message="Internal Server Error"
@@ -69,7 +69,7 @@ def execute(event, context):
                 message="Bad Request"
             )
     except Exception as e:
-        logger(e)
+        logger.error(e)
         return generate_lambda_response(
             status_code=StatusCode.INTERNAL_SERVER_ERROR,
             message="Internal Server Error"
@@ -99,7 +99,7 @@ def cancel(event, context):
                 message="Bad Request"
             )
     except Exception as e:
-        logger(e)
+        logger.error(e)
         return generate_lambda_response(
             status_code=StatusCode.INTERNAL_SERVER_ERROR,
             message="Internal Server Error"
