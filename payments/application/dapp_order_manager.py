@@ -16,7 +16,7 @@ class OrderManager:
             response = {
                 "order_id": order.get_order_id(),
                 "item_details": order.get_item_details(),
-                "amount": {
+                "price": {
                     "amount": order.get_amount(),
                     "currency": order.get_currency()
                 }
@@ -39,7 +39,7 @@ class OrderManager:
             payment = payment_details["payment_object"]
             self.order_repository.persist_payment(order, payment.get_payment_id())
             response = {
-                "amount": {
+                "price": {
                     "amount": payment.get_amount(),
                     "currency": payment.get_currency()
                 },
