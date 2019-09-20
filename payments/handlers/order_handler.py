@@ -2,7 +2,8 @@ import json
 
 from common.constant import StatusCode
 from common.logger import get_logger
-from common.utils import generate_lambda_response, validate_dict
+from common.utils import generate_lambda_response
+from common.utils import validate_dict
 from payments.application.dapp_order_manager import OrderManager
 
 logger = get_logger(__name__)
