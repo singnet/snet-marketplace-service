@@ -14,7 +14,7 @@ class OrderFactory:
         payments = []
         for payment_info in order.payments:
             if ("payment_method" in payment_info.payment_details) and (
-                payment_info.payment_details["payment_method"] == "paypal"
+                    payment_info.payment_details["payment_method"] == "paypal"
             ):
                 payment = PaypalPayment(
                     payment_id=payment_info.payment_id,
@@ -69,20 +69,25 @@ class OrderFactory:
                     "currency": order_item.amount["currency"],
                 },
                 "username": order_item.username,
-                "created_at": order_item.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                "created_at":
+                order_item.created_at.strftime("%Y-%m-%d %H:%M:%S"),
                 "item_details": order_item.item_details,
                 "payments": [],
             }
             for payment_item in order_item.payments:
                 payment = {
-                    "payment_id": payment_item.payment_id,
+                    "payment_id":
+                    payment_item.payment_id,
                     "price": {
                         "amount": payment_item.amount["amount"],
                         "currency": payment_item.amount["currency"],
                     },
-                    "payment_details": payment_item.payment_details,
-                    "payment_status": payment_item.payment_status,
-                    "created_at": payment_item.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                    "payment_details":
+                    payment_item.payment_details,
+                    "payment_status":
+                    payment_item.payment_status,
+                    "created_at":
+                    payment_item.created_at.strftime("%Y-%m-%d %H:%M:%S"),
                 }
                 order["payments"].append(payment)
             order_details.append(order)
