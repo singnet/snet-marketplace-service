@@ -80,4 +80,3 @@ class OrderFactory:
                 order["payments"].append(payment)
             order_details.append(order)
         return {"orders": order_details}
-

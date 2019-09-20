@@ -42,7 +42,8 @@ class Order(object):
         return self._item_details
 
     def create_payment(self, amount, currency, payment_method):
-        logger.info(f"Initiating payment against order: {self._order_id}, payment_method: {payment_method}")
+        logger.info(
+            f"Initiating payment against order: {self._order_id}, payment_method: {payment_method}")
         if payment_method == PAYMENT_METHOD_PAYPAL:
 
             payment = PaypalPayment(
@@ -86,9 +87,12 @@ class Order(object):
         payment = self.get_payment(payment_id)
 
         if payment.get_payment_status() == PaymentStatus.SUCCESS:
-            raise Exception(f"Payment {payment_id} is already in success status")
+            raise Exception(
+                f"Payment {payment_id} is already in success status")
         elif payment.get_payment_status() == PaymentStatus.FAILED:
-            raise Exception(f"Payment {payment_id} is already in failed status")
+            raise Exception(
+                f"Payment {payment_id} is already in failed status")
 
         payment.set_payment_status(PaymentStatus.FAILED)
-        logger.info(f"Payment status set to \"failed\" for payment_id {payment_id}")
+        logger.info(
+            f"Payment status set to \"failed\" for payment_id {payment_id}")
