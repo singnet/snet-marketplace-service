@@ -1,7 +1,11 @@
 import paypalrestsdk
 
+from common.logger import get_logger
+from common.constant import PaymentStatus, PAYMENT_METHOD_PAYPAL
 from payments.domain.payment import Payment
 from payments.config import MODE, PAYPAL_CLIENT, PAYPAL_SECRET, PAYMENT_CANCEL_URL, PAYMENT_RETURN_URL
+
+logger = get_logger(__name__)
 
 
 class PaypalPayment(Payment):
@@ -19,17 +23,18 @@ class PaypalPayment(Payment):
         payment = paypalrestsdk.Payment(paypal_payload, api=self.payee_client_api)
 
         if not payment.create():
+            logger.error(f"Paypal error:{payment.error}")
             raise Exception("Payment failed to create")
 
-        approval_url = ""
+        logger.info(f"Paypal payment initiated with paypal_payment_id: {payment.id}")
 
+        approval_url = ""
         for link in payment.links:
             if link.rel == "approval_url":
                 approval_url = str(link.href)
 
         if len(approval_url) == 0:
             raise Exception("Payment link not found")
-
         self._payment_details["payment_id"] = payment.id
 
         response_payload = {
@@ -44,20 +49,26 @@ class PaypalPayment(Payment):
     def execute_transaction(self, paid_payment_details):
         paypal_payment_id = self._payment_details["payment_id"]
         payer_id = paid_payment_details["payer_id"]
+
         payment = paypalrestsdk.Payment.find(paypal_payment_id, api=self.payee_client_api)
 
         if payment.execute({"payer_id": payer_id}):
-            self._payment_status = 'success'
+            logger.info(f"Paypal payment execution is success for paypal_payment_id:{paypal_payment_id}")
+            self._payment_status = PaymentStatus.SUCCESS
+
             return True
-        elif self._payment_status == "pending":
-            self._payment_status = 'failed'
+        elif self._payment_status == PaymentStatus.PENDING:
+            logger.info(f"Paypal payment execution is failed for paypal_payment_id:{paypal_payment_id}")
+            self._payment_status = PaymentStatus.FAILED
+
+        logger.error(payment.error)
         return False
 
     def get_paypal_payload(self, order_id):
         paypal_payload = {
             "intent": "sale",
             "payer": {
-                "payment_method": "paypal"
+                "payment_method": PAYMENT_METHOD_PAYPAL
             },
             "redirect_urls": {
                 "return_url": PAYMENT_RETURN_URL.format(order_id, self._payment_id),
@@ -80,7 +91,7 @@ class PaypalPayment(Payment):
                         "total": self._amount,
                         "currency": self._currency
                     },
-                    "description": "This is the payment transaction description."
+                    "description": ""
                 }
             ]
         }
