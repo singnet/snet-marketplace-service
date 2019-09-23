@@ -8,17 +8,17 @@ NETWORKS = {
     1: {
         'name': 'mainnet',
         'ws_provider': 'wss://mainnet.infura.io/ws',
-        'db':{}
+        'db': {}
     },
     3: {
         'name': 'ropsten',
         'ws_provider': 'wss: // ropsten.infura.io / ws',
-        'db':{}
+        'db': {}
     },
     42: {
         'name': 'kovan',
         'ws_provider': 'wss://kovan.infura.io/ws',
-	'http_provider': 'https://kovan.infura.io',
+        'http_provider': 'https://kovan.infura.io',
         'db': {'DB_HOST': '',
                'DB_USER': '',
                'DB_PASSWORD': '',
@@ -27,7 +27,8 @@ NETWORKS = {
                }
     }
 }
-MPE_EVTS = ['ChannelOpen', 'ChannelClaim', 'ChannelSenderClaim', 'ChannelExtend', 'ChannelAddFunds']
+MPE_EVTS = ['ChannelOpen', 'ChannelClaim',
+            'ChannelSenderClaim', 'ChannelExtend', 'ChannelAddFunds']
 REG_EVTS = ['OrganizationCreated', 'OrganizationModified', 'OrganizationDeleted', 'ServiceCreated',
             'ServiceMetadataModified', 'ServiceTagsModified', 'ServiceDeleted']
 COMMON_CNTRCT_PATH = '../node_modules/singularitynet-platform-contracts'
@@ -36,7 +37,7 @@ MPE_CNTRCT_PATH = COMMON_CNTRCT_PATH + '/abi/MultiPartyEscrow.json'
 REG_ADDR_PATH = COMMON_CNTRCT_PATH + '/networks/Registry.json'
 MPE_ADDR_PATH = COMMON_CNTRCT_PATH + '/networks/MultiPartyEscrow.json'
 SLACK_HOOK = {
-    'hostname' : '',
+    'hostname': '',
     'port': 443,
     'path': '',
     'method': 'POST',
@@ -52,3 +53,35 @@ ERROR_MSG = {
 }
 
 EVNTS_LIMIT = "100"
+SRVC_STATUS_GRPC_TIMEOUT = 10
+
+
+ASSETS_BUCKET_NAME = "enhanced-marketplace"
+ASSETS_PREFIX = "assets"
+NET_ID = ''
+PATH_PREFIX = ""
+PREFIX_FREE_CALL = ""
+METERING_ARN = ""
+GET_ALL_SERVICE_OFFSET_LIMIT = 0
+GET_ALL_SERVICE_LIMIT = 15
+GET_FREE_CALLS_METERING_ARN = ""
+
+
+class StatusCode:
+    BAD_PARAMETERS_CODE = 400
+    SERVER_ERROR_CODE = 500
+    SUCCESS_POST_CODE = 201
+    SUCCESS_GET_CODE = 200
+
+
+HEADER_POST_RESPONSE = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
+}
+
+
+class StatusMessage:
+    BAD_PARAMETER = "Request validation failed"
+    SERVER_ERROR_MSG = "failed"
+    SUCCESS_POST_CODE = "successful"

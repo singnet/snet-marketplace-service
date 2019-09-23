@@ -1,11 +1,10 @@
 import pymysql
-from common.constant import NETWORKS
 
 
 class Repository:
     connection = None
 
-    def __init__(self, net_id):
+    def __init__(self, net_id, NETWORKS):
         self.DB_HOST = NETWORKS[net_id]['db']['DB_HOST']
         self.DB_USER = NETWORKS[net_id]['db']['DB_USER']
         self.DB_PASSWORD = NETWORKS[net_id]['db']['DB_PASSWORD']
@@ -50,6 +49,7 @@ class Repository:
         except Exception as e:
             self.connection.rollback()
             print("DB Error in %s, error: %s" % (str(query), repr(e)))
+            raise e
         return result
 
     def bulk_query(self, query, params=None):
@@ -61,3 +61,14 @@ class Repository:
         except Exception as err:
             self.connection.rollback()
             print("DB Error in %s, error: %s" % (str(query), repr(err)))
+
+    def begin_transaction(self):
+        self.auto_commit = False
+
+    def commit_transaction(self):
+        self.connection.commit()
+        self.auto_commit = True
+
+    def rollback_transaction(self):
+        self.connection.rollback()
+        self.auto_commit = True

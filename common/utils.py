@@ -2,18 +2,19 @@ import json
 import datetime
 import decimal
 import requests
-
-from common.constant import SLACK_HOOK
+import web3
+from web3 import Web3
 IGNORED_LIST = ['row_id', 'row_created', 'row_updated']
+
 
 class Utils:
     def __init__(self):
         self.msg_type = {
-            0 : 'info:: ',
-            1 : 'err:: '
+            0: 'info:: ',
+            1: 'err:: '
         }
 
-    def report_slack(self, type, slack_msg):
+    def report_slack(self, type, slack_msg, SLACK_HOOK):
         url = SLACK_HOOK['hostname'] + SLACK_HOOK['path']
         prefix = self.msg_type.get(type, "")
         print(url)
@@ -43,6 +44,31 @@ class Utils:
                 elif row[key] == b'\x00':
                     row[key] = 0
                 else:
-                    raise Exception("Unsupported bytes object. Key " + str(key) + " value " + str(row[key]))
+                    raise Exception("Unsupported bytes object. Key " +
+                                    str(key) + " value " + str(row[key]))
 
         return row
+
+    def remove_http_https_prefix(self, url):
+        url = url.replace("https://", "")
+        url = url.replace("http://", "")
+        return url
+
+    def get_current_block_no(self, ws_provider):
+        w3Obj = Web3(web3.providers.WebsocketProvider(ws_provider))
+        return w3Obj.eth.blockNumber
+
+
+def make_response(status_code, body, header=None):
+    return {
+        "statusCode": status_code,
+        "headers": header,
+        "body": body
+    }
+
+
+def validate_request(required_keys, request_body):
+    for key in required_keys:
+        if key not in request_body:
+            return False
+    return True

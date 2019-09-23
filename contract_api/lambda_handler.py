@@ -1,128 +1,114 @@
 import json
 import re
 import traceback
-
-from contract_api.channel import Channel
-from schema import Schema, And
-from contract_api.service import Service
-from contract_api.service_status import ServiceStatus
+from contract_api.config import NETWORKS, SLACK_HOOK
+from common.repository import Repository
 from common.utils import Utils
-from contract_api.search import Search
-from common.constant import NETWORKS
+from contract_api.registry import Registry
+from contract_api.mpe import MPE
 
-NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys())
-obj_srvc = None
-obj_srch = None
+NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId)
+                     for netId in NETWORKS.keys())
+db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS))
+          for netId in NETWORKS.keys())
 obj_util = Utils()
-route_path = {}
 
 
 def request_handler(event, context):
     print(event)
     if 'path' not in event:
-        print("request_handler::path: ", None)
-        return get_response("400", "Bad Request")
+        return get_response(400, "Bad Request")
     try:
         payload_dict = None
         path = event['path'].lower()
-        if event['httpMethod'] == 'POST':
-            body = event['body']
-            if body is not None and len(body) > 0:
-                payload_dict = json.loads(body)
-                print("Processing [" + str(path) + "] with body [" + str(body) + "]")
-        elif event['httpMethod'] == 'GET':
-            payload_dict = event.get('queryStringParameters')
-            print("Processing [" + str(path) + "] with queryStringParameters [" + str(payload_dict) + "]")
+        path = re.sub(r"^(\/contract-api)", "", path)
         stage = event['requestContext']['stage']
         net_id = NETWORKS_NAME[stage]
-        global obj_srvc, obj_srch
-        obj_srvc = Service(net_id)
-        obj_srch = Search(net_id)
-        data = None
-        if "/service" == path:
-            data = obj_srvc.get_curated_services()
-        elif "/channels" == path:
-            data = get_profile_details(user_address=payload_dict['user_address'])
-        elif "/fetch-vote" == path:
-            data = get_user_vote(payload_dict['user_address'])
-        elif "/user-vote" == path:
-            data = set_user_vote(payload_dict['vote'])
-        elif "/group-info" == path:
-            data = obj_srvc.get_group_info()
-        elif "/available-channels" == path:
-            channel_instance = Channel(net_id)
-            data = channel_instance.get_channel_info(payload_dict['user_address'], payload_dict['service_id'],
-                                                     payload_dict['org_id'])
-        elif "/expired-channels" == path:
-            channel_instance = Channel(net_id)
-            data = channel_instance.get_expired_channel_info(payload_dict['user_address'])
-        elif "/organizations" == path:
-            data = {"organizations": obj_srch.get_all_org()}
-        elif re.match("^(/organizations)[/][[a-z0-9]+$", path):
-            data = obj_srch.get_org(org_id = event['path'].split("/")[2])
-        elif re.match("^(/organizations)[/][a-zA-Z0-9]{1,}[/](services)$", path):
-            data = {"services": obj_srch.get_all_srvc(org_id = event['path'].split("/")[2])}
-        elif re.match("^(/organizations)[/][a-zA-Z0-9]{1,}[/](services)[/][a-z0-9]+$", path):
-            data = []
-        elif re.match("^(/tags)[/][[a-z0-9]+$", path):
-            data = {"services": obj_srch.get_all_srvc_by_tag(tag_name=event['path'].split("/")[2])}
-        elif "update-service-status" == path:
-            print('update service status')
-            s = ServiceStatus(obj_srvc.repo)
-            s.update_service_status()
-            data = {}
+        method = event['httpMethod']
+        response_data = None
 
-        if data is None:
-            err_msg = {'status': 'failed', 'error': 'Bad Request'}
-            obj_util.report_slack(1, str(err_msg))
-            response = get_response("400", err_msg)
+        if method == 'POST':
+            payload_dict = json.loads(event['body'])
+        elif method == 'GET':
+            payload_dict = event.get('queryStringParameters')
         else:
-            response = get_response("200", {"status": "success", "data": data})
+            return get_response(405, "Method Not Allowed")
+
+        sub_path = path.split("/")
+        if sub_path[1] in ["org", "service"]:
+            obj_reg = Registry(obj_repo=db[net_id])
+
+        elif sub_path[1] in ["channel", "group"]:
+            obj_mpe = MPE(net_id=net_id, obj_repo=db[net_id])
+
+        if "/org" == path:
+            response_data = obj_reg.get_all_org()
+
+        elif re.match("(\/org\/)[^\/]*(\/group)[/]{0,1}$", path):
+            org_id = sub_path[2]
+            response_data = obj_reg.get_all_group_for_org_id(org_id=org_id)
+
+        elif "/service" == path and method == 'POST':
+            payload_dict = {} if payload_dict is None else payload_dict
+            response_data = obj_reg.get_all_srvcs(qry_param=payload_dict)
+
+        elif "/service" == path and method == 'GET':
+            response_data = obj_reg.get_filter_attribute(
+                attribute=payload_dict["attribute"])
+
+        elif re.match("(\/org\/)[^\/]*(\/service\/)[^\/]*(\/group)[/]{0,1}$", path):
+            org_id = sub_path[2]
+            service_id = sub_path[4]
+            response_data = obj_reg.get_group_info(
+                org_id=org_id, service_id=service_id)
+
+        elif "/channel" == path:
+            response_data = obj_mpe.get_channels_by_user_address(user_address=payload_dict["user_address"],
+                                                                 org_id=payload_dict.get(
+                                                                     "org_id", None),
+                                                                 service_id=payload_dict.get("service_id", None))
+
+        elif re.match("(\/org\/)[^\/]*(\/service\/)[^\/]*[/]{0,1}$", path):
+            org_id = sub_path[2]
+            service_id = sub_path[4]
+            response_data = obj_reg.get_service_data_by_org_id_and_service_id(
+                org_id=org_id, service_id=service_id)
+
+        elif re.match("(\/group\/)[^\/]*(\/channel\/)[^\/]*[/]{0,1}$", path):
+            group_id = sub_path[2]
+            channel_id = sub_path[4]
+            response_data = obj_mpe.get_channel_data_by_group_id_and_channel_id(
+                group_id=group_id, channel_id=channel_id)
+
+        elif re.match("(\/org\/)[^\/]*[/]{0,1}$", path):
+            org_id = sub_path[2]
+            response_data = obj_reg.get_org_details(org_id=org_id)
+
+        elif re.match("(\/org\/)[^\/]*(\/service\/)[^\/]*(\/rating)[/]{0,1}$", path) and method == 'POST':
+            org_id = sub_path[2]
+            service_id = sub_path[4]
+            response_data = obj_reg.update_service_rating(org_id=org_id, service_id=service_id)
+
+        else:
+            return get_response(404, "Not Found")
+
+        if response_data is None:
+            err_msg = {'status': 'failed', 'error': 'Bad Request',
+                       'api': event['path'], 'payload': payload_dict, 'network_id': net_id}
+            obj_util.report_slack(1, str(err_msg), SLACK_HOOK)
+            response = get_response(500, err_msg)
+        else:
+            response = get_response(
+                200, {"status": "success", "data": response_data})
     except Exception as e:
-        err_msg = {"status": "failed", "error": repr(e)}
-        obj_util.report_slack(1, str(err_msg))
+        err_msg = {"status": "failed", "error": repr(
+            e), 'api': event['path'], 'payload': payload_dict, 'network_id': net_id}
+        obj_util.report_slack(1, str(err_msg), SLACK_HOOK)
         response = get_response(500, err_msg)
         traceback.print_exc()
-
-    print(response)
     return response
 
-def get_profile_details(user_address):
-    if user_address is None or len(user_address) == 0:
-        return []
-    return obj_srvc.get_profile_details(user_address)
 
-
-def set_user_vote(vote_info):
-    voted = False
-    schema = Schema([{'user_address': And(str),
-                      'org_id': And(str),
-                      'service_id': And(str),
-                      'up_vote': bool,
-                      'down_vote': bool,
-                      'signature': And(str)
-                      }])
-    try:
-        vote_info = schema.validate([vote_info])
-        voted = obj_srvc.set_user_vote(vote_info[0])
-    except Exception as err:
-        print("Invalid Input ", err)
-        return None
-    if voted:
-        return []
-    return None
-
-
-def get_user_vote(user_address):
-    if user_address is None or len(user_address) == 0:
-        return []
-    return obj_srvc.get_user_vote(user_address)
-
-def get_curated_services_by_tag():
-    return obj_srvc.get_curated_services()
-
-
-# Generate response JSON that API gateway expects from the lambda function
 def get_response(status_code, message):
     return {
         'statusCode': status_code,
@@ -130,9 +116,8 @@ def get_response(status_code, message):
         'headers': {
             'Content-Type': 'application/json',
             "X-Requested-With": '*',
-            "Access-Control-Allow-Headers": 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,x-requested-with',
+            "Access-Control-Allow-Headers": 'Access-Control-Allow-Origin, Content-Type,X-Amz-Date,Authorization,X-Api-Key,x-requested-with',
             "Access-Control-Allow-Origin": '*',
-            "Access-Control-Allow-Methods": ''
-                                            'GET,OPTIONS,POST'
+            "Access-Control-Allow-Methods": 'GET,OPTIONS,POST'
         }
     }
