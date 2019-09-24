@@ -20,11 +20,11 @@ jobs:
         command: |
           git clone https://github.com/prashantramangupta/snet-marketplace-service.git
           cd snet-marketplace-service
-          mysql -h localhost -u root < ./test/unittest_db.sql
-          pip3 install -r requirement.txt
-          export PYTHONPATH=$PATH:/root/singnet/snet-marketplace-service
-          cp ./test/constant.py ./common/constant.py
-          cp ./test/.coveragerc ./
-          pip3 install coveralls
-          coverage run --source=/root/singnet/snet-marketplace-service ./test/test_contract_api.py
-          COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} coveralls
+          #mysql -h localhost -u root < ./test/unittest_db.sql
+          #pip3 install -r requirement.txt
+          #export PYTHONPATH=$PATH:/root/singnet/snet-marketplace-service
+          #cp ./test/constant.py ./common/constant.py
+          #cp ./test/.coveragerc ./
+          #pip3 install coveralls
+          #coverage run --source=/root/singnet/snet-marketplace-service ./test/test_contract_api.py
+          #COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} coveralls

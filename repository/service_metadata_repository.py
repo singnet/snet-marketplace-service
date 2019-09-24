@@ -9,6 +9,7 @@ class ServiceMetadataRepository(BaseRepository):
 
         result = session.query(ServiceMetadata).filter(ServiceMetadata.service_id == service_id).\
             filter(ServiceMetadata.org_id == org_id).first()
+        session.commit()
 
         return result
 

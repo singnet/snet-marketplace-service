@@ -1,5 +1,5 @@
 import web3
-from common.constant import NETWORKS
+from contract_api.config import NETWORKS
 from common.utils import Utils
 from contract_api.registry import Registry
 from web3 import Web3
@@ -62,6 +62,16 @@ class MPE:
                 channel_dta[group_id]['channels'].append(channel)
             return list(channel_dta.values())
 
+        except Exception as e:
+            print(repr(e))
+            raise e
+
+    def get_channel_data_by_group_id_and_channel_id(self, group_id, channel_id):
+        try:
+            result = self.repo.execute(
+                "SELECT * FROM mpe_channel WHERE groupId = %s AND channel_id = %s", [group_id, channel_id])
+            self.obj_util.clean(result)
+            return result
         except Exception as e:
             print(repr(e))
             raise e

@@ -2,9 +2,12 @@ from datetime import datetime as dt
 
 import boto3
 
-from common.constant import PATH_PREFIX
+from dapp_user.config import PATH_PREFIX
 from common.utils import Utils
 from schema import Schema, And
+
+DEFAULT_WALLET_TYPE = "METAMASK"
+CREATED_BY = "snet"
 
 
 class User:
@@ -23,7 +26,7 @@ class User:
                 status = 1
             else:
                 raise Exception("Email verification is pending.")
-            q_dta = [claims['email'], user_data['accountId'], claims['name'], claims['email'], status,
+            q_dta = [claims['email'], user_data['accountId'], claims['nickname'], claims['email'], status,
                      status, user_data['requestId'], user_data['requestTimeEpoch'], dt.utcnow(), dt.utcnow()]
             set_usr_dta = self.repo.execute(
                 "INSERT INTO user (username, account_id, name, email, email_verified, status, request_id, "
@@ -152,8 +155,6 @@ class User:
         try:
             user_rating_dict = {}
             username = user_data['authorizer']['claims']['email']
-            user_address = self._get_user_address_from_username(
-                username=username)
             query_part = ""
             query_part_values = []
             if org_id is not None:
@@ -163,14 +164,14 @@ class User:
                     query_part += "AND service_id = %s "
                     query_part_values.append(service_id)
 
-            rating_query = "SELECT * FROM user_service_vote WHERE user_address = %s " + query_part
+            rating_query = "SELECT * FROM user_service_vote WHERE username = %s " + query_part
             rating = self.repo.execute(
-                rating_query, [user_address] + query_part_values)
+                rating_query, [username] + query_part_values)
             self.obj_utils.clean(rating)
 
-            feedback_query = "SELECT * FROM user_service_feedback WHERE user_address = %s " + query_part
+            feedback_query = "SELECT * FROM user_service_feedback WHERE username = %s " + query_part
             feedback = self.repo.execute(
-                feedback_query, [user_address] + query_part_values)
+                feedback_query, [username] + query_part_values)
             self.obj_utils.clean(feedback)
 
             for record in feedback:
@@ -206,21 +207,19 @@ class User:
                     "Invalid Rating. Provided user rating should be between 1.0 and 5.0 .")
             curr_dt = dt.utcnow()
             username = user_data['authorizer']['claims']['email']
-            user_address = self._get_user_address_from_username(
-                username=username)
             org_id = feedback_data['org_id']
             service_id = feedback_data['service_id']
             comment = feedback_data['comment']
             self.repo.begin_transaction()
-            set_rating = "INSERT INTO user_service_vote (user_address, org_id, service_id, rating, row_updated, row_created) " \
+            set_rating = "INSERT INTO user_service_vote (username, org_id, service_id, rating, row_updated, row_created) " \
                          "VALUES (%s, %s, %s, %s, %s, %s) " \
                          "ON DUPLICATE KEY UPDATE rating = %s, row_updated = %s"
-            set_rating_params = [user_address, org_id, service_id,
+            set_rating_params = [username, org_id, service_id,
                                  user_rating, curr_dt, curr_dt, user_rating, curr_dt]
             self.repo.execute(set_rating, set_rating_params)
-            set_feedback = "INSERT INTO user_service_feedback (user_address, org_id, service_id, comment, row_updated, row_created)" \
+            set_feedback = "INSERT INTO user_service_feedback (username, org_id, service_id, comment, row_updated, row_created)" \
                            "VALUES (%s, %s, %s, %s, %s, %s)"
-            set_feedback_params = [user_address, org_id,
+            set_feedback_params = [username, org_id,
                                    service_id, comment, curr_dt, curr_dt]
             self.repo.execute(set_feedback, set_feedback_params)
             self._update_service_rating(org_id=org_id, service_id=service_id)
@@ -259,5 +258,40 @@ class User:
                 "= CONCAT('{\"rating\":', B.service_rating, ' , \"total_users_rated\":', B.total_users_rated, '}') "
                 "WHERE A.org_id = %s AND A.service_id = %s ", [org_id, service_id])
         except Exception as e:
+            print(repr(e))
+            raise e
+
+    def set_wallet_details(self, username, address, is_default, status=1, type=DEFAULT_WALLET_TYPE, created_by=CREATED_BY):
+        try:
+            self.repo.execute(
+                "INSERT INTO wallet (username, address, type, is_default, status, created_by, row_updated, row_created) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                [username, address, type, is_default, status, created_by, dt.utcnow(), dt.utcnow()])
+        except Exception as e:
+            print(repr(e))
+            raise e
+
+    def register_wallet(self, user_data, wallet_data):
+        try:
+            is_default = wallet_data["is_default"]
+            username = user_data['authorizer']['claims']['email']
+            address = wallet_data['address']
+            print(is_default)
+            if is_default == 1:
+                self.repo.begin_transaction()
+                self.set_wallet_details(
+                    username=username, address=address, is_default=is_default)
+                self.repo.execute(
+                    "UPDATE wallet SET is_default = 0 WHERE username = %s AND address != %s", [username, address])
+                self.repo.commit_transaction()
+                # need to be cleaned
+            else:
+                self.set_wallet_details(
+                    username=username, address=address, is_default=is_default)
+
+            return []
+        except Exception as e:
+            if is_default is not None and is_default == 1:
+                self.repo.rollback_transaction()
             print(repr(e))
             raise e

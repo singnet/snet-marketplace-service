@@ -5,7 +5,8 @@ from datetime import datetime as dt
 
 import log_setup
 
-from common.constant import EVNTS_LIMIT, IPFS_URL, ASSETS_BUCKET_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY, ASSETS_PREFIX
+from parse_events.constant import EVNTS_LIMIT
+from parse_events.config import NETWORKS, IPFS_URL, ASSETS_BUCKET_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY, ASSETS_PREFIX, SLACK_HOOK
 from common.ipfs_util import IPFSUtil
 from common.repository import Repository
 from common.s3_util import S3Util
@@ -20,7 +21,7 @@ log_setup.configure_log(logger)
 class HandleContractsDB:
     def __init__(self, err_obj, net_id):
         self.err_obj = err_obj
-        self.repo = Repository(net_id)
+        self.repo = Repository(net_id, NETWORKS)
         self.util_obj = Utils()
         self.ipfs_utll = IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
         self.s3_util = S3Util(S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY)
@@ -56,7 +57,7 @@ class HandleContractsDB:
         upsert_qry = "Insert into organization (org_id, organization_name, owner_address, org_metadata_uri, row_updated, row_created) " \
                      "VALUES ( %s, %s, %s, %s, %s , %s) " \
                      "ON DUPLICATE KEY UPDATE organization_name = %s, owner_address = %s, org_metadata_uri = %s, row_updated = %s  "
-        upsert_params = [org_id, org_name, owner_address, ipfs_hash, dt.utcnow(), dt.utcnow(), org_name, owner_address, org_metadata_uri,
+        upsert_params = [org_id, org_name, owner_address, org_metadata_uri, dt.utcnow(), dt.utcnow(), org_name, owner_address, org_metadata_uri,
                          dt.utcnow()]
         print('upsert_qry: ', upsert_qry)
         qry_resp = conn.execute(upsert_qry, upsert_params)
@@ -132,12 +133,9 @@ class HandleContractsDB:
         del_srvc_endpts_count = conn.execute(
             del_srvc_endpts, [service_id, org_id])
 
-        del_srvc_st = 'DELETE FROM service_status WHERE service_id = %s AND org_id = %s '
-        del_srvc_st_count = conn.execute(del_srvc_st, [service_id, org_id])
-
         self._del_tags(org_id=org_id, service_id=service_id, conn=conn)
-        print('_del_srvc_dpndts::del_srvc_grps: ', del_srvc_grps_count, '|del_srvc_endpts: ', del_srvc_endpts_count,
-              '|del_srvc_st_count: ', del_srvc_st_count)
+        print('_del_srvc_dpndts::del_srvc_grps: ', del_srvc_grps_count,
+              '|del_srvc_endpts: ', del_srvc_endpts_count)
 
     def _create_or_updt_srvc(self, org_id, service_id, ipfs_hash, conn):
         upsrt_srvc = "INSERT INTO service (org_id, service_id, is_curated, ipfs_hash, row_created, row_updated) " \
@@ -152,8 +150,8 @@ class HandleContractsDB:
     def _create_or_updt_srvc_mdata(self, srvc_rw_id, org_id, service_id, ipfs_data, assets_url, conn):
         upsrt_srvc_mdata = "INSERT INTO service_metadata (service_row_id, org_id, service_id, " \
                            "display_name, model_ipfs_hash, description, url, json, encoding, type, " \
-                           "mpe_address, assets_hash , assets_url, row_updated, row_created) " \
-                           "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s ) " \
+                           "mpe_address, assets_hash , assets_url, service_rating, row_updated, row_created) " \
+                           "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s ) " \
                            "ON DUPLICATE KEY UPDATE service_row_id = %s, " \
                            "display_name = %s, model_ipfs_hash = %s, description = %s, url = %s, json = %s, " \
                            "encoding = %s, type = %s, mpe_address = %s, row_updated = %s ,assets_hash = %s ,assets_url = %s"
@@ -166,7 +164,7 @@ class HandleContractsDB:
         assets_url_str = json.dumps(assets_url)
         upsrt_srvc_mdata_params = [srvc_rw_id, org_id, service_id, ipfs_data['display_name'],
                                    ipfs_data['model_ipfs_hash'], desc, url, json_str, ipfs_data['encoding'],
-                                   ipfs_data['service_type'], ipfs_data['mpe_address'], assets_hash, assets_url_str, dt.utcnow(
+                                   ipfs_data['service_type'], ipfs_data['mpe_address'], assets_hash, assets_url_str, '{"rating": 0.0 , "total_users_rated": 0 }', dt.utcnow(
         ), dt.utcnow(),
             srvc_rw_id, ipfs_data['display_name'],
             ipfs_data['model_ipfs_hash'], desc, url, json_str, ipfs_data['encoding'],
@@ -176,10 +174,10 @@ class HandleContractsDB:
         print('_create_or_updt_srvc_mdata::row upserted', qry_res)
 
     def _create_grp(self, srvc_rw_id, org_id, service_id, grp_data, conn):
-        insrt_grp = "INSERT INTO service_group (service_row_id, org_id, service_id, group_id, " \
+        insrt_grp = "INSERT INTO service_group (service_row_id, org_id, service_id, group_id, group_name," \
                     "pricing, row_updated, row_created)" \
-                    "VALUES(%s, %s, %s, %s, %s, %s, %s)"
-        insrt_grp_params = [srvc_rw_id, org_id, service_id, grp_data['group_id'],
+                    "VALUES(%s, %s, %s, %s, %s, %s, %s, %s)"
+        insrt_grp_params = [srvc_rw_id, org_id, service_id, grp_data['group_id'], grp_data['group_name'],
                             grp_data['pricing'], dt.utcnow(), dt.utcnow()]
 
         return conn.execute(insrt_grp, insrt_grp_params)
@@ -211,7 +209,8 @@ class HandleContractsDB:
                 updt_evts, [err_cd, err_msg, row_id])
             print('updt_raw_evts::row updated: ', updt_evts_resp, '|', type)
         except Exception as e:
-            self.util_obj.report_slack(type=1, slack_msg=repr(e))
+            self.util_obj.report_slack(
+                type=1, slack_msg=repr(e), SLACK_HOOK=SLACK_HOOK)
             print('Error in updt_reg_evts_raw::error: ', e)
 
     def updt_raw_evts(self, row_id, type, err_cd, err_msg):
@@ -230,7 +229,8 @@ class HandleContractsDB:
                     org_id=org_id, service_id=rec['service_id'], conn=conn)
             self._commit(conn=conn)
         except Exception as e:
-            self.util_obj.report_slack(type=1, slack_msg=repr(e))
+            self.util_obj.report_slack(
+                type=1, slack_msg=repr(e), SLACK_HOOK=SLACK_HOOK)
             self._rollback(conn=conn, err=repr(e))
 
     def del_srvc(self, org_id, service_id):
@@ -364,6 +364,7 @@ class HandleContractsDB:
                 qry_data = self._create_grp(srvc_rw_id=service_row_id, org_id=org_id, service_id=service_id, conn=conn,
                                             grp_data={
                                                 'group_id': grp['group_id'],
+                                                'group_name': grp['group_name'],
                                                 'pricing': json.dumps(grp['pricing'])
                                             })
                 group_insert_count = group_insert_count + qry_data[0]
@@ -373,7 +374,7 @@ class HandleContractsDB:
                     qry_data = self._create_edpts(srvc_rw_id=service_row_id, org_id=org_id, service_id=service_id,
                                                   conn=conn,
                                                   endpt_data={
-                                                      'endpoint': endpt['endpoint'],
+                                                      'endpoint': endpt,
                                                       'group_id': grp['group_id'],
                                                   })
                     endpt_insert_count = endpt_insert_count + qry_data[0]
@@ -390,7 +391,8 @@ class HandleContractsDB:
             self._commit(conn=conn)
 
         except Exception as e:
-            self.util_obj.report_slack(type=1, slack_msg=repr(e))
+            self.util_obj.report_slack(
+                type=1, slack_msg=repr(e), SLACK_HOOK=SLACK_HOOK)
             self._rollback(conn=conn, err=repr(e))
 
     def process_org_data(self, org_id, org_data, ipfs_data, org_metadata_uri):
@@ -408,7 +410,8 @@ class HandleContractsDB:
                 self._create_or_updt_members(org_id, org_data[4], conn)
                 self._commit(conn)
         except Exception as e:
-            self.util_obj.report_slack(type=1, slack_msg=repr(e))
+            self.util_obj.report_slack(
+                type=1, slack_msg=repr(e), SLACK_HOOK=SLACK_HOOK)
             self._rollback(conn=conn, err=repr(e))
 
     def update_tags(self, org_id, service_id, tags_data):
@@ -428,7 +431,8 @@ class HandleContractsDB:
                                       conn=conn)
                 self._commit(conn)
         except Exception as e:
-            self.util_obj.report_slack(type=1, slack_msg=repr(e))
+            self.util_obj.report_slack(
+                type=1, slack_msg=repr(e), SLACK_HOOK=SLACK_HOOK)
             self._rollback(conn=conn, err=repr(e))
 
     #

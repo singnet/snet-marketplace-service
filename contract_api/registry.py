@@ -2,7 +2,7 @@ import json
 from collections import defaultdict
 from common.utils import Utils
 from contract_api.filter import Filter
-from common.constant import GET_ALL_SERVICE_OFFSET_LIMIT, GET_ALL_SERVICE_LIMIT
+from contract_api.constant import GET_ALL_SERVICE_OFFSET_LIMIT, GET_ALL_SERVICE_LIMIT
 
 
 class Registry:
@@ -67,10 +67,10 @@ class Registry:
             sub_qry = ""
             if s == "all":
                 for rec in fm:
-                    sub_qry += fm[rec] + " LIKE '" + str(q) + "%' OR "
+                    sub_qry += fm[rec] + " LIKE '%" + str(q) + "%' OR "
                 sub_qry = sub_qry[:-3] if sub_qry.endswith("OR ") else sub_qry
             else:
-                sub_qry += fm[s] + " LIKE '" + str(q) + "%' "
+                sub_qry += fm[s] + " LIKE '%" + str(q) + "%' "
             return sub_qry.replace("org_id", "M.org_id")
         except Exception as err:
             raise err
@@ -89,17 +89,22 @@ class Registry:
         except Exception as err:
             raise err
 
+    def _convert_service_metadata_str_to_json(self, record):
+        record["service_rating"] = json.loads(record["service_rating"])
+        record["assets_url"] = json.loads(record["assets_url"])
+        record["assets_hash"] = json.loads(record["assets_hash"])
+
     def _search_query_data(self, sub_qry, sort_by, order_by, offset, limit, filter_query, values):
         try:
             if filter_query != "":
                 filter_query = " AND " + filter_query
             srch_qry = "SELECT * FROM service A, (SELECT M.org_id, M.service_id, group_concat(T.tag_name) AS tags FROM " \
                        "service_metadata M LEFT JOIN service_tags T ON M.service_row_id = T.service_row_id WHERE (" \
-                       + sub_qry.replace('%', '%%') + ")" + filter_query + " GROUP BY M.org_id, M.service_id ORDER BY %s %s ) B WHERE " \
+                       + sub_qry.replace('%', '%%') + ")" + filter_query + " GROUP BY M.org_id, M.service_id ORDER BY " + sort_by + " " + order_by + " ) B WHERE " \
                                                       "A.service_id = B.service_id AND A.org_id=B.org_id AND A.is_curated= 1 LIMIT %s , %s"
 
             qry_dta = self.repo.execute(
-                srch_qry, values + [sort_by, order_by, int(offset), int(limit)])
+                srch_qry, values + [int(offset), int(limit)])
             org_srvc_tuple = ()
             rslt = {}
             for rec in qry_dta:
@@ -114,12 +119,16 @@ class Registry:
                 rslt[org_id][service_id]["tags"] = tags
             qry_part = " AND (S.org_id, S.service_id) IN " + \
                 str(org_srvc_tuple).replace(',)', ')')
-            services = self.repo.execute("SELECT M.* FROM service_metadata M, service S WHERE "
-                                         "S.row_id = M.service_row_id " + qry_part)
+            print("qry_part::", qry_part)
+            sort_by = sort_by.replace("org_id", "M.org_id")
+            services = self.repo.execute("SELECT M.*,O.organization_name FROM service_metadata M, service S , organization O WHERE O.org_id = S.org_id and "
+                                         "S.row_id = M.service_row_id " + qry_part + "ORDER BY " + sort_by + " " + order_by)
             obj_utils = Utils()
             obj_utils.clean(services)
             available_service = self._get_is_available_service()
             for rec in services:
+                self._convert_service_metadata_str_to_json(rec)
+
                 org_id = rec["org_id"]
                 service_id = rec["service_id"]
                 tags = []
@@ -143,15 +152,17 @@ class Registry:
 
     def get_all_srvcs(self, qry_param):
         try:
-            fields_mapping = {"dn": "display_name",
-                              "tg": "tag_name", "org": "org_id"}
+            fields_mapping = {"display_name": "display_name",
+                              "tag_name": "tag_name", "org_id": "org_id"}
             s = qry_param.get('s', 'all')
             q = qry_param.get('q', '')
             offset = qry_param.get('offset', GET_ALL_SERVICE_OFFSET_LIMIT)
             limit = qry_param.get('limit', GET_ALL_SERVICE_LIMIT)
             sort_by = fields_mapping.get(
-                qry_param.get('sort_by', None), "display_name")
-            order_by = qry_param.get('order_by', 'asc')
+                qry_param.get('sort_by', None), "ranking")
+            order_by = qry_param.get('order_by', 'desc')
+            if order_by.lower() != "desc":
+                order_by = "asc"
 
             sub_qry = self._prepare_subquery(s=s, q=q, fm=fields_mapping)
             print("get_all_srvcs::sub_qry: ", sub_qry)
@@ -176,7 +187,7 @@ class Registry:
     def get_group_info(self, org_id, service_id):
         try:
             group_data = self.repo.execute(
-                "SELECT G.*, E.* FROM service_group G INNER JOIN service_endpoint E ON G.group_id = E.group_id WHERE "
+                "SELECT G.*, E.* FROM service_group G INNER JOIN service_endpoint E ON G.group_id = E.group_id AND G.service_row_id = E.service_row_id WHERE "
                 "G.org_id = %s AND G.service_id = %s ", [org_id, service_id])
             self.obj_utils.clean(group_data)
             groups = {}
@@ -270,9 +281,58 @@ class Registry:
         try:
             groups_data = self.repo.execute(
                 "SELECT group_id, group_name, payment FROM org_group WHERE org_id = %s", [org_id])
+            [rec.update({'payment': json.loads(rec['payment'])})
+             for rec in groups_data]
             groups = {"org_id": org_id,
                       "groups": groups_data}
             return groups
+        except Exception as e:
+            print(repr(e))
+            raise e
+
+    def get_service_data_by_org_id_and_service_id(self, org_id, service_id):
+        try:
+            """ Method to get all service data for given org_id and service_id"""
+            tags = []
+            org_groups_dict = {}
+            basic_service_data = self.repo.execute(
+                "SELECT * FROM service S, service_metadata M WHERE S.row_id = M.service_row_id AND S.org_id = %s "
+                "AND S.service_id = %s AND S.is_curated = 1", [org_id, service_id])
+            if len(basic_service_data) == 0:
+                return []
+            self.obj_utils.clean(basic_service_data)
+
+            org_group_data = self.repo.execute(
+                "SELECT * FROM org_group WHERE org_id = %s", [org_id])
+            self.obj_utils.clean(org_group_data)
+
+            service_group_data = self.get_group_info(
+                org_id=org_id, service_id=service_id)
+
+            tags = self.repo.execute("SELECT tag_name FROM service_tags WHERE org_id = %s AND service_id = %s",
+                                     [org_id, service_id])
+
+            result = basic_service_data[0]
+            self._convert_service_metadata_str_to_json(result)
+
+            for rec in org_group_data:
+                org_groups_dict[rec['group_id']] = {
+                    "payment": json.loads(rec["payment"])}
+
+            is_available = 0
+            for rec in service_group_data:
+                if is_available == 0:
+                    endpoints = rec['endpoints']
+                    for endpoint in endpoints:
+                        is_available = endpoint['is_available']
+                        if is_available == 1:
+                            break
+                rec.update(org_groups_dict.get(rec['group_id'], {}))
+
+            result.update({"is_available": is_available})
+            result.update({"groups": service_group_data})
+            result.update({"tags": tags})
+            return result
         except Exception as e:
             print(repr(e))
             raise e
@@ -290,6 +350,24 @@ class Registry:
                 members = self._get_all_members(org_id)
                 org_details[0]["members"] = members
             return org_details
+        except Exception as e:
+            print(repr(e))
+            raise e
+
+    def update_service_rating(self, org_id, service_id):
+        """
+            Method updates service_rating and total_user_rated when user rating is changed for given service_id
+            and org_id.
+        """
+        try:
+            update_service_metadata = self.repo.execute(
+                "UPDATE service_metadata A  INNER JOIN "
+                "(SELECT U.org_id, U.service_id, AVG(U.rating) AS service_rating, count(*) AS total_users_rated "
+                "FROM user_service_vote AS U WHERE U.rating IS NOT NULL GROUP BY U.service_id, U.org_id ) AS B "
+                "ON A.org_id=B.org_id AND A.service_id=B.service_id SET A.service_rating "
+                "= CONCAT('{\"rating\":', B.service_rating, ' , \"total_users_rated\":', B.total_users_rated, '}') "
+                "WHERE A.org_id = %s AND A.service_id = %s ", [org_id, service_id])
+            return "success"
         except Exception as e:
             print(repr(e))
             raise e
