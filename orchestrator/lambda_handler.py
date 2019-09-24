@@ -36,7 +36,7 @@ def route_path(path, method, payload_dict, request_context=None):
 def request_handler(event, context):
     try:
         valid_event = validate_dict(
-            item=event, required_keys=REQUIRED_KEYS_FOR_LAMBDA_EVENT)
+            event=event, required_keys=REQUIRED_KEYS_FOR_LAMBDA_EVENT)
         if not valid_event:
             return generate_lambda_response(400, "Bad Request")
 

@@ -2,7 +2,7 @@ import traceback
 
 from common.repository import Repository
 from common.utils import Utils, generate_lambda_response, extract_payload, validate_dict, format_error_message
-from wallets.config import NETWORKS, NETWORK_ID, SLACK_HOOK
+from wallets.config import NETWORKS, NETWORK_ID
 from wallets.constant import REQUIRED_KEYS_FOR_LAMBDA_EVENT
 from wallets.wallet_service import WalletService
 
@@ -11,10 +11,10 @@ db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETW
 obj_util = Utils()
 
 
+
 def route_path(path, method, payload_dict):
     obj_wallet_manager = WalletService(obj_repo=db[NETWORK_ID])
     path_exist = True
-    response_data = None
     if "/wallet" == path:
         response_data = obj_wallet_manager.create_and_register_wallet()
 
@@ -43,7 +43,7 @@ def route_path(path, method, payload_dict):
 
 def request_handler(event, context):
     try:
-        valid_event = validate_dict(item=event, required_keys=REQUIRED_KEYS_FOR_LAMBDA_EVENT)
+        valid_event = validate_dict(event=event, required_keys=REQUIRED_KEYS_FOR_LAMBDA_EVENT)
         if not valid_event:
             return generate_lambda_response(400, "Bad Request")
 
@@ -61,14 +61,14 @@ def request_handler(event, context):
         if response_data is None:
             error_message = format_error_message(status="failed", error="Bad Request", resource=path,
                                                  payload=payload_dict, net_id=NETWORK_ID)
-            obj_util.report_slack(1, error_message, SLACK_HOOK)
+            obj_util.report_slack(1, error_message)
             response = generate_lambda_response(500, error_message)
         else:
             response = generate_lambda_response(200, {"status": "success", "data": response_data})
     except Exception as e:
         error_message = format_error_message(status="failed", error="Bad Request", resource=path,
                                              payload=payload_dict, net_id=NETWORK_ID)
-        obj_util.report_slack(1, error_message, SLACK_HOOK)
+        obj_util.report_slack(1, error_message)
         response = generate_lambda_response(500, error_message)
         traceback.print_exc()
     return response
