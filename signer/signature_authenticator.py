@@ -58,6 +58,7 @@ def main(event, context):
         print("Derived public key is %s", derived_public_key)
         verified = (verify_public_key(public_keys, derived_public_key)
                     and authenticator.verify_current_block_number())
+        print(verified)
     except Exception as e:
         print(e)
         return generatePolicy('exception', 'Deny', event['methodArn'])
