@@ -1,7 +1,7 @@
 {
-  "name": "snet-marketplace-service",
+  "name": "parse_events",
   "version": "1.0.0",
-  "description": "index to display curated services on the SingularityNet DApp",
+  "description": "",
   "author": "SingularityNet",
   "dependencies": {
   	"singularitynet-platform-contracts": "0.3.4"
