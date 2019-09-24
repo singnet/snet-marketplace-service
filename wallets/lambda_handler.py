@@ -7,7 +7,7 @@ from wallets.constant import REQUIRED_KEYS_FOR_LAMBDA_EVENT
 from wallets.wallet_service import WalletService
 
 NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys())
-db = dict((netId, Repository(net_id=netId)) for netId in NETWORKS.keys())
+db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys())
 obj_util = Utils()
 
 
@@ -28,7 +28,7 @@ def route_path(path, method, payload_dict):
                                                                        currency=payload_dict['currency'],
                                                                        recipient=payload_dict['recipient'])
 
-    elif "/wallet/channel/deposit" == path and method == 'GET':
+    elif "/wallet/channel/deposit" == path and method == 'POST':
         response_data = obj_wallet_manager.add_funds_to_channel(order_id=payload_dict['order_id'],
                                                                 amount=payload_dict['amount'],
                                                                 currency=payload_dict['currency'])
