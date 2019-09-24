@@ -14,8 +14,9 @@ class WalletDAO:
 
     def insert_channel_history(self, order_id, amount, currency, type, address, signature, request_parameters,
                                transaction_hash, status):
+        params = [order_id, amount, currency, type, address, signature, request_parameters, transaction_hash, status, dt.utcnow(), dt.utcnow()]
         query = "INSERT INTO channel_transaction_history (order_id, amount, currency, type, address, " \
-                "signature, request_parameters, transaction_type, transaction_hash, status, row_created, row_updated) " \
+                "signature, request_parameters, transaction_hash, status, row_created, row_updated) " \
                 "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
         query_response = self.repo.execute(query, [order_id, amount, currency, type, address, signature,
                                                    request_parameters, transaction_hash, status,
