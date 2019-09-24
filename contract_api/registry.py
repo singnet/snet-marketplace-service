@@ -258,19 +258,18 @@ class Registry:
         try:
             filter_attribute = {"attribute": attribute, "values": []}
             if attribute == "tag_name":
-                filter_data = self.repo.execute("SELECT DISTINCT tag_name AS ATTR_VALUE FROM service_tags T, service S "
+                filter_data = self.repo.execute("SELECT DISTINCT tag_name AS 'key', tag_name AS 'value' FROM service_tags T, service S "
                                                 "WHERE S.row_id = T.service_row_id AND S.is_curated = 1")
             elif attribute == "display_name":
-                filter_data = self.repo.execute("SELECT DISTINCT display_name AS ATTR_VALUE FROM service_metadata M, service S "
+                filter_data = self.repo.execute("SELECT DISTINCT S.service_id AS 'key',display_name AS 'value' FROM service_metadata M, service S "
                                                 "WHERE S.row_id = M.service_row_id AND S.is_curated = 1")
             elif attribute == "org_id":
-                filter_data = self.repo.execute("SELECT DISTINCT O.org_id ,O.organization_name from organization O, service S "
+                filter_data = self.repo.execute("SELECT DISTINCT O.org_id AS 'key' ,O.organization_name AS 'value' from organization O, service S "
                                                 "WHERE S.org_id = O.org_id AND S.is_curated = 1")
-                return filter_data
             else:
                 return filter_attribute
             for rec in filter_data:
-                filter_attribute["values"].append(rec.get("ATTR_VALUE", None))
+                filter_attribute["values"].append(rec)
 
             return filter_attribute
         except Exception as e:
