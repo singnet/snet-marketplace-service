@@ -17,7 +17,6 @@ depends_on = None
 def upgrade():
     conn = op.get_bind()
     conn.execute("""
-            
         CREATE TABLE `user_wallet` (
           `row_id` int(11) NOT NULL AUTO_INCREMENT,
           `username` varchar(128) NOT NULL,
@@ -28,32 +27,27 @@ def upgrade():
           PRIMARY KEY (`row_id`),
           UNIQUE KEY `uq_user` (`username`),
           UNIQUE KEY `uq_wallet` (`address`)
-           );
-    
+       );
     """)
     conn.execute("""
-
-            CREATE TABLE `wallet_transaction_history` (
-              `row_id` int(11) NOT NULL AUTO_INCREMENT,
-              `order_id` varchar(128) NOT NULL,
-              `channel_id` int(11) NULL DEFAULT NULL,
-              `amount` int(11) NOT NULL,
-              `currency` varchar(64) NOT NULL,
-              `type` varchar(128) NULL DEFAULT NULL,
-              `address` varchar(256) NULL DEFAULT NULL,
-              `signature` varchar(256) NULL DEFAULT NULL,
-              `request_parameters` json DEFAULT NULL,
-              `transaction_type` varchar(128) NULL DEFAULT NULL,
-              `transaction_hash` varchar(256) NULL DEFAULT NULL,
-              `status` bit(1) DEFAULT b'1',
-              `row_created` timestamp NULL DEFAULT NULL,
-              `row_updated` timestamp NULL DEFAULT NULL,
-              PRIMARY KEY (`row_id`)
-            );
-
+        CREATE TABLE `channel_transaction_history` (
+          `row_id` int(11) NOT NULL AUTO_INCREMENT,
+          `order_id` varchar(128) NOT NULL,
+          `amount` int(11) NOT NULL,
+          `currency` varchar(64) NOT NULL,
+          `type` varchar(128) DEFAULT NULL,
+          `address` varchar(256) DEFAULT NULL,
+          `signature` varchar(256) DEFAULT NULL,
+          `request_parameters` varchar(1024) DEFAULT NULL,
+          `transaction_type` varchar(128) DEFAULT NULL,
+          `transaction_hash` varchar(256) DEFAULT NULL,
+          `status` bit(1) DEFAULT b'1',
+          `row_created` timestamp NULL DEFAULT NULL,
+          `row_updated` timestamp NULL DEFAULT NULL,
+          PRIMARY KEY (`row_id`)
+        );
        """)
     conn.execute("""
-        
         CREATE TABLE `wallet` (
           `row_id` int(11) NOT NULL AUTO_INCREMENT,
           `address` varchar(256) NOT NULL,
@@ -63,8 +57,7 @@ def upgrade():
           `row_updated` timestamp NULL DEFAULT NULL,
           PRIMARY KEY (`row_id`),
           UNIQUE KEY `uq_wallet` (`address`)
-            );
-
+       );
        """)
 
 
