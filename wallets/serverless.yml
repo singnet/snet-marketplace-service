@@ -104,7 +104,7 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
       - http:
-          method: GET
+          method: POST
           path: /wallet/channel/deposit
           private: true
           authorizer:
