@@ -1,15 +1,6 @@
-import glob
-import json
-import os
-import tarfile
-
 import ipfsapi
 import io
-
 import logging
-
-from parse_events.config import IPFS_URL
-from common.s3_util import S3Util
 
 
 class IPFSUtil(object):
