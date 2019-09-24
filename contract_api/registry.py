@@ -296,7 +296,7 @@ class Registry:
             tags = []
             org_groups_dict = {}
             basic_service_data = self.repo.execute(
-                "SELECT * FROM service S, service_metadata M WHERE S.row_id = M.service_row_id AND S.org_id = %s "
+                "SELECT * FROM service S, service_metadata M , organization O  WHERE O.org_id = S.org_id AND  S.row_id = M.service_row_id AND S.org_id = %s "
                 "AND S.service_id = %s AND S.is_curated = 1", [org_id, service_id])
             if len(basic_service_data) == 0:
                 return []
