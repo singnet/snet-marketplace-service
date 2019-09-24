@@ -269,7 +269,7 @@ class Registry:
             else:
                 return filter_attribute
             for rec in filter_data:
-                filter_attribute["values"].append(rec.get("ATTR_VALUE", None))
+                filter_attribute["values"].append(rec)
 
             return filter_attribute
         except Exception as e:
