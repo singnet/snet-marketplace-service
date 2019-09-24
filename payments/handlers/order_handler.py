@@ -9,6 +9,7 @@ logger = get_logger(__name__)
 
 
 def create(event, context):
+    logger.info("Received request to create order")
     try:
         payload = json.loads(event['body'])
         if validate_dict(payload, ["price", "username"]):
@@ -16,25 +17,50 @@ def create(event, context):
             currency = payload["price"]["currency"]
             username = payload["username"]
             item_details = payload["item_details"]
-            status, response = OrderManager().create_order(amount, currency, item_details, username)
-            if status:
-                return generate_lambda_response(
-                    status_code=StatusCode.CREATED,
-                    message=response
-                )
-            else:
-                return generate_lambda_response(
-                    status_code=StatusCode.INTERNAL_SERVER_ERROR,
-                    message=response
-                )
+            logger.info(f"Fetched values from request\n"
+                        f"username: {username}\n"
+                        f"amount: {amount} {currency}\n"
+                        f"item_details: {item_details}")
+            response = OrderManager().create_order(amount, currency, item_details, username)
+            status_code = StatusCode.CREATED
         else:
-            return generate_lambda_response(
-                status_code=StatusCode.BAD_REQUEST,
-                message="Bad Request"
-            )
+            status_code = StatusCode.BAD_REQUEST
+            response = "Bad Request"
+            logger.error(response)
+            logger.info(event)
     except Exception as e:
-        logger(e)
-        return generate_lambda_response(
-            status_code=StatusCode.INTERNAL_SERVER_ERROR,
-            message="Internal Server Error"
-        )
+        response = "Failed to create order"
+        logger.error(response)
+        logger.info(event)
+        logger.error(e)
+        status_code = StatusCode.INTERNAL_SERVER_ERROR
+    return generate_lambda_response(
+        status_code=status_code,
+        message=response
+    )
+
+
+def get_order_details_for_user(event, context):
+    logger.info("Received request to get order details using username")
+    try:
+        if "username" in event["queryStringParameters"]:
+            username = event["queryStringParameters"]["username"]
+            logger.info(f"Fetched values from request\n"
+                        f"username: {username}")
+            response = OrderManager().get_order_details_for_user(username)
+            status_code = StatusCode.OK
+        else:
+            status_code = StatusCode.BAD_REQUEST
+            response = "Bad Request"
+            logger.error(response)
+            logger.info(event)
+    except Exception as e:
+        response = "Failed to fetch order details"
+        logger.error(response)
+        logger.info(event)
+        logger.error(e)
+        status_code = StatusCode.INTERNAL_SERVER_ERROR
+    return generate_lambda_response(
+        status_code=status_code,
+        message=response
+    )

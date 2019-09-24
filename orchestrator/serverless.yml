@@ -101,7 +101,7 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
       - http:
-          method: GET
+          method: POST
           path: /order/execute
           authorizer:
             name: user-authorizer
