@@ -261,7 +261,7 @@ class Registry:
                 filter_data = self.repo.execute("SELECT DISTINCT tag_name AS 'key', tag_name AS 'value' FROM service_tags T, service S "
                                                 "WHERE S.row_id = T.service_row_id AND S.is_curated = 1")
             elif attribute == "display_name":
-                filter_data = self.repo.execute("SELECT DISTINCT display_name AS 'key',display_name AS 'value' FROM service_metadata M, service S "
+                filter_data = self.repo.execute("SELECT DISTINCT S.service_id AS 'key',display_name AS 'value' FROM service_metadata M, service S "
                                                 "WHERE S.row_id = M.service_row_id AND S.is_curated = 1")
             elif attribute == "org_id":
                 filter_data = self.repo.execute("SELECT DISTINCT O.org_id AS 'key' ,O.organization_name AS 'value' from organization O, service S "
