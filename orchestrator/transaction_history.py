@@ -5,10 +5,10 @@ class TransactionHistory:
             order_id,
             order_type,
             status,
-            payment_id=None,
-            payment_method=None,
-            raw_payment_data=None,
-            transaction_hash=None,
+            payment_id="",
+            payment_method="",
+            raw_payment_data="{}",
+            transaction_hash=""
     ):
         self.__username = username
         self.__order_id = order_id
@@ -28,5 +28,5 @@ class TransactionHistory:
             "payment_id": self.__payment_id,
             "payment_method": self.__payment_method,
             "raw_payment_data": self.__raw_payment_data,
-            "transaction_hash": self.__transaction_hash,
+            "transaction_hash": self.__transaction_hash
         }

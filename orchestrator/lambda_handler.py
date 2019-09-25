@@ -1,5 +1,5 @@
 import traceback
-
+import re
 from common.repository import Repository
 from common.utils import extract_payload
 from common.utils import format_error_message
@@ -10,21 +10,23 @@ from orchestrator.config import NETWORK_ID
 from orchestrator.config import NETWORKS
 from orchestrator.constant import REQUIRED_KEYS_FOR_LAMBDA_EVENT
 from orchestrator.order_service import OrderService
+from orchestrator.config import SLACK_HOOK
 
 NETWORKS_NAME = dict(
     (NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
-db = dict((netId, Repository(net_id=netId)) for netId in NETWORKS.keys())
+db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys())
 obj_util = Utils()
-
+path = None
 
 def route_path(path, method, payload_dict, request_context=None):
     obj_order_service = OrderService(obj_repo=db[NETWORK_ID])
     path_exist = True
-    if "order/initiate" == path:
+    response_data = None
+    if "/order/initiate" == path:
         response_data = obj_order_service.initiate_order(
             user_data=request_context, payload_dict=payload_dict)
 
-    elif "order/execute" == path and method == "POST":
+    elif "/order/execute" == path and method == "POST":
         response_data = obj_order_service.execute_order(
             user_data=request_context, payload_dict=payload_dict)
     else:
@@ -36,7 +38,7 @@ def route_path(path, method, payload_dict, request_context=None):
 def request_handler(event, context):
     try:
         valid_event = validate_dict(
-            event=event, required_keys=REQUIRED_KEYS_FOR_LAMBDA_EVENT)
+            data_dict=event, required_keys=REQUIRED_KEYS_FOR_LAMBDA_EVENT)
         if not valid_event:
             return generate_lambda_response(400, "Bad Request")
 
@@ -66,7 +68,7 @@ def request_handler(event, context):
                 payload=payload_dict,
                 net_id=NETWORK_ID,
             )
-            obj_util.report_slack(1, error_message)
+            obj_util.report_slack(1, error_message, SLACK_HOOK)
             response = generate_lambda_response(500, error_message)
         else:
             response = generate_lambda_response(200, {
@@ -81,7 +83,7 @@ def request_handler(event, context):
             payload=payload_dict,
             net_id=NETWORK_ID,
         )
-        obj_util.report_slack(1, error_message)
+        obj_util.report_slack(1, error_message, SLACK_HOOK)
         response = generate_lambda_response(500, error_message)
         traceback.print_exc()
     return response

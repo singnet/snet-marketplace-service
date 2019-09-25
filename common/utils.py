@@ -67,9 +67,9 @@ def make_response(status_code, body, header=None):
     }
 
 
-def validate_dict(item, required_keys):
+def validate_dict(data_dict, required_keys):
     for key in required_keys:
-        if key not in item:
+        if key not in data_dict:
             return False
     return True
 
