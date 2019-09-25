@@ -18,6 +18,7 @@ db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETW
 obj_util = Utils()
 path = None
 
+
 def route_path(path, method, payload_dict, request_context=None):
     obj_order_service = OrderService(obj_repo=db[NETWORK_ID])
     path_exist = True
