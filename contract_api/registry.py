@@ -92,6 +92,7 @@ class Registry:
     def _convert_service_metadata_str_to_json(self, record):
         record["service_rating"] = json.loads(record["service_rating"])
         record["assets_url"] = json.loads(record["assets_url"])
+        record["org_assets_url"] = json.loads(record["org_assets_url"])
         record["assets_hash"] = json.loads(record["assets_hash"])
 
     def _search_query_data(self, sub_qry, sort_by, order_by, offset, limit, filter_query, values):
