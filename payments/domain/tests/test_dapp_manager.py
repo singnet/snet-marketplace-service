@@ -2,7 +2,8 @@ import unittest
 from datetime import datetime
 
 from payments.application.dapp_order_manager import OrderManager
-from payments.infrastructure.models import Order, Payment
+from payments.infrastructure.models import Order
+from payments.infrastructure.models import Payment
 from payments.infrastructure.order_repositroy import OrderRepository
 
 

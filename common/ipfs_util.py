@@ -1,6 +1,7 @@
-import ipfsapi
 import io
 import logging
+
+import ipfsapi
 
 
 class IPFSUtil(object):

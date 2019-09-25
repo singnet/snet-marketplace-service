@@ -3,8 +3,9 @@ from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from payments.infrastructure.models import Order, Payment
 from payments.config import DB_URL
+from payments.infrastructure.models import Order
+from payments.infrastructure.models import Payment
 
 engine = create_engine(DB_URL, echo=False)
 Session = sessionmaker(bind=engine)

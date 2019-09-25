@@ -1,4 +1,9 @@
-from sqlalchemy import Column, VARCHAR, Float, TIMESTAMP, Integer, ForeignKey
+from sqlalchemy import Column
+from sqlalchemy import Float
+from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
+from sqlalchemy import TIMESTAMP
+from sqlalchemy import VARCHAR
 from sqlalchemy.dialects.mysql import JSON
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
