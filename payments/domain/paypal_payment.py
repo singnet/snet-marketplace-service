@@ -2,6 +2,7 @@ import paypalrestsdk
 
 from common.logger import get_logger
 from common.constant import PaymentStatus, PAYMENT_METHOD_PAYPAL
+from common.ssm_utils import get_ssm_parameter
 from payments.domain.payment import Payment
 from payments.config import MODE, PAYPAL_CLIENT, PAYPAL_SECRET, PAYMENT_CANCEL_URL, PAYMENT_RETURN_URL
 
@@ -12,11 +13,15 @@ class PaypalPayment(Payment):
 
     def __init__(self, payment_id, amount, currency, payment_status, created_at, payment_details):
         super().__init__(payment_id, amount, currency, payment_status, created_at, payment_details)
-        self.payee_client_api = paypalrestsdk.Api({
-          'mode': MODE,
-          'client_id': PAYPAL_CLIENT,
-          'client_secret': PAYPAL_SECRET}
-        )
+        try:
+            self.payee_client_api = paypalrestsdk.Api({
+              'mode': MODE,
+              'client_id': get_ssm_parameter(PAYPAL_CLIENT),
+              'client_secret': get_ssm_parameter(PAYPAL_SECRET)}
+            )
+        except Exception as e:
+            logger.error("Failed to get ssm parameters")
+            raise e
 
     def initiate_payment(self, order_id):
         paypal_payload = self.get_paypal_payload(order_id)
