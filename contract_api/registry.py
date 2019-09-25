@@ -122,7 +122,7 @@ class Registry:
                 str(org_srvc_tuple).replace(',)', ')')
             print("qry_part::", qry_part)
             sort_by = sort_by.replace("org_id", "M.org_id")
-            services = self.repo.execute("SELECT M.*,O.organization_name,O.org_assets_url, FROM service_metadata M, service S , organization O WHERE O.org_id = S.org_id and "
+            services = self.repo.execute("SELECT M.*,O.organization_name,O.org_assets_url FROM service_metadata M, service S , organization O WHERE O.org_id = S.org_id and "
                                          "S.row_id = M.service_row_id " + qry_part + "ORDER BY " + sort_by + " " + order_by)
             obj_utils = Utils()
             obj_utils.clean(services)
