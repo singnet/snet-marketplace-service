@@ -14,9 +14,11 @@ from orchestrator.config import SLACK_HOOK
 
 NETWORKS_NAME = dict(
     (NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
-db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys())
+db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS))
+          for netId in NETWORKS.keys())
 obj_util = Utils()
 path = None
+
 
 def route_path(path, method, payload_dict, request_context=None):
     obj_order_service = OrderService(obj_repo=db[NETWORK_ID])

@@ -55,7 +55,8 @@ class OrderFactory:
     def get_order_details(orders):
         order_details = []
         for order_item in orders:
-            order = OrderFactory.create_order_details_from_repository(order_item)
+            order = OrderFactory.create_order_details_from_repository(
+                order_item)
             order_details.append(order)
         return {"orders": order_details}
 
