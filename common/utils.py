@@ -67,8 +67,39 @@ def make_response(status_code, body, header=None):
     }
 
 
-def validate_request(required_keys, request_body):
+def validate_dict(data_dict, required_keys):
     for key in required_keys:
-        if key not in request_body:
+        if key not in data_dict:
             return False
     return True
+
+
+def generate_lambda_response(status_code, message):
+    return {
+        'statusCode': status_code,
+        'body': json.dumps(message),
+        'headers': {
+            'Content-Type': 'application/json',
+            "X-Requested-With": '*',
+            "Access-Control-Allow-Headers": 'Access-Control-Allow-Origin, Content-Type,X-Amz-Date,Authorization,X-Api-Key,x-requested-with',
+            "Access-Control-Allow-Origin": '*',
+            "Access-Control-Allow-Methods": 'GET,OPTIONS,POST'
+        }
+    }
+
+
+def extract_payload(method, event):
+    method_found = True
+    payload_dict = None
+    if method == 'POST':
+        payload_dict = json.loads(event['body'])
+    elif method == 'GET':
+        payload_dict = event.get('queryStringParameters', {})
+    else:
+        method_found = False
+    return method_found, payload_dict
+
+
+def format_error_message(status, error, resource, payload, net_id):
+    return json.dumps(
+        {'status': status, 'error': error, 'resource': resource, 'payload': payload, 'network_id': net_id})

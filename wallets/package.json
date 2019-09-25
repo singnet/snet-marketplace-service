@@ -1,0 +1,9 @@
+{
+  "name": "wallets",
+  "version": "1.0.0",
+  "description": "Microservices to create wallet, channel, add funds and register wallet.",
+  "author": "SingularityNet",
+  "dependencies": {
+    "singularitynet-platform-contracts": "^0.3.4"
+  }
+}

@@ -307,8 +307,9 @@ class HandleContractsDB:
             elif isinstance(new_asset_hash, str):
                 # if this asset_type has single value
                 if new_asset_type in existing_assets_hash and existing_assets_hash[new_asset_type] == new_asset_hash:
-                    # file is not updated
-                    pass
+                    # file is not updated , add existing url
+                    assets_url_mapping[new_asset_type] = existing_assets_url[new_asset_type]
+
                 else:
                     if new_asset_type in existing_assets_url:
                         url_of_file_to_be_removed = existing_assets_url[new_asset_type]
