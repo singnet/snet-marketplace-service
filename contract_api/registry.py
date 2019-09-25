@@ -13,7 +13,7 @@ class Registry:
     def _get_all_service(self):
         """ Method to generate org_id and service mapping."""
         try:
-            all_orgs_srvcs_raw = self.repo.execute("SELECT O.org_id, O.organization_name, O.owner_address, S.service_id  FROM service S, "
+            all_orgs_srvcs_raw = self.repo.execute("SELECT O.org_id, O.organization_name,O.org_assets_url, O.owner_address, S.service_id  FROM service S, "
                                                    "organization O WHERE S.org_id = O.org_id AND S.is_curated = 1")
             all_orgs_srvcs = {}
             for rec in all_orgs_srvcs_raw:
@@ -92,6 +92,7 @@ class Registry:
     def _convert_service_metadata_str_to_json(self, record):
         record["service_rating"] = json.loads(record["service_rating"])
         record["assets_url"] = json.loads(record["assets_url"])
+        record["org_assets_url"] = json.loads(record["org_assets_url"])
         record["assets_hash"] = json.loads(record["assets_hash"])
 
     def _search_query_data(self, sub_qry, sort_by, order_by, offset, limit, filter_query, values):
@@ -121,7 +122,7 @@ class Registry:
                 str(org_srvc_tuple).replace(',)', ')')
             print("qry_part::", qry_part)
             sort_by = sort_by.replace("org_id", "M.org_id")
-            services = self.repo.execute("SELECT M.*,O.organization_name FROM service_metadata M, service S , organization O WHERE O.org_id = S.org_id and "
+            services = self.repo.execute("SELECT M.*,O.organization_name,O.org_assets_url FROM service_metadata M, service S , organization O WHERE O.org_id = S.org_id and "
                                          "S.row_id = M.service_row_id " + qry_part + "ORDER BY " + sort_by + " " + order_by)
             obj_utils = Utils()
             obj_utils.clean(services)
