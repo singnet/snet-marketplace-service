@@ -20,22 +20,22 @@ def verify_public_key(public_keys, derived_public_key):
 
 def generatePolicy(principalId, effect, methodArn):
     authResponse = {}
-    authResponse['principalId'] = principalId
+    authResponse["principalId"] = principalId
 
     if effect and methodArn:
         policyDocument = {
-            'Version': '2012-10-17',
-            'Statement': [
+            "Version": "2012-10-17",
+            "Statement": [
                 {
-                    'Sid': 'FirstStatement',
-                    'Action': 'execute-api:Invoke',
-                    'Effect': effect,
-                    'Resource': methodArn
+                    "Sid": "FirstStatement",
+                    "Action": "execute-api:Invoke",
+                    "Effect": effect,
+                    "Resource": methodArn,
                 }
-            ]
+            ],
         }
 
-        authResponse['policyDocument'] = policyDocument
+        authResponse["policyDocument"] = policyDocument
 
     return authResponse
 
@@ -44,7 +44,7 @@ def main(event, context):
     # default is Deamon authenticator, in future we will introduce new authentications
     print(event)
     authenticator = None
-    if 'x-authtype' in event:
+    if "x-authtype" in event:
         pass
     else:
         authenticator = DaemonAuthenticator(event, NETWORKS, NET_ID)
@@ -56,13 +56,15 @@ def main(event, context):
         principal = authenticator.get_principal()
         derived_public_key = extract_public_key(message, signature)
         print("Derived public key is %s", derived_public_key)
-        verified = (verify_public_key(public_keys, derived_public_key)
-                    and authenticator.verify_current_block_number())
+        verified = (
+            verify_public_key(public_keys, derived_public_key)
+            and authenticator.verify_current_block_number()
+        )
         if verified:
             print(f"verified sign auth for {principal}")
-            return generatePolicy(principal, 'Allow', event['methodArn'])
+            return generatePolicy(principal, "Allow", event["methodArn"])
         print(f"verified failed sign auth for {principal}")
-        return generatePolicy(principal, 'Deny', event['methodArn'])
+        return generatePolicy(principal, "Deny", event["methodArn"])
     except Exception as e:
         print(e)
-        return generatePolicy('exception', 'Deny', event['methodArn'])
+        return generatePolicy("exception", "Deny", event["methodArn"])

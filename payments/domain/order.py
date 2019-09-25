@@ -9,7 +9,6 @@ logger = get_logger(__name__)
 
 
 class Order(object):
-
     def __init__(self):
         self._order_id = None
         self._payments = None
@@ -43,28 +42,24 @@ class Order(object):
 
     def create_payment(self, amount, currency, payment_method):
         logger.info(
-            f"Initiating payment against order: {self._order_id}, payment_method: {payment_method}")
+            f"Initiating payment against order: {self._order_id}, payment_method: {payment_method}"
+        )
         if payment_method == PAYMENT_METHOD_PAYPAL:
 
             payment = PaypalPayment(
                 payment_id=str(uuid.uuid1()),
                 amount=amount,
                 currency=currency,
-                payment_details={
-                    "payment_method": payment_method
-                },
+                payment_details={"payment_method": payment_method},
                 payment_status="pending",
-                created_at=datetime.utcnow()
+                created_at=datetime.utcnow(),
             )
 
             payment_response = payment.initiate_payment(self.get_order_id())
             self._payments.append(payment)
         else:
             raise Exception(f"Invalid payment method: {payment_method}")
-        return {
-            "payment_object": payment,
-            "payment": payment_response["payment"]
-        }
+        return {"payment_object": payment, "payment": payment_response["payment"]}
 
     def get_payment(self, payment_id):
         for payment in self._payments:
@@ -87,12 +82,9 @@ class Order(object):
         payment = self.get_payment(payment_id)
 
         if payment.get_payment_status() == PaymentStatus.SUCCESS:
-            raise Exception(
-                f"Payment {payment_id} is already in success status")
+            raise Exception(f"Payment {payment_id} is already in success status")
         elif payment.get_payment_status() == PaymentStatus.FAILED:
-            raise Exception(
-                f"Payment {payment_id} is already in failed status")
+            raise Exception(f"Payment {payment_id} is already in failed status")
 
         payment.set_payment_status(PaymentStatus.FAILED)
-        logger.info(
-            f"Payment status set to \"failed\" for payment_id {payment_id}")
+        logger.info(f'Payment status set to "failed" for payment_id {payment_id}')

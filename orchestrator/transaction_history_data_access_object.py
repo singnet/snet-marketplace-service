@@ -21,8 +21,8 @@ class TransactionHistoryDAO:
                 transaction_history["payment_id"],
                 transaction_history["payment_method"],
                 transaction_history["raw_payment_data"],
-                transaction_history["transaction_hash"]
-            ]
+                transaction_history["transaction_hash"],
+            ],
         )
         if query_response[0] == 1:
             return True

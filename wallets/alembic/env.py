@@ -44,7 +44,7 @@ def run_migrations_offline():
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
-        version_table="wallet_alembic_version"
+        version_table="wallet_alembic_version",
     )
 
     with context.begin_transaction():
@@ -66,8 +66,9 @@ def run_migrations_online():
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata,
-            version_table="wallet_alembic_version"
+            connection=connection,
+            target_metadata=target_metadata,
+            version_table="wallet_alembic_version",
         )
 
         with context.begin_transaction():
