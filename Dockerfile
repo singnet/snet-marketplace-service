@@ -10,7 +10,7 @@ RUN mkdir -p  /var/log/marketplace
 WORKDIR /opt/snet/snet-marketplace-service
 COPY . .
 RUN pip3 install -r parse_events/requirement.txt
-RUN npm install
+RUN cd parse_events && npm install && cd ..
 RUN mv snet-contract-event-consumer /opt/snet/
 RUN mv marketplace.conf contract_event.conf /etc/logrotate.d/
 WORKDIR /opt/snet/snet-contract-event-consumer
