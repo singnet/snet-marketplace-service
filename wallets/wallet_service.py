@@ -29,9 +29,10 @@ class WalletService:
             provider=NETWORKS[NETWORK_ID]["http_provider"],
         )
         address, private_key = self.obj_blockchain_util.create_account()
-        obj_wallet = Wallet(
-            address=address, private_key=private_key, type=GENERAL_WALLET_TYPE, status=0
-        )
+        obj_wallet = Wallet(address=address,
+                            private_key=private_key,
+                            type=GENERAL_WALLET_TYPE,
+                            status=0)
         registered = self.register_wallet(obj_wallet=obj_wallet)
         if registered:
             return obj_wallet.get_wallet()
@@ -49,9 +50,8 @@ class WalletService:
             return True
         raise Exception("Unable to register wallet.")
 
-    def __generate_signature_details(
-        self, recipient, group_id, agi_tokens, expiration, message_nonce, signer_key
-    ):
+    def __generate_signature_details(self, recipient, group_id, agi_tokens,
+                                     expiration, message_nonce, signer_key):
         data_types = [
             "string",
             "address",
@@ -75,8 +75,7 @@ class WalletService:
             message_nonce,
         ]
         signature = self.obj_blockchain_util.generate_signature(
-            data_types=data_types, values=values, signer_key=signer_key
-        )
+            data_types=data_types, values=values, signer_key=signer_key)
         v, r, s = (
             Web3.toInt(hexstr="0x" + signature[-2:]),
             signature[:66],
@@ -93,14 +92,14 @@ class WalletService:
         return agi_tokens
 
     def open_channel_by_third_party(
-        self,
-        order_id,
-        sender,
-        sender_private_key,
-        group_id,
-        amount,
-        currency,
-        recipient,
+            self,
+            order_id,
+            sender,
+            sender_private_key,
+            group_id,
+            amount,
+            currency,
+            recipient,
     ):
         obj_wallet_dao = WalletDAO(obj_repo=self.obj_repo)
         self.obj_blockchain_util = BlockChainUtil(
@@ -109,12 +108,12 @@ class WalletService:
         )
         method_name = "openChannelByThirdParty"
         self.mpe_address = self.obj_blockchain_util.read_contract_address(
-            net_id=NETWORK_ID, path=MPE_ADDR_PATH, key="address"
-        )
+            net_id=NETWORK_ID, path=MPE_ADDR_PATH, key="address")
         current_block_no = self.obj_blockchain_util.get_current_block_no()
         # 1 block no is mined in 15 sec on average, setting expiration as 10 years
         expiration = current_block_no + (10 * 365 * 24 * 60 * 4)
-        agi_tokens = self.__calculate_agi_tokens(amount=amount, currency=currency)
+        agi_tokens = self.__calculate_agi_tokens(amount=amount,
+                                                 currency=currency)
         group_id_in_hex = "0x" + base64.b64decode(group_id).hex()
         r, s, v, signature = self.__generate_signature_details(
             recipient=recipient,
@@ -142,14 +141,12 @@ class WalletService:
             address=EXECUTOR_WALLET_ADDRESS,
             contract_path=MPE_CNTRCT_PATH,
             contract_address_path=MPE_ADDR_PATH,
-            net_id=NETWORK_ID
-        )
+            net_id=NETWORK_ID)
         raw_transaction = self.obj_blockchain_util.sign_transaction_with_private_key(
-            transaction_object=transaction_object, private_key=EXECUTOR_WALLET_KEY
-        )
+            transaction_object=transaction_object,
+            private_key=EXECUTOR_WALLET_KEY)
         transaction_hash = self.obj_blockchain_util.process_raw_transaction(
-            raw_transaction=raw_transaction
-        )
+            raw_transaction=raw_transaction)
         print("openChannelByThirdParty::transaction_hash", transaction_hash)
         obj_wallet_dao.insert_channel_history(
             order_id=order_id,
@@ -176,7 +173,8 @@ class WalletService:
 
     def add_funds_to_channel(self, order_id, channel_id, amount, currency):
         method_name = "channelAddFunds"
-        agi_tokens = self.__calculate_agi_tokens(amount=amount, currency=currency)
+        agi_tokens = self.__calculate_agi_tokens(amount=amount,
+                                                 currency=currency)
         positional_inputs = (channel_id, agi_tokens)
         transaction_object = self.obj_utils.create_transaction_object(
             *positional_inputs,
@@ -184,15 +182,13 @@ class WalletService:
             address=EXECUTOR_WALLET_ADDRESS,
             contract_path=MPE_CNTRCT_PATH,
             contract_address_path=MPE_ADDR_PATH,
-            net_id=self.net_id
-        )
+            net_id=self.net_id)
         raw_transaction = self.obj_utils.sign_transaction_with_private_key(
-            transaction_object=transaction_object, private_key=EXECUTOR_WALLET_KEY
-        )
+            transaction_object=transaction_object,
+            private_key=EXECUTOR_WALLET_KEY)
 
         transaction_hash = self.obj_utils.process_raw_transaction(
-            raw_transaction=raw_transaction
-        )
+            raw_transaction=raw_transaction)
         print("channelAddFunds::transaction_hash", transaction_hash)
         return {
             "transaction_hash": transaction_hash,

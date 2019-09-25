@@ -13,10 +13,10 @@ from orchestrator.config import SLACK_HOOK
 from orchestrator.constant import REQUIRED_KEYS_FOR_LAMBDA_EVENT
 from orchestrator.order_service import OrderService
 
-NETWORKS_NAME = dict((NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
-db = dict(
-    (netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys()
-)
+NETWORKS_NAME = dict(
+    (NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
+db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS))
+          for netId in NETWORKS.keys())
 obj_util = Utils()
 path = None
 
@@ -27,13 +27,11 @@ def route_path(path, method, payload_dict, request_context=None):
     response_data = None
     if "/order/initiate" == path:
         response_data = obj_order_service.initiate_order(
-            user_data=request_context, payload_dict=payload_dict
-        )
+            user_data=request_context, payload_dict=payload_dict)
 
     elif "/order/execute" == path and method == "POST":
         response_data = obj_order_service.execute_order(
-            user_data=request_context, payload_dict=payload_dict
-        )
+            user_data=request_context, payload_dict=payload_dict)
     else:
         path_exist = False
 
@@ -43,8 +41,7 @@ def route_path(path, method, payload_dict, request_context=None):
 def request_handler(event, context):
     try:
         valid_event = validate_dict(
-            data_dict=event, required_keys=REQUIRED_KEYS_FOR_LAMBDA_EVENT
-        )
+            data_dict=event, required_keys=REQUIRED_KEYS_FOR_LAMBDA_EVENT)
         if not valid_event:
             return generate_lambda_response(400, "Bad Request")
 
@@ -52,7 +49,8 @@ def request_handler(event, context):
         path = re.sub(r"^(\/orchestrator)", "", path)
         method = event["httpMethod"]
 
-        method_found, payload_dict = extract_payload(method=method, event=event)
+        method_found, payload_dict = extract_payload(method=method,
+                                                     event=event)
         if not method_found:
             return generate_lambda_response(405, "Method Not Allowed")
 
@@ -76,9 +74,10 @@ def request_handler(event, context):
             obj_util.report_slack(1, error_message, SLACK_HOOK)
             response = generate_lambda_response(500, error_message)
         else:
-            response = generate_lambda_response(
-                200, {"status": "success", "data": response_data}
-            )
+            response = generate_lambda_response(200, {
+                "status": "success",
+                "data": response_data
+            })
     except Exception as e:
         error_message = format_error_message(
             status="failed",

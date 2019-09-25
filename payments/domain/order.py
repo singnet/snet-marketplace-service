@@ -18,7 +18,8 @@ class Order(object):
         self._username = None
         self._currency = None
 
-    def __init__(self, order_id, amount, currency, item_details, username, payments):
+    def __init__(self, order_id, amount, currency, item_details, username,
+                 payments):
         self._order_id = order_id
         self._payments = payments
         self._amount = amount
@@ -60,7 +61,10 @@ class Order(object):
             self._payments.append(payment)
         else:
             raise Exception(f"Invalid payment method: {payment_method}")
-        return {"payment_object": payment, "payment": payment_response["payment"]}
+        return {
+            "payment_object": payment,
+            "payment": payment_response["payment"]
+        }
 
     def get_payment(self, payment_id):
         for payment in self._payments:
@@ -68,7 +72,8 @@ class Order(object):
                 return payment
         return None
 
-    def execute_payment(self, payment_id, paid_payment_details, payment_method):
+    def execute_payment(self, payment_id, paid_payment_details,
+                        payment_method):
         logger.info(f"Executing payment {payment_id} using {payment_method}")
         if payment_method == PAYMENT_METHOD_PAYPAL:
             payment = self.get_payment(payment_id)
@@ -83,9 +88,12 @@ class Order(object):
         payment = self.get_payment(payment_id)
 
         if payment.get_payment_status() == PaymentStatus.SUCCESS:
-            raise Exception(f"Payment {payment_id} is already in success status")
+            raise Exception(
+                f"Payment {payment_id} is already in success status")
         elif payment.get_payment_status() == PaymentStatus.FAILED:
-            raise Exception(f"Payment {payment_id} is already in failed status")
+            raise Exception(
+                f"Payment {payment_id} is already in failed status")
 
         payment.set_payment_status(PaymentStatus.FAILED)
-        logger.info(f'Payment status set to "failed" for payment_id {payment_id}')
+        logger.info(
+            f'Payment status set to "failed" for payment_id {payment_id}')

@@ -14,7 +14,7 @@ class OrderFactory:
         payments = []
         for payment_info in order.payments:
             if ("payment_method" in payment_info.payment_details) and (
-                payment_info.payment_details["payment_method"] == "paypal"
+                    payment_info.payment_details["payment_method"] == "paypal"
             ):
                 payment = PaypalPayment(
                     payment_id=payment_info.payment_id,
@@ -62,7 +62,8 @@ class OrderFactory:
     def get_order_details(orders):
         order_details = []
         for order_item in orders:
-            order = OrderFactory.create_order_details_from_repository(order_item)
+            order = OrderFactory.create_order_details_from_repository(
+                order_item)
             order_details.append(order)
         return {"orders": order_details}
 
@@ -81,14 +82,18 @@ class OrderFactory:
         }
         for payment_item in order_item.payments:
             payment = {
-                "payment_id": payment_item.payment_id,
+                "payment_id":
+                payment_item.payment_id,
                 "price": {
                     "amount": payment_item.amount["amount"],
                     "currency": payment_item.amount["currency"],
                 },
-                "payment_details": payment_item.payment_details,
-                "payment_status": payment_item.payment_status,
-                "created_at": payment_item.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                "payment_details":
+                payment_item.payment_details,
+                "payment_status":
+                payment_item.payment_status,
+                "created_at":
+                payment_item.created_at.strftime("%Y-%m-%d %H:%M:%S"),
             }
             order["payments"].append(payment)
         return order

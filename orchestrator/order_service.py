@@ -31,7 +31,8 @@ class OrderType(Enum):
 class OrderService:
     def __init__(self, obj_repo):
         self.obj_repo = obj_repo
-        self.obj_transaction_history_dao = TransactionHistoryDAO(obj_repo=self.obj_repo)
+        self.obj_transaction_history_dao = TransactionHistoryDAO(
+            obj_repo=self.obj_repo)
         self.lambda_client = boto3.client("lambda")
 
     def initiate_order(self, user_data, payload_dict):
@@ -45,8 +46,9 @@ class OrderService:
         price = payload_dict["price"]
         order_type = payload_dict["order_type"]
         order_details = self.manage_create_order(
-            username=username, item_details=payload_dict["item_details"], price=price
-        )
+            username=username,
+            item_details=payload_dict["item_details"],
+            price=price)
         order_id = order_details["order_id"]
         try:
             redirect_response = self.manage_initiate_payment(
@@ -67,8 +69,7 @@ class OrderService:
                 status=Status.SUCCESS.value,
             )
             self.obj_transaction_history_dao.insert_transaction_history(
-                obj_transaction_history=obj_transaction_history
-            )
+                obj_transaction_history=obj_transaction_history)
             redirect_response["statusCode"] = 301
             return redirect_response
         except Exception as e:
@@ -79,8 +80,7 @@ class OrderService:
                 status=Status.PAYMENT_INITIATION_FAILED.value,
             )
             self.obj_transaction_history_dao.insert_transaction_history(
-                obj_transaction_history=obj_transaction_history
-            )
+                obj_transaction_history=obj_transaction_history)
             print(repr(e))
             raise e
 
@@ -130,8 +130,7 @@ class OrderService:
                 transaction_hash=processed_order_data["transaction_hash"],
             )
             self.obj_transaction_history_dao.insert_transaction_history(
-                obj_transaction_history=obj_transaction_history
-            )
+                obj_transaction_history=obj_transaction_history)
             return processed_order_data
 
         except Exception as e:
@@ -142,16 +141,21 @@ class OrderService:
                 status=status,
             )
             self.obj_transaction_history_dao.insert_transaction_history(
-                obj_transaction_history=obj_transaction_history
-            )
+                obj_transaction_history=obj_transaction_history)
             print(repr(e))
             raise e
 
-    def manage_initiate_payment(self, username, order_id, price, payment_method):
+    def manage_initiate_payment(self, username, order_id, price,
+                                payment_method):
         initiate_payment_event = {
-            "pathParameters": {"order_id": order_id},
+            "pathParameters": {
+                "order_id": order_id
+            },
             "httpMethod": "POST",
-            "body": json.dumps({"price": price, "payment_method": payment_method}),
+            "body": json.dumps({
+                "price": price,
+                "payment_method": payment_method
+            }),
         }
         response = self.lambda_client.invoke(
             FunctionName=INITIATE_PAYMENT_SERVICE_ARN,
@@ -166,32 +170,42 @@ class OrderService:
 
     def manage_create_order(self, username, item_details, price):
         create_order_event = {
-            "path": "/order/create",
-            "httpMethod": "POST",
-            "body": json.dumps(
-                {"price": price, "item_details": item_details, "username": username}
-            ),
+            "path":
+            "/order/create",
+            "httpMethod":
+            "POST",
+            "body":
+            json.dumps({
+                "price": price,
+                "item_details": item_details,
+                "username": username
+            }),
         }
         response = self.lambda_client.invoke(
             FunctionName=CREATE_ORDER_SERVICE_ARN,
             InvocationType="RequestResponse",
             Payload=json.dumps(create_order_event),
         )
-        create_order_service_response = json.loads(response.get("Payload").read())
+        create_order_service_response = json.loads(
+            response.get("Payload").read())
         print("create_order_service_response==", create_order_service_response)
         if create_order_service_response["statusCode"] == 201:
             return json.loads(create_order_service_response["body"])
         else:
             raise Exception("Error creating order for user %s", username)
 
-    def manage_execute_payment(
-        self, username, order_id, payment_id, payment_details, payment_method
-    ):
+    def manage_execute_payment(self, username, order_id, payment_id,
+                               payment_details, payment_method):
         execute_payment_event = {
-            "pathParameters": {"order_id": order_id, "payment_id": payment_id},
-            "body": json.dumps(
-                {"payment_method": payment_method, "payment_details": payment_details}
-            ),
+            "pathParameters": {
+                "order_id": order_id,
+                "payment_id": payment_id
+            },
+            "body":
+            json.dumps({
+                "payment_method": payment_method,
+                "payment_details": payment_details
+            }),
         }
         response = self.lambda_client.invoke(
             FunctionName=EXECUTE_PAYMENT_SERVICE_ARN,
@@ -208,7 +222,8 @@ class OrderService:
                 order_id,
             )
 
-    def manage_process_order(self, order_id, order_type, amount, currency, order_data):
+    def manage_process_order(self, order_id, order_type, amount, currency,
+                             order_data):
         obj_wallets_service = WalletService(obj_repo=self.obj_repo)
         if order_type == OrderType.CREATE_WALLET_AND_CHANNEL.value:
             wallet_details = obj_wallets_service.create_and_register_wallet()

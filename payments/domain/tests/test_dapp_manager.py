@@ -14,8 +14,10 @@ class TestDappMananger(unittest.TestCase):
 
     def test_create_order(self):
         status, response = self.dapp_order_manager.create_order(
-            100, "USD", {"item": "item", "quantity": 2}, "user"
-        )
+            100, "USD", {
+                "item": "item",
+                "quantity": 2
+            }, "user")
         if status:
             assert "order_id" in response
             assert "item_details" in response
@@ -29,17 +31,20 @@ class TestDappMananger(unittest.TestCase):
         self.repo.add_item(
             Order(
                 id="order_test_123",
-                item_details={"item": "test_item", "quantity": 2},
-                amount={"amount": 100, "currency": "USD"},
-                created_at=datetime.strptime(
-                    "2002-12-21 00:00:00", "%Y-%m-%d %H:%M:%S"
-                ),
+                item_details={
+                    "item": "test_item",
+                    "quantity": 2
+                },
+                amount={
+                    "amount": 100,
+                    "currency": "USD"
+                },
+                created_at=datetime.strptime("2002-12-21 00:00:00",
+                                             "%Y-%m-%d %H:%M:%S"),
                 username="user",
-            )
-        )
+            ))
         status, response = self.dapp_order_manager.initiate_payment_against_order(
-            "order_test_123", 100, "USD", "paypal"
-        )
+            "order_test_123", 100, "USD", "paypal")
         if status:
             if "price" in response:
                 assert "amount" in response["price"]
@@ -57,18 +62,21 @@ class TestDappMananger(unittest.TestCase):
         self.repo.add_item(
             Order(
                 id="order_test_123",
-                item_details={"item": "test_item", "quantity": 2},
-                amount={"amount": 100, "currency": "USD"},
-                created_at=datetime.strptime(
-                    "2002-12-21 00:00:00", "%Y-%m-%d %H:%M:%S"
-                ),
+                item_details={
+                    "item": "test_item",
+                    "quantity": 2
+                },
+                amount={
+                    "amount": 100,
+                    "currency": "USD"
+                },
+                created_at=datetime.strptime("2002-12-21 00:00:00",
+                                             "%Y-%m-%d %H:%M:%S"),
                 username="user",
-            )
-        )
+            ))
         username = "user"
         status, order_details = self.dapp_order_manager.get_order_details_for_user(
-            username
-        )
+            username)
         if status:
             assert "orders" in order_details
 

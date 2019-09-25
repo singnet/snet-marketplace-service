@@ -23,7 +23,9 @@ class IPFSUtil(object):
         ipfs_conn = ipfsapi.connect(host=self.host, port=self.port)
         try:
             with open(filepath, "r+b") as file:
-                result = ipfs_conn.add(file, pin=True, wrap_with_directory=True)
+                result = ipfs_conn.add(file,
+                                       pin=True,
+                                       wrap_with_directory=True)
                 return result[1]["Hash"] + "/" + result[0]["Name"]
         except Exception as err:
             logging.error("File error ", err)

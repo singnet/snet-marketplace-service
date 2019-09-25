@@ -10,7 +10,8 @@ class OrderManager:
         self.order_repository = OrderRepository()
 
     def create_order(self, amount, currency, item_details, username):
-        order = OrderFactory.create_order(amount, currency, item_details, username)
+        order = OrderFactory.create_order(amount, currency, item_details,
+                                          username)
 
         self.order_repository.persist_order(order)
         logger.info(
@@ -20,18 +21,20 @@ class OrderManager:
         response = {
             "order_id": order.get_order_id(),
             "item_details": order.get_item_details(),
-            "price": {"amount": order.get_amount(), "currency": order.get_currency()},
+            "price": {
+                "amount": order.get_amount(),
+                "currency": order.get_currency()
+            },
         }
         return response
 
-    def initiate_payment_against_order(
-        self, order_id, amount, currency, payment_method
-    ):
+    def initiate_payment_against_order(self, order_id, amount, currency,
+                                       payment_method):
         order = OrderFactory.create_order_from_repository_order(
-            self.order_repository.get_order_by_order_id(order_id)
-        )
+            self.order_repository.get_order_by_order_id(order_id))
 
-        payment_details = order.create_payment(amount, currency, payment_method)
+        payment_details = order.create_payment(amount, currency,
+                                               payment_method)
         payment = payment_details["payment_object"]
         logger.info(
             f"Payment {payment.get_payment_id()} created against order {order.get_order_id()}"
@@ -53,17 +56,17 @@ class OrderManager:
 
         return response
 
-    def execute_payment_against_order(
-        self, order_id, payment_id, payment_details, payment_method
-    ):
+    def execute_payment_against_order(self, order_id, payment_id,
+                                      payment_details, payment_method):
         order = OrderFactory.create_order_from_repository_order(
-            self.order_repository.get_order_by_order_id(order_id)
-        )
+            self.order_repository.get_order_by_order_id(order_id))
 
-        payment = order.execute_payment(payment_id, payment_details, payment_method)
+        payment = order.execute_payment(payment_id, payment_details,
+                                        payment_method)
         logger.info("Payment execution is complete")
 
-        OrderRepository().update_payment_status(order, payment.get_payment_id())
+        OrderRepository().update_payment_status(order,
+                                                payment.get_payment_id())
         logger.info("Payment status updated in the database")
 
         response = {
@@ -85,8 +88,7 @@ class OrderManager:
 
     def cancel_payment_against_order(self, order_id, payment_id):
         order = OrderFactory.create_order_from_repository_order(
-            self.order_repository.get_order_by_order_id(order_id)
-        )
+            self.order_repository.get_order_by_order_id(order_id))
 
         order.cancel_payment(payment_id)
         self.order_repository.update_payment_status(order, payment_id)
@@ -96,6 +98,5 @@ class OrderManager:
 
     def get_order_from_order_id(self, order_id):
         response = OrderFactory.create_order_details_from_repository(
-            self.order_repository.get_order_by_order_id(order_id)
-        )
+            self.order_repository.get_order_by_order_id(order_id))
         return response

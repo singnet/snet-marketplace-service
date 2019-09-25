@@ -35,9 +35,9 @@ def upgrade():
         sa.Column("payment_details", mysql.JSON(), nullable=False),
         sa.Column("payment_status", sa.VARCHAR(length=225), nullable=False),
         sa.Column("created_at", sa.TIMESTAMP(), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["order_id"], ["order.id"], onupdate="CASCADE", ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["order_id"], ["order.id"],
+                                onupdate="CASCADE",
+                                ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("payment_id"),
     )
     # ### end Alembic commands ###

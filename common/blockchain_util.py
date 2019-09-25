@@ -32,53 +32,45 @@ class BlockChainUtil(object):
         return self.web3_object.eth.contract(abi=contract, address=address)
 
     def generate_signature(self, data_types, values, signer_key):
-        signer_key = (
-            "0x" + signer_key if not signer_key.startswith("0x") else signer_key
-        )
+        signer_key = ("0x" + signer_key
+                      if not signer_key.startswith("0x") else signer_key)
         message = web3.Web3.soliditySha3(data_types, values)
         signature = self.web3_object.eth.account.signHash(
-            defunct_hash_message(message), signer_key
-        )
+            defunct_hash_message(message), signer_key)
         return signature.signature.hex()
 
     def get_nonce(self, address):
         nonce = self.web3_object.eth.getTransactionCount(address)
         return nonce
 
-    def sign_transaction_with_private_key(self, private_key, transaction_object):
+    def sign_transaction_with_private_key(self, private_key,
+                                          transaction_object):
         return self.web3_object.eth.account.signTransaction(
-            transaction_object, private_key
-        ).rawTransaction
+            transaction_object, private_key).rawTransaction
 
-    def create_transaction_object(
-        self,
-        *positional_inputs,
-        method_name,
-        address,
-        contract_path,
-        contract_address_path,
-        net_id
-    ):
+    def create_transaction_object(self, *positional_inputs, method_name,
+                                  address, contract_path,
+                                  contract_address_path, net_id):
         nonce = self.get_nonce(address=address)
         self.contract = self.load_contract(path=contract_path)
         self.contract_address = self.read_contract_address(
-            net_id=net_id, path=contract_address_path, key="address"
-        )
+            net_id=net_id, path=contract_address_path, key="address")
         self.contract_instance = self.contract_instance(
-            contract=self.contract, address=self.contract_address
-        )
+            contract=self.contract, address=self.contract_address)
         print("gas_price == ", self.web3_object.eth.gasPrice)
         print("nonce == ", nonce)
-        transaction_object = getattr(self.contract_instance.functions, method_name)(
-            *positional_inputs
-        ).buildTransaction(
-            {
-                "from": address,
-                "nonce": nonce,
-                "gasPrice": self.web3_object.eth.gasPrice,
-                "chainId": 3,
-            }
-        )
+        transaction_object = getattr(
+            self.contract_instance.functions,
+            method_name)(*positional_inputs).buildTransaction({
+                "from":
+                address,
+                "nonce":
+                nonce,
+                "gasPrice":
+                self.web3_object.eth.gasPrice,
+                "chainId":
+                3,
+            })
         return transaction_object
 
     def process_raw_transaction(self, raw_transaction):
