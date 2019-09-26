@@ -3,7 +3,7 @@ import boto3
 
 from enum import Enum
 from orchestrator.config import CREATE_ORDER_SERVICE_ARN, INITIATE_PAYMENT_SERVICE_ARN, \
-    EXECUTE_PAYMENT_SERVICE_ARN, WALLETS_SERVICE_ARN
+    EXECUTE_PAYMENT_SERVICE_ARN, WALLETS_SERVICE_ARN, ORDER_DETAILS_ORDER_ID_ARN
 from orchestrator.transaction_history import TransactionHistory
 from orchestrator.transaction_history_data_access_object import TransactionHistoryDAO
 
@@ -40,7 +40,7 @@ class OrderService:
         """
         username = user_data["authorizer"]["claims"]["email"]
         price = payload_dict["price"]
-        order_type = payload_dict["order_type"]
+        order_type = payload_dict["item_details"]["order_type"]
         order_details = self.manage_create_order(
             username=username, item_details=payload_dict["item_details"],
             price=price
@@ -77,18 +77,30 @@ class OrderService:
                 Step 3  Process Order
                 Step 4  Update Transaction History
         """
-        username = user_data["authorizer"]["claims"]["email"]
         order_id = payload_dict["order_id"]
-        order_type = payload_dict["order_type"]
-        item_details = payload_dict["item_details"]
         payment_id = payload_dict["payment_id"]
-        payment_method = payload_dict["payment_method"]
-        payment_details = payload_dict["payment_details"]
-        price = payload_dict["price"]
+        username = user_data["authorizer"]["claims"]["email"]
+        order = self.get_order_details(order_id, username)
+        payment = None
+        for payment_item in order["payments"]:
+            if payment_item["payment_id"] == payment_id:
+                payment = payment_item
+                break
+
+        if payment is None:
+            raise Exception(f"Failed to fetch order details for order_id {order_id} \n"
+                            f"payment_id {payment_id} \n"
+                            f"username{username}")
+
+        order_type = order["item_details"]["order_type"]
+        item_details = order["item_details"]
+        payment_method = payment["payment_details"]["payment_method"]
+        paid_payment_details = payload_dict["payment_details"]
+        price = payment["price"]
         status = Status.PAYMENT_EXECUTION_FAILED.value
-        payment_executed = self.manage_execute_payment(
+        self.manage_execute_payment(
             username=username, order_id=order_id, payment_id=payment_id,
-            payment_details=payment_details, payment_method=payment_method
+            payment_details=paid_payment_details, payment_method=payment_method
         )
         status = Status.PAYMENT_EXECUTED.value
         try:
@@ -103,7 +115,7 @@ class OrderService:
                 username=username, order_id=order_id, order_type=order_type,
                 status=status, payment_id=payment_id,
                 payment_method=payment_method,
-                raw_payment_data=json.dumps(payment_details),
+                raw_payment_data=json.dumps(paid_payment_details),
                 transaction_hash=processed_order_data["transaction_hash"]
             )
             self.obj_transaction_history_dao.insert_transaction_history(obj_transaction_history=obj_transaction_history)
@@ -117,6 +129,26 @@ class OrderService:
             self.obj_transaction_history_dao.insert_transaction_history(obj_transaction_history=obj_transaction_history)
             print(repr(e))
             raise e
+
+    def get_order_details(self, order_id, username):
+        order_details_event = {
+            "path": f"order/{order_id}",
+            "pathParameters": {"order_id": order_id},
+            "httpMethod": "GET"
+        }
+        response = self.lambda_client.invoke(
+            FunctionName=ORDER_DETAILS_ORDER_ID_ARN,
+            InvocationType='RequestResponse',
+            Payload=json.dumps(order_details_event)
+        )
+        order_details_response = json.loads(response.get('Payload').read())
+        if order_details_response["statusCode"] != 200:
+            raise Exception(f"Failed to fetch order details for order_id {order_id} username{username}")
+
+        order_details_data = json.loads(order_details_response["body"])
+        if order_details_data["username"] != username:
+            raise Exception(f"Failed to fetch order details for order_id {order_id} username{username}")
+        return order_details_data
 
     def manage_initiate_payment(self, username, order_id, price, payment_method):
         initiate_payment_event = {
@@ -151,7 +183,7 @@ class OrderService:
         if create_order_service_response["statusCode"] == 201:
             return json.loads(create_order_service_response["body"])
         else:
-            raise Exception("Error creating order for user %s", username)
+            raise Exception(f"Error creating order for user {username}")
 
     def manage_execute_payment(self, username, order_id, payment_id, payment_details, payment_method):
         execute_payment_event = {
@@ -167,7 +199,7 @@ class OrderService:
         if payment_executed["statusCode"] == 201:
             return payment_executed
         else:
-            raise Exception("Error executing payment for username %s against order_id %s", username, order_id)
+            raise Exception(f"Error executing payment for username {username} against order_id {order_id}")
 
     def manage_process_order(self, order_id, order_type, amount, currency, order_data):
         if order_type == OrderType.CREATE_WALLET_AND_CHANNEL.value:
