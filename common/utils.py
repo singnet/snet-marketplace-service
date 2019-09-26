@@ -99,7 +99,7 @@ def generate_lambda_redirect_response(status_code, message, headers=None):
         'headers': {
             'Content-Type': 'text/plain',
             "X-Requested-With": '*',
-            "Access-Control-Allow-Headers": 'Access-Control-Allow-Origin, Content-Type,X-Amz-Date,Authorization,'
+            "Access-Control-Allow-Headers": 'Access-Control-Allow-Origin, Content-Type,X-Amz-Date,'
                                             'X-Api-Key,x-requested-with',
             "Access-Control-Allow-Origin": '*',
             "Access-Control-Allow-Methods": 'GET,OPTIONS,POST'
