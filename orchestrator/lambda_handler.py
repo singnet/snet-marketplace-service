@@ -16,7 +16,6 @@ NETWORKS_NAME = dict(
     (NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
 db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys())
 obj_util = Utils()
-path = None
 
 
 def route_path(path, method, payload_dict, request_context=None):
@@ -72,10 +71,21 @@ def request_handler(event, context):
             obj_util.report_slack(1, error_message, SLACK_HOOK)
             response = generate_lambda_response(500, error_message)
         else:
-            response = generate_lambda_response(200, {
-                "status": "success",
-                "data": response_data
-            })
+            if path == "/order/initiate":
+                response = generate_lambda_response(
+                    302, {
+                        "status": "success",
+                        "data": response_data
+                    },
+                    headers={
+                        "location": response_data["payment"]["payment_url"]
+                    }
+                )
+            else:
+                response = generate_lambda_response(200, {
+                    "status": "success",
+                    "data": response_data
+                })
     except Exception as e:
         error_message = format_error_message(
             status="failed",
