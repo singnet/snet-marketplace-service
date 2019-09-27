@@ -26,6 +26,11 @@ def route_path(path, method, payload_dict, request_context=None):
         response_data = obj_order_service.initiate_order(
             user_data=request_context, payload_dict=payload_dict)
 
+    elif "/v2/order/initiate" == path:
+        response_data = obj_order_service.initiate_order(
+            user_data=request_context, payload_dict=payload_dict
+        )
+
     elif "/order/execute" == path and method == "POST":
         response_data = obj_order_service.execute_order(
             user_data=request_context, payload_dict=payload_dict)
