@@ -71,10 +71,21 @@ def request_handler(event, context):
             obj_util.report_slack(1, error_message, SLACK_HOOK)
             response = generate_lambda_response(500, error_message)
         else:
-            response = generate_lambda_response(200, {
-                "status": "success",
-                "data": response_data
-            })
+            if "/v2/order/initiate" == path:
+                response = generate_lambda_redirect_response(
+                    302, {
+                        "status": "success",
+                        "data": response_data
+                    },
+                    headers={
+                        "location": response_data["payment"]["payment_url"]
+                    }
+                )
+            else:
+                response = generate_lambda_response(200, {
+                    "status": "success",
+                    "data": response_data
+                })
     except Exception as e:
         error_message = format_error_message(
             status="failed",
