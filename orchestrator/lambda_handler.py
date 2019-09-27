@@ -26,6 +26,11 @@ def route_path(path, method, payload_dict, request_context=None):
         response_data = obj_order_service.initiate_order(
             user_data=request_context, payload_dict=payload_dict)
 
+    elif "/v2/order/initiate" == path:
+        response_data = obj_order_service.initiate_order(
+            user_data=request_context, payload_dict=payload_dict
+        )
+
     elif "/order/execute" == path and method == "POST":
         response_data = obj_order_service.execute_order(
             user_data=request_context, payload_dict=payload_dict)
@@ -71,10 +76,21 @@ def request_handler(event, context):
             obj_util.report_slack(1, error_message, SLACK_HOOK)
             response = generate_lambda_response(500, error_message)
         else:
-            response = generate_lambda_response(200, {
-                "status": "success",
-                "data": response_data
-            })
+            if "/v2/order/initiate" == path:
+                response = generate_lambda_redirect_response(
+                    302, {
+                        "status": "success",
+                        "data": response_data
+                    },
+                    headers={
+                        "location": response_data["payment"]["payment_url"]
+                    }
+                )
+            else:
+                response = generate_lambda_response(200, {
+                    "status": "success",
+                    "data": response_data
+                })
     except Exception as e:
         error_message = format_error_message(
             status="failed",
