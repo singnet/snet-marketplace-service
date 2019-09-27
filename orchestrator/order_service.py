@@ -80,8 +80,7 @@ class OrderService:
         """
         order_id = payload_dict["order_id"]
         payment_id = payload_dict["payment_id"]
-        username = "pratik.prajapati@singularitynet.io"
-        # username = user_data["authorizer"]["claims"]["email"]
+        username = user_data["authorizer"]["claims"]["email"]
         order = self.get_order_details(order_id, username)
         payment = None
         for payment_item in order["payments"]:
