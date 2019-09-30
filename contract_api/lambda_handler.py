@@ -63,10 +63,16 @@ def request_handler(event, context):
                 org_id=org_id, service_id=service_id)
 
         elif "/channel" == path:
-            response_data = obj_mpe.get_channels_by_user_address(user_address=payload_dict["user_address"],
-                                                                 org_id=payload_dict.get(
-                                                                     "org_id", None),
-                                                                 service_id=payload_dict.get("service_id", None))
+            user_address = payload_dict["user_address"]
+            org_id = payload_dict.get("org_id", None)
+            service_id = payload_dict.get("service_id", None)
+            group_id = payload_dict.get("group_id", None)
+            response_data = obj_mpe.get_channels_by_user_address(
+                user_address=user_address,
+                org_id=org_id,
+                service_id=service_id,
+                group_id=group_id
+            )
 
         elif re.match("(\/org\/)[^\/]*(\/service\/)[^\/]*[/]{0,1}$", path):
             org_id = sub_path[2]
@@ -121,3 +127,19 @@ def get_response(status_code, message):
             "Access-Control-Allow-Methods": 'GET,OPTIONS,POST'
         }
     }
+
+
+if __name__ == "__main__":
+    event = {
+        "requestContext": {
+            'stage': "ropsten"
+        },
+        "httpMethod": "GET",
+        "path": "/channel",
+        "queryStringParameters": {
+            "user_address": "0x0B71B242Be89BaDaCFFe320a263c0686a91A617b",
+            "org_id": "snet",
+            "group_id": "m5FKWq4hW0foGW5qSbzGSjgZRuKs7A1ZwbIrJ9e96rc="
+        }
+    }
+    print(request_handler(event, None))
