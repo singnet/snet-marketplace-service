@@ -127,19 +127,3 @@ def get_response(status_code, message):
             "Access-Control-Allow-Methods": 'GET,OPTIONS,POST'
         }
     }
-
-
-if __name__ == "__main__":
-    event = {
-        "requestContext": {
-            'stage': "ropsten"
-        },
-        "httpMethod": "GET",
-        "path": "/channel",
-        "queryStringParameters": {
-            "user_address": "0x0B71B242Be89BaDaCFFe320a263c0686a91A617b",
-            "org_id": "snet",
-            "group_id": "m5FKWq4hW0foGW5qSbzGSjgZRuKs7A1ZwbIrJ9e96rc="
-        }
-    }
-    print(request_handler(event, None))
