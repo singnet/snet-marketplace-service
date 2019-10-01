@@ -1,8 +1,9 @@
+import json
 from datetime import datetime as dt
 
 import boto3
 
-from dapp_user.config import PATH_PREFIX
+from dapp_user.config import PATH_PREFIX, CONTRACT_API_ARN
 from common.utils import Utils
 from schema import Schema, And
 
@@ -14,7 +15,7 @@ class User:
     def __init__(self, obj_repo):
         self.repo = obj_repo
         self.obj_utils = Utils()
-        self.ssm_client = boto3.client('ssm', region_name="us-east-1")
+        self.ssm_client = boto3.client('ssm')
 
     def _set_user_data(self, user_data):
         """ Method to set user information. """
@@ -40,14 +41,51 @@ class User:
             print(repr(e))
             raise e
 
-    def get_wallet_details(self, user_data):
+    def get_wallet_details(self, user_data, org_id, group_id):
         """ Method to get wallet details for a given username. """
         try:
             username = user_data['authorizer']['claims']['email']
-            search_data = self.repo.execute(
-                "SELECT * FROM wallet WHERE username = %s", username)
-            self.obj_utils.clean(search_data)
-            return search_data
+            wallet_data = self.repo.execute(
+                "SELECT UW.address, UW.is_default, W.type, W.status "
+                "FROM user_wallet as UW JOIN wallet as W ON UW.address = W.address WHERE UW.username= %s", username)
+            self.obj_utils.clean(wallet_data)
+
+            wallet_response = {
+                "username": username,
+                "org_id": org_id,
+                "group_id": group_id,
+                "wallets": []
+            }
+            for record in wallet_data:
+                wallet = dict()
+                wallet.update(record)
+                user_address = record["address"]
+
+                event = {
+                    "requestContext": {
+                        'stage': "ropsten"
+                    },
+                    "httpMethod": "GET",
+                    "path": "/channel",
+                    "queryStringParameters": {
+                        "user_address": user_address,
+                        "org_id": org_id,
+                        "group_id": group_id
+                    }
+                }
+                channel_details_lambda_response = self.lambda_client.invoke(
+                    FunctionName=CONTRACT_API_ARN, InvocationType='RequestResponse',
+                    Payload=json.dumps(event)
+                )
+                channel_details_response = json.loads(channel_details_lambda_response.get("Payload").read())
+                if channel_details_response["statusCode"] != 200:
+                    raise Exception(f"Failed to get channel details from contract API username: {username} "
+                                    f"group_id: {group_id} "
+                                    f"org_id: {org_id}")
+                channel_details = json.loads(channel_details_response["body"])["data"]
+                wallet["channels"] = channel_details["channels"]
+                wallet_response["wallets"].append(wallet)
+            return wallet_response
         except Exception as e:
             print(repr(e))
             raise e
@@ -55,7 +93,8 @@ class User:
     # def _link_wallet(self, username):
     #    """ Method to assign wallet address to a user. """
     #    try:
-    #        return self.repo.execute("UPDATE wallet SET username = %s WHERE username IS NULL AND status = 1 LIMIT 1", username)
+    #        return self.repo.execute("UPDATE wallet SET username = %s
+    #        WHERE username IS NULL AND status = 1 LIMIT 1", username)
     #    except Exception as e:
     #        print(repr(e))
     #        raise e
@@ -102,9 +141,9 @@ class User:
             raise e
 
     def get_user_profile(self, user_data):
-        '''
+        """
             Method to fetch user profile data.
-        '''
+        """
         try:
             username = user_data['authorizer']['claims']['email']
             result = self.repo.execute(
@@ -116,13 +155,13 @@ class User:
             raise e
 
     def update_user_profile(self, email_alerts, is_terms_accepted, user_data):
-        '''
+        """
             Method to update user profile data.
-        '''
+        """
         try:
             username = user_data['authorizer']['claims']['email']
-            result = self.repo.execute("UPDATE user SET email_alerts = %s, is_terms_accepted = %s WHERE username = %s", [
-                                       int(email_alerts == True), int(is_terms_accepted == True), username])
+            result = self.repo.execute("UPDATE user SET email_alerts = %s, is_terms_accepted = %s WHERE username = %s",
+                                       [int(email_alerts is True), int(is_terms_accepted is True), username])
             return {"success": "success", "data": []}
         except Exception as e:
             print(repr(e))
@@ -189,8 +228,8 @@ class User:
                 org_id = record['org_id']
                 service_id = record['service_id']
                 record.update({'comment': user_rating_dict.get(org_id, {})
-                               .get(service_id, {})
-                               .get("comment", [])})
+                              .get(service_id, {})
+                              .get("comment", [])})
             return rating
         except Exception as e:
             print(repr(e))
@@ -261,7 +300,8 @@ class User:
             print(repr(e))
             raise e
 
-    def set_wallet_details(self, username, address, is_default, status=1, type=DEFAULT_WALLET_TYPE, created_by=CREATED_BY):
+    def set_wallet_details(self, username, address, is_default, status=1, type=DEFAULT_WALLET_TYPE,
+                           created_by=CREATED_BY):
         try:
             self.repo.execute(
                 "INSERT INTO wallet (username, address, type, is_default, status, created_by, row_updated, row_created) "
