@@ -44,7 +44,19 @@ def request_handler(event, context):
             response_data = signer_object.signature_for_regular_call(user_data=event['requestContext'],
                                                                      org_id=payload_dict['org_id'],
                                                                      service_id=payload_dict['service_id'])
-        else:
+
+        elif "/state-service" == path:
+
+            response_data = signer_object.signature_for_regular_call(user_data=event['requestContext'],
+                                                                     channel_id=payload_dict['channel_id'])
+
+        elif "/daemon-call" == path:
+
+            response_data = signer_object.signature_for_daemon_call(user_data=event['requestContext'],
+                                                                    channel_id=payload_dict['channel_id'],
+                                                                    nonce=payload_dict['nonce'],
+                                                                    amount=payload_dict['amount'])
+       else:
             return get_response(404, "Not Found")
 
         if response_data is None:
