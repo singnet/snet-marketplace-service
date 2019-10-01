@@ -55,29 +55,33 @@ class OrderFactory:
     def get_order_details(orders):
         order_details = []
         for order_item in orders:
-            order = {
-                "order_id": order_item.id,
-                "price": {
-                    "amount": order_item.amount["amount"],
-                    "currency": order_item.amount["currency"]
-                },
-                "username": order_item.username,
-                "created_at": order_item.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-                "item_details": order_item.item_details,
-                "payments": []
-            }
-            for payment_item in order_item.payments:
-                payment = {
-                    "payment_id": payment_item.payment_id,
-                    "price": {
-                        "amount": payment_item.amount["amount"],
-                        "currency": payment_item.amount["currency"]
-                    },
-                    "payment_details": payment_item.payment_details,
-                    "payment_status": payment_item.payment_status,
-                    "created_at": payment_item.created_at.strftime("%Y-%m-%d %H:%M:%S")
-                }
-                order["payments"].append(payment)
+            order = OrderFactory.create_order_details_from_repository(order_item)
             order_details.append(order)
         return {"orders": order_details}
 
+    @staticmethod
+    def create_order_details_from_repository(order_item):
+        order = {
+            "order_id": order_item.id,
+            "price": {
+                "amount": order_item.amount["amount"],
+                "currency": order_item.amount["currency"]
+            },
+            "username": order_item.username,
+            "created_at": order_item.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "item_details": order_item.item_details,
+            "payments": []
+        }
+        for payment_item in order_item.payments:
+            payment = {
+                "payment_id": payment_item.payment_id,
+                "price": {
+                    "amount": payment_item.amount["amount"],
+                    "currency": payment_item.amount["currency"]
+                },
+                "payment_details": payment_item.payment_details,
+                "payment_status": payment_item.payment_status,
+                "created_at": payment_item.created_at.strftime("%Y-%m-%d %H:%M:%S")
+            }
+            order["payments"].append(payment)
+        return order
