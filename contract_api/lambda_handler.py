@@ -63,10 +63,16 @@ def request_handler(event, context):
                 org_id=org_id, service_id=service_id)
 
         elif "/channel" == path:
-            response_data = obj_mpe.get_channels_by_user_address(user_address=payload_dict["user_address"],
-                                                                 org_id=payload_dict.get(
-                                                                     "org_id", None),
-                                                                 service_id=payload_dict.get("service_id", None))
+            user_address = payload_dict["user_address"]
+            org_id = payload_dict.get("org_id", None)
+            service_id = payload_dict.get("service_id", None)
+            group_id = payload_dict.get("group_id", None)
+            response_data = obj_mpe.get_channels_by_user_address(
+                user_address=user_address,
+                org_id=org_id,
+                service_id=service_id,
+                group_id=group_id
+            )
 
         elif re.match("(\/org\/)[^\/]*(\/service\/)[^\/]*[/]{0,1}$", path):
             org_id = sub_path[2]
