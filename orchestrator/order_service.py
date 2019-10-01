@@ -206,7 +206,7 @@ class OrderService:
         if order_type == OrderType.CREATE_WALLET_AND_CHANNEL.value:
             wallet_create_payload = {
                 "path": "/wallet",
-                "body": f'"username": {username}',
+                "body": json.dumps({"username": username}),
                 "httpMethod": "POST"
             }
             wallet_create_lambda_response = self.lambda_client.invoke(
