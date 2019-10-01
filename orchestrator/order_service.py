@@ -38,8 +38,7 @@ class OrderService:
                 Step 2  Initiate Payment
                 Step 3  Persist Transaction History
         """
-        username = "pratik.prajapati@singularitynet.io"
-        # username = user_data["authorizer"]["claims"]["email"]
+        username = user_data["authorizer"]["claims"]["email"]
         price = payload_dict["price"]
         order_type = payload_dict["item_details"]["order_type"]
         order_details = self.manage_create_order(

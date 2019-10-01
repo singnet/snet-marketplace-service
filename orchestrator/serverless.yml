@@ -85,11 +85,11 @@ functions:
       - http:
           method: POST
           path: /order/initiate
-#          authorizer:
-#            name: user-authorizer
-#            type: COGNITO_USER_POOLS
-#            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-#            identitySource: method.request.header.Authorization
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
