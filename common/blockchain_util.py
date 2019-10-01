@@ -38,7 +38,7 @@ class BlockChainUtil(object):
         return signature.signature.hex()
 
     def get_nonce(self, address):
-        nonce = self.web3_object.eth.getTransactionCount(address)
+        nonce = self.web3_object.eth.getTransactionCount(address, 'pending')
         return nonce
 
     def sign_transaction_with_private_key(self, private_key, transaction_object):
