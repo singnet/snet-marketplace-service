@@ -82,3 +82,7 @@ class OrderManager:
 
         response = "Success"
         return response
+
+    def get_order_from_order_id(self, order_id):
+        response = OrderFactory.create_order_details_from_repository(self.order_repository.get_order_by_order_id(order_id))
+        return response

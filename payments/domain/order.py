@@ -56,7 +56,7 @@ class Order(object):
                 created_at=datetime.utcnow()
             )
 
-            payment_response = payment.initiate_payment(self.get_order_id())
+            payment_response = payment.initiate_payment(self.get_order_id(), self.get_item_details())
             self._payments.append(payment)
         else:
             raise Exception(f"Invalid payment method: {payment_method}")
