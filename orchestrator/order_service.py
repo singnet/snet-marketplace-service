@@ -106,6 +106,7 @@ class OrderService:
         try:
             status = Status.ORDER_PROCESSING_FAILED.value
             processed_order_data = self.manage_process_order(
+                username=username,
                 order_id=order_id, order_type=order_type,
                 amount=price["amount"],
                 currency=price["currency"], order_data=item_details
@@ -201,11 +202,11 @@ class OrderService:
         else:
             raise Exception(f"Error executing payment for username {username} against order_id {order_id}")
 
-    def manage_process_order(self, order_id, order_type, amount, currency, order_data):
+    def manage_process_order(self, username, order_id, order_type, amount, currency, order_data):
         if order_type == OrderType.CREATE_WALLET_AND_CHANNEL.value:
             wallet_create_payload = {
                 "path": "/wallet",
-                "body": "{}",
+                "body": f'"username": {username}',
                 "httpMethod": "POST"
             }
             wallet_create_lambda_response = self.lambda_client.invoke(
