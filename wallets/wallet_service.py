@@ -15,19 +15,20 @@ class WalletService:
     def __init__(self, obj_repo):
         self.obj_repo = obj_repo
 
-    def create_and_register_wallet(self):
+    def create_and_register_wallet(self, username):
         self.obj_blockchain_util = BlockChainUtil(provider_type="HTTP_PROVIDER", provider=NETWORKS[NETWORK_ID]['http_provider'])
         address, private_key = self.obj_blockchain_util.create_account()
         obj_wallet = Wallet(address=address, private_key=private_key, type=GENERAL_WALLET_TYPE, status=0)
-        registered = self.register_wallet(obj_wallet=obj_wallet)
+        registered = self.register_wallet(username=username, obj_wallet=obj_wallet)
         if registered:
             return obj_wallet.get_wallet()
         raise Exception("Unable to create and register wallet.")
 
-    def register_wallet(self, obj_wallet):
+    def register_wallet(self, username, obj_wallet):
         wallet_details = obj_wallet.get_wallet()
         obj_wallet_dao = WalletDAO(obj_repo=self.obj_repo)
-        persisted = obj_wallet_dao.insert_wallet_details(address=wallet_details["address"],
+        persisted = obj_wallet_dao.insert_wallet_details(username=username,
+                                                         address=wallet_details["address"],
                                                          type=wallet_details["type"],
                                                          status=wallet_details["status"])
         if persisted:
