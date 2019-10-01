@@ -16,7 +16,9 @@ def route_path(path, method, payload_dict):
     obj_wallet_manager = WalletService(obj_repo=db[NETWORK_ID])
     path_exist = True
     if "/wallet" == path:
-        response_data = obj_wallet_manager.create_and_register_wallet()
+        response_data = obj_wallet_manager.create_and_register_wallet(
+            username=payload_dict["username"]
+        )
 
     elif "/wallet/channel" == path and method == 'POST':
         response_data = obj_wallet_manager.open_channel_by_third_party(order_id=payload_dict['order_id'],
@@ -49,12 +51,15 @@ def request_handler(event, context):
 
         path = event['path'].lower()
         method = event['httpMethod']
-
         method_found, payload_dict = extract_payload(method=method, event=event)
         if not method_found:
             return generate_lambda_response(405, "Method Not Allowed")
 
-        path_exist, response_data = route_path(path=path, method=method, payload_dict=payload_dict)
+        path_exist, response_data = route_path(
+            path=path, method=method,
+            payload_dict=payload_dict
+        )
+
         if not path_exist:
             return generate_lambda_response(404, "Not Found")
 
