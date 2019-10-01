@@ -213,41 +213,44 @@ class OrderService:
                 InvocationType='RequestResponse',
                 Payload=json.dumps(wallet_create_payload)
             )
-            wallet_create_response = json.loads(
-                json.loads(
-                    wallet_create_lambda_response.get("Payload").read()
-                ).get("body")
-            )["data"]
+            wallet_create_response = json.loads(wallet_create_lambda_response.get("Payload").read())
+            if wallet_create_response["statusCode"] != 200:
+                raise Exception("Failed to create wallet")
+            wallet_create_response_body = json.loads(wallet_create_response["body"])
+            wallet_details = wallet_create_response_body["data"]
             receipient = order_data["receipient"]
 
             open_channel_body = {
                 'order_id': order_id,
-                'sender': wallet_create_response["address"],
-                'sender_private_key': wallet_create_response["private_key"],
+                'sender': wallet_details["address"],
+                'sender_private_key': wallet_details["private_key"],
                 'group_id': order_data["group_id"],
                 'amount': amount,
                 'currency': currency,
                 'recipient': receipient
             }
+
             create_channel_transaction_payload = {
                 "path": "/wallet/channel",
                 "body": json.dumps(open_channel_body),
                 "httpMethod": "POST"
             }
 
-            create_channel_response = self.lambda_client.invoke(
+            create_channel_lambda_response = self.lambda_client.invoke(
                 FunctionName=WALLETS_SERVICE_ARN,
                 InvocationType='RequestResponse',
                 Payload=json.dumps(create_channel_transaction_payload)
             )
-            create_channel_transaction_data = json.loads(
-                json.loads(
-                    create_channel_response.get("Payload").read()
-                ).get("body")
-            )["data"]
 
-            create_channel_transaction_data.update(wallet_create_response)
-            return create_channel_transaction_data
+            create_channel_response = json.loads(create_channel_lambda_response["Payload"].read())
+            if create_channel_response["statusCode"] != 200:
+                raise Exception(f"Failed to create channel for {open_channel_body}")
+
+            create_channel_response_body = json.loads(create_channel_response["body"])
+            channel_details = create_channel_response_body["data"]
+
+            channel_details.update(wallet_details)
+            return channel_details
         elif order_type == OrderType.CREATE_CHANNEL.value:
             pass
         elif order_type == OrderType.FUND_CHANNEL.value:
@@ -262,17 +265,19 @@ class OrderService:
                 "httpMethod": "POST"
             }
 
-            fund_channel_response = self.lambda_client.invoke(
+            fund_channel_lambda_response = self.lambda_client.invoke(
                 FunctionName=WALLETS_SERVICE_ARN,
                 InvocationType='RequestResponse',
                 Payload=json.dumps(fund_channel_payload)
             )
-            fund_channel_transaction_data = json.loads(
-                json.loads(
-                    fund_channel_response.get("Payload").read()
-                ).get("body")
-            )["data"]
-            return fund_channel_transaction_data
+
+            fund_channel_response = json.loads(fund_channel_lambda_response.get("Payload").read())
+            if fund_channel_response["statusCode"] != 200:
+                raise Exception(f"Failed to add funds in channel for {fund_channel_body}")
+
+            fund_channel_response_body = fund_channel_response["body"]
+            fund_channel_transaction_details = fund_channel_response_body["data"]
+            return fund_channel_transaction_details
         else:
             raise Exception("Order type is not valid.")
 
