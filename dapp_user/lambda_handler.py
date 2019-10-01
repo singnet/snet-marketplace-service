@@ -106,26 +106,3 @@ def get_response(status_code, message):
             "Access-Control-Allow-Methods": 'GET,OPTIONS,POST'
         }
     }
-
-
-if __name__ == "__main__":
-    print(request_handler(
-        {
-            "requestContext": {
-                "stage": "ropsten",
-                "authorizer": {
-                    "claims": {
-                        "email": "pratik.prajapati@singularitynet.io"
-                    }
-                }
-            },
-            "httpMethod": "GET",
-            "path": "/wallet",
-            "queryStringParameters": {
-                "org_id": "snet",
-                "group_id": "group_id"
-            },
-            "body": "{}"
-        },
-        None
-    ))
