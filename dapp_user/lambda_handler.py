@@ -47,9 +47,10 @@ def request_handler(event, context):
             response_data = usr_obj.get_user_profile(
                 user_data=event['requestContext'])
 
-        elif "/wallet" == path:
-            response_data = usr_obj.get_wallet_details(
-                user_data=event['requestContext'])
+        elif "/wallet" == path and event['httpMethod'] == 'GET':
+            org_id = payload_dict["org_id"]
+            group_id = payload_dict["group_id"]
+            response_data = usr_obj.get_wallet_details(event['requestContext'], org_id, group_id)
 
         elif "/delete-user" == path:
             response_data = usr_obj.del_user_data(
