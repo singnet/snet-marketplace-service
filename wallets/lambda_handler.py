@@ -37,6 +37,10 @@ def route_path(path, method, payload_dict):
 
     elif "/wallet/status" == path:
         response_data = obj_wallet_manager.update_wallet_status(address=payload_dict['address'])
+
+    elif "/wallet/transactions" == path:
+        response_data = obj_wallet_manager.get_wallet_transaction_history(order_id=payload_dict["order_id"])
+
     else:
         path_exist = False
 
