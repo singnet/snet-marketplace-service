@@ -47,7 +47,7 @@ def request_handler(event, context):
        
         elif "/state-service" == path:
 
-            response_data = signer_object.signature_for_regular_call(user_data=event['requestContext'],
+            response_data = signer_object.signature_for_state_service(user_data=event['requestContext'],
                                                                      channel_id=payload_dict['channel_id'])
 
         elif "/mpe-claim" == path:
