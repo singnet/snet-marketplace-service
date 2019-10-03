@@ -56,7 +56,7 @@ def request_handler(event, context):
                                                                     channel_id=payload_dict['channel_id'],
                                                                     nonce=payload_dict['nonce'],
                                                                     amount=payload_dict['amount'])
-       else:
+        else:
             return get_response(404, "Not Found")
 
         if response_data is None:
