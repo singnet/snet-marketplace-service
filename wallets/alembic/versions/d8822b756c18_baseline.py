@@ -39,9 +39,8 @@ def upgrade():
           `address` varchar(256) DEFAULT NULL,
           `signature` varchar(256) DEFAULT NULL,
           `request_parameters` varchar(1024) DEFAULT NULL,
-          `transaction_type` varchar(128) DEFAULT NULL,
           `transaction_hash` varchar(256) DEFAULT NULL,
-          `status` bit(1) DEFAULT b'1',
+          `status` VARCHAR(255),
           `row_created` timestamp NULL DEFAULT NULL,
           `row_updated` timestamp NULL DEFAULT NULL,
           PRIMARY KEY (`row_id`)
