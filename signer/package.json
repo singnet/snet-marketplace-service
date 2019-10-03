@@ -1,0 +1,9 @@
+{
+  "name": "signer",
+  "version": "1.0.0",
+  "description": "",
+  "author": "SingularityNet",
+  "dependencies": {
+  	"singularitynet-platform-contracts": "0.3.4"
+  }
+}
