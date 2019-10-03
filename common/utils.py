@@ -33,7 +33,8 @@ class Utils:
 
     def clean_row(self, row):
         for item in IGNORED_LIST:
-            del row[item]
+            if item in row:
+                del row[item]
 
         for key in row:
             if isinstance(row[key], decimal.Decimal) or isinstance(row[key], datetime.datetime):
