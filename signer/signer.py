@@ -18,7 +18,7 @@ class Signer:
         self.lambda_client = boto3.client('lambda')
         self.obj_utils = Utils()
         self.obj_blockchain_utils = BlockChainUtil(provider_type="HTTP_PROVIDER", provider=NETWORKS[self.net_id]['http_provider'])
-        self.mpe_address = self.obj_utils.read_contract_address(net_id=self.net_id, path=MPE_ADDR_PATH, key='address')
+        self.mpe_address = self.obj_blockchain_utils.read_contract_address(net_id=self.net_id, path=MPE_ADDR_PATH, key='address')
         self.current_block_no = self.obj_blockchain_utils.get_current_block_no()
 
     def _free_calls_allowed(self, username, org_id, service_id):
