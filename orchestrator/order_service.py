@@ -120,6 +120,8 @@ class OrderService:
                 transaction_hash=processed_order_data["transaction_hash"]
             )
             self.obj_transaction_history_dao.insert_transaction_history(obj_transaction_history=obj_transaction_history)
+            processed_order_data["price"] = price
+            processed_order_data["item_details"] = item_details
             return processed_order_data
 
         except Exception as e:
