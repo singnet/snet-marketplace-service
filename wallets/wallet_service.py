@@ -1,6 +1,7 @@
 from web3 import Web3
 import base64
 from common.blockchain_util import BlockChainUtil
+from common.constant import TransactionStatus
 from common.ssm_utils import get_ssm_parameter
 from wallets.config import NETWORK_ID, NETWORKS, SIGNER_ADDRESS, EXECUTOR_ADDRESS, EXECUTOR_KEY
 from wallets.constant import GENERAL_WALLET_TYPE, MPE_ADDR_PATH, MPE_CNTRCT_PATH
@@ -91,7 +92,7 @@ class WalletService:
             order_id=order_id, amount=amount, currency=currency, type=method_name,
             address=sender, signature=signature,
             request_parameters=str(positional_inputs),
-            transaction_hash=transaction_hash, status=0
+            transaction_hash=transaction_hash, status=TransactionStatus.PENDING
         )
 
         return {"transaction_hash": transaction_hash, "signature": signature, "agi_tokens": agi_tokens,
@@ -117,3 +118,14 @@ class WalletService:
         print("channelAddFunds::transaction_hash", transaction_hash)
         return {"transaction_hash": transaction_hash, "agi_tokens": agi_tokens,
                 "positional_inputs": positional_inputs, "type": method_name}
+
+    def get_wallet_transaction_history(self, order_id):
+        query = "SELECT order_id, amount, currency, type, address, transaction_hash, row_created as created_at " \
+                "FROM channel_transaction_history WHERE order_id = %s"
+        transaction_history = self.obj_repo.execute(query, order_id)
+        for record in transaction_history:
+            record["created_at"] = record["created_at"].strftime("%Y-%m-%d %H:%M:%S")
+        return {
+            "order_id": order_id,
+            "transactions": transaction_history
+        }
