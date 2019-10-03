@@ -167,7 +167,7 @@ class OrderService:
             if transaction_details_response["statusCode"] != 200:
                 raise Exception(f"Failed to fetch transaction details for username{order_id}")
             transaction_details_response_body = json.loads(transaction_details_response["body"])
-            order["transactions"] = transaction_details_response_body["data"]["transactions"]
+            order["wallet_transactions"] = transaction_details_response_body["data"]["transactions"]
 
         return {"orders": orders}
 
