@@ -9,9 +9,9 @@ PAYMENT_METHOD_PAYPAL = "paypal"
 
 
 class PaymentStatus:
-    PENDING = "pending"
-    SUCCESS = "success"
-    FAILED = "failed"
+    PENDING = "PENDING"
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
 
 
 class TransactionStatus:

@@ -52,7 +52,7 @@ class Order(object):
                 payment_details={
                     "payment_method": payment_method
                 },
-                payment_status="pending",
+                payment_status=PaymentStatus.PENDING,
                 created_at=datetime.utcnow()
             )
 
