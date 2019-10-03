@@ -50,7 +50,7 @@ def request_handler(event, context):
             response_data = signer_object.signature_for_regular_call(user_data=event['requestContext'],
                                                                      channel_id=payload_dict['channel_id'])
 
-        elif "/daemon-call" == path:
+        elif "/mpe-claim" == path:
 
             response_data = signer_object.signature_for_daemon_call(user_data=event['requestContext'],
                                                                     channel_id=payload_dict['channel_id'],

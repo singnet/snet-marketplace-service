@@ -130,7 +130,7 @@ functions:
               - x-requested-with
       - http:
           method: POST
-          path: /daemon-call
+          path: /mpe-claim
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
