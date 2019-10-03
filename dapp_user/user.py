@@ -16,6 +16,7 @@ class User:
         self.repo = obj_repo
         self.obj_utils = Utils()
         self.ssm_client = boto3.client('ssm')
+        self.lambda_client = boto3.client('lambda')
 
     def _set_user_data(self, user_data):
         """ Method to set user information. """
