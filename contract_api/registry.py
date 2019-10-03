@@ -291,6 +291,19 @@ class Registry:
             print(repr(e))
             raise e
 
+    def get_group_details_for_org_id(self, org_id, group_id):
+        """ Method to get group data for given org_id and group_id. This includes group data at org level"""
+        try:
+            group_data = self.repo.execute(
+                "SELECT group_id, group_name, payment , org_id FROM org_group WHERE org_id = %s and group_id = %s",
+                [org_id, group_id]
+            )
+            group_data.update({'payment': json.loads(group_data['payment'])})
+            return group_data
+        except Exception as e:
+            print(repr(e))
+            raise e
+
     def get_service_data_by_org_id_and_service_id(self, org_id, service_id):
         try:
             """ Method to get all service data for given org_id and service_id"""

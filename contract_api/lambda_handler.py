@@ -48,6 +48,11 @@ def request_handler(event, context):
             org_id = sub_path[2]
             response_data = obj_reg.get_all_group_for_org_id(org_id=org_id)
 
+        elif re.match("(\/org\/)[^\/]*(\/group\/)[^\/]*[/]{0,1}$", path):
+            org_id = sub_path[2]
+            group_id = sub_path[4]
+            response_data = obj_reg.get_group_details_for_org_id(org_id=org_id, group_id=group_id)
+
         elif "/service" == path and method == 'POST':
             payload_dict = {} if payload_dict is None else payload_dict
             response_data = obj_reg.get_all_srvcs(qry_param=payload_dict)
