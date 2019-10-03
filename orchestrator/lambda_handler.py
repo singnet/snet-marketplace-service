@@ -22,7 +22,13 @@ def route_path(path, method, payload_dict, request_context=None):
     obj_order_service = OrderService(obj_repo=db[NETWORK_ID])
     path_exist = True
     response_data = None
-    if "/order/initiate" == path:
+
+    if "/order" == path:
+        response_data = obj_order_service.get_order_details_by_username(
+            request_context["authorizer"]["claims"]["email"]
+        )
+
+    elif "/order/initiate" == path:
         response_data = obj_order_service.initiate_order(
             user_data=request_context, payload_dict=payload_dict)
 
@@ -34,6 +40,7 @@ def route_path(path, method, payload_dict, request_context=None):
     elif "/order/execute" == path and method == "POST":
         response_data = obj_order_service.execute_order(
             user_data=request_context, payload_dict=payload_dict)
+
     else:
         path_exist = False
 

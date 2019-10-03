@@ -3,7 +3,7 @@ import boto3
 
 from enum import Enum
 from orchestrator.config import CREATE_ORDER_SERVICE_ARN, INITIATE_PAYMENT_SERVICE_ARN, \
-    EXECUTE_PAYMENT_SERVICE_ARN, WALLETS_SERVICE_ARN, ORDER_DETAILS_ORDER_ID_ARN
+    EXECUTE_PAYMENT_SERVICE_ARN, WALLETS_SERVICE_ARN, ORDER_DETAILS_ORDER_ID_ARN, ORDER_DETAILS_BY_USERNAME_ARN
 from orchestrator.transaction_history import TransactionHistory
 from orchestrator.transaction_history_data_access_object import TransactionHistoryDAO
 
@@ -80,7 +80,7 @@ class OrderService:
         order_id = payload_dict["order_id"]
         payment_id = payload_dict["payment_id"]
         username = user_data["authorizer"]["claims"]["email"]
-        order = self.get_order_details(order_id, username)
+        order = self.get_order_details_by_order_id(order_id, username)
         payment = None
         for payment_item in order["payments"]:
             if payment_item["payment_id"] == payment_id:
@@ -133,7 +133,45 @@ class OrderService:
             print(repr(e))
             raise e
 
-    def get_order_details(self, order_id, username):
+    def get_order_details_by_username(self, username):
+        order_details_event = {
+            "path": f"/order",
+            "queryStringParameters": {"username": username},
+            "httpMethod": "GET"
+        }
+        order_details_lambda_response = self.lambda_client.invoke(
+            FunctionName=ORDER_DETAILS_BY_USERNAME_ARN,
+            InvocationType='RequestResponse',
+            Payload=json.dumps(order_details_event)
+        )
+        order_details_response = json.loads(order_details_lambda_response.get('Payload').read())
+        if order_details_response["statusCode"] != 200:
+            raise Exception(f"Failed to fetch order details for username{username}")
+
+        order_details_response_body = json.loads(order_details_response["body"])
+        orders = order_details_response_body["orders"]
+
+        for order in orders:
+            order_id = order["order_id"]
+            transaction_details_event = {
+                "path": f"/wallet/transactions",
+                "queryStringParameters": {"order_id": order_id},
+                "httpMethod": "GET"
+            }
+            transaction_details_lambda_response = self.lambda_client.invoke(
+                FunctionName=WALLETS_SERVICE_ARN,
+                InvocationType='RequestResponse',
+                Payload=json.dumps(transaction_details_event)
+            )
+            transaction_details_response = json.loads(transaction_details_lambda_response.get('Payload').read())
+            if transaction_details_response["statusCode"] != 200:
+                raise Exception(f"Failed to fetch transaction details for username{order_id}")
+            transaction_details_response_body = json.loads(transaction_details_response["body"])
+            order["transactions"] = transaction_details_response_body["data"]["transactions"]
+
+        return {"orders": orders}
+
+    def get_order_details_by_order_id(self, order_id, username):
         order_details_event = {
             "path": f"order/{order_id}",
             "pathParameters": {"order_id": order_id},
