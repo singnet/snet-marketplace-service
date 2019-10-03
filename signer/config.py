@@ -12,3 +12,4 @@ SLACK_HOOK = {
     }
 }
 signer={}
+SIGNER_KEY=""

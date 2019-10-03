@@ -1,7 +1,8 @@
 import json
 import boto3
 import web3
-from signer.config import PREFIX_FREE_CALL, GET_FREE_CALLS_METERING_ARN, NETWORKS
+from signer.config import PREFIX_FREE_CALL, GET_FREE_CALLS_METERING_ARN, NETWORKS, SIGNER_KEY
+from signer.constant import MPE_ADDR_PATH
 from config import config
 from eth_account.messages import defunct_hash_message
 from sdk.service_client import ServiceClient
@@ -15,6 +16,9 @@ class Signer:
         self.net_id = net_id
         self.lambda_client = boto3.client('lambda')
         self.obj_utils = Utils()
+        self.obj_blockchain_utils = BlockChainUtil(provider_type="HTTP_PROVIDER", provider=NETWORKS[self.net_id]['http_provider'])
+        self.mpe_address = self.obj_utils.read_contract_address(net_id=self.net_id, path=MPE_ADDR_PATH, key='address')
+        self.current_block_no = self.obj_blockchain_utils.get_current_block_no()
 
     def _free_calls_allowed(self, username, org_id, service_id):
         """
@@ -141,3 +145,34 @@ class Signer:
             print(repr(e))
             raise Exception(
                 "Unable to sign regular call for username %s", username)
+
+    def signature_for_daemon_call(self, user_data, channel_id, nonce, amount):
+        """
+            Method to generate signature for daemon call.
+        """
+        try:
+            username = user_data['authorizer']['claims']['email']
+            data_types = ["string", "address", "uint256", "uint256", "uint256"]
+            values = ["__MPE_claim_message", self.mpe_address, channel_id, nonce, amount]
+            signature = self.obj_blockchain_utils.generate_signature(data_types=data_types, values=values, signer_key=SIGNER_KEY)
+            return {"signature": signature, "channel_id": channel_id}
+        except Exception as e:
+            print(repr(e))
+            raise Exception(
+                "Unable to generate signature for daemon call for username %s", username)
+
+    def signature_for_state_service(self, channel_id):
+        """
+            Method to generate signature for state service.
+        """
+        try:
+            username = user_data['authorizer']['claims']['email']
+            data_types = ["string", "address", "uint256", "uint256"]
+            values = ["__get_channel_state", self.mpe_address, channel_id, self.current_block_no]
+            signature = self.obj_blockchain_utils.generate_signature(data_types=data_types, values=values, signer_key=SIGNER_KEY)
+            return {"signature": signature, "channel_id": channel_id}
+        except Exception as e:
+            print(repr(e))
+            raise Exception(
+                "Unable to generate signature for daemon call for username %s", username)
+
