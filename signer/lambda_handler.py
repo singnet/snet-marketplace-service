@@ -44,7 +44,7 @@ def request_handler(event, context):
             response_data = signer_object.signature_for_regular_call(user_data=event['requestContext'],
                                                                      org_id=payload_dict['org_id'],
                                                                      service_id=payload_dict['service_id'])
-
+       
         elif "/state-service" == path:
 
             response_data = signer_object.signature_for_regular_call(user_data=event['requestContext'],
