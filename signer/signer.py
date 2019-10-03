@@ -8,6 +8,7 @@ from eth_account.messages import defunct_hash_message
 from sdk.service_client import ServiceClient
 from web3 import Web3
 from common.utils import Utils
+from common.blockchain_util import BlockChainUtil
 
 
 class Signer:
