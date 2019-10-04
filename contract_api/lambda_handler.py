@@ -1,6 +1,8 @@
 import json
 import re
 import traceback
+from urllib.parse import unquote
+
 from contract_api.config import NETWORKS, SLACK_HOOK
 from common.repository import Repository
 from common.utils import Utils
@@ -50,7 +52,7 @@ def request_handler(event, context):
 
         elif re.match("(\/org\/)[^\/]*(\/group\/)[^\/]*[/]{0,1}$", path):
             org_id = sub_path[2]
-            group_id = sub_path[4]
+            group_id = unquote(sub_path[4])
             response_data = obj_reg.get_group_details_for_org_id(org_id=org_id, group_id=group_id)
 
         elif "/service" == path and method == 'POST':
