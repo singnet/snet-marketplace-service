@@ -84,7 +84,8 @@ class OrderService:
             "pathParameters": {
                 "org_id": org_id,
                 "group_id": quote(group_id, safe='')
-            }
+            },
+            "httpMethod": "GET"
         }
         group_details_lambda_response = self.lambda_client.invoke(
             FunctionName=CONTRACT_API_ARN,
