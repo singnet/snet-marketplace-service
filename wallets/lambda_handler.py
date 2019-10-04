@@ -76,14 +76,14 @@ def request_handler(event, context):
         if response_data is None:
             error_message = format_error_message(status="failed", error="Bad Request", resource=path,
                                                  payload=payload_dict, net_id=NETWORK_ID)
-            # obj_util.report_slack(1, error_message, SLACK_HOOK)
+            obj_util.report_slack(1, error_message, SLACK_HOOK)
             response = generate_lambda_response(500, error_message)
         else:
             response = generate_lambda_response(200, {"status": "success", "data": response_data})
     except Exception as e:
         error_message = format_error_message(status="failed", error="Bad Request", resource=path,
                                              payload=payload_dict, net_id=NETWORK_ID)
-        # obj_util.report_slack(1, error_message, SLACK_HOOK)
+        obj_util.report_slack(1, error_message, SLACK_HOOK)
         response = generate_lambda_response(500, error_message)
         traceback.print_exc()
     return response
