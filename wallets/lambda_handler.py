@@ -15,10 +15,16 @@ obj_util = Utils()
 def route_path(path, method, payload_dict):
     obj_wallet_manager = WalletService(obj_repo=db[NETWORK_ID])
     path_exist = True
-    if "/wallet" == path:
+    response_data = None
+
+    if "/wallet" == path and method == "POST":
         response_data = obj_wallet_manager.create_and_register_wallet(
             username=payload_dict["username"]
         )
+
+    elif "/wallet" == path and method == "GET":
+        username = payload_dict["username"]
+        response_data = obj_wallet_manager.get_wallet_details(username=username)
 
     elif "/wallet/channel" == path and method == 'POST':
         response_data = obj_wallet_manager.open_channel_by_third_party(order_id=payload_dict['order_id'],
@@ -70,14 +76,14 @@ def request_handler(event, context):
         if response_data is None:
             error_message = format_error_message(status="failed", error="Bad Request", resource=path,
                                                  payload=payload_dict, net_id=NETWORK_ID)
-            obj_util.report_slack(1, error_message, SLACK_HOOK)
+            # obj_util.report_slack(1, error_message, SLACK_HOOK)
             response = generate_lambda_response(500, error_message)
         else:
             response = generate_lambda_response(200, {"status": "success", "data": response_data})
     except Exception as e:
         error_message = format_error_message(status="failed", error="Bad Request", resource=path,
                                              payload=payload_dict, net_id=NETWORK_ID)
-        obj_util.report_slack(1, error_message, SLACK_HOOK)
+        # obj_util.report_slack(1, error_message, SLACK_HOOK)
         response = generate_lambda_response(500, error_message)
         traceback.print_exc()
     return response
