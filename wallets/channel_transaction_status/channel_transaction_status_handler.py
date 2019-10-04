@@ -17,8 +17,8 @@ def request_handler(event, context):
         obj_channel_transaction_status.manage_channel_transaction_status()
     except Exception as e:
         error_message = "Error in updating channel transaction status \n"
-        "NETWORK ID:" + NETWORK_ID + "\n"
+        "NETWORK ID:" + str(NETWORK_ID) + "\n"
         "Error:" + repr(e)
-        obj_util.report_slack(1, error_message)
+        # obj_util.report_slack(1, error_message)
         traceback.print_exc()
     return
