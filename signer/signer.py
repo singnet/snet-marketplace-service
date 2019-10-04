@@ -162,7 +162,7 @@ class Signer:
             raise Exception(
                 "Unable to generate signature for daemon call for username %s", username)
 
-    def signature_for_state_service(self, channel_id):
+    def signature_for_state_service(self, user_data, channel_id):
         """
             Method to generate signature for state service.
         """
