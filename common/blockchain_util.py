@@ -70,3 +70,6 @@ class BlockChainUtil(object):
 
     def get_current_block_no(self):
         return self.web3_object.eth.blockNumber
+
+    def get_transaction_receipt_from_blockchain(self, transaction_hash):
+        return  self.web3_object.eth.getTransactionReceipt(transaction_hash)
