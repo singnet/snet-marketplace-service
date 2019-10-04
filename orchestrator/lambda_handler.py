@@ -67,7 +67,7 @@ def request_handler(event, context):
             path=path,
             method=method,
             payload_dict=payload_dict,
-            request_context=event["requestContext"],
+            request_context=event.get("requestContext", None),
         )
         if not path_exist:
             return generate_lambda_response(404, "Not Found")

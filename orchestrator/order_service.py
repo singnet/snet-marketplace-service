@@ -2,8 +2,10 @@ import json
 import boto3
 
 from enum import Enum
+from urllib.parse import quote
 from orchestrator.config import CREATE_ORDER_SERVICE_ARN, INITIATE_PAYMENT_SERVICE_ARN, \
-    EXECUTE_PAYMENT_SERVICE_ARN, WALLETS_SERVICE_ARN, ORDER_DETAILS_ORDER_ID_ARN, ORDER_DETAILS_BY_USERNAME_ARN
+    EXECUTE_PAYMENT_SERVICE_ARN, WALLETS_SERVICE_ARN, ORDER_DETAILS_ORDER_ID_ARN, ORDER_DETAILS_BY_USERNAME_ARN, \
+    CONTRACT_API_ARN
 from orchestrator.transaction_history import TransactionHistory
 from orchestrator.transaction_history_data_access_object import TransactionHistoryDAO
 
@@ -41,8 +43,14 @@ class OrderService:
         username = user_data["authorizer"]["claims"]["email"]
         price = payload_dict["price"]
         order_type = payload_dict["item_details"]["order_type"]
+        item_details = payload_dict["item_details"]
+        group_id = item_details["group_id"]
+        org_id = item_details["org_id"]
+
+        recipient = self.get_payment_address_for_org(group_id=group_id, org_id=org_id)
+        item_details["recipient"] = recipient
         order_details = self.manage_create_order(
-            username=username, item_details=payload_dict["item_details"],
+            username=username, item_details=item_details,
             price=price
         )
         order_id = order_details["order_id"]
@@ -68,6 +76,32 @@ class OrderService:
             self.obj_transaction_history_dao.insert_transaction_history(obj_transaction_history=obj_transaction_history)
             print(repr(e))
             raise e
+
+    def get_payment_address_for_org(self, org_id, group_id):
+
+        group_details_event = {
+            "path": f"/org/{org_id}/group/{quote(group_id, safe='')}",
+            "pathParameters": {
+                "org_id": org_id,
+                "group_id": quote(group_id, safe='')
+            },
+            "httpMethod": "GET"
+        }
+        group_details_lambda_response = self.lambda_client.invoke(
+            FunctionName=CONTRACT_API_ARN,
+            InvocationType='RequestResponse',
+            Payload=json.dumps(group_details_event)
+        )
+        group_details_response = json.loads(group_details_lambda_response.get('Payload').read())
+        if group_details_response["statusCode"] != 200:
+            raise Exception(f"Failed to fetch group details for org_id:{org_id} "
+                            f"group_id {group_id}")
+
+        group_details_response_body = json.loads(group_details_response["body"])
+        groups = group_details_response_body["data"]["groups"]
+        if len(groups) == 0:
+            raise Exception(f"Failed to find group {group_id} for org_id: {org_id}")
+        return groups[0]["payment"]["payment_address"]
 
     def execute_order(self, user_data, payload_dict):
         """
@@ -259,7 +293,7 @@ class OrderService:
                 raise Exception("Failed to create wallet")
             wallet_create_response_body = json.loads(wallet_create_response["body"])
             wallet_details = wallet_create_response_body["data"]
-            receipient = order_data["receipient"]
+            recipient = order_data["recipient"]
 
             open_channel_body = {
                 'order_id': order_id,
@@ -268,7 +302,7 @@ class OrderService:
                 'group_id': order_data["group_id"],
                 'amount': amount,
                 'currency': currency,
-                'recipient': receipient
+                'recipient': recipient
             }
 
             create_channel_transaction_payload = {

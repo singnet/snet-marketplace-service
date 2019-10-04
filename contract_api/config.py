@@ -8,3 +8,4 @@ SLACK_HOOK = {
         'Content-Type': 'application/json'
     }
 }
+NETWORK_ID = 0
