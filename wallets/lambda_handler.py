@@ -15,10 +15,16 @@ obj_util = Utils()
 def route_path(path, method, payload_dict):
     obj_wallet_manager = WalletService(obj_repo=db[NETWORK_ID])
     path_exist = True
-    if "/wallet" == path:
+    response_data = None
+
+    if "/wallet" == path and method == "POST":
         response_data = obj_wallet_manager.create_and_register_wallet(
             username=payload_dict["username"]
         )
+
+    elif "/wallet" == path and method == "GET":
+        username = payload_dict["username"]
+        response_data = obj_wallet_manager.get_wallet_details(username=username)
 
     elif "/wallet/channel" == path and method == 'POST':
         response_data = obj_wallet_manager.open_channel_by_third_party(order_id=payload_dict['order_id'],
