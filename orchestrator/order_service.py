@@ -84,10 +84,6 @@ class OrderService:
             "pathParameters": {
                 "org_id": org_id,
                 "group_id": quote(group_id, safe='')
-            },
-            "httpMethod": "GET",
-            "requestContext": {
-                "stage": 3
             }
         }
         group_details_lambda_response = self.lambda_client.invoke(
