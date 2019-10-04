@@ -3,7 +3,7 @@ import re
 import traceback
 from urllib.parse import unquote
 
-from contract_api.config import NETWORKS, SLACK_HOOK
+from contract_api.config import NETWORKS, SLACK_HOOK, NETWORK_ID
 from common.repository import Repository
 from common.utils import Utils
 from contract_api.registry import Registry
@@ -24,8 +24,7 @@ def request_handler(event, context):
         payload_dict = None
         path = event['path'].lower()
         path = re.sub(r"^(\/contract-api)", "", path)
-        stage = event['requestContext']['stage']
-        net_id = NETWORKS_NAME[stage]
+        net_id = NETWORK_ID
         method = event['httpMethod']
         response_data = None
 
