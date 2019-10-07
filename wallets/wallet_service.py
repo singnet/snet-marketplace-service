@@ -47,10 +47,7 @@ class WalletService:
 
     def get_wallet_details(self, username):
         """ Method to get wallet details for a given username. """
-        query = "SELECT UW.address, UW.is_default, W.type, W.status " \
-                "FROM user_wallet as UW JOIN wallet as W ON UW.address = W.address WHERE UW.username= %s"
-
-        wallet_data = self.repo.execute(query, username)
+        wallet_data = self.obj_wallet_dao.get_wallet_data_by_username(username)
         self.utils.clean(wallet_data)
 
         wallet_response = {"username": username, "wallets": wallet_data}
@@ -195,9 +192,8 @@ class WalletService:
             transaction_details["wallets"].append(wallet)
         return transaction_details
 
-    def get_wallet_transactions_against_order_id(self, order_id):
-        query = "SELECT order_id, amount, currency, type, address, transaction_hash, row_created as created_at " \
-                "FROM channel_transaction_history WHERE order_id = %s"
+    def get_channel_transactions_against_order_id(self, order_id):
+        transaction_history = self.obj_wallet_dao.get_channel_transactions_against_order_id(order_id)
 
         transaction_history = self.repo.execute(query, order_id)
         for record in transaction_history:
