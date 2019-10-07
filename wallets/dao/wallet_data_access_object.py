@@ -1,5 +1,6 @@
 from datetime import datetime as dt
 
+from common.constant import TransactionStatus
 from common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -28,15 +29,9 @@ class WalletDAO:
             logger.error(repr(e))
             return False
 
-    def insert_channel_history(self, order_id, amount, currency, type, address, signature, request_parameters,
-                               transaction_hash, status):
-        params = [order_id, amount, currency, type, address, signature, request_parameters, transaction_hash, status, dt.utcnow(), dt.utcnow()]
-        query = "INSERT INTO channel_transaction_history (order_id, amount, currency, type, address, " \
-                "signature, request_parameters, transaction_hash, status, row_created, row_updated) " \
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-        query_response = self.repo.execute(query, [order_id, amount, currency, type, address, signature,
-                                                   request_parameters, transaction_hash, status,
-                                                   dt.utcnow(), dt.utcnow()])
-        if query_response[0] == 1:
-            return True
-        return False
+    def get_wallet_data_by_username(self, username):
+        """ Method to get wallet details for a given username. """
+        query = "SELECT UW.address, UW.is_default, W.type, W.status " \
+                "FROM user_wallet as UW JOIN wallet as W ON UW.address = W.address WHERE UW.username= %s"
+        wallet_data = self.repo.execute(query, username)
+        return wallet_data
