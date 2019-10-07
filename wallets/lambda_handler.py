@@ -8,8 +8,10 @@ from wallets.config import NETWORKS, NETWORK_ID
 from wallets.constant import REQUIRED_KEYS_FOR_LAMBDA_EVENT
 from wallets.wallet_service import WalletService
 
-NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys())
-db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys())
+NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId)
+                     for netId in NETWORKS.keys())
+db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS))
+          for netId in NETWORKS.keys())
 obj_util = Utils()
 logger = get_logger(__name__)
 
@@ -26,7 +28,8 @@ def route_path(path, method, payload_dict):
 
     elif "/wallet" == path and method == "GET":
         username = payload_dict["username"]
-        response_data = obj_wallet_manager.get_wallet_details(username=username)
+        response_data = obj_wallet_manager.get_wallet_details(
+            username=username)
 
     elif "/wallet/channel" == path and method == 'POST':
         response_data = obj_wallet_manager.open_channel_by_third_party(order_id=payload_dict['order_id'],
@@ -44,7 +47,8 @@ def route_path(path, method, payload_dict):
                                                                 currency=payload_dict['currency'])
 
     elif "/wallet/status" == path:
-        response_data = obj_wallet_manager.update_wallet_status(address=payload_dict['address'])
+        response_data = obj_wallet_manager.update_wallet_status(
+            address=payload_dict['address'])
 
     elif "/wallet/channel/transactions" == path and method == 'GET':
         order_id = payload_dict.get('order_id', None)
@@ -52,12 +56,14 @@ def route_path(path, method, payload_dict):
         recipient = payload_dict.get('recipient', None)
 
         if order_id is not None:
-            logger.info(f"Received request to fetch transactions against order_id: {order_id}")
+            logger.info(
+                f"Received request to fetch transactions against order_id: {order_id}")
 
             response_data = obj_wallet_manager.get_channel_transactions_against_order_id(
                 order_id=payload_dict["order_id"])
         elif username is not None and recipient is not None:
-            logger.info(f"Received request to fetch transactions for username: {username} and recipient: {recipient}")
+            logger.info(
+                f"Received request to fetch transactions for username: {username} and recipient: {recipient}")
 
             response_data = obj_wallet_manager.get_transactions_from_username_recipient(
                 username=username, recipient=recipient)
@@ -72,13 +78,15 @@ def route_path(path, method, payload_dict):
 
 def request_handler(event, context):
     try:
-        valid_event = validate_dict(data_dict=event, required_keys=REQUIRED_KEYS_FOR_LAMBDA_EVENT)
+        valid_event = validate_dict(
+            data_dict=event, required_keys=REQUIRED_KEYS_FOR_LAMBDA_EVENT)
         if not valid_event:
             return generate_lambda_response(400, "Bad Request")
 
         path = event['path'].lower()
         method = event['httpMethod']
-        method_found, payload_dict = extract_payload(method=method, event=event)
+        method_found, payload_dict = extract_payload(
+            method=method, event=event)
         if not method_found:
             return generate_lambda_response(405, "Method Not Allowed")
 
@@ -96,7 +104,8 @@ def request_handler(event, context):
             obj_util.report_slack(1, error_message, SLACK_HOOK)
             response = generate_lambda_response(500, error_message)
         else:
-            response = generate_lambda_response(200, {"status": "success", "data": response_data})
+            response = generate_lambda_response(
+                200, {"status": "success", "data": response_data})
     except Exception as e:
         error_message = format_error_message(status="failed", error="Bad Request", resource=path,
                                              payload=payload_dict, net_id=NETWORK_ID)
