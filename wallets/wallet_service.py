@@ -2,6 +2,7 @@ from web3 import Web3
 import base64
 from common.blockchain_util import BlockChainUtil
 from common.constant import TransactionStatus
+from common.logger import get_logger
 from common.ssm_utils import get_ssm_parameter
 from common.utils import Utils
 from wallets.config import NETWORK_ID, NETWORKS, SIGNER_ADDRESS, EXECUTOR_ADDRESS, EXECUTOR_KEY
@@ -12,6 +13,7 @@ from wallets.dao.wallet_data_access_object import WalletDAO
 
 EXECUTOR_WALLET_ADDRESS = get_ssm_parameter(EXECUTOR_ADDRESS)
 EXECUTOR_WALLET_KEY = get_ssm_parameter(EXECUTOR_KEY)
+logger = get_logger(__name__)
 
 
 class WalletService:
@@ -49,9 +51,11 @@ class WalletService:
 
     def get_wallet_details(self, username):
         """ Method to get wallet details for a given username. """
+        logger.info(f"Fetching wallet details for {username}")
         wallet_data = self.obj_wallet_dao.get_wallet_data_by_username(username)
         self.utils.clean(wallet_data)
 
+        logger.info(f"Fetched {len(wallet_data)} wallets for username: {username}")
         wallet_response = {"username": username, "wallets": wallet_data}
         return wallet_response
 
@@ -157,10 +161,12 @@ class WalletService:
         }
 
     def get_transactions_from_username_recipient(self, username, recipient):
+        logger.info(f"Fetching transactions for {username} to recipient: {recipient}")
         channel_data = self.channel_dao.get_channel_transactions_for_username_recipient(
             username=username, recipient=recipient)
         self.utils.clean(channel_data)
 
+        logger.info(f"Fetched {len(channel_data)} transactions")
         transaction_details = {
             "username": username,
             "wallets": []
