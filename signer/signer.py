@@ -2,20 +2,18 @@ import json
 
 import boto3
 import web3
+from config import config
 from eth_account.messages import defunct_hash_message
 from web3 import Web3
 
 from common.blockchain_util import BlockChainUtil
 from common.logger import get_logger
 from common.utils import Utils
-from config import config
-from signer.config import (
-    PREFIX_FREE_CALL,
-    GET_FREE_CALLS_METERING_ARN,
-    NETWORKS,
-    SIGNER_KEY,
-    REGION_NAME,
-)
+from signer.config import GET_FREE_CALLS_METERING_ARN
+from signer.config import NETWORKS
+from signer.config import PREFIX_FREE_CALL
+from signer.config import REGION_NAME
+from signer.config import SIGNER_KEY
 from signer.constant import MPE_ADDR_PATH
 
 logger = get_logger(__name__)

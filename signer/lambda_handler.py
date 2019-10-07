@@ -4,7 +4,8 @@ import traceback
 
 from common.logger import get_logger
 from common.utils import Utils
-from signer.config import SLACK_HOOK, NET_ID
+from signer.config import NET_ID
+from signer.config import SLACK_HOOK
 from signer.signer import Signer
 
 obj_util = Utils()
