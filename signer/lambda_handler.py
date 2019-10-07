@@ -42,8 +42,8 @@ def request_handler(event, context):
         elif "/state-service" == path:
 
             response_data = signer_object.signature_for_state_service(
-                user_data=event["requestContext"], channel_id=payload_dict["channel_id"]
-            )
+                user_data=event["requestContext"],
+                channel_id=payload_dict["channel_id"])
 
         elif "/regular-call" == path:
 
@@ -68,7 +68,10 @@ def request_handler(event, context):
             obj_util.report_slack(1, str(err_msg), SLACK_HOOK)
             response = get_response(500, err_msg)
         else:
-            response = get_response(200, {"status": "success", "data": response_data})
+            response = get_response(200, {
+                "status": "success",
+                "data": response_data
+            })
     except Exception as e:
         err_msg = {
             "status": "failed",
@@ -90,7 +93,8 @@ def get_response(status_code, message):
         "headers": {
             "Content-Type": "application/json",
             "X-Requested-With": "*",
-            "Access-Control-Allow-Headers": "Access-Control-Allow-Origin, Content-Type,X-Amz-Date,Authorization,X-Api-Key,x-requested-with",
+            "Access-Control-Allow-Headers":
+            "Access-Control-Allow-Origin, Content-Type,X-Amz-Date,Authorization,X-Api-Key,x-requested-with",
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET,OPTIONS,POST",
         },
