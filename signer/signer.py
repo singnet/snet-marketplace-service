@@ -45,7 +45,7 @@ class Signer:
             free_calls_allowed = response_body["free_calls_allowed"]
             total_calls_made = response_body["total_calls_made"]
             is_free_calls_allowed = True if (
-                    (free_calls_allowed - total_calls_made) > 0) else False
+                (free_calls_allowed - total_calls_made) > 0) else False
             return is_free_calls_allowed
         except Exception as e:
             logger.info(repr(e))
@@ -88,7 +88,8 @@ class Signer:
         try:
             username = user_data['authorizer']['claims']['email']
             data_types = ["string", "address", "uint256", "uint256", "uint256"]
-            values = ["__MPE_claim_message", self.mpe_address, channel_id, nonce, amount]
+            values = ["__MPE_claim_message",
+                      self.mpe_address, channel_id, nonce, amount]
             signature = self.obj_blockchain_utils.generate_signature(data_types=data_types, values=values,
                                                                      signer_key=SIGNER_KEY)
             return {"snet-payment-channel-signature-bin": signature, "snet-payment-type": "escrow",
@@ -106,7 +107,8 @@ class Signer:
         try:
             username = user_data['authorizer']['claims']['email']
             data_types = ["string", "address", "uint256", "uint256"]
-            values = ["__get_channel_state", self.mpe_address, channel_id, self.current_block_no]
+            values = ["__get_channel_state", self.mpe_address,
+                      channel_id, self.current_block_no]
             signature = self.obj_blockchain_utils.generate_signature(data_types=data_types, values=values,
                                                                      signer_key=SIGNER_KEY)
             return {"signature": signature, "snet-current-block-number": self.current_block_no}
