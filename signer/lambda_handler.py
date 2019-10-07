@@ -1,15 +1,11 @@
 import json
-import traceback
 import re
-from signer.config import NETWORKS, SLACK_HOOK
-from common.repository import Repository
+import traceback
+
 from common.utils import Utils
+from signer.config import SLACK_HOOK, NET_ID
 from signer.signer import Signer
 
-NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId)
-                     for netId in NETWORKS.keys())
-db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS))
-          for netId in NETWORKS.keys())
 obj_util = Utils()
 
 
@@ -21,9 +17,7 @@ def request_handler(event, context):
         payload_dict = None
         path = event['path'].lower()
         path = re.sub(r"^(\/signer)", "", path)
-        stage = event['requestContext']['stage']
-        net_id = NETWORKS_NAME[stage]
-        signer_object = Signer(obj_repo=db[net_id], net_id=net_id)
+        signer_object = Signer(net_id=NET_ID)
         method = event['httpMethod']
         response_data = None
 
@@ -39,29 +33,24 @@ def request_handler(event, context):
                                                                   org_id=payload_dict['org_id'],
                                                                   service_id=payload_dict['service_id'])
 
-        elif "/regular-call" == path:
-
-            response_data = signer_object.signature_for_regular_call(user_data=event['requestContext'],
-                                                                     org_id=payload_dict['org_id'],
-                                                                     service_id=payload_dict['service_id'])
-       
         elif "/state-service" == path:
 
             response_data = signer_object.signature_for_state_service(user_data=event['requestContext'],
-                                                                     channel_id=payload_dict['channel_id'])
+                                                                      channel_id=payload_dict['channel_id'])
 
-        elif "/mpe-claim" == path:
+        elif "/regular-call" == path:
 
-            response_data = signer_object.signature_for_daemon_call(user_data=event['requestContext'],
-                                                                    channel_id=payload_dict['channel_id'],
-                                                                    nonce=payload_dict['nonce'],
-                                                                    amount=payload_dict['amount'])
+            response_data = signer_object.signature_for_regular_call(user_data=event['requestContext'],
+                                                                     channel_id=payload_dict['channel_id'],
+                                                                     nonce=payload_dict['nonce'],
+                                                                     amount=payload_dict['amount'])
+            print(response_data)
         else:
             return get_response(404, "Not Found")
 
         if response_data is None:
             err_msg = {'status': 'failed', 'error': 'Bad Request',
-                       'api': event['path'], 'payload': payload_dict, 'network_id': net_id}
+                       'api': event['path'], 'payload': payload_dict, 'network_id': NET_ID}
             obj_util.report_slack(1, str(err_msg), SLACK_HOOK)
             response = get_response(500, err_msg)
         else:
@@ -69,7 +58,7 @@ def request_handler(event, context):
                 200, {"status": "success", "data": response_data})
     except Exception as e:
         err_msg = {"status": "failed", "error": repr(
-            e), 'api': event['path'], 'payload': payload_dict, 'network_id': net_id}
+            e), 'api': event['path'], 'payload': payload_dict, 'network_id': NET_ID}
         obj_util.report_slack(1, str(err_msg), SLACK_HOOK)
         response = get_response(500, err_msg)
         traceback.print_exc()

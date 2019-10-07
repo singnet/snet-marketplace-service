@@ -11,5 +11,6 @@ SLACK_HOOK = {
         'Content-Type': 'application/json'
     }
 }
-signer={}
-SIGNER_KEY=""
+signer = {}
+SIGNER_KEY = ""
+REGION_NAME = ""
