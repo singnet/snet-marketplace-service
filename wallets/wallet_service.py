@@ -118,7 +118,8 @@ class WalletService:
         print("openChannelByThirdParty::transaction_hash", transaction_hash)
 
         self.obj_wallet_dao.insert_channel_history(
-            order_id=order_id, amount=amount, currency=currency, type=method_name,
+            order_id=order_id, amount=amount, currency=currency,
+            type=method_name, recipient=recipient,
             address=sender, signature=signature,
             request_parameters=str(positional_inputs),
             transaction_hash=transaction_hash, status=TransactionStatus.PENDING
@@ -157,7 +158,44 @@ class WalletService:
             "positional_inputs": positional_inputs, "type": method_name
         }
 
-    def get_wallet_transaction_history(self, order_id):
+    def get_transactions_from_username_recipient(self, username, recipient):
+        channel_data = self.obj_wallet_dao.get_wallet_transactions_for_username_recipient(
+            username=username, recipient=recipient)
+        self.utils.clean(channel_data)
+
+        transaction_details = {
+            "username": username,
+            "wallets": []
+        }
+
+        wallet_transactions = dict()
+        for rec in channel_data:
+            sender_address = rec["address"]
+            if rec["address"] not in wallet_transactions:
+                wallet_transactions[rec["address"]] = {
+                    "address": sender_address,
+                    "is_default": rec["is_default"],
+                    "transactions": []
+                }
+            if rec['recipient'] is None:
+                continue
+
+            transaction = {
+                "recipient": recipient,
+                "amount": rec["amount"],
+                "currency": rec["currency"],
+                "status": rec["status"],
+                "created_at": rec["created_at"],
+            }
+
+            wallet_transactions[sender_address]["transactions"].append(transaction)
+
+        for key in wallet_transactions:
+            wallet = wallet_transactions[key]
+            transaction_details["wallets"].append(wallet)
+        return transaction_details
+
+    def get_wallet_transactions_against_order_id(self, order_id):
         query = "SELECT order_id, amount, currency, type, address, transaction_hash, row_created as created_at " \
                 "FROM channel_transaction_history WHERE order_id = %s"
 
