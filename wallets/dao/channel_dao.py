@@ -23,7 +23,6 @@ class ChannelDAO:
                 "(SELECT CT.address, CT.amount, CT.currency, CT.status, CT.recipient, CT.row_created, CT.`type`" \
                 "FROM channel_transaction_history as CT " \
                 "WHERE CT.recipient = %s " \
-                "AND (CT.status = %s OR CT.status = %s) ) CT " \
                 "ON W.address = CT.address"
         channel_data = self.repo.execute(query, params)
         return channel_data
