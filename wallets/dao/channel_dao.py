@@ -35,7 +35,7 @@ class ChannelDAO:
         query = "INSERT INTO channel_transaction_history (order_id, amount, currency, " \
                 "type, recipient, address, signature, request_parameters, " \
                 "transaction_hash, status, row_created, row_updated) " \
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
         query_response = self.repo.execute(query, params)
         if query_response[0] == 1:
             return True
