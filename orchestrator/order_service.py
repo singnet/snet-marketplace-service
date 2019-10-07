@@ -141,22 +141,10 @@ class OrderService:
             }
             for wallet in wallet_response["wallets"]:
                 user_address = wallet["address"]
-
-                event = {
-                    "requestContext": {
-                        'stage': "ropsten"
-                    },
-                    "httpMethod": "GET",
-                    "path": "/channel",
-                    "queryStringParameters": {
-                        "user_address": user_address,
-                        "org_id": org_id,
-                        "group_id": group_id
-                    }
-                }
-                channel_details_lambda_response = self.lambda_client.invoke(
-                    FunctionName=CONTRACT_API_ARN, InvocationType='RequestResponse',
-                    Payload=json.dumps(event)
+                wallet["channels"] = self.get_channels_from_contract(
+                    user_address=user_address,
+                    org_id=org_id,
+                    group_id=group_id
                 )
                 channel_details_response = json.loads(channel_details_lambda_response.get("Payload").read())
                 if channel_details_response["statusCode"] != 200:
@@ -169,6 +157,31 @@ class OrderService:
         except Exception as e:
             print(repr(e))
             raise e
+
+    def get_channels_from_contract(self, user_address, org_id, group_id):
+        event = {
+            "requestContext": {
+                'stage': "ropsten"
+            },
+            "httpMethod": "GET",
+            "path": "/channel",
+            "queryStringParameters": {
+                "user_address": user_address,
+                "org_id": org_id,
+                "group_id": group_id
+            }
+        }
+        channel_details_lambda_response = self.lambda_client.invoke(
+            FunctionName=CONTRACT_API_ARN, InvocationType='RequestResponse',
+            Payload=json.dumps(event)
+        )
+        channel_details_response = json.loads(channel_details_lambda_response.get("Payload").read())
+        if channel_details_response["statusCode"] != 200:
+            raise Exception(f"Failed to get channel details from contract API username: {user_address} "
+                            f"group_id: {group_id} "
+                            f"org_id: {org_id}")
+        channel_details = json.loads(channel_details_response["body"])["data"]
+        return channel_details["channels"]
 
     def execute_order(self, user_data, payload_dict):
         """
