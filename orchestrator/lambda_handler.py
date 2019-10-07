@@ -37,6 +37,12 @@ def route_path(path, method, payload_dict, request_context=None):
             user_data=request_context, payload_dict=payload_dict
         )
 
+    elif "/wallet/channel" == path and method == 'GET':
+        org_id = payload_dict["org_id"]
+        username = request_context["authorizer"]["claims"]["email"]
+        group_id = payload_dict["group_id"]
+        response_data = obj_order_service.get_channel_details(username, org_id, group_id)
+
     elif "/order/execute" == path and method == "POST":
         response_data = obj_order_service.execute_order(
             user_data=request_context, payload_dict=payload_dict)
