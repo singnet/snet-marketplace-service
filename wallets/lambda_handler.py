@@ -44,21 +44,19 @@ def route_path(path, method, payload_dict):
     elif "/wallet/status" == path:
         response_data = obj_wallet_manager.update_wallet_status(address=payload_dict['address'])
 
-    elif "/wallet/transactions" == path and method == 'GET':
+    elif "/wallet/channel/transactions" == path and method == 'GET':
         order_id = payload_dict.get('order_id', None)
         username = payload_dict.get('username', None)
         recipient = payload_dict.get('recipient', None)
 
         if order_id is not None:
-            response_data = obj_wallet_manager.get_wallet_transactions_against_order_id(
+            response_data = obj_wallet_manager.get_channel_transactions_against_order_id(
                 order_id=payload_dict["order_id"])
         elif username is not None and recipient is not None:
             response_data = obj_wallet_manager.get_transactions_from_username_recipient(
                 username=username, recipient=recipient)
         else:
             raise Exception("Bad Parameters")
-
-
 
     else:
         path_exist = False

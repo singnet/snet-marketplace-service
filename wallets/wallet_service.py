@@ -6,8 +6,9 @@ from common.ssm_utils import get_ssm_parameter
 from common.utils import Utils
 from wallets.config import NETWORK_ID, NETWORKS, SIGNER_ADDRESS, EXECUTOR_ADDRESS, EXECUTOR_KEY
 from wallets.constant import GENERAL_WALLET_TYPE, MPE_ADDR_PATH, MPE_CNTRCT_PATH
+from wallets.dao.channel_dao import ChannelDAO
 from wallets.wallet import Wallet
-from wallets.wallet_data_access_object import WalletDAO
+from wallets.dao.wallet_data_access_object import WalletDAO
 
 EXECUTOR_WALLET_ADDRESS = get_ssm_parameter(EXECUTOR_ADDRESS)
 EXECUTOR_WALLET_KEY = get_ssm_parameter(EXECUTOR_KEY)
@@ -21,6 +22,7 @@ class WalletService:
             provider=NETWORKS[NETWORK_ID]['http_provider']
         )
         self.utils = Utils()
+        self.channel_dao = ChannelDAO(obj_repo=self.repo)
         self.obj_wallet_dao = WalletDAO(obj_repo=self.repo)
 
     def create_and_register_wallet(self, username):
@@ -114,7 +116,7 @@ class WalletService:
 
         print("openChannelByThirdParty::transaction_hash", transaction_hash)
 
-        self.obj_wallet_dao.insert_channel_history(
+        self.channel_dao.insert_channel_history(
             order_id=order_id, amount=amount, currency=currency,
             type=method_name, recipient=recipient,
             address=sender, signature=signature,
@@ -149,14 +151,13 @@ class WalletService:
 
         transaction_hash = self.obj_blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
         print("channelAddFunds::transaction_hash", transaction_hash)
-
         return {
             "transaction_hash": transaction_hash, "agi_tokens": agi_tokens,
             "positional_inputs": positional_inputs, "type": method_name
         }
 
     def get_transactions_from_username_recipient(self, username, recipient):
-        channel_data = self.obj_wallet_dao.get_wallet_transactions_for_username_recipient(
+        channel_data = self.channel_dao.get_channel_transactions_for_username_recipient(
             username=username, recipient=recipient)
         self.utils.clean(channel_data)
 
@@ -193,11 +194,11 @@ class WalletService:
         return transaction_details
 
     def get_channel_transactions_against_order_id(self, order_id):
-        transaction_history = self.obj_wallet_dao.get_channel_transactions_against_order_id(order_id)
+        transaction_history = self.channel_dao.get_channel_transactions_against_order_id(order_id)
 
-        transaction_history = self.repo.execute(query, order_id)
         for record in transaction_history:
             record["created_at"] = record["created_at"].strftime("%Y-%m-%d %H:%M:%S")
+
         return {
             "order_id": order_id,
             "transactions": transaction_history
