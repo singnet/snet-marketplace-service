@@ -2,15 +2,18 @@ import json
 import re
 import traceback
 
+from common.logger import get_logger
 from common.utils import Utils
 from signer.config import SLACK_HOOK, NET_ID
 from signer.signer import Signer
 
 obj_util = Utils()
 
+logger = get_logger(__name__)
+
 
 def request_handler(event, context):
-    print(event)
+    logger.info(event)
     if 'path' not in event:
         return get_response(400, "Bad Request")
     try:
@@ -44,7 +47,7 @@ def request_handler(event, context):
                                                                      channel_id=payload_dict['channel_id'],
                                                                      nonce=payload_dict['nonce'],
                                                                      amount=payload_dict['amount'])
-            print(response_data)
+            logger.info(response_data)
         else:
             return get_response(404, "Not Found")
 

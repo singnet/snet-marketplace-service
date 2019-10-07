@@ -6,10 +6,13 @@ from eth_account.messages import defunct_hash_message
 from web3 import Web3
 
 from common.blockchain_util import BlockChainUtil
+from common.logger import get_logger
 from common.utils import Utils
 from config import config
 from signer.config import PREFIX_FREE_CALL, GET_FREE_CALLS_METERING_ARN, NETWORKS, SIGNER_KEY, REGION_NAME
 from signer.constant import MPE_ADDR_PATH
+
+logger = get_logger(__name__)
 
 
 class Signer:
@@ -45,7 +48,7 @@ class Signer:
                     (free_calls_allowed - total_calls_made) > 0) else False
             return is_free_calls_allowed
         except Exception as e:
-            print(repr(e))
+            logger.info(repr(e))
             raise e
 
     def signature_for_free_call(self, user_data, org_id, service_id):
@@ -75,12 +78,12 @@ class Signer:
                 raise Exception(
                     "Free calls expired for username %s.", username)
         except Exception as e:
-            print(repr(e))
+            logger.info(repr(e))
             raise e
 
     def signature_for_regular_call(self, user_data, channel_id, nonce, amount):
         """
-            Method to generate signature for daemon call.
+            Method to generate signature for regular call.
         """
         try:
             username = user_data['authorizer']['claims']['email']
@@ -92,7 +95,7 @@ class Signer:
                     "snet-payment-channel-id": channel_id, "snet-payment-channel-nonce": nonce,
                     "snet-payment-channel-amount": amount, "snet-current-block-number": self.current_block_no}
         except Exception as e:
-            print(repr(e))
+            logger.info(repr(e))
             raise Exception(
                 "Unable to generate signature for daemon call for username %s", username)
 
@@ -108,6 +111,6 @@ class Signer:
                                                                      signer_key=SIGNER_KEY)
             return {"signature": signature, "snet-current-block-number": self.current_block_no}
         except Exception as e:
-            print(repr(e))
+            logger.info(repr(e))
             raise Exception(
                 "Unable to generate signature for daemon call for username %s", username)
