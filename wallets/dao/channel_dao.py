@@ -12,7 +12,7 @@ class ChannelDAO:
         self.repo = obj_repo
 
     def get_channel_transactions_for_username_recipient(self, username, recipient):
-        params = [username, recipient]
+        params = [username, recipient, TransactionStatus.FAILED, TransactionStatus.PENDING]
         query = "SELECT W.username, W.address, W.is_default, CT.recipient, CT.amount, " \
                 "CT.currency, CT.status, CT.row_created as created_at " \
                 "FROM " \
@@ -22,7 +22,8 @@ class ChannelDAO:
                 "LEFT JOIN " \
                 "(SELECT CT.address, CT.amount, CT.currency, CT.status, CT.recipient, CT.row_created, CT.`type`" \
                 "FROM channel_transaction_history as CT " \
-                "WHERE CT.recipient = %s) CT " \
+                "WHERE CT.recipient = %s " \
+                "AND (CT.status = %s OR CT.status = %s)) CT " \
                 "ON W.address = CT.address"
         channel_data = self.repo.execute(query, params)
         return channel_data
