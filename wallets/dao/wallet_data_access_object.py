@@ -16,17 +16,15 @@ class WalletDAO:
             time_now = dt.utcnow()
             wallet_query = "INSERT INTO wallet (address, type, status, row_created, row_updated) VALUES (%s, %s, %s, %s, %s)"
             wallet_query_response = self.repo.execute(
-                wallet_query, [address, type, status, time_now, time_now]
-            )
+                wallet_query, [address, type, status, time_now, time_now])
 
             user_wallet_query = (
                 "INSERT INTO user_wallet (username, address, is_default, row_created, row_updated) "
-                "VALUES (%s, %s, %s, %s, %s)"
-            )
+                "VALUES (%s, %s, %s, %s, %s)")
             user_wallet_query_response = self.repo.execute(
-                user_wallet_query, [username, address, 1, time_now, time_now]
-            )
-            if user_wallet_query_response[0] == 1 and wallet_query_response[0] == 1:
+                user_wallet_query, [username, address, 1, time_now, time_now])
+            if user_wallet_query_response[0] == 1 and wallet_query_response[
+                    0] == 1:
                 self.repo.commit_transaction()
                 return True
             raise Exception("Failed to insert wallet details")
