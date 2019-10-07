@@ -1,5 +1,6 @@
 import traceback
 
+from common.logger import get_logger
 from common.repository import Repository
 from common.utils import Utils, generate_lambda_response, extract_payload, validate_dict, format_error_message
 from wallets.config import SLACK_HOOK
@@ -10,6 +11,7 @@ from wallets.wallet_service import WalletService
 NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys())
 db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys())
 obj_util = Utils()
+logger = get_logger(__name__)
 
 
 def route_path(path, method, payload_dict):
@@ -50,9 +52,13 @@ def route_path(path, method, payload_dict):
         recipient = payload_dict.get('recipient', None)
 
         if order_id is not None:
+            logger.info(f"Received request to fetch transactions against order_id: {order_id}")
+
             response_data = obj_wallet_manager.get_channel_transactions_against_order_id(
                 order_id=payload_dict["order_id"])
         elif username is not None and recipient is not None:
+            logger.info(f"Received request to fetch transactions for username: {username} and recipient: {recipient}")
+
             response_data = obj_wallet_manager.get_transactions_from_username_recipient(
                 username=username, recipient=recipient)
         else:
