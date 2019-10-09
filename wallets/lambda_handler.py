@@ -14,7 +14,7 @@ obj_util = Utils()
 logger = get_logger(__name__)
 
 
-def route_path(path, method, payload_dict):
+def route_path(path, method, payload_dict, path_parameters):
     obj_wallet_manager = WalletService(obj_repo=db[NETWORK_ID])
     path_exist = True
     response_data = None
@@ -82,13 +82,14 @@ def request_handler(event, context):
 
         path = event['path'].lower()
         method = event['httpMethod']
-        method_found, payload_dict = extract_payload(method=method, event=event)
+        method_found, path_parameters, payload_dict = extract_payload(method=method, event=event)
         if not method_found:
             return generate_lambda_response(405, "Method Not Allowed")
 
         path_exist, response_data = route_path(
             path=path, method=method,
-            payload_dict=payload_dict
+            payload_dict=payload_dict,
+            path_parameters=path_parameters
         )
 
         if not path_exist:

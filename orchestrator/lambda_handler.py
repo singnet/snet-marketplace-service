@@ -18,7 +18,7 @@ db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETW
 obj_util = Utils()
 
 
-def route_path(path, method, payload_dict, request_context=None):
+def route_path(path, method, payload_dict, request_context, path_parameters):
     obj_order_service = OrderService(obj_repo=db[NETWORK_ID])
     path_exist = True
     response_data = None
@@ -27,6 +27,11 @@ def route_path(path, method, payload_dict, request_context=None):
         response_data = obj_order_service.get_order_details_by_username(
             request_context["authorizer"]["claims"]["email"]
         )
+
+    elif re.match("(\/order\/)[^\/]*[/]{0,1}$", path):
+        username = request_context["authorizer"]["claims"]["email"]
+        order_id = path_parameters["order_id"]
+        response_data = obj_order_service.get_order_details_by_order_id(username=username, order_id=order_id)
 
     elif "/order/initiate" == path:
         response_data = obj_order_service.initiate_order(
@@ -64,8 +69,8 @@ def request_handler(event, context):
         path = re.sub(r"^(\/orchestrator)", "", path)
         method = event["httpMethod"]
 
-        method_found, payload_dict = extract_payload(method=method,
-                                                     event=event)
+        method_found, path_parameters, payload_dict = extract_payload(
+            method=method, event=event)
         if not method_found:
             return generate_lambda_response(405, "Method Not Allowed")
 
@@ -74,6 +79,7 @@ def request_handler(event, context):
             method=method,
             payload_dict=payload_dict,
             request_context=event.get("requestContext", None),
+            path_parameters=path_parameters
         )
         if not path_exist:
             return generate_lambda_response(404, "Not Found")
