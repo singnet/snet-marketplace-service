@@ -28,8 +28,6 @@ class TestSignUPAPI(unittest.TestCase):
                     "private_key"] == "26561428888193216265620544717131876925191237116680314981303971688115990928499")
         assert (response_body["data"]["status"] == 0)
         assert (response_body["data"]["type"] == "GENERAL")
-        response = lambda_handler.request_handler(create_wallet_event, context=None)
-        assert (response["statusCode"] == 500)
 
     @patch('common.utils.Utils.report_slack')
     def test_create_wallet_and_channel(self, mock_report_slack):
