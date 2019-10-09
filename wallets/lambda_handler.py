@@ -34,6 +34,7 @@ def route_path(path, method, payload_dict):
                                                                        sender_private_key=payload_dict[
                                                                            'sender_private_key'],
                                                                        group_id=payload_dict['group_id'],
+                                                                       org_id=payload_dict["org_id"],
                                                                        amount=payload_dict['amount'],
                                                                        currency=payload_dict['currency'],
                                                                        recipient=payload_dict['recipient'])
