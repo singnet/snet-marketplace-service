@@ -28,11 +28,6 @@ def route_path(path, method, payload_dict, request_context, path_parameters):
             request_context["authorizer"]["claims"]["email"]
         )
 
-    elif re.match("(\/order\/)[^\/]*[/]{0,1}$", path):
-        username = request_context["authorizer"]["claims"]["email"]
-        order_id = path_parameters["order_id"]
-        response_data = obj_order_service.get_order_details_by_order_id(username=username, order_id=order_id)
-
     elif "/order/initiate" == path:
         response_data = obj_order_service.initiate_order(
             user_data=request_context, payload_dict=payload_dict)
@@ -51,6 +46,11 @@ def route_path(path, method, payload_dict, request_context, path_parameters):
     elif "/order/execute" == path and method == "POST":
         response_data = obj_order_service.execute_order(
             user_data=request_context, payload_dict=payload_dict)
+
+    elif re.match("(\/order\/)[^\/]*[/]{0,1}$", path):
+        username = request_context["authorizer"]["claims"]["email"]
+        order_id = path_parameters["order_id"]
+        response_data = obj_order_service.get_order_details_by_order_id(username=username, order_id=order_id)
 
     else:
         path_exist = False
