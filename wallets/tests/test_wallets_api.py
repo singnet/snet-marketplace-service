@@ -8,19 +8,17 @@ from wallets import lambda_handler
 class TestSignUPAPI(unittest.TestCase):
     def setUp(self):
         pass
-        self.create_wallet = {"path": "/wallet",
-                              "httpMethod": "POST",
-                              "body": "{\"username\": \"dummy@dummy.com\"}"
-                              }
 
     @patch('common.utils.Utils.report_slack')
     @patch('common.blockchain_util.BlockChainUtil.create_account')
     def test_create_wallet(self, mock_create_account, mock_report_slack):
-        mock_create_account.return_value = (
-            "323449587122651441342932061624154600879572532581",
-            "26561428888193216265620544717131876925191237116680314981303971688115990928499")
-        response = lambda_handler.request_handler(self.create_wallet, context=None)
-        print(response)
+        create_wallet = {"path": "/wallet",
+                         "httpMethod": "POST",
+                         "body": "{\"username\": \"dummy@dummy.com\"}"
+                         }
+        mock_create_account.return_value = ("323449587122651441342932061624154600879572532581",
+                                            "26561428888193216265620544717131876925191237116680314981303971688115990928499")
+        response = lambda_handler.request_handler(create_wallet, context=None)
         assert (response["statusCode"] == 200)
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
@@ -30,9 +28,8 @@ class TestSignUPAPI(unittest.TestCase):
                     "private_key"] == "26561428888193216265620544717131876925191237116680314981303971688115990928499")
         assert (response_body["data"]["status"] == 0)
         assert (response_body["data"]["type"] == "GENERAL")
-        response = lambda_handler.request_handler(self.create_wallet, context=None)
+        response = lambda_handler.request_handler(create_wallet, context=None)
         assert (response["statusCode"] == 500)
-
 
     @patch('common.utils.Utils.report_slack')
     def test_create_wallet_and_channel(self, mock_report_slack):
