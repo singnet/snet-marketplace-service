@@ -12,7 +12,8 @@ class ChannelDAO:
         self.repo = obj_repo
 
     def get_channel_transactions_for_username_recipient(self, username, org_id, group_id):
-        params = [username, group_id, org_id, TransactionStatus.FAILED, TransactionStatus.PENDING]
+        params = [username, group_id, org_id,
+                  TransactionStatus.FAILED, TransactionStatus.PENDING]
         query = "SELECT W.username, W.address, W.type, W.is_default, CT.recipient, CT.amount, " \
                 "CT.`type` as transaction_type, CT.currency, CT.status, CT.row_created as created_at " \
                 "FROM " \
