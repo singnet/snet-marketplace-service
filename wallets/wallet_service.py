@@ -11,8 +11,6 @@ from wallets.dao.channel_dao import ChannelDAO
 from wallets.wallet import Wallet
 from wallets.dao.wallet_data_access_object import WalletDAO
 
-EXECUTOR_WALLET_ADDRESS = get_ssm_parameter(EXECUTOR_ADDRESS)
-EXECUTOR_WALLET_KEY = get_ssm_parameter(EXECUTOR_KEY)
 logger = get_logger(__name__)
 
 
@@ -62,7 +60,7 @@ class WalletService:
     def __generate_signature_details(self, recipient, group_id, agi_tokens, expiration, message_nonce, signer_key):
         data_types = ["string", "address", "address", "address", "address", "bytes32", "uint256", "uint256",
                       "uint256"]
-        values = ["__openChannelByThirdParty", self.mpe_address, EXECUTOR_WALLET_ADDRESS, SIGNER_ADDRESS, recipient,
+        values = ["__openChannelByThirdParty", self.mpe_address, self.EXECUTOR_WALLET_ADDRESS, SIGNER_ADDRESS, recipient,
                   group_id, agi_tokens, expiration, message_nonce]
         signature = self.obj_blockchain_util.generate_signature(data_types=data_types, values=values,
                                                                 signer_key=signer_key)
@@ -79,6 +77,8 @@ class WalletService:
 
     def open_channel_by_third_party(self, order_id, sender, sender_private_key, group_id,
                                     org_id, amount, currency, recipient):
+        self.EXECUTOR_WALLET_ADDRESS = get_ssm_parameter(EXECUTOR_ADDRESS)
+        self.EXECUTOR_WALLET_KEY = get_ssm_parameter(EXECUTOR_KEY)
         method_name = "openChannelByThirdParty"
         self.mpe_address = self.obj_blockchain_util.read_contract_address(
             net_id=NETWORK_ID, path=MPE_ADDR_PATH,
@@ -108,7 +108,7 @@ class WalletService:
         transaction_object = self.obj_blockchain_util.create_transaction_object(
             *positional_inputs,
             method_name=method_name,
-            address=EXECUTOR_WALLET_ADDRESS,
+            address=self.EXECUTOR_WALLET_ADDRESS,
             contract_path=MPE_CNTRCT_PATH,
             contract_address_path=MPE_ADDR_PATH,
             net_id=NETWORK_ID
@@ -116,7 +116,7 @@ class WalletService:
 
         raw_transaction = self.obj_blockchain_util.sign_transaction_with_private_key(
             transaction_object=transaction_object,
-            private_key=EXECUTOR_WALLET_KEY)
+            private_key=self.EXECUTOR_WALLET_KEY)
         transaction_hash = self.obj_blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
 
         print("openChannelByThirdParty::transaction_hash", transaction_hash)
@@ -139,13 +139,15 @@ class WalletService:
         pass
 
     def add_funds_to_channel(self, order_id, channel_id, amount, currency):
+        self.EXECUTOR_WALLET_ADDRESS = get_ssm_parameter(EXECUTOR_ADDRESS)
+        self.EXECUTOR_WALLET_KEY = get_ssm_parameter(EXECUTOR_KEY)
         method_name = "channelAddFunds"
         agi_tokens = self.__calculate_agi_tokens(amount=amount, currency=currency)
         positional_inputs = (channel_id, agi_tokens)
 
         transaction_object = self.obj_blockchain_util.create_transaction_object(
             *positional_inputs, method_name=method_name,
-            address=EXECUTOR_WALLET_ADDRESS,
+            address=self.EXECUTOR_WALLET_ADDRESS,
             contract_path=MPE_CNTRCT_PATH,
             contract_address_path=MPE_ADDR_PATH,
             net_id=NETWORK_ID
@@ -153,7 +155,7 @@ class WalletService:
 
         raw_transaction = self.obj_blockchain_util.sign_transaction_with_private_key(
             transaction_object=transaction_object,
-            private_key=EXECUTOR_WALLET_KEY)
+            private_key=self.EXECUTOR_WALLET_KEY)
 
         transaction_hash = self.obj_blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
         print("channelAddFunds::transaction_hash", transaction_hash)
