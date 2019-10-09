@@ -13,10 +13,10 @@ class ChannelDAO:
 
     def get_channel_transactions_for_username_recipient(self, username, recipient):
         params = [username, recipient, TransactionStatus.FAILED, TransactionStatus.PENDING]
-        query = "SELECT W.username, W.address, W.is_default, CT.recipient, CT.amount, " \
+        query = "SELECT W.username, W.address, W.type, W.is_default, CT.recipient, CT.amount, " \
                 "CT.currency, CT.status, CT.row_created as created_at " \
                 "FROM " \
-                "(SELECT UW.username, UW.address, UW.is_default " \
+                "(SELECT UW.username, UW.address, UW.is_default, W.type " \
                 "FROM user_wallet as UW JOIN wallet W ON W.address = UW.address " \
                 "WHERE UW.username = %s) W " \
                 "LEFT JOIN " \
