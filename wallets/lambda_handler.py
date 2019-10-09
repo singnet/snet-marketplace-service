@@ -1,5 +1,6 @@
 import traceback
 
+from common.logger import get_logger
 from common.repository import Repository
 from common.utils import Utils, generate_lambda_response, extract_payload, validate_dict, format_error_message
 from wallets.config import SLACK_HOOK
@@ -10,6 +11,7 @@ from wallets.wallet_service import WalletService
 NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys())
 db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys())
 obj_util = Utils()
+logger = get_logger(__name__)
 
 
 def route_path(path, method, payload_dict):
@@ -32,6 +34,7 @@ def route_path(path, method, payload_dict):
                                                                        sender_private_key=payload_dict[
                                                                            'sender_private_key'],
                                                                        group_id=payload_dict['group_id'],
+                                                                       org_id=payload_dict["org_id"],
                                                                        amount=payload_dict['amount'],
                                                                        currency=payload_dict['currency'],
                                                                        recipient=payload_dict['recipient'])
@@ -44,8 +47,26 @@ def route_path(path, method, payload_dict):
     elif "/wallet/status" == path:
         response_data = obj_wallet_manager.update_wallet_status(address=payload_dict['address'])
 
-    elif "/wallet/transactions" == path:
-        response_data = obj_wallet_manager.get_wallet_transaction_history(order_id=payload_dict["order_id"])
+    elif "/wallet/channel/transactions" == path and method == 'GET':
+        order_id = payload_dict.get('order_id', None)
+        username = payload_dict.get('username', None)
+        org_id = payload_dict.get('org_id', None)
+        group_id = payload_dict.get('group_id', None)
+
+        if order_id is not None:
+            logger.info(f"Received request to fetch transactions against order_id: {order_id}")
+
+            response_data = obj_wallet_manager.get_channel_transactions_against_order_id(
+                order_id=payload_dict["order_id"])
+        elif username is not None and group_id is not None and org_id is not None:
+            logger.info(f"Received request to fetch transactions for username: {username} "
+                        f"group_id: {group_id} "
+                        f"org_id: {org_id}")
+
+            response_data = obj_wallet_manager.get_transactions_from_username_recipient(
+                username=username, group_id=group_id, org_id=org_id)
+        else:
+            raise Exception("Bad Parameters")
 
     else:
         path_exist = False
