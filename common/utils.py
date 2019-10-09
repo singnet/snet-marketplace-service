@@ -116,13 +116,14 @@ def generate_lambda_redirect_response(status_code, message, headers=None):
 def extract_payload(method, event):
     method_found = True
     payload_dict = None
+    path_parameters = event.get("pathParameters", None)
     if method == 'POST':
         payload_dict = json.loads(event['body'])
     elif method == 'GET':
         payload_dict = event.get('queryStringParameters', {})
     else:
         method_found = False
-    return method_found, payload_dict
+    return method_found, path_parameters, payload_dict
 
 
 def format_error_message(status, error, resource, payload, net_id):
