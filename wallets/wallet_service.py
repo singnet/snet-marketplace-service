@@ -179,6 +179,7 @@ class WalletService:
                 wallet_transactions[rec["address"]] = {
                     "address": sender_address,
                     "is_default": rec["is_default"],
+                    "type": rec["type"],
                     "transactions": []
                 }
             if rec['recipient'] is None:
