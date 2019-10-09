@@ -13,10 +13,10 @@ from wallets.config import SLACK_HOOK
 from wallets.constant import REQUIRED_KEYS_FOR_LAMBDA_EVENT
 from wallets.wallet_service import WalletService
 
-NETWORKS_NAME = dict((NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
-db = dict(
-    (netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys()
-)
+NETWORKS_NAME = dict(
+    (NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
+db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS))
+          for netId in NETWORKS.keys())
 obj_util = Utils()
 logger = get_logger(__name__)
 
@@ -28,12 +28,12 @@ def route_path(path, method, payload_dict):
 
     if "/wallet" == path and method == "POST":
         response_data = obj_wallet_manager.create_and_register_wallet(
-            username=payload_dict["username"]
-        )
+            username=payload_dict["username"])
 
     elif "/wallet" == path and method == "GET":
         username = payload_dict["username"]
-        response_data = obj_wallet_manager.get_wallet_details(username=username)
+        response_data = obj_wallet_manager.get_wallet_details(
+            username=username)
 
     elif "/wallet/channel" == path and method == "POST":
         response_data = obj_wallet_manager.open_channel_by_third_party(
@@ -56,8 +56,7 @@ def route_path(path, method, payload_dict):
 
     elif "/wallet/status" == path:
         response_data = obj_wallet_manager.update_wallet_status(
-            address=payload_dict["address"]
-        )
+            address=payload_dict["address"])
 
     elif "/wallet/channel/transactions" == path and method == "GET":
         order_id = payload_dict.get("order_id", None)
@@ -71,18 +70,15 @@ def route_path(path, method, payload_dict):
             )
 
             response_data = obj_wallet_manager.get_channel_transactions_against_order_id(
-                order_id=payload_dict["order_id"]
-            )
+                order_id=payload_dict["order_id"])
         elif username is not None and group_id is not None and org_id is not None:
             logger.info(
                 f"Received request to fetch transactions for username: {username} "
                 f"group_id: {group_id} "
-                f"org_id: {org_id}"
-            )
+                f"org_id: {org_id}")
 
             response_data = obj_wallet_manager.get_transactions_from_username_recipient(
-                username=username, group_id=group_id, org_id=org_id
-            )
+                username=username, group_id=group_id, org_id=org_id)
         else:
             raise Exception("Bad Parameters")
 
@@ -95,20 +91,20 @@ def route_path(path, method, payload_dict):
 def request_handler(event, context):
     try:
         valid_event = validate_dict(
-            data_dict=event, required_keys=REQUIRED_KEYS_FOR_LAMBDA_EVENT
-        )
+            data_dict=event, required_keys=REQUIRED_KEYS_FOR_LAMBDA_EVENT)
         if not valid_event:
             return generate_lambda_response(400, "Bad Request")
 
         path = event["path"].lower()
         method = event["httpMethod"]
-        method_found, payload_dict = extract_payload(method=method, event=event)
+        method_found, payload_dict = extract_payload(method=method,
+                                                     event=event)
         if not method_found:
             return generate_lambda_response(405, "Method Not Allowed")
 
-        path_exist, response_data = route_path(
-            path=path, method=method, payload_dict=payload_dict
-        )
+        path_exist, response_data = route_path(path=path,
+                                               method=method,
+                                               payload_dict=payload_dict)
 
         if not path_exist:
             return generate_lambda_response(404, "Not Found")
@@ -124,9 +120,10 @@ def request_handler(event, context):
             obj_util.report_slack(1, error_message, SLACK_HOOK)
             response = generate_lambda_response(500, error_message)
         else:
-            response = generate_lambda_response(
-                200, {"status": "success", "data": response_data}
-            )
+            response = generate_lambda_response(200, {
+                "status": "success",
+                "data": response_data
+            })
     except Exception as e:
         error_message = format_error_message(
             status="failed",
