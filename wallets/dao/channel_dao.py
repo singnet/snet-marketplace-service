@@ -10,7 +10,8 @@ class ChannelDAO:
     def __init__(self, obj_repo):
         self.repo = obj_repo
 
-    def get_channel_transactions_for_username_recipient(self, username, recipient):
+    def get_channel_transactions_for_username_recipient(
+            self, username, recipient):
         params = [
             username,
             recipient,
@@ -29,23 +30,22 @@ class ChannelDAO:
             "FROM channel_transaction_history as CT "
             "WHERE CT.recipient = %s "
             "AND (CT.status = %s OR CT.status = %s)) CT "
-            "ON W.address = CT.address"
-        )
+            "ON W.address = CT.address")
         channel_data = self.repo.execute(query, params)
         return channel_data
 
     def insert_channel_history(
-        self,
-        order_id,
-        amount,
-        currency,
-        type,
-        recipient,
-        address,
-        signature,
-        request_parameters,
-        transaction_hash,
-        status,
+            self,
+            order_id,
+            amount,
+            currency,
+            type,
+            recipient,
+            address,
+            signature,
+            request_parameters,
+            transaction_hash,
+            status,
     ):
         time_now = dt.now()
         params = [
@@ -66,8 +66,7 @@ class ChannelDAO:
             "INSERT INTO channel_transaction_history (order_id, amount, currency, "
             "type, recipient, address, signature, request_parameters, "
             "transaction_hash, status, row_created, row_updated) "
-            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-        )
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
         query_response = self.repo.execute(query, params)
         if query_response[0] == 1:
             return True
@@ -76,8 +75,7 @@ class ChannelDAO:
     def get_channel_transactions_against_order_id(self, order_id):
         query = (
             "SELECT order_id, amount, currency, type, address, transaction_hash, row_created as created_at "
-            "FROM channel_transaction_history WHERE order_id = %s"
-        )
+            "FROM channel_transaction_history WHERE order_id = %s")
 
         transaction_history = self.repo.execute(query, order_id)
         return transaction_history
