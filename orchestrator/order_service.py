@@ -146,13 +146,6 @@ class OrderService:
                     org_id=org_id,
                     group_id=group_id
                 )
-                channel_details_response = json.loads(channel_details_lambda_response.get("Payload").read())
-                if channel_details_response["statusCode"] != 200:
-                    raise Exception(f"Failed to get channel details from contract API username: {username} "
-                                    f"group_id: {group_id} "
-                                    f"org_id: {org_id}")
-                channel_details = json.loads(channel_details_response["body"])["data"]
-                wallet["channels"] = channel_details["channels"]
             return wallet_response
         except Exception as e:
             print(repr(e))
