@@ -103,13 +103,14 @@ class OrderService:
             raise Exception(f"Failed to find group {group_id} for org_id: {org_id}")
         return groups[0]["payment"]["payment_address"]
 
-    def get_channel_transactions(self, username, recipient):
+    def get_channel_transactions(self, username, org_id, group_id):
 
         channel_transactions_event = {
             "path": "/wallet/channel/transactions",
             "queryStringParameters": {
                 "username": username,
-                "recipient": recipient
+                "group_id": group_id,
+                "org_id": org_id
             },
             "httpMethod": "GET"
         }
@@ -130,13 +131,12 @@ class OrderService:
     def get_channel_details(self, username, org_id, group_id):
         """ Method to get wallet details for a given username. """
         try:
-            recipient = self.get_payment_address_for_org(group_id=group_id, org_id=org_id)
-            wallet_channel_transactions = self.get_channel_transactions(username, recipient)
+            wallet_channel_transactions = self.get_channel_transactions(
+                username=username, org_id=org_id, group_id=group_id)
             wallet_response = {
                 "username": username,
                 "org_id": org_id,
                 "group_id": group_id,
-                "recipient": recipient,
                 "wallets": wallet_channel_transactions
             }
             for wallet in wallet_response["wallets"]:
