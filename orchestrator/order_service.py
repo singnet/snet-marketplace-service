@@ -29,8 +29,8 @@ class OrderType(Enum):
 
 class OrderService:
     def __init__(self, obj_repo):
-        self.obj_repo = obj_repo
-        self.obj_transaction_history_dao = TransactionHistoryDAO(obj_repo=self.obj_repo)
+        self.repo = obj_repo
+        self.obj_transaction_history_dao = TransactionHistoryDAO(obj_repo=self.repo)
         self.lambda_client = boto3.client('lambda')
 
     def initiate_order(self, user_data, payload_dict):
@@ -103,6 +103,79 @@ class OrderService:
             raise Exception(f"Failed to find group {group_id} for org_id: {org_id}")
         return groups[0]["payment"]["payment_address"]
 
+    def get_channel_transactions(self, username, org_id, group_id):
+
+        channel_transactions_event = {
+            "path": "/wallet/channel/transactions",
+            "queryStringParameters": {
+                "username": username,
+                "group_id": group_id,
+                "org_id": org_id
+            },
+            "httpMethod": "GET"
+        }
+
+        channel_transactions_lambda_response = self.lambda_client.invoke(
+            FunctionName=WALLETS_SERVICE_ARN,
+            InvocationType='RequestResponse',
+            Payload=json.dumps(channel_transactions_event)
+        )
+        channel_transactions_response = json.loads(channel_transactions_lambda_response.get('Payload').read())
+        if channel_transactions_response["statusCode"] != 200:
+            raise Exception(f"Failed to fetch wallet details for username: {username}")
+
+        channel_transactions_response_body = json.loads(channel_transactions_response["body"])
+        channel_transactions = channel_transactions_response_body["data"]["wallets"]
+        return channel_transactions
+
+    def get_channel_details(self, username, org_id, group_id):
+        """ Method to get wallet details for a given username. """
+        try:
+            wallet_channel_transactions = self.get_channel_transactions(
+                username=username, org_id=org_id, group_id=group_id)
+            wallet_response = {
+                "username": username,
+                "org_id": org_id,
+                "group_id": group_id,
+                "wallets": wallet_channel_transactions
+            }
+            for wallet in wallet_response["wallets"]:
+                user_address = wallet["address"]
+                wallet["channels"] = self.get_channels_from_contract(
+                    user_address=user_address,
+                    org_id=org_id,
+                    group_id=group_id
+                )
+            return wallet_response
+        except Exception as e:
+            print(repr(e))
+            raise e
+
+    def get_channels_from_contract(self, user_address, org_id, group_id):
+        event = {
+            "requestContext": {
+                'stage': "ropsten"
+            },
+            "httpMethod": "GET",
+            "path": "/channel",
+            "queryStringParameters": {
+                "user_address": user_address,
+                "org_id": org_id,
+                "group_id": group_id
+            }
+        }
+        channel_details_lambda_response = self.lambda_client.invoke(
+            FunctionName=CONTRACT_API_ARN, InvocationType='RequestResponse',
+            Payload=json.dumps(event)
+        )
+        channel_details_response = json.loads(channel_details_lambda_response.get("Payload").read())
+        if channel_details_response["statusCode"] != 200:
+            raise Exception(f"Failed to get channel details from contract API username: {user_address} "
+                            f"group_id: {group_id} "
+                            f"org_id: {org_id}")
+        channel_details = json.loads(channel_details_response["body"])["data"]
+        return channel_details["channels"]
+
     def execute_order(self, user_data, payload_dict):
         """
             Execute Order
@@ -173,6 +246,7 @@ class OrderService:
             "queryStringParameters": {"username": username},
             "httpMethod": "GET"
         }
+
         order_details_lambda_response = self.lambda_client.invoke(
             FunctionName=ORDER_DETAILS_BY_USERNAME_ARN,
             InvocationType='RequestResponse',
@@ -188,7 +262,7 @@ class OrderService:
         for order in orders:
             order_id = order["order_id"]
             transaction_details_event = {
-                "path": f"/wallet/transactions",
+                "path": f"/wallet/channel/transactions",
                 "queryStringParameters": {"order_id": order_id},
                 "httpMethod": "GET"
             }
@@ -300,6 +374,7 @@ class OrderService:
                 'sender': wallet_details["address"],
                 'sender_private_key': wallet_details["private_key"],
                 'group_id': order_data["group_id"],
+                'org_id': order_data["org_id"],
                 'amount': amount,
                 'currency': currency,
                 'recipient': recipient

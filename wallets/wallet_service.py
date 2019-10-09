@@ -77,7 +77,8 @@ class WalletService:
 
         return agi_tokens
 
-    def open_channel_by_third_party(self, order_id, sender, sender_private_key, group_id, amount, currency, recipient):
+    def open_channel_by_third_party(self, order_id, sender, sender_private_key, group_id,
+                                    org_id, amount, currency, recipient):
         method_name = "openChannelByThirdParty"
         self.mpe_address = self.obj_blockchain_util.read_contract_address(
             net_id=NETWORK_ID, path=MPE_ADDR_PATH,
@@ -122,6 +123,7 @@ class WalletService:
 
         self.channel_dao.insert_channel_history(
             order_id=order_id, amount=amount, currency=currency,
+            group_id=group_id, org_id=org_id,
             type=method_name, recipient=recipient,
             address=sender, signature=signature,
             request_parameters=str(positional_inputs),
@@ -160,10 +162,10 @@ class WalletService:
             "positional_inputs": positional_inputs, "type": method_name
         }
 
-    def get_transactions_from_username_recipient(self, username, recipient):
-        logger.info(f"Fetching transactions for {username} to recipient: {recipient}")
+    def get_transactions_from_username_recipient(self, username, org_id, group_id):
+        logger.info(f"Fetching transactions for {username} to org_id: {org_id} group_id: {org_id}")
         channel_data = self.channel_dao.get_channel_transactions_for_username_recipient(
-            username=username, recipient=recipient)
+            username=username, group_id=group_id, org_id=org_id)
         self.utils.clean(channel_data)
 
         logger.info(f"Fetched {len(channel_data)} transactions")
@@ -179,14 +181,18 @@ class WalletService:
                 wallet_transactions[rec["address"]] = {
                     "address": sender_address,
                     "is_default": rec["is_default"],
+                    "type": rec["type"],
                     "transactions": []
                 }
             if rec['recipient'] is None:
                 continue
 
             transaction = {
-                "recipient": recipient,
+                "org_id": org_id,
+                "group_id": group_id,
+                "recipient": rec["recipient"],
                 "amount": rec["amount"],
+                "transaction_type": rec["transaction_type"],
                 "currency": rec["currency"],
                 "status": rec["status"],
                 "created_at": rec["created_at"],
