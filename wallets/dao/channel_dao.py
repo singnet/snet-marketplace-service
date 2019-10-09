@@ -11,10 +11,10 @@ class ChannelDAO:
     def __init__(self, obj_repo):
         self.repo = obj_repo
 
-    def get_channel_transactions_for_username_recipient(self, username, recipient):
-        params = [username, recipient, TransactionStatus.FAILED, TransactionStatus.PENDING]
+    def get_channel_transactions_for_username_recipient(self, username, org_id, group_id):
+        params = [username, group_id, org_id, TransactionStatus.FAILED, TransactionStatus.PENDING]
         query = "SELECT W.username, W.address, W.type, W.is_default, CT.recipient, CT.amount, " \
-                "CT.currency, CT.status, CT.row_created as created_at " \
+                "CT.`type` as transaction_type, CT.currency, CT.status, CT.row_created as created_at " \
                 "FROM " \
                 "(SELECT UW.username, UW.address, UW.is_default, W.type " \
                 "FROM user_wallet as UW JOIN wallet W ON W.address = UW.address " \
@@ -22,21 +22,21 @@ class ChannelDAO:
                 "LEFT JOIN " \
                 "(SELECT CT.address, CT.amount, CT.currency, CT.status, CT.recipient, CT.row_created, CT.`type`" \
                 "FROM channel_transaction_history as CT " \
-                "WHERE CT.recipient = %s " \
+                "WHERE CT.group_id = %s AND CT.org_id = %s" \
                 "AND (CT.status = %s OR CT.status = %s)) CT " \
                 "ON W.address = CT.address"
         channel_data = self.repo.execute(query, params)
         return channel_data
 
-    def insert_channel_history(self, order_id, amount, currency, type, recipient, address, signature,
-                               request_parameters, transaction_hash, status):
+    def insert_channel_history(self, order_id, amount, currency, type, group_id, org_id, recipient,
+                               address, signature, request_parameters, transaction_hash, status):
         time_now = dt.now()
-        params = [order_id, amount, currency, type, recipient, address,
+        params = [order_id, amount, org_id, group_id, currency, type, recipient, address,
                   signature, request_parameters, transaction_hash, status, time_now, time_now]
-        query = "INSERT INTO channel_transaction_history (order_id, amount, currency, " \
+        query = "INSERT INTO channel_transaction_history (order_id, amount, org_id, group_id, currency, " \
                 "type, recipient, address, signature, request_parameters, " \
                 "transaction_hash, status, row_created, row_updated) " \
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
         query_response = self.repo.execute(query, params)
         if query_response[0] == 1:
             return True

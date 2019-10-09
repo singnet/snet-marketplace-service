@@ -374,6 +374,7 @@ class OrderService:
                 'sender': wallet_details["address"],
                 'sender_private_key': wallet_details["private_key"],
                 'group_id': order_data["group_id"],
+                'org_id': order_data["org_id"],
                 'amount': amount,
                 'currency': currency,
                 'recipient': recipient
