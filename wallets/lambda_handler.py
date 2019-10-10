@@ -45,7 +45,7 @@ def route_path(path, method, payload_dict, path_parameters):
                                                                 group_id=payload_dict['group_id'],
                                                                 channel_id=payload_dict['channel_id'],
                                                                 sender=payload_dict['sender'],
-                                                                recipient=payload_dict['sender'],
+                                                                recipient=payload_dict['recipient'],
                                                                 order_id=payload_dict['order_id'],
                                                                 amount=payload_dict['amount'],
                                                                 currency=payload_dict['currency'])

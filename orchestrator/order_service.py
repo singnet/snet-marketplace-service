@@ -69,7 +69,7 @@ class OrderService:
 
         item_details["channel_id"] = channel_id
         item_details["recipient"] = recipient
-        item_details["wallet_address"] = wallet_address
+        item_details["sender"] = wallet_address
         order_details = self.manage_create_order(
             username=username, item_details=item_details,
             price=price
@@ -374,6 +374,7 @@ class OrderService:
         org_id = order_data["org_id"]
         recipient = order_data["recipient"]
         channel_id = order_data["channel_id"]
+        sender = order_data["sender"]
         if order_type == OrderType.CREATE_WALLET_AND_CHANNEL.value:
             wallet_create_payload = {
                 "path": "/wallet",
@@ -432,7 +433,9 @@ class OrderService:
                 'org_id': org_id,
                 'amount': amount,
                 'channel_id': channel_id,
-                'currency': currency
+                'currency': currency,
+                'recipient': recipient,
+                'sender': sender
             }
             fund_channel_payload = {
                 "path": "/wallet/channel/deposit",
