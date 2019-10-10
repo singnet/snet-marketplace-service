@@ -1,6 +1,6 @@
 from common.blockchain_util import BlockChainUtil
 from common.constant import TransactionStatus
-from wallets.channel_transaction_status.channel_transaction_status_data_access_object import \
+from wallets.dao.channel_transaction_status_data_access_object import \
     ChannelTransactionStatusDataAccessObject
 from wallets.config import NETWORKS, NETWORK_ID
 

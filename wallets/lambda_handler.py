@@ -6,7 +6,7 @@ from common.utils import Utils, generate_lambda_response, extract_payload, valid
 from wallets.config import SLACK_HOOK
 from wallets.config import NETWORKS, NETWORK_ID
 from wallets.constant import REQUIRED_KEYS_FOR_LAMBDA_EVENT
-from wallets.wallet_service import WalletService
+from wallets.service.wallet_service import WalletService
 
 NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys())
 db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys())

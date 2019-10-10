@@ -5,7 +5,7 @@ from unittest.mock import patch
 from wallets import lambda_handler
 
 
-class TestSignUPAPI(unittest.TestCase):
+class TestWalletAPI(unittest.TestCase):
     def setUp(self):
         pass
 
