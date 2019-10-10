@@ -64,6 +64,7 @@ class OrderService:
             for channel in channels:
                 if channel["signer"] == signer:
                     channel_id = channel["channel_id"]
+                    recipient = channel["recipient"]
             if channel_id is None:
                 raise Exception(f"Channel not found for the user: {username} with org: {org_id} group: {group_id}")
 
@@ -453,7 +454,7 @@ class OrderService:
             if fund_channel_response["statusCode"] != 200:
                 raise Exception(f"Failed to add funds in channel for {fund_channel_body}")
 
-            fund_channel_response_body = fund_channel_response["body"]
+            fund_channel_response_body = json.loads(fund_channel_response["body"])
             fund_channel_transaction_details = fund_channel_response_body["data"]
             return fund_channel_transaction_details
         else:
@@ -489,8 +490,7 @@ class OrderService:
     def register_wallet(self, username, wallet_details):
         register_wallet_body = {
             'address': wallet_details["address"],
-            'status': wallet_details["status"],
-            'type': wallet_details["status"],
+            'type': wallet_details["type"],
             'username': username
         }
         register_wallet_payload = {

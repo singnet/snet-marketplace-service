@@ -1,4 +1,5 @@
 import traceback
+from enum import Enum
 
 from common.logger import get_logger
 from common.repository import Repository
@@ -13,6 +14,10 @@ NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys
 db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys())
 obj_util = Utils()
 logger = get_logger(__name__)
+
+
+class WalletStatus(Enum):
+    ACTIVE = 1
 
 
 def route_path(path, method, payload_dict, path_parameters):
@@ -77,8 +82,9 @@ def route_path(path, method, payload_dict, path_parameters):
 
     elif "/wallet/register" == path:
         username = payload_dict["username"]
+        status = WalletStatus.ACTIVE.value
         obj_wallet = Wallet(address=payload_dict["address"], type=payload_dict["type"],
-                            status=payload_dict["status"])
+                            status=status)
         obj_wallet_manager.register_wallet(username=username, obj_wallet=obj_wallet)
         response_data = []
 
