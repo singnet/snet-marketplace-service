@@ -41,7 +41,12 @@ def route_path(path, method, payload_dict, path_parameters):
                                                                        recipient=payload_dict['recipient'])
 
     elif "/wallet/channel/deposit" == path and method == 'POST':
-        response_data = obj_wallet_manager.add_funds_to_channel(order_id=payload_dict['order_id'],
+        response_data = obj_wallet_manager.add_funds_to_channel(org_id=payload_dict['org_id'],
+                                                                group_id=payload_dict['group_id'],
+                                                                channel_id=payload_dict['channel_id'],
+                                                                sender=payload_dict['sender'],
+                                                                recipient=payload_dict['sender'],
+                                                                order_id=payload_dict['order_id'],
                                                                 amount=payload_dict['amount'],
                                                                 currency=payload_dict['currency'])
 
