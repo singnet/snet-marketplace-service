@@ -55,7 +55,6 @@ def route_path(path, method, payload_dict, request_context, path_parameters):
     elif "/wallet/register" == path and method == "POST":
         username = request_context["authorizer"]["claims"]["email"]
         response_data = obj_order_service.register_wallet(username=username, wallet_details=payload_dict)
-        return response_data
 
     elif "/wallet/status" == path and method == "POST":
         username = request_context["authorizer"]["claims"]["email"]
