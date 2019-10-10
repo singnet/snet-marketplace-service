@@ -501,7 +501,7 @@ class OrderService:
         response = self.boto_client.invoke_lambda(lambda_function_arn=WALLETS_SERVICE_ARN,
                                                   invocation_type="RequestResponse",
                                                   payload=json.dumps(register_wallet_payload))
-        return response
+        return json.loads(response["body"])["data"]
 
     def set_default_wallet(self, username, address):
         set_default_wallet_body = {
@@ -516,4 +516,4 @@ class OrderService:
         response = self.boto_client.invoke_lambda(lambda_function_arn=WALLETS_SERVICE_ARN,
                                                   invocation_type="RequestResponse",
                                                   payload=json.dumps(set_default_wallet_payload))
-        return response
+        return json.loads(response["body"])["data"]
