@@ -32,7 +32,7 @@ package:
     - venv/**
     - config.ropsten.json
     - test/**
-    - tests/**
+    - testcase/**
     - sql_script/**
     - service_status/**
     - contract_api/**
@@ -180,7 +180,7 @@ functions:
 
   channel-transaction-status:
     warmup: true
-    handler: wallets/channel_transaction_status/channel_transaction_status_handler.request_handler
+    handler: wallets/handler/channel_transaction_status_handler.request_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
