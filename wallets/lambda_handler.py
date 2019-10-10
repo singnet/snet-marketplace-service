@@ -4,7 +4,7 @@ from enum import Enum
 from common.logger import get_logger
 from common.repository import Repository
 from common.utils import Utils, generate_lambda_response, extract_payload, validate_dict, format_error_message
-from wallets.config import NETWORKS, NETWORK_ID
+from wallets.config import NETWORKS, NETWORK_ID, WALLET_TYPES_ALLOWED
 from wallets.config import SLACK_HOOK
 from wallets.constant import REQUIRED_KEYS_FOR_LAMBDA_EVENT
 from wallets.service.wallet_service import WalletService
@@ -83,7 +83,13 @@ def route_path(path, method, payload_dict, path_parameters):
     elif "/wallet/register" == path:
         username = payload_dict["username"]
         status = WalletStatus.ACTIVE.value
-        obj_wallet = Wallet(address=payload_dict["address"], type=payload_dict["type"],
+        wallet_address = payload_dict["address"]
+        wallet_type = payload_dict['type']
+
+        if wallet_type not in WALLET_TYPES_ALLOWED:
+            raise Exception("Wallet type invalid")
+
+        obj_wallet = Wallet(address=wallet_address, type=wallet_type,
                             status=status)
         obj_wallet_manager.register_wallet(username=username, obj_wallet=obj_wallet)
         response_data = []

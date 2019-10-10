@@ -1,7 +1,6 @@
 import base64
 
 from web3 import Web3
-
 from common.blockchain_util import BlockChainUtil
 from common.constant import TransactionStatus
 from common.logger import get_logger
