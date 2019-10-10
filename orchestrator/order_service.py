@@ -454,3 +454,19 @@ class OrderService:
                                                 invocation_type="RequestResponse",
                                                 payload=json.dumps(register_wallet_payload))
         return response
+
+    def set_default_wallet(self, username, address):
+        set_default_wallet_body = {
+            'address': address,
+            'username': username
+        }
+        set_default_wallet_payload = {
+            "path": "/wallet/status",
+            "body": json.dumps(set_default_wallet_body),
+            "httpMethod": "POST"
+        }
+        obj_boto_utils = BotoUtils(region_name=REGION_NAME)
+        response = obj_boto_utils.invoke_lambda(lambda_function_arn=WALLETS_SERVICE_ARN,
+                                                invocation_type="RequestResponse",
+                                                payload=json.dumps(set_default_wallet_payload))
+        return response

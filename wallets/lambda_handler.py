@@ -46,7 +46,8 @@ def route_path(path, method, payload_dict, path_parameters):
                                                                 currency=payload_dict['currency'])
 
     elif "/wallet/status" == path:
-        response_data = obj_wallet_manager.update_wallet_status(address=payload_dict['address'])
+        response_data = obj_wallet_manager.set_default_wallet(username=payload_dict["username"],
+                                                              address=payload_dict['address'])
 
     elif "/wallet/channel/transactions" == path and method == 'GET':
         order_id = payload_dict.get('order_id', None)
@@ -71,7 +72,7 @@ def route_path(path, method, payload_dict, path_parameters):
 
     elif "/wallet/register" == path:
         username = payload_dict["username"]
-        obj_wallet = Wallet(address=payload_dict["address"], type=payload_dict["qtype"],
+        obj_wallet = Wallet(address=payload_dict["address"], type=payload_dict["type"],
                             status=payload_dict["status"])
         obj_wallet_manager.register_wallet(username=username, obj_wallet=obj_wallet)
         response_data = []

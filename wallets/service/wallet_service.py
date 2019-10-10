@@ -135,8 +135,9 @@ class WalletService:
             "agi_tokens": agi_tokens, "type": method_name
         }
 
-    def update_wallet_status(self, address):
-        pass
+    def set_default_wallet(self, username, address):
+        self.obj_wallet_dao.set_default_wallet(username=username, address=address)
+        return []
 
     def add_funds_to_channel(self, order_id, channel_id, amount, currency):
         self.EXECUTOR_WALLET_ADDRESS = get_ssm_parameter(EXECUTOR_ADDRESS)
