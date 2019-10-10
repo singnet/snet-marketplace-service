@@ -490,8 +490,7 @@ class OrderService:
     def register_wallet(self, username, wallet_details):
         register_wallet_body = {
             'address': wallet_details["address"],
-            'status': wallet_details["status"],
-            'type': wallet_details["status"],
+            'type': wallet_details["type"],
             'username': username
         }
         register_wallet_payload = {
