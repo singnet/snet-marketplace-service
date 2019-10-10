@@ -21,17 +21,16 @@ class TestWalletAPI(unittest.TestCase):
             "323449587122651441342932061624154600879572532581",
             "26561428888193216265620544717131876925191237116680314981303971688115990928499",
         )
-        response = lambda_handler.request_handler(create_wallet_event, context=None)
+        response = lambda_handler.request_handler(create_wallet_event,
+                                                  context=None)
         assert response["statusCode"] == 200
         response_body = json.loads(response["body"])
         assert response_body["status"] == "success"
+        assert (response_body["data"]["address"] ==
+                "323449587122651441342932061624154600879572532581")
         assert (
-            response_body["data"]["address"]
-            == "323449587122651441342932061624154600879572532581"
-        )
-        assert (
-            response_body["data"]["private_key"]
-            == "26561428888193216265620544717131876925191237116680314981303971688115990928499"
+            response_body["data"]["private_key"] ==
+            "26561428888193216265620544717131876925191237116680314981303971688115990928499"
         )
         assert response_body["data"]["status"] == 0
         assert response_body["data"]["type"] == "GENERAL"

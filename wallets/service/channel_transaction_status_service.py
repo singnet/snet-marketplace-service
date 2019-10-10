@@ -3,8 +3,7 @@ from common.constant import TransactionStatus
 from wallets.config import NETWORK_ID
 from wallets.config import NETWORKS
 from wallets.dao.channel_transaction_status_data_access_object import (
-    ChannelTransactionStatusDataAccessObject,
-)
+    ChannelTransactionStatusDataAccessObject, )
 
 
 class ChannelTransactionStatusService:
@@ -16,25 +15,19 @@ class ChannelTransactionStatusService:
             provider=NETWORKS[NETWORK_ID]["http_provider"],
         )
         self.obj_channel_transaction_history_dao = ChannelTransactionStatusDataAccessObject(
-            repo=self.repo
-        )
+            repo=self.repo)
 
     def manage_channel_transaction_status(self):
-        transaction_data = (
-            self.obj_channel_transaction_history_dao.get_pending_transaction_data()
-        )
+        transaction_data = (self.obj_channel_transaction_history_dao.
+                            get_pending_transaction_data())
         print(transaction_data)
         for record in transaction_data:
             transaction_hash = record["transaction_hash"]
             transaction_receipt = self.obj_blockchain_util.get_transaction_receipt_from_blockchain(
-                transaction_hash=transaction_hash
-            )
+                transaction_hash=transaction_hash)
             if transaction_receipt is not None:
-                status = (
-                    TransactionStatus.SUCCESS
-                    if transaction_receipt.status == 1
-                    else TransactionStatus.FAILED
-                )
+                status = (TransactionStatus.SUCCESS
+                          if transaction_receipt.status == 1 else
+                          TransactionStatus.FAILED)
                 self.obj_channel_transaction_history_dao.update_channel_transaction_history(
-                    transaction_hash=transaction_hash, status=status
-                )
+                    transaction_hash=transaction_hash, status=status)
