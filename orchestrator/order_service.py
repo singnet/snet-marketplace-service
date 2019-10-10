@@ -482,3 +482,35 @@ class OrderService:
             raise Exception("No active paypal wallet")
 
         return default_wallet
+
+    def register_wallet(self, username, wallet_details):
+        register_wallet_body = {
+            'address': wallet_details["address"],
+            'status': wallet_details["status"],
+            'type': wallet_details["status"],
+            'username': username
+        }
+        register_wallet_payload = {
+            "path": "/wallet/register",
+            "body": json.dumps(register_wallet_body),
+            "httpMethod": "POST"
+        }
+        response = self.boto_client.invoke_lambda(lambda_function_arn=WALLETS_SERVICE_ARN,
+                                                  invocation_type="RequestResponse",
+                                                  payload=json.dumps(register_wallet_payload))
+        return response
+
+    def set_default_wallet(self, username, address):
+        set_default_wallet_body = {
+            'address': address,
+            'username': username
+        }
+        set_default_wallet_payload = {
+            "path": "/wallet/status",
+            "body": json.dumps(set_default_wallet_body),
+            "httpMethod": "POST"
+        }
+        response = self.boto_client.invoke_lambda(lambda_function_arn=WALLETS_SERVICE_ARN,
+                                                  invocation_type="RequestResponse",
+                                                  payload=json.dumps(set_default_wallet_payload))
+        return response
