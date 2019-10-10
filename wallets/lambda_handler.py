@@ -3,10 +3,11 @@ import traceback
 from common.logger import get_logger
 from common.repository import Repository
 from common.utils import Utils, generate_lambda_response, extract_payload, validate_dict, format_error_message
-from wallets.config import SLACK_HOOK
 from wallets.config import NETWORKS, NETWORK_ID
+from wallets.config import SLACK_HOOK
 from wallets.constant import REQUIRED_KEYS_FOR_LAMBDA_EVENT
 from wallets.service.wallet_service import WalletService
+from wallets.wallet import Wallet
 
 NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys())
 db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys())
@@ -67,6 +68,13 @@ def route_path(path, method, payload_dict, path_parameters):
                 username=username, group_id=group_id, org_id=org_id)
         else:
             raise Exception("Bad Parameters")
+
+    elif "/wallet/register" == path:
+        username = payload_dict["username"]
+        obj_wallet = Wallet(address=payload_dict["address"], type=payload_dict["qtype"],
+                            status=payload_dict["status"])
+        obj_wallet_manager.register_wallet(username=username, obj_wallet=obj_wallet)
+        response_data = []
 
     else:
         path_exist = False
