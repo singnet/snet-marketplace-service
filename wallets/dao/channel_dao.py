@@ -43,7 +43,7 @@ class ChannelDAO:
         return False
 
     def get_channel_transactions_against_order_id(self, order_id):
-        query = "SELECT order_id, amount, currency, type, address, transaction_hash, row_created as created_at " \
+        query = "SELECT order_id, amount, currency, type, address, transaction_hash, status, row_created as created_at " \
                 "FROM channel_transaction_history WHERE order_id = %s"
 
         transaction_history = self.repo.execute(query, order_id)
