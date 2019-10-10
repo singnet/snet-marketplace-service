@@ -140,7 +140,7 @@ class WalletService:
 
     def set_default_wallet(self, username, address):
         self.obj_wallet_dao.set_default_wallet(username=username, address=address)
-        return []
+        return "OK"
 
     def add_funds_to_channel(self, org_id, group_id, channel_id, sender, recipient, order_id, amount, currency):
         self.EXECUTOR_WALLET_ADDRESS = get_ssm_parameter(EXECUTOR_ADDRESS)
