@@ -1,4 +1,5 @@
 from datetime import datetime as dt
+
 from common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -23,7 +24,8 @@ class WalletDAO:
 
             user_wallet_query = "INSERT INTO user_wallet (username, address, is_default, row_created, row_updated) " \
                                 "VALUES (%s, %s, %s, %s, %s)"
-            user_wallet_query_response = self.repo.execute(user_wallet_query, [username, address, is_default, time_now, time_now])
+            user_wallet_query_response = self.repo.execute(user_wallet_query,
+                                                           [username, address, is_default, time_now, time_now])
             if user_wallet_query_response[0] == 1 and wallet_query_response[0] == 1:
                 self.repo.commit_transaction()
                 return True
@@ -39,3 +41,22 @@ class WalletDAO:
                 "FROM user_wallet as UW JOIN wallet as W ON UW.address = W.address WHERE UW.username= %s"
         wallet_data = self.repo.execute(query, username)
         return wallet_data
+
+    def set_default_wallet(self, username, address):
+        try:
+            is_default = 1
+            self.repo.begin_transaction()
+            update_default_query_response = self.repo.execute(
+                "UPDATE user_wallet SET is_default = %s WHERE username = %s AND address = %s", [is_default, username,
+                                                                                                address])
+            if update_default_query_response[0] == 1:
+                '''Set is_default as 0 for other wallets for given user'''
+                is_default = 0
+                self.repo.execute("UPDATE user_wallet SET is_default = %s WHERE username = %s AND address <> %s",
+                                  [is_default, username, address])
+                self.repo.commit_transaction()
+            raise Exception("Unable to set default wallet as %s for username %s", address, username)
+
+        except Exception as e:
+            self.repo.rollback_transaction()
+            print(repr(e))

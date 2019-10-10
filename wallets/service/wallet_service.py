@@ -1,5 +1,7 @@
-from web3 import Web3
 import base64
+
+from web3 import Web3
+
 from common.blockchain_util import BlockChainUtil
 from common.constant import TransactionStatus
 from common.logger import get_logger
@@ -8,8 +10,8 @@ from common.utils import Utils
 from wallets.config import NETWORK_ID, NETWORKS, SIGNER_ADDRESS, EXECUTOR_ADDRESS, EXECUTOR_KEY
 from wallets.constant import GENERAL_WALLET_TYPE, MPE_ADDR_PATH, MPE_CNTRCT_PATH
 from wallets.dao.channel_dao import ChannelDAO
-from wallets.wallet import Wallet
 from wallets.dao.wallet_data_access_object import WalletDAO
+from wallets.wallet import Wallet
 
 logger = get_logger(__name__)
 
@@ -60,7 +62,8 @@ class WalletService:
     def __generate_signature_details(self, recipient, group_id, agi_tokens, expiration, message_nonce, signer_key):
         data_types = ["string", "address", "address", "address", "address", "bytes32", "uint256", "uint256",
                       "uint256"]
-        values = ["__openChannelByThirdParty", self.mpe_address, self.EXECUTOR_WALLET_ADDRESS, SIGNER_ADDRESS, recipient,
+        values = ["__openChannelByThirdParty", self.mpe_address, self.EXECUTOR_WALLET_ADDRESS, SIGNER_ADDRESS,
+                  recipient,
                   group_id, agi_tokens, expiration, message_nonce]
         signature = self.obj_blockchain_util.generate_signature(data_types=data_types, values=values,
                                                                 signer_key=signer_key)
@@ -135,10 +138,11 @@ class WalletService:
             "agi_tokens": agi_tokens, "type": method_name
         }
 
-    def update_wallet_status(self, address):
-        pass
+    def set_default_wallet(self, username, address):
+        self.obj_wallet_dao.set_default_wallet(username=username, address=address)
+        return "OK"
 
-    def add_funds_to_channel(self, order_id, channel_id, amount, currency):
+    def add_funds_to_channel(self, org_id, group_id, channel_id, sender, recipient, order_id, amount, currency):
         self.EXECUTOR_WALLET_ADDRESS = get_ssm_parameter(EXECUTOR_ADDRESS)
         self.EXECUTOR_WALLET_KEY = get_ssm_parameter(EXECUTOR_KEY)
         method_name = "channelAddFunds"
@@ -159,10 +163,16 @@ class WalletService:
 
         transaction_hash = self.obj_blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
         print("channelAddFunds::transaction_hash", transaction_hash)
-        return {
-            "transaction_hash": transaction_hash, "agi_tokens": agi_tokens,
-            "positional_inputs": positional_inputs, "type": method_name
-        }
+
+        self.channel_dao.insert_channel_history(
+            order_id=order_id, amount=amount, currency=currency,
+            group_id=group_id, org_id=org_id,
+            type=method_name, recipient=recipient,
+            address=sender, signature=None,
+            request_parameters=str(positional_inputs),
+            transaction_hash=transaction_hash, status=TransactionStatus.PENDING
+        )
+        return {"transaction_hash": transaction_hash, "agi_tokens": agi_tokens, "type": method_name}
 
     def get_transactions_from_username_recipient(self, username, org_id, group_id):
         logger.info(f"Fetching transactions for {username} to org_id: {org_id} group_id: {org_id}")
