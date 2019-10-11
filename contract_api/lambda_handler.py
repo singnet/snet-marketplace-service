@@ -75,7 +75,7 @@ def request_handler(event, context):
             org_id = payload_dict.get("org_id", None)
             service_id = payload_dict.get("service_id", None)
             group_id = payload_dict.get("group_id", None)
-            response_data = obj_mpe.get_channels_by_user_address(
+            response_data = obj_mpe.get_channels(
                 user_address=user_address,
                 org_id=org_id,
                 service_id=service_id,
