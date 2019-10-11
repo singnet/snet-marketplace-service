@@ -15,25 +15,37 @@ class User:
     def __init__(self, obj_repo):
         self.repo = obj_repo
         self.obj_utils = Utils()
-        self.ssm_client = boto3.client('ssm')
-        self.lambda_client = boto3.client('lambda')
+        self.ssm_client = boto3.client("ssm")
+        self.lambda_client = boto3.client("lambda")
 
     def _set_user_data(self, user_data):
         """ Method to set user information. """
         try:
-            claims = user_data['authorizer']['claims']
-            email_verified = claims['email_verified']
+            claims = user_data["authorizer"]["claims"]
+            email_verified = claims["email_verified"]
             status = 0
             if email_verified:
                 status = 1
             else:
                 raise Exception("Email verification is pending.")
-            q_dta = [claims['email'], user_data['accountId'], claims['nickname'], claims['email'], status,
-                     status, user_data['requestId'], user_data['requestTimeEpoch'], dt.utcnow(), dt.utcnow()]
+            q_dta = [
+                claims["email"],
+                user_data["accountId"],
+                claims["nickname"],
+                claims["email"],
+                status,
+                status,
+                user_data["requestId"],
+                user_data["requestTimeEpoch"],
+                dt.utcnow(),
+                dt.utcnow(),
+            ]
             set_usr_dta = self.repo.execute(
                 "INSERT INTO user (username, account_id, name, email, email_verified, status, request_id, "
                 "request_time_epoch, row_created, row_updated) "
-                "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", q_dta)
+                "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                q_dta,
+            )
             if len(set_usr_dta) > 0:
                 return "success"
             else:
@@ -45,8 +57,9 @@ class User:
     def _fetch_private_key_from_ssm(self, address):
         try:
             store = self.ssm_client.get_parameter(
-                Name=PATH_PREFIX + str(address), WithDecryption=True)
-            return store['Parameter']['Value']
+                Name=PATH_PREFIX + str(address), WithDecryption=True
+            )
+            return store["Parameter"]["Value"]
         except Exception as e:
             print(repr(e))
             raise Exception("Error fetching value from parameter store.")
@@ -56,7 +69,7 @@ class User:
             This is one time process.
         """
         try:
-            username = user_data['authorizer']['claims']['email']
+            username = user_data["authorizer"]["claims"]["email"]
             set_user_data = self._set_user_data(user_data)
             print(set_user_data)
             return set_user_data
@@ -70,12 +83,15 @@ class User:
             Deregister User.
         """
         try:
-            username = user_data['authorizer']['claims']['email']
+            username = user_data["authorizer"]["claims"]["email"]
             self.repo.begin_transaction()
             del_user = self.repo.execute(
-                "DELETE FROM user WHERE username = %s ", [username])
+                "DELETE FROM user WHERE username = %s ", [username]
+            )
             updt_wallet = self.repo.execute(
-                "UPDATE wallet SET status=0, username=NULL WHERE username = %s ", [username])
+                "UPDATE wallet SET status=0, username=NULL WHERE username = %s ",
+                [username],
+            )
             self.repo.commit_transaction()
             return []
         except Exception as e:
@@ -88,9 +104,10 @@ class User:
             Method to fetch user profile data.
         """
         try:
-            username = user_data['authorizer']['claims']['email']
+            username = user_data["authorizer"]["claims"]["email"]
             result = self.repo.execute(
-                "SELECT * FROM user WHERE username = %s", [username])
+                "SELECT * FROM user WHERE username = %s", [username]
+            )
             self.obj_utils.clean(result)
             return {"success": "success", "data": result}
         except Exception as e:
@@ -102,9 +119,11 @@ class User:
             Method to update user profile data.
         """
         try:
-            username = user_data['authorizer']['claims']['email']
-            result = self.repo.execute("UPDATE user SET email_alerts = %s, is_terms_accepted = %s WHERE username = %s",
-                                       [int(email_alerts is True), int(is_terms_accepted is True), username])
+            username = user_data["authorizer"]["claims"]["email"]
+            result = self.repo.execute(
+                "UPDATE user SET email_alerts = %s, is_terms_accepted = %s WHERE username = %s",
+                [int(email_alerts is True), int(is_terms_accepted is True), username],
+            )
             return {"success": "success", "data": []}
         except Exception as e:
             print(repr(e))
@@ -114,15 +133,21 @@ class User:
         """
             Method to validate and set user feedback data.
         """
-        schema = Schema([{'org_id': And(str),
-                          'service_id': And(str),
-                          'user_rating': And(str),
-                          'comment': And(str)
-                          }])
+        schema = Schema(
+            [
+                {
+                    "org_id": And(str),
+                    "service_id": And(str),
+                    "user_rating": And(str),
+                    "comment": And(str),
+                }
+            ]
+        )
         try:
             feedback_data = schema.validate([feedback_data])
             feedback_recorded = self._set_user_feedback(
-                feedback_data[0], user_data=user_data)
+                feedback_data[0], user_data=user_data
+            )
             if feedback_recorded:
                 return []
             return None
@@ -136,7 +161,7 @@ class User:
         """
         try:
             user_rating_dict = {}
-            username = user_data['authorizer']['claims']['email']
+            username = user_data["authorizer"]["claims"]["email"]
             query_part = ""
             query_part_values = []
             if org_id is not None:
@@ -146,33 +171,40 @@ class User:
                     query_part += "AND service_id = %s "
                     query_part_values.append(service_id)
 
-            rating_query = "SELECT * FROM user_service_vote WHERE username = %s " + query_part
-            rating = self.repo.execute(
-                rating_query, [username] + query_part_values)
+            rating_query = (
+                "SELECT * FROM user_service_vote WHERE username = %s " + query_part
+            )
+            rating = self.repo.execute(rating_query, [username] + query_part_values)
             self.obj_utils.clean(rating)
 
-            feedback_query = "SELECT * FROM user_service_feedback WHERE username = %s " + query_part
-            feedback = self.repo.execute(
-                feedback_query, [username] + query_part_values)
+            feedback_query = (
+                "SELECT * FROM user_service_feedback WHERE username = %s " + query_part
+            )
+            feedback = self.repo.execute(feedback_query, [username] + query_part_values)
             self.obj_utils.clean(feedback)
 
             for record in feedback:
-                org_id = record['org_id']
-                service_id = record['service_id']
+                org_id = record["org_id"]
+                service_id = record["service_id"]
                 if org_id not in user_rating_dict.keys():
                     user_rating_dict[org_id] = {}
                 if service_id not in user_rating_dict.keys():
                     user_rating_dict[org_id][service_id] = {}
-                    user_rating_dict[org_id][service_id]['comment'] = []
-                user_rating_dict[org_id][service_id]['comment'].append(
-                    record['comment'])
+                    user_rating_dict[org_id][service_id]["comment"] = []
+                user_rating_dict[org_id][service_id]["comment"].append(
+                    record["comment"]
+                )
 
             for record in rating:
-                org_id = record['org_id']
-                service_id = record['service_id']
-                record.update({'comment': user_rating_dict.get(org_id, {})
-                               .get(service_id, {})
-                               .get("comment", [])})
+                org_id = record["org_id"]
+                service_id = record["service_id"]
+                record.update(
+                    {
+                        "comment": user_rating_dict.get(org_id, {})
+                        .get(service_id, {})
+                        .get("comment", [])
+                    }
+                )
             return rating
         except Exception as e:
             print(repr(e))
@@ -183,26 +215,45 @@ class User:
             Method to set user rating and feedback.
         """
         try:
-            user_rating = str(feedback_data['user_rating'])
+            user_rating = str(feedback_data["user_rating"])
             if float(user_rating) > 5.0 or float(user_rating) < 1.0:
                 raise Exception(
-                    "Invalid Rating. Provided user rating should be between 1.0 and 5.0 .")
+                    "Invalid Rating. Provided user rating should be between 1.0 and 5.0 ."
+                )
             curr_dt = dt.utcnow()
-            username = user_data['authorizer']['claims']['email']
-            org_id = feedback_data['org_id']
-            service_id = feedback_data['service_id']
-            comment = feedback_data['comment']
+            username = user_data["authorizer"]["claims"]["email"]
+            org_id = feedback_data["org_id"]
+            service_id = feedback_data["service_id"]
+            comment = feedback_data["comment"]
             self.repo.begin_transaction()
-            set_rating = "INSERT INTO user_service_vote (username, org_id, service_id, rating, row_updated, row_created) " \
-                         "VALUES (%s, %s, %s, %s, %s, %s) " \
-                         "ON DUPLICATE KEY UPDATE rating = %s, row_updated = %s"
-            set_rating_params = [username, org_id, service_id,
-                                 user_rating, curr_dt, curr_dt, user_rating, curr_dt]
+            set_rating = (
+                "INSERT INTO user_service_vote (username, org_id, service_id, rating, row_updated, row_created) "
+                "VALUES (%s, %s, %s, %s, %s, %s) "
+                "ON DUPLICATE KEY UPDATE rating = %s, row_updated = %s"
+            )
+            set_rating_params = [
+                username,
+                org_id,
+                service_id,
+                user_rating,
+                curr_dt,
+                curr_dt,
+                user_rating,
+                curr_dt,
+            ]
             self.repo.execute(set_rating, set_rating_params)
-            set_feedback = "INSERT INTO user_service_feedback (username, org_id, service_id, comment, row_updated, row_created)" \
-                           "VALUES (%s, %s, %s, %s, %s, %s)"
-            set_feedback_params = [username, org_id,
-                                   service_id, comment, curr_dt, curr_dt]
+            set_feedback = (
+                "INSERT INTO user_service_feedback (username, org_id, service_id, comment, row_updated, row_created)"
+                "VALUES (%s, %s, %s, %s, %s, %s)"
+            )
+            set_feedback_params = [
+                username,
+                org_id,
+                service_id,
+                comment,
+                curr_dt,
+                curr_dt,
+            ]
             self.repo.execute(set_feedback, set_feedback_params)
             self._update_service_rating(org_id=org_id, service_id=service_id)
             self.repo.commit_transaction()
@@ -223,7 +274,9 @@ class User:
                 "count(*) AS total_users_rated FROM user_service_vote AS U WHERE U.rating IS NOT NULL GROUP BY "
                 "U.service_id, U.org_id ) AS B ON A.org_id=B.org_id AND A.service_id=B.service_id SET A.service_rating "
                 "= CONCAT('{\"rating\":', B.service_rating, ' , \"total_users_rated\":', B.total_users_rated, '}') "
-                "WHERE A.org_id = %s AND A.service_id = %s ", [org_id, service_id])
+                "WHERE A.org_id = %s AND A.service_id = %s ",
+                [org_id, service_id],
+            )
         except Exception as e:
             print(repr(e))
             raise e
