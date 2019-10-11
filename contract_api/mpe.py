@@ -1,10 +1,11 @@
 import json
 
 import web3
-from contract_api.config import NETWORKS
-from common.utils import Utils
-from contract_api.registry import Registry
 from web3 import Web3
+
+from common.utils import Utils
+from contract_api.config import NETWORKS
+from contract_api.registry import Registry
 
 
 class MPE:

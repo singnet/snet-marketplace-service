@@ -1,8 +1,9 @@
 import uuid
 from datetime import datetime
 
+from common.constant import PAYMENT_METHOD_PAYPAL
+from common.constant import PaymentStatus
 from common.logger import get_logger
-from common.constant import PaymentStatus, PAYMENT_METHOD_PAYPAL
 from payments.domain.paypal_payment import PaypalPayment
 
 logger = get_logger(__name__)

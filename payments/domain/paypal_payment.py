@@ -1,16 +1,15 @@
 import paypalrestsdk
 
+from common.constant import PAYMENT_METHOD_PAYPAL
+from common.constant import PaymentStatus
 from common.logger import get_logger
-from common.constant import PaymentStatus, PAYMENT_METHOD_PAYPAL
 from common.ssm_utils import get_ssm_parameter
+from payments.config import MODE
+from payments.config import PAYMENT_CANCEL_URL
+from payments.config import PAYMENT_RETURN_URL
+from payments.config import PAYPAL_CLIENT
+from payments.config import PAYPAL_SECRET
 from payments.domain.payment import Payment
-from payments.config import (
-    MODE,
-    PAYPAL_CLIENT,
-    PAYPAL_SECRET,
-    PAYMENT_CANCEL_URL,
-    PAYMENT_RETURN_URL,
-)
 
 logger = get_logger(__name__)
 
