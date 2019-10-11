@@ -17,7 +17,8 @@ depends_on = None
 
 def upgrade():
     conn = op.get_bind()
-    conn.execute("""
+    conn.execute(
+        """
          CREATE TABLE `transaction_history` (
             `row_id` int NOT NULL AUTO_INCREMENT,
             `username` varchar(128) NOT NULL,
@@ -32,11 +33,14 @@ def upgrade():
             `row_created` timestamp NULL DEFAULT NULL,
             `row_updated` timestamp NULL DEFAULT NULL,
             PRIMARY KEY (`row_id`));
-            """)
+            """
+    )
 
 
 def downgrade():
     conn = op.get_bind()
-    conn.execute("""
+    conn.execute(
+        """
             drop table transaction_history;
-            """)
+            """
+    )
