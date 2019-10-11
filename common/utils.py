@@ -38,8 +38,7 @@ class Utils:
 
         for key in row:
             if isinstance(row[key], decimal.Decimal) or isinstance(
-                row[key], datetime.datetime
-            ):
+                    row[key], datetime.datetime):
                 row[key] = str(row[key])
             elif isinstance(row[key], bytes):
                 if row[key] == b"\x01":
@@ -47,12 +46,8 @@ class Utils:
                 elif row[key] == b"\x00":
                     row[key] = 0
                 else:
-                    raise Exception(
-                        "Unsupported bytes object. Key "
-                        + str(key)
-                        + " value "
-                        + str(row[key])
-                    )
+                    raise Exception("Unsupported bytes object. Key " +
+                                    str(key) + " value " + str(row[key]))
 
         return row
 
@@ -82,12 +77,17 @@ def generate_lambda_response(status_code, message, headers=None):
         "statusCode": status_code,
         "body": json.dumps(message),
         "headers": {
-            "Content-Type": "application/json",
-            "X-Requested-With": "*",
-            "Access-Control-Allow-Headers": "Access-Control-Allow-Origin, Content-Type,X-Amz-Date,Authorization,"
+            "Content-Type":
+            "application/json",
+            "X-Requested-With":
+            "*",
+            "Access-Control-Allow-Headers":
+            "Access-Control-Allow-Origin, Content-Type,X-Amz-Date,Authorization,"
             "X-Api-Key,x-requested-with",
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET,OPTIONS,POST",
+            "Access-Control-Allow-Origin":
+            "*",
+            "Access-Control-Allow-Methods":
+            "GET,OPTIONS,POST",
         },
     }
     if headers is not None:
@@ -109,12 +109,10 @@ def extract_payload(method, event):
 
 
 def format_error_message(status, error, resource, payload, net_id):
-    return json.dumps(
-        {
-            "status": status,
-            "error": error,
-            "resource": resource,
-            "payload": payload,
-            "network_id": net_id,
-        }
-    )
+    return json.dumps({
+        "status": status,
+        "error": error,
+        "resource": resource,
+        "payload": payload,
+        "network_id": net_id,
+    })
