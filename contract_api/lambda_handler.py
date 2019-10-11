@@ -50,6 +50,7 @@ def request_handler(event, context):
             response_data = obj_reg.get_all_group_for_org_id(org_id=org_id)
 
         elif re.match("(\/org\/)[^\/]*(\/group\/)[^\/]*[/]{0,1}$", path):
+            """ Format /org/{orgId}/group/{groupId} """
             org_id = sub_path[2]
             group_id = unquote(sub_path[4])
             response_data = obj_reg.get_group_details_for_org_id(org_id=org_id, group_id=group_id)
@@ -63,6 +64,7 @@ def request_handler(event, context):
                 attribute=payload_dict["attribute"])
 
         elif re.match("(\/org\/)[^\/]*(\/service\/)[^\/]*(\/group)[/]{0,1}$", path):
+            """ Format /org/{orgId}/service/{serviceId}/group """
             org_id = sub_path[2]
             service_id = sub_path[4]
             response_data = obj_reg.get_group_info(
@@ -81,22 +83,26 @@ def request_handler(event, context):
             )
 
         elif re.match("(\/org\/)[^\/]*(\/service\/)[^\/]*[/]{0,1}$", path):
+            """ Format /org/{orgId}/service/{serviceId} """
             org_id = sub_path[2]
             service_id = sub_path[4]
             response_data = obj_reg.get_service_data_by_org_id_and_service_id(
                 org_id=org_id, service_id=service_id)
 
         elif re.match("(\/group\/)[^\/]*(\/channel\/)[^\/]*[/]{0,1}$", path):
+            """ Format /group/{groupId}/channel """
             group_id = sub_path[2]
             channel_id = sub_path[4]
             response_data = obj_mpe.get_channel_data_by_group_id_and_channel_id(
                 group_id=group_id, channel_id=channel_id)
 
         elif re.match("(\/org\/)[^\/]*[/]{0,1}$", path):
+            """ Format /org/{orgId} """
             org_id = sub_path[2]
             response_data = obj_reg.get_org_details(org_id=org_id)
 
         elif re.match("(\/org\/)[^\/]*(\/service\/)[^\/]*(\/rating)[/]{0,1}$", path) and method == 'POST':
+            """ Format /org/{orgId}/service/{serviceId}/rating """
             org_id = sub_path[2]
             service_id = sub_path[4]
             response_data = obj_reg.update_service_rating(org_id=org_id, service_id=service_id)
