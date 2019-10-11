@@ -5,7 +5,7 @@ import boto3
 from schema import Schema, And
 
 from common.utils import Utils
-from dapp_user.config import PATH_PREFIX, CONTRACT_API_ARN
+from dapp_user.config import PATH_PREFIX
 
 DEFAULT_WALLET_TYPE = "METAMASK"
 CREATED_BY = "snet"
