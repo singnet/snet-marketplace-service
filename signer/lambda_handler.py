@@ -31,9 +31,9 @@ def request_handler(event, context):
         elif method == "GET":
             payload_dict = event.get("queryStringParameters")
         else:
-            return generate_lambda_response(
-                405, "Method Not Allowed", cors_enabled=True
-            )
+            return generate_lambda_response(405,
+                                            "Method Not Allowed",
+                                            cors_enabled=True)
 
         if "/free-call" == path:
             response_data = signer_object.signature_for_free_call(
@@ -45,8 +45,8 @@ def request_handler(event, context):
         elif "/state-service" == path:
 
             response_data = signer_object.signature_for_state_service(
-                user_data=event["requestContext"], channel_id=payload_dict["channel_id"]
-            )
+                user_data=event["requestContext"],
+                channel_id=payload_dict["channel_id"])
 
         elif "/regular-call" == path:
 
@@ -57,7 +57,9 @@ def request_handler(event, context):
                 amount=payload_dict["amount"],
             )
         else:
-            return generate_lambda_response(404, "Not Found", cors_enabled=True)
+            return generate_lambda_response(404,
+                                            "Not Found",
+                                            cors_enabled=True)
         logger.info("Signer::response_data: ", response_data)
         if response_data is None:
             err_msg = {
@@ -68,11 +70,15 @@ def request_handler(event, context):
                 "network_id": NET_ID,
             }
             obj_util.report_slack(1, str(err_msg), SLACK_HOOK)
-            response = generate_lambda_response(500, err_msg, cors_enabled=True)
+            response = generate_lambda_response(500,
+                                                err_msg,
+                                                cors_enabled=True)
         else:
-            response = generate_lambda_response(
-                200, {"status": "success", "data": response_data}, cors_enabled=True
-            )
+            response = generate_lambda_response(200, {
+                "status": "success",
+                "data": response_data
+            },
+                                                cors_enabled=True)
     except Exception as e:
         err_msg = {
             "status": "failed",

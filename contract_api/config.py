@@ -4,6 +4,8 @@ SLACK_HOOK = {
     "port": 443,
     "path": "",
     "method": "POST",
-    "headers": {"Content-Type": "application/json"},
+    "headers": {
+        "Content-Type": "application/json"
+    },
 }
 NETWORK_ID = 0

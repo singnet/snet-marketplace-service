@@ -26,7 +26,8 @@ class Registry:
                         "service_id": [],
                         "owner_address": rec["owner_address"],
                     }
-                all_orgs_srvcs[rec["org_id"]]["service_id"].append(rec["service_id"])
+                all_orgs_srvcs[rec["org_id"]]["service_id"].append(
+                    rec["service_id"])
             return all_orgs_srvcs
         except Exception as e:
             print(repr(e))
@@ -89,12 +90,9 @@ class Registry:
             search_count_query = (
                 "SELECT count(*) as search_count FROM service A, (SELECT DISTINCT M.org_id, M.service_id FROM "
                 "service_metadata M LEFT JOIN service_tags T ON M.service_row_id = T.service_row_id WHERE ("
-                + sub_qry.replace("%", "%%")
-                + ")"
-                + filter_query
-                + ") B WHERE A.service_id = B.service_id "
-                "AND A.org_id = B.org_id AND A.is_curated = 1 "
-            )
+                + sub_qry.replace("%", "%%") + ")" + filter_query +
+                ") B WHERE A.service_id = B.service_id "
+                "AND A.org_id = B.org_id AND A.is_curated = 1 ")
 
             res = self.repo.execute(search_count_query, values)
             return res[0].get("search_count", 0)
@@ -107,53 +105,42 @@ class Registry:
         record["org_assets_url"] = json.loads(record["org_assets_url"])
         record["assets_hash"] = json.loads(record["assets_hash"])
 
-    def _search_query_data(
-        self, sub_qry, sort_by, order_by, offset, limit, filter_query, values
-    ):
+    def _search_query_data(self, sub_qry, sort_by, order_by, offset, limit,
+                           filter_query, values):
         try:
             if filter_query != "":
                 filter_query = " AND " + filter_query
             srch_qry = (
                 "SELECT * FROM service A, (SELECT M.org_id, M.service_id, group_concat(T.tag_name) AS tags FROM "
                 "service_metadata M LEFT JOIN service_tags T ON M.service_row_id = T.service_row_id WHERE ("
-                + sub_qry.replace("%", "%%")
-                + ")"
-                + filter_query
-                + " GROUP BY M.org_id, M.service_id ORDER BY "
-                + sort_by
-                + " "
-                + order_by
-                + " ) B WHERE "
+                + sub_qry.replace("%", "%%") + ")" + filter_query +
+                " GROUP BY M.org_id, M.service_id ORDER BY " + sort_by + " " +
+                order_by + " ) B WHERE "
                 "A.service_id = B.service_id AND A.org_id=B.org_id AND A.is_curated= 1 LIMIT %s , %s"
             )
 
-            qry_dta = self.repo.execute(srch_qry, values + [int(offset), int(limit)])
+            qry_dta = self.repo.execute(srch_qry, values +
+                                        [int(offset), int(limit)])
             org_srvc_tuple = ()
             rslt = {}
             for rec in qry_dta:
                 org_id = rec["org_id"]
                 service_id = rec["service_id"]
                 tags = rec["tags"]
-                org_srvc_tuple = org_srvc_tuple + ((org_id, service_id),)
+                org_srvc_tuple = org_srvc_tuple + ((org_id, service_id), )
                 if org_id not in rslt.keys():
                     rslt[org_id] = {}
                 if service_id not in rslt[org_id].keys():
                     rslt[org_id][service_id] = {}
                 rslt[org_id][service_id]["tags"] = tags
             qry_part = " AND (S.org_id, S.service_id) IN " + str(
-                org_srvc_tuple
-            ).replace(",)", ")")
+                org_srvc_tuple).replace(",)", ")")
             print("qry_part::", qry_part)
             sort_by = sort_by.replace("org_id", "M.org_id")
             services = self.repo.execute(
                 "SELECT M.*,O.organization_name,O.org_assets_url FROM service_metadata M, service S , organization O WHERE O.org_id = S.org_id and "
-                "S.row_id = M.service_row_id "
-                + qry_part
-                + "ORDER BY "
-                + sort_by
-                + " "
-                + order_by
-            )
+                "S.row_id = M.service_row_id " + qry_part + "ORDER BY " +
+                sort_by + " " + order_by)
             obj_utils = Utils()
             obj_utils.clean(services)
             available_service = self._get_is_available_service()
@@ -164,10 +151,8 @@ class Registry:
                 service_id = rec["service_id"]
                 tags = []
                 is_available = 0
-                if (
-                    rslt.get(org_id, {}).get(service_id, {}).get("tags", None)
-                    is not None
-                ):
+                if (rslt.get(org_id, {}).get(service_id, {}).get("tags", None)
+                        is not None):
                     tags = rslt[org_id][service_id]["tags"].split(",")
                 if (org_id, service_id) in available_service:
                     is_available = 1
@@ -180,7 +165,12 @@ class Registry:
 
     def _search_response_format(self, tc, offset, limit, rslt):
         try:
-            return {"total_count": tc, "offset": offset, "limit": limit, "result": rslt}
+            return {
+                "total_count": tc,
+                "offset": offset,
+                "limit": limit,
+                "result": rslt
+            }
         except Exception as err:
             raise err
 
@@ -195,7 +185,8 @@ class Registry:
             q = qry_param.get("q", "")
             offset = qry_param.get("offset", GET_ALL_SERVICE_OFFSET_LIMIT)
             limit = qry_param.get("limit", GET_ALL_SERVICE_LIMIT)
-            sort_by = fields_mapping.get(qry_param.get("sort_by", None), "ranking")
+            sort_by = fields_mapping.get(qry_param.get("sort_by", None),
+                                         "ranking")
             order_by = qry_param.get("order_by", "desc")
             if order_by.lower() != "desc":
                 order_by = "asc"
@@ -205,15 +196,16 @@ class Registry:
 
             filter_qry = ""
             if qry_param.get("filters", None) is not None:
-                filter_query, values = self._filters_to_query(qry_param.get("filters"))
-                print(
-                    "get_all_srvcs::filter_query: ", filter_query, "|values: ", values
-                )
-            total_count = self._get_total_count(
-                sub_qry=sub_qry, filter_query=filter_query, values=values
-            )
+                filter_query, values = self._filters_to_query(
+                    qry_param.get("filters"))
+                print("get_all_srvcs::filter_query: ", filter_query,
+                      "|values: ", values)
+            total_count = self._get_total_count(sub_qry=sub_qry,
+                                                filter_query=filter_query,
+                                                values=values)
             if total_count == 0:
-                return self._search_response_format(total_count, offset, limit, [])
+                return self._search_response_format(total_count, offset, limit,
+                                                    [])
             q_dta = self._search_query_data(
                 sub_qry=sub_qry,
                 sort_by=sort_by,
@@ -223,7 +215,8 @@ class Registry:
                 filter_query=filter_query,
                 values=values,
             )
-            return self._search_response_format(total_count, offset, limit, q_dta)
+            return self._search_response_format(total_count, offset, limit,
+                                                q_dta)
         except Exception as e:
             print(repr(e))
             raise e
@@ -248,13 +241,14 @@ class Registry:
                             "endpoints": [],
                         }
                     }
-                    groups[group_id]["endpoints"].append(
-                        {
-                            "endpoint": rec["endpoint"],
-                            "is_available": rec["is_available"],
-                            "last_check_timestamp": rec["last_check_timestamp"],
-                        }
-                    )
+                    groups[group_id]["endpoints"].append({
+                        "endpoint":
+                        rec["endpoint"],
+                        "is_available":
+                        rec["is_available"],
+                        "last_check_timestamp":
+                        rec["last_check_timestamp"],
+                    })
             return list(groups.values())
         except Exception as e:
             print(repr(e))
@@ -280,14 +274,14 @@ class Registry:
         if filter_condition.operator == "=":
             value = filter_condition.value
             return (
-                '%s %s"%s"' % (filter_condition.attr, filter_condition.operator, "%s"),
+                '%s %s"%s"' %
+                (filter_condition.attr, filter_condition.operator, "%s"),
                 value,
             )
         if filter_condition.operator == "IN":
             value = filter_condition.value
             return (
-                "%s %s %s"
-                % (
+                "%s %s %s" % (
                     filter_condition.attr,
                     filter_condition.operator,
                     "(" + (("%s,") * len(value))[:-1] + ")",
@@ -297,8 +291,8 @@ class Registry:
         if filter_condition.operator == "BETWEEN":
             value = filter_condition.value
             return (
-                "%s %s %s AND %s"
-                % (filter_condition.attr, filter_condition.operator, "%s", "%s"),
+                "%s %s %s AND %s" %
+                (filter_condition.attr, filter_condition.operator, "%s", "%s"),
                 value,
             )
 
@@ -311,7 +305,8 @@ class Registry:
         for filter in filters:
             query += "("
             for filter_condition in filter.get_filter().get("filter"):
-                sub_query, value = self._filter_condition_to_query(filter_condition)
+                sub_query, value = self._filter_condition_to_query(
+                    filter_condition)
                 values += value
                 query = query + "(" + sub_query + ") AND "
             if query.endswith(" AND "):
@@ -328,18 +323,15 @@ class Registry:
             if attribute == "tag_name":
                 filter_data = self.repo.execute(
                     "SELECT DISTINCT tag_name AS 'key', tag_name AS 'value' FROM service_tags T, service S "
-                    "WHERE S.row_id = T.service_row_id AND S.is_curated = 1"
-                )
+                    "WHERE S.row_id = T.service_row_id AND S.is_curated = 1")
             elif attribute == "display_name":
                 filter_data = self.repo.execute(
                     "SELECT DISTINCT S.service_id AS 'key',display_name AS 'value' FROM service_metadata M, service S "
-                    "WHERE S.row_id = M.service_row_id AND S.is_curated = 1"
-                )
+                    "WHERE S.row_id = M.service_row_id AND S.is_curated = 1")
             elif attribute == "org_id":
                 filter_data = self.repo.execute(
                     "SELECT DISTINCT O.org_id AS 'key' ,O.organization_name AS 'value' from organization O, service S "
-                    "WHERE S.org_id = O.org_id AND S.is_curated = 1"
-                )
+                    "WHERE S.org_id = O.org_id AND S.is_curated = 1")
             else:
                 return filter_attribute
             for rec in filter_data:
@@ -358,7 +350,8 @@ class Registry:
                 [org_id],
             )
             [
-                group_record.update({"payment": json.loads(group_record["payment"])})
+                group_record.update(
+                    {"payment": json.loads(group_record["payment"])})
                 for group_record in groups_data
             ]
             groups = {"org_id": org_id, "groups": groups_data}
@@ -374,7 +367,8 @@ class Registry:
             [org_id, group_id],
         )
         [
-            group_record.update({"payment": json.loads(group_record["payment"])})
+            group_record.update(
+                {"payment": json.loads(group_record["payment"])})
             for group_record in group_data
         ]
         return {"groups": group_data}
@@ -394,13 +388,11 @@ class Registry:
             self.obj_utils.clean(basic_service_data)
 
             org_group_data = self.repo.execute(
-                "SELECT * FROM org_group WHERE org_id = %s", [org_id]
-            )
+                "SELECT * FROM org_group WHERE org_id = %s", [org_id])
             self.obj_utils.clean(org_group_data)
 
-            service_group_data = self.get_group_info(
-                org_id=org_id, service_id=service_id
-            )
+            service_group_data = self.get_group_info(org_id=org_id,
+                                                     service_id=service_id)
 
             tags = self.repo.execute(
                 "SELECT tag_name FROM service_tags WHERE org_id = %s AND service_id = %s",
