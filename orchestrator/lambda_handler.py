@@ -9,8 +9,9 @@ from common.utils import validate_dict
 from orchestrator.config import NETWORK_ID
 from orchestrator.config import NETWORKS
 from orchestrator.constant import REQUIRED_KEYS_FOR_LAMBDA_EVENT
-from orchestrator.order_service import OrderService
+from orchestrator.services.order_service import OrderService
 from orchestrator.config import SLACK_HOOK
+from orchestrator.services.wallet_service import WalletService
 
 NETWORKS_NAME = dict(
     (NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
@@ -36,7 +37,7 @@ def route_path(path, method, payload_dict, request_context, path_parameters):
         org_id = payload_dict["org_id"]
         username = request_context["authorizer"]["claims"]["email"]
         group_id = payload_dict["group_id"]
-        response_data = obj_order_service.get_channel_details(username, org_id, group_id)
+        response_data = WalletService().get_channel_details(username, org_id, group_id)
 
     elif "/order/execute" == path and method == "POST":
         response_data = obj_order_service.execute_order(
@@ -50,11 +51,11 @@ def route_path(path, method, payload_dict, request_context, path_parameters):
 
     elif "/wallet/register" == path and method == "POST":
         username = request_context["authorizer"]["claims"]["email"]
-        response_data = obj_order_service.register_wallet(username=username, wallet_details=payload_dict)
+        response_data = WalletService().register_wallet(username=username, wallet_details=payload_dict)
 
     elif "/wallet/status" == path and method == "POST":
         username = request_context["authorizer"]["claims"]["email"]
-        response_data = obj_order_service.set_default_wallet(username=username, address=payload_dict["address"])
+        response_data = WalletService().set_default_wallet(username=username, address=payload_dict["address"])
 
     else:
         path_exist = False
