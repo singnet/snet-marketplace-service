@@ -31,15 +31,18 @@ def upgrade():
     """)
     conn.execute("""
         CREATE TABLE `channel_transaction_history` (
-          `row_id` int(11) NOT NULL AUTO_INCREMENT,
+          `row_id` int NOT NULL AUTO_INCREMENT,
           `order_id` varchar(128) NOT NULL,
-          `amount` int(11) NOT NULL,
+          `amount` int NOT NULL,
           `currency` varchar(64) NOT NULL,
           `type` varchar(128) DEFAULT NULL,
-          `address` varchar(256) DEFAULT NULL,
-          `signature` varchar(256) DEFAULT NULL,
+          `address` varchar(255) DEFAULT NULL,
+          `recipient` varchar(255) DEFAULT NULL,
+          `signature` varchar(255) DEFAULT NULL,
+          `org_id` varchar(255) DEFAULT NULL,
+          `group_id` varchar(255) DEFAULT NULL,
           `request_parameters` varchar(1024) DEFAULT NULL,
-          `transaction_hash` varchar(256) DEFAULT NULL,
+          `transaction_hash` varchar(255) DEFAULT NULL,
           `status` VARCHAR(255),
           `row_created` timestamp NULL DEFAULT NULL,
           `row_updated` timestamp NULL DEFAULT NULL,
@@ -48,7 +51,7 @@ def upgrade():
        """)
     conn.execute("""
         CREATE TABLE `wallet` (
-          `row_id` int(11) NOT NULL AUTO_INCREMENT,
+          `row_id` int NOT NULL AUTO_INCREMENT,
           `address` varchar(256) NOT NULL,
           `type` varchar(128) DEFAULT NULL,
           `status` bit(1) DEFAULT b'1',
