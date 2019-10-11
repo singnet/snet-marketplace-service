@@ -1,6 +1,4 @@
-
 class Payment:
-
     def __init__(self):
         self._payment_id = None
         self._amount = None
@@ -9,7 +7,9 @@ class Payment:
         self._created_at = None
         self._payment_details = {}
 
-    def __init__(self, payment_id, amount, currency, payment_status, created_at, payment_details):
+    def __init__(
+        self, payment_id, amount, currency, payment_status, created_at, payment_details
+    ):
         self._payment_id = payment_id
         self._amount = amount
         self._currency = currency
