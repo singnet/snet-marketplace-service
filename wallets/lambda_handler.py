@@ -101,6 +101,7 @@ def route_path(path, method, payload_dict, path_parameters):
 
 
 def request_handler(event, context):
+    logger.info("Wallets::event: ", event)
     try:
         valid_event = validate_dict(data_dict=event, required_keys=REQUIRED_KEYS_FOR_LAMBDA_EVENT)
         if not valid_event:
@@ -120,6 +121,7 @@ def request_handler(event, context):
 
         if not path_exist:
             return generate_lambda_response(404, "Not Found")
+        logger.info("Wallets::response_data: ", response_data)
 
         if response_data is None:
             error_message = format_error_message(status="failed", error="Bad Request", resource=path,

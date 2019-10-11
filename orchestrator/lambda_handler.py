@@ -1,6 +1,7 @@
 import traceback
 import re
 from common.repository import Repository
+from common.logger import get_logger
 from common.utils import extract_payload
 from common.utils import format_error_message
 from common.utils import generate_lambda_response
@@ -17,7 +18,7 @@ NETWORKS_NAME = dict(
     (NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
 db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys())
 obj_util = Utils()
-
+logger = get_logger(__name__)
 
 def route_path(path, method, payload_dict, request_context, path_parameters):
     obj_order_service = OrderService(obj_repo=db[NETWORK_ID])
@@ -64,6 +65,7 @@ def route_path(path, method, payload_dict, request_context, path_parameters):
 
 
 def request_handler(event, context):
+    logger.info("Orchestrator::event: ", event)
     try:
         valid_event = validate_dict(
             data_dict=event, required_keys=REQUIRED_KEYS_FOR_LAMBDA_EVENT)
@@ -89,6 +91,7 @@ def request_handler(event, context):
         if not path_exist:
             return generate_lambda_response(404, "Not Found", cors_enabled=True)
 
+        logger.info("Orchestrator::response_data: ", response_data)
         if response_data is None:
             error_message = format_error_message(
                 status="failed",
