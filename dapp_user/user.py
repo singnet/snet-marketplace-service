@@ -2,7 +2,8 @@ import json
 from datetime import datetime as dt
 
 import boto3
-from schema import Schema, And
+from schema import And
+from schema import Schema
 
 from common.utils import Utils
 from dapp_user.config import PATH_PREFIX
