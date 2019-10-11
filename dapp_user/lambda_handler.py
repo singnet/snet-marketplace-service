@@ -1,11 +1,14 @@
 import json
 import re
 import traceback
+
 import boto3
-from dapp_user.config import NETWORKS, GET_FREE_CALLS_METERING_ARN, SLACK_HOOK
+
 from common.repository import Repository
 from common.utils import Utils
-
+from dapp_user.config import GET_FREE_CALLS_METERING_ARN
+from dapp_user.config import NETWORKS
+from dapp_user.config import SLACK_HOOK
 from dapp_user.user import User
 
 NETWORKS_NAME = dict((NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
