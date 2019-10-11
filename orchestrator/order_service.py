@@ -64,12 +64,13 @@ class OrderService:
             for channel in channels:
                 if channel["signer"] == signer:
                     channel_id = channel["channel_id"]
+                    recipient = channel["recipient"]
             if channel_id is None:
                 raise Exception(f"Channel not found for the user: {username} with org: {org_id} group: {group_id}")
 
         item_details["channel_id"] = channel_id
         item_details["recipient"] = recipient
-        item_details["wallet_address"] = wallet_address
+        item_details["sender"] = wallet_address
         order_details = self.manage_create_order(
             username=username, item_details=item_details,
             price=price
@@ -374,6 +375,7 @@ class OrderService:
         org_id = order_data["org_id"]
         recipient = order_data["recipient"]
         channel_id = order_data["channel_id"]
+        sender = order_data["sender"]
         if order_type == OrderType.CREATE_WALLET_AND_CHANNEL.value:
             wallet_create_payload = {
                 "path": "/wallet",
@@ -432,7 +434,9 @@ class OrderService:
                 'org_id': org_id,
                 'amount': amount,
                 'channel_id': channel_id,
-                'currency': currency
+                'currency': currency,
+                'recipient': recipient,
+                'sender': sender
             }
             fund_channel_payload = {
                 "path": "/wallet/channel/deposit",
@@ -450,7 +454,7 @@ class OrderService:
             if fund_channel_response["statusCode"] != 200:
                 raise Exception(f"Failed to add funds in channel for {fund_channel_body}")
 
-            fund_channel_response_body = fund_channel_response["body"]
+            fund_channel_response_body = json.loads(fund_channel_response["body"])
             fund_channel_transaction_details = fund_channel_response_body["data"]
             return fund_channel_transaction_details
         else:
@@ -486,8 +490,7 @@ class OrderService:
     def register_wallet(self, username, wallet_details):
         register_wallet_body = {
             'address': wallet_details["address"],
-            'status': wallet_details["status"],
-            'type': wallet_details["status"],
+            'type': wallet_details["type"],
             'username': username
         }
         register_wallet_payload = {
@@ -498,7 +501,7 @@ class OrderService:
         response = self.boto_client.invoke_lambda(lambda_function_arn=WALLETS_SERVICE_ARN,
                                                   invocation_type="RequestResponse",
                                                   payload=json.dumps(register_wallet_payload))
-        return response
+        return json.loads(response["body"])["data"]
 
     def set_default_wallet(self, username, address):
         set_default_wallet_body = {
@@ -513,4 +516,4 @@ class OrderService:
         response = self.boto_client.invoke_lambda(lambda_function_arn=WALLETS_SERVICE_ARN,
                                                   invocation_type="RequestResponse",
                                                   payload=json.dumps(set_default_wallet_payload))
-        return response
+        return json.loads(response["body"])["data"]

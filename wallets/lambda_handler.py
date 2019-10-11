@@ -1,9 +1,10 @@
 import traceback
+from enum import Enum
 
 from common.logger import get_logger
 from common.repository import Repository
 from common.utils import Utils, generate_lambda_response, extract_payload, validate_dict, format_error_message
-from wallets.config import NETWORKS, NETWORK_ID
+from wallets.config import NETWORKS, NETWORK_ID, WALLET_TYPES_ALLOWED
 from wallets.config import SLACK_HOOK
 from wallets.constant import REQUIRED_KEYS_FOR_LAMBDA_EVENT
 from wallets.service.wallet_service import WalletService
@@ -13,6 +14,10 @@ NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys
 db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys())
 obj_util = Utils()
 logger = get_logger(__name__)
+
+
+class WalletStatus(Enum):
+    ACTIVE = 1
 
 
 def route_path(path, method, payload_dict, path_parameters):
@@ -45,7 +50,7 @@ def route_path(path, method, payload_dict, path_parameters):
                                                                 group_id=payload_dict['group_id'],
                                                                 channel_id=payload_dict['channel_id'],
                                                                 sender=payload_dict['sender'],
-                                                                recipient=payload_dict['sender'],
+                                                                recipient=payload_dict['recipient'],
                                                                 order_id=payload_dict['order_id'],
                                                                 amount=payload_dict['amount'],
                                                                 currency=payload_dict['currency'])
@@ -77,8 +82,15 @@ def route_path(path, method, payload_dict, path_parameters):
 
     elif "/wallet/register" == path:
         username = payload_dict["username"]
-        obj_wallet = Wallet(address=payload_dict["address"], type=payload_dict["type"],
-                            status=payload_dict["status"])
+        status = WalletStatus.ACTIVE.value
+        wallet_address = payload_dict["address"]
+        wallet_type = payload_dict['type']
+
+        if wallet_type not in WALLET_TYPES_ALLOWED:
+            raise Exception("Wallet type invalid")
+
+        obj_wallet = Wallet(address=wallet_address, type=wallet_type,
+                            status=status)
         obj_wallet_manager.register_wallet(username=username, obj_wallet=obj_wallet)
         response_data = []
 
