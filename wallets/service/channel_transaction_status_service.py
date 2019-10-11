@@ -16,8 +16,8 @@ class ChannelTransactionStatusService:
     def manage_channel_transaction_status(self):
         transaction_data = self.obj_channel_transaction_history_dao.get_pending_transaction_data()
         print(transaction_data)
-        for record in transaction_data:
-            transaction_hash = record['transaction_hash']
+        for transaction_record in transaction_data:
+            transaction_hash = transaction_record['transaction_hash']
             transaction_receipt = self.obj_blockchain_util.get_transaction_receipt_from_blockchain(
                 transaction_hash=transaction_hash)
             if transaction_receipt is not None:
