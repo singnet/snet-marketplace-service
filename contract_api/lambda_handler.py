@@ -1,7 +1,9 @@
 import json
 import re
 import traceback
-from contract_api.config import NETWORKS, SLACK_HOOK
+from urllib.parse import unquote
+
+from contract_api.config import NETWORKS, SLACK_HOOK, NETWORK_ID
 from common.repository import Repository
 from common.utils import Utils
 from contract_api.registry import Registry
@@ -22,8 +24,7 @@ def request_handler(event, context):
         payload_dict = None
         path = event['path'].lower()
         path = re.sub(r"^(\/contract-api)", "", path)
-        stage = event['requestContext']['stage']
-        net_id = NETWORKS_NAME[stage]
+        net_id = NETWORK_ID
         method = event['httpMethod']
         response_data = None
 
@@ -48,6 +49,12 @@ def request_handler(event, context):
             org_id = sub_path[2]
             response_data = obj_reg.get_all_group_for_org_id(org_id=org_id)
 
+        elif re.match("(\/org\/)[^\/]*(\/group\/)[^\/]*[/]{0,1}$", path):
+            """ Format /org/{orgId}/group/{groupId} """
+            org_id = sub_path[2]
+            group_id = unquote(sub_path[4])
+            response_data = obj_reg.get_group_details_for_org_id(org_id=org_id, group_id=group_id)
+
         elif "/service" == path and method == 'POST':
             payload_dict = {} if payload_dict is None else payload_dict
             response_data = obj_reg.get_all_srvcs(qry_param=payload_dict)
@@ -57,34 +64,45 @@ def request_handler(event, context):
                 attribute=payload_dict["attribute"])
 
         elif re.match("(\/org\/)[^\/]*(\/service\/)[^\/]*(\/group)[/]{0,1}$", path):
+            """ Format /org/{orgId}/service/{serviceId}/group """
             org_id = sub_path[2]
             service_id = sub_path[4]
             response_data = obj_reg.get_group_info(
                 org_id=org_id, service_id=service_id)
 
         elif "/channel" == path:
-            response_data = obj_mpe.get_channels_by_user_address(user_address=payload_dict["user_address"],
-                                                                 org_id=payload_dict.get(
-                                                                     "org_id", None),
-                                                                 service_id=payload_dict.get("service_id", None))
+            user_address = payload_dict["user_address"]
+            org_id = payload_dict.get("org_id", None)
+            service_id = payload_dict.get("service_id", None)
+            group_id = payload_dict.get("group_id", None)
+            response_data = obj_mpe.get_channels(
+                user_address=user_address,
+                org_id=org_id,
+                service_id=service_id,
+                group_id=group_id
+            )
 
         elif re.match("(\/org\/)[^\/]*(\/service\/)[^\/]*[/]{0,1}$", path):
+            """ Format /org/{orgId}/service/{serviceId} """
             org_id = sub_path[2]
             service_id = sub_path[4]
             response_data = obj_reg.get_service_data_by_org_id_and_service_id(
                 org_id=org_id, service_id=service_id)
 
         elif re.match("(\/group\/)[^\/]*(\/channel\/)[^\/]*[/]{0,1}$", path):
+            """ Format /group/{groupId}/channel """
             group_id = sub_path[2]
             channel_id = sub_path[4]
             response_data = obj_mpe.get_channel_data_by_group_id_and_channel_id(
                 group_id=group_id, channel_id=channel_id)
 
         elif re.match("(\/org\/)[^\/]*[/]{0,1}$", path):
+            """ Format /org/{orgId} """
             org_id = sub_path[2]
             response_data = obj_reg.get_org_details(org_id=org_id)
 
         elif re.match("(\/org\/)[^\/]*(\/service\/)[^\/]*(\/rating)[/]{0,1}$", path) and method == 'POST':
+            """ Format /org/{orgId}/service/{serviceId}/rating """
             org_id = sub_path[2]
             service_id = sub_path[4]
             response_data = obj_reg.update_service_rating(org_id=org_id, service_id=service_id)

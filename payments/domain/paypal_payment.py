@@ -8,6 +8,9 @@ from payments.config import MODE, PAYPAL_CLIENT, PAYPAL_SECRET, PAYMENT_CANCEL_U
 
 logger = get_logger(__name__)
 
+client_id = get_ssm_parameter(PAYPAL_CLIENT)
+client_secret = get_ssm_parameter(PAYPAL_SECRET)
+
 
 class PaypalPayment(Payment):
 
@@ -16,15 +19,15 @@ class PaypalPayment(Payment):
         try:
             self.payee_client_api = paypalrestsdk.Api({
               'mode': MODE,
-              'client_id': get_ssm_parameter(PAYPAL_CLIENT),
-              'client_secret': get_ssm_parameter(PAYPAL_SECRET)}
+              'client_id': client_id,
+              'client_secret': client_secret}
             )
         except Exception as e:
             logger.error("Failed to get ssm parameters")
             raise e
 
-    def initiate_payment(self, order_id):
-        paypal_payload = self.get_paypal_payload(order_id)
+    def initiate_payment(self, order_id, item_details):
+        paypal_payload = self.get_paypal_payload(order_id, item_details["org_id"], item_details["service_id"])
         payment = paypalrestsdk.Payment(paypal_payload, api=self.payee_client_api)
 
         if not payment.create():
@@ -54,7 +57,6 @@ class PaypalPayment(Payment):
     def execute_transaction(self, paid_payment_details):
         paypal_payment_id = self._payment_details["payment_id"]
         payer_id = paid_payment_details["payer_id"]
-
         payment = paypalrestsdk.Payment.find(paypal_payment_id, api=self.payee_client_api)
 
         if payment.execute({"payer_id": payer_id}):
@@ -69,15 +71,15 @@ class PaypalPayment(Payment):
         logger.error(payment.error)
         return False
 
-    def get_paypal_payload(self, order_id):
+    def get_paypal_payload(self, order_id, org_id, service_id):
         paypal_payload = {
             "intent": "sale",
             "payer": {
                 "payment_method": PAYMENT_METHOD_PAYPAL
             },
             "redirect_urls": {
-                "return_url": PAYMENT_RETURN_URL.format(order_id, self._payment_id),
-                "cancel_url": PAYMENT_CANCEL_URL.format(order_id, self._payment_id)
+                "return_url": PAYMENT_RETURN_URL.format(org_id, service_id, order_id, self._payment_id),
+                "cancel_url": PAYMENT_CANCEL_URL.format(org_id, service_id, order_id, self._payment_id)
             },
             "transactions": [
                 {

@@ -38,7 +38,8 @@ class BlockChainUtil(object):
         return signature.signature.hex()
 
     def get_nonce(self, address):
-        nonce = self.web3_object.eth.getTransactionCount(address)
+        """ transaction count includes pending transaction also. """
+        nonce = self.web3_object.eth.getTransactionCount(address, 'pending')
         return nonce
 
     def sign_transaction_with_private_key(self, private_key, transaction_object):
@@ -70,3 +71,6 @@ class BlockChainUtil(object):
 
     def get_current_block_no(self):
         return self.web3_object.eth.blockNumber
+
+    def get_transaction_receipt_from_blockchain(self, transaction_hash):
+        return  self.web3_object.eth.getTransactionReceipt(transaction_hash)

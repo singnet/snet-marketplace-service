@@ -47,9 +47,9 @@ def request_handler(event, context):
             response_data = usr_obj.get_user_profile(
                 user_data=event['requestContext'])
 
-        elif "/wallet" == path:
-            response_data = usr_obj.get_wallet_details(
-                user_data=event['requestContext'])
+        elif "/wallet" == path and event['httpMethod'] == 'GET':
+            """ Deprecated """
+            response_data = []
 
         elif "/delete-user" == path:
             response_data = usr_obj.del_user_data(
@@ -70,8 +70,8 @@ def request_handler(event, context):
             return result
 
         elif "/wallet/register" == path:
-            response_data = usr_obj.register_wallet(
-                user_data=event['requestContext'], wallet_data=payload_dict)
+            """ Deprecated """
+            response_data = []
 
         else:
             return get_response(404, "Not Found")

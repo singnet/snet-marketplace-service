@@ -1,10 +1,11 @@
+import json
 from datetime import datetime as dt
 
 import boto3
-
-from dapp_user.config import PATH_PREFIX
-from common.utils import Utils
 from schema import Schema, And
+
+from common.utils import Utils
+from dapp_user.config import PATH_PREFIX, CONTRACT_API_ARN
 
 DEFAULT_WALLET_TYPE = "METAMASK"
 CREATED_BY = "snet"
@@ -14,7 +15,8 @@ class User:
     def __init__(self, obj_repo):
         self.repo = obj_repo
         self.obj_utils = Utils()
-        self.ssm_client = boto3.client('ssm', region_name="us-east-1")
+        self.ssm_client = boto3.client('ssm')
+        self.lambda_client = boto3.client('lambda')
 
     def _set_user_data(self, user_data):
         """ Method to set user information. """
@@ -39,26 +41,6 @@ class User:
         except Exception as e:
             print(repr(e))
             raise e
-
-    def get_wallet_details(self, user_data):
-        """ Method to get wallet details for a given username. """
-        try:
-            username = user_data['authorizer']['claims']['email']
-            search_data = self.repo.execute(
-                "SELECT * FROM wallet WHERE username = %s", username)
-            self.obj_utils.clean(search_data)
-            return search_data
-        except Exception as e:
-            print(repr(e))
-            raise e
-
-    # def _link_wallet(self, username):
-    #    """ Method to assign wallet address to a user. """
-    #    try:
-    #        return self.repo.execute("UPDATE wallet SET username = %s WHERE username IS NULL AND status = 1 LIMIT 1", username)
-    #    except Exception as e:
-    #        print(repr(e))
-    #        raise e
 
     def _fetch_private_key_from_ssm(self, address):
         try:
@@ -102,9 +84,9 @@ class User:
             raise e
 
     def get_user_profile(self, user_data):
-        '''
+        """
             Method to fetch user profile data.
-        '''
+        """
         try:
             username = user_data['authorizer']['claims']['email']
             result = self.repo.execute(
@@ -116,13 +98,13 @@ class User:
             raise e
 
     def update_user_profile(self, email_alerts, is_terms_accepted, user_data):
-        '''
+        """
             Method to update user profile data.
-        '''
+        """
         try:
             username = user_data['authorizer']['claims']['email']
-            result = self.repo.execute("UPDATE user SET email_alerts = %s, is_terms_accepted = %s WHERE username = %s", [
-                                       int(email_alerts == True), int(is_terms_accepted == True), username])
+            result = self.repo.execute("UPDATE user SET email_alerts = %s, is_terms_accepted = %s WHERE username = %s",
+                                       [int(email_alerts is True), int(is_terms_accepted is True), username])
             return {"success": "success", "data": []}
         except Exception as e:
             print(repr(e))
@@ -189,8 +171,8 @@ class User:
                 org_id = record['org_id']
                 service_id = record['service_id']
                 record.update({'comment': user_rating_dict.get(org_id, {})
-                               .get(service_id, {})
-                               .get("comment", [])})
+                              .get(service_id, {})
+                              .get("comment", [])})
             return rating
         except Exception as e:
             print(repr(e))
@@ -230,21 +212,6 @@ class User:
             print(repr(e))
             raise e
 
-    def _get_user_address_from_username(self, username):
-        """
-            Method to get user_address for a given username
-        """
-        try:
-            wallet_details = self.repo.execute(
-                "SELECT * FROM wallet WHERE username = %s ", [username])
-            if len(wallet_details) > 0:
-                return wallet_details[0].get("address", None)
-            else:
-                raise Exception("Wallet address does not exist for this user.")
-        except Exception as e:
-            print(repr(e))
-            raise e
-
     def _update_service_rating(self, org_id, service_id):
         """
             Method updates service_rating and total_user_rated when user rating is changed for given service_id
@@ -258,40 +225,5 @@ class User:
                 "= CONCAT('{\"rating\":', B.service_rating, ' , \"total_users_rated\":', B.total_users_rated, '}') "
                 "WHERE A.org_id = %s AND A.service_id = %s ", [org_id, service_id])
         except Exception as e:
-            print(repr(e))
-            raise e
-
-    def set_wallet_details(self, username, address, is_default, status=1, type=DEFAULT_WALLET_TYPE, created_by=CREATED_BY):
-        try:
-            self.repo.execute(
-                "INSERT INTO wallet (username, address, type, is_default, status, created_by, row_updated, row_created) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
-                [username, address, type, is_default, status, created_by, dt.utcnow(), dt.utcnow()])
-        except Exception as e:
-            print(repr(e))
-            raise e
-
-    def register_wallet(self, user_data, wallet_data):
-        try:
-            is_default = wallet_data["is_default"]
-            username = user_data['authorizer']['claims']['email']
-            address = wallet_data['address']
-            print(is_default)
-            if is_default == 1:
-                self.repo.begin_transaction()
-                self.set_wallet_details(
-                    username=username, address=address, is_default=is_default)
-                self.repo.execute(
-                    "UPDATE wallet SET is_default = 0 WHERE username = %s AND address != %s", [username, address])
-                self.repo.commit_transaction()
-                # need to be cleaned
-            else:
-                self.set_wallet_details(
-                    username=username, address=address, is_default=is_default)
-
-            return []
-        except Exception as e:
-            if is_default is not None and is_default == 1:
-                self.repo.rollback_transaction()
             print(repr(e))
             raise e
