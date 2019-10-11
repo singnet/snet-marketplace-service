@@ -57,9 +57,9 @@ class User:
 
     def _fetch_private_key_from_ssm(self, address):
         try:
-            store = self.ssm_client.get_parameter(
-                Name=PATH_PREFIX + str(address), WithDecryption=True
-            )
+            store = self.ssm_client.get_parameter(Name=PATH_PREFIX +
+                                                  str(address),
+                                                  WithDecryption=True)
             return store["Parameter"]["Value"]
         except Exception as e:
             print(repr(e))
@@ -87,8 +87,7 @@ class User:
             username = user_data["authorizer"]["claims"]["email"]
             self.repo.begin_transaction()
             del_user = self.repo.execute(
-                "DELETE FROM user WHERE username = %s ", [username]
-            )
+                "DELETE FROM user WHERE username = %s ", [username])
             updt_wallet = self.repo.execute(
                 "UPDATE wallet SET status=0, username=NULL WHERE username = %s ",
                 [username],
@@ -107,8 +106,7 @@ class User:
         try:
             username = user_data["authorizer"]["claims"]["email"]
             result = self.repo.execute(
-                "SELECT * FROM user WHERE username = %s", [username]
-            )
+                "SELECT * FROM user WHERE username = %s", [username])
             self.obj_utils.clean(result)
             return {"success": "success", "data": result}
         except Exception as e:
@@ -123,7 +121,10 @@ class User:
             username = user_data["authorizer"]["claims"]["email"]
             result = self.repo.execute(
                 "UPDATE user SET email_alerts = %s, is_terms_accepted = %s WHERE username = %s",
-                [int(email_alerts is True), int(is_terms_accepted is True), username],
+                [
+                    int(email_alerts is True),
+                    int(is_terms_accepted is True), username
+                ],
             )
             return {"success": "success", "data": []}
         except Exception as e:
@@ -134,21 +135,16 @@ class User:
         """
             Method to validate and set user feedback data.
         """
-        schema = Schema(
-            [
-                {
-                    "org_id": And(str),
-                    "service_id": And(str),
-                    "user_rating": And(str),
-                    "comment": And(str),
-                }
-            ]
-        )
+        schema = Schema([{
+            "org_id": And(str),
+            "service_id": And(str),
+            "user_rating": And(str),
+            "comment": And(str),
+        }])
         try:
             feedback_data = schema.validate([feedback_data])
-            feedback_recorded = self._set_user_feedback(
-                feedback_data[0], user_data=user_data
-            )
+            feedback_recorded = self._set_user_feedback(feedback_data[0],
+                                                        user_data=user_data)
             if feedback_recorded:
                 return []
             return None
@@ -173,15 +169,17 @@ class User:
                     query_part_values.append(service_id)
 
             rating_query = (
-                "SELECT * FROM user_service_vote WHERE username = %s " + query_part
-            )
-            rating = self.repo.execute(rating_query, [username] + query_part_values)
+                "SELECT * FROM user_service_vote WHERE username = %s " +
+                query_part)
+            rating = self.repo.execute(rating_query,
+                                       [username] + query_part_values)
             self.obj_utils.clean(rating)
 
             feedback_query = (
-                "SELECT * FROM user_service_feedback WHERE username = %s " + query_part
-            )
-            feedback = self.repo.execute(feedback_query, [username] + query_part_values)
+                "SELECT * FROM user_service_feedback WHERE username = %s " +
+                query_part)
+            feedback = self.repo.execute(feedback_query,
+                                         [username] + query_part_values)
             self.obj_utils.clean(feedback)
 
             for record in feedback:
@@ -193,19 +191,17 @@ class User:
                     user_rating_dict[org_id][service_id] = {}
                     user_rating_dict[org_id][service_id]["comment"] = []
                 user_rating_dict[org_id][service_id]["comment"].append(
-                    record["comment"]
-                )
+                    record["comment"])
 
             for record in rating:
                 org_id = record["org_id"]
                 service_id = record["service_id"]
-                record.update(
-                    {
-                        "comment": user_rating_dict.get(org_id, {})
-                        .get(service_id, {})
-                        .get("comment", [])
-                    }
-                )
+                record.update({
+                    "comment":
+                    user_rating_dict.get(org_id,
+                                         {}).get(service_id,
+                                                 {}).get("comment", [])
+                })
             return rating
         except Exception as e:
             print(repr(e))
@@ -230,8 +226,7 @@ class User:
             set_rating = (
                 "INSERT INTO user_service_vote (username, org_id, service_id, rating, row_updated, row_created) "
                 "VALUES (%s, %s, %s, %s, %s, %s) "
-                "ON DUPLICATE KEY UPDATE rating = %s, row_updated = %s"
-            )
+                "ON DUPLICATE KEY UPDATE rating = %s, row_updated = %s")
             set_rating_params = [
                 username,
                 org_id,
@@ -245,8 +240,7 @@ class User:
             self.repo.execute(set_rating, set_rating_params)
             set_feedback = (
                 "INSERT INTO user_service_feedback (username, org_id, service_id, comment, row_updated, row_created)"
-                "VALUES (%s, %s, %s, %s, %s, %s)"
-            )
+                "VALUES (%s, %s, %s, %s, %s, %s)")
             set_feedback_params = [
                 username,
                 org_id,
