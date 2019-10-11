@@ -121,7 +121,7 @@ class WalletService:
             private_key=self.EXECUTOR_WALLET_KEY)
         transaction_hash = self.obj_blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
 
-        print("openChannelByThirdParty::transaction_hash", transaction_hash)
+        logger.info("openChannelByThirdParty::transaction_hash", transaction_hash)
 
         self.channel_dao.insert_channel_history(
             order_id=order_id, amount=amount, currency=currency,
@@ -161,7 +161,7 @@ class WalletService:
             private_key=self.EXECUTOR_WALLET_KEY)
 
         transaction_hash = self.obj_blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
-        print("channelAddFunds::transaction_hash", transaction_hash)
+        logger.info("channelAddFunds::transaction_hash", transaction_hash)
 
         self.channel_dao.insert_channel_history(
             order_id=order_id, amount=amount, currency=currency,

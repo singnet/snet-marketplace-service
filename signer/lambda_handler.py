@@ -4,10 +4,10 @@ import traceback
 
 from common.logger import get_logger
 from common.utils import Utils
+from common.utils import generate_lambda_response
 from signer.config import NET_ID
 from signer.config import SLACK_HOOK
 from signer.signer import Signer
-from common.utils import generate_lambda_response
 
 obj_util = Utils()
 
@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 
 
 def request_handler(event, context):
-    logger.info(event)
+    logger.info("Signer::event: ", event)
     if "path" not in event:
         return generate_lambda_response(400, "Bad Request", cors_enabled=True)
     try:
@@ -54,10 +54,9 @@ def request_handler(event, context):
                 nonce=payload_dict["nonce"],
                 amount=payload_dict["amount"],
             )
-            logger.info(response_data)
         else:
             return generate_lambda_response(404, "Not Found", cors_enabled=True)
-
+        logger.info("Signer::response_data: ", response_data)
         if response_data is None:
             err_msg = {
                 "status": "failed",
