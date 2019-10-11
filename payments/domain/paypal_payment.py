@@ -8,6 +8,9 @@ from payments.config import MODE, PAYPAL_CLIENT, PAYPAL_SECRET, PAYMENT_CANCEL_U
 
 logger = get_logger(__name__)
 
+client_id = get_ssm_parameter(PAYPAL_CLIENT)
+client_secret = get_ssm_parameter(PAYPAL_SECRET)
+
 
 class PaypalPayment(Payment):
 
@@ -16,8 +19,8 @@ class PaypalPayment(Payment):
         try:
             self.payee_client_api = paypalrestsdk.Api({
               'mode': MODE,
-              'client_id': get_ssm_parameter(PAYPAL_CLIENT),
-              'client_secret': get_ssm_parameter(PAYPAL_SECRET)}
+              'client_id': client_id,
+              'client_secret': client_secret}
             )
         except Exception as e:
             logger.error("Failed to get ssm parameters")
