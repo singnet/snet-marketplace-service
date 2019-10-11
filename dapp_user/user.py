@@ -171,8 +171,8 @@ class User:
                 org_id = record['org_id']
                 service_id = record['service_id']
                 record.update({'comment': user_rating_dict.get(org_id, {})
-                              .get(service_id, {})
-                              .get("comment", [])})
+                               .get(service_id, {})
+                               .get("comment", [])})
             return rating
         except Exception as e:
             print(repr(e))
