@@ -1,9 +1,11 @@
-import json
 import datetime
 import decimal
+import json
+
 import requests
 import web3
 from web3 import Web3
+
 IGNORED_LIST = ['row_id', 'row_created', 'row_updated']
 
 
@@ -74,20 +76,21 @@ def validate_dict(data_dict, required_keys):
             return False
     return True
 
-def generate_lambda_response(status_code, message, headers=None, enable_cors=False):
+
+def generate_lambda_response(status_code, message, headers=None, cors_enabled=False):
     response = {
         'statusCode': status_code,
         'body': json.dumps(message),
-        'headers': {
-            'Content-Type': 'application/json',
+        'headers': {'Content-Type': 'application/json'}
+    }
+    if cors_enabled:
+        response["headers"].update({
             "X-Requested-With": '*',
             "Access-Control-Allow-Headers": 'Access-Control-Allow-Origin, Content-Type, X-Amz-Date, Authorization,'
                                             'X-Api-Key,x-requested-with',
+            "Access-Control-Allow-Origin": '*',
             "Access-Control-Allow-Methods": 'GET,OPTIONS,POST'
-        }
-    }
-    if enable_cors:
-        response["headers"].update({"Access-Control-Allow-Origin": '*'})
+        })
     if headers is not None:
         response["headers"].update(headers)
     return response
