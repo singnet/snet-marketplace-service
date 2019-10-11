@@ -3,7 +3,7 @@ import re
 from common.repository import Repository
 from common.utils import extract_payload
 from common.utils import format_error_message
-from common.utils import generate_lambda_response, generate_lambda_redirect_response
+from common.utils import generate_lambda_response
 from common.utils import Utils
 from common.utils import validate_dict
 from orchestrator.config import NETWORK_ID
