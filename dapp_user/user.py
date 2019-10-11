@@ -2,10 +2,10 @@ import json
 from datetime import datetime as dt
 
 import boto3
-
-from dapp_user.config import PATH_PREFIX, CONTRACT_API_ARN
-from common.utils import Utils
 from schema import Schema, And
+
+from common.utils import Utils
+from dapp_user.config import PATH_PREFIX, CONTRACT_API_ARN
 
 DEFAULT_WALLET_TYPE = "METAMASK"
 CREATED_BY = "snet"
@@ -41,64 +41,6 @@ class User:
         except Exception as e:
             print(repr(e))
             raise e
-
-    def get_wallet_details(self, user_data, org_id, group_id):
-        """ Method to get wallet details for a given username. """
-        try:
-            username = user_data['authorizer']['claims']['email']
-            wallet_data = self.repo.execute(
-                "SELECT UW.address, UW.is_default, W.type, W.status "
-                "FROM user_wallet as UW JOIN wallet as W ON UW.address = W.address WHERE UW.username= %s", username)
-            self.obj_utils.clean(wallet_data)
-
-            wallet_response = {
-                "username": username,
-                "org_id": org_id,
-                "group_id": group_id,
-                "wallets": []
-            }
-            for record in wallet_data:
-                wallet = dict()
-                wallet.update(record)
-                user_address = record["address"]
-
-                event = {
-                    "requestContext": {
-                        'stage': "ropsten"
-                    },
-                    "httpMethod": "GET",
-                    "path": "/channel",
-                    "queryStringParameters": {
-                        "user_address": user_address,
-                        "org_id": org_id,
-                        "group_id": group_id
-                    }
-                }
-                channel_details_lambda_response = self.lambda_client.invoke(
-                    FunctionName=CONTRACT_API_ARN, InvocationType='RequestResponse',
-                    Payload=json.dumps(event)
-                )
-                channel_details_response = json.loads(channel_details_lambda_response.get("Payload").read())
-                if channel_details_response["statusCode"] != 200:
-                    raise Exception(f"Failed to get channel details from contract API username: {username} "
-                                    f"group_id: {group_id} "
-                                    f"org_id: {org_id}")
-                channel_details = json.loads(channel_details_response["body"])["data"]
-                wallet["channels"] = channel_details["channels"]
-                wallet_response["wallets"].append(wallet)
-            return wallet_response
-        except Exception as e:
-            print(repr(e))
-            raise e
-
-    # def _link_wallet(self, username):
-    #    """ Method to assign wallet address to a user. """
-    #    try:
-    #        return self.repo.execute("UPDATE wallet SET username = %s
-    #        WHERE username IS NULL AND status = 1 LIMIT 1", username)
-    #    except Exception as e:
-    #        print(repr(e))
-    #        raise e
 
     def _fetch_private_key_from_ssm(self, address):
         try:
@@ -270,21 +212,6 @@ class User:
             print(repr(e))
             raise e
 
-    def _get_user_address_from_username(self, username):
-        """
-            Method to get user_address for a given username
-        """
-        try:
-            wallet_details = self.repo.execute(
-                "SELECT * FROM wallet WHERE username = %s ", [username])
-            if len(wallet_details) > 0:
-                return wallet_details[0].get("address", None)
-            else:
-                raise Exception("Wallet address does not exist for this user.")
-        except Exception as e:
-            print(repr(e))
-            raise e
-
     def _update_service_rating(self, org_id, service_id):
         """
             Method updates service_rating and total_user_rated when user rating is changed for given service_id
@@ -298,41 +225,5 @@ class User:
                 "= CONCAT('{\"rating\":', B.service_rating, ' , \"total_users_rated\":', B.total_users_rated, '}') "
                 "WHERE A.org_id = %s AND A.service_id = %s ", [org_id, service_id])
         except Exception as e:
-            print(repr(e))
-            raise e
-
-    def set_wallet_details(self, username, address, is_default, status=1, type=DEFAULT_WALLET_TYPE,
-                           created_by=CREATED_BY):
-        try:
-            self.repo.execute(
-                "INSERT INTO wallet (username, address, type, is_default, status, created_by, row_updated, row_created) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
-                [username, address, type, is_default, status, created_by, dt.utcnow(), dt.utcnow()])
-        except Exception as e:
-            print(repr(e))
-            raise e
-
-    def register_wallet(self, user_data, wallet_data):
-        try:
-            is_default = wallet_data["is_default"]
-            username = user_data['authorizer']['claims']['email']
-            address = wallet_data['address']
-            print(is_default)
-            if is_default == 1:
-                self.repo.begin_transaction()
-                self.set_wallet_details(
-                    username=username, address=address, is_default=is_default)
-                self.repo.execute(
-                    "UPDATE wallet SET is_default = 0 WHERE username = %s AND address != %s", [username, address])
-                self.repo.commit_transaction()
-                # need to be cleaned
-            else:
-                self.set_wallet_details(
-                    username=username, address=address, is_default=is_default)
-
-            return []
-        except Exception as e:
-            if is_default is not None and is_default == 1:
-                self.repo.rollback_transaction()
             print(repr(e))
             raise e
