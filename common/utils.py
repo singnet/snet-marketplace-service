@@ -4,25 +4,24 @@ import decimal
 import requests
 import web3
 from web3 import Web3
-IGNORED_LIST = ['row_id', 'row_created', 'row_updated']
+
+IGNORED_LIST = ["row_id", "row_created", "row_updated"]
 
 
 class Utils:
     def __init__(self):
-        self.msg_type = {
-            0: 'info:: ',
-            1: 'err:: '
-        }
+        self.msg_type = {0: "info:: ", 1: "err:: "}
 
     def report_slack(self, type, slack_msg, SLACK_HOOK):
-        url = SLACK_HOOK['hostname'] + SLACK_HOOK['path']
+        url = SLACK_HOOK["hostname"] + SLACK_HOOK["path"]
         prefix = self.msg_type.get(type, "")
         print(url)
-        payload = {"channel": "#contract-index-alerts",
-                   "username": "webhookbot",
-                   "text": prefix + slack_msg,
-                   "icon_emoji": ":ghost:"
-                   }
+        payload = {
+            "channel": "#contract-index-alerts",
+            "username": "webhookbot",
+            "text": prefix + slack_msg,
+            "icon_emoji": ":ghost:",
+        }
 
         resp = requests.post(url=url, data=json.dumps(payload))
         print(resp.status_code, resp.text)
@@ -37,16 +36,22 @@ class Utils:
                 del row[item]
 
         for key in row:
-            if isinstance(row[key], decimal.Decimal) or isinstance(row[key], datetime.datetime):
+            if isinstance(row[key], decimal.Decimal) or isinstance(
+                row[key], datetime.datetime
+            ):
                 row[key] = str(row[key])
             elif isinstance(row[key], bytes):
-                if row[key] == b'\x01':
+                if row[key] == b"\x01":
                     row[key] = 1
-                elif row[key] == b'\x00':
+                elif row[key] == b"\x00":
                     row[key] = 0
                 else:
-                    raise Exception("Unsupported bytes object. Key " +
-                                    str(key) + " value " + str(row[key]))
+                    raise Exception(
+                        "Unsupported bytes object. Key "
+                        + str(key)
+                        + " value "
+                        + str(row[key])
+                    )
 
         return row
 
@@ -61,11 +66,7 @@ class Utils:
 
 
 def make_response(status_code, body, header=None):
-    return {
-        "statusCode": status_code,
-        "headers": header,
-        "body": body
-    }
+    return {"statusCode": status_code, "headers": header, "body": body}
 
 
 def validate_dict(data_dict, required_keys):
@@ -77,16 +78,16 @@ def validate_dict(data_dict, required_keys):
 
 def generate_lambda_response(status_code, message, headers=None):
     response = {
-        'statusCode': status_code,
-        'body': json.dumps(message),
-        'headers': {
-            'Content-Type': 'application/json',
-            "X-Requested-With": '*',
-            "Access-Control-Allow-Headers": 'Access-Control-Allow-Origin, Content-Type,X-Amz-Date,Authorization,'
-                                            'X-Api-Key,x-requested-with',
-            "Access-Control-Allow-Origin": '*',
-            "Access-Control-Allow-Methods": 'GET,OPTIONS,POST'
-        }
+        "statusCode": status_code,
+        "body": json.dumps(message),
+        "headers": {
+            "Content-Type": "application/json",
+            "X-Requested-With": "*",
+            "Access-Control-Allow-Headers": "Access-Control-Allow-Origin, Content-Type,X-Amz-Date,Authorization,"
+            "X-Api-Key,x-requested-with",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET,OPTIONS,POST",
+        },
     }
     if headers is not None:
         response["headers"].update(headers)
@@ -97,10 +98,10 @@ def extract_payload(method, event):
     method_found = True
     payload_dict = None
     path_parameters = event.get("pathParameters", None)
-    if method == 'POST':
-        payload_dict = json.loads(event['body'])
-    elif method == 'GET':
-        payload_dict = event.get('queryStringParameters', {})
+    if method == "POST":
+        payload_dict = json.loads(event["body"])
+    elif method == "GET":
+        payload_dict = event.get("queryStringParameters", {})
     else:
         method_found = False
     return method_found, path_parameters, payload_dict
@@ -108,4 +109,11 @@ def extract_payload(method, event):
 
 def format_error_message(status, error, resource, payload, net_id):
     return json.dumps(
-        {'status': status, 'error': error, 'resource': resource, 'payload': payload, 'network_id': net_id})
+        {
+            "status": status,
+            "error": error,
+            "resource": resource,
+            "payload": payload,
+            "network_id": net_id,
+        }
+    )
