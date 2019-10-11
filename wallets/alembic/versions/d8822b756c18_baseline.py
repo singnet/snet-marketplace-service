@@ -14,6 +14,7 @@ down_revision = None
 branch_labels = None
 depends_on = None
 
+
 def upgrade():
     conn = op.get_bind()
     conn.execute("""
@@ -63,7 +64,6 @@ def upgrade():
        """)
 
 
-
 def downgrade():
     conn = op.get_bind()
     conn.execute("""
@@ -73,10 +73,8 @@ def downgrade():
     conn.execute("""
                 drop table wallet_transaction_history
                 """
-    )
+                 )
     conn.execute("""
                 drop table user_wallet
        """
-    )
-
-
+                 )

@@ -56,7 +56,8 @@ class Signer:
             response_body_raw = json.loads(
                 response.get("Payload").read())["body"]
             get_free_calls_response_body = json.loads(response_body_raw)
-            logger.info("Signer::get_free_calls_response_body: %s for payload: %s", get_free_calls_response_body, json.dumps(lambda_payload))
+            logger.info("Signer::get_free_calls_response_body: %s for payload: %s",
+                        get_free_calls_response_body, json.dumps(lambda_payload))
             free_calls_allowed = get_free_calls_response_body["free_calls_allowed"]
             total_calls_made = get_free_calls_response_body["total_calls_made"]
             is_free_calls_allowed = (True if (

@@ -11,7 +11,8 @@ class ChannelTransactionStatusService:
         self.repo = repo
         self.obj_blockchain_util = BlockChainUtil(provider_type="HTTP_PROVIDER",
                                                   provider=NETWORKS[NETWORK_ID]['http_provider'])
-        self.obj_channel_transaction_history_dao = ChannelTransactionStatusDataAccessObject(repo=self.repo)
+        self.obj_channel_transaction_history_dao = ChannelTransactionStatusDataAccessObject(
+            repo=self.repo)
 
     def manage_channel_transaction_status(self):
         transaction_data = self.obj_channel_transaction_history_dao.get_pending_transaction_data()

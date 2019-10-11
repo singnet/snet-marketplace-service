@@ -50,9 +50,11 @@ class WalletService:
             payload=json.dumps(channel_transactions_event)
         )
         if channel_transactions_response["statusCode"] != 200:
-            raise Exception(f"Failed to fetch wallet details for username: {username}")
+            raise Exception(
+                f"Failed to fetch wallet details for username: {username}")
 
-        channel_transactions_response_body = json.loads(channel_transactions_response["body"])
+        channel_transactions_response_body = json.loads(
+            channel_transactions_response["body"])
         channel_transactions = channel_transactions_response_body["data"]["wallets"]
         return channel_transactions
 

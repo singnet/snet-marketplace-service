@@ -28,8 +28,10 @@ class WalletService:
 
     def create_and_register_wallet(self, username):
         address, private_key = self.obj_blockchain_util.create_account()
-        obj_wallet = Wallet(address=address, private_key=private_key, type=GENERAL_WALLET_TYPE, status=0)
-        registered = self.register_wallet(username=username, obj_wallet=obj_wallet)
+        obj_wallet = Wallet(
+            address=address, private_key=private_key, type=GENERAL_WALLET_TYPE, status=0)
+        registered = self.register_wallet(
+            username=username, obj_wallet=obj_wallet)
         if registered:
             return obj_wallet.get_wallet()
         raise Exception("Unable to create and register wallet.")
@@ -54,7 +56,8 @@ class WalletService:
         wallet_data = self.obj_wallet_dao.get_wallet_data_by_username(username)
         self.utils.clean(wallet_data)
 
-        logger.info(f"Fetched {len(wallet_data)} wallets for username: {username}")
+        logger.info(
+            f"Fetched {len(wallet_data)} wallets for username: {username}")
         wallet_response = {"username": username, "wallets": wallet_data}
         return wallet_response
 
@@ -66,7 +69,8 @@ class WalletService:
                   group_id, agi_tokens, expiration, message_nonce]
         signature = self.obj_blockchain_util.generate_signature(data_types=data_types, values=values,
                                                                 signer_key=signer_key)
-        v, r, s = Web3.toInt(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
+        v, r, s = Web3.toInt(
+            hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
         return r, s, v, signature
 
     def __calculate_agi_tokens(self, amount, currency):
@@ -91,7 +95,8 @@ class WalletService:
 
         # 1 block no is mined in 15 sec on average, setting expiration as 10 years
         expiration = current_block_no + (10 * 365 * 24 * 60 * 4)
-        agi_tokens = self.__calculate_agi_tokens(amount=amount, currency=currency)
+        agi_tokens = self.__calculate_agi_tokens(
+            amount=amount, currency=currency)
 
         group_id_in_hex = "0x" + base64.b64decode(group_id).hex()
         r, s, v, signature = self.__generate_signature_details(
@@ -119,9 +124,11 @@ class WalletService:
         raw_transaction = self.obj_blockchain_util.sign_transaction_with_private_key(
             transaction_object=transaction_object,
             private_key=self.EXECUTOR_WALLET_KEY)
-        transaction_hash = self.obj_blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
+        transaction_hash = self.obj_blockchain_util.process_raw_transaction(
+            raw_transaction=raw_transaction)
 
-        logger.info("openChannelByThirdParty::transaction_hash : %s for order_id : %s", transaction_hash, order_id)
+        logger.info("openChannelByThirdParty::transaction_hash : %s for order_id : %s",
+                    transaction_hash, order_id)
 
         self.channel_dao.insert_channel_history(
             order_id=order_id, amount=amount, currency=currency,
@@ -138,14 +145,16 @@ class WalletService:
         }
 
     def set_default_wallet(self, username, address):
-        self.obj_wallet_dao.set_default_wallet(username=username, address=address)
+        self.obj_wallet_dao.set_default_wallet(
+            username=username, address=address)
         return "OK"
 
     def add_funds_to_channel(self, org_id, group_id, channel_id, sender, recipient, order_id, amount, currency):
         self.EXECUTOR_WALLET_ADDRESS = get_ssm_parameter(EXECUTOR_ADDRESS)
         self.EXECUTOR_WALLET_KEY = get_ssm_parameter(EXECUTOR_KEY)
         method_name = "channelAddFunds"
-        agi_tokens = self.__calculate_agi_tokens(amount=amount, currency=currency)
+        agi_tokens = self.__calculate_agi_tokens(
+            amount=amount, currency=currency)
         positional_inputs = (channel_id, agi_tokens)
 
         transaction_object = self.obj_blockchain_util.create_transaction_object(
@@ -160,8 +169,10 @@ class WalletService:
             transaction_object=transaction_object,
             private_key=self.EXECUTOR_WALLET_KEY)
 
-        transaction_hash = self.obj_blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
-        logger.info("channelAddFunds::transaction_hash: %s for order_id: %s", transaction_hash, order_id)
+        transaction_hash = self.obj_blockchain_util.process_raw_transaction(
+            raw_transaction=raw_transaction)
+        logger.info("channelAddFunds::transaction_hash: %s for order_id: %s",
+                    transaction_hash, order_id)
 
         self.channel_dao.insert_channel_history(
             order_id=order_id, amount=amount, currency=currency,
@@ -174,7 +185,8 @@ class WalletService:
         return {"transaction_hash": transaction_hash, "agi_tokens": agi_tokens, "type": method_name}
 
     def get_transactions_from_username_recipient(self, username, org_id, group_id):
-        logger.info(f"Fetching transactions for {username} to org_id: {org_id} group_id: {org_id}")
+        logger.info(
+            f"Fetching transactions for {username} to org_id: {org_id} group_id: {org_id}")
         channel_data = self.channel_dao.get_channel_transactions_for_username_recipient(
             username=username, group_id=group_id, org_id=org_id)
         self.utils.clean(channel_data)
@@ -209,7 +221,8 @@ class WalletService:
                 "created_at": rec["created_at"],
             }
 
-            wallet_transactions[sender_address]["transactions"].append(transaction)
+            wallet_transactions[sender_address]["transactions"].append(
+                transaction)
 
         for key in wallet_transactions:
             wallet = wallet_transactions[key]
@@ -217,10 +230,12 @@ class WalletService:
         return transaction_details
 
     def get_channel_transactions_against_order_id(self, order_id):
-        transaction_history = self.channel_dao.get_channel_transactions_against_order_id(order_id)
+        transaction_history = self.channel_dao.get_channel_transactions_against_order_id(
+            order_id)
 
         for record in transaction_history:
-            record["created_at"] = record["created_at"].strftime("%Y-%m-%d %H:%M:%S")
+            record["created_at"] = record["created_at"].strftime(
+                "%Y-%m-%d %H:%M:%S")
 
         return {
             "order_id": order_id,

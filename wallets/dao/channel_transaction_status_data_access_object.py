@@ -16,4 +16,5 @@ class ChannelTransactionStatusDataAccessObject:
             "UPDATE channel_transaction_history SET status = %s WHERE transaction_hash = %s ", [status,
                                                                                                 transaction_hash])
         if query_response[0] == 1:
-            print("Transaction with transaction hash %s got updated to status %s", transaction_hash, status)
+            print("Transaction with transaction hash %s got updated to status %s",
+                  transaction_hash, status)
