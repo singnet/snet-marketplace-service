@@ -93,26 +93,6 @@ def generate_lambda_response(status_code, message, headers=None):
     return response
 
 
-def generate_lambda_redirect_response(status_code, message, headers=None):
-    response = {
-        'statusCode': status_code,
-        'body': json.dumps(message),
-        'headers': {
-            'Content-Type': 'text/plain',
-            "X-Requested-With": '*',
-            "Access-Control-Allow-Headers": 'Access-Control-Allow-Origin, Content-Type,X-Amz-Date,'
-                                            'X-Api-Key,x-requested-with',
-            "Access-Control-Allow-Origin": '*',
-            "Access-Control-Allow-Methods": 'GET,OPTIONS,POST',
-            "sec-fetch-mode": "navigate",
-            "x-request-origin": "staging-server"
-        }
-    }
-    if headers is not None:
-        response["headers"].update(headers)
-    return response
-
-
 def extract_payload(method, event):
     method_found = True
     payload_dict = None
