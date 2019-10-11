@@ -62,7 +62,7 @@ class Signer:
                 (free_calls_allowed - total_calls_made) > 0) else False)
             return is_free_calls_allowed
         except Exception as e:
-            logger.info(repr(e))
+            logger.error(repr(e))
             raise e
 
     def signature_for_free_call(self, user_data, org_id, service_id):
@@ -104,7 +104,7 @@ class Signer:
                 raise Exception("Free calls expired for username %s.",
                                 username)
         except Exception as e:
-            logger.info(repr(e))
+            logger.error(repr(e))
             raise e
 
     def signature_for_regular_call(self, user_data, channel_id, nonce, amount):
@@ -132,7 +132,7 @@ class Signer:
                 "snet-current-block-number": self.current_block_no,
             }
         except Exception as e:
-            logger.info(repr(e))
+            logger.error(repr(e))
             raise Exception(
                 "Unable to generate signature for daemon call for username %s",
                 username)
@@ -157,7 +157,7 @@ class Signer:
                 "snet-current-block-number": self.current_block_no,
             }
         except Exception as e:
-            logger.info(repr(e))
+            logger.error(repr(e))
             raise Exception(
                 "Unable to generate signature for daemon call for username %s",
                 username)

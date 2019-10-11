@@ -43,6 +43,7 @@ def route_path(path, method, payload_dict, request_context, path_parameters):
             user_data=request_context, payload_dict=payload_dict)
 
     elif re.match("(\/order\/)[^\/]*[/]{0,1}$", path):
+        """ Format /order/{orderId} """
         username = request_context["authorizer"]["claims"]["email"]
         order_id = path_parameters["order_id"]
         response_data = obj_order_service.get_order_details_by_order_id(username=username, order_id=order_id)
