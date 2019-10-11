@@ -18,7 +18,7 @@ def upgrade():
     conn = op.get_bind()
     conn.execute("""
         CREATE TABLE `user_wallet` (
-          `row_id` int(11) NOT NULL AUTO_INCREMENT,
+          `row_id` int NOT NULL AUTO_INCREMENT,
           `username` varchar(128) NOT NULL,
           `address` varchar(256) NOT NULL,
           `is_default` bit(1) DEFAULT b'0',
