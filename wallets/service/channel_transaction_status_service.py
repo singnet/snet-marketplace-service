@@ -1,9 +1,10 @@
 from common.blockchain_util import BlockChainUtil
 from common.constant import TransactionStatus
+from wallets.config import NETWORK_ID
+from wallets.config import NETWORKS
 from wallets.dao.channel_transaction_status_data_access_object import (
     ChannelTransactionStatusDataAccessObject,
 )
-from wallets.config import NETWORKS, NETWORK_ID
 
 
 class ChannelTransactionStatusService:

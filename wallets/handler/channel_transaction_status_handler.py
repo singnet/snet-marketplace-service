@@ -2,7 +2,8 @@ import traceback
 
 from common.repository import Repository
 from common.utils import Utils
-from wallets.config import NETWORKS, NETWORK_ID
+from wallets.config import NETWORK_ID
+from wallets.config import NETWORKS
 from wallets.service.channel_transaction_status_service import (
     ChannelTransactionStatusService,
 )
