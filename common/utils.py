@@ -74,20 +74,20 @@ def validate_dict(data_dict, required_keys):
             return False
     return True
 
-
-def generate_lambda_response(status_code, message, headers=None):
+def generate_lambda_response(status_code, message, headers=None, enable_cors=False):
     response = {
         'statusCode': status_code,
         'body': json.dumps(message),
         'headers': {
             'Content-Type': 'application/json',
             "X-Requested-With": '*',
-            "Access-Control-Allow-Headers": 'Access-Control-Allow-Origin, Content-Type,X-Amz-Date,Authorization,'
+            "Access-Control-Allow-Headers": 'Access-Control-Allow-Origin, Content-Type, X-Amz-Date, Authorization,'
                                             'X-Api-Key,x-requested-with',
-            "Access-Control-Allow-Origin": '*',
             "Access-Control-Allow-Methods": 'GET,OPTIONS,POST'
         }
     }
+    if enable_cors:
+        response["headers"].update({"Access-Control-Allow-Origin": '*'})
     if headers is not None:
         response["headers"].update(headers)
     return response
