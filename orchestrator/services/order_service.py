@@ -7,6 +7,7 @@ from common.boto_utils import BotoUtils
 from orchestrator.config import CREATE_ORDER_SERVICE_ARN, INITIATE_PAYMENT_SERVICE_ARN, \
     EXECUTE_PAYMENT_SERVICE_ARN, WALLETS_SERVICE_ARN, ORDER_DETAILS_ORDER_ID_ARN, ORDER_DETAILS_BY_USERNAME_ARN, \
     CONTRACT_API_ARN, REGION_NAME, SIGNER_ADDRESS
+from orchestrator.services.wallet_service import WalletService
 from orchestrator.transaction_history import TransactionHistory
 from orchestrator.transaction_history_data_access_object import TransactionHistoryDAO
 
@@ -34,6 +35,7 @@ class OrderService:
         self.obj_transaction_history_dao = TransactionHistoryDAO(obj_repo=self.repo)
         self.lambda_client = boto3.client('lambda')
         self.boto_client = BotoUtils(REGION_NAME)
+        self.wallet_service = WalletService()
 
     def initiate_order(self, user_data, payload_dict):
         """
@@ -58,9 +60,10 @@ class OrderService:
         elif order_type == OrderType.FUND_CHANNEL.value:
             signer = SIGNER_ADDRESS
             channel_id = None
-            wallet = self.get_default_wallet(username)
+            wallet = self.wallet_service.get_default_wallet(username)
             wallet_address = wallet["address"]
-            channels = self.get_channels_from_contract(user_address=wallet_address, org_id=org_id, group_id=group_id)
+            channels = self.wallet_service.get_channels_from_contract(
+                user_address=wallet_address, org_id=org_id, group_id=group_id)
             for channel in channels:
                 if channel["signer"] == signer:
                     channel_id = channel["channel_id"]
@@ -128,76 +131,6 @@ class OrderService:
         if len(groups) == 0:
             raise Exception(f"Failed to find group {group_id} for org_id: {org_id}")
         return groups[0]["payment"]["payment_address"]
-
-    def get_channel_transactions(self, username, org_id, group_id):
-
-        channel_transactions_event = {
-            "path": "/wallet/channel/transactions",
-            "queryStringParameters": {
-                "username": username,
-                "group_id": group_id,
-                "org_id": org_id
-            },
-            "httpMethod": "GET"
-        }
-
-        channel_transactions_lambda_response = self.lambda_client.invoke(
-            FunctionName=WALLETS_SERVICE_ARN,
-            InvocationType='RequestResponse',
-            Payload=json.dumps(channel_transactions_event)
-        )
-        channel_transactions_response = json.loads(channel_transactions_lambda_response.get('Payload').read())
-        if channel_transactions_response["statusCode"] != 200:
-            raise Exception(f"Failed to fetch wallet details for username: {username}")
-
-        channel_transactions_response_body = json.loads(channel_transactions_response["body"])
-        channel_transactions = channel_transactions_response_body["data"]["wallets"]
-        return channel_transactions
-
-    def get_channel_details(self, username, org_id, group_id):
-        """ Method to get wallet details for a given username. """
-        try:
-            wallet_channel_transactions = self.get_channel_transactions(
-                username=username, org_id=org_id, group_id=group_id)
-            wallet_response = {
-                "username": username,
-                "org_id": org_id,
-                "group_id": group_id,
-                "wallets": wallet_channel_transactions
-            }
-            for wallet in wallet_response["wallets"]:
-                user_address = wallet["address"]
-                wallet["channels"] = self.get_channels_from_contract(
-                    user_address=user_address,
-                    org_id=org_id,
-                    group_id=group_id
-                )
-            return wallet_response
-        except Exception as e:
-            print(repr(e))
-            raise e
-
-    def get_channels_from_contract(self, user_address, org_id, group_id):
-        event = {
-            "httpMethod": "GET",
-            "path": "/channel",
-            "queryStringParameters": {
-                "user_address": user_address,
-                "org_id": org_id,
-                "group_id": group_id
-            }
-        }
-        channel_details_lambda_response = self.lambda_client.invoke(
-            FunctionName=CONTRACT_API_ARN, InvocationType='RequestResponse',
-            Payload=json.dumps(event)
-        )
-        channel_details_response = json.loads(channel_details_lambda_response.get("Payload").read())
-        if channel_details_response["statusCode"] != 200:
-            raise Exception(f"Failed to get channel details from contract API username: {user_address} "
-                            f"group_id: {group_id} "
-                            f"org_id: {org_id}")
-        channel_details = json.loads(channel_details_response["body"])["data"]
-        return channel_details["channels"]
 
     def execute_order(self, user_data, payload_dict):
         """
@@ -462,61 +395,3 @@ class OrderService:
             return fund_channel_transaction_details
         else:
             raise Exception("Order type is not valid.")
-
-    def get_default_wallet(self, username):
-        get_wallets_payload = {
-            "path": "/wallet",
-            "queryStringParameters": {
-                "username": username
-            },
-            "httpMethod": "GET"
-        }
-        get_wallets_response = self.boto_client.invoke_lambda(
-            lambda_function_arn=WALLETS_SERVICE_ARN,
-            invocation_type='RequestResponse', payload=json.dumps(get_wallets_payload))
-
-        if get_wallets_response["statusCode"] != 200:
-            raise Exception(f"Failed to fetch wallet for {username}")
-
-        wallets = json.loads(get_wallets_response["body"])["data"]["wallets"]
-
-        default_wallet = None
-        for wallet in wallets:
-            if wallet["is_default"] == 1 and wallet["type"] == "GENERAL":
-                default_wallet = wallet
-
-        if default_wallet is None:
-            raise Exception("No active paypal wallet")
-
-        return default_wallet
-
-    def register_wallet(self, username, wallet_details):
-        register_wallet_body = {
-            'address': wallet_details["address"],
-            'type': wallet_details["type"],
-            'username': username
-        }
-        register_wallet_payload = {
-            "path": "/wallet/register",
-            "body": json.dumps(register_wallet_body),
-            "httpMethod": "POST"
-        }
-        response = self.boto_client.invoke_lambda(lambda_function_arn=WALLETS_SERVICE_ARN,
-                                                  invocation_type="RequestResponse",
-                                                  payload=json.dumps(register_wallet_payload))
-        return json.loads(response["body"])["data"]
-
-    def set_default_wallet(self, username, address):
-        set_default_wallet_body = {
-            'address': address,
-            'username': username
-        }
-        set_default_wallet_payload = {
-            "path": "/wallet/status",
-            "body": json.dumps(set_default_wallet_body),
-            "httpMethod": "POST"
-        }
-        response = self.boto_client.invoke_lambda(lambda_function_arn=WALLETS_SERVICE_ARN,
-                                                  invocation_type="RequestResponse",
-                                                  payload=json.dumps(set_default_wallet_payload))
-        return json.loads(response["body"])["data"]
