@@ -67,7 +67,7 @@ def request_handler(event, context):
         valid_event = validate_dict(
             data_dict=event, required_keys=REQUIRED_KEYS_FOR_LAMBDA_EVENT)
         if not valid_event:
-            return generate_lambda_response(400, "Bad Request")
+            return generate_lambda_response(400, "Bad Request", cors_enabled=True)
 
         path = event["path"].lower()
         path = re.sub(r"^(\/orchestrator)", "", path)
@@ -76,7 +76,7 @@ def request_handler(event, context):
         method_found, path_parameters, payload_dict = extract_payload(
             method=method, event=event)
         if not method_found:
-            return generate_lambda_response(405, "Method Not Allowed")
+            return generate_lambda_response(405, "Method Not Allowed", cors_enabled=True)
 
         path_exist, response_data = route_path(
             path=path,
@@ -86,7 +86,7 @@ def request_handler(event, context):
             path_parameters=path_parameters
         )
         if not path_exist:
-            return generate_lambda_response(404, "Not Found")
+            return generate_lambda_response(404, "Not Found", cors_enabled=True)
 
         if response_data is None:
             error_message = format_error_message(
@@ -97,12 +97,12 @@ def request_handler(event, context):
                 net_id=NETWORK_ID,
             )
             obj_util.report_slack(1, error_message, SLACK_HOOK)
-            response = generate_lambda_response(500, error_message)
+            response = generate_lambda_response(500, error_message, cors_enabled=True)
         else:
             response = generate_lambda_response(200, {
                 "status": "success",
                 "data": response_data
-            })
+            }, cors_enabled=True)
     except Exception as e:
         error_message = format_error_message(
             status="failed",
@@ -112,6 +112,6 @@ def request_handler(event, context):
             net_id=NETWORK_ID,
         )
         obj_util.report_slack(1, error_message, SLACK_HOOK)
-        response = generate_lambda_response(500, error_message)
+        response = generate_lambda_response(500, error_message, cors_enabled=True)
         traceback.print_exc()
     return response
