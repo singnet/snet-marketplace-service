@@ -15,26 +15,30 @@ client_secret = get_ssm_parameter(PAYPAL_SECRET)
 class PaypalPayment(Payment):
 
     def __init__(self, payment_id, amount, currency, payment_status, created_at, payment_details):
-        super().__init__(payment_id, amount, currency, payment_status, created_at, payment_details)
+        super().__init__(payment_id, amount, currency,
+                         payment_status, created_at, payment_details)
         try:
             self.payee_client_api = paypalrestsdk.Api({
-              'mode': MODE,
-              'client_id': client_id,
-              'client_secret': client_secret}
+                'mode': MODE,
+                'client_id': client_id,
+                'client_secret': client_secret}
             )
         except Exception as e:
             logger.error("Failed to get ssm parameters")
             raise e
 
     def initiate_payment(self, order_id, item_details):
-        paypal_payload = self.get_paypal_payload(order_id, item_details["org_id"], item_details["service_id"])
-        payment = paypalrestsdk.Payment(paypal_payload, api=self.payee_client_api)
+        paypal_payload = self.get_paypal_payload(
+            order_id, item_details["org_id"], item_details["service_id"])
+        payment = paypalrestsdk.Payment(
+            paypal_payload, api=self.payee_client_api)
 
         if not payment.create():
             logger.error(f"Paypal error:{payment.error}")
             raise Exception("Payment failed to create")
 
-        logger.info(f"Paypal payment initiated with paypal_payment_id: {payment.id}")
+        logger.info(
+            f"Paypal payment initiated with paypal_payment_id: {payment.id}")
 
         approval_url = ""
         for link in payment.links:
@@ -57,15 +61,18 @@ class PaypalPayment(Payment):
     def execute_transaction(self, paid_payment_details):
         paypal_payment_id = self._payment_details["payment_id"]
         payer_id = paid_payment_details["payer_id"]
-        payment = paypalrestsdk.Payment.find(paypal_payment_id, api=self.payee_client_api)
+        payment = paypalrestsdk.Payment.find(
+            paypal_payment_id, api=self.payee_client_api)
 
         if payment.execute({"payer_id": payer_id}):
-            logger.info(f"Paypal payment execution is success for paypal_payment_id:{paypal_payment_id}")
+            logger.info(
+                f"Paypal payment execution is success for paypal_payment_id:{paypal_payment_id}")
             self._payment_status = PaymentStatus.SUCCESS
 
             return True
         elif self._payment_status == PaymentStatus.PENDING:
-            logger.info(f"Paypal payment execution is failed for paypal_payment_id:{paypal_payment_id}")
+            logger.info(
+                f"Paypal payment execution is failed for paypal_payment_id:{paypal_payment_id}")
             self._payment_status = PaymentStatus.FAILED
 
         logger.error(payment.error)
