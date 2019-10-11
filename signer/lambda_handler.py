@@ -7,6 +7,7 @@ from common.utils import Utils
 from signer.config import NET_ID
 from signer.config import SLACK_HOOK
 from signer.signer import Signer
+from common.utils import generate_lambda_response
 
 obj_util = Utils()
 
@@ -16,7 +17,7 @@ logger = get_logger(__name__)
 def request_handler(event, context):
     logger.info(event)
     if "path" not in event:
-        return get_response(400, "Bad Request")
+        return generate_lambda_response(400, "Bad Request", cors_enabled=True)
     try:
         payload_dict = None
         path = event["path"].lower()
@@ -30,7 +31,7 @@ def request_handler(event, context):
         elif method == "GET":
             payload_dict = event.get("queryStringParameters")
         else:
-            return get_response(405, "Method Not Allowed")
+            return generate_lambda_response(405, "Method Not Allowed", cors_enabled=True)
 
         if "/free-call" == path:
             response_data = signer_object.signature_for_free_call(
@@ -55,7 +56,7 @@ def request_handler(event, context):
             )
             logger.info(response_data)
         else:
-            return get_response(404, "Not Found")
+            return generate_lambda_response(404, "Not Found", cors_enabled=True)
 
         if response_data is None:
             err_msg = {
@@ -66,12 +67,12 @@ def request_handler(event, context):
                 "network_id": NET_ID,
             }
             obj_util.report_slack(1, str(err_msg), SLACK_HOOK)
-            response = get_response(500, err_msg)
+            response = generate_lambda_response(500, err_msg, cors_enabled=True)
         else:
-            response = get_response(200, {
+            response = generate_lambda_response(200, {
                 "status": "success",
                 "data": response_data
-            })
+            }, cors_enabled=True)
     except Exception as e:
         err_msg = {
             "status": "failed",
@@ -81,21 +82,6 @@ def request_handler(event, context):
             "network_id": NET_ID,
         }
         obj_util.report_slack(1, str(err_msg), SLACK_HOOK)
-        response = get_response(500, err_msg)
+        response = generate_lambda_response(500, err_msg, cors_enabled=True)
         traceback.print_exc()
     return response
-
-
-def get_response(status_code, message):
-    return {
-        "statusCode": status_code,
-        "body": json.dumps(message),
-        "headers": {
-            "Content-Type": "application/json",
-            "X-Requested-With": "*",
-            "Access-Control-Allow-Headers":
-            "Access-Control-Allow-Origin, Content-Type,X-Amz-Date,Authorization,X-Api-Key,x-requested-with",
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET,OPTIONS,POST",
-        },
-    }
