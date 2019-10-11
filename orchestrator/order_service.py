@@ -55,7 +55,7 @@ class OrderService:
         if order_type == OrderType.CREATE_WALLET_AND_CHANNEL.value:
             recipient = self.get_payment_address_for_org(group_id=group_id, org_id=org_id)
 
-        if order_type == OrderType.FUND_CHANNEL.value:
+        elif order_type == OrderType.FUND_CHANNEL.value:
             signer = SIGNER_ADDRESS
             channel_id = None
             wallet = self.get_default_wallet(username)
@@ -67,6 +67,9 @@ class OrderService:
                     recipient = channel["recipient"]
             if channel_id is None:
                 raise Exception(f"Channel not found for the user: {username} with org: {org_id} group: {group_id}")
+
+        else:
+            raise Exception("Invalid order type")
 
         item_details["channel_id"] = channel_id
         item_details["recipient"] = recipient
