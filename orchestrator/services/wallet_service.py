@@ -90,10 +90,13 @@ class WalletService:
             "body": json.dumps(register_wallet_body),
             "httpMethod": "POST"
         }
-        response = self.boto_client.invoke_lambda(lambda_function_arn=WALLETS_SERVICE_ARN,
-                                                  invocation_type="RequestResponse",
-                                                  payload=json.dumps(register_wallet_payload))
-        return json.loads(response["body"])["data"]
+        raw_response = self.boto_client.invoke_lambda(lambda_function_arn=WALLETS_SERVICE_ARN,
+                                                      invocation_type="RequestResponse",
+                                                      payload=json.dumps(register_wallet_payload))
+        status = raw_response["statusCode"]
+        if int(status) != 200:
+            raise Exception("Unable to register wallet for username %s", username)
+        return json.loads(raw_response["body"])["data"]
 
     def set_default_wallet(self, username, address):
         set_default_wallet_body = {
