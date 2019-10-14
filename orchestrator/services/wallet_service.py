@@ -1,7 +1,9 @@
 import json
-
 from common.boto_utils import BotoUtils
+from common.logger import get_logger
 from orchestrator.config import CONTRACT_API_ARN, REGION_NAME, WALLETS_SERVICE_ARN
+
+logger = get_logger(__name__)
 
 
 class WalletService:
@@ -72,10 +74,15 @@ class WalletService:
             invocation_type="RequestResponse",
             payload=json.dumps(event))
 
+        if "statusCode" not in channel_details_response:
+            logger.error(f"contract API boto call failed {channel_details_response}")
+            raise Exception(f"Failed to get channel details from contract API")
+
         if channel_details_response["statusCode"] != 200:
             raise Exception(f"Failed to get channel details from contract API username: {user_address} "
                             f"group_id: {group_id} "
                             f"org_id: {org_id}")
+
         channel_details = json.loads(channel_details_response["body"])["data"]
         return channel_details["channels"]
 
