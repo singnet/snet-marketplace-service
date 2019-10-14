@@ -69,13 +69,13 @@ class WalletService:
         v, r, s = Web3.toInt(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
         return r, s, v, signature
 
-    def __calculate_agi_tokens(self, amount, currency):
+    def __calculate_amount_in_cogs(self, amount, currency):
         if currency == "USD":
-            agi_tokens = round(amount)
+            amount_in_cogs = round(amount)
         else:
             raise Exception("Currency %s not supported.", currency)
 
-        return agi_tokens
+        return amount_in_cogs
 
     def open_channel_by_third_party(self, order_id, sender, sender_private_key, group_id,
                                     org_id, amount, currency, recipient):
@@ -91,19 +91,20 @@ class WalletService:
 
         # 1 block no is mined in 15 sec on average, setting expiration as 10 years
         expiration = current_block_no + (10 * 365 * 24 * 60 * 4)
-        agi_tokens = self.__calculate_agi_tokens(amount=amount, currency=currency)
+        amount_in_cogs = self.__calculate_amount_in_cogs(amount=amount, currency=currency)
+        self.__validate__cogs(amount_in_cogs=amount_in_cogs)
 
         group_id_in_hex = "0x" + base64.b64decode(group_id).hex()
         r, s, v, signature = self.__generate_signature_details(
             recipient=recipient, group_id=group_id_in_hex,
-            agi_tokens=agi_tokens, expiration=expiration,
+            agi_tokens=amount_in_cogs, expiration=expiration,
             message_nonce=current_block_no,
             signer_key=sender_private_key
         )
 
         positional_inputs = (
             sender, SIGNER_ADDRESS, recipient,
-            group_id_in_hex, agi_tokens, expiration,
+            group_id_in_hex, amount_in_cogs, expiration,
             current_block_no, v, r, s
         )
 
@@ -134,7 +135,7 @@ class WalletService:
 
         return {
             "transaction_hash": transaction_hash, "signature": signature,
-            "agi_tokens": agi_tokens, "type": method_name
+            "amount_in_cogs": amount_in_cogs, "type": method_name
         }
 
     def set_default_wallet(self, username, address):
@@ -145,7 +146,7 @@ class WalletService:
         self.EXECUTOR_WALLET_ADDRESS = get_ssm_parameter(EXECUTOR_ADDRESS)
         self.EXECUTOR_WALLET_KEY = get_ssm_parameter(EXECUTOR_KEY)
         method_name = "channelAddFunds"
-        amount_in_cogs = self.__calculate_agi_tokens(amount=amount, currency=currency)
+        amount_in_cogs = self.__calculate_amount_in_cogs(amount=amount, currency=currency)
         self.__validate__cogs(self, amount_in_cogs=amount_in_cogs)
         positional_inputs = (channel_id, amount_in_cogs)
 
