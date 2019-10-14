@@ -93,6 +93,9 @@ class WalletService:
         response = self.boto_client.invoke_lambda(lambda_function_arn=WALLETS_SERVICE_ARN,
                                                   invocation_type="RequestResponse",
                                                   payload=json.dumps(register_wallet_payload))
+        if response["statusCode"] != 200:
+            return "failed"
+
         return json.loads(response["body"])["data"]
 
     def set_default_wallet(self, username, address):
@@ -108,6 +111,9 @@ class WalletService:
         response = self.boto_client.invoke_lambda(lambda_function_arn=WALLETS_SERVICE_ARN,
                                                   invocation_type="RequestResponse",
                                                   payload=json.dumps(set_default_wallet_payload))
+
+        if response["statusCode"] != 200:
+            return "failed"
         return json.loads(response["body"])["data"]
 
     def get_default_wallet(self, username):
