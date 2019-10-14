@@ -36,10 +36,12 @@ class WalletService:
 
     def create_and_register_wallet(self, username):
         address, private_key = self.obj_blockchain_util.create_account()
-        obj_wallet = Wallet(
-            address=address, private_key=private_key, type=GENERAL_WALLET_TYPE, status=0
-        )
-        registered = self.register_wallet(username=username, obj_wallet=obj_wallet)
+        obj_wallet = Wallet(address=address,
+                            private_key=private_key,
+                            type=GENERAL_WALLET_TYPE,
+                            status=0)
+        registered = self.register_wallet(username=username,
+                                          obj_wallet=obj_wallet)
         if registered:
             return obj_wallet.get_wallet()
         raise Exception("Unable to create and register wallet.")
@@ -64,13 +66,13 @@ class WalletService:
         wallet_data = self.obj_wallet_dao.get_wallet_data_by_username(username)
         self.utils.clean(wallet_data)
 
-        logger.info(f"Fetched {len(wallet_data)} wallets for username: {username}")
+        logger.info(
+            f"Fetched {len(wallet_data)} wallets for username: {username}")
         wallet_response = {"username": username, "wallets": wallet_data}
         return wallet_response
 
-    def __generate_signature_details(
-        self, recipient, group_id, agi_tokens, expiration, message_nonce, signer_key
-    ):
+    def __generate_signature_details(self, recipient, group_id, agi_tokens,
+                                     expiration, message_nonce, signer_key):
         data_types = [
             "string",
             "address",
@@ -94,8 +96,7 @@ class WalletService:
             message_nonce,
         ]
         signature = self.obj_blockchain_util.generate_signature(
-            data_types=data_types, values=values, signer_key=signer_key
-        )
+            data_types=data_types, values=values, signer_key=signer_key)
         v, r, s = (
             Web3.toInt(hexstr="0x" + signature[-2:]),
             signature[:66],
@@ -112,30 +113,28 @@ class WalletService:
         return amount_in_cogs
 
     def open_channel_by_third_party(
-        self,
-        order_id,
-        sender,
-        sender_private_key,
-        group_id,
-        org_id,
-        amount,
-        currency,
-        recipient,
+            self,
+            order_id,
+            sender,
+            sender_private_key,
+            group_id,
+            org_id,
+            amount,
+            currency,
+            recipient,
     ):
         self.EXECUTOR_WALLET_ADDRESS = get_ssm_parameter(EXECUTOR_ADDRESS)
         self.EXECUTOR_WALLET_KEY = get_ssm_parameter(EXECUTOR_KEY)
         method_name = "openChannelByThirdParty"
         self.mpe_address = self.obj_blockchain_util.read_contract_address(
-            net_id=NETWORK_ID, path=MPE_ADDR_PATH, key="address"
-        )
+            net_id=NETWORK_ID, path=MPE_ADDR_PATH, key="address")
 
         current_block_no = self.obj_blockchain_util.get_current_block_no()
 
         # 1 block no is mined in 15 sec on average, setting expiration as 10 years
         expiration = current_block_no + (10 * 365 * 24 * 60 * 4)
-        amount_in_cogs = self.__calculate_amount_in_cogs(
-            amount=amount, currency=currency
-        )
+        amount_in_cogs = self.__calculate_amount_in_cogs(amount=amount,
+                                                         currency=currency)
         self.__validate__cogs(amount_in_cogs=amount_in_cogs)
 
         group_id_in_hex = "0x" + base64.b64decode(group_id).hex()
@@ -171,11 +170,10 @@ class WalletService:
         )
 
         raw_transaction = self.obj_blockchain_util.sign_transaction_with_private_key(
-            transaction_object=transaction_object, private_key=self.EXECUTOR_WALLET_KEY
-        )
+            transaction_object=transaction_object,
+            private_key=self.EXECUTOR_WALLET_KEY)
         transaction_hash = self.obj_blockchain_util.process_raw_transaction(
-            raw_transaction=raw_transaction
-        )
+            raw_transaction=raw_transaction)
 
         logger.info(
             "openChannelByThirdParty::transaction_hash : %s for order_id : %s",
@@ -206,26 +204,26 @@ class WalletService:
         }
 
     def set_default_wallet(self, username, address):
-        self.obj_wallet_dao.set_default_wallet(username=username, address=address)
+        self.obj_wallet_dao.set_default_wallet(username=username,
+                                               address=address)
         return "OK"
 
     def add_funds_to_channel(
-        self,
-        org_id,
-        group_id,
-        channel_id,
-        sender,
-        recipient,
-        order_id,
-        amount,
-        currency,
+            self,
+            org_id,
+            group_id,
+            channel_id,
+            sender,
+            recipient,
+            order_id,
+            amount,
+            currency,
     ):
         self.EXECUTOR_WALLET_ADDRESS = get_ssm_parameter(EXECUTOR_ADDRESS)
         self.EXECUTOR_WALLET_KEY = get_ssm_parameter(EXECUTOR_KEY)
         method_name = "channelAddFunds"
-        amount_in_cogs = self.__calculate_amount_in_cogs(
-            amount=amount, currency=currency
-        )
+        amount_in_cogs = self.__calculate_amount_in_cogs(amount=amount,
+                                                         currency=currency)
         self.__validate__cogs(self, amount_in_cogs=amount_in_cogs)
         positional_inputs = (channel_id, amount_in_cogs)
 
@@ -239,12 +237,11 @@ class WalletService:
         )
 
         raw_transaction = self.obj_blockchain_util.sign_transaction_with_private_key(
-            transaction_object=transaction_object, private_key=self.EXECUTOR_WALLET_KEY
-        )
+            transaction_object=transaction_object,
+            private_key=self.EXECUTOR_WALLET_KEY)
 
         transaction_hash = self.obj_blockchain_util.process_raw_transaction(
-            raw_transaction=raw_transaction
-        )
+            raw_transaction=raw_transaction)
         logger.info(
             "channelAddFunds::transaction_hash: %s for order_id: %s",
             transaction_hash,
@@ -271,13 +268,13 @@ class WalletService:
             "type": method_name,
         }
 
-    def get_transactions_from_username_recipient(self, username, org_id, group_id):
+    def get_transactions_from_username_recipient(self, username, org_id,
+                                                 group_id):
         logger.info(
             f"Fetching transactions for {username} to org_id: {org_id} group_id: {org_id}"
         )
         channel_data = self.channel_dao.get_channel_transactions_for_username_recipient(
-            username=username, group_id=group_id, org_id=org_id
-        )
+            username=username, group_id=group_id, org_id=org_id)
         self.utils.clean(channel_data)
 
         logger.info(f"Fetched {len(channel_data)} transactions")
@@ -307,7 +304,8 @@ class WalletService:
                 "created_at": rec["created_at"],
             }
 
-            wallet_transactions[sender_address]["transactions"].append(transaction)
+            wallet_transactions[sender_address]["transactions"].append(
+                transaction)
 
         for key in wallet_transactions:
             wallet = wallet_transactions[key]
@@ -316,16 +314,15 @@ class WalletService:
 
     def get_channel_transactions_against_order_id(self, order_id):
         transaction_history = self.channel_dao.get_channel_transactions_against_order_id(
-            order_id
-        )
+            order_id)
 
         for record in transaction_history:
-            record["created_at"] = record["created_at"].strftime("%Y-%m-%d %H:%M:%S")
+            record["created_at"] = record["created_at"].strftime(
+                "%Y-%m-%d %H:%M:%S")
 
         return {"order_id": order_id, "transactions": transaction_history}
 
     def __validate__cogs(self, amount_in_cogs):
         if amount_in_cogs < MINIMUM_AMOUNT_IN_COGS_ALLOWED:
             raise Exception(
-                "Insufficient amount to buy minimum amount in cogs allowed."
-            )
+                "Insufficient amount to buy minimum amount in cogs allowed.")
