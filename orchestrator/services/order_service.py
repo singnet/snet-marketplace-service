@@ -354,7 +354,7 @@ class OrderService:
 
             create_channel_response = json.loads(create_channel_lambda_response["Payload"].read())
             if create_channel_response["statusCode"] != 200:
-                raise Exception(f"Failed to create channel for {open_channel_body}")
+                raise Exception(f"Failed to create channel")
 
             create_channel_response_body = json.loads(create_channel_response["body"])
             channel_details = create_channel_response_body["data"]
