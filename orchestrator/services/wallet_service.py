@@ -50,9 +50,11 @@ class WalletService:
             payload=json.dumps(channel_transactions_event)
         )
         if channel_transactions_response["statusCode"] != 200:
-            raise Exception(f"Failed to fetch wallet details for username: {username}")
+            raise Exception(
+                f"Failed to fetch wallet details for username: {username}")
 
-        channel_transactions_response_body = json.loads(channel_transactions_response["body"])
+        channel_transactions_response_body = json.loads(
+            channel_transactions_response["body"])
         channel_transactions = channel_transactions_response_body["data"]["wallets"]
         return channel_transactions
 
@@ -95,7 +97,8 @@ class WalletService:
                                                       payload=json.dumps(register_wallet_payload))
         status = raw_response["statusCode"]
         if int(status) != 200:
-            raise Exception("Unable to register wallet for username %s", username)
+            raise Exception(
+                "Unable to register wallet for username %s", username)
         return json.loads(raw_response["body"])["data"]
 
     def set_default_wallet(self, username, address):
