@@ -147,7 +147,7 @@ class WalletService:
         self.EXECUTOR_WALLET_KEY = get_ssm_parameter(EXECUTOR_KEY)
         method_name = "channelAddFunds"
         amount_in_cogs = self.__calculate_amount_in_cogs(amount=amount, currency=currency)
-        self.__validate__cogs(self, amount_in_cogs=amount_in_cogs)
+        self.__validate__cogs(amount_in_cogs=amount_in_cogs)
         positional_inputs = (channel_id, amount_in_cogs)
 
         transaction_object = self.obj_blockchain_util.create_transaction_object(
