@@ -6,7 +6,7 @@ from common.constant import TransactionStatus
 from common.logger import get_logger
 from common.ssm_utils import get_ssm_parameter
 from common.utils import Utils
-from wallets.config import NETWORK_ID, NETWORKS, SIGNER_ADDRESS, EXECUTOR_ADDRESS, EXECUTOR_KEY
+from wallets.config import NETWORK_ID, NETWORKS, SIGNER_ADDRESS, EXECUTOR_ADDRESS, EXECUTOR_KEY, MINIMUM_AMOUNT_IN_COGS_ALLOWED
 from wallets.constant import GENERAL_WALLET_TYPE, MPE_ADDR_PATH, MPE_CNTRCT_PATH
 from wallets.dao.channel_dao import ChannelDAO
 from wallets.dao.wallet_data_access_object import WalletDAO
@@ -71,7 +71,7 @@ class WalletService:
 
     def __calculate_agi_tokens(self, amount, currency):
         if currency == "USD":
-            agi_tokens = amount
+            agi_tokens = round(amount)
         else:
             raise Exception("Currency %s not supported.", currency)
 
@@ -145,8 +145,9 @@ class WalletService:
         self.EXECUTOR_WALLET_ADDRESS = get_ssm_parameter(EXECUTOR_ADDRESS)
         self.EXECUTOR_WALLET_KEY = get_ssm_parameter(EXECUTOR_KEY)
         method_name = "channelAddFunds"
-        agi_tokens = self.__calculate_agi_tokens(amount=amount, currency=currency)
-        positional_inputs = (channel_id, agi_tokens)
+        amount_in_cogs = self.__calculate_agi_tokens(amount=amount, currency=currency)
+        self.__validate__cogs(self, amount_in_cogs=amount_in_cogs)
+        positional_inputs = (channel_id, amount_in_cogs)
 
         transaction_object = self.obj_blockchain_util.create_transaction_object(
             *positional_inputs, method_name=method_name,
@@ -171,7 +172,7 @@ class WalletService:
             request_parameters=str(positional_inputs),
             transaction_hash=transaction_hash, status=TransactionStatus.PENDING
         )
-        return {"transaction_hash": transaction_hash, "agi_tokens": agi_tokens, "type": method_name}
+        return {"transaction_hash": transaction_hash, "amount_in_cogs": amount_in_cogs, "type": method_name}
 
     def get_transactions_from_username_recipient(self, username, org_id, group_id):
         logger.info(f"Fetching transactions for {username} to org_id: {org_id} group_id: {org_id}")
@@ -226,3 +227,7 @@ class WalletService:
             "order_id": order_id,
             "transactions": transaction_history
         }
+
+    def __validate__cogs(self, amount_in_cogs):
+        if amount_in_cogs < MINIMUM_AMOUNT_IN_COGS_ALLOWED:
+            raise Exception("Insufficient amount to buy minimum amount in cogs allowed.")
