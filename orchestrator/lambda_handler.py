@@ -20,9 +20,11 @@ patch_all()
 
 NETWORKS_NAME = dict(
     (NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
-db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys())
+db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS))
+          for netId in NETWORKS.keys())
 obj_util = Utils()
 logger = get_logger(__name__)
+
 
 def route_path(path, method, payload_dict, request_context, path_parameters):
     obj_order_service = OrderService(obj_repo=db[NETWORK_ID])
@@ -57,15 +59,18 @@ def route_path(path, method, payload_dict, request_context, path_parameters):
         """ Format /order/{orderId} """
         username = request_context["authorizer"]["claims"]["email"]
         order_id = path_parameters["order_id"]
-        response_data = obj_order_service.get_order_details_by_order_id(username=username, order_id=order_id)
+        response_data = obj_order_service.get_order_details_by_order_id(
+            username=username, order_id=order_id)
 
     elif "/wallet/register" == path and method == "POST":
         username = request_context["authorizer"]["claims"]["email"]
-        response_data = WalletService().register_wallet(username=username, wallet_details=payload_dict)
+        response_data = WalletService().register_wallet(
+            username=username, wallet_details=payload_dict)
 
     elif "/wallet/status" == path and method == "POST":
         username = request_context["authorizer"]["claims"]["email"]
-        response_data = WalletService().set_default_wallet(username=username, address=payload_dict["address"])
+        response_data = WalletService().set_default_wallet(
+            username=username, address=payload_dict["address"])
 
     else:
         path_exist = False
@@ -110,7 +115,8 @@ def request_handler(event, context):
                 net_id=NETWORK_ID,
             )
             obj_util.report_slack(1, error_message, SLACK_HOOK)
-            response = generate_lambda_response(500, error_message, cors_enabled=True)
+            response = generate_lambda_response(
+                500, error_message, cors_enabled=True)
         else:
             response = generate_lambda_response(200, {
                 "status": "success",
@@ -125,6 +131,7 @@ def request_handler(event, context):
             net_id=NETWORK_ID,
         )
         obj_util.report_slack(1, error_message, SLACK_HOOK)
-        response = generate_lambda_response(500, error_message, cors_enabled=True)
+        response = generate_lambda_response(
+            500, error_message, cors_enabled=True)
         traceback.print_exc()
     return response
