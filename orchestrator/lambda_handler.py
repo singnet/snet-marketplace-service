@@ -11,6 +11,9 @@ from orchestrator.config import NETWORKS
 from orchestrator.constant import REQUIRED_KEYS_FOR_LAMBDA_EVENT
 from orchestrator.order_service import OrderService
 from orchestrator.config import SLACK_HOOK
+from aws_xray_sdk.core import patch_all
+
+patch_all()
 
 NETWORKS_NAME = dict(
     (NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
