@@ -1,7 +1,10 @@
 import json
+
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
-from orchestrator.config import CONTRACT_API_ARN, REGION_NAME, WALLETS_SERVICE_ARN
+from orchestrator.config import CONTRACT_API_ARN
+from orchestrator.config import REGION_NAME
+from orchestrator.config import WALLETS_SERVICE_ARN
 
 logger = get_logger(__name__)
 
