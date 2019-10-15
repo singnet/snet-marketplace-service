@@ -7,22 +7,20 @@ from common.utils import Utils
 from wallets.config import NETWORK_ID
 from wallets.config import NETWORKS
 from wallets.service.channel_transaction_status_service import (
-    ChannelTransactionStatusService,
-)
+    ChannelTransactionStatusService, )
 
 patch_all()
-NETWORKS_NAME = dict((NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
+NETWORKS_NAME = dict(
+    (NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
 obj_util = Utils()
-db = dict(
-    (netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys()
-)
+db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS))
+          for netId in NETWORKS.keys())
 
 
 def request_handler(event, context):
     try:
         obj_channel_transaction_status = ChannelTransactionStatusService(
-            repo=db[NETWORK_ID], net_id=NETWORK_ID
-        )
+            repo=db[NETWORK_ID], net_id=NETWORK_ID)
         obj_channel_transaction_status.manage_channel_transaction_status()
     except Exception as e:
         error_message = "Error in updating channel transaction status \n"
