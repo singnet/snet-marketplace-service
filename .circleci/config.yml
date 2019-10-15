@@ -30,9 +30,10 @@ jobs:
           command: |
             sudo apt-get update
             sudo apt-get install mysql-client -y
+            sudo pip install coverage coveralls pytest
       - run:
           name: run tests for wallet
           command: |
-            sudo pip install coverage coveralls pytest
+            sudo pip install -r wallets/requirement.txt
             PYTHONPATH=$PWD coverage run -m pytest wallets/testcase/unit_testcases/test_wallet_service.py
             coverage report -m
