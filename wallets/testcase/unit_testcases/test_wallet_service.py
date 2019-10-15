@@ -2,7 +2,8 @@ import unittest
 from unittest.mock import patch
 
 from common.repository import Repository
-from wallets.config import NETWORK_ID, NETWORKS
+from wallets.config import NETWORK_ID
+from wallets.config import NETWORKS
 from wallets.service.wallet_service import WalletService
 from wallets.wallet import Wallet
 

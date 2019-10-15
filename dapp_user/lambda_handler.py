@@ -1,13 +1,16 @@
 import json
 import re
 import traceback
+
 import boto3
-from dapp_user.config import NETWORKS, GET_FREE_CALLS_METERING_ARN, SLACK_HOOK
+from aws_xray_sdk.core import patch_all
+
 from common.repository import Repository
 from common.utils import Utils
-
+from dapp_user.config import GET_FREE_CALLS_METERING_ARN
+from dapp_user.config import NETWORKS
+from dapp_user.config import SLACK_HOOK
 from dapp_user.user import User
-from aws_xray_sdk.core import patch_all
 
 patch_all()
 

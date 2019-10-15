@@ -3,12 +3,15 @@ import re
 import traceback
 from urllib.parse import unquote
 
-from contract_api.config import NETWORKS, SLACK_HOOK, NETWORK_ID
+from aws_xray_sdk.core import patch_all
+
 from common.repository import Repository
 from common.utils import Utils
-from contract_api.registry import Registry
+from contract_api.config import NETWORK_ID
+from contract_api.config import NETWORKS
+from contract_api.config import SLACK_HOOK
 from contract_api.mpe import MPE
-from aws_xray_sdk.core import patch_all
+from contract_api.registry import Registry
 
 patch_all()
 

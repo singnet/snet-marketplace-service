@@ -1,20 +1,21 @@
 import base64
 
 from web3 import Web3
+
 from common.blockchain_util import BlockChainUtil
 from common.constant import TransactionStatus
 from common.logger import get_logger
 from common.ssm_utils import get_ssm_parameter
 from common.utils import Utils
-from wallets.config import (
-    NETWORK_ID,
-    NETWORKS,
-    SIGNER_ADDRESS,
-    EXECUTOR_ADDRESS,
-    EXECUTOR_KEY,
-    MINIMUM_AMOUNT_IN_COGS_ALLOWED,
-)
-from wallets.constant import GENERAL_WALLET_TYPE, MPE_ADDR_PATH, MPE_CNTRCT_PATH
+from wallets.config import EXECUTOR_ADDRESS
+from wallets.config import EXECUTOR_KEY
+from wallets.config import MINIMUM_AMOUNT_IN_COGS_ALLOWED
+from wallets.config import NETWORK_ID
+from wallets.config import NETWORKS
+from wallets.config import SIGNER_ADDRESS
+from wallets.constant import GENERAL_WALLET_TYPE
+from wallets.constant import MPE_ADDR_PATH
+from wallets.constant import MPE_CNTRCT_PATH
 from wallets.dao.channel_dao import ChannelDAO
 from wallets.dao.wallet_data_access_object import WalletDAO
 from wallets.wallet import Wallet
