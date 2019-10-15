@@ -1,6 +1,7 @@
 plugins:
   - serverless-offline
   - serverless-python-requirements
+  - serverless-plugin-tracing
 
 service: dapp-user
 custom:
@@ -22,6 +23,7 @@ provider:
     tags: # Tags that will be added to each of the deployment resources
       key1: dapp-user
   deploymentPrefix: serverless
+  tracing: true
 
 package:
   exclude:

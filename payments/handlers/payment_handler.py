@@ -4,6 +4,9 @@ from common.logger import get_logger
 from common.utils import generate_lambda_response, validate_dict
 from payments.application.dapp_order_manager import OrderManager
 from common.constant import StatusCode
+from aws_xray_sdk.core import patch_all
+
+patch_all()
 
 logger = get_logger(__name__)
 
