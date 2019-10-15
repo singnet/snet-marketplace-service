@@ -19,6 +19,7 @@ class Registry:
             for rec in all_orgs_srvcs_raw:
                 if rec['org_id'] not in all_orgs_srvcs.keys():
                     all_orgs_srvcs[rec['org_id']] = {'service_id': [],
+                                                     'organization_name': rec["organization_name"],
                                                      'owner_address': rec['owner_address']}
                 all_orgs_srvcs[rec['org_id']]['service_id'].append(
                     rec['service_id'])
@@ -30,7 +31,7 @@ class Registry:
     def _get_all_members(self, org_id=None):
         """ Method to generate org_id and members mapping."""
         try:
-            query = "SELECT org_id, member FROM members M"
+            query = "SELECT org_id, `member` FROM members M"
             params = None
             if org_id is not None:
                 query += " where M.org_id = %s"
@@ -51,11 +52,12 @@ class Registry:
             all_orgs_srvcs = self._get_all_service()
             all_orgs_members = self._get_all_members()
             all_orgs_data = []
-            for rec in all_orgs_srvcs:
-                data = {"org_id": rec,
-                        "owner_address": all_orgs_srvcs[rec]['owner_address'],
-                        "service_id": all_orgs_srvcs[rec]['service_id'],
-                        "members": all_orgs_members.get(rec, [])}
+            for org_rec in all_orgs_srvcs:
+                data = {"org_id": org_rec,
+                        "org_name": all_orgs_srvcs[org_rec]["organization_name"],
+                        "owner_address": all_orgs_srvcs[org_rec]['owner_address'],
+                        "service_id": all_orgs_srvcs[org_rec]['service_id'],
+                        "members": all_orgs_members.get(org_rec, [])}
                 all_orgs_data.append(data)
             return all_orgs_data
         except Exception as e:
