@@ -32,7 +32,7 @@ package:
     - venv/**
     - config.ropsten.json
     - test/**
-    - tests/**
+    - testcase/**
     - sql_script/**
     - service_status/**
     - contract_api/**
@@ -74,32 +74,19 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-
       - http:
           method: GET
           path: /wallet
           private: true
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-
+      - http:
+          method: POST
+          path: /wallet/register
+          private: true
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
       - http:
           method: POST
           path: /wallet/channel
@@ -109,16 +96,6 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
       - http:
           method: POST
           path: /wallet/channel/deposit
@@ -128,16 +105,6 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
       - http:
           method: POST
           path: /wallet/status
@@ -147,16 +114,6 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
 
       - http:
           method: GET
@@ -167,20 +124,10 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
 
   channel-transaction-status:
     warmup: true
-    handler: wallets/channel_transaction_status/channel_transaction_status_handler.request_handler
+    handler: wallets/handler/channel_transaction_status_handler.request_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:

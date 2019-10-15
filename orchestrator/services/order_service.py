@@ -3,9 +3,11 @@ import boto3
 
 from enum import Enum
 from urllib.parse import quote
+from common.boto_utils import BotoUtils
 from orchestrator.config import CREATE_ORDER_SERVICE_ARN, INITIATE_PAYMENT_SERVICE_ARN, \
     EXECUTE_PAYMENT_SERVICE_ARN, WALLETS_SERVICE_ARN, ORDER_DETAILS_ORDER_ID_ARN, ORDER_DETAILS_BY_USERNAME_ARN, \
-    CONTRACT_API_ARN
+    CONTRACT_API_ARN, REGION_NAME, SIGNER_ADDRESS
+from orchestrator.services.wallet_service import WalletService
 from orchestrator.transaction_history import TransactionHistory
 from orchestrator.transaction_history_data_access_object import TransactionHistoryDAO
 
@@ -29,9 +31,11 @@ class OrderType(Enum):
 
 class OrderService:
     def __init__(self, obj_repo):
-        self.obj_repo = obj_repo
-        self.obj_transaction_history_dao = TransactionHistoryDAO(obj_repo=self.obj_repo)
+        self.repo = obj_repo
+        self.obj_transaction_history_dao = TransactionHistoryDAO(obj_repo=self.repo)
         self.lambda_client = boto3.client('lambda')
+        self.boto_client = BotoUtils(REGION_NAME)
+        self.wallet_service = WalletService()
 
     def initiate_order(self, user_data, payload_dict):
         """
@@ -46,14 +50,39 @@ class OrderService:
         item_details = payload_dict["item_details"]
         group_id = item_details["group_id"]
         org_id = item_details["org_id"]
+        wallet_address = ""
+        recipient = ""
+        channel_id = ""
 
-        recipient = self.get_payment_address_for_org(group_id=group_id, org_id=org_id)
+        if order_type == OrderType.CREATE_WALLET_AND_CHANNEL.value:
+            recipient = self.get_payment_address_for_org(group_id=group_id, org_id=org_id)
+
+        elif order_type == OrderType.FUND_CHANNEL.value:
+            signer = SIGNER_ADDRESS
+            channel_id = None
+            wallet = self.wallet_service.get_default_wallet(username)
+            wallet_address = wallet["address"]
+            channels = self.wallet_service.get_channels_from_contract(
+                user_address=wallet_address, org_id=org_id, group_id=group_id)
+            for channel in channels:
+                if channel["signer"] == signer:
+                    channel_id = channel["channel_id"]
+                    recipient = channel["recipient"]
+            if channel_id is None:
+                raise Exception(f"Channel not found for the user: {username} with org: {org_id} group: {group_id}")
+
+        else:
+            raise Exception("Invalid order type")
+
+        item_details["channel_id"] = channel_id
         item_details["recipient"] = recipient
+        item_details["sender"] = wallet_address
         order_details = self.manage_create_order(
             username=username, item_details=item_details,
             price=price
         )
         order_id = order_details["order_id"]
+
         try:
             payment_data = self.manage_initiate_payment(
                 username=username, order_id=order_id, price=price,
@@ -173,6 +202,7 @@ class OrderService:
             "queryStringParameters": {"username": username},
             "httpMethod": "GET"
         }
+
         order_details_lambda_response = self.lambda_client.invoke(
             FunctionName=ORDER_DETAILS_BY_USERNAME_ARN,
             InvocationType='RequestResponse',
@@ -188,7 +218,7 @@ class OrderService:
         for order in orders:
             order_id = order["order_id"]
             transaction_details_event = {
-                "path": f"/wallet/transactions",
+                "path": f"/wallet/channel/transactions",
                 "queryStringParameters": {"order_id": order_id},
                 "httpMethod": "GET"
             }
@@ -277,6 +307,11 @@ class OrderService:
             raise Exception(f"Error executing payment for username {username} against order_id {order_id}")
 
     def manage_process_order(self, username, order_id, order_type, amount, currency, order_data):
+        group_id = order_data["group_id"]
+        org_id = order_data["org_id"]
+        recipient = order_data["recipient"]
+        channel_id = order_data["channel_id"]
+        sender = order_data["sender"]
         if order_type == OrderType.CREATE_WALLET_AND_CHANNEL.value:
             wallet_create_payload = {
                 "path": "/wallet",
@@ -293,13 +328,13 @@ class OrderService:
                 raise Exception("Failed to create wallet")
             wallet_create_response_body = json.loads(wallet_create_response["body"])
             wallet_details = wallet_create_response_body["data"]
-            recipient = order_data["recipient"]
 
             open_channel_body = {
                 'order_id': order_id,
                 'sender': wallet_details["address"],
                 'sender_private_key': wallet_details["private_key"],
-                'group_id': order_data["group_id"],
+                'group_id': group_id,
+                'org_id': org_id,
                 'amount': amount,
                 'currency': currency,
                 'recipient': recipient
@@ -330,9 +365,14 @@ class OrderService:
             pass
         elif order_type == OrderType.FUND_CHANNEL.value:
             fund_channel_body = {
-                "order_id": order_id,
-                "amount": amount,
-                "currency": currency
+                'order_id': order_id,
+                'group_id': group_id,
+                'org_id': org_id,
+                'amount': amount,
+                'channel_id': channel_id,
+                'currency': currency,
+                'recipient': recipient,
+                'sender': sender
             }
             fund_channel_payload = {
                 "path": "/wallet/channel/deposit",
@@ -350,11 +390,8 @@ class OrderService:
             if fund_channel_response["statusCode"] != 200:
                 raise Exception(f"Failed to add funds in channel for {fund_channel_body}")
 
-            fund_channel_response_body = fund_channel_response["body"]
+            fund_channel_response_body = json.loads(fund_channel_response["body"])
             fund_channel_transaction_details = fund_channel_response_body["data"]
             return fund_channel_transaction_details
         else:
             raise Exception("Order type is not valid.")
-
-    def get_receipient_address(self):
-        return ""

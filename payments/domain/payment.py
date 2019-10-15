@@ -41,7 +41,7 @@ class Payment:
     def set_payment_status(self, payment_status):
         self._payment_status = payment_status
 
-    def initiate_payment(self, order_id):
+    def initiate_payment(self, order_id, item_details):
         pass
 
     def execute_transaction(self, paid_payment_details):

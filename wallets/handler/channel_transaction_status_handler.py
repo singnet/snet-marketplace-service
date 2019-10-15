@@ -3,7 +3,7 @@ import traceback
 from common.repository import Repository
 from common.utils import Utils
 from wallets.config import NETWORKS, NETWORK_ID
-from wallets.channel_transaction_status.channel_transaction_status_service import ChannelTransactionStatusService
+from wallets.service.channel_transaction_status_service import ChannelTransactionStatusService
 NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId)
                      for netId in NETWORKS.keys())
 obj_util = Utils()
@@ -19,6 +19,6 @@ def request_handler(event, context):
         error_message = "Error in updating channel transaction status \n"
         "NETWORK ID:" + str(NETWORK_ID) + "\n"
         "Error:" + repr(e)
-        # obj_util.report_slack(1, error_message)
+        obj_util.report_slack(1, error_message)
         traceback.print_exc()
     return

@@ -1,5 +1,5 @@
 class Wallet:
-    def __init__(self, address=None, private_key=None, status=None, type=type):
+    def __init__(self, address, type, private_key=None, status=None):
         self.__address = address
         self.__private_key = private_key
         self.__status = status
