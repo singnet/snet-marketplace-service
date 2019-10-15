@@ -86,6 +86,23 @@ class WalletService:
         channel_details = json.loads(channel_details_response["body"])["data"]
         return channel_details["channels"]
 
+    def get_wallets(self, username):
+        get_wallet_event = {
+            "path": "/wallet",
+            "queryStringParameters": {
+                "username": username
+            },
+            "httpMethod": "GET"
+        }
+        get_wallet_response = self.boto_client.invoke_lambda(lambda_function_arn=WALLETS_SERVICE_ARN,
+                                                             invocation_type="RequestResponse",
+                                                             payload=json.dumps(get_wallet_event))
+        status = get_wallet_response["statusCode"]
+        if status != 200:
+            raise Exception("Unable to get wallets for username %s", username)
+        wallets = json.loads(get_wallet_response["body"])["data"]
+        return wallets
+
     def register_wallet(self, username, wallet_details):
         register_wallet_body = {
             'address': wallet_details["address"],
