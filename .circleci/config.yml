@@ -34,6 +34,6 @@ jobs:
       - run:
           name: run tests for wallet
           command: |
-            pip install -r wallets/requirement.txt
+            sudo pip install -r wallets/requirement.txt
             PYTHONPATH=$PWD coverage run -m pytest wallets/testcase/unit_testcases/test_wallet_service.py
             coverage report -m
