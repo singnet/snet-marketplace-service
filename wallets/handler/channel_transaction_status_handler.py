@@ -16,7 +16,8 @@ db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS))
 
 def request_handler(event, context):
     try:
-        obj_channel_transaction_status = ChannelTransactionStatusService(repo=db[NETWORK_ID], net_id=NETWORK_ID)
+        obj_channel_transaction_status = ChannelTransactionStatusService(
+            repo=db[NETWORK_ID], net_id=NETWORK_ID)
         obj_channel_transaction_status.manage_channel_transaction_status()
     except Exception as e:
         error_message = "Error in updating channel transaction status \n"
