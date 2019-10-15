@@ -30,7 +30,7 @@ jobs:
           command: |
             sudo apt-get update
             sudo apt-get install mysql-client -y
-            sudo pip install coverage coveralls pytest
+            sudo pip install coverage coveralls pytest boto3
       - run:
           name: run tests for wallet
           command: |
