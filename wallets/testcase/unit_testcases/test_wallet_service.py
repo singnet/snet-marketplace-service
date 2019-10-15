@@ -9,8 +9,10 @@ from wallets.wallet import Wallet
 
 class TestWalletService(unittest.TestCase):
     def setUp(self):
-        self.NETWORKS_NAME = dict((NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
-        self.db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys())
+        self.NETWORKS_NAME = dict(
+            (NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
+        self.db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS))
+                       for netId in NETWORKS.keys())
         self.obj_wallet_manager = WalletService(obj_repo=self.db[NETWORK_ID])
 
     @patch("common.utils.Utils.report_slack")
@@ -22,13 +24,15 @@ class TestWalletService(unittest.TestCase):
             "323449587122651441342932061624154600879572532581",
             "26561428888193216265620544717131876925191237116680314981303971688115990928499",
         )
-        response = self.obj_wallet_manager.create_and_register_wallet(username="dummy")
+        response = self.obj_wallet_manager.create_and_register_wallet(
+            username="dummy")
         assert (response == {"address": "323449587122651441342932061624154600879572532581",
                              "private_key": "26561428888193216265620544717131876925191237116680314981303971688115990928499",
                              "status": 0, "type": "GENERAL"})
         mock_register_wallet.return_value = False
         try:
-            self.obj_wallet_manager.create_and_register_wallet(username="dummy")
+            self.obj_wallet_manager.create_and_register_wallet(
+                username="dummy")
         except Exception as e:
             assert (e.args == ("Unable to create and register wallet.",))
 
@@ -39,11 +43,13 @@ class TestWalletService(unittest.TestCase):
         obj_wallet = Wallet(address="323449587122651441342932061624154600879572532581",
                             private_key="26561428888193216265620544717131876925191237116680314981303971688115990928499",
                             type="GENERAL", status=0)
-        response = self.obj_wallet_manager.register_wallet(username="dummy", obj_wallet=obj_wallet)
+        response = self.obj_wallet_manager.register_wallet(
+            username="dummy", obj_wallet=obj_wallet)
         assert (response == True)
         mock_insert_wallet_details.return_value = False
         try:
-            self.obj_wallet_manager.register_wallet(username="dummy", obj_wallet=obj_wallet)
+            self.obj_wallet_manager.register_wallet(
+                username="dummy", obj_wallet=obj_wallet)
         except Exception as e:
             assert (e.args == ("Unable to register wallet.",))
 

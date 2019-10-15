@@ -26,7 +26,8 @@ def initiate(event, context):
                         f"order_id: {order_id}\n"
                         f"amount: {amount} {currency}\n"
                         f"payment_method: {payment_method}")
-            response = OrderManager().initiate_payment_against_order(order_id, amount, currency, payment_method)
+            response = OrderManager().initiate_payment_against_order(
+                order_id, amount, currency, payment_method)
             status_code = StatusCode.CREATED
         else:
             status_code = StatusCode.BAD_REQUEST
