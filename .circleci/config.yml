@@ -33,7 +33,6 @@ jobs:
        - run:
           name: run tests for wallet
           command: |
-            cd wallets
             sudo pip install coverage coveralls pytest
-            PYTHONPATH=$PWD coverage run -m pytest testcase/unit_testcases/test_wallet_service.py
+            PYTHONPATH=$PWD coverage run -m pytest wallets/testcase/unit_testcases/test_wallet_service.py
             coverage report -m
