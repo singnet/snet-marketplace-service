@@ -8,6 +8,9 @@ from common.utils import generate_lambda_response
 from signer.config import NET_ID
 from signer.config import SLACK_HOOK
 from signer.signer import Signer
+from aws_xray_sdk.core import patch_all
+
+patch_all()
 
 obj_util = Utils()
 
