@@ -30,9 +30,10 @@ jobs:
           command: |
             sudo apt-get update
             sudo apt-get install mysql-client -y
-      # mysql -h 127.0.0.1 -u unittest_root -D unittest_db -punittest_pwd < tests/unittest_db.sql
-      # sudo pip install -r ./dapp_user/requirement.txt
-      # export PYTHONPATH=$PATH:$pwd
-      # sudo pip install coveralls
-      # coverage run --source=`pwd` ./tests/test_dapp_user.py
-      # COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} coveralls
+            sudo pip install coverage coveralls pytest boto3
+      - run:
+          name: run tests for wallet
+          command: |
+            sudo pip install -r wallets/requirement.txt
+            PYTHONPATH=$PWD coverage run -m pytest wallets/testcase/unit_testcases/test_wallet_service.py
+            coverage report -m
