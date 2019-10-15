@@ -5,9 +5,17 @@ from enum import Enum
 from urllib.parse import quote
 from common.boto_utils import BotoUtils
 from common.constant import TransactionStatus
-from orchestrator.config import CREATE_ORDER_SERVICE_ARN, INITIATE_PAYMENT_SERVICE_ARN, \
-    EXECUTE_PAYMENT_SERVICE_ARN, WALLETS_SERVICE_ARN, ORDER_DETAILS_ORDER_ID_ARN, ORDER_DETAILS_BY_USERNAME_ARN, \
-    CONTRACT_API_ARN, REGION_NAME, SIGNER_ADDRESS
+from orchestrator.config import (
+    CREATE_ORDER_SERVICE_ARN,
+    INITIATE_PAYMENT_SERVICE_ARN,
+    EXECUTE_PAYMENT_SERVICE_ARN,
+    WALLETS_SERVICE_ARN,
+    ORDER_DETAILS_ORDER_ID_ARN,
+    ORDER_DETAILS_BY_USERNAME_ARN,
+    CONTRACT_API_ARN,
+    REGION_NAME,
+    SIGNER_ADDRESS,
+)
 from orchestrator.services.wallet_service import WalletService
 from orchestrator.transaction_history import TransactionHistory
 from orchestrator.transaction_history_data_access_object import TransactionHistoryDAO
@@ -33,9 +41,8 @@ class OrderType(Enum):
 class OrderService:
     def __init__(self, obj_repo):
         self.repo = obj_repo
-        self.obj_transaction_history_dao = TransactionHistoryDAO(
-            obj_repo=self.repo)
-        self.lambda_client = boto3.client('lambda')
+        self.obj_transaction_history_dao = TransactionHistoryDAO(obj_repo=self.repo)
+        self.lambda_client = boto3.client("lambda")
         self.boto_client = BotoUtils(REGION_NAME)
         self.wallet_service = WalletService()
 
@@ -57,7 +64,8 @@ class OrderService:
 
         if order_type == OrderType.CREATE_WALLET_AND_CHANNEL.value:
             recipient = self.get_payment_address_for_org(
-                group_id=group_id, org_id=org_id)
+                group_id=group_id, org_id=org_id
+            )
 
         elif order_type == OrderType.FUND_CHANNEL.value:
             signer = SIGNER_ADDRESS
@@ -65,14 +73,16 @@ class OrderService:
             wallet = self.wallet_service.get_default_wallet(username)
             wallet_address = wallet["address"]
             channels = self.wallet_service.get_channels_from_contract(
-                user_address=wallet_address, org_id=org_id, group_id=group_id)
+                user_address=wallet_address, org_id=org_id, group_id=group_id
+            )
             for channel in channels:
                 if channel["signer"] == signer:
                     channel_id = channel["channel_id"]
                     recipient = channel["recipient"]
             if channel_id is None:
                 raise Exception(
-                    f"Channel not found for the user: {username} with org: {org_id} group: {group_id}")
+                    f"Channel not found for the user: {username} with org: {org_id} group: {group_id}"
+                )
 
         else:
             raise Exception("Invalid order type")
@@ -81,33 +91,41 @@ class OrderService:
         item_details["recipient"] = recipient
         item_details["sender"] = wallet_address
         order_details = self.manage_create_order(
-            username=username, item_details=item_details,
-            price=price
+            username=username, item_details=item_details, price=price
         )
         order_id = order_details["order_id"]
 
         try:
             payment_data = self.manage_initiate_payment(
-                username=username, order_id=order_id, price=price,
-                payment_method=payload_dict["payment_method"]
+                username=username,
+                order_id=order_id,
+                price=price,
+                payment_method=payload_dict["payment_method"],
             )
             payment_id = payment_data["payment_id"]
             raw_payment_data = json.dumps(payment_data["payment"])
             obj_transaction_history = TransactionHistory(
-                username=username, order_id=order_id, order_type=order_type,
-                payment_id=payment_id, raw_payment_data=raw_payment_data,
-                status=Status.SUCCESS.value
+                username=username,
+                order_id=order_id,
+                order_type=order_type,
+                payment_id=payment_id,
+                raw_payment_data=raw_payment_data,
+                status=Status.SUCCESS.value,
             )
             self.obj_transaction_history_dao.insert_transaction_history(
-                obj_transaction_history=obj_transaction_history)
+                obj_transaction_history=obj_transaction_history
+            )
             return payment_data
         except Exception as e:
             obj_transaction_history = TransactionHistory(
-                username=username, order_id=order_id, order_type=order_type,
-                status=Status.PAYMENT_INITIATION_FAILED.value
+                username=username,
+                order_id=order_id,
+                order_type=order_type,
+                status=Status.PAYMENT_INITIATION_FAILED.value,
             )
             self.obj_transaction_history_dao.insert_transaction_history(
-                obj_transaction_history=obj_transaction_history)
+                obj_transaction_history=obj_transaction_history
+            )
             print(repr(e))
             raise e
 
@@ -115,29 +133,27 @@ class OrderService:
 
         group_details_event = {
             "path": f"/org/{org_id}/group/{quote(group_id, safe='')}",
-            "pathParameters": {
-                "org_id": org_id,
-                "group_id": quote(group_id, safe='')
-            },
-            "httpMethod": "GET"
+            "pathParameters": {"org_id": org_id, "group_id": quote(group_id, safe="")},
+            "httpMethod": "GET",
         }
         group_details_lambda_response = self.lambda_client.invoke(
             FunctionName=CONTRACT_API_ARN,
-            InvocationType='RequestResponse',
-            Payload=json.dumps(group_details_event)
+            InvocationType="RequestResponse",
+            Payload=json.dumps(group_details_event),
         )
         group_details_response = json.loads(
-            group_details_lambda_response.get('Payload').read())
+            group_details_lambda_response.get("Payload").read()
+        )
         if group_details_response["statusCode"] != 200:
-            raise Exception(f"Failed to fetch group details for org_id:{org_id} "
-                            f"group_id {group_id}")
+            raise Exception(
+                f"Failed to fetch group details for org_id:{org_id} "
+                f"group_id {group_id}"
+            )
 
-        group_details_response_body = json.loads(
-            group_details_response["body"])
+        group_details_response_body = json.loads(group_details_response["body"])
         groups = group_details_response_body["data"]["groups"]
         if len(groups) == 0:
-            raise Exception(
-                f"Failed to find group {group_id} for org_id: {org_id}")
+            raise Exception(f"Failed to find group {group_id} for org_id: {org_id}")
         return groups[0]["payment"]["payment_address"]
 
     def execute_order(self, user_data, payload_dict):
@@ -159,9 +175,11 @@ class OrderService:
                 break
 
         if payment is None:
-            raise Exception(f"Failed to fetch order details for order_id {order_id} \n"
-                            f"payment_id {payment_id} \n"
-                            f"username{username}")
+            raise Exception(
+                f"Failed to fetch order details for order_id {order_id} \n"
+                f"payment_id {payment_id} \n"
+                f"username{username}"
+            )
 
         order_type = order["item_details"]["order_type"]
         item_details = order["item_details"]
@@ -170,39 +188,51 @@ class OrderService:
         price = payment["price"]
         status = Status.PAYMENT_EXECUTION_FAILED.value
         self.manage_execute_payment(
-            username=username, order_id=order_id, payment_id=payment_id,
-            payment_details=paid_payment_details, payment_method=payment_method
+            username=username,
+            order_id=order_id,
+            payment_id=payment_id,
+            payment_details=paid_payment_details,
+            payment_method=payment_method,
         )
         status = Status.PAYMENT_EXECUTED.value
         try:
             status = Status.ORDER_PROCESSING_FAILED.value
             processed_order_data = self.manage_process_order(
                 username=username,
-                order_id=order_id, order_type=order_type,
+                order_id=order_id,
+                order_type=order_type,
                 amount=price["amount"],
-                currency=price["currency"], order_data=item_details
+                currency=price["currency"],
+                order_data=item_details,
             )
             status = Status.ORDER_PROCESSED.value
             obj_transaction_history = TransactionHistory(
-                username=username, order_id=order_id, order_type=order_type,
-                status=status, payment_id=payment_id,
+                username=username,
+                order_id=order_id,
+                order_type=order_type,
+                status=status,
+                payment_id=payment_id,
                 payment_method=payment_method,
                 raw_payment_data=json.dumps(paid_payment_details),
-                transaction_hash=processed_order_data["transaction_hash"]
+                transaction_hash=processed_order_data["transaction_hash"],
             )
             self.obj_transaction_history_dao.insert_transaction_history(
-                obj_transaction_history=obj_transaction_history)
+                obj_transaction_history=obj_transaction_history
+            )
             processed_order_data["price"] = price
             processed_order_data["item_details"] = item_details
             return processed_order_data
 
         except Exception as e:
             obj_transaction_history = TransactionHistory(
-                username=username, order_id=order_id,
-                order_type=order_type, status=status
+                username=username,
+                order_id=order_id,
+                order_type=order_type,
+                status=status,
             )
             self.obj_transaction_history_dao.insert_transaction_history(
-                obj_transaction_history=obj_transaction_history)
+                obj_transaction_history=obj_transaction_history
+            )
             print(repr(e))
             raise e
 
@@ -210,36 +240,38 @@ class OrderService:
         order_details_event = {
             "path": f"order/{order_id}",
             "pathParameters": {"order_id": order_id},
-            "httpMethod": "GET"
+            "httpMethod": "GET",
         }
         response = self.lambda_client.invoke(
             FunctionName=ORDER_DETAILS_ORDER_ID_ARN,
-            InvocationType='RequestResponse',
-            Payload=json.dumps(order_details_event)
+            InvocationType="RequestResponse",
+            Payload=json.dumps(order_details_event),
         )
-        order_details_response = json.loads(response.get('Payload').read())
+        order_details_response = json.loads(response.get("Payload").read())
         if order_details_response["statusCode"] != 200:
             raise Exception(
-                f"Failed to fetch order details for order_id {order_id} username{username}")
+                f"Failed to fetch order details for order_id {order_id} username{username}"
+            )
 
         order_details_data = json.loads(order_details_response["body"])
         if order_details_data["username"] != username:
             raise Exception(
-                f"Failed to fetch order details for order_id {order_id} username{username}")
+                f"Failed to fetch order details for order_id {order_id} username{username}"
+            )
         return order_details_data
 
     def manage_initiate_payment(self, username, order_id, price, payment_method):
         initiate_payment_event = {
             "pathParameters": {"order_id": order_id},
             "httpMethod": "POST",
-            "body": json.dumps({"price": price, "payment_method": payment_method})
+            "body": json.dumps({"price": price, "payment_method": payment_method}),
         }
         response = self.lambda_client.invoke(
             FunctionName=INITIATE_PAYMENT_SERVICE_ARN,
-            InvocationType='RequestResponse',
-            Payload=json.dumps(initiate_payment_event)
+            InvocationType="RequestResponse",
+            Payload=json.dumps(initiate_payment_event),
         )
-        initiate_payment_data = json.loads(response.get('Payload').read())
+        initiate_payment_data = json.loads(response.get("Payload").read())
         if initiate_payment_data["statusCode"] == 201:
             return json.loads(initiate_payment_data["body"])
         else:
@@ -249,39 +281,47 @@ class OrderService:
         create_order_event = {
             "path": "/order/create",
             "httpMethod": "POST",
-            "body": json.dumps({"price": price, "item_details": item_details, "username": username})
+            "body": json.dumps(
+                {"price": price, "item_details": item_details, "username": username}
+            ),
         }
         response = self.lambda_client.invoke(
             FunctionName=CREATE_ORDER_SERVICE_ARN,
-            InvocationType='RequestResponse',
-            Payload=json.dumps(create_order_event)
+            InvocationType="RequestResponse",
+            Payload=json.dumps(create_order_event),
         )
-        create_order_service_response = json.loads(
-            response.get('Payload').read())
+        create_order_service_response = json.loads(response.get("Payload").read())
         print("create_order_service_response==", create_order_service_response)
         if create_order_service_response["statusCode"] == 201:
             return json.loads(create_order_service_response["body"])
         else:
             raise Exception(f"Error creating order for user {username}")
 
-    def manage_execute_payment(self, username, order_id, payment_id, payment_details, payment_method):
+    def manage_execute_payment(
+        self, username, order_id, payment_id, payment_details, payment_method
+    ):
         execute_payment_event = {
             "pathParameters": {"order_id": order_id, "payment_id": payment_id},
-            "body": json.dumps({"payment_method": payment_method, "payment_details": payment_details})
+            "body": json.dumps(
+                {"payment_method": payment_method, "payment_details": payment_details}
+            ),
         }
         response = self.lambda_client.invoke(
             FunctionName=EXECUTE_PAYMENT_SERVICE_ARN,
-            InvocationType='RequestResponse',
-            Payload=json.dumps(execute_payment_event)
+            InvocationType="RequestResponse",
+            Payload=json.dumps(execute_payment_event),
         )
-        payment_executed = json.loads(response.get('Payload').read())
+        payment_executed = json.loads(response.get("Payload").read())
         if payment_executed["statusCode"] == 201:
             return payment_executed
         else:
             raise Exception(
-                f"Error executing payment for username {username} against order_id {order_id}")
+                f"Error executing payment for username {username} against order_id {order_id}"
+            )
 
-    def manage_process_order(self, username, order_id, order_type, amount, currency, order_data):
+    def manage_process_order(
+        self, username, order_id, order_type, amount, currency, order_data
+    ):
         group_id = order_data["group_id"]
         org_id = order_data["org_id"]
         recipient = order_data["recipient"]
@@ -291,51 +331,51 @@ class OrderService:
             wallet_create_payload = {
                 "path": "/wallet",
                 "body": json.dumps({"username": username}),
-                "httpMethod": "POST"
+                "httpMethod": "POST",
             }
             wallet_create_lambda_response = self.lambda_client.invoke(
                 FunctionName=WALLETS_SERVICE_ARN,
-                InvocationType='RequestResponse',
-                Payload=json.dumps(wallet_create_payload)
+                InvocationType="RequestResponse",
+                Payload=json.dumps(wallet_create_payload),
             )
             wallet_create_response = json.loads(
-                wallet_create_lambda_response.get("Payload").read())
+                wallet_create_lambda_response.get("Payload").read()
+            )
             if wallet_create_response["statusCode"] != 200:
                 raise Exception("Failed to create wallet")
-            wallet_create_response_body = json.loads(
-                wallet_create_response["body"])
+            wallet_create_response_body = json.loads(wallet_create_response["body"])
             wallet_details = wallet_create_response_body["data"]
 
             open_channel_body = {
-                'order_id': order_id,
-                'sender': wallet_details["address"],
-                'sender_private_key': wallet_details["private_key"],
-                'group_id': group_id,
-                'org_id': org_id,
-                'amount': amount,
-                'currency': currency,
-                'recipient': recipient
+                "order_id": order_id,
+                "sender": wallet_details["address"],
+                "sender_private_key": wallet_details["private_key"],
+                "group_id": group_id,
+                "org_id": org_id,
+                "amount": amount,
+                "currency": currency,
+                "recipient": recipient,
             }
 
             create_channel_transaction_payload = {
                 "path": "/wallet/channel",
                 "body": json.dumps(open_channel_body),
-                "httpMethod": "POST"
+                "httpMethod": "POST",
             }
 
             create_channel_lambda_response = self.lambda_client.invoke(
                 FunctionName=WALLETS_SERVICE_ARN,
-                InvocationType='RequestResponse',
-                Payload=json.dumps(create_channel_transaction_payload)
+                InvocationType="RequestResponse",
+                Payload=json.dumps(create_channel_transaction_payload),
             )
 
             create_channel_response = json.loads(
-                create_channel_lambda_response["Payload"].read())
+                create_channel_lambda_response["Payload"].read()
+            )
             if create_channel_response["statusCode"] != 200:
                 raise Exception(f"Failed to create channel")
 
-            create_channel_response_body = json.loads(
-                create_channel_response["body"])
+            create_channel_response_body = json.loads(create_channel_response["body"])
             channel_details = create_channel_response_body["data"]
 
             channel_details.update(wallet_details)
@@ -344,35 +384,36 @@ class OrderService:
             pass
         elif order_type == OrderType.FUND_CHANNEL.value:
             fund_channel_body = {
-                'order_id': order_id,
-                'group_id': group_id,
-                'org_id': org_id,
-                'amount': amount,
-                'channel_id': channel_id,
-                'currency': currency,
-                'recipient': recipient,
-                'sender': sender
+                "order_id": order_id,
+                "group_id": group_id,
+                "org_id": org_id,
+                "amount": amount,
+                "channel_id": channel_id,
+                "currency": currency,
+                "recipient": recipient,
+                "sender": sender,
             }
             fund_channel_payload = {
                 "path": "/wallet/channel/deposit",
                 "body": json.dumps(fund_channel_body),
-                "httpMethod": "POST"
+                "httpMethod": "POST",
             }
 
             fund_channel_lambda_response = self.lambda_client.invoke(
                 FunctionName=WALLETS_SERVICE_ARN,
-                InvocationType='RequestResponse',
-                Payload=json.dumps(fund_channel_payload)
+                InvocationType="RequestResponse",
+                Payload=json.dumps(fund_channel_payload),
             )
 
             fund_channel_response = json.loads(
-                fund_channel_lambda_response.get("Payload").read())
+                fund_channel_lambda_response.get("Payload").read()
+            )
             if fund_channel_response["statusCode"] != 200:
                 raise Exception(
-                    f"Failed to add funds in channel for {fund_channel_body}")
+                    f"Failed to add funds in channel for {fund_channel_body}"
+                )
 
-            fund_channel_response_body = json.loads(
-                fund_channel_response["body"])
+            fund_channel_response_body = json.loads(fund_channel_response["body"])
             fund_channel_transaction_details = fund_channel_response_body["data"]
             return fund_channel_transaction_details
         else:
@@ -382,22 +423,20 @@ class OrderService:
         order_details_event = {
             "path": f"/order",
             "queryStringParameters": {"username": username},
-            "httpMethod": "GET"
+            "httpMethod": "GET",
         }
 
         order_details_response = self.boto_client.invoke_lambda(
             lambda_function_arn=ORDER_DETAILS_BY_USERNAME_ARN,
-            invocation_type='RequestResponse',
-            payload=json.dumps(order_details_event)
+            invocation_type="RequestResponse",
+            payload=json.dumps(order_details_event),
         )
         if order_details_response["statusCode"] != 200:
-            raise Exception(
-                f"Failed to fetch order details for username{username}")
+            raise Exception(f"Failed to fetch order details for username{username}")
 
         org_id_name_mapping = self.get_organizations_from_contract()
 
-        order_details_response_body = json.loads(
-            order_details_response["body"])
+        order_details_response_body = json.loads(order_details_response["body"])
         orders = order_details_response_body["orders"]
 
         for order in orders:
@@ -406,26 +445,33 @@ class OrderService:
             if "org_id" in order["item_details"]:
                 org_id = order["item_details"]["org_id"]
                 if org_id in org_id_name_mapping:
-                    order["item_details"]["organization_name"] = org_id_name_mapping[org_id]
+                    order["item_details"]["organization_name"] = org_id_name_mapping[
+                        org_id
+                    ]
 
             transaction_details_event = {
                 "path": f"/wallet/channel/transactions",
                 "queryStringParameters": {"order_id": order_id},
-                "httpMethod": "GET"
+                "httpMethod": "GET",
             }
             transaction_details_lambda_response = self.lambda_client.invoke(
                 FunctionName=WALLETS_SERVICE_ARN,
-                InvocationType='RequestResponse',
-                Payload=json.dumps(transaction_details_event)
+                InvocationType="RequestResponse",
+                Payload=json.dumps(transaction_details_event),
             )
             transaction_details_response = json.loads(
-                transaction_details_lambda_response.get('Payload').read())
+                transaction_details_lambda_response.get("Payload").read()
+            )
             if transaction_details_response["statusCode"] != 200:
                 raise Exception(
-                    f"Failed to fetch transaction details for username{order_id}")
+                    f"Failed to fetch transaction details for username{order_id}"
+                )
             transaction_details_response_body = json.loads(
-                transaction_details_response["body"])
-            order["wallet_transactions"] = transaction_details_response_body["data"]["transactions"]
+                transaction_details_response["body"]
+            )
+            order["wallet_transactions"] = transaction_details_response_body["data"][
+                "transactions"
+            ]
             order_status = TransactionStatus.SUCCESS
             for payment in order["payments"]:
                 if payment["payment_status"] != TransactionStatus.SUCCESS:
@@ -441,14 +487,11 @@ class OrderService:
         return {"orders": orders}
 
     def get_organizations_from_contract(self):
-        org_details_event = {
-            "path": f"/org",
-            "httpMethod": "GET"
-        }
+        org_details_event = {"path": f"/org", "httpMethod": "GET"}
         org_details_response = self.boto_client.invoke_lambda(
             lambda_function_arn=CONTRACT_API_ARN,
-            invocation_type='RequestResponse',
-            payload=json.dumps(org_details_event)
+            invocation_type="RequestResponse",
+            payload=json.dumps(org_details_event),
         )
         if org_details_response["statusCode"] != 200:
             raise Exception("Failed to get org details")
