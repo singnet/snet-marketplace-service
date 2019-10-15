@@ -14,11 +14,10 @@ from dapp_user.user import User
 
 patch_all()
 
-
-NETWORKS_NAME = dict((NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
-db = dict(
-    (netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys()
-)
+NETWORKS_NAME = dict(
+    (NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
+db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS))
+          for netId in NETWORKS.keys())
 obj_util = Utils()
 
 
@@ -43,7 +42,8 @@ def request_handler(event, context):
             return get_response(405, "Method Not Allowed")
 
         if "/signup" == path:
-            response_data = usr_obj.user_signup(user_data=event["requestContext"])
+            response_data = usr_obj.user_signup(
+                user_data=event["requestContext"])
 
         elif "/profile" == path and event["httpMethod"] == "POST":
             response_data = usr_obj.update_user_profile(
@@ -53,14 +53,16 @@ def request_handler(event, context):
             )
 
         elif "/profile" == path and event["httpMethod"] == "GET":
-            response_data = usr_obj.get_user_profile(user_data=event["requestContext"])
+            response_data = usr_obj.get_user_profile(
+                user_data=event["requestContext"])
 
         elif "/wallet" == path and event["httpMethod"] == "GET":
             """ Deprecated """
             response_data = []
 
         elif "/delete-user" == path:
-            response_data = usr_obj.del_user_data(user_data=event["requestContext"])
+            response_data = usr_obj.del_user_data(
+                user_data=event["requestContext"])
 
         elif "/feedback" == path and event["httpMethod"] == "GET":
             response_data = usr_obj.get_user_feedback(
@@ -102,7 +104,10 @@ def request_handler(event, context):
             obj_util.report_slack(1, str(err_msg), SLACK_HOOK)
             response = get_response(500, err_msg)
         else:
-            response = get_response(200, {"status": "success", "data": response_data})
+            response = get_response(200, {
+                "status": "success",
+                "data": response_data
+            })
     except Exception as e:
         err_msg = {
             "status": "failed",
@@ -124,7 +129,8 @@ def get_response(status_code, message):
         "headers": {
             "Content-Type": "application/json",
             "X-Requested-With": "*",
-            "Access-Control-Allow-Headers": "Access-Control-Allow-Origin, Content-Type,X-Amz-Date,Authorization,X-Api-Key,x-requested-with",
+            "Access-Control-Allow-Headers":
+            "Access-Control-Allow-Origin, Content-Type,X-Amz-Date,Authorization,X-Api-Key,x-requested-with",
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET,OPTIONS,POST",
         },
