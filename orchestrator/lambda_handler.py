@@ -114,7 +114,7 @@ def request_handler(event, context):
     except Exception as e:
         error_message = format_error_message(
             status="failed",
-            error="Bad Request",
+            error=repr(e),
             resource=path,
             payload=payload_dict,
             net_id=NETWORK_ID,
