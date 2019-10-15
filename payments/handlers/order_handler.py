@@ -14,17 +14,21 @@ logger = get_logger(__name__)
 def create(event, context):
     logger.info("Received request to create order")
     try:
-        payload = json.loads(event['body'])
+        payload = json.loads(event["body"])
         if validate_dict(payload, ["price", "username"]):
             amount = payload["price"]["amount"]
             currency = payload["price"]["currency"]
             username = payload["username"]
             item_details = payload["item_details"]
-            logger.info(f"Fetched values from request\n"
-                        f"username: {username}\n"
-                        f"amount: {amount} {currency}\n"
-                        f"item_details: {item_details}")
-            response = OrderManager().create_order(amount, currency, item_details, username)
+            logger.info(
+                f"Fetched values from request\n"
+                f"username: {username}\n"
+                f"amount: {amount} {currency}\n"
+                f"item_details: {item_details}"
+            )
+            response = OrderManager().create_order(
+                amount, currency, item_details, username
+            )
             status_code = StatusCode.CREATED
         else:
             status_code = StatusCode.BAD_REQUEST
@@ -37,10 +41,7 @@ def create(event, context):
         logger.info(event)
         logger.error(e)
         status_code = StatusCode.INTERNAL_SERVER_ERROR
-    return generate_lambda_response(
-        status_code=status_code,
-        message=response
-    )
+    return generate_lambda_response(status_code=status_code, message=response)
 
 
 def get_order_details_for_user(event, context):
@@ -48,8 +49,7 @@ def get_order_details_for_user(event, context):
     try:
         if "username" in event["queryStringParameters"]:
             username = event["queryStringParameters"]["username"]
-            logger.info(f"Fetched values from request\n"
-                        f"username: {username}")
+            logger.info(f"Fetched values from request\n" f"username: {username}")
             response = OrderManager().get_order_details_for_user(username)
             status_code = StatusCode.OK
         else:
@@ -63,10 +63,7 @@ def get_order_details_for_user(event, context):
         logger.info(event)
         logger.error(e)
         status_code = StatusCode.INTERNAL_SERVER_ERROR
-    return generate_lambda_response(
-        status_code=status_code,
-        message=response
-    )
+    return generate_lambda_response(status_code=status_code, message=response)
 
 
 def get_order_from_order_id(event, context):
@@ -74,8 +71,7 @@ def get_order_from_order_id(event, context):
     try:
         if "order_id" in event["pathParameters"]:
             order_id = event["pathParameters"]["order_id"]
-            logger.info(f"Fetched values from request\n"
-                        f"order_id: {order_id}")
+            logger.info(f"Fetched values from request\n" f"order_id: {order_id}")
             response = OrderManager().get_order_from_order_id(order_id)
             status_code = StatusCode.OK
         else:
@@ -89,7 +85,4 @@ def get_order_from_order_id(event, context):
         logger.info(event)
         logger.error(e)
         status_code = StatusCode.INTERNAL_SERVER_ERROR
-    return generate_lambda_response(
-        status_code=status_code,
-        message=response
-    )
+    return generate_lambda_response(status_code=status_code, message=response)

@@ -14,20 +14,24 @@ logger = get_logger(__name__)
 def initiate(event, context):
     logger.info("Received request for initiate payment")
     try:
-        payload = json.loads(event['body'])
+        payload = json.loads(event["body"])
         path_parameters = event["pathParameters"]
-        if validate_dict(payload, ["price", "payment_method"]) \
-                and validate_dict(path_parameters, ["order_id"]):
+        if validate_dict(payload, ["price", "payment_method"]) and validate_dict(
+            path_parameters, ["order_id"]
+        ):
             order_id = path_parameters["order_id"]
             amount = payload["price"]["amount"]
             currency = payload["price"]["currency"]
             payment_method = payload["payment_method"]
-            logger.info(f"Fetched values from request\n"
-                        f"order_id: {order_id}\n"
-                        f"amount: {amount} {currency}\n"
-                        f"payment_method: {payment_method}")
+            logger.info(
+                f"Fetched values from request\n"
+                f"order_id: {order_id}\n"
+                f"amount: {amount} {currency}\n"
+                f"payment_method: {payment_method}"
+            )
             response = OrderManager().initiate_payment_against_order(
-                order_id, amount, currency, payment_method)
+                order_id, amount, currency, payment_method
+            )
             status_code = StatusCode.CREATED
         else:
             status_code = StatusCode.BAD_REQUEST
@@ -40,31 +44,31 @@ def initiate(event, context):
         logger.error(response)
         logger.error(e)
         status_code = StatusCode.INTERNAL_SERVER_ERROR
-    return generate_lambda_response(
-        status_code=status_code,
-        message=response
-    )
+    return generate_lambda_response(status_code=status_code, message=response)
 
 
 def execute(event, context):
     logger.info("Received request to execute payment")
     try:
-        payload = json.loads(event['body'])
+        payload = json.loads(event["body"])
         path_parameters = event["pathParameters"]
-        if validate_dict(payload, ["payment_method", "payment_details"]) \
-                and validate_dict(path_parameters, ["order_id", "payment_id"]):
+        if validate_dict(
+            payload, ["payment_method", "payment_details"]
+        ) and validate_dict(path_parameters, ["order_id", "payment_id"]):
             order_id = path_parameters["order_id"]
             payment_id = path_parameters["payment_id"]
             payment_method = payload["payment_method"]
             payment_details = payload["payment_details"]
-            logger.info(f"Fetched values from the request,"
-                        f"order_id: {order_id}\n"
-                        f"payment_id: {payment_id}\n"
-                        f"payment_method: {payment_method}\n"
-                        f"payment_details: {payment_details}")
+            logger.info(
+                f"Fetched values from the request,"
+                f"order_id: {order_id}\n"
+                f"payment_id: {payment_id}\n"
+                f"payment_method: {payment_method}\n"
+                f"payment_details: {payment_details}"
+            )
             response = OrderManager().execute_payment_against_order(
-                order_id, payment_id,
-                payment_details, payment_method)
+                order_id, payment_id, payment_details, payment_method
+            )
             status_code = StatusCode.CREATED
         else:
             status_code = StatusCode.BAD_REQUEST
@@ -77,10 +81,7 @@ def execute(event, context):
         logger.info(event)
         logger.error(e)
         status_code = StatusCode.INTERNAL_SERVER_ERROR
-    return generate_lambda_response(
-        status_code=status_code,
-        message=response
-    )
+    return generate_lambda_response(status_code=status_code, message=response)
 
 
 def cancel(event, context):
@@ -103,7 +104,4 @@ def cancel(event, context):
         logger.info(event)
         logger.error(e)
         status_code = StatusCode.INTERNAL_SERVER_ERROR
-    return generate_lambda_response(
-        status_code=status_code,
-        message=response
-    )
+    return generate_lambda_response(status_code=status_code, message=response)
