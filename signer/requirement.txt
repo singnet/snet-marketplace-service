@@ -29,3 +29,4 @@ varint==1.0.2
 web3==4.9.2
 websockets==6.0
 boto3==1.9.193
+aws-xray-sdk==2.4.2

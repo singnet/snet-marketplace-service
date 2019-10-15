@@ -8,6 +8,9 @@ from common.repository import Repository
 from common.utils import Utils
 from contract_api.registry import Registry
 from contract_api.mpe import MPE
+from aws_xray_sdk.core import patch_all
+
+patch_all()
 
 NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId)
                      for netId in NETWORKS.keys())

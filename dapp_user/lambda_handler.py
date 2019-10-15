@@ -7,6 +7,10 @@ from common.repository import Repository
 from common.utils import Utils
 
 from dapp_user.user import User
+from aws_xray_sdk.core import patch_all
+
+patch_all()
+
 
 NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId)
                      for netId in NETWORKS.keys())
