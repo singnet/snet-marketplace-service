@@ -4,6 +4,7 @@ import boto3
 from enum import Enum
 from urllib.parse import quote
 from common.boto_utils import BotoUtils
+from common.constant import TransactionStatus
 from orchestrator.config import CREATE_ORDER_SERVICE_ARN, INITIATE_PAYMENT_SERVICE_ARN, \
     EXECUTE_PAYMENT_SERVICE_ARN, WALLETS_SERVICE_ARN, ORDER_DETAILS_ORDER_ID_ARN, ORDER_DETAILS_BY_USERNAME_ARN, \
     CONTRACT_API_ARN, REGION_NAME, SIGNER_ADDRESS
@@ -37,14 +38,13 @@ class OrderService:
         self.boto_client = BotoUtils(REGION_NAME)
         self.wallet_service = WalletService()
 
-    def initiate_order(self, user_data, payload_dict):
+    def initiate_order(self, username, payload_dict):
         """
             Initiate Order
                 Step 1  Order Creation
                 Step 2  Initiate Payment
                 Step 3  Persist Transaction History
         """
-        username = user_data["authorizer"]["claims"]["email"]
         price = payload_dict["price"]
         order_type = payload_dict["item_details"]["order_type"]
         item_details = payload_dict["item_details"]
@@ -195,45 +195,6 @@ class OrderService:
             self.obj_transaction_history_dao.insert_transaction_history(obj_transaction_history=obj_transaction_history)
             print(repr(e))
             raise e
-
-    def get_order_details_by_username(self, username):
-        order_details_event = {
-            "path": f"/order",
-            "queryStringParameters": {"username": username},
-            "httpMethod": "GET"
-        }
-
-        order_details_lambda_response = self.lambda_client.invoke(
-            FunctionName=ORDER_DETAILS_BY_USERNAME_ARN,
-            InvocationType='RequestResponse',
-            Payload=json.dumps(order_details_event)
-        )
-        order_details_response = json.loads(order_details_lambda_response.get('Payload').read())
-        if order_details_response["statusCode"] != 200:
-            raise Exception(f"Failed to fetch order details for username{username}")
-
-        order_details_response_body = json.loads(order_details_response["body"])
-        orders = order_details_response_body["orders"]
-
-        for order in orders:
-            order_id = order["order_id"]
-            transaction_details_event = {
-                "path": f"/wallet/channel/transactions",
-                "queryStringParameters": {"order_id": order_id},
-                "httpMethod": "GET"
-            }
-            transaction_details_lambda_response = self.lambda_client.invoke(
-                FunctionName=WALLETS_SERVICE_ARN,
-                InvocationType='RequestResponse',
-                Payload=json.dumps(transaction_details_event)
-            )
-            transaction_details_response = json.loads(transaction_details_lambda_response.get('Payload').read())
-            if transaction_details_response["statusCode"] != 200:
-                raise Exception(f"Failed to fetch transaction details for username{order_id}")
-            transaction_details_response_body = json.loads(transaction_details_response["body"])
-            order["wallet_transactions"] = transaction_details_response_body["data"]["transactions"]
-
-        return {"orders": orders}
 
     def get_order_details_by_order_id(self, order_id, username):
         order_details_event = {
@@ -395,3 +356,80 @@ class OrderService:
             return fund_channel_transaction_details
         else:
             raise Exception("Order type is not valid.")
+
+    def get_order_details_by_username(self, username):
+        order_details_event = {
+            "path": f"/order",
+            "queryStringParameters": {"username": username},
+            "httpMethod": "GET"
+        }
+
+        order_details_response = self.boto_client.invoke_lambda(
+            lambda_function_arn=ORDER_DETAILS_BY_USERNAME_ARN,
+            invocation_type='RequestResponse',
+            payload=json.dumps(order_details_event)
+        )
+        if order_details_response["statusCode"] != 200:
+            raise Exception(f"Failed to fetch order details for username{username}")
+
+        org_id_name_mapping = self.get_organizations_from_contract()
+
+        order_details_response_body = json.loads(order_details_response["body"])
+        orders = order_details_response_body["orders"]
+
+        for order in orders:
+            order_id = order["order_id"]
+            order["wallet_type"] = "GENERAL"
+            if "org_id" in order["item_details"]:
+                org_id = order["item_details"]["org_id"]
+                if org_id in org_id_name_mapping:
+                    order["item_details"]["org_name"] = org_id_name_mapping[org_id]
+
+            transaction_details_event = {
+                "path": f"/wallet/channel/transactions",
+                "queryStringParameters": {"order_id": order_id},
+                "httpMethod": "GET"
+            }
+            transaction_details_lambda_response = self.lambda_client.invoke(
+                FunctionName=WALLETS_SERVICE_ARN,
+                InvocationType='RequestResponse',
+                Payload=json.dumps(transaction_details_event)
+            )
+            transaction_details_response = json.loads(transaction_details_lambda_response.get('Payload').read())
+            if transaction_details_response["statusCode"] != 200:
+                raise Exception(f"Failed to fetch transaction details for username{order_id}")
+            transaction_details_response_body = json.loads(transaction_details_response["body"])
+            order["wallet_transactions"] = transaction_details_response_body["data"]["transactions"]
+            order_status = TransactionStatus.SUCCESS
+            for payment in order["payments"]:
+                if payment["payment_status"] != TransactionStatus.SUCCESS:
+                    order_status = payment["payment_status"]
+                    break
+
+            for wallet_transaction in order["wallet_transactions"]:
+                if wallet_transaction["status"] != TransactionStatus.SUCCESS:
+                    order_status = wallet_transaction["status"]
+                    break
+
+            order["order_status"] = order_status
+        return {"orders": orders}
+
+    def get_organizations_from_contract(self):
+        org_details_event = {
+            "path": f"/org",
+            "httpMethod": "GET"
+        }
+        org_details_response = self.boto_client.invoke_lambda(
+            lambda_function_arn=CONTRACT_API_ARN,
+            invocation_type='RequestResponse',
+            payload=json.dumps(org_details_event)
+        )
+        if org_details_response["statusCode"] != 200:
+            raise Exception("Failed to get org details")
+
+        org_details = json.loads(org_details_response["body"])["data"]
+        org_id_name_mapping = {}
+        for org in org_details:
+            org_id_name_mapping[org["org_id"]] = org["org_name"]
+
+        return org_id_name_mapping
