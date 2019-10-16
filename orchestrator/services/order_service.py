@@ -343,7 +343,7 @@ class OrderService:
             signature = order_data["signature"]
             v, r, s = Web3.toInt(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
             open_channel_body = {'order_id': order_id,
-                                 'sender': order_data["address"],
+                                 'sender': order_data["wallet_address"],
                                  'signature': order_data["signature"],
                                  'r': r,
                                  's': s,
