@@ -305,9 +305,9 @@ class OrderService:
             expiration = current_block_no + (10 * 365 * 24 * 60 * 4)
             message_nonce = current_block_no
             self.EXECUTOR_WALLET_ADDRESS = self.boto_client.get_ssm_parameter(EXECUTOR_ADDRESS)
-            group_id = "0x" + base64.b64decode(group_id).hex()
+            group_id_in_hex = "0x" + base64.b64decode(group_id).hex()
             signature_details = self.generate_signature_for_open_channel_for_third_party(recipient=recipient,
-                                                                                         group_id=group_id,
+                                                                                         group_id=group_id_in_hex,
                                                                                          amount_in_cogs=amount,
                                                                                          expiration=expiration,
                                                                                          message_nonce=message_nonce,
