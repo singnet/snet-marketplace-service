@@ -7,24 +7,23 @@ from common.logger import get_logger
 
 logger = get_logger(__name__)
 
-EMAIL_SENDER_EMAIL = "<tech-support@singularitynet.io>"
-EMAIL_BODY_TEXT = "Hello"
-EMAIL_BODY_HTML = """<html>
+SENDER = "Tech Support <tech-support@singularitynet.io>"
+CHARSET = "UTF-8"
+AWS_REGION = "us-east-1"
+
+# The HTML body of the email.
+BODY_HTML = """<html>
 <head></head>
 <body>
-  <h1>SNET Error Notification</h1>
-  <br>Error:$message</br>
-  <br>Details:$details</br>
+  <h1>Header message</h1>
+  <p>Custom message {}</p>
 </body>
 </html>
 """
 
-
-def send_email(recipient, subject, context):
+def send_email(recipient, subject, message):
     client = boto3.client('ses')
     try:
-        src = Template(EMAIL_BODY_HTML)
-        body = src.substitute(context)
         response = client.send_email(
             Destination={
                 'ToAddresses': [
@@ -34,20 +33,16 @@ def send_email(recipient, subject, context):
             Message={
                 'Body': {
                     'Html': {
-                        'Charset': "UTF-8",
-                        'Data': body,
-                    },
-                    'Text': {
-                        'Charset': "UTF-8",
-                        'Data': body,
+                        'Charset': CHARSET,
+                        'Data': BODY_HTML.format(message),
                     },
                 },
                 'Subject': {
-                    'Charset': "UTF-8",
+                    'Charset': CHARSET,
                     'Data': subject,
                 },
             },
-            Source=EMAIL_SENDER_EMAIL,
+            Source=SENDER,
         )
     except ClientError as e:
         print(e.response['Error']['Message'])
@@ -66,17 +61,12 @@ def main(proxy_event, context):
                 print("No recipient")
             else:
                 message = event["message"] if 'message' in event else ''
-                details = event["details"] if 'details' in event else ''
-                component = event["component"] if 'component' in event else ''
-                component_id = event["component_id"] if 'component_id' in event else ''
-                subject = 'Error occurred'
-                if 'daemon' == component:
-                    subject = 'Error detected by the Daemon ' + component_id
-                send_email(recipient, subject, event)
+                subject = event["subject"] if 'subject' in event else 'Error occurred'
+                send_email(recipient, subject, message)
         except Exception as e:
             logger.exception(e)
 
-    return {
-        'statusCode': 200,
-        'body': json.dumps('Received!')
-    }
+        return {
+            'statusCode': 200,
+            'body': json.dumps('Received!')
+        }
