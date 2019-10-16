@@ -1,11 +1,13 @@
 import json
 import boto3
 from botocore.exceptions import ClientError
-from string import Template
+
 
 from common.logger import get_logger
 
 logger = get_logger(__name__)
+
+
 
 SENDER = "Tech Support <tech-support@singularitynet.io>"
 CHARSET = "UTF-8"
@@ -66,7 +68,7 @@ def main(proxy_event, context):
         except Exception as e:
             logger.exception(e)
 
-        return {
-            'statusCode': 200,
-            'body': json.dumps('Received!')
-        }
+    return {
+        'statusCode': 200,
+        'body': json.dumps('Received!')
+    }
