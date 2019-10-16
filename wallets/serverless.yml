@@ -127,7 +127,7 @@ functions:
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
 
-  channel-transaction-status:
+  channelTxnStatus:
     warmup: true
     handler: wallets/handler/channel_transaction_status_handler.request_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
