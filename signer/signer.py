@@ -8,7 +8,6 @@ from web3 import Web3
 from common.blockchain_util import BlockChainUtil
 from common.logger import get_logger
 from common.utils import Utils
-from config import config
 from signer.config import GET_FREE_CALLS_METERING_ARN
 from signer.config import NETWORKS
 from signer.config import PREFIX_FREE_CALL
@@ -88,11 +87,12 @@ class Signer:
                         current_block_no
                     ],
                 )
-                if not config["private_key"].startswith("0x"):
-                    config["private_key"] = "0x" + config["private_key"]
+                signer_key = SIGNER_KEY
+                if not signer_key.startswith("0x"):
+                    signer_key = "0x" + signer_key
                 signature = bytes(
                     w3.eth.account.signHash(defunct_hash_message(message),
-                                            config["private_key"]).signature)
+                                            signer_key).signature)
                 signature = signature.hex()
                 if not signature.startswith("0x"):
                     signature = "0x" + signature
@@ -164,13 +164,13 @@ class Signer:
                 "Unable to generate signature for daemon call for username %s",
                 username)
 
-    def signature_for_open_channel_for_third_party(self, recipient, group_id, agi_tokens, expiration, message_nonce,
-                                                   signer_key, executor_wallet_address):
+    def signature_for_open_channel_for_third_party(self, recipient, group_id, amount_in_cogs, expiration, message_nonce,
+                                                   sender_private_key, executor_wallet_address):
         data_types = ["string", "address", "address", "address", "address", "bytes32", "uint256", "uint256",
                       "uint256"]
         values = ["__openChannelByThirdParty", self.mpe_address, executor_wallet_address, SIGNER_ADDRESS, recipient,
-                  group_id, agi_tokens, expiration, message_nonce]
-        signature = self.obj_blockchain_util.generate_signature(data_types=data_types, values=values,
-                                                                signer_key=signer_key)
+                  group_id, amount_in_cogs, expiration, message_nonce]
+        signature = self.obj_blockchain_utils.generate_signature(data_types=data_types, values=values,
+                                                                 signer_key=sender_private_key)
         v, r, s = Web3.toInt(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
         return {"r": r, "s": s, "v": v, "signature": signature}
