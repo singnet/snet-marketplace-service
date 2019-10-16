@@ -16,9 +16,12 @@ class NotificationType(Enum):
     SUPPORT = "support"
 
 
-SENDERS = {NotificationType.SUPPORT: "Tech Support <tech-support@singularitynet.io>"}
+SENDERS = {
+    NotificationType.SUPPORT: "Tech Support <tech-support@singularitynet.io>"
+}
 BODY_HTMLS = {
-    NotificationType.SUPPORT: """<html>
+    NotificationType.SUPPORT:
+    """<html>
 <head></head>
 <body>
   <h1>Header message</h1>
@@ -35,8 +38,16 @@ def send_email(recipient, subject, body_html, sender):
         response = client.send_email(
             Destination={"ToAddresses": [recipient]},
             Message={
-                "Body": {"Html": {"Charset": CHARSET, "Data": body_html}},
-                "Subject": {"Charset": CHARSET, "Data": subject},
+                "Body": {
+                    "Html": {
+                        "Charset": CHARSET,
+                        "Data": body_html
+                    }
+                },
+                "Subject": {
+                    "Charset": CHARSET,
+                    "Data": subject
+                },
             },
             Source=sender,
         )
@@ -57,10 +68,10 @@ def main(proxy_event, context):
                 print("No recipient")
             else:
                 message = event["message"] if "message" in event else ""
-                subject = event["subject"] if "subject" in event else "Error occurred"
-                notification_type = (
-                    event["notification_type"] if "notification_type" in event else ""
-                )
+                subject = event[
+                    "subject"] if "subject" in event else "Error occurred"
+                notification_type = (event["notification_type"]
+                                     if "notification_type" in event else "")
                 body_html = BODY_HTMLS[notification_type].format(message)
                 sender = SENDERS[notification_type]
                 send_email(recipient, subject, body_html, sender)
