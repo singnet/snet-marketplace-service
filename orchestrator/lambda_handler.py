@@ -38,6 +38,11 @@ def route_path(path, method, payload_dict, request_context, path_parameters):
         response_data = obj_order_service.initiate_order(
             user_data=request_context, payload_dict=payload_dict)
 
+    elif "/wallet" == path:
+        username = request_context["authorizer"]["claims"]["email"]
+        logger.info(f"Received request to get wallets for user:{username}")
+        response_data = WalletService().get_wallets(username)
+
     elif "/wallet/channel" == path and method == 'GET':
         org_id = payload_dict["org_id"]
         username = request_context["authorizer"]["claims"]["email"]
