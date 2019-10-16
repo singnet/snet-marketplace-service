@@ -4,15 +4,19 @@ from enum import Enum
 from urllib.parse import quote
 
 import boto3
+from web3 import Web3
 
 from common.boto_utils import BotoUtils
 from common.constant import TransactionStatus
+from common.logger import get_logger
 from orchestrator.config import CREATE_ORDER_SERVICE_ARN, INITIATE_PAYMENT_SERVICE_ARN, \
     EXECUTE_PAYMENT_SERVICE_ARN, WALLETS_SERVICE_ARN, ORDER_DETAILS_ORDER_ID_ARN, ORDER_DETAILS_BY_USERNAME_ARN, \
     CONTRACT_API_ARN, REGION_NAME, SIGNER_ADDRESS, EXECUTOR_ADDRESS
 from orchestrator.services.wallet_service import WalletService
 from orchestrator.transaction_history import TransactionHistory
 from orchestrator.transaction_history_data_access_object import TransactionHistoryDAO
+
+logger = get_logger(__name__)
 
 
 class Status(Enum):
@@ -297,13 +301,16 @@ class OrderService:
             message_nonce = current_block_no
             self.EXECUTOR_WALLET_ADDRESS = self.boto_client.get_ssm_parameter(EXECUTOR_ADDRESS)
             signature_details = self.generate_signature_for_open_channel_for_third_party(recipient=recipient,
-                                                                     group_id=base64.decode(group_id),
-                                                                     amount_in_cogs=amount, expiration=expiration,
-                                                                     message_nonce=message_nonce,
-                                                                     sender_private_key=wallet_details[
-                                                                         "sender_private_key"],
-                                                                     executor_wallet_address=self.EXECUTOR_WALLET_ADDRESS)
-            print(signature_details)
+                                                                                         group_id=base64.decode(
+                                                                                             group_id),
+                                                                                         amount_in_cogs=amount,
+                                                                                         expiration=expiration,
+                                                                                         message_nonce=message_nonce,
+                                                                                         sender_private_key=
+                                                                                         wallet_details[
+                                                                                             "sender_private_key"],
+                                                                                         executor_wallet_address=self.EXECUTOR_WALLET_ADDRESS)
+            logger.info(signature_details)
             open_channel_body = {
                 'order_id': order_id,
                 'sender': wallet_details["address"],
@@ -318,30 +325,29 @@ class OrderService:
                 'recipient': recipient,
                 'current_block_no': current_block_no
             }
-
-            create_channel_transaction_payload = {
-                "path": "/wallet/channel",
-                "body": json.dumps(open_channel_body),
-                "httpMethod": "POST"
-            }
-
-            create_channel_lambda_response = self.lambda_client.invoke(
-                FunctionName=WALLETS_SERVICE_ARN,
-                InvocationType='RequestResponse',
-                Payload=json.dumps(create_channel_transaction_payload)
-            )
-
-            create_channel_response = json.loads(create_channel_lambda_response["Payload"].read())
-            if create_channel_response["statusCode"] != 200:
-                raise Exception(f"Failed to create channel")
-
-            create_channel_response_body = json.loads(create_channel_response["body"])
-            channel_details = create_channel_response_body["data"]
-
+            channel_details = self.create_channel(open_channel_body=open_channel_body)
             channel_details.update(wallet_details)
             return channel_details
         elif order_type == OrderType.CREATE_CHANNEL.value:
-            pass
+            logger.info("order_data: ", order_data)
+            signature = order_data["signature"]
+            v, r, s = Web3.toInt(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
+            open_channel_body = {'order_id': order_id,
+                                 'sender': order_data["address"],
+                                 'signature': order_data["signature"],
+                                 'r': r,
+                                 's': s,
+                                 'v': v,
+                                 'group_id': group_id,
+                                 'org_id': org_id,
+                                 'amount': amount,
+                                 'currency': currency,
+                                 'recipient': recipient,
+                                 'current_block_no': order_data["current_block_no"]
+                                 }
+            channel_details = self.create_channel(open_channel_body=open_channel_body)
+            logger.info("channel_details: ", channel_details)
+            return channel_details
         elif order_type == OrderType.FUND_CHANNEL.value:
             fund_channel_body = {
                 'order_id': order_id,
@@ -485,3 +491,24 @@ class OrderService:
         response = json.loads(signature_for_open_channel_for_third_party_response.get("Payload").read())
         if response["statusCode"] != 200:
             raise Exception(f"Failed to create signature for {signature_for_open_channel_for_third_party_body}")
+
+    def create_channel(self, open_channel_body):
+        create_channel_transaction_payload = {
+            "path": "/wallet/channel",
+            "body": json.dumps(open_channel_body),
+            "httpMethod": "POST"
+        }
+
+        create_channel_lambda_response = self.lambda_client.invoke(
+            FunctionName=WALLETS_SERVICE_ARN,
+            InvocationType='RequestResponse',
+            Payload=json.dumps(create_channel_transaction_payload)
+        )
+
+        create_channel_response = json.loads(create_channel_lambda_response["Payload"].read())
+        if create_channel_response["statusCode"] != 200:
+            raise Exception(f"Failed to create channel")
+
+        create_channel_response_body = json.loads(create_channel_response["body"])
+        channel_details = create_channel_response_body["data"]
+        return channel_details
