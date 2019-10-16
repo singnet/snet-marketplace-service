@@ -39,7 +39,6 @@ class OrderService:
         self.lambda_client = boto3.client('lambda')
         self.boto_client = BotoUtils(REGION_NAME)
         self.wallet_service = WalletService()
-        self.boto_utils = BotoUtils()
 
     def initiate_order(self, username, payload_dict):
         """
@@ -296,7 +295,7 @@ class OrderService:
             # 1 block no is mined in 15 sec on average, setting expiration as 10 years
             expiration = current_block_no + (10 * 365 * 24 * 60 * 4)
             message_nonce = current_block_no
-            self.EXECUTOR_WALLET_ADDRESS = self.boto_utils.get_ssm_parameter(EXECUTOR_ADDRESS)
+            self.EXECUTOR_WALLET_ADDRESS = self.boto_client.get_ssm_parameter(EXECUTOR_ADDRESS)
             signature_details = self.generate_signature_for_open_channel_for_third_party(recipient=recipient,
                                                                      group_id=base64.decode(group_id),
                                                                      amount_in_cogs=amount, expiration=expiration,
