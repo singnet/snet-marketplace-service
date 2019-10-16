@@ -3,7 +3,11 @@ import boto3
 from botocore.exceptions import ClientError
 from string import Template
 
-EMAIL_SENDER_EMAIL = "<notifications@singularitynet.io>"
+from common.logger import get_logger
+
+logger = get_logger(__name__)
+
+EMAIL_SENDER_EMAIL = "<tech-support@singularitynet.io>"
 EMAIL_BODY_TEXT = "Hello"
 EMAIL_BODY_HTML = """<html>
 <head></head>
@@ -53,7 +57,7 @@ def send_email(recipient, subject, context):
 
 
 def main(proxy_event, context):
-    print(proxy_event)
+    logger.info(proxy_event)
     if 'body' in proxy_event:
         try:
             event = json.loads(proxy_event['body'])
@@ -70,7 +74,7 @@ def main(proxy_event, context):
                     subject = 'Error detected by the Daemon ' + component_id
                 send_email(recipient, subject, event)
         except Exception as e:
-            print(repr(e))
+            logger.exception(e)
 
     return {
         'statusCode': 200,
