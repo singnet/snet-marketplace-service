@@ -32,6 +32,12 @@ jobs:
             sudo apt-get install mysql-client -y
             sudo pip install coverage coveralls pytest boto3
       - run:
+          name: run tests for signer
+          command: |
+            sudo pip install -r signer/requirement.txt
+            PYTHONPATH=$PWD coverage run -m pytest signer/tests/test_signer.py
+            coverage report -m
+      - run:
           name: run tests for wallet
           command: |
             sudo pip install -r wallets/requirement.txt
