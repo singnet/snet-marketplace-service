@@ -127,7 +127,7 @@ functions:
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
 
-  channel-transaction-status:
+  channelTxnStatus:
     warmup: true
     handler: wallets/handler/channel_transaction_status_handler.request_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -139,6 +139,4 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
-      - schedule:
-          rate: rate(1 minutes)
-          enabled: true
+      - schedule: rate(2 minutes)

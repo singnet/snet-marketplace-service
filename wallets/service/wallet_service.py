@@ -77,8 +77,8 @@ class WalletService:
 
         return amount_in_cogs
 
-    def open_channel_by_third_party(self, order_id, sender, sender_private_key, group_id,
-                                    org_id, amount, currency, recipient):
+    def open_channel_by_third_party(self, order_id, sender, signature, r, s, v, group_id,
+                                    org_id, amount, currency, recipient, current_block_no):
         self.EXECUTOR_WALLET_ADDRESS = get_ssm_parameter(EXECUTOR_ADDRESS)
         self.EXECUTOR_WALLET_KEY = get_ssm_parameter(EXECUTOR_KEY)
         method_name = "openChannelByThirdParty"
@@ -87,20 +87,12 @@ class WalletService:
             key='address'
         )
 
-        current_block_no = self.obj_blockchain_util.get_current_block_no()
-
         # 1 block no is mined in 15 sec on average, setting expiration as 10 years
         expiration = current_block_no + (10 * 365 * 24 * 60 * 4)
         amount_in_cogs = self.__calculate_amount_in_cogs(amount=amount, currency=currency)
         self.__validate__cogs(amount_in_cogs=amount_in_cogs)
 
         group_id_in_hex = "0x" + base64.b64decode(group_id).hex()
-        r, s, v, signature = self.__generate_signature_details(
-            recipient=recipient, group_id=group_id_in_hex,
-            agi_tokens=amount_in_cogs, expiration=expiration,
-            message_nonce=current_block_no,
-            signer_key=sender_private_key
-        )
 
         positional_inputs = (
             sender, SIGNER_ADDRESS, recipient,
