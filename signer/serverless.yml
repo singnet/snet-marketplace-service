@@ -49,7 +49,6 @@ package:
     - License
     - log_setup.py
     - heath_check.sh
-    - node_modules/**
 
 functions:
   signature-authenticator:

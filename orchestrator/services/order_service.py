@@ -320,6 +320,7 @@ class OrderService:
                                                                                          executor_wallet_address=self.EXECUTOR_WALLET_ADDRESS)
 
             logger.info(f"Signature Details {signature_details}")
+            logger.info(f"Wallet Details {wallet_details}")
             open_channel_body = {
                 'order_id': order_id,
                 'sender': wallet_details["address"],
