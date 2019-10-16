@@ -37,8 +37,11 @@ def route_path(path, method, payload_dict, path_parameters):
     elif "/wallet/channel" == path and method == 'POST':
         response_data = obj_wallet_manager.open_channel_by_third_party(order_id=payload_dict['order_id'],
                                                                        sender=payload_dict['sender'],
-                                                                       sender_private_key=payload_dict[
-                                                                           'sender_private_key'],
+                                                                       signature=payload_dict['signature'],
+                                                                       r=payload_dict['r'],
+                                                                       s=payload_dict['s'],
+                                                                       v=payload_dict['v'],
+                                                                       current_block_no=payload_dict['current_block_no'],
                                                                        group_id=payload_dict['group_id'],
                                                                        org_id=payload_dict["org_id"],
                                                                        amount=payload_dict['amount'],

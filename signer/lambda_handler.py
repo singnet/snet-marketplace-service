@@ -63,9 +63,9 @@ def request_handler(event, context):
 
             response_data = signer_object.signature_for_open_channel_for_third_party(
                 recipient=payload_dict["recipient"], group_id=payload_dict['group_id'],
-                agi_tokens=payload_dict["amount_in_cogs"], expiration=payload_dict["expiration"],
+                amount_in_cogs=payload_dict["amount_in_cogs"], expiration=payload_dict["expiration"],
                 message_nonce=payload_dict["message_nonce"],
-                signer_key=payload_dict["signer_key"], executor_wallet_address=payload_dict["executor_wallet_address"])
+                sender_private_key=payload_dict["signer_key"], executor_wallet_address=payload_dict["executor_wallet_address"])
         else:
             return generate_lambda_response(404, "Not Found", cors_enabled=True)
         logger.info("Signer::response_data: ", response_data)
