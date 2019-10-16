@@ -23,6 +23,7 @@ provider:
     tags: # Tags that will be added to each of the deployment resources
       key1: orchestrator
   deploymentPrefix: serverless
+  versionFunctions: false
   tracing: true
 
 package:
