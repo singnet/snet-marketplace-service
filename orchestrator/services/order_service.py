@@ -7,11 +7,12 @@ import boto3
 from web3 import Web3
 
 from common.boto_utils import BotoUtils
+from common.blockchain_util import BlockChainUtil
 from common.constant import TransactionStatus
 from common.logger import get_logger
 from orchestrator.config import CREATE_ORDER_SERVICE_ARN, INITIATE_PAYMENT_SERVICE_ARN, \
     EXECUTE_PAYMENT_SERVICE_ARN, WALLETS_SERVICE_ARN, ORDER_DETAILS_ORDER_ID_ARN, ORDER_DETAILS_BY_USERNAME_ARN, \
-    CONTRACT_API_ARN, REGION_NAME, SIGNER_ADDRESS, EXECUTOR_ADDRESS
+    CONTRACT_API_ARN, REGION_NAME, SIGNER_ADDRESS, EXECUTOR_ADDRESS, NETWORKS, NETWORK_ID
 from orchestrator.services.wallet_service import WalletService
 from orchestrator.transaction_history import TransactionHistory
 from orchestrator.transaction_history_data_access_object import TransactionHistoryDAO
@@ -43,6 +44,10 @@ class OrderService:
         self.lambda_client = boto3.client('lambda')
         self.boto_client = BotoUtils(REGION_NAME)
         self.wallet_service = WalletService()
+        self.obj_blockchain_util = BlockChainUtil(
+            provider_type="HTTP_PROVIDER",
+            provider=NETWORKS[NETWORK_ID]['http_provider']
+        )
 
     def initiate_order(self, username, payload_dict):
         """
