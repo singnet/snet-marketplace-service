@@ -300,6 +300,7 @@ class OrderService:
                 raise Exception("Failed to create wallet")
             wallet_create_response_body = json.loads(wallet_create_response["body"])
             wallet_details = wallet_create_response_body["data"]
+            logger.info("wallet_details == ", wallet_details)
             current_block_no = self.obj_blockchain_util.get_current_block_no()
             # 1 block no is mined in 15 sec on average, setting expiration as 10 years
             expiration = current_block_no + (10 * 365 * 24 * 60 * 4)
@@ -311,9 +312,7 @@ class OrderService:
                                                                                          amount_in_cogs=amount,
                                                                                          expiration=expiration,
                                                                                          message_nonce=message_nonce,
-                                                                                         sender_private_key=
-                                                                                         wallet_details[
-                                                                                             "sender_private_key"],
+                                                                                         sender_private_key=wallet_details["private_key"],
                                                                                          executor_wallet_address=self.EXECUTOR_WALLET_ADDRESS)
             logger.info(signature_details)
             open_channel_body = {
