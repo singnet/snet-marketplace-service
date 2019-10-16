@@ -68,6 +68,9 @@ class OrderService:
         if order_type == OrderType.CREATE_WALLET_AND_CHANNEL.value:
             recipient = self.get_payment_address_for_org(group_id=group_id, org_id=org_id)
 
+        elif order_type == OrderType.CREATE_CHANNEL:
+            pass
+
         elif order_type == OrderType.FUND_CHANNEL.value:
             signer = SIGNER_ADDRESS
             channel_id = None
