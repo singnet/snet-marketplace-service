@@ -50,13 +50,14 @@ class MPE:
         )
         self.obj_util.clean(channel_details)
 
-        channel_details_response = {
-            "wallet_address": user_address,
-            "organizations": []
-        }
+        channel_details_response = {"wallet_address": user_address,
+                                    "organizations": self.segregate_org_channel_details(channel_details)}
 
+        return channel_details_response
+
+    def segregate_org_channel_details(self, raw_channel_data):
         org_data = {}
-        for channel_record in channel_details:
+        for channel_record in raw_channel_data:
             org_id = channel_record["org_id"]
             group_id = channel_record["group_id"]
 
@@ -75,24 +76,22 @@ class MPE:
                 }
 
             channel = {
-                    "channel_id": channel_record["channel_id"],
-                    "recipient": channel_record["recipient"],
-                    "balance_in_cogs": channel_record["balance_in_cogs"],
-                    "pending": channel_record["pending"],
-                    "nonce": channel_record["nonce"],
-                    "expiration": channel_record["expiration"],
-                    "signer": channel_record["signer"],
-                    "status": channel_record["status"]
-                }
+                "channel_id": channel_record["channel_id"],
+                "recipient": channel_record["recipient"],
+                "balance_in_cogs": channel_record["balance_in_cogs"],
+                "pending": channel_record["pending"],
+                "nonce": channel_record["nonce"],
+                "expiration": channel_record["expiration"],
+                "signer": channel_record["signer"],
+                "status": channel_record["status"]
+            }
 
             org_data[org_id]["groups"][group_id]["channels"].append(channel)
 
         for org_id in org_data:
             org_data[org_id]["groups"] = list(org_data[org_id]["groups"].values())
 
-        channel_details_response["organizations"] = list(org_data.values())
-
-        return channel_details_response
+        return list(org_data.values())
 
     def get_channels_by_user_address(self, user_address, service_id, org_id):
         last_block_no = self.get_latest_block_no()
