@@ -63,7 +63,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /notification/email
+          path: /email
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
