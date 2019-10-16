@@ -383,7 +383,7 @@ class OrderService:
             if "org_id" in order["item_details"]:
                 org_id = order["item_details"]["org_id"]
                 if org_id in org_id_name_mapping:
-                    order["item_details"]["org_name"] = org_id_name_mapping[org_id]
+                    order["item_details"]["organization_name"] = org_id_name_mapping[org_id]
 
             transaction_details_event = {
                 "path": f"/wallet/channel/transactions",
