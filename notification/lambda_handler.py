@@ -28,7 +28,7 @@ BODY_HTMLS = {NotificationType.SUPPORT: """<html>
 client = boto3.client('ses')
 
 
-def send_email(recipient, subject, message, notification_type):
+def send_email(recipient, subject, body_html, sender):
     try:
         response = client.send_email(
             Destination={
@@ -40,7 +40,7 @@ def send_email(recipient, subject, message, notification_type):
                 'Body': {
                     'Html': {
                         'Charset': CHARSET,
-                        'Data': BODY_HTMLS[notification_type].format(message),
+                        'Data': body_html
                     },
                 },
                 'Subject': {
@@ -48,7 +48,7 @@ def send_email(recipient, subject, message, notification_type):
                     'Data': subject,
                 },
             },
-            Source=SENDERS[notification_type],
+            Source=sender,
         )
     except ClientError as e:
         logger.error(e.response['Error']['Message'])
@@ -69,7 +69,9 @@ def main(proxy_event, context):
                 message = event["message"] if 'message' in event else ''
                 subject = event["subject"] if 'subject' in event else 'Error occurred'
                 notification_type = event["notification_type"] if 'notification_type' in event else ''
-                send_email(recipient, subject, message, notification_type)
+                body_html = BODY_HTMLS[notification_type].format(message)
+                sender = SENDERS[notification_type]
+                send_email(recipient, subject, body_html, sender)
         except Exception as e:
             logger.exception(e)
 
