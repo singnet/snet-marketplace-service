@@ -3,7 +3,9 @@ import boto3
 from botocore.exceptions import ClientError
 from string import Template
 
+from common.logger import get_logger
 
+logger = get_logger(__name__)
 
 EMAIL_SENDER_EMAIL = "<tech-support@singularitynet.io>"
 EMAIL_BODY_TEXT = "Hello"
