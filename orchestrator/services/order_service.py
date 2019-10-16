@@ -1,13 +1,15 @@
+import base64
 import json
-import boto3
-
 from enum import Enum
 from urllib.parse import quote
+
+import boto3
+
 from common.boto_utils import BotoUtils
 from common.constant import TransactionStatus
 from orchestrator.config import CREATE_ORDER_SERVICE_ARN, INITIATE_PAYMENT_SERVICE_ARN, \
     EXECUTE_PAYMENT_SERVICE_ARN, WALLETS_SERVICE_ARN, ORDER_DETAILS_ORDER_ID_ARN, ORDER_DETAILS_BY_USERNAME_ARN, \
-    CONTRACT_API_ARN, REGION_NAME, SIGNER_ADDRESS
+    CONTRACT_API_ARN, REGION_NAME, SIGNER_ADDRESS, EXECUTOR_ADDRESS
 from orchestrator.services.wallet_service import WalletService
 from orchestrator.transaction_history import TransactionHistory
 from orchestrator.transaction_history_data_access_object import TransactionHistoryDAO
@@ -37,6 +39,7 @@ class OrderService:
         self.lambda_client = boto3.client('lambda')
         self.boto_client = BotoUtils(REGION_NAME)
         self.wallet_service = WalletService()
+        self.boto_utils = BotoUtils()
 
     def initiate_order(self, username, payload_dict):
         """
@@ -289,16 +292,32 @@ class OrderService:
                 raise Exception("Failed to create wallet")
             wallet_create_response_body = json.loads(wallet_create_response["body"])
             wallet_details = wallet_create_response_body["data"]
-
+            current_block_no = self.obj_blockchain_util.get_current_block_no()
+            # 1 block no is mined in 15 sec on average, setting expiration as 10 years
+            expiration = current_block_no + (10 * 365 * 24 * 60 * 4)
+            message_nonce = current_block_no
+            self.EXECUTOR_WALLET_ADDRESS = self.boto_utils.get_ssm_parameter(EXECUTOR_ADDRESS)
+            signature_details = self.generate_signature_for_open_channel_for_third_party(recipient=recipient,
+                                                                     group_id=base64.decode(group_id),
+                                                                     amount_in_cogs=amount, expiration=expiration,
+                                                                     message_nonce=message_nonce,
+                                                                     sender_private_key=wallet_details[
+                                                                         "sender_private_key"],
+                                                                     executor_wallet_address=self.EXECUTOR_WALLET_ADDRESS)
+            print(signature_details)
             open_channel_body = {
                 'order_id': order_id,
                 'sender': wallet_details["address"],
-                'sender_private_key': wallet_details["private_key"],
+                'signature': signature_details["signature"],
+                'r': signature_details["r"],
+                's': signature_details["s"],
+                'v': signature_details["v"],
                 'group_id': group_id,
                 'org_id': org_id,
                 'amount': amount,
                 'currency': currency,
-                'recipient': recipient
+                'recipient': recipient,
+                'current_block_no': current_block_no
             }
 
             create_channel_transaction_payload = {
@@ -433,3 +452,37 @@ class OrderService:
             org_id_name_mapping[org["org_id"]] = org["org_name"]
 
         return org_id_name_mapping
+
+    #
+    # recipient = payload_dict["recipient"], group_id = payload_dict['group_id'],
+    # amount_in_cogs = payload_dict["amount_in_cogs"], expiration = payload_dict["expiration"],
+    # message_nonce = payload_dict["message_nonce"],
+    # sender_private_key = payload_dict["signer_key"], executor_wallet_address = payload_dict["executor_wallet_address"]
+    def generate_signature_for_open_channel_for_third_party(self, recipient, group_id, amount_in_cogs, expiration,
+                                                            message_nonce, sender_private_key, executor_wallet_address):
+
+        signature_for_open_channel_for_third_party_body = {
+            'recipient': recipient,
+            'group_id': group_id,
+            'amount_in_cogs': amount_in_cogs,
+            'expiration': expiration,
+            'message_nonce': message_nonce,
+            'sender_private_key': sender_private_key,
+            'executor_wallet_address': executor_wallet_address
+        }
+
+        signature_for_open_channel_for_third_party_payload = {
+            "path": "/signer/open-channel-for-third-party",
+            "body": json.dumps(signature_for_open_channel_for_third_party_body),
+            "httpMethod": "POST"
+        }
+
+        signature_for_open_channel_for_third_party_response = self.lambda_client.invoke(
+            FunctionName=WALLETS_SERVICE_ARN,
+            InvocationType='RequestResponse',
+            Payload=json.dumps(signature_for_open_channel_for_third_party_payload)
+        )
+
+        response = json.loads(signature_for_open_channel_for_third_party_response.get("Payload").read())
+        if response["statusCode"] != 200:
+            raise Exception(f"Failed to create signature for {signature_for_open_channel_for_third_party_body}")
