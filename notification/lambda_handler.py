@@ -16,67 +16,55 @@ class NotificationType(Enum):
     SUPPORT = "support"
 
 
-SENDERS = {
-    NotificationType.SUPPORT: "Tech Support <tech-support@singularitynet.io>"}
-BODY_HTMLS = {NotificationType.SUPPORT: """<html>
+SENDERS = {NotificationType.SUPPORT: "Tech Support <tech-support@singularitynet.io>"}
+BODY_HTMLS = {
+    NotificationType.SUPPORT: """<html>
 <head></head>
 <body>
   <h1>Header message</h1>
   <p>Custom message {}</p>
 </body>
 </html>
-"""}
-client = boto3.client('ses')
+"""
+}
+client = boto3.client("ses")
 
 
 def send_email(recipient, subject, body_html, sender):
     try:
         response = client.send_email(
-            Destination={
-                'ToAddresses': [
-                    recipient,
-                ],
-            },
+            Destination={"ToAddresses": [recipient]},
             Message={
-                'Body': {
-                    'Html': {
-                        'Charset': CHARSET,
-                        'Data': body_html
-                    },
-                },
-                'Subject': {
-                    'Charset': CHARSET,
-                    'Data': subject,
-                },
+                "Body": {"Html": {"Charset": CHARSET, "Data": body_html}},
+                "Subject": {"Charset": CHARSET, "Data": subject},
             },
             Source=sender,
         )
     except ClientError as e:
-        logger.error(e.response['Error']['Message'])
+        logger.error(e.response["Error"]["Message"])
     else:
         logger.info("Email sent! Message ID:"),
-        logger.info(response['MessageId'])
+        logger.info(response["MessageId"])
 
 
 def main(proxy_event, context):
     logger.info(proxy_event)
-    if 'body' in proxy_event:
+    if "body" in proxy_event:
         try:
-            event = json.loads(proxy_event['body'])
+            event = json.loads(proxy_event["body"])
             recipient = event["recipient"]
-            if recipient == '':
+            if recipient == "":
                 print("No recipient")
             else:
-                message = event["message"] if 'message' in event else ''
-                subject = event["subject"] if 'subject' in event else 'Error occurred'
-                notification_type = event["notification_type"] if 'notification_type' in event else ''
+                message = event["message"] if "message" in event else ""
+                subject = event["subject"] if "subject" in event else "Error occurred"
+                notification_type = (
+                    event["notification_type"] if "notification_type" in event else ""
+                )
                 body_html = BODY_HTMLS[notification_type].format(message)
                 sender = SENDERS[notification_type]
                 send_email(recipient, subject, body_html, sender)
         except Exception as e:
             logger.exception(e)
 
-    return {
-        'statusCode': 200,
-        'body': json.dumps('Received!')
-    }
+    return {"statusCode": 200, "body": json.dumps("Received!")}
