@@ -1,7 +1,9 @@
 import json
-
 from common.boto_utils import BotoUtils
+from common.logger import get_logger
 from orchestrator.config import CONTRACT_API_ARN, REGION_NAME, WALLETS_SERVICE_ARN
+
+logger = get_logger(__name__)
 
 
 class WalletService:
@@ -72,12 +74,34 @@ class WalletService:
             invocation_type="RequestResponse",
             payload=json.dumps(event))
 
+        if "statusCode" not in channel_details_response:
+            logger.error(f"contract API boto call failed {channel_details_response}")
+            raise Exception(f"Failed to get channel details from contract API")
+
         if channel_details_response["statusCode"] != 200:
             raise Exception(f"Failed to get channel details from contract API username: {user_address} "
                             f"group_id: {group_id} "
                             f"org_id: {org_id}")
+
         channel_details = json.loads(channel_details_response["body"])["data"]
         return channel_details["channels"]
+
+    def get_wallets(self, username):
+        get_wallet_event = {
+            "path": "/wallet",
+            "queryStringParameters": {
+                "username": username
+            },
+            "httpMethod": "GET"
+        }
+        get_wallet_response = self.boto_client.invoke_lambda(lambda_function_arn=WALLETS_SERVICE_ARN,
+                                                             invocation_type="RequestResponse",
+                                                             payload=json.dumps(get_wallet_event))
+        status = get_wallet_response["statusCode"]
+        if status != 200:
+            raise Exception("Unable to get wallets for username %s", username)
+        wallets = json.loads(get_wallet_response["body"])["data"]
+        return wallets
 
     def register_wallet(self, username, wallet_details):
         register_wallet_body = {
@@ -90,10 +114,13 @@ class WalletService:
             "body": json.dumps(register_wallet_body),
             "httpMethod": "POST"
         }
-        response = self.boto_client.invoke_lambda(lambda_function_arn=WALLETS_SERVICE_ARN,
-                                                  invocation_type="RequestResponse",
-                                                  payload=json.dumps(register_wallet_payload))
-        return json.loads(response["body"])["data"]
+        raw_response = self.boto_client.invoke_lambda(lambda_function_arn=WALLETS_SERVICE_ARN,
+                                                      invocation_type="RequestResponse",
+                                                      payload=json.dumps(register_wallet_payload))
+        status = raw_response["statusCode"]
+        if int(status) != 200:
+            raise Exception("Unable to register wallet for username %s", username)
+        return json.loads(raw_response["body"])["data"]
 
     def set_default_wallet(self, username, address):
         set_default_wallet_body = {

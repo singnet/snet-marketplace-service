@@ -14,6 +14,10 @@ from orchestrator.services.order_service import OrderService
 from orchestrator.config import SLACK_HOOK
 from orchestrator.services.wallet_service import WalletService
 
+from aws_xray_sdk.core import patch_all
+
+patch_all()
+
 NETWORKS_NAME = dict(
     (NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
 db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys())
@@ -32,7 +36,12 @@ def route_path(path, method, payload_dict, request_context, path_parameters):
 
     elif "/order/initiate" == path:
         response_data = obj_order_service.initiate_order(
-            user_data=request_context, payload_dict=payload_dict)
+            username=request_context["authorizer"]["claims"]["email"], payload_dict=payload_dict)
+
+    elif "/wallet" == path:
+        username = request_context["authorizer"]["claims"]["email"]
+        logger.info(f"Received request to get wallets for user:{username}")
+        response_data = WalletService().get_wallets(username)
 
     elif "/wallet/channel" == path and method == 'GET':
         org_id = payload_dict["org_id"]
@@ -110,7 +119,7 @@ def request_handler(event, context):
     except Exception as e:
         error_message = format_error_message(
             status="failed",
-            error="Bad Request",
+            error=repr(e),
             resource=path,
             payload=payload_dict,
             net_id=NETWORK_ID,

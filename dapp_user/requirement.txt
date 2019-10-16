@@ -3,3 +3,4 @@ boto3==1.9.193
 schema==0.6.8
 requests==2.22.0
 web3==4.9.2
+aws-xray-sdk==2.4.2

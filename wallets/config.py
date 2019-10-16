@@ -5,9 +5,9 @@ NETWORKS = {
         "ws_provider": "wss://ropsten.infura.io/ws",
         "db": {
             "DB_HOST": "localhost",
-            "DB_USER": "root",
-            "DB_PASSWORD": "root",
-            "DB_NAME": "contract_index_test",
+            "DB_USER": "unittest_root",
+            "DB_PASSWORD": "unittest_pwd",
+            "DB_NAME": "unittest_db",
             "DB_PORT": 3306,
         },
     }
@@ -20,3 +20,4 @@ NETWORK_ID = 0
 SLACK_HOOK = {}
 REGION_NAME = ""
 WALLET_TYPES_ALLOWED = []
+MINIMUM_AMOUNT_IN_COGS_ALLOWED = 0

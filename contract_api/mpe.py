@@ -1,10 +1,13 @@
 import json
-
 import web3
+
+from common.logger import get_logger
 from contract_api.config import NETWORKS
 from common.utils import Utils
 from contract_api.registry import Registry
 from web3 import Web3
+
+logger = get_logger(__name__)
 
 
 class MPE:
@@ -30,6 +33,65 @@ class MPE:
 
         else:
             raise Exception("Invalid Request")
+
+    def get_channels_by_user_address_v2(self, user_address):
+        last_block_no = self.get_latest_block_no()
+        logger.info(f"got block number {last_block_no}")
+        channel_details_query = "SELECT mc.channel_id, mc.sender, mc.recipient, mc.groupId as group_id, " \
+                                "mc.balance_in_cogs, mc.pending, mc.nonce, mc.expiration, mc.signer, og.org_id, " \
+                                "org.organization_name, IF(mc.expiration > %s, 'active','inactive') AS status, " \
+                                "og.group_name, org.org_assets_url " \
+                                "FROM mpe_channel AS mc JOIN org_group AS og ON mc.groupId = og.group_id " \
+                                "JOIN organization AS org ON og.org_id = org.org_id WHERE mc.sender = %s "
+        params = [last_block_no, user_address]
+        channel_details = self.repo.execute(
+            channel_details_query,
+            params
+        )
+        self.obj_util.clean(channel_details)
+
+        channel_details_response = {"wallet_address": user_address,
+                                    "organizations": self.segregate_org_channel_details(channel_details)}
+
+        return channel_details_response
+
+    def segregate_org_channel_details(self, raw_channel_data):
+        org_data = {}
+        for channel_record in raw_channel_data:
+            org_id = channel_record["org_id"]
+            group_id = channel_record["group_id"]
+
+            if org_id not in org_data:
+                org_data[org_id] = {
+                    "org_name": channel_record["organization_name"],
+                    "org_id": org_id,
+                    "hero_image": json.loads(channel_record["org_assets_url"]).get("hero_image", ""),
+                    "groups": {}
+                }
+            if group_id not in org_data[org_id]["groups"]:
+                org_data[org_id]["groups"][group_id] = {
+                    "group_id": group_id,
+                    "group_name": channel_record["group_name"],
+                    "channels": []
+                }
+
+            channel = {
+                "channel_id": channel_record["channel_id"],
+                "recipient": channel_record["recipient"],
+                "balance_in_cogs": channel_record["balance_in_cogs"],
+                "pending": channel_record["pending"],
+                "nonce": channel_record["nonce"],
+                "expiration": channel_record["expiration"],
+                "signer": channel_record["signer"],
+                "status": channel_record["status"]
+            }
+
+            org_data[org_id]["groups"][group_id]["channels"].append(channel)
+
+        for org_id in org_data:
+            org_data[org_id]["groups"] = list(org_data[org_id]["groups"].values())
+
+        return list(org_data.values())
 
     def get_channels_by_user_address(self, user_address, service_id, org_id):
         last_block_no = self.get_latest_block_no()
