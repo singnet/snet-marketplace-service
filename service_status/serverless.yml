@@ -2,12 +2,18 @@ plugins:
   - serverless-offline
   - serverless-python-requirements
   - serverless-graph
+  - serverless-prune-plugin
 
 service: service-status
 custom:
   pythonRequirements:
     fileName: service_status/requirement.txt
     dockerizePip: true
+  prune:
+    automatic: true
+    includeLayers: true
+    number: 5
+
 
 provider:
   name: aws
