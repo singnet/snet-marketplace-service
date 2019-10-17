@@ -20,9 +20,7 @@ SLACK_HOOK = {
     "port": 443,
     "path": "",
     "method": "POST",
-    "headers": {
-        "Content-Type": "application/json"
-    },
+    "headers": {"Content-Type": "application/json"},
 }
 signer = {}
 # this configuration is only for testing

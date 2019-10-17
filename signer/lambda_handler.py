@@ -35,7 +35,9 @@ def request_handler(event, context):
         elif method == "GET":
             payload_dict = event.get("queryStringParameters")
         else:
-            return generate_lambda_response(405, "Method Not Allowed", cors_enabled=True)
+            return generate_lambda_response(
+                405, "Method Not Allowed", cors_enabled=True
+            )
 
         if "/free-call" == path:
             response_data = signer_object.signature_for_free_call(
@@ -47,8 +49,8 @@ def request_handler(event, context):
         elif "/state-service" == path:
 
             response_data = signer_object.signature_for_state_service(
-                user_data=event["requestContext"],
-                channel_id=payload_dict["channel_id"])
+                user_data=event["requestContext"], channel_id=payload_dict["channel_id"]
+            )
 
         elif "/regular-call" == path:
 
@@ -62,10 +64,14 @@ def request_handler(event, context):
         elif "/open-channel-for-third-party" == path:
 
             response_data = signer_object.signature_for_open_channel_for_third_party(
-                recipient=payload_dict["recipient"], group_id=payload_dict['group_id'],
-                amount_in_cogs=payload_dict["amount_in_cogs"], expiration=payload_dict["expiration"],
+                recipient=payload_dict["recipient"],
+                group_id=payload_dict["group_id"],
+                amount_in_cogs=payload_dict["amount_in_cogs"],
+                expiration=payload_dict["expiration"],
                 message_nonce=payload_dict["message_nonce"],
-                sender_private_key=payload_dict["signer_key"], executor_wallet_address=payload_dict["executor_wallet_address"])
+                sender_private_key=payload_dict["signer_key"],
+                executor_wallet_address=payload_dict["executor_wallet_address"],
+            )
         else:
             return generate_lambda_response(404, "Not Found", cors_enabled=True)
         logger.info("Signer::response_data: ", response_data)
@@ -78,13 +84,11 @@ def request_handler(event, context):
                 "network_id": NET_ID,
             }
             obj_util.report_slack(1, str(err_msg), SLACK_HOOK)
-            response = generate_lambda_response(
-                500, err_msg, cors_enabled=True)
+            response = generate_lambda_response(500, err_msg, cors_enabled=True)
         else:
-            response = generate_lambda_response(200, {
-                "status": "success",
-                "data": response_data
-            }, cors_enabled=True)
+            response = generate_lambda_response(
+                200, {"status": "success", "data": response_data}, cors_enabled=True
+            )
     except Exception as e:
         err_msg = {
             "status": "failed",
