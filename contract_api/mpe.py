@@ -22,13 +22,17 @@ class MPE:
         w3 = Web3(web3.providers.WebsocketProvider(self.ws_provider))
         return w3.eth.blockNumber
 
-    def get_channels(self, user_address, org_id=None, service_id=None, group_id=None):
+    def get_channels(self,
+                     user_address,
+                     org_id=None,
+                     service_id=None,
+                     group_id=None):
         if user_address and org_id and group_id:
             return self.get_channels_by_user_address_org_group(
-                user_address=user_address, org_id=org_id, group_id=group_id
-            )
+                user_address=user_address, org_id=org_id, group_id=group_id)
         elif user_address is not None:
-            return self.get_channels_by_user_address(user_address, service_id, org_id)
+            return self.get_channels_by_user_address(user_address, service_id,
+                                                     org_id)
 
         else:
             raise Exception("Invalid Request")
@@ -50,7 +54,8 @@ class MPE:
 
         channel_details_response = {
             "wallet_address": user_address,
-            "organizations": self.segregate_org_channel_details(channel_details),
+            "organizations":
+            self.segregate_org_channel_details(channel_details),
         }
 
         return channel_details_response
@@ -63,11 +68,13 @@ class MPE:
 
             if org_id not in org_data:
                 org_data[org_id] = {
-                    "org_name": channel_record["organization_name"],
-                    "org_id": org_id,
-                    "hero_image": json.loads(channel_record["org_assets_url"]).get(
-                        "hero_image", ""
-                    ),
+                    "org_name":
+                    channel_record["organization_name"],
+                    "org_id":
+                    org_id,
+                    "hero_image":
+                    json.loads(channel_record["org_assets_url"]).get(
+                        "hero_image", ""),
                     "groups": {},
                 }
             if group_id not in org_data[org_id]["groups"]:
@@ -91,7 +98,8 @@ class MPE:
             org_data[org_id]["groups"][group_id]["channels"].append(channel)
 
         for org_id in org_data:
-            org_data[org_id]["groups"] = list(org_data[org_id]["groups"].values())
+            org_data[org_id]["groups"] = list(
+                org_data[org_id]["groups"].values())
 
         return list(org_data.values())
 
@@ -116,9 +124,8 @@ class MPE:
             'SELECT  C.*, E.*, IF(C.expiration > %s, "active","inactive") AS status FROM '
             "service_group G, mpe_channel C, service_endpoint E, service S WHERE G.group_id = C.groupId AND "
             "G.group_id = E.group_id and S.row_id = E.service_row_id and E.service_row_id = G.service_row_id "
-            "AND S.is_curated = 1  "
-            + sub_qry
-            + " AND C.sender = %s ORDER BY C.expiration DESC",
+            "AND S.is_curated = 1  " + sub_qry +
+            " AND C.sender = %s ORDER BY C.expiration DESC",
             params,
         )
         self.obj_util.clean(raw_channel_dta)
@@ -130,7 +137,9 @@ class MPE:
                     "group_id": group_id,
                     "org_id": rec["org_id"],
                     "service_id": rec["service_id"],
-                    "group": {"endpoints": []},
+                    "group": {
+                        "endpoints": []
+                    },
                     "channels": [],
                 }
 
@@ -153,9 +162,10 @@ class MPE:
             channel_dta[group_id]["channels"].append(channel)
         return list(channel_dta.values())
 
-    def get_channels_by_user_address_org_group(
-        self, user_address, org_id=None, group_id=None
-    ):
+    def get_channels_by_user_address_org_group(self,
+                                               user_address,
+                                               org_id=None,
+                                               group_id=None):
         last_block_no = self.get_latest_block_no()
         params = [last_block_no, org_id, group_id, user_address]
         raw_channel_data = self.repo.execute(
@@ -184,7 +194,8 @@ class MPE:
 
         return channel_data
 
-    def get_channel_data_by_group_id_and_channel_id(self, group_id, channel_id):
+    def get_channel_data_by_group_id_and_channel_id(self, group_id,
+                                                    channel_id):
         try:
             result = self.repo.execute(
                 "SELECT * FROM mpe_channel WHERE groupId = %s AND channel_id = %s",

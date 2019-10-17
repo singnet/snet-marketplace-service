@@ -29,9 +29,9 @@ class Signer:
             provider=NETWORKS[self.net_id]["http_provider"],
         )
         self.mpe_address = self.obj_blockchain_utils.read_contract_address(
-            net_id=self.net_id, path=MPE_ADDR_PATH, key="address"
+            net_id=self.net_id, path=MPE_ADDR_PATH, key="address")
+        self.current_block_no = self.obj_blockchain_utils.get_current_block_no(
         )
-        self.current_block_no = self.obj_blockchain_utils.get_current_block_no()
 
     def _free_calls_allowed(self, username, org_id, service_id):
         """
@@ -53,18 +53,19 @@ class Signer:
                 InvocationType="RequestResponse",
                 Payload=json.dumps(lambda_payload),
             )
-            response_body_raw = json.loads(response.get("Payload").read())["body"]
+            response_body_raw = json.loads(
+                response.get("Payload").read())["body"]
             get_free_calls_response_body = json.loads(response_body_raw)
             logger.info(
                 "Signer::get_free_calls_response_body: %s for payload: %s",
                 get_free_calls_response_body,
                 json.dumps(lambda_payload),
             )
-            free_calls_allowed = get_free_calls_response_body["free_calls_allowed"]
+            free_calls_allowed = get_free_calls_response_body[
+                "free_calls_allowed"]
             total_calls_made = get_free_calls_response_body["total_calls_made"]
-            is_free_calls_allowed = (
-                True if ((free_calls_allowed - total_calls_made) > 0) else False
-            )
+            is_free_calls_allowed = (True if (
+                (free_calls_allowed - total_calls_made) > 0) else False)
             return is_free_calls_allowed
         except Exception as e:
             logger.error(repr(e))
@@ -76,26 +77,27 @@ class Signer:
         """
         try:
             username = user_data["authorizer"]["claims"]["email"]
-            if self._free_calls_allowed(
-                username=username, org_id=org_id, service_id=service_id
-            ):
+            if self._free_calls_allowed(username=username,
+                                        org_id=org_id,
+                                        service_id=service_id):
                 current_block_no = self.obj_utils.get_current_block_no(
-                    ws_provider=NETWORKS[self.net_id]["ws_provider"]
-                )
-                provider = Web3.HTTPProvider(NETWORKS[self.net_id]["http_provider"])
+                    ws_provider=NETWORKS[self.net_id]["ws_provider"])
+                provider = Web3.HTTPProvider(
+                    NETWORKS[self.net_id]["http_provider"])
                 w3 = Web3(provider)
                 message = web3.Web3.soliditySha3(
                     ["string", "string", "string", "string", "uint256"],
-                    [PREFIX_FREE_CALL, username, org_id, service_id, current_block_no],
+                    [
+                        PREFIX_FREE_CALL, username, org_id, service_id,
+                        current_block_no
+                    ],
                 )
                 signer_key = SIGNER_KEY
                 if not signer_key.startswith("0x"):
                     signer_key = "0x" + signer_key
                 signature = bytes(
-                    w3.eth.account.signHash(
-                        defunct_hash_message(message), signer_key
-                    ).signature
-                )
+                    w3.eth.account.signHash(defunct_hash_message(message),
+                                            signer_key).signature)
                 signature = signature.hex()
                 if not signature.startswith("0x"):
                     signature = "0x" + signature
@@ -106,7 +108,8 @@ class Signer:
                     "snet-payment-type": "free-call",
                 }
             else:
-                raise Exception("Free calls expired for username %s.", username)
+                raise Exception("Free calls expired for username %s.",
+                                username)
         except Exception as e:
             logger.error(repr(e))
             raise e
@@ -126,8 +129,7 @@ class Signer:
                 amount,
             ]
             signature = self.obj_blockchain_utils.generate_signature(
-                data_types=data_types, values=values, signer_key=SIGNER_KEY
-            )
+                data_types=data_types, values=values, signer_key=SIGNER_KEY)
             return {
                 "snet-payment-channel-signature-bin": signature,
                 "snet-payment-type": "escrow",
@@ -139,8 +141,8 @@ class Signer:
         except Exception as e:
             logger.error(repr(e))
             raise Exception(
-                "Unable to generate signature for daemon call for username %s", username
-            )
+                "Unable to generate signature for daemon call for username %s",
+                username)
 
     def signature_for_state_service(self, user_data, channel_id):
         """
@@ -156,8 +158,7 @@ class Signer:
                 self.current_block_no,
             ]
             signature = self.obj_blockchain_utils.generate_signature(
-                data_types=data_types, values=values, signer_key=SIGNER_KEY
-            )
+                data_types=data_types, values=values, signer_key=SIGNER_KEY)
             return {
                 "signature": signature,
                 "snet-current-block-number": self.current_block_no,
@@ -165,18 +166,18 @@ class Signer:
         except Exception as e:
             logger.error(repr(e))
             raise Exception(
-                "Unable to generate signature for daemon call for username %s", username
-            )
+                "Unable to generate signature for daemon call for username %s",
+                username)
 
     def signature_for_open_channel_for_third_party(
-        self,
-        recipient,
-        group_id,
-        amount_in_cogs,
-        expiration,
-        message_nonce,
-        sender_private_key,
-        executor_wallet_address,
+            self,
+            recipient,
+            group_id,
+            amount_in_cogs,
+            expiration,
+            message_nonce,
+            sender_private_key,
+            executor_wallet_address,
     ):
         data_types = [
             "string",
@@ -201,8 +202,9 @@ class Signer:
             message_nonce,
         ]
         signature = self.obj_blockchain_utils.generate_signature(
-            data_types=data_types, values=values, signer_key=sender_private_key
-        )
+            data_types=data_types,
+            values=values,
+            signer_key=sender_private_key)
         v, r, s = (
             Web3.toInt(hexstr="0x" + signature[-2:]),
             signature[:66],
