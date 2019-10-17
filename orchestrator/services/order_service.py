@@ -495,9 +495,11 @@ class OrderService:
             Payload=json.dumps(signature_for_open_channel_for_third_party_payload)
         )
 
-        response = json.loads(signature_for_open_channel_for_third_party_response.get("Payload").read())
-        if response["statusCode"] != 200:
+        signature_response = json.loads(signature_for_open_channel_for_third_party_response.get("Payload").read())
+        if signature_response["statusCode"] != 200:
             raise Exception(f"Failed to create signature for {signature_for_open_channel_for_third_party_body}")
+        signature_details = json.loads(signature_response["body"])
+        return signature_details["data"]
 
     def create_channel(self, open_channel_body):
         create_channel_transaction_payload = {
