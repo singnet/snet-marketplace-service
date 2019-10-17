@@ -2,12 +2,18 @@ plugins:
   - serverless-offline
   - serverless-python-requirements
   - serverless-plugin-tracing
+  - serverless-prune-plugin
 
 service: wallets
 custom:
   pythonRequirements:
     fileName: wallets/requirement.txt
     dockerizePip: true
+  prune:
+    automatic: true
+    includeLayers: true
+    number: 5
+
 
 provider:
   name: aws
@@ -23,6 +29,7 @@ provider:
     tags: # Tags that will be added to each of the deployment resources
       key1: wallets
   deploymentPrefix: serverless
+  versionFunctions: false
   tracing: true
 
 package:

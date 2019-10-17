@@ -353,7 +353,7 @@ class OrderService:
                                  'amount': amount,
                                  'currency': currency,
                                  'recipient': recipient,
-                                 'current_block_no': order_data["current_block_no"]
+                                 'current_block_no': order_data["current_block_number"]
                                  }
             channel_details = self.create_channel(open_channel_body=open_channel_body)
             logger.info("channel_details: ", channel_details)
