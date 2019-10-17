@@ -14,7 +14,6 @@ custom:
     includeLayers: true
     number: 5
 
-
 provider:
   name: aws
   runtime: python3.6

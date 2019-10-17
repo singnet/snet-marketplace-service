@@ -54,8 +54,6 @@ package:
     - signer/**
 
 functions:
-
-
   send_mail:
     warmup: true
     handler: notification/lambda_handler.main
