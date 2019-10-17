@@ -61,33 +61,25 @@ class OrderService:
         item_details = payload_dict["item_details"]
         group_id = item_details["group_id"]
         org_id = item_details["org_id"]
-        wallet_address = ""
-        recipient = ""
         channel_id = ""
 
         if order_type == OrderType.CREATE_WALLET_AND_CHANNEL.value or order_type == OrderType.CREATE_CHANNEL.value:
             recipient = self.get_payment_address_for_org(group_id=group_id, org_id=org_id)
 
         elif order_type == OrderType.FUND_CHANNEL.value:
-            signer = SIGNER_ADDRESS
-            channel_id = None
-            wallet = self.wallet_service.get_default_wallet(username)
-            wallet_address = wallet["address"]
-            channels = self.wallet_service.get_channels_from_contract(
-                user_address=wallet_address, org_id=org_id, group_id=group_id)
-            for channel in channels:
-                if channel["signer"] == signer:
-                    channel_id = channel["channel_id"]
-                    recipient = channel["recipient"]
-            if channel_id is None:
+            channel = self.get_channel_for_topup(username=username, group_id=group_id, org_id=org_id)
+            if channel is None:
                 raise Exception(f"Channel not found for the user: {username} with org: {org_id} group: {group_id}")
+            wallet_address = channel["address"]
+            recipient = channel["recipient"]
+            channel_id = channel["channel_id"]
+            item_details["wallet_address"] = wallet_address
 
         else:
             raise Exception("Invalid order type")
 
         item_details["channel_id"] = channel_id
         item_details["recipient"] = recipient
-        item_details["sender"] = wallet_address
         order_details = self.manage_create_order(
             username=username, item_details=item_details,
             price=price
@@ -116,6 +108,20 @@ class OrderService:
             self.obj_transaction_history_dao.insert_transaction_history(obj_transaction_history=obj_transaction_history)
             print(repr(e))
             raise e
+
+    def get_channel_for_topup(self, username, group_id, org_id):
+        channel_details = self.wallet_service.get_channel_details(
+            username=username, group_id=group_id, org_id=org_id
+        )
+        wallets = channel_details["wallets"]
+        for wallet in wallets:
+            if (wallet["type"] == "GENERAL") and len(wallet["channels"]) > 0:
+                if wallet["channels"][0]["signer"] == SIGNER_ADDRESS:
+                    wallet_address = wallet["address"]
+                    channel = wallet["channels"][0]
+                    channel["address"] = wallet_address
+                    return channel
+        return None
 
     def get_payment_address_for_org(self, org_id, group_id):
 
@@ -284,7 +290,7 @@ class OrderService:
         org_id = order_data["org_id"]
         recipient = order_data["recipient"]
         channel_id = order_data["channel_id"]
-        sender = order_data["sender"]
+        sender = order_data["wallet_address"]
         if order_type == OrderType.CREATE_WALLET_AND_CHANNEL.value:
             wallet_create_payload = {
                 "path": "/wallet",
