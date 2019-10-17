@@ -482,7 +482,7 @@ class OrderService:
             'amount_in_cogs': amount_in_cogs,
             'expiration': expiration,
             'message_nonce': message_nonce,
-            'sender_private_key': sender_private_key,
+            'signer_key': sender_private_key,
             'executor_wallet_address': executor_wallet_address
         }
 
