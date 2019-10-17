@@ -282,6 +282,7 @@ class OrderService:
             raise Exception(f"Error executing payment for username {username} against order_id {order_id}")
 
     def manage_process_order(self, username, order_id, order_type, amount, currency, order_data):
+        logger.info(f"Order Data {order_data}")
         group_id = order_data["group_id"]
         org_id = order_data["org_id"]
         recipient = order_data["recipient"]
@@ -317,7 +318,9 @@ class OrderService:
                                                                                          message_nonce=message_nonce,
                                                                                          sender_private_key=wallet_details["private_key"],
                                                                                          executor_wallet_address=self.EXECUTOR_WALLET_ADDRESS)
-            logger.info(signature_details)
+
+            logger.info(f"Signature Details {signature_details}")
+            logger.info(f"Wallet Details {wallet_details}")
             open_channel_body = {
                 'order_id': order_id,
                 'sender': wallet_details["address"],
@@ -336,11 +339,11 @@ class OrderService:
             channel_details.update(wallet_details)
             return channel_details
         elif order_type == OrderType.CREATE_CHANNEL.value:
-            logger.info("order_data: ", order_data)
+            logger.info(f"Order Data {order_data}")
             signature = order_data["signature"]
             v, r, s = Web3.toInt(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
             open_channel_body = {'order_id': order_id,
-                                 'sender': order_data["address"],
+                                 'sender': order_data["wallet_address"],
                                  'signature': order_data["signature"],
                                  'r': r,
                                  's': s,
