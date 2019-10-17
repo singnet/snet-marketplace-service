@@ -2,12 +2,17 @@ plugins:
   - serverless-offline
   - serverless-python-requirements
   - serverless-plugin-tracing
+  - serverless-prune-plugin
 
 service: dapp-user
 custom:
   pythonRequirements:
     fileName: dapp_user/requirement.txt
     dockerizePip: true
+  prune:
+    automatic: true
+    includeLayers: true
+    number: 5
 
 provider:
   name: aws
