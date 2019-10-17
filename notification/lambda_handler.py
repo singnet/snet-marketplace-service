@@ -1,30 +1,34 @@
 import json
+from enum import Enum
+
 import boto3
 from botocore.exceptions import ClientError
-
 
 from common.logger import get_logger
 
 logger = get_logger(__name__)
 
-
-
-SENDER = "Tech Support <tech-support@singularitynet.io>"
 CHARSET = "UTF-8"
 AWS_REGION = "us-east-1"
 
-# The HTML body of the email.
-BODY_HTML = """<html>
+
+class NotificationType(Enum):
+    SUPPORT = "support"
+
+
+SENDERS = {NotificationType.SUPPORT: "Tech Support <tech-support@singularitynet.io>"}
+BODY_HTMLS = {NotificationType.SUPPORT: """<html>
 <head></head>
 <body>
   <h1>Header message</h1>
   <p>Custom message {}</p>
 </body>
 </html>
-"""
+"""}
+client = boto3.client('ses')
 
-def send_email(recipient, subject, message):
-    client = boto3.client('ses')
+
+def send_email(recipient, subject, body_html, sender):
     try:
         response = client.send_email(
             Destination={
@@ -36,7 +40,7 @@ def send_email(recipient, subject, message):
                 'Body': {
                     'Html': {
                         'Charset': CHARSET,
-                        'Data': BODY_HTML.format(message),
+                        'Data': body_html
                     },
                 },
                 'Subject': {
@@ -44,13 +48,13 @@ def send_email(recipient, subject, message):
                     'Data': subject,
                 },
             },
-            Source=SENDER,
+            Source=sender,
         )
     except ClientError as e:
-        print(e.response['Error']['Message'])
+        logger.error(e.response['Error']['Message'])
     else:
-        print("Email sent! Message ID:"),
-        print(response['MessageId'])
+        logger.info("Email sent! Message ID:"),
+        logger.info(response['MessageId'])
 
 
 def main(proxy_event, context):
@@ -64,7 +68,10 @@ def main(proxy_event, context):
             else:
                 message = event["message"] if 'message' in event else ''
                 subject = event["subject"] if 'subject' in event else 'Error occurred'
-                send_email(recipient, subject, message)
+                notification_type = event["notification_type"] if 'notification_type' in event else ''
+                body_html = BODY_HTMLS[notification_type].format(message)
+                sender = SENDERS[notification_type]
+                send_email(recipient, subject, body_html, sender)
         except Exception as e:
             logger.exception(e)
 
