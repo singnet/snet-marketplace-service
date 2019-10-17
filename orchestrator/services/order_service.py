@@ -65,11 +65,8 @@ class OrderService:
         recipient = ""
         channel_id = ""
 
-        if order_type == OrderType.CREATE_WALLET_AND_CHANNEL.value:
+        if order_type == OrderType.CREATE_WALLET_AND_CHANNEL.value or order_type == OrderType.CREATE_CHANNEL.value:
             recipient = self.get_payment_address_for_org(group_id=group_id, org_id=org_id)
-
-        elif order_type == OrderType.CREATE_CHANNEL.value:
-            pass
 
         elif order_type == OrderType.FUND_CHANNEL.value:
             signer = SIGNER_ADDRESS
@@ -482,7 +479,7 @@ class OrderService:
             'amount_in_cogs': amount_in_cogs,
             'expiration': expiration,
             'message_nonce': message_nonce,
-            'sender_private_key': sender_private_key,
+            'signer_key': sender_private_key,
             'executor_wallet_address': executor_wallet_address
         }
 
