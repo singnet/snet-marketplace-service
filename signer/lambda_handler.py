@@ -78,7 +78,8 @@ def request_handler(event, context):
                 "network_id": NET_ID,
             }
             obj_util.report_slack(1, str(err_msg), SLACK_HOOK)
-            response = generate_lambda_response(500, err_msg, cors_enabled=True)
+            response = generate_lambda_response(
+                500, err_msg, cors_enabled=True)
         else:
             response = generate_lambda_response(200, {
                 "status": "success",

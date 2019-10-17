@@ -60,7 +60,7 @@ class Signer:
             free_calls_allowed = get_free_calls_response_body["free_calls_allowed"]
             total_calls_made = get_free_calls_response_body["total_calls_made"]
             is_free_calls_allowed = (True if (
-                    (free_calls_allowed - total_calls_made) > 0) else False)
+                (free_calls_allowed - total_calls_made) > 0) else False)
             return is_free_calls_allowed
         except Exception as e:
             logger.error(repr(e))
@@ -172,5 +172,6 @@ class Signer:
                   group_id, amount_in_cogs, expiration, message_nonce]
         signature = self.obj_blockchain_utils.generate_signature(data_types=data_types, values=values,
                                                                  signer_key=sender_private_key)
-        v, r, s = Web3.toInt(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
+        v, r, s = Web3.toInt(
+            hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
         return {"r": r, "s": s, "v": v, "signature": signature}

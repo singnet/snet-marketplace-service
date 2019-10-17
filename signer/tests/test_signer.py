@@ -48,13 +48,14 @@ class TestSignUPAPI(unittest.TestCase):
         }
         mock_read_contract_address.return_value = "0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C"
         mock_current_block_no.return_value = 6521925
-        response = lambda_handler.request_handler(event=signature_for_state_service, context=None)
+        response = lambda_handler.request_handler(
+            event=signature_for_state_service, context=None)
         assert response["statusCode"] == 200
         response_body = json.loads(response["body"])
         assert response_body["status"] == "success"
         assert (
-                response_body["data"]["signature"] ==
-                "0xf4fad486513c6e514869a2af9423de3c1e03c9953b4cd79c4d78f7f8f54da1a01812d7c58120c038ead631e2462ab788746972cad46f4e7f2f1bd79b863b54681c"
+            response_body["data"]["signature"] ==
+            "0xf4fad486513c6e514869a2af9423de3c1e03c9953b4cd79c4d78f7f8f54da1a01812d7c58120c038ead631e2462ab788746972cad46f4e7f2f1bd79b863b54681c"
         )
         assert (response_body["data"]["snet-current-block-number"] ==
                 mock_current_block_no.return_value)
@@ -80,13 +81,14 @@ class TestSignUPAPI(unittest.TestCase):
         }
         mock_current_block_no.return_value = 6521925
         mock_read_contract_address.return_value = "0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C"
-        response = lambda_handler.request_handler(event=signature_for_regular_call, context=None)
+        response = lambda_handler.request_handler(
+            event=signature_for_regular_call, context=None)
         assert response["statusCode"] == 200
         response_body = json.loads(response["body"])
         assert response_body["status"] == "success"
         assert (
-                response_body["data"]["snet-payment-channel-signature-bin"] ==
-                "0x505dec3d328eced279a2953e7ba614936a239fb558c80615ff1c97115f8b76ea0530dc47acab7bca8c1dd4563f0299d9b1f61933902919097d82eb0eeb12cb501c"
+            response_body["data"]["snet-payment-channel-signature-bin"] ==
+            "0x505dec3d328eced279a2953e7ba614936a239fb558c80615ff1c97115f8b76ea0530dc47acab7bca8c1dd4563f0299d9b1f61933902919097d82eb0eeb12cb501c"
         )
         assert response_body["data"]["snet-payment-type"] == "escrow"
         assert response_body["data"]["snet-payment-channel-id"] == 1
@@ -116,7 +118,8 @@ class TestSignUPAPI(unittest.TestCase):
         }
         mock_read_contract_address.return_value = "0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C"
         mock_current_block_no.return_value = 6521925
-        response = lambda_handler.request_handler(event=signature_for_open_channel_for_third_party, context=None)
+        response = lambda_handler.request_handler(
+            event=signature_for_open_channel_for_third_party, context=None)
         assert response["statusCode"] == 200
         response_body = json.loads(response["body"])
         assert response_body["status"] == "success"
