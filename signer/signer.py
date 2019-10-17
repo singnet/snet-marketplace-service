@@ -12,7 +12,8 @@ from signer.config import GET_FREE_CALLS_METERING_ARN
 from signer.config import NETWORKS
 from signer.config import PREFIX_FREE_CALL
 from signer.config import REGION_NAME
-from signer.config import SIGNER_KEY, SIGNER_ADDRESS
+from signer.config import SIGNER_ADDRESS
+from signer.config import SIGNER_KEY
 from signer.constant import MPE_ADDR_PATH
 
 logger = get_logger(__name__)

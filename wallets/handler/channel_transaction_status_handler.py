@@ -1,12 +1,14 @@
 import traceback
 
+from aws_xray_sdk.core import patch_all
+
 from common.repository import Repository
 from common.utils import Utils
-from wallets.config import NETWORKS, NETWORK_ID
+from wallets.config import NETWORK_ID
+from wallets.config import NETWORKS
 from wallets.service.channel_transaction_status_service import (
     ChannelTransactionStatusService,
 )
-from aws_xray_sdk.core import patch_all
 
 patch_all()
 NETWORKS_NAME = dict((NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())

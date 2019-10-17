@@ -3,15 +3,15 @@ from enum import Enum
 
 from common.logger import get_logger
 from common.repository import Repository
-from common.utils import (
-    Utils,
-    generate_lambda_response,
-    extract_payload,
-    validate_dict,
-    format_error_message,
-)
-from wallets.config import NETWORKS, NETWORK_ID, WALLET_TYPES_ALLOWED
+from common.utils import extract_payload
+from common.utils import format_error_message
+from common.utils import generate_lambda_response
+from common.utils import Utils
+from common.utils import validate_dict
+from wallets.config import NETWORK_ID
+from wallets.config import NETWORKS
 from wallets.config import SLACK_HOOK
+from wallets.config import WALLET_TYPES_ALLOWED
 from wallets.constant import REQUIRED_KEYS_FOR_LAMBDA_EVENT
 from wallets.service.wallet_service import WalletService
 from wallets.wallet import Wallet

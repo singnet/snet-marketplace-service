@@ -10,21 +10,19 @@ from common.blockchain_util import BlockChainUtil
 from common.boto_utils import BotoUtils
 from common.constant import TransactionStatus
 from common.logger import get_logger
-from orchestrator.config import (
-    CREATE_ORDER_SERVICE_ARN,
-    INITIATE_PAYMENT_SERVICE_ARN,
-    EXECUTE_PAYMENT_SERVICE_ARN,
-    WALLETS_SERVICE_ARN,
-    ORDER_DETAILS_ORDER_ID_ARN,
-    ORDER_DETAILS_BY_USERNAME_ARN,
-    CONTRACT_API_ARN,
-    REGION_NAME,
-    SIGNER_ADDRESS,
-    EXECUTOR_ADDRESS,
-    NETWORKS,
-    NETWORK_ID,
-    SIGNER_SERVICE_ARN,
-)
+from orchestrator.config import CONTRACT_API_ARN
+from orchestrator.config import CREATE_ORDER_SERVICE_ARN
+from orchestrator.config import EXECUTE_PAYMENT_SERVICE_ARN
+from orchestrator.config import EXECUTOR_ADDRESS
+from orchestrator.config import INITIATE_PAYMENT_SERVICE_ARN
+from orchestrator.config import NETWORK_ID
+from orchestrator.config import NETWORKS
+from orchestrator.config import ORDER_DETAILS_BY_USERNAME_ARN
+from orchestrator.config import ORDER_DETAILS_ORDER_ID_ARN
+from orchestrator.config import REGION_NAME
+from orchestrator.config import SIGNER_ADDRESS
+from orchestrator.config import SIGNER_SERVICE_ARN
+from orchestrator.config import WALLETS_SERVICE_ARN
 from orchestrator.services.wallet_service import WalletService
 from orchestrator.transaction_history import TransactionHistory
 from orchestrator.transaction_history_data_access_object import TransactionHistoryDAO
