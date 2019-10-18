@@ -1,6 +1,8 @@
 plugins:
   - serverless-offline
   - serverless-python-requirements
+  - serverless-plugin-tracing
+  - serverless-prune-plugin
 
 service: contract-api
 provider:
@@ -17,11 +19,16 @@ provider:
     tags: # Tags that will be added to each of the deployment resources
       key1: contract-api
   deploymentPrefix: serverless
+  tracing: true
 
 custom:
   pythonRequirements:
     fileName: contract_api/requirement.txt
     dockerizePip: true
+  prune:
+    automatic: true
+    includeLayers: true
+    number: 5
 
 package:
   exclude:
@@ -220,6 +227,32 @@ functions:
       - http:
           method: GET
           path: /channel
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
+  get_channel:
+    warmup: true
+    handler: contract_api/handlers.channel_handlers.get_channels
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /v2/channel
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:

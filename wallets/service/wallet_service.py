@@ -6,7 +6,7 @@ from common.constant import TransactionStatus
 from common.logger import get_logger
 from common.ssm_utils import get_ssm_parameter
 from common.utils import Utils
-from wallets.config import NETWORK_ID, NETWORKS, SIGNER_ADDRESS, EXECUTOR_ADDRESS, EXECUTOR_KEY
+from wallets.config import NETWORK_ID, NETWORKS, SIGNER_ADDRESS, EXECUTOR_ADDRESS, EXECUTOR_KEY, MINIMUM_AMOUNT_IN_COGS_ALLOWED
 from wallets.constant import GENERAL_WALLET_TYPE, MPE_ADDR_PATH, MPE_CNTRCT_PATH
 from wallets.dao.channel_dao import ChannelDAO
 from wallets.dao.wallet_data_access_object import WalletDAO
@@ -69,16 +69,16 @@ class WalletService:
         v, r, s = Web3.toInt(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
         return r, s, v, signature
 
-    def __calculate_agi_tokens(self, amount, currency):
+    def __calculate_amount_in_cogs(self, amount, currency):
         if currency == "USD":
-            agi_tokens = amount
+            amount_in_cogs = round(amount)
         else:
             raise Exception("Currency %s not supported.", currency)
 
-        return agi_tokens
+        return amount_in_cogs
 
-    def open_channel_by_third_party(self, order_id, sender, sender_private_key, group_id,
-                                    org_id, amount, currency, recipient):
+    def open_channel_by_third_party(self, order_id, sender, signature, r, s, v, group_id,
+                                    org_id, amount, currency, recipient, current_block_no):
         self.EXECUTOR_WALLET_ADDRESS = get_ssm_parameter(EXECUTOR_ADDRESS)
         self.EXECUTOR_WALLET_KEY = get_ssm_parameter(EXECUTOR_KEY)
         method_name = "openChannelByThirdParty"
@@ -87,23 +87,16 @@ class WalletService:
             key='address'
         )
 
-        current_block_no = self.obj_blockchain_util.get_current_block_no()
-
         # 1 block no is mined in 15 sec on average, setting expiration as 10 years
         expiration = current_block_no + (10 * 365 * 24 * 60 * 4)
-        agi_tokens = self.__calculate_agi_tokens(amount=amount, currency=currency)
+        amount_in_cogs = self.__calculate_amount_in_cogs(amount=amount, currency=currency)
+        self.__validate__cogs(amount_in_cogs=amount_in_cogs)
 
         group_id_in_hex = "0x" + base64.b64decode(group_id).hex()
-        r, s, v, signature = self.__generate_signature_details(
-            recipient=recipient, group_id=group_id_in_hex,
-            agi_tokens=agi_tokens, expiration=expiration,
-            message_nonce=current_block_no,
-            signer_key=sender_private_key
-        )
 
         positional_inputs = (
             sender, SIGNER_ADDRESS, recipient,
-            group_id_in_hex, agi_tokens, expiration,
+            group_id_in_hex, amount_in_cogs, expiration,
             current_block_no, v, r, s
         )
 
@@ -134,7 +127,7 @@ class WalletService:
 
         return {
             "transaction_hash": transaction_hash, "signature": signature,
-            "agi_tokens": agi_tokens, "type": method_name
+            "amount_in_cogs": amount_in_cogs, "type": method_name
         }
 
     def set_default_wallet(self, username, address):
@@ -145,8 +138,9 @@ class WalletService:
         self.EXECUTOR_WALLET_ADDRESS = get_ssm_parameter(EXECUTOR_ADDRESS)
         self.EXECUTOR_WALLET_KEY = get_ssm_parameter(EXECUTOR_KEY)
         method_name = "channelAddFunds"
-        agi_tokens = self.__calculate_agi_tokens(amount=amount, currency=currency)
-        positional_inputs = (channel_id, agi_tokens)
+        amount_in_cogs = self.__calculate_amount_in_cogs(amount=amount, currency=currency)
+        self.__validate__cogs(amount_in_cogs=amount_in_cogs)
+        positional_inputs = (channel_id, amount_in_cogs)
 
         transaction_object = self.obj_blockchain_util.create_transaction_object(
             *positional_inputs, method_name=method_name,
@@ -171,7 +165,7 @@ class WalletService:
             request_parameters=str(positional_inputs),
             transaction_hash=transaction_hash, status=TransactionStatus.PENDING
         )
-        return {"transaction_hash": transaction_hash, "agi_tokens": agi_tokens, "type": method_name}
+        return {"transaction_hash": transaction_hash, "amount_in_cogs": amount_in_cogs, "type": method_name}
 
     def get_transactions_from_username_recipient(self, username, org_id, group_id):
         logger.info(f"Fetching transactions for {username} to org_id: {org_id} group_id: {org_id}")
@@ -226,3 +220,7 @@ class WalletService:
             "order_id": order_id,
             "transactions": transaction_history
         }
+
+    def __validate__cogs(self, amount_in_cogs):
+        if amount_in_cogs < MINIMUM_AMOUNT_IN_COGS_ALLOWED:
+            raise Exception("Insufficient amount to buy minimum amount in cogs allowed.")

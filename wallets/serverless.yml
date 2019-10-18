@@ -1,12 +1,19 @@
 plugins:
   - serverless-offline
   - serverless-python-requirements
+  - serverless-plugin-tracing
+  - serverless-prune-plugin
 
 service: wallets
 custom:
   pythonRequirements:
     fileName: wallets/requirement.txt
     dockerizePip: true
+  prune:
+    automatic: true
+    includeLayers: true
+    number: 5
+
 
 provider:
   name: aws
@@ -22,6 +29,8 @@ provider:
     tags: # Tags that will be added to each of the deployment resources
       key1: wallets
   deploymentPrefix: serverless
+  versionFunctions: false
+  tracing: true
 
 package:
   exclude:
@@ -46,7 +55,6 @@ package:
     - License
     - log_setup.py
     - heath_check.sh
-    - node_modules/**
 
 functions:
   wallets:
@@ -125,7 +133,7 @@ functions:
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
 
-  channel-transaction-status:
+  channelTxnStatus:
     warmup: true
     handler: wallets/handler/channel_transaction_status_handler.request_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -137,6 +145,4 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
-      - schedule:
-          rate: rate(5 minutes)
-          enabled: true
+      - schedule: rate(2 minutes)
