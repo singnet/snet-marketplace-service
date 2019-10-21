@@ -138,22 +138,7 @@ class WalletService:
         return json.loads(response["body"])["data"]
 
     def get_default_wallet(self, username):
-        get_wallets_payload = {
-            "path": "/wallet",
-            "queryStringParameters": {
-                "username": username
-            },
-            "httpMethod": "GET"
-        }
-        get_wallets_response = self.boto_client.invoke_lambda(
-            lambda_function_arn=WALLETS_SERVICE_ARN,
-            invocation_type='RequestResponse', payload=json.dumps(get_wallets_payload))
-
-        if get_wallets_response["statusCode"] != 200:
-            raise Exception(f"Failed to fetch wallet for {username}")
-
-        wallets = json.loads(get_wallets_response["body"])["data"]["wallets"]
-
+        wallets = self.get_wallets(username)["wallets"]
         default_wallet = None
         for wallet in wallets:
             if wallet["is_default"] == 1 and wallet["type"] == "GENERAL":
