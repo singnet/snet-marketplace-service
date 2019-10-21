@@ -48,7 +48,8 @@ class TestWalletService(unittest.TestCase):
         group_id = "dummy-group"
 
         channel_details = WalletService().get_channel_details(username, org_id, group_id)
-        assert validate_dict(channel_details, ["username", "org_id", "group_id", "wallets"])
+        assert validate_dict(
+            channel_details, ["username", "org_id", "group_id", "wallets"])
         assert isinstance(channel_details["wallets"], list)
         assert validate_dict(channel_details["wallets"][0], ["channels"])
         assert isinstance(channel_details["wallets"][0]["channels"], list)
@@ -88,7 +89,8 @@ class TestWalletService(unittest.TestCase):
         username = "dummy@dummy.io"
         org_id = "dummy"
         group_id = "dummy-group"
-        channel_transactions = WalletService().get_channel_transactions(username, org_id, group_id)
+        channel_transactions = WalletService().get_channel_transactions(
+            username, org_id, group_id)
         assert isinstance(channel_transactions, list)
 
     @patch("common.boto_utils.BotoUtils.invoke_lambda")
@@ -123,7 +125,8 @@ class TestWalletService(unittest.TestCase):
         group_id = "dummy-group"
         transaction_keys = ["channel_id", "recipient", "balance_in_cogs", "pending",
                             "nonce", "expiration", "signer", "status"]
-        channel_transactions = WalletService().get_channels_from_contract(username, org_id, group_id)
+        channel_transactions = WalletService().get_channels_from_contract(
+            username, org_id, group_id)
         assert isinstance(channel_transactions, list)
         if len(channel_transactions) > 0:
             transaction = channel_transactions[0]
@@ -212,4 +215,5 @@ class TestWalletService(unittest.TestCase):
         username = "dummy@dummy.io"
         default_wallet = WalletService().get_default_wallet(username)
         assert isinstance(default_wallet, dict)
-        assert validate_dict(default_wallet, ["address", "is_default", "type", "status"])
+        assert validate_dict(
+            default_wallet, ["address", "is_default", "type", "status"])
