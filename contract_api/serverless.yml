@@ -9,7 +9,7 @@ provider:
   name: aws
   runtime: python3.6
   description: Description of what the lambda function does # optional, Description to publish to AWS
-  memorySize: 128
+  memorySize: 256
   timeout: 30
   region: ${file(./config.${self:provider.stage}.json):REGION}
   stage: ${opt:stage,'dev'}
