@@ -121,8 +121,13 @@ class TestWalletService(unittest.TestCase):
         username = "dummy@dummy.io"
         org_id = "dummy"
         group_id = "dummy-group"
+        transaction_keys = ["channel_id", "recipient", "balance_in_cogs", "pending",
+                            "nonce", "expiration", "signer", "status"]
         channel_transactions = WalletService().get_channels_from_contract(username, org_id, group_id)
         assert isinstance(channel_transactions, list)
+        if len(channel_transactions) > 0:
+            transaction = channel_transactions[0]
+            assert validate_dict(transaction, transaction_keys)
 
     @patch("common.boto_utils.BotoUtils.invoke_lambda")
     def test_get_wallets(self, invoke_lambda_mock):
@@ -144,10 +149,14 @@ class TestWalletService(unittest.TestCase):
             })
         }
         username = "dummy@dummy.io"
+        wallet_required_keys = ["address", "is_default", "type", "status"]
         wallets = WalletService().get_wallets(username)
         assert isinstance(wallets, dict)
         assert "username" in wallets
         assert "wallets" in wallets
+        if len(wallets["wallets"]) > 0:
+            wallet_details = wallets["wallets"][0]
+            assert validate_dict(wallet_details, wallet_required_keys)
 
     @patch("common.boto_utils.BotoUtils.invoke_lambda")
     def test_register_wallet(self, invoke_lambda_mock):
