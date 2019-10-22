@@ -76,7 +76,7 @@ class WalletService:
 
         if "statusCode" not in channel_details_response:
             logger.error(f"contract API boto call failed {channel_details_response}")
-            raise Exception(f"Failed to get channel details from contract API")
+            raise Exception(f"Failed to get channel details from contract API {event}")
 
         if channel_details_response["statusCode"] != 200:
             raise Exception(f"Failed to get channel details from contract API username: {user_address} "
