@@ -17,7 +17,8 @@ class TestUpdateTransaction(unittest.TestCase):
         response = request_handler(event={}, context=None)
         assert (response == "success")
         repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
-        query_response = repo.execute("SELECT * FROM transaction_history WHERE status = %s", "ORDER_CANCELED")
+        query_response = repo.execute(
+            "SELECT * FROM transaction_history WHERE status = %s", "ORDER_CANCELED")
         assert (len(query_response) > 1)
 
     @patch("common.utils.Utils.report_slack")
@@ -29,5 +30,6 @@ class TestUpdateTransaction(unittest.TestCase):
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
         repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
-        query_response = repo.execute("SELECT * FROM transaction_history WHERE order_id = %s AND status = %s", ["Fb736cfa-dae4-11e9-9769-26327914c219", "ORDER_CANCELED"])
+        query_response = repo.execute("SELECT * FROM transaction_history WHERE order_id = %s AND status = %s", [
+                                      "Fb736cfa-dae4-11e9-9769-26327914c219", "ORDER_CANCELED"])
         assert (len(query_response) == 1)

@@ -30,8 +30,10 @@ def request_handler(event, context):
         path_parameters = event.get("pathParameters", None)
 
         order_service = OrderService(obj_repo=repo)
-        order_service.cancel_order_for_given_order_id(order_id=path_parameters["order_id"])
-        response = generate_lambda_response(200, {"status": "success", "data": ""}, cors_enabled=True)
+        order_service.cancel_order_for_given_order_id(
+            order_id=path_parameters["order_id"])
+        response = generate_lambda_response(
+            200, {"status": "success", "data": ""}, cors_enabled=True)
     except Exception as e:
         error_message = format_error_message(
             status="failed",
@@ -41,6 +43,7 @@ def request_handler(event, context):
             handler="cancel_order_handler"
         )
         obj_util.report_slack(1, error_message, SLACK_HOOK)
-        response = generate_lambda_response(500, error_message, cors_enabled=True)
+        response = generate_lambda_response(
+            500, error_message, cors_enabled=True)
         traceback.print_exc()
     return response

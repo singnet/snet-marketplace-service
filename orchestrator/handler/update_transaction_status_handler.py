@@ -9,7 +9,7 @@ from orchestrator.services.order_service import OrderService
 
 patch_all()
 obj_util = Utils()
-repo =Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
+repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
 
 
 def request_handler(event, context):
@@ -17,7 +17,8 @@ def request_handler(event, context):
         order_service = OrderService(obj_repo=repo)
         response = order_service.cancel_order()
         if response == False:
-            raise Exception("Error in update transaction status for network id %s", NETWORK_ID)
+            raise Exception(
+                "Error in update transaction status for network id %s", NETWORK_ID)
         return "success"
     except Exception as e:
         error_message = "Error in updating channel transaction status \n"
