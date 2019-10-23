@@ -46,6 +46,7 @@ def initiate(event, context):
         status = ResponseStatus.FAILED
         utils.report_slack(1, error, SLACK_HOOK)
         status_code = StatusCode.INTERNAL_SERVER_ERROR
+        traceback.print_exc()
 
     except Exception as e:
         response = "Failed to initiate order"
@@ -55,7 +56,8 @@ def initiate(event, context):
         error = Error.UNDEFINED_ERROR
         status = ResponseStatus.FAILED
         status_code = StatusCode.INTERNAL_SERVER_ERROR
-        utils.report_slack(1, error, SLACK_HOOK)
+        utils.report_slack(1, str(error), SLACK_HOOK)
+        traceback.print_exc()
     return generate_lambda_response(status_code, make_response_body(
         status, response, error
     ), cors_enabled=True)
@@ -85,7 +87,7 @@ def execute(event, context):
         error = Error.PAYMENT_INITIATE_FAILED
         status = ResponseStatus.FAILED
         status_code = StatusCode.INTERNAL_SERVER_ERROR
-        utils.report_slack(1, error, SLACK_HOOK)
+        utils.report_slack(1, str(error), SLACK_HOOK)
 
     except Exception as e:
         response = "Failed to execute order"
@@ -95,7 +97,7 @@ def execute(event, context):
         error = Error.UNDEFINED_ERROR
         status = ResponseStatus.FAILED
         status_code = StatusCode.INTERNAL_SERVER_ERROR
-        utils.report_slack(1, error, SLACK_HOOK)
+        utils.report_slack(1, str(error), SLACK_HOOK)
         traceback.print_exc()
     return generate_lambda_response(status_code, make_response_body(
         status, response, error
@@ -135,7 +137,7 @@ def get(event, context):
         status_code = StatusCode.INTERNAL_SERVER_ERROR
         logger.error(response)
         logger.info(event)
-        utils.report_slack(1, error, SLACK_HOOK)
+        utils.report_slack(1, str(error), SLACK_HOOK)
         traceback.print_exc()
     return generate_lambda_response(status_code, make_response_body(
         status, response, error
