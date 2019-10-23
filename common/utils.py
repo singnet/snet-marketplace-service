@@ -38,8 +38,7 @@ class Utils:
 
         for key in row:
             if isinstance(row[key], decimal.Decimal) or isinstance(
-                row[key], datetime.datetime
-            ):
+                    row[key], datetime.datetime):
                 row[key] = str(row[key])
             elif isinstance(row[key], bytes):
                 if row[key] == b"\x01":
@@ -47,12 +46,8 @@ class Utils:
                 elif row[key] == b"\x00":
                     row[key] = 0
                 else:
-                    raise Exception(
-                        "Unsupported bytes object. Key "
-                        + str(key)
-                        + " value "
-                        + str(row[key])
-                    )
+                    raise Exception("Unsupported bytes object. Key " +
+                                    str(key) + " value " + str(row[key]))
 
         return row
 
@@ -77,22 +72,29 @@ def validate_dict(data_dict, required_keys):
     return True
 
 
-def generate_lambda_response(status_code, message, headers=None, cors_enabled=False):
+def generate_lambda_response(status_code,
+                             message,
+                             headers=None,
+                             cors_enabled=False):
     response = {
         "statusCode": status_code,
         "body": json.dumps(message),
-        "headers": {"Content-Type": "application/json"},
+        "headers": {
+            "Content-Type": "application/json"
+        },
     }
     if cors_enabled:
-        response["headers"].update(
-            {
-                "X-Requested-With": "*",
-                "Access-Control-Allow-Headers": "Access-Control-Allow-Origin, Content-Type, X-Amz-Date, Authorization,"
-                "X-Api-Key,x-requested-with",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "GET,OPTIONS,POST",
-            }
-        )
+        response["headers"].update({
+            "X-Requested-With":
+            "*",
+            "Access-Control-Allow-Headers":
+            "Access-Control-Allow-Origin, Content-Type, X-Amz-Date, Authorization,"
+            "X-Api-Key,x-requested-with",
+            "Access-Control-Allow-Origin":
+            "*",
+            "Access-Control-Allow-Methods":
+            "GET,OPTIONS,POST",
+        })
     if headers is not None:
         response["headers"].update(headers)
     return response
@@ -111,14 +113,17 @@ def extract_payload(method, event):
     return method_found, path_parameters, payload_dict
 
 
-def format_error_message(status, error, payload, net_id, handler=None, resource=None):
-    return json.dumps(
-        {
-            "status": status,
-            "error": error,
-            "resource": resource,
-            "payload": payload,
-            "network_id": net_id,
-            "handler": handler,
-        }
-    )
+def format_error_message(status,
+                         error,
+                         payload,
+                         net_id,
+                         handler=None,
+                         resource=None):
+    return json.dumps({
+        "status": status,
+        "error": error,
+        "resource": resource,
+        "payload": payload,
+        "network_id": net_id,
+        "handler": handler,
+    })

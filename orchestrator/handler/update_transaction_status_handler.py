@@ -19,8 +19,8 @@ def request_handler(event, context):
         response = order_service.cancel_order()
         if response == False:
             raise Exception(
-                "Error in update transaction status for network id %s", NETWORK_ID
-            )
+                "Error in update transaction status for network id %s",
+                NETWORK_ID)
         return "success"
     except Exception as e:
         error_message = "Error in updating channel transaction status \n"
