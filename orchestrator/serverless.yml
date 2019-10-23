@@ -291,25 +291,25 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-
+    events:
       - http:
-          method: GET
-          path: /order/{order_id}/cancel
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
+        method: GET
+        path: /order/{order_id}/cancel
+        authorizer:
+          name: user-authorizer
+          type: COGNITO_USER_POOLS
+          arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+          identitySource: method.request.header.Authorization
+        cors:
+          origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+          headers:
+            - Content-Type
+            - X-Amz-Date
+            - Authorization
+            - X-Api-Key
+            - X-Amz-Security-Token
+            - X-Amz-User-Agent
+            - x-requested-with
 
   updateTxnStatus:
     warmup: true
