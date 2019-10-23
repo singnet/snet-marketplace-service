@@ -18,7 +18,6 @@ from orchestrator.dao.transaction_history_dao import TransactionHistoryDAO
 from orchestrator.order_status import OrderStatus
 from orchestrator.services.wallet_service import WalletService
 from orchestrator.transaction_history import TransactionHistory
-from orchestrator.transaction_history_data_access_object import TransactionHistoryDAO
 
 logger = get_logger(__name__)
 
