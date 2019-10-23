@@ -15,7 +15,7 @@ repo =Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
 def request_handler(event, context):
     try:
         order_service = OrderService(obj_repo=repo)
-        response = order_service.manage_update_canceled_order_in_txn_history()
+        response = order_service.cancel_order()
         if response == False:
             raise Exception("Error in update transaction status for network id %s", NETWORK_ID)
         return "success"

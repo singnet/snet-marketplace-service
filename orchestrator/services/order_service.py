@@ -41,7 +41,7 @@ class OrderType(Enum):
 class OrderService:
     def __init__(self, obj_repo):
         self.repo = obj_repo
-        self.obj_transaction_history_dao = TransactionHistoryDAO(obj_repo=self.repo)
+        self.obj_transaction_history_dao = TransactionHistoryDAO(repo=self.repo)
         self.lambda_client = boto3.client('lambda', region_name=REGION_NAME)
         self.boto_client = BotoUtils(REGION_NAME)
         self.wallet_service = WalletService()
@@ -534,7 +534,7 @@ class OrderService:
         channel_details = create_channel_response_body["data"]
         return channel_details
 
-    def manage_update_canceled_order_in_txn_history(self):
+    def cancel_order(self):
         logger.info("Start of UpdateTransactionStatus::manage_update_canceled_order_in_txn_history")
         list_of_order_id_for_expired_transaction = self.obj_transaction_history_dao.get_order_id_for_expired_transaction()
         logger.info(f"List of order_id to be updated with ORDER CANCELED: {list_of_order_id_for_expired_transaction}")

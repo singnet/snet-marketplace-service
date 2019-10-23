@@ -6,8 +6,8 @@ from common.logger import get_logger
 logger = get_logger(__name__)
 
 class TransactionHistoryDAO:
-    def __init__(self, obj_repo):
-        self.__repo = obj_repo
+    def __init__(self, repo):
+        self.__repo = repo
 
     def insert_transaction_history(self, obj_transaction_history):
         transaction_history = obj_transaction_history.get_transaction_history()
