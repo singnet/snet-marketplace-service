@@ -155,17 +155,16 @@ class MPE:
         for record in raw_channel_data:
             record["payment"] = json.loads(record["payment"])
             if record["recipient"] == record["payment"]["payment_address"]:
-                if group_id not in channel_data.keys():
-                    channel = {'channel_id': record['channel_id'],
-                               'recipient': record['recipient'],
-                               'balance_in_cogs': record['balance_in_cogs'],
-                               'pending': record['pending'],
-                               'nonce': record['nonce'],
-                               'expiration': record['expiration'],
-                               'signer': record['signer'],
-                               'status': record['status']
-                               }
-                    channel_data['channels'].append(channel)
+                channel = {'channel_id': record['channel_id'],
+                           'recipient': record['recipient'],
+                           'balance_in_cogs': record['balance_in_cogs'],
+                           'pending': record['pending'],
+                           'nonce': record['nonce'],
+                           'expiration': record['expiration'],
+                           'signer': record['signer'],
+                           'status': record['status']
+                           }
+                channel_data['channels'].append(channel)
 
         return channel_data
 
