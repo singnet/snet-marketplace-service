@@ -24,7 +24,7 @@ def initiate(event, context):
         payload = json.loads(event["body"])
         required_keys = ["price", "item_details", "payment_method"]
         if validate_dict(payload, required_keys):
-            error, response = OrderService(obj_repo=db[NETWORK_ID]).initiate_order(username, payload)
+            response = OrderService(obj_repo=db[NETWORK_ID]).initiate_order(username, payload)
             status_code = StatusCode.CREATED
             status = ResponseStatus.SUCCESS
         else:
@@ -34,6 +34,7 @@ def initiate(event, context):
             response = "Bad Request"
             logger.error(response)
             logger.info(event)
+        error = {}
 
     except PaymentInitiateFailed:
         response = "Failed to initiate order"
