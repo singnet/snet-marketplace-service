@@ -7,6 +7,9 @@ from common.repository import Repository
 from common.utils import validate_dict, generate_lambda_response, make_response_body
 from orchestrator.config import NETWORKS, NETWORK_ID
 from orchestrator.services.order_service import OrderService
+from aws_xray_sdk.core import patch_all
+
+patch_all()
 
 logger = get_logger(__name__)
 NETWORKS_NAME = dict(
