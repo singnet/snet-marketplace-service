@@ -43,8 +43,9 @@ class OrderType(Enum):
 class OrderService:
     def __init__(self, obj_repo):
         self.repo = obj_repo
-        self.obj_transaction_history_dao = TransactionHistoryDAO(repo=self.repo)
-        self.lambda_client = boto3.client('lambda', region_name=REGION_NAME)
+        self.obj_transaction_history_dao = TransactionHistoryDAO(self.repo)
+        self.lambda_client = boto3.client('lambda', region_name=REGION_NAME, aws_access_key_id=ACCESS_KEY,
+                                          aws_secret_access_key=SECRET_KEY)
         self.boto_client = BotoUtils(REGION_NAME)
         self.wallet_service = WalletService()
         self.obj_blockchain_util = BlockChainUtil(
