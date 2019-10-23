@@ -243,7 +243,7 @@ functions:
 
   execute-order:
     warmup: true
-    handler: orchestrator/handlers.order_handler.initiate
+    handler: orchestrator/handlers.order_handler.execute
           role: ${file(./config.${self:provider.stage}.json):ROLE}
           tags:
             Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
@@ -278,7 +278,7 @@ functions:
 
   cancel-order:
     warmup: true
-    handler: orchestrator/handlers.order_handler.initiate
+    handler: orchestrator/handlers.order_handler.cancel
       role: ${file(./config.${self:provider.stage}.json):ROLE}
       tags:
         Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
