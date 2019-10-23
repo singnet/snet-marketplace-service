@@ -44,7 +44,7 @@ class OrderService:
     def __init__(self, obj_repo):
         self.repo = obj_repo
         self.obj_transaction_history_dao = TransactionHistoryDAO(self.repo)
-        self.lambda_client = boto3.client('lambda', REGION_NAME)
+        self.lambda_client = boto3.client('lambda', region_name=REGION_NAME)
         self.boto_client = BotoUtils(REGION_NAME)
         self.wallet_service = WalletService()
         self.obj_blockchain_util = BlockChainUtil(
