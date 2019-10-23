@@ -109,6 +109,6 @@ def extract_payload(method, event):
     return method_found, path_parameters, payload_dict
 
 
-def format_error_message(status, error, resource, payload, net_id):
+def format_error_message(status, error, payload, net_id, handler=None, resource=None):
     return json.dumps(
-        {'status': status, 'error': error, 'resource': resource, 'payload': payload, 'network_id': net_id})
+        {'status': status, 'error': error, 'resource': resource, 'payload': payload, 'network_id': net_id, 'handler': handler})

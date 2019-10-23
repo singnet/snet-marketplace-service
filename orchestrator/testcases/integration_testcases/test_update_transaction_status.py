@@ -26,7 +26,7 @@ class TestUpdateTransaction(unittest.TestCase):
                  "pathParameters": {"order_id": "Fb736cfa-dae4-11e9-9769-26327914c219"}, "httpMethod": "GET"}
         response = cancel_given_order(event=event, context=None)
         assert (response["statusCode"] == 200)
-        response_body = json.dumps(response["body"])
+        response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
         repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
         query_response = repo.execute("SELECT * FROM transaction_history WHERE order_id = %s AND status = %s", ["Fb736cfa-dae4-11e9-9769-26327914c219", "ORDER_CANCELED"])

@@ -13,9 +13,10 @@ from common.logger import get_logger
 from orchestrator.config import CREATE_ORDER_SERVICE_ARN, INITIATE_PAYMENT_SERVICE_ARN, \
     EXECUTE_PAYMENT_SERVICE_ARN, WALLETS_SERVICE_ARN, ORDER_DETAILS_ORDER_ID_ARN, ORDER_DETAILS_BY_USERNAME_ARN, \
     CONTRACT_API_ARN, REGION_NAME, SIGNER_ADDRESS, EXECUTOR_ADDRESS, NETWORKS, NETWORK_ID, SIGNER_SERVICE_ARN
+from orchestrator.dao.transaction_history_data_access_object import TransactionHistoryDAO
+from orchestrator.order_status import OrderStatus
 from orchestrator.services.wallet_service import WalletService
 from orchestrator.transaction_history import TransactionHistory
-from orchestrator.transaction_history_data_access_object import TransactionHistoryDAO
 
 logger = get_logger(__name__)
 
@@ -322,7 +323,8 @@ class OrderService:
                                                                                          amount_in_cogs=amount,
                                                                                          expiration=expiration,
                                                                                          message_nonce=message_nonce,
-                                                                                         sender_private_key=wallet_details["private_key"],
+                                                                                         sender_private_key=
+                                                                                         wallet_details["private_key"],
                                                                                          executor_wallet_address=self.EXECUTOR_WALLET_ADDRESS)
 
             logger.info(f"Signature Details {signature_details}")
@@ -531,3 +533,17 @@ class OrderService:
         create_channel_response_body = json.loads(create_channel_response["body"])
         channel_details = create_channel_response_body["data"]
         return channel_details
+
+    def manage_update_canceled_order_in_txn_history(self):
+        logger.info("Start of UpdateTransactionStatus::manage_update_canceled_order_in_txn_history")
+        list_of_order_id_for_expired_transaction = self.obj_transaction_history_dao.get_order_id_for_expired_transaction()
+        logger.info(f"List of order_id to be updated with ORDER CANCELED: {list_of_order_id_for_expired_transaction}")
+        update_transaction_status = self.obj_transaction_history_dao.update_transaction_status(
+            list_of_order_id=list_of_order_id_for_expired_transaction, status=OrderStatus.ORDER_CANCELED.value)
+        return True
+
+    def cancel_order_for_given_order_id(self, order_id):
+        logger.info("UpdateTransactionStatus::cancel_order_for_given_order_id: %s", order_id)
+        self.obj_transaction_history_dao.update_transaction_status(
+            list_of_order_id=[order_id], status=OrderStatus.ORDER_CANCELED.value)
+        return True
