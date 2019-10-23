@@ -18,7 +18,6 @@ from orchestrator.dao.transaction_history_dao import TransactionHistoryDAO
 from orchestrator.order_status import OrderStatus
 from orchestrator.services.wallet_service import WalletService
 from orchestrator.transaction_history import TransactionHistory
-from orchestrator.transaction_history_data_access_object import TransactionHistoryDAO
 
 logger = get_logger(__name__)
 
@@ -43,7 +42,7 @@ class OrderType(Enum):
 class OrderService:
     def __init__(self, obj_repo):
         self.repo = obj_repo
-        self.obj_transaction_history_dao = TransactionHistoryDAO(repo=self.repo)
+        self.obj_transaction_history_dao = TransactionHistoryDAO(self.repo)
         self.lambda_client = boto3.client('lambda', region_name=REGION_NAME)
         self.boto_client = BotoUtils(REGION_NAME)
         self.wallet_service = WalletService()
