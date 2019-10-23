@@ -1,8 +1,8 @@
 plugins:
   - serverless-offline
   - serverless-python-requirements
-  - serverless-plugin-tracing
-  - serverless-prune-plugin
+#  - serverless-plugin-tracing
+#  - serverless-prune-plugin
 
 service: orchestrator
 custom:
@@ -90,83 +90,10 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-      - http:
-          method: POST
-          path: /order/initiate
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-      - http:
-          method: POST
-          path: /order/execute
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
+
       - http:
           method: POST
           path: /wallet/status
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-
-      - http:
-          method: GET
-          path: /order
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-
-      - http:
-          method: GET
-          path: /order/{order_id}
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -205,6 +132,131 @@ functions:
       - http:
           method: GET
           path: /wallet
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
+
+  get-order:
+    warmup: true
+    handler: orchestrator/handlers.order_handler.get
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /order
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
+      - http:
+          method: GET
+          path: /order/{order_id}
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
+  initiate-order:
+    warmup: true
+    handler: orchestrator/handlers.order_handler.initiate
+          role: ${file(./config.${self:provider.stage}.json):ROLE}
+          tags:
+            Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+            Team: ${file(./config.${self:provider.stage}.json):TEAM}
+            Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+          vpc:
+            securityGroupIds:
+              - ${file(./config.${self:provider.stage}.json):SG1}
+              - ${file(./config.${self:provider.stage}.json):SG2}
+            subnetIds:
+              - ${file(./config.${self:provider.stage}.json):VPC1}
+              - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: POST
+          path: /order/initiate
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
+  execute-order:
+    warmup: true
+    handler: orchestrator/handlers.order_handler.initiate
+          role: ${file(./config.${self:provider.stage}.json):ROLE}
+          tags:
+            Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+            Team: ${file(./config.${self:provider.stage}.json):TEAM}
+            Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+          vpc:
+            securityGroupIds:
+              - ${file(./config.${self:provider.stage}.json):SG1}
+              - ${file(./config.${self:provider.stage}.json):SG2}
+            subnetIds:
+              - ${file(./config.${self:provider.stage}.json):VPC1}
+              - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: POST
+          path: /order/execute
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
