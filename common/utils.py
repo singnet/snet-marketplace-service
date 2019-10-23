@@ -77,6 +77,14 @@ def validate_dict(data_dict, required_keys):
     return True
 
 
+def make_response_body(status, data, error):
+    return {
+        "status": status,
+        "data": data,
+        "error": error
+    }
+
+
 def generate_lambda_response(status_code, message, headers=None, cors_enabled=False):
     response = {
         'statusCode': status_code,

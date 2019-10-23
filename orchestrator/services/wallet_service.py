@@ -11,6 +11,27 @@ class WalletService:
     def __init__(self):
         self.boto_client = BotoUtils(REGION_NAME)
 
+    def create_channel(self, open_channel_body):
+        create_channel_transaction_payload = {
+            "path": "/wallet/channel",
+            "body": json.dumps(open_channel_body),
+            "httpMethod": "POST"
+        }
+
+        create_channel_response = self.boto_client.invoke_lambda(
+            lambda_function_arn=WALLETS_SERVICE_ARN,
+            invocation_type='RequestResponse',
+            payload=json.dumps(create_channel_transaction_payload)
+        )
+
+        logger.info(f"create_channel_response {create_channel_response}")
+        if create_channel_response["statusCode"] != 200:
+            raise Exception(f"Failed to create channel")
+
+        create_channel_response_body = json.loads(create_channel_response["body"])
+        channel_details = create_channel_response_body["data"]
+        return channel_details
+
     def get_channel_details(self, username, org_id, group_id):
         """ Method to get wallet details for a given username. """
         try:

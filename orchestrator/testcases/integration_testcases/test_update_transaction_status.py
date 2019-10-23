@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 from common.repository import Repository
 from orchestrator.config import NETWORK_ID, NETWORKS
-from orchestrator.handler.cancel_order_handler import request_handler as cancel_given_order
-from orchestrator.handler.update_transaction_status_handler import request_handler
+from orchestrator.handlers.cancel_order_handler import request_handler as cancel_given_order
+from orchestrator.handlers.update_transaction_status_handler import request_handler
 
 
 class TestUpdateTransaction(unittest.TestCase):
