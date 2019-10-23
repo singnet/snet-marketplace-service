@@ -9,7 +9,7 @@ from web3 import Web3
 from common.blockchain_util import BlockChainUtil
 from common.boto_utils import BotoUtils
 from common.constant import TransactionStatus
-from common.exceptions import PaymentInitiateFailed, ChannelCreationFailed, FundChannelFailed
+from orchestrator.exceptions import PaymentInitiateFailed, ChannelCreationFailed, FundChannelFailed
 from common.logger import get_logger
 from orchestrator.config import CREATE_ORDER_SERVICE_ARN, INITIATE_PAYMENT_SERVICE_ARN, \
     EXECUTE_PAYMENT_SERVICE_ARN, WALLETS_SERVICE_ARN, ORDER_DETAILS_ORDER_ID_ARN, ORDER_DETAILS_BY_USERNAME_ARN, \
