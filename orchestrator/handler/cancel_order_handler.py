@@ -23,7 +23,8 @@ logger = get_logger(__name__)
 def request_handler(event, context):
     try:
         valid_event = validate_dict(
-            data_dict=event, required_keys=REQUIRED_KEYS_FOR_CANCEL_ORDER_EVENT)
+            data_dict=event, required_keys=REQUIRED_KEYS_FOR_CANCEL_ORDER_EVENT
+        )
         if not valid_event:
             return generate_lambda_response(400, "Bad Request", cors_enabled=True)
 
@@ -31,19 +32,20 @@ def request_handler(event, context):
 
         order_service = OrderService(obj_repo=repo)
         order_service.cancel_order_for_given_order_id(
-            order_id=path_parameters["order_id"])
+            order_id=path_parameters["order_id"]
+        )
         response = generate_lambda_response(
-            200, {"status": "success", "data": ""}, cors_enabled=True)
+            200, {"status": "success", "data": ""}, cors_enabled=True
+        )
     except Exception as e:
         error_message = format_error_message(
             status="failed",
             error=repr(e),
             payload=payload_dict,
             net_id=NETWORK_ID,
-            handler="cancel_order_handler"
+            handler="cancel_order_handler",
         )
         obj_util.report_slack(1, error_message, SLACK_HOOK)
-        response = generate_lambda_response(
-            500, error_message, cors_enabled=True)
+        response = generate_lambda_response(500, error_message, cors_enabled=True)
         traceback.print_exc()
     return response

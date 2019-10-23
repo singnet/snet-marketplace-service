@@ -29,21 +29,31 @@ class TransactionHistoryDAO:
                 transaction_history["payment_id"],
                 transaction_history["payment_method"],
                 transaction_history["raw_payment_data"],
-                transaction_history["transaction_hash"]
-            ]
+                transaction_history["transaction_hash"],
+            ],
         )
         if query_response[0] == 1:
             return True
         return False
 
     def get_order_id_for_expired_transaction(self):
-        params = [OrderStatus.PAYMENT_INITIATED.value, OrderStatus.PAYMENT_INITIATION_FAILED.value,
-                  OrderStatus.PAYMENT_EXECUTION_FAILED.value, ORDER_EXPIRATION_THRESHOLD_IN_MINUTES]
+        params = [
+            OrderStatus.PAYMENT_INITIATED.value,
+            OrderStatus.PAYMENT_INITIATION_FAILED.value,
+            OrderStatus.PAYMENT_EXECUTION_FAILED.value,
+            ORDER_EXPIRATION_THRESHOLD_IN_MINUTES,
+        ]
         order_id_raw_data = self.__repo.execute(
             "SELECT order_id FROM transaction_history WHERE status IN (%s, %s, %s) AND "
             "TIMESTAMPDIFF(MINUTE, row_created, %s) > %s ",
-            [OrderStatus.PAYMENT_INITIATED.value, OrderStatus.PAYMENT_INITIATION_FAILED.value,
-             OrderStatus.PAYMENT_EXECUTION_FAILED.value, dt.utcnow(), ORDER_EXPIRATION_THRESHOLD_IN_MINUTES])
+            [
+                OrderStatus.PAYMENT_INITIATED.value,
+                OrderStatus.PAYMENT_INITIATION_FAILED.value,
+                OrderStatus.PAYMENT_EXECUTION_FAILED.value,
+                dt.utcnow(),
+                ORDER_EXPIRATION_THRESHOLD_IN_MINUTES,
+            ],
+        )
         list_of_order_id = [rec["order_id"] for rec in order_id_raw_data]
         return list_of_order_id
 
@@ -53,7 +63,10 @@ class TransactionHistoryDAO:
         temp_holder = ("%s, " * len(list_of_order_id))[:-2]
         params = [status] + list_of_order_id
         update_transaction_status_response = self.__repo.execute(
-            "UPDATE transaction_history SET status = %s WHERE order_id IN (" + temp_holder + ")", params)
-        logger.info(
-            f"update_transaction_status: {update_transaction_status_response}")
+            "UPDATE transaction_history SET status = %s WHERE order_id IN ("
+            + temp_holder
+            + ")",
+            params,
+        )
+        logger.info(f"update_transaction_status: {update_transaction_status_response}")
         return update_transaction_status_response
