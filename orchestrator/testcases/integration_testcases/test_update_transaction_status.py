@@ -1,9 +1,10 @@
-import unittest
 import json
+import unittest
 from unittest.mock import patch
 
 from common.repository import Repository
-from orchestrator.config import NETWORK_ID, NETWORKS
+from orchestrator.config import NETWORK_ID
+from orchestrator.config import NETWORKS
 from orchestrator.handler.cancel_order_handler import (
     request_handler as cancel_given_order,
 )

@@ -1,7 +1,8 @@
+from datetime import datetime as dt
+
+from common.logger import get_logger
 from orchestrator.config import ORDER_EXPIRATION_THRESHOLD_IN_MINUTES
 from orchestrator.order_status import OrderStatus
-from datetime import datetime as dt
-from common.logger import get_logger
 
 logger = get_logger(__name__)
 
