@@ -30,8 +30,8 @@ def request_handler(event, context):
         path_parameters = event.get("pathParameters", None)
 
         order_service = OrderService(obj_repo=repo)
-        order_service.cancel_order_for_given_order_id(order_id=path_parameters["order_id"])
-        response = generate_lambda_response(200, {"status": "success", "data": ""}, cors_enabled=True)
+        cancel_order_status = order_service.cancel_order_for_given_order_id(order_id=path_parameters["order_id"])
+        response = generate_lambda_response(200, {"status": "success", "data": cancel_order_status}, cors_enabled=True)
     except Exception as e:
         error_message = format_error_message(
             status="failed",
