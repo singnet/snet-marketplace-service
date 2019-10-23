@@ -56,9 +56,11 @@ class TransactionHistoryDAO:
                                                 OrderStatus.PAYMENT_INITIATION_FAILED.value,
                                                 OrderStatus.PAYMENT_EXECUTION_FAILED.value]
         update_transaction_status_response = self.__repo.execute(
-            "UPDATE transaction_history SET status = %s WHERE order_id IN (" + temp_holder + ") AND status IN (%s, %s, %s)",
+            "UPDATE transaction_history SET status = %s WHERE order_id IN (" +
+            temp_holder + ") AND status IN (%s, %s, %s)",
             params)
-        logger.info(f"update_transaction_status: {update_transaction_status_response}")
+        logger.info(
+            f"update_transaction_status: {update_transaction_status_response}")
         return update_transaction_status_response
 
     def get_transaction_details_for_given_order_id(self, order_id):
