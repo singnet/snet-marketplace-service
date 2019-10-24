@@ -16,10 +16,10 @@ from contract_api.mpe import MPE
 patch_all()
 logger = get_logger(__name__)
 
-NETWORKS_NAME = dict((NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
-db = dict(
-    (netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys()
-)
+NETWORKS_NAME = dict(
+    (NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
+db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS))
+          for netId in NETWORKS.keys())
 utils = Utils()
 
 
@@ -29,10 +29,13 @@ def get_channels(event, context):
         query_string_parameters = event["queryStringParameters"]
         if validate_dict(query_string_parameters, ["wallet_address"]):
             wallet_address = query_string_parameters["wallet_address"]
-            logger.info(f"Fetched values from request wallet_address: {wallet_address}")
+            logger.info(
+                f"Fetched values from request wallet_address: {wallet_address}"
+            )
             response = MPE(
-                net_id=NETWORK_ID, obj_repo=db[NETWORK_ID]
-            ).get_channels_by_user_address_v2(wallet_address)
+                net_id=NETWORK_ID,
+                obj_repo=db[NETWORK_ID]).get_channels_by_user_address_v2(
+                    wallet_address)
             status_code = StatusCode.OK
         else:
             status_code = StatusCode.BAD_REQUEST
@@ -45,9 +48,9 @@ def get_channels(event, context):
         utils.report_slack(1, str(response), SLACK_HOOK)
         logger.error(e)
         status_code = StatusCode.INTERNAL_SERVER_ERROR
-    return generate_lambda_response(
-        status_code=status_code, message=response, cors_enabled=True
-    )
+    return generate_lambda_response(status_code=status_code,
+                                    message=response,
+                                    cors_enabled=True)
 
 
 def get_channels_for_group(event, context):
@@ -56,11 +59,12 @@ def get_channels_for_group(event, context):
     channel_id = event["pathParameters"]["channelId"]
     obj_mpe = MPE(net_id=net_id, obj_repo=db[net_id])
     response_data = obj_mpe.get_channel_data_by_group_id_and_channel_id(
-        group_id=group_id, channel_id=channel_id
-    )
-    return generate_lambda_response(
-        200, {"status": "success", "data": response_data}, cors_enabled=True
-    )
+        group_id=group_id, channel_id=channel_id)
+    return generate_lambda_response(200, {
+        "status": "success",
+        "data": response_data
+    },
+                                    cors_enabled=True)
 
 
 def get_channels_old_api(event, context):
@@ -77,6 +81,8 @@ def get_channels_old_api(event, context):
         service_id=service_id,
         group_id=group_id,
     )
-    return generate_lambda_response(
-        200, {"status": "success", "data": response_data}, cors_enabled=True
-    )
+    return generate_lambda_response(200, {
+        "status": "success",
+        "data": response_data
+    },
+                                    cors_enabled=True)
