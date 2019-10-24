@@ -25,8 +25,10 @@ def get_channels(event, context):
         query_string_parameters = event["queryStringParameters"]
         if validate_dict(query_string_parameters, ["wallet_address"]):
             wallet_address = query_string_parameters["wallet_address"]
-            logger.info(f"Fetched values from request wallet_address: {wallet_address}")
-            response = MPE(net_id=NETWORK_ID, obj_repo=db[NETWORK_ID]).get_channels_by_user_address_v2(wallet_address)
+            logger.info(
+                f"Fetched values from request wallet_address: {wallet_address}")
+            response = MPE(net_id=NETWORK_ID, obj_repo=db[NETWORK_ID]).get_channels_by_user_address_v2(
+                wallet_address)
             status_code = StatusCode.OK
         else:
             status_code = StatusCode.BAD_REQUEST
