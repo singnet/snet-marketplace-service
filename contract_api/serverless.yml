@@ -363,7 +363,7 @@ functions:
 
   get_channels_old_api:
     warmup: true
-    handler: ontract_api/handlers.channel_handlers.get_channels_old_api
+    handler: contract_api/handlers.channel_handlers.get_channels_old_api
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
