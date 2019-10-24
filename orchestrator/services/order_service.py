@@ -13,7 +13,8 @@ from orchestrator.exceptions import PaymentInitiateFailed, ChannelCreationFailed
 from common.logger import get_logger
 from orchestrator.config import CREATE_ORDER_SERVICE_ARN, INITIATE_PAYMENT_SERVICE_ARN, \
     EXECUTE_PAYMENT_SERVICE_ARN, WALLETS_SERVICE_ARN, ORDER_DETAILS_ORDER_ID_ARN, ORDER_DETAILS_BY_USERNAME_ARN, \
-    CONTRACT_API_ARN, REGION_NAME, SIGNER_ADDRESS, EXECUTOR_ADDRESS, NETWORKS, NETWORK_ID, SIGNER_SERVICE_ARN
+     REGION_NAME, SIGNER_ADDRESS, EXECUTOR_ADDRESS, NETWORKS, NETWORK_ID, SIGNER_SERVICE_ARN, \
+    GET_GROUP_FOR_ORG_API_ARN, GET_ALL_ORG_API_ARN
 from orchestrator.dao.transaction_history_dao import TransactionHistoryDAO
 from orchestrator.order_status import OrderStatus
 from orchestrator.services.wallet_service import WalletService
@@ -140,7 +141,7 @@ class OrderService:
             "httpMethod": "GET"
         }
         group_details_lambda_response = self.lambda_client.invoke(
-            FunctionName=CONTRACT_API_ARN,
+            FunctionName=GET_GROUP_FOR_ORG_API_ARN,
             InvocationType='RequestResponse',
             Payload=json.dumps(group_details_event)
         )
@@ -484,7 +485,7 @@ class OrderService:
             "httpMethod": "GET"
         }
         org_details_response = self.boto_client.invoke_lambda(
-            lambda_function_arn=CONTRACT_API_ARN,
+            lambda_function_arn=GET_ALL_ORG_API_ARN,
             invocation_type='RequestResponse',
             payload=json.dumps(org_details_event)
         )
