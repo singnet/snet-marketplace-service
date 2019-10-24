@@ -1,9 +1,11 @@
+from datetime import datetime as dt
+
+from common.logger import get_logger
 from orchestrator.config import ORDER_EXPIRATION_THRESHOLD_IN_MINUTES
 from orchestrator.order_status import OrderStatus
-from datetime import datetime as dt
-from common.logger import get_logger
 
 logger = get_logger(__name__)
+
 
 class TransactionHistoryDAO:
     def __init__(self, repo):
@@ -48,10 +50,21 @@ class TransactionHistoryDAO:
 
     def update_transaction_status(self, list_of_order_id, status):
         if len(list_of_order_id) == 0:
-            return
+            return "No order id found"
         temp_holder = ("%s, " * len(list_of_order_id))[:-2]
-        params = [status]+ list_of_order_id
+        params = [status] + list_of_order_id + [OrderStatus.PAYMENT_INITIATED.value,
+                                                OrderStatus.PAYMENT_INITIATION_FAILED.value,
+                                                OrderStatus.PAYMENT_EXECUTION_FAILED.value]
         update_transaction_status_response = self.__repo.execute(
-            "UPDATE transaction_history SET status = %s WHERE order_id IN (" + temp_holder + ")", params)
+            "UPDATE transaction_history SET status = %s WHERE order_id IN (" + temp_holder + ") AND status IN (%s, %s, %s)",
+            params)
         logger.info(f"update_transaction_status: {update_transaction_status_response}")
         return update_transaction_status_response
+
+    def get_transaction_details_for_given_order_id(self, order_id):
+        transaction_data = self.__repo.execute(
+            "SELECT username, order_id, order_type, status, payment_id, payment_type, payment_method, raw_payment_data, "
+            "transaction_hash FROM transaction_history WHERE order_id = %s", [order_id])
+        if len(transaction_data) == 0:
+            raise Exception("Order Id does not exist.")
+        return transaction_data[0]
