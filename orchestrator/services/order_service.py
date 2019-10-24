@@ -103,7 +103,7 @@ class OrderService:
             obj_transaction_history = TransactionHistory(
                 username=username, order_id=order_id, order_type=order_type,
                 payment_id=payment_id, raw_payment_data=raw_payment_data,
-                status=Status.SUCCESS.value
+                status=Status.PAYMENT_INITIATED.value
             )
             self.obj_transaction_history_dao.insert_transaction_history(obj_transaction_history=obj_transaction_history)
             return payment_data
