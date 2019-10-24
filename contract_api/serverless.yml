@@ -59,8 +59,6 @@ package:
     - node_modules/**
 
 functions:
-
-
   get_all_org:
     warmup: true
     handler: contract_api/handlers.organization_handlers.get_all_org
@@ -146,7 +144,7 @@ functions:
               - x-requested-with
   get_group_for_org_id:
     warmup: true
-    handler:  contract_api/handlers.organization_handlers.get_group_for_org_id
+    handler: contract_api/handlers.organization_handlers.get_group_for_org_id
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -225,7 +223,7 @@ functions:
               - x-requested-with
   get_group_for_service:
     warmup: true
-    handler:  contract_api/handlers.service_handlers.get_group_for_service
+    handler: contract_api/handlers.service_handlers.get_group_for_service
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
