@@ -15,9 +15,9 @@ class TransactionHistoryDAO:
         transaction_history = obj_transaction_history.get_transaction_history()
         query_response = self.__repo.execute(
             "INSERT INTO transaction_history (username, order_id, order_type, status, payment_id, payment_method, "
-            "raw_payment_data, transaction_hash)"
-            "VALUES(%s, %s, %s, %s, %s, %s, %s, %s) "
-            "ON DUPLICATE KEY UPDATE payment_id = %s, payment_method = %s, raw_payment_data = %s, transaction_hash = %s",
+            "raw_payment_data, transaction_hash, row_created, row_updated)"
+            "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
+            "ON DUPLICATE KEY UPDATE payment_id = %s, payment_method = %s, raw_payment_data = %s, transaction_hash = %s, row_updated = %s",
             [
                 transaction_history["username"],
                 transaction_history["order_id"],
@@ -27,10 +27,13 @@ class TransactionHistoryDAO:
                 transaction_history["payment_method"],
                 transaction_history["raw_payment_data"],
                 transaction_history["transaction_hash"],
+                dt.utcnow(),
+                dt.utcnow(),
                 transaction_history["payment_id"],
                 transaction_history["payment_method"],
                 transaction_history["raw_payment_data"],
-                transaction_history["transaction_hash"]
+                transaction_history["transaction_hash"],
+                dt.utcnow()
             ]
         )
         if query_response[0] == 1:
