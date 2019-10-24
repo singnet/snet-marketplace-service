@@ -20,6 +20,12 @@ class Error:
         "code": UNDEFINED_ERROR_CODE,
         "message": "PAYMENT_EXECUTE_FAILED",
     }
-    INVALID_ORDER_TYPE = {"code": UNDEFINED_ERROR_CODE, "message": "INVALID_ORDER_TYPE"}
-    UNDEFINED_ERROR = {"code": UNDEFINED_ERROR_CODE, "message": "UNDEFINED_ERROR"}
+    INVALID_ORDER_TYPE = {
+        "code": UNDEFINED_ERROR_CODE,
+        "message": "INVALID_ORDER_TYPE"
+    }
+    UNDEFINED_ERROR = {
+        "code": UNDEFINED_ERROR_CODE,
+        "message": "UNDEFINED_ERROR"
+    }
     NO_ERROR = {}

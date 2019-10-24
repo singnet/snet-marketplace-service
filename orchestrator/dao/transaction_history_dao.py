@@ -64,10 +64,10 @@ class TransactionHistoryDAO:
         temp_holder = ("%s, " * len(list_of_order_id))[:-2]
         params = [status] + list_of_order_id
         update_transaction_status_response = self.__repo.execute(
-            "UPDATE transaction_history SET status = %s WHERE order_id IN ("
-            + temp_holder
-            + ")",
+            "UPDATE transaction_history SET status = %s WHERE order_id IN (" +
+            temp_holder + ")",
             params,
         )
-        logger.info(f"update_transaction_status: {update_transaction_status_response}")
+        logger.info(
+            f"update_transaction_status: {update_transaction_status_response}")
         return update_transaction_status_response
