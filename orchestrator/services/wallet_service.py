@@ -1,7 +1,7 @@
 import json
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
-from orchestrator.config import CONTRACT_API_ARN, REGION_NAME, WALLETS_SERVICE_ARN
+from orchestrator.config import  REGION_NAME, WALLETS_SERVICE_ARN, GET_CHANNEL_API_OLD_ARN
 
 logger = get_logger(__name__)
 
@@ -91,7 +91,7 @@ class WalletService:
         }
 
         channel_details_response = self.boto_client.invoke_lambda(
-            lambda_function_arn=CONTRACT_API_ARN,
+            lambda_function_arn=GET_CHANNEL_API_OLD_ARN,
             invocation_type="RequestResponse",
             payload=json.dumps(event))
 
