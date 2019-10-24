@@ -173,9 +173,9 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-  contract_api:
+  get_service_get:
     warmup: true
-    handler: contract_api/lambda_handler.request_handler
+    handler: contract_api/handlers.service_handlers.get_service_get
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -198,6 +198,18 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+  get_service_post:
+    warmup: true
+    handler: contract_api/handlers.service_handlers.get_service_post
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
       - http:
           method: POST
           path: /service
@@ -211,6 +223,18 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+  get_group_for_service:
+    warmup: true
+    handler:  contract_api/handlers.service_handlers.get_group_for_service
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
       - http:
           method: GET
           path: /org/{orgId}/service/{serviceId}/group
@@ -229,6 +253,18 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+  get_service_for_given_org:
+    warmup: true
+    handler: contract_api/handlers.service_handlers.get_service_for_given_org
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
       - http:
           method: GET
           path: /org/{orgId}/service/{serviceId}
@@ -247,7 +283,18 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-
+  post_rating_for_given_service:
+    warmup: true
+    handler: contract_api/handlers.service_handlers.post_rating_for_given_service
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
       - http:
           method: POST
           path: /org/{orgId}/service/{serviceId}/rating
@@ -257,6 +304,18 @@ functions:
                 orgId: true
                 serviceId: true
 
+  contract_api:
+    warmup: true
+    handler: contract_api/lambda_handler.request_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
       - http:
           method: GET
           path: /group/{groupId}/channel/{channelId}
