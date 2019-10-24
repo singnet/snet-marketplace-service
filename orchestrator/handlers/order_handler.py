@@ -6,7 +6,12 @@ from orchestrator.errors import Error
 from orchestrator.exceptions import PaymentInitiateFailed, ChannelCreationFailed
 from common.logger import get_logger
 from common.repository import Repository
-from common.utils import validate_dict, generate_lambda_response, make_response_body, Utils
+from common.utils import (
+    validate_dict,
+    generate_lambda_response,
+    make_response_body,
+    Utils,
+)
 from orchestrator.config import NETWORKS, NETWORK_ID, SLACK_HOOK
 from orchestrator.services.order_service import OrderService
 from aws_xray_sdk.core import patch_all
@@ -15,10 +20,10 @@ patch_all()
 
 logger = get_logger(__name__)
 utils = Utils()
-NETWORKS_NAME = dict(
-    (NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
-db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS))
-          for netId in NETWORKS.keys())
+NETWORKS_NAME = dict((NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
+db = dict(
+    (netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys()
+)
 
 
 def initiate(event, context):
@@ -28,8 +33,9 @@ def initiate(event, context):
         payload = json.loads(event["body"])
         required_keys = ["price", "item_details", "payment_method"]
         if validate_dict(payload, required_keys):
-            response = OrderService(
-                obj_repo=db[NETWORK_ID]).initiate_order(username, payload)
+            response = OrderService(obj_repo=db[NETWORK_ID]).initiate_order(
+                username, payload
+            )
             status_code = StatusCode.CREATED
             status = ResponseStatus.SUCCESS
         else:
@@ -61,9 +67,9 @@ def initiate(event, context):
         status_code = StatusCode.INTERNAL_SERVER_ERROR
         utils.report_slack(1, str(error), SLACK_HOOK)
         traceback.print_exc()
-    return generate_lambda_response(status_code, make_response_body(
-        status, response, error
-    ), cors_enabled=True)
+    return generate_lambda_response(
+        status_code, make_response_body(status, response, error), cors_enabled=True
+    )
 
 
 def execute(event, context):
@@ -73,8 +79,9 @@ def execute(event, context):
         payload = json.loads(event["body"])
         required_keys = ["order_id", "payment_id", "payment_details"]
         if validate_dict(payload, required_keys):
-            response = OrderService(
-                obj_repo=db[NETWORK_ID]).execute_order(username, payload)
+            response = OrderService(obj_repo=db[NETWORK_ID]).execute_order(
+                username, payload
+            )
             status_code = StatusCode.CREATED
             status = ResponseStatus.SUCCESS
         else:
@@ -103,9 +110,9 @@ def execute(event, context):
         status_code = StatusCode.INTERNAL_SERVER_ERROR
         utils.report_slack(1, str(error), SLACK_HOOK)
         traceback.print_exc()
-    return generate_lambda_response(status_code, make_response_body(
-        status, response, error
-    ), cors_enabled=True)
+    return generate_lambda_response(
+        status_code, make_response_body(status, response, error), cors_enabled=True
+    )
 
 
 def get(event, context):
@@ -116,12 +123,14 @@ def get(event, context):
         bad_request = False
         if query_string_params is None:
             response = OrderService(
-                obj_repo=db[NETWORK_ID]).get_order_details_by_username(username)
+                obj_repo=db[NETWORK_ID]
+            ).get_order_details_by_username(username)
         else:
             order_id = query_string_params.get("order_id", None)
             if order_id is not None:
                 response = OrderService(
-                    obj_repo=db[NETWORK_ID]).get_order_details_by_order_id(username, order_id)
+                    obj_repo=db[NETWORK_ID]
+                ).get_order_details_by_order_id(username, order_id)
             else:
                 bad_request = True
 
@@ -145,9 +154,9 @@ def get(event, context):
         logger.info(event)
         utils.report_slack(1, str(error), SLACK_HOOK)
         traceback.print_exc()
-    return generate_lambda_response(status_code, make_response_body(
-        status, response, error
-    ), cors_enabled=True)
+    return generate_lambda_response(
+        status_code, make_response_body(status, response, error), cors_enabled=True
+    )
 
 
 def cancel(event, context):
@@ -161,7 +170,8 @@ def cancel(event, context):
             order_id = path_parameters.get("order_id", None)
             if order_id is not None:
                 response = OrderService(
-                    obj_repo=db[NETWORK_ID]).cancel_order_for_given_order_id(order_id)
+                    obj_repo=db[NETWORK_ID]
+                ).cancel_order_for_given_order_id(order_id)
             else:
                 bad_request = True
         error = {}
@@ -184,6 +194,6 @@ def cancel(event, context):
         logger.info(event)
         utils.report_slack(1, error, SLACK_HOOK)
         traceback.print_exc()
-    return generate_lambda_response(status_code, make_response_body(
-        status, response, error
-    ), cors_enabled=True)
+    return generate_lambda_response(
+        status_code, make_response_body(status, response, error), cors_enabled=True
+    )

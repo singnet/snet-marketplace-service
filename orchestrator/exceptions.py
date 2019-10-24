@@ -1,4 +1,3 @@
-
 class PaymentInitiateFailed(Exception):
     pass
 

@@ -9,12 +9,14 @@ from orchestrator.services.order_service import OrderService
 
 
 class TestOrderService(unittest.TestCase):
-
     def setUp(self):
         self.NETWORKS_NAME = dict(
-            (NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
-        self.db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS))
-                       for netId in NETWORKS.keys())
+            (NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys()
+        )
+        self.db = dict(
+            (netId, Repository(net_id=netId, NETWORKS=NETWORKS))
+            for netId in NETWORKS.keys()
+        )
         self.order_service = OrderService(self.db[NETWORK_ID])
 
     def test_initiate_order(self):
@@ -23,8 +25,8 @@ class TestOrderService(unittest.TestCase):
     @patch("common.boto_utils.BotoUtils.invoke_lambda")
     def test_manage_create_order(self, mock_lambda_invoke):
         mock_lambda_invoke.return_value = {
-            'statusCode': 201,
-            'body': json.dumps(
+            "statusCode": 201,
+            "body": json.dumps(
                 {
                     "order_id": "e33404a2-f574-11e9-9a93-3abe2d8567d5",
                     "item_details": {
@@ -36,14 +38,11 @@ class TestOrderService(unittest.TestCase):
                         "recipient": "0x123",
                         "order_type": "CREATE_WALLET_AND_CHANNEL",
                         "wallet_address": "",
-                        "channel_id": ""
+                        "channel_id": "",
                     },
-                    "price": {
-                        "amount": 1,
-                        "currency": "USD"
-                    }
+                    "price": {"amount": 1, "currency": "USD"},
                 }
-            )
+            ),
         }
         username = "dummy@dummy.io"
         item_details = {
@@ -55,15 +54,13 @@ class TestOrderService(unittest.TestCase):
             "recipient": "0x123",
             "order_type": "CREATE_WALLET_AND_CHANNEL",
             "wallet_address": "",
-            "channel_id": ""
+            "channel_id": "",
         }
-        price = {
-            "amount": 1, "currency": "USD"
-        }
+        price = {"amount": 1, "currency": "USD"}
         order_details = self.order_service.manage_create_order(
-            username, item_details, price)
-        assert validate_dict(
-            order_details, ["order_id", "item_details", "price"])
+            username, item_details, price
+        )
+        assert validate_dict(order_details, ["order_id", "item_details", "price"])
 
     def test_manage_initiate_payment(self):
         pass
