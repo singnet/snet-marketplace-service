@@ -89,7 +89,8 @@ class MPE:
             org_data[org_id]["groups"][group_id]["channels"].append(channel)
 
         for org_id in org_data:
-            org_data[org_id]["groups"] = list(org_data[org_id]["groups"].values())
+            org_data[org_id]["groups"] = list(
+                org_data[org_id]["groups"].values())
 
         return list(org_data.values())
 

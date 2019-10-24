@@ -11,8 +11,10 @@ from orchestrator.services.order_service import OrderService
 class TestOrderService(unittest.TestCase):
 
     def setUp(self):
-        self.NETWORKS_NAME = dict((NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
-        self.db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys())
+        self.NETWORKS_NAME = dict(
+            (NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
+        self.db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS))
+                       for netId in NETWORKS.keys())
         self.order_service = OrderService(self.db[NETWORK_ID])
 
     def test_initiate_order(self):
@@ -58,8 +60,10 @@ class TestOrderService(unittest.TestCase):
         price = {
             "amount": 1, "currency": "USD"
         }
-        order_details = self.order_service.manage_create_order(username, item_details, price)
-        assert validate_dict(order_details, ["order_id", "item_details", "price"])
+        order_details = self.order_service.manage_create_order(
+            username, item_details, price)
+        assert validate_dict(
+            order_details, ["order_id", "item_details", "price"])
 
     def test_manage_initiate_payment(self):
         pass

@@ -1,7 +1,7 @@
 import json
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
-from orchestrator.config import  REGION_NAME, WALLETS_SERVICE_ARN, GET_CHANNEL_API_OLD_ARN
+from orchestrator.config import REGION_NAME, WALLETS_SERVICE_ARN, GET_CHANNEL_API_OLD_ARN
 
 logger = get_logger(__name__)
 
@@ -28,7 +28,8 @@ class WalletService:
         if create_channel_response["statusCode"] != 200:
             raise Exception(f"Failed to create channel")
 
-        create_channel_response_body = json.loads(create_channel_response["body"])
+        create_channel_response_body = json.loads(
+            create_channel_response["body"])
         channel_details = create_channel_response_body["data"]
         return channel_details
 
@@ -73,9 +74,11 @@ class WalletService:
             payload=json.dumps(channel_transactions_event)
         )
         if channel_transactions_response["statusCode"] != 200:
-            raise Exception(f"Failed to fetch wallet details for username: {username}")
+            raise Exception(
+                f"Failed to fetch wallet details for username: {username}")
 
-        channel_transactions_response_body = json.loads(channel_transactions_response["body"])
+        channel_transactions_response_body = json.loads(
+            channel_transactions_response["body"])
         channel_transactions = channel_transactions_response_body["data"]["wallets"]
         return channel_transactions
 
@@ -96,8 +99,10 @@ class WalletService:
             payload=json.dumps(event))
 
         if "statusCode" not in channel_details_response:
-            logger.error(f"contract API boto call failed {channel_details_response}")
-            raise Exception(f"Failed to get channel details from contract API {event}")
+            logger.error(
+                f"contract API boto call failed {channel_details_response}")
+            raise Exception(
+                f"Failed to get channel details from contract API {event}")
 
         if channel_details_response["statusCode"] != 200:
             raise Exception(f"Failed to get channel details from contract API username: {user_address} "
@@ -140,7 +145,8 @@ class WalletService:
                                                       payload=json.dumps(register_wallet_payload))
         status = raw_response["statusCode"]
         if int(status) != 200:
-            raise Exception("Unable to register wallet for username %s", username)
+            raise Exception(
+                "Unable to register wallet for username %s", username)
         return json.loads(raw_response["body"])["data"]
 
     def set_default_wallet(self, username, address):
