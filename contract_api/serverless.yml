@@ -158,7 +158,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /org/{orgId}/group/{groupId}
+          path: /org/{orgId}/group/{group_id}
           request:
             parameters:
               paths:
