@@ -49,7 +49,6 @@ def get_service_for_given_org(event, context):
         200, {"status": "success", "data": response_data}, cors_enabled=True)
 
 
-
 def get_group_for_service(event, context):
     obj_reg = Registry(obj_repo=db[net_id])
     org_id = event['pathParameters']['orgId']
@@ -64,7 +63,7 @@ def post_rating_for_given_service(event, context):
     obj_reg = Registry(obj_repo=db[net_id])
     org_id = event['pathParameters']['orgId']
     service_id = event['pathParameters']['serviceId']
-    response_data = obj_reg.update_service_rating(org_id=org_id, service_id=service_id)
+    response_data = obj_reg.update_service_rating(
+        org_id=org_id, service_id=service_id)
     return generate_lambda_response(
         200, {"status": "success", "data": response_data}, cors_enabled=True)
-
