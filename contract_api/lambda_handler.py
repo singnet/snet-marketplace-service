@@ -45,20 +45,13 @@ def request_handler(event, context):
         elif sub_path[1] in ["channel", "group"]:
             obj_mpe = MPE(net_id=net_id, obj_repo=db[net_id])
 
-        if "/org" == path:
-            response_data = obj_reg.get_all_org()
 
-        elif re.match("(\/org\/)[^\/]*(\/group)[/]{0,1}$", path):
-            org_id = sub_path[2]
-            response_data = obj_reg.get_all_group_for_org_id(org_id=org_id)
 
-        elif re.match("(\/org\/)[^\/]*(\/group\/)[^\/]*[/]{0,1}$", path):
-            """ Format /org/{orgId}/group/{groupId} """
-            org_id = sub_path[2]
-            group_id = unquote(sub_path[4])
-            response_data = obj_reg.get_group_details_for_org_id(org_id=org_id, group_id=group_id)
 
-        elif "/service" == path and method == 'POST':
+
+
+
+        if "/service" == path and method == 'POST':
             payload_dict = {} if payload_dict is None else payload_dict
             response_data = obj_reg.get_all_srvcs(qry_param=payload_dict)
 
@@ -99,10 +92,6 @@ def request_handler(event, context):
             response_data = obj_mpe.get_channel_data_by_group_id_and_channel_id(
                 group_id=group_id, channel_id=channel_id)
 
-        elif re.match("(\/org\/)[^\/]*[/]{0,1}$", path):
-            """ Format /org/{orgId} """
-            org_id = sub_path[2]
-            response_data = obj_reg.get_org_details(org_id=org_id)
 
         elif re.match("(\/org\/)[^\/]*(\/service\/)[^\/]*(\/rating)[/]{0,1}$", path) and method == 'POST':
             """ Format /org/{orgId}/service/{serviceId}/rating """
