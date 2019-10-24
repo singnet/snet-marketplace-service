@@ -9,6 +9,9 @@ custom:
   pythonRequirements:
     fileName: wallets/requirement.txt
     dockerizePip: true
+    useDownloadCache: true
+    useStaticCache: true
+    cacheLocation: '/var/cache/serverless'
   prune:
     automatic: true
     includeLayers: true
