@@ -1,7 +1,10 @@
-import traceback
 import re
-from common.repository import Repository
+import traceback
+
+from aws_xray_sdk.core import patch_all
+
 from common.logger import get_logger
+from common.repository import Repository
 from common.utils import extract_payload
 from common.utils import format_error_message
 from common.utils import generate_lambda_response
@@ -9,12 +12,10 @@ from common.utils import Utils
 from common.utils import validate_dict
 from orchestrator.config import NETWORK_ID
 from orchestrator.config import NETWORKS
+from orchestrator.config import SLACK_HOOK
 from orchestrator.constant import REQUIRED_KEYS_FOR_LAMBDA_EVENT
 from orchestrator.services.order_service import OrderService
-from orchestrator.config import SLACK_HOOK
 from orchestrator.services.wallet_service import WalletService
-
-from aws_xray_sdk.core import patch_all
 
 patch_all()
 

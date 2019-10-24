@@ -4,7 +4,8 @@ from unittest.mock import patch
 
 from common.repository import Repository
 from common.utils import validate_dict
-from orchestrator.config import NETWORK_ID, NETWORKS
+from orchestrator.config import NETWORK_ID
+from orchestrator.config import NETWORKS
 from orchestrator.services.order_service import OrderService
 
 

@@ -1,11 +1,12 @@
 import json
+
 import web3
+from web3 import Web3
 
 from common.logger import get_logger
-from contract_api.config import NETWORKS
 from common.utils import Utils
+from contract_api.config import NETWORKS
 from contract_api.registry import Registry
-from web3 import Web3
 
 logger = get_logger(__name__)
 
