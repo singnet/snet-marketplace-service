@@ -26,7 +26,6 @@ class BlockChainUtil(object):
     def read_contract_address(self, net_id, path, key):
         contract = self.load_contract(path)
         return Web3.toChecksumAddress(contract[str(net_id)][key])
-        return nonce
 
     def contract_instance(self, contract, address):
         return self.web3_object.eth.contract(abi=contract, address=address)
