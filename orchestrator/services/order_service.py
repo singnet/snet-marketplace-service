@@ -135,8 +135,8 @@ class OrderService:
         group_details_event = {
             "path": f"/org/{org_id}/group/{quote(group_id, safe='')}",
             "pathParameters": {
-                "org_id": org_id,
-                "group_id": quote(group_id, safe='')
+                "orgId": org_id,
+                "groupId": quote(group_id, safe='')
             },
             "httpMethod": "GET"
         }
