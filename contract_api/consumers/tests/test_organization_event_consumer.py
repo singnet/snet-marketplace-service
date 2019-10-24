@@ -1,13 +1,7 @@
-import json
 import unittest
 from datetime import datetime
-from unittest.mock import patch, Mock
 
-from hexbytes import HexBytes
-from web3.datastructures import AttributeDict
-
-from event_pubsub.consumers.marketplace_event_consumer.organization_event_consumer import OrganizationEventConsumer
-from event_pubsub.producers.blockchain_event_producer import BlockchainEventProducer
+from event_pubsub.consumers.marketplace_event_consumer.consumers.organization_event_consumer import OrganizationEventConsumer
 
 
 class TestOrganizationEventConsumer(unittest.TestCase):

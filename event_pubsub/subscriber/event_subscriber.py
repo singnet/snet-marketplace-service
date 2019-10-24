@@ -46,15 +46,13 @@ class EventSubscriber(object):
         self.publish_events(mpe_events)
         self.publish_events(registry_events)
 
-
-
     def publish_events(self, events):
 
         error_map = {}
 
         for event in events:
             listeners = self.event_consumer_map[event['event']]
-            #error_map[0] = { event[]}
+            # error_map[0] = { event[]}
             for listener in listeners:
                 push_event = {"data": event, "name": event["event"]}
                 try:
@@ -66,7 +64,7 @@ class EventSubscriber(object):
                         # execute lambda here
                         pass
                 except Exception as e:
-                    error_map[event["row_id"]] = {"error_message":str(e), "error_code":1}
+                    error_map[event["row_id"]] = {"error_message": str(e), "error_code": 1}
                     raise e
 
         return error_map

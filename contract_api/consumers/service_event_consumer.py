@@ -2,6 +2,7 @@ import web3
 from web3 import Web3
 
 from common.ipfs_util import IPFSUtil
+from event_pubsub.consumers.marketplace_event_consumer.config import ASSETS_PREFIX, ASSETS_BUCKET_NAME
 from event_pubsub.consumers.marketplace_event_consumer.dao.organization_repository import OrganizationRepository
 from event_pubsub.consumers.marketplace_event_consumer.dao.service_repository import ServiceRepository
 from event_pubsub.repository import Repository
@@ -98,6 +99,13 @@ class ServiceEventConsumer(object):
     def process_event(self):
         pass
 
+    def _push_asset_to_s3_using_hash(self, hash, org_id, service_id):
+        io_bytes = self.ipfs_utll.read_bytesio_from_ipfs(hash)
+        filename = hash.split("/")[1]
+        new_url = self.s3_util.push_io_bytes_to_s3(ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename, ASSETS_BUCKET_NAME,
+                                                   io_bytes)
+        return new_url
+
     def _comapre_assets_and_push_to_s3(self, existing_assets_hash, new_assets_hash, existing_assets_url, org_id,
                                        service_id):
         """
@@ -167,7 +175,7 @@ class ServiceEventConsumer(object):
         existing_assets_hash = {}
         existing_assets_url = {}
 
-        existing_service_metadata = self.service_dao.get_service_metdata(service_id,org_id)
+        existing_service_metadata = self.service_dao.get_service_metadata(service_id, org_id)
         if existing_service_metadata:
             existing_assets_hash = existing_service_metadata["assets_hash"]
             existing_assets_url = existing_service_metadata["assets_url"]

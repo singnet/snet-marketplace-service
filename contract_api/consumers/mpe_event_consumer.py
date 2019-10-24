@@ -2,7 +2,7 @@ import web3
 from web3 import Web3
 
 from common.ipfs_util import IPFSUtil
-from event_pubsub.consumers.event_consumer import EventConsumer
+from event_pubsub.consumers.marketplace_event_consumer.consumers.event_consumer import EventConsumer
 import json
 import base64
 

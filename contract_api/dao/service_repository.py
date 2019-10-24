@@ -7,7 +7,7 @@ from event_pubsub.consumers.marketplace_event_consumer.dao.repository import Rep
 class ServiceRepository(Repository):
 
     def __init__(self, connection):
-        self.connection=connection
+        self.connection = connection
         super().__init__(connection)
 
     def create_or_update_service(self, org_id, service_id, ipfs_hash):
@@ -65,13 +65,12 @@ class ServiceRepository(Repository):
 
             self.rollback_transaction()
 
-
-
     def create_endpoints(self, service_row_id, org_id, service_id, endpt_data):
         insert_endpoints = "INSERT INTO service_endpoint (service_row_id, org_id, service_id, group_id, endpoint, " \
                            "row_created, row_updated) " \
                            "VALUES(%s, %s, %s, %s, %s, %s, %s)"
-        insert_endpoint_paramteres = [service_row_id, org_id, service_id, endpt_data['group_id'], endpt_data['endpoint'],
+        insert_endpoint_paramteres = [service_row_id, org_id, service_id, endpt_data['group_id'],
+                                      endpt_data['endpoint'],
                                       datetime.utcnow(), datetime.utcnow()]
         return self.connection.execute(insert_endpoints, insert_endpoint_paramteres)
 
@@ -89,14 +88,19 @@ class ServiceRepository(Repository):
         delete_service_tags_count = self.connection.execute(delete_service_tags, [service_id, org_id])
 
     def delete_service_dependents(self, org_id, service_id):
-        delete_service_groups = 'DELETE FROM service_group WHERE service_id = %s AND org_id = %s '
-        delete_service_group_count = self.connection.execute(delete_service_groups, [service_id, org_id])
+        self.delete_service_group(org_id, service_id)
+        self.delete_service_dependents(org_id, service_id)
+        self.delete_tags(org_id=org_id, service_id=service_id)
+
+    def delete_service_endpoint(self, org_id, service_id):
 
         delete_service_endpoint = 'DELETE FROM service_endpoint WHERE service_id = %s AND org_id = %s '
         del_srvc_endpts_count = self.connection.execute(
             delete_service_endpoint, [service_id, org_id])
 
-        self.delete_tags(org_id=org_id, service_id=service_id)
+    def delete_service_group(self, org_id, service_id):
+        delete_service_groups = 'DELETE FROM service_group WHERE service_id = %s AND org_id = %s '
+        delete_service_group_count = self.connection.execute(delete_service_groups, [service_id, org_id])
 
     def delete_service(self, org_id, service_id):
         delete_service = 'DELETE FROM service WHERE service_id = %s AND org_id = %s '
@@ -113,7 +117,7 @@ class ServiceRepository(Repository):
 
         return service_data
 
-    def get_service_metdata(self, service_id, org_id):
+    def get_service_metadata(self, service_id, org_id):
         query = "Select * from service_metadata where service_id = %s and org_id = %s "
         service_metadata = self.connection.execute(query, (service_id, org_id))
 
