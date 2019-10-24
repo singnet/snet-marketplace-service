@@ -136,7 +136,7 @@ class OrderService:
             "path": f"/org/{org_id}/group/{quote(group_id, safe='')}",
             "pathParameters": {
                 "orgId": org_id,
-                "groupId": quote(group_id, safe='')
+                "group_id": quote(group_id, safe='')
             },
             "httpMethod": "GET"
         }
