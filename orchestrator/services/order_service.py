@@ -536,10 +536,19 @@ class OrderService:
         logger.info(f"List of order_id to be updated with ORDER CANCELED: {list_of_order_id_for_expired_transaction}")
         update_transaction_status = self.obj_transaction_history_dao.update_transaction_status(
             list_of_order_id=list_of_order_id_for_expired_transaction, status=OrderStatus.ORDER_CANCELED.value)
-        return True
+        return update_transaction_status
 
     def cancel_order_for_given_order_id(self, order_id):
         logger.info("UpdateTransactionStatus::cancel_order_for_given_order_id: %s", order_id)
-        self.obj_transaction_history_dao.update_transaction_status(
-            list_of_order_id=[order_id], status=OrderStatus.ORDER_CANCELED.value)
-        return True
+        transaction_data_dict = self.obj_transaction_history_dao.get_transaction_details_for_given_order_id(
+            order_id=order_id)
+        if transaction_data_dict["status"] == OrderStatus.ORDER_CANCELED.value:
+            return f"Order with order_id {order_id} is already canceled."
+        elif transaction_data_dict["status"] in [OrderStatus.PAYMENT_INITIATED.value,
+                                                 OrderStatus.PAYMENT_INITIATION_FAILED.value,
+                                                 OrderStatus.PAYMENT_EXECUTION_FAILED]:
+            self.obj_transaction_history_dao.update_transaction_status(list_of_order_id=[order_id],
+                                                                       status=OrderStatus.ORDER_CANCELED.value)
+            return f"Order with order_id {order_id} is canceled successfully."
+        else:
+            return f"Unable to cancel order with order_id {order_id}"
