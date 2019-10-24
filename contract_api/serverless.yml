@@ -303,40 +303,9 @@ functions:
               paths:
                 orgId: true
                 serviceId: true
-#  get_channels_for_group:
-#    warmup: true
-#    handler: contract_api/handlers.channel_handlers.get_channels_for_group
-#    role: ${file(./config.${self:provider.stage}.json):ROLE}
-#    vpc:
-#      securityGroupIds:
-#        - ${file(./config.${self:provider.stage}.json):SG1}
-#        - ${file(./config.${self:provider.stage}.json):SG2}
-#      subnetIds:
-#        - ${file(./config.${self:provider.stage}.json):VPC1}
-#        - ${file(./config.${self:provider.stage}.json):VPC2}
-#    events:
-#      - http:
-#          method: GET
-#          path: /group/{groupId}/channel/{channelId}
-#          request:
-#            parameters:
-#              paths:
-#                orgId: true
-#                serviceId: true
-#          cors:
-#            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-#            headers:
-#              - Content-Type
-#              - X-Amz-Date
-#              - Authorization
-#              - X-Api-Key
-#              - X-Amz-Security-Token
-#              - X-Amz-User-Agent
-#              - x-requested-with
-
-  contract_api:
+  get_channels_for_group:
     warmup: true
-    handler: contract_api/lambda_handler.request_handler
+    handler: contract_api/handlers.channel_handlers.get_channels_for_group
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -348,7 +317,12 @@ functions:
     events:
       - http:
           method: GET
-          path: /channel
+          path: /group/{groupId}/channel/{channelId}
+          request:
+            parameters:
+              paths:
+                orgId: true
+                serviceId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -360,10 +334,9 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-#
-#  get_channels_old_api:
+#  contract_api:
 #    warmup: true
-#    handler: ontract_api/handlers.channel_handlers.get_channels_old_api
+#    handler: contract_api/lambda_handler.request_handler
 #    role: ${file(./config.${self:provider.stage}.json):ROLE}
 #    vpc:
 #      securityGroupIds:
@@ -386,6 +359,33 @@ functions:
 #              - X-Amz-Security-Token
 #              - X-Amz-User-Agent
 #              - x-requested-with
+
+
+  get_channels_old_api:
+    warmup: true
+    handler: ontract_api/handlers.channel_handlers.get_channels_old_api
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /channel
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
   get_channel:
     warmup: true
     handler: contract_api/handlers.channel_handlers.get_channels
