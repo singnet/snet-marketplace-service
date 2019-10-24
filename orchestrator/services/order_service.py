@@ -140,12 +140,14 @@ class OrderService:
             },
             "httpMethod": "GET"
         }
+        logger.info(f"get_group_for_org request: {org_id} and {group_id}")
         group_details_lambda_response = self.lambda_client.invoke(
             FunctionName=GET_GROUP_FOR_ORG_API_ARN,
             InvocationType='RequestResponse',
             Payload=json.dumps(group_details_event)
         )
         group_details_response = json.loads(group_details_lambda_response.get('Payload').read())
+        logger.info(f"get_group_for_org response: {group_details_response}")
         if group_details_response["statusCode"] != 200:
             raise Exception(f"Failed to fetch group details for org_id:{org_id} "
                             f"group_id {group_id}")
@@ -552,3 +554,7 @@ class OrderService:
             return f"Order with order_id {order_id} is canceled successfully."
         else:
             return f"Unable to cancel order with order_id {order_id}"
+
+
+if __name__ == "__main__":
+    OrderService
