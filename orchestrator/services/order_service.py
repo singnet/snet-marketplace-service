@@ -9,13 +9,13 @@ from web3 import Web3
 from common.blockchain_util import BlockChainUtil
 from common.boto_utils import BotoUtils
 from common.constant import TransactionStatus
-from orchestrator.exceptions import PaymentInitiateFailed, ChannelCreationFailed, FundChannelFailed
 from common.logger import get_logger
 from orchestrator.config import CREATE_ORDER_SERVICE_ARN, INITIATE_PAYMENT_SERVICE_ARN, \
     EXECUTE_PAYMENT_SERVICE_ARN, WALLETS_SERVICE_ARN, ORDER_DETAILS_ORDER_ID_ARN, ORDER_DETAILS_BY_USERNAME_ARN, \
-     REGION_NAME, SIGNER_ADDRESS, EXECUTOR_ADDRESS, NETWORKS, NETWORK_ID, SIGNER_SERVICE_ARN, \
+    REGION_NAME, SIGNER_ADDRESS, EXECUTOR_ADDRESS, NETWORKS, NETWORK_ID, SIGNER_SERVICE_ARN, \
     GET_GROUP_FOR_ORG_API_ARN, GET_ALL_ORG_API_ARN
 from orchestrator.dao.transaction_history_dao import TransactionHistoryDAO
+from orchestrator.exceptions import PaymentInitiateFailed, ChannelCreationFailed, FundChannelFailed
 from orchestrator.order_status import OrderStatus
 from orchestrator.services.wallet_service import WalletService
 from orchestrator.transaction_history import TransactionHistory
@@ -65,6 +65,10 @@ class OrderService:
         group_id = item_details["group_id"]
         org_id = item_details["org_id"]
         channel_id = ""
+        amount_in_cogs = self.__calculate_amount_in_cogs(amount=price["amount"], currency=price["currency"])
+        if amount_in_cogs < 1:
+            raise Exception("Amount in cogs should be greater than equal to 1")
+        item_details["amount_in_cogs"] = amount_in_cogs
 
         if order_type == OrderType.CREATE_WALLET_AND_CHANNEL.value:
             item_details["wallet_address"] = ""
@@ -158,6 +162,13 @@ class OrderService:
             raise Exception(f"Failed to find group {group_id} for org_id: {org_id}")
         return groups[0]["payment"]["payment_address"]
 
+
+    def __calculate_amount_in_cogs(self, amount, currency):
+        if currency == "USD":
+            amount_in_cogs = round(amount)
+        else:
+            raise Exception("Currency %s not supported.", currency)
+
     def execute_order(self, username, payload_dict):
         """
             Execute Order
@@ -194,11 +205,15 @@ class OrderService:
         status = Status.PAYMENT_EXECUTED.value
         try:
             status = Status.ORDER_PROCESSING_FAILED.value
+            amount_in_cogs = self.__calculate_amount_in_cogs(amount=price["amount"], currency=price["currency"])
+            if amount_in_cogs < 1:
+                raise Exception("Amount in cogs should be greater than equal to 1")
             processed_order_data = self.manage_process_order(
                 username=username,
                 order_id=order_id, order_type=order_type,
                 amount=price["amount"],
-                currency=price["currency"], order_data=item_details
+                currency=price["currency"], order_data=item_details,
+                amount_in_cogs=amount_in_cogs
             )
             status = Status.ORDER_PROCESSED.value
             obj_transaction_history = TransactionHistory(
@@ -296,7 +311,7 @@ class OrderService:
         else:
             raise Exception(f"Error executing payment for username {username} against order_id {order_id}")
 
-    def manage_process_order(self, username, order_id, order_type, amount, currency, order_data):
+    def manage_process_order(self, username, order_id, order_type, amount, currency, order_data, amount_in_cogs):
         logger.info(f"Order Data {order_data}")
         group_id = order_data["group_id"]
         org_id = order_data["org_id"]
@@ -329,7 +344,7 @@ class OrderService:
                 group_id_in_hex = "0x" + base64.b64decode(group_id).hex()
                 signature_details = self.generate_signature_for_open_channel_for_third_party(
                     recipient=recipient, group_id=group_id_in_hex,
-                    amount_in_cogs=amount, expiration=expiration,
+                    amount_in_cogs=amount_in_cogs, expiration=expiration,
                     message_nonce=message_nonce, sender_private_key=wallet_details["private_key"],
                     executor_wallet_address=self.EXECUTOR_WALLET_ADDRESS
                 )
@@ -347,7 +362,8 @@ class OrderService:
                     'amount': amount,
                     'currency': currency,
                     'recipient': recipient,
-                    'current_block_no': current_block_no
+                    'current_block_no': current_block_no,
+                    'amount_in_cogs': amount_in_cogs
                 }
                 channel_details = self.wallet_service.create_channel(open_channel_body=open_channel_body)
                 channel_details.update(wallet_details)
@@ -377,7 +393,8 @@ class OrderService:
                     'order_id': order_id, 'sender': order_data["wallet_address"],
                     'signature': order_data["signature"], 'r': r, 's': s, 'v': v,
                     'group_id': group_id, 'org_id': org_id, 'amount': amount, 'currency': currency,
-                    'recipient': recipient, 'current_block_no': order_data["current_block_number"]
+                    'recipient': recipient, 'current_block_no': order_data["current_block_number"],
+                    'amount_in_cogs': amount_in_cogs
                 }
                 channel_details = self.wallet_service.create_channel(open_channel_body=open_channel_body)
                 logger.info("channel_details: ", channel_details)
@@ -398,7 +415,8 @@ class OrderService:
                     'channel_id': channel_id,
                     'currency': currency,
                     'recipient': recipient,
-                    'sender': sender
+                    'sender': sender,
+                    'amount_in_cogs': amount_in_cogs
                 }
                 fund_channel_payload = {
                     "path": "/wallet/channel/deposit",
@@ -557,5 +575,3 @@ class OrderService:
             return f"Order with order_id {order_id} is canceled successfully."
         else:
             return f"Unable to cancel order with order_id {order_id}"
-
-
