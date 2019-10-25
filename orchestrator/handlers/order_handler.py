@@ -110,7 +110,7 @@ def get(event, context):
     logger.info("Received request to get orders for username")
     try:
         username = event["requestContext"]["authorizer"]["claims"]["email"]
-
+        order_id = None
         path_parameters = event["pathParameters"]
         if path_parameters is not None:
             order_id = path_parameters["order_id"]
