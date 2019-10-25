@@ -165,7 +165,8 @@ class OrderService:
 
     def __calculate_amount_in_cogs(self, amount, currency):
         if currency == "USD":
-            amount_in_cogs = round(amount) * USD_TO_COGS_CONVERSION_FACTOR
+            amount_in_cogs = round(amount * USD_TO_COGS_CONVERSION_FACTOR)
+            return amount_in_cogs
         else:
             raise Exception("Currency %s not supported.", currency)
 
