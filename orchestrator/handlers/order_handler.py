@@ -109,7 +109,7 @@ def get(event, context):
     logger.info("Received request to get orders for username")
     try:
         username = event["requestContext"]["authorizer"]["claims"]["email"]
-        query_string_params = event["queryStringParameters"]
+        query_string_params = event["pathParameters"]["order_id"]
         bad_request = False
         if query_string_params is None:
             logger.info(f"Getting all order details for user {username}")
