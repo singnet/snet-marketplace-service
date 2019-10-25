@@ -22,7 +22,7 @@ provider:
   runtime: python3.6
   description: Orchestrator # optional, Description to publish to AWS
   memorySize: 512
-  timeout: 30
+  timeout: 60
   region: ${file(./config.${self:provider.stage}.json):REGION}
   stage: ${opt:stage,'dev'}
   deploymentBucket:
