@@ -107,4 +107,6 @@ venv.bak/
 **/setting*py
 config*py
 setting*py
+.serverless
+.serverless/**
 
