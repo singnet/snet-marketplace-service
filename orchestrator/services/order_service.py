@@ -228,6 +228,8 @@ class OrderService:
             "pathParameters": {"order_id": order_id},
             "httpMethod": "GET"
         }
+
+        logger.info(f"Requesting order details for order_id {order_id}")
         response = self.lambda_client.invoke(
             FunctionName=ORDER_DETAILS_ORDER_ID_ARN,
             InvocationType='RequestResponse',
@@ -431,6 +433,7 @@ class OrderService:
             "httpMethod": "GET"
         }
 
+        logger.info(f"Requesting order details for username {username}")
         order_details_response = self.boto_client.invoke_lambda(
             lambda_function_arn=ORDER_DETAILS_BY_USERNAME_ARN,
             invocation_type='RequestResponse',
@@ -556,5 +559,3 @@ class OrderService:
             return f"Unable to cancel order with order_id {order_id}"
 
 
-if __name__ == "__main__":
-    OrderService
