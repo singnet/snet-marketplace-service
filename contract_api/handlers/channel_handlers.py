@@ -44,3 +44,32 @@ def get_channels(event, context):
         message=response,
         cors_enabled=True
     )
+
+
+def get_channels_for_group(event, context):
+    net_id = NETWORK_ID
+    group_id = event['pathParameters']['groupId']
+    channel_id = event['pathParameters']['channelId']
+    obj_mpe = MPE(net_id=net_id, obj_repo=db[net_id])
+    response_data = obj_mpe.get_channel_data_by_group_id_and_channel_id(
+        group_id=group_id, channel_id=channel_id)
+    return generate_lambda_response(
+        200, {"status": "success", "data": response_data}, cors_enabled=True)
+
+
+def get_channels_old_api(event, context):
+    net_id = NETWORK_ID
+    payload_dict = event.get('queryStringParameters')
+    user_address = payload_dict["user_address"]
+    org_id = payload_dict.get("org_id", None)
+    service_id = payload_dict.get("service_id", None)
+    group_id = payload_dict.get("group_id", None)
+    obj_mpe = MPE(net_id=net_id, obj_repo=db[net_id])
+    response_data = obj_mpe.get_channels(
+        user_address=user_address,
+        org_id=org_id,
+        service_id=service_id,
+        group_id=group_id
+    )
+    return generate_lambda_response(
+        200, {"status": "success", "data": response_data}, cors_enabled=True)

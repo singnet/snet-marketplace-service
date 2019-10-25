@@ -2,12 +2,20 @@ plugins:
   - serverless-offline
   - serverless-python-requirements
   - serverless-plugin-tracing
+  - serverless-prune-plugin
 
 service: signer
 custom:
   pythonRequirements:
     fileName: signer/requirement.txt
     dockerizePip: true
+    useDownloadCache: true
+    useStaticCache: true
+    cacheLocation: '/var/cache/serverless'
+  prune:
+    automatic: true
+    includeLayers: true
+    number: 5
 
 provider:
   name: aws

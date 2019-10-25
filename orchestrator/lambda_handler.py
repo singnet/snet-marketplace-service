@@ -29,16 +29,7 @@ def route_path(path, method, payload_dict, request_context, path_parameters):
     path_exist = True
     response_data = None
 
-    if "/order" == path:
-        response_data = obj_order_service.get_order_details_by_username(
-            request_context["authorizer"]["claims"]["email"]
-        )
-
-    elif "/order/initiate" == path:
-        response_data = obj_order_service.initiate_order(
-            username=request_context["authorizer"]["claims"]["email"], payload_dict=payload_dict)
-
-    elif "/wallet" == path:
+    if "/wallet" == path:
         username = request_context["authorizer"]["claims"]["email"]
         logger.info(f"Received request to get wallets for user:{username}")
         response_data = WalletService().get_wallets(username)
@@ -48,10 +39,6 @@ def route_path(path, method, payload_dict, request_context, path_parameters):
         username = request_context["authorizer"]["claims"]["email"]
         group_id = payload_dict["group_id"]
         response_data = WalletService().get_channel_details(username, org_id, group_id)
-
-    elif "/order/execute" == path and method == "POST":
-        response_data = obj_order_service.execute_order(
-            user_data=request_context, payload_dict=payload_dict)
 
     elif re.match("(\/order\/)[^\/]*[/]{0,1}$", path):
         """ Format /order/{orderId} """
