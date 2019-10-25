@@ -1,15 +1,16 @@
 import json
 import traceback
 
+from aws_xray_sdk.core import patch_all
+
 from common.constant import StatusCode, ResponseStatus
-from orchestrator.errors import Error
-from orchestrator.exceptions import PaymentInitiateFailed, ChannelCreationFailed
 from common.logger import get_logger
 from common.repository import Repository
 from common.utils import validate_dict, generate_lambda_response, make_response_body, Utils
 from orchestrator.config import NETWORKS, NETWORK_ID, SLACK_HOOK
+from orchestrator.errors import Error
+from orchestrator.exceptions import PaymentInitiateFailed, ChannelCreationFailed
 from orchestrator.services.order_service import OrderService
-from aws_xray_sdk.core import patch_all
 
 patch_all()
 
@@ -109,8 +110,10 @@ def get(event, context):
     logger.info("Received request to get orders for username")
     try:
         username = event["requestContext"]["authorizer"]["claims"]["email"]
-
-        order_id = event["pathParameters"].get("order_id",None)
+        order_id = None
+        path_parameters = event["pathParameters"]
+        if path_parameters is not None:
+            order_id = path_parameters["order_id"]
         bad_request = False
         if order_id is None:
             logger.info(f"Getting all order details for user {username}")
@@ -118,7 +121,8 @@ def get(event, context):
         else:
             logger.info(f"Getting order details for order_id {order_id}")
             if order_id is not None:
-                response = OrderService(obj_repo=db[NETWORK_ID]).get_order_details_by_order_id(username, order_id)
+                response = OrderService(obj_repo=db[NETWORK_ID]).get_order_details_by_order_id(username=username,
+                                                                                               order_id=order_id)
             else:
                 bad_request = True
 
