@@ -110,7 +110,7 @@ def get(event, context):
     try:
         username = event["requestContext"]["authorizer"]["claims"]["email"]
 
-        order_id = event["pathParameters"].get(["order_id"],None)
+        order_id = event["pathParameters"].get("order_id",None)
         bad_request = False
         if order_id is None:
             logger.info(f"Getting all order details for user {username}")
