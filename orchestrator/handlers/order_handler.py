@@ -109,13 +109,13 @@ def get(event, context):
     logger.info("Received request to get orders for username")
     try:
         username = event["requestContext"]["authorizer"]["claims"]["email"]
-        query_string_params = event["pathParameters"]["order_id"]
+
+        order_id = event["pathParameters"].get(["order_id"],None)
         bad_request = False
-        if query_string_params is None:
+        if order_id is None:
             logger.info(f"Getting all order details for user {username}")
             response = OrderService(obj_repo=db[NETWORK_ID]).get_order_details_by_username(username)
         else:
-            order_id = query_string_params.get("order_id", None)
             logger.info(f"Getting order details for order_id {order_id}")
             if order_id is not None:
                 response = OrderService(obj_repo=db[NETWORK_ID]).get_order_details_by_order_id(username, order_id)
