@@ -22,8 +22,8 @@ provider:
   name: aws
   runtime: python3.6
   description: Payment Service #optional, Description to publish to AWS
-  memorySize: 128
-  timeout: 30
+  memorySize: 512
+  timeout: 60
   region: ${file(./config.${self:provider.stage}.json):REGION}
   stage: ${opt:stage,'dev'}
   deploymentBucket:

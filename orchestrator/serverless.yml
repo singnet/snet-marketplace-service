@@ -21,7 +21,7 @@ provider:
   name: aws
   runtime: python3.6
   description: Orchestrator # optional, Description to publish to AWS
-  memorySize: 128
+  memorySize: 512
   timeout: 30
   region: ${file(./config.${self:provider.stage}.json):REGION}
   stage: ${opt:stage,'dev'}
@@ -244,6 +244,7 @@ functions:
   execute-order:
     warmup: true
     handler: orchestrator/handlers.order_handler.execute
+    timeout: 60
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
