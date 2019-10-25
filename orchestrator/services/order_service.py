@@ -13,7 +13,7 @@ from common.logger import get_logger
 from orchestrator.config import CREATE_ORDER_SERVICE_ARN, INITIATE_PAYMENT_SERVICE_ARN, \
     EXECUTE_PAYMENT_SERVICE_ARN, WALLETS_SERVICE_ARN, ORDER_DETAILS_ORDER_ID_ARN, ORDER_DETAILS_BY_USERNAME_ARN, \
     REGION_NAME, SIGNER_ADDRESS, EXECUTOR_ADDRESS, NETWORKS, NETWORK_ID, SIGNER_SERVICE_ARN, \
-    GET_GROUP_FOR_ORG_API_ARN, GET_ALL_ORG_API_ARN
+    GET_GROUP_FOR_ORG_API_ARN, GET_ALL_ORG_API_ARN, USD_TO_COGS_CONVERSION_FACTOR
 from orchestrator.dao.transaction_history_dao import TransactionHistoryDAO
 from orchestrator.exceptions import PaymentInitiateFailed, ChannelCreationFailed, FundChannelFailed
 from orchestrator.order_status import OrderStatus
@@ -165,7 +165,7 @@ class OrderService:
 
     def __calculate_amount_in_cogs(self, amount, currency):
         if currency == "USD":
-            amount_in_cogs = round(amount)
+            amount_in_cogs = round(amount) * USD_TO_COGS_CONVERSION_FACTOR
         else:
             raise Exception("Currency %s not supported.", currency)
 
