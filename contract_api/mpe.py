@@ -12,7 +12,7 @@ class MPE:
     def __init__(self, net_id, obj_repo):
         self.repo = obj_repo
         self.obj_util = Utils()
-        self.boto_utils = BlockChainUtil(provider_type="WS_PROVIDER", provider=NETWORKS["ws_provider"])
+        self.blockchain_util = BlockChainUtil(provider_type="WS_PROVIDER", provider=NETWORKS["ws_provider"])
 
     def get_channels(self, user_address, org_id=None, service_id=None, group_id=None):
         if user_address and org_id and group_id:
@@ -28,7 +28,7 @@ class MPE:
             raise Exception("Invalid Request")
 
     def get_channels_by_user_address_v2(self, user_address):
-        last_block_no = self.boto_utils.get_current_block_no()
+        last_block_no = self.blockchain_util.get_current_block_no()
         logger.info(f"got block number {last_block_no}")
         channel_details_query = "SELECT mc.channel_id, mc.sender, mc.recipient, mc.groupId as group_id, " \
                                 "mc.balance_in_cogs, mc.pending, mc.nonce, mc.expiration, mc.signer, og.org_id, " \
@@ -87,7 +87,7 @@ class MPE:
         return list(org_data.values())
 
     def get_channels_by_user_address(self, user_address, service_id, org_id):
-        last_block_no = self.boto_utils.get_current_block_no()
+        last_block_no = self.blockchain_util.get_current_block_no()
         params = [last_block_no]
         print('Inside get_channel_info::user_address',
               user_address, '|', org_id, '|', service_id)
@@ -132,7 +132,7 @@ class MPE:
         return list(channel_dta.values())
 
     def get_channels_by_user_address_org_group(self, user_address, org_id=None, group_id=None):
-        last_block_no = self.boto_utils.get_current_block_no()
+        last_block_no = self.blockchain_util.get_current_block_no()
         params = [last_block_no, org_id, group_id, user_address]
         raw_channel_data = self.repo.execute(
             "SELECT C.* , OG.payment, OG.org_id, IF(C.expiration > %s, 'active','inactive') AS status FROM "
