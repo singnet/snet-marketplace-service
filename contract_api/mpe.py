@@ -12,7 +12,7 @@ class MPE:
     def __init__(self, net_id, obj_repo):
         self.repo = obj_repo
         self.obj_util = Utils()
-        self.blockchain_util = BlockChainUtil(provider_type="WS_PROVIDER", provider=NETWORKS["ws_provider"])
+        self.blockchain_util = BlockChainUtil(provider_type="WS_PROVIDER", provider=NETWORKS[net_id]["ws_provider"])
 
     def get_channels(self, user_address, org_id=None, service_id=None, group_id=None):
         if user_address and org_id and group_id:
