@@ -311,6 +311,40 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+  currency-to-token-conversion:
+    warmup: true
+    handler: orchestrator/handlers.order_handler.currency_to_token_conversion
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /currency/{currency}/token
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
 
   updateTxnStatus:
     warmup: true

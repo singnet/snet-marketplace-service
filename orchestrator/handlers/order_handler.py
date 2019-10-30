@@ -6,7 +6,7 @@ from aws_xray_sdk.core import patch_all
 from common.constant import StatusCode, ResponseStatus
 from common.logger import get_logger
 from common.repository import Repository
-from common.utils import validate_dict, generate_lambda_response, make_response_body, Utils
+from common.utils import validate_dict, generate_lambda_response, make_response_body, Utils, format_error_message
 from orchestrator.config import NETWORKS, NETWORK_ID, SLACK_HOOK
 from orchestrator.errors import Error
 from orchestrator.exceptions import PaymentInitiateFailed, ChannelCreationFailed
@@ -16,9 +16,8 @@ patch_all()
 
 logger = get_logger(__name__)
 utils = Utils()
-NETWORKS_NAME = dict(
-    (NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
-db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys())
+repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
+REQUIRED_KEYS_FOR_CURRENCY_TO_TOKEN_CONVERSION = ['pathParameters', 'queryStringParameters']
 
 
 def initiate(event, context):
@@ -28,7 +27,7 @@ def initiate(event, context):
         payload = json.loads(event["body"])
         required_keys = ["price", "item_details", "payment_method"]
         if validate_dict(payload, required_keys):
-            response = OrderService(obj_repo=db[NETWORK_ID]).initiate_order(username, payload)
+            response = OrderService(obj_repo=repo).initiate_order(username, payload)
             status_code = StatusCode.CREATED
             status = ResponseStatus.SUCCESS
         else:
@@ -72,7 +71,7 @@ def execute(event, context):
         payload = json.loads(event["body"])
         required_keys = ["order_id", "payment_id", "payment_details"]
         if validate_dict(payload, required_keys):
-            response = OrderService(obj_repo=db[NETWORK_ID]).execute_order(username, payload)
+            response = OrderService(obj_repo=repo).execute_order(username, payload)
             status_code = StatusCode.CREATED
             status = ResponseStatus.SUCCESS
         else:
@@ -117,12 +116,12 @@ def get(event, context):
         bad_request = False
         if order_id is None:
             logger.info(f"Getting all order details for user {username}")
-            response = OrderService(obj_repo=db[NETWORK_ID]).get_order_details_by_username(username)
+            response = OrderService(obj_repo=repo).get_order_details_by_username(username)
         else:
             logger.info(f"Getting order details for order_id {order_id}")
             if order_id is not None:
-                response = OrderService(obj_repo=db[NETWORK_ID]).get_order_details_by_order_id(username=username,
-                                                                                               order_id=order_id)
+                response = OrderService(obj_repo=repo).get_order_details_by_order_id(username=username,
+                                                                                     order_id=order_id)
             else:
                 bad_request = True
 
@@ -161,7 +160,7 @@ def cancel(event, context):
         else:
             order_id = path_parameters.get("order_id", None)
             if order_id is not None:
-                response = OrderService(obj_repo=db[NETWORK_ID]).cancel_order_for_given_order_id(order_id)
+                response = OrderService(obj_repo=repo).cancel_order_for_given_order_id(order_id)
             else:
                 bad_request = True
         error = {}
@@ -187,3 +186,31 @@ def cancel(event, context):
     return generate_lambda_response(status_code, make_response_body(
         status, response, error
     ), cors_enabled=True)
+
+
+def currency_to_token_conversion(event, context):
+    try:
+        valid_event = validate_dict(
+            data_dict=event, required_keys=REQUIRED_KEYS_FOR_CURRENCY_TO_TOKEN_CONVERSION)
+        if not valid_event:
+            return generate_lambda_response(400, "Bad Request", cors_enabled=True)
+
+        path_parameters = event["pathParameters"]
+        query_string_parameters = event["queryStringParameters"]
+
+        order_service = OrderService(obj_repo=repo)
+        response_data = order_service.currency_to_token(currency=path_parameters["currency"],
+                                                        amount=query_string_parameters["amount"])
+        response = generate_lambda_response(200, {"status": "success", "data": response_data}, cors_enabled=True)
+    except Exception as e:
+        error_message = format_error_message(
+            status="failed",
+            error=repr(e),
+            payload=path_parameters,
+            net_id=NETWORK_ID,
+            handler="cancel_order_handler"
+        )
+        utils.report_slack(1, error_message, SLACK_HOOK)
+        response = generate_lambda_response(500, error_message, cors_enabled=True)
+        traceback.print_exc()
+    return response
