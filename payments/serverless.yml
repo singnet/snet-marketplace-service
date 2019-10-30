@@ -9,6 +9,9 @@ custom:
   pythonRequirements:
     fileName: payments/requirements.txt
     dockerizePip: true
+    useDownloadCache: true
+    useStaticCache: true
+    cacheLocation: '/var/cache/serverless'
   prune:
     automatic: true
     includeLayers: true
@@ -19,8 +22,8 @@ provider:
   name: aws
   runtime: python3.6
   description: Payment Service #optional, Description to publish to AWS
-  memorySize: 128
-  timeout: 30
+  memorySize: 512
+  timeout: 60
   region: ${file(./config.${self:provider.stage}.json):REGION}
   stage: ${opt:stage,'dev'}
   deploymentBucket:

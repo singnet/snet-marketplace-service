@@ -1,21 +1,16 @@
-import json
+from aws_xray_sdk.core import patch_all
 
+from common.constant import StatusCode
 from common.logger import get_logger
 from common.repository import Repository
 from common.utils import generate_lambda_response, validate_dict, Utils
 from contract_api.config import NETWORKS, SLACK_HOOK, NETWORK_ID
-from common.constant import StatusCode
-from aws_xray_sdk.core import patch_all
-
 from contract_api.mpe import MPE
 
 patch_all()
 logger = get_logger(__name__)
-
-NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId)
-                     for netId in NETWORKS.keys())
-db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS))
-          for netId in NETWORKS.keys())
+repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
+obj_mpe = MPE(net_id=NETWORK_ID, obj_repo=repo)
 utils = Utils()
 
 
@@ -26,7 +21,7 @@ def get_channels(event, context):
         if validate_dict(query_string_parameters, ["wallet_address"]):
             wallet_address = query_string_parameters["wallet_address"]
             logger.info(f"Fetched values from request wallet_address: {wallet_address}")
-            response = MPE(net_id=NETWORK_ID, obj_repo=db[NETWORK_ID]).get_channels_by_user_address_v2(wallet_address)
+            response = obj_mpe.get_channels_by_user_address_v2(wallet_address)
             status_code = StatusCode.OK
         else:
             status_code = StatusCode.BAD_REQUEST
@@ -44,3 +39,28 @@ def get_channels(event, context):
         message=response,
         cors_enabled=True
     )
+
+
+def get_channels_for_group(event, context):
+    group_id = event['pathParameters']['groupId']
+    channel_id = event['pathParameters']['channelId']
+    response_data = obj_mpe.get_channel_data_by_group_id_and_channel_id(
+        group_id=group_id, channel_id=channel_id)
+    return generate_lambda_response(
+        200, {"status": "success", "data": response_data}, cors_enabled=True)
+
+
+def get_channels_old_api(event, context):
+    payload_dict = event.get('queryStringParameters')
+    user_address = payload_dict["user_address"]
+    org_id = payload_dict.get("org_id", None)
+    service_id = payload_dict.get("service_id", None)
+    group_id = payload_dict.get("group_id", None)
+    response_data = obj_mpe.get_channels(
+        user_address=user_address,
+        org_id=org_id,
+        service_id=service_id,
+        group_id=group_id
+    )
+    return generate_lambda_response(
+        200, {"status": "success", "data": response_data}, cors_enabled=True)
