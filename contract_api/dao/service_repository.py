@@ -1,13 +1,12 @@
 from datetime import datetime
 import json
 
-from event_pubsub.consumers.marketplace_event_consumer.dao.repository import Repository
+from dao.common_repository import CommonRepository
 
 
-class ServiceRepository(Repository):
+class ServiceRepository(CommonRepository):
 
     def __init__(self, connection):
-        self.connection = connection
         super().__init__(connection)
 
     def create_or_update_service(self, org_id, service_id, ipfs_hash):
@@ -46,7 +45,7 @@ class ServiceRepository(Repository):
                                          assets_hash,
                                          assets_url_str]
 
-        query_response = self.coonection.execute(upsrt_servicec_metadata, upsrt_service_metadata_params)
+        query_response = self.connection.execute(upsrt_servicec_metadata, upsrt_service_metadata_params)
 
     def update_tags(self, org_id, service_id, tags_data):
         try:
@@ -89,7 +88,6 @@ class ServiceRepository(Repository):
 
     def delete_service_dependents(self, org_id, service_id):
         self.delete_service_group(org_id, service_id)
-        self.delete_service_dependents(org_id, service_id)
         self.delete_tags(org_id=org_id, service_id=service_id)
 
     def delete_service_endpoint(self, org_id, service_id):
@@ -121,7 +119,9 @@ class ServiceRepository(Repository):
         query = "Select * from service_metadata where service_id = %s and org_id = %s "
         service_metadata = self.connection.execute(query, (service_id, org_id))
 
-        return service_metadata[0]
+        if len(service_metadata) > 0:
+            return service_metadata[0]
+        return None
 
     def create_group(self, service_row_id, org_id, service_id, grp_data):
         insert_group = "INSERT INTO service_group (service_row_id, org_id, service_id, group_id, group_name," \

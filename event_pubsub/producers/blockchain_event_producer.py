@@ -1,58 +1,33 @@
-from enum import Enum
+import os
 
 import web3
 from web3 import Web3
 
+from common.blockchain_util import BlockChainUtil
+from event_pubsub.event_repository import EventRepository
 from event_pubsub.producers.event_producer import EventProducer
-import json
-from datetime import datetime
-
 from event_pubsub.repository import Repository
 
 
-class ContractType(Enum):
-    REGISTRY = "REGISTRY"
-    MPE = "MPE"
-
-
 class BlockchainEventProducer(EventProducer):
-
-    def __init__(self, ws_provider, repository=None):
+    def __init__(self, ws_provider, repository=None, ):
         self.web3 = Web3(web3.providers.WebsocketProvider(ws_provider))
-        self.repository = Repository(NETWORKS={
+        self.blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
+        self.event_repository = EventRepository(Repository(NETWORKS={
             'db': {"HOST": "localhost",
                    "USER": "root",
                    "PASSWORD": "password",
                    "NAME": "pub_sub",
                    "PORT": 3306,
                    }
-        })
+        }))
 
-    def get_contract_details(self, contract_name, base_path, net_id):
+    def get_events_from_blockchain(self, start_block_number, end_block_number, net_id):
 
-        if contract_name == "REGISTRY":
-            json_file = "Registry.json"
-        elif contract_name == "MPE":
-            json_file = "MultiPartyEscrow.json"
-        else:
-            raise Exception("Invalid contract Type {}".format(contract_name))
+        base_contract_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), '..', 'node_modules', 'singularitynet-platform-contracts'))
 
-        contract_network_path = base_path + "{}/{}".format("networks", json_file)
-        contract_abi_path = base_path + "{}/{}".format("abi", json_file)
-
-        with open(contract_abi_path) as abi_file:
-            abi_value = json.load(abi_file)
-            contract_abi = abi_value
-
-        with open(contract_network_path) as network_file:
-            network_value = json.load(network_file)
-            contract_address = network_value[str(net_id)]['address']
-
-        return contract_abi, contract_address
-
-    def get_events_from_blockchain(self, start_block_number, end_block_number, contract_abi, contract_address):
-
-        contract = self.web3.eth.contract(address=self.web3.toChecksumAddress(contract_address), abi=contract_abi)
+        contract = self.blockchain_util.get_contract_instance(base_contract_path, "MPE", net_id=net_id)
         contract_events = contract.events
         all_blockchain_events = []
 
@@ -61,10 +36,24 @@ class BlockchainEventProducer(EventProducer):
                 event_name = attributes['name']
                 event_object = getattr(contract.events, event_name)
                 blockchain_events = event_object.createFilter(fromBlock=start_block_number,
-                                                              toBlock='latest').get_all_entries()
+                                                              toBlock=end_block_number).get_all_entries()
                 all_blockchain_events.extend(blockchain_events)
 
         return all_blockchain_events
+
+    def produce_contract_events(self, start_block_number, end_block_number, net_id):
+
+        events = self.get_events_from_blockchain(start_block_number, end_block_number, net_id)
+        print("read events count" + str(len(events)))
+        return events
+
+
+class RegistryEventProducer(BlockchainEventProducer):
+    REGISTRY_EVENT_READ_BATCH_LIMIT = 500000
+
+    def __init__(self, ws_provider, repository=None):
+        super().__init__(ws_provider, repository)
+        self.contract_name = "REGISTRY"
 
     def push_event(self, event):
         """
@@ -93,40 +82,87 @@ class BlockchainEventProducer(EventProducer):
         error_message = ""
 
         # insert into database here
-        insert_query = "Insert into registry_events_raw (block_no, event, json_str, processed, transactionHash, logIndex ,error_code,error_msg,row_updated,row_created) " \
-                       "VALUES ( %s, %s, %s, %s, %s , %s, %s, %s, %s, %s ) "
-        insert_params = [block_number, event_name, json_str, 0, transaction_hash, log_index, error_code, error_message,
-                         datetime.utcnow(), datetime.utcnow()]
 
-        query_reponse = self.repository.execute(insert_query, insert_params)
+        self.event_repository.insert_registry_event(block_number, event_name, json_str, processed, transaction_hash,
+                                                    log_index,
+                                                    error_code, error_message)
 
-    def produce_contract_events(self, start_block_number, end_block_number, contract_name, net_id):
-        contract_abi, contract_address = self.get_contract_details(contract_name,
-                                                                   "../node_modules/singularitynet-platform-contracts/",
-                                                                   net_id)
-        events = self.get_events_from_blockchain(start_block_number, end_block_number, contract_abi, contract_address)
-
+    def push_events_to_repository(self, events):
         for event in events:
             self.push_event(event)
 
-    def produce_all_events(self):
-        start_block_number = 6629000
-        end_block_number = 6629468
-        net_id = 3
+    def produce_event(self, net_id):
+        last_block_number = self.event_repository.read_last_read_block_number_for_event("REGISTRY")
+        end_block_number = last_block_number + self.REGISTRY_EVENT_READ_BATCH_LIMIT
 
-        #self.produce_contract_events(start_block_number, end_block_number, "REGISTRY", net_id)
-        self.produce_contract_events(start_block_number, end_block_number, "MPE", net_id)
+        events = self.produce_contract_events(last_block_number, end_block_number, net_id)
+        self.push_events_to_repository(events)
+        self.event_repository.update_last_read_block_number_for_event("REGISTRY", end_block_number)
+
+        return events
+
+
+class MPEEventProducer(BlockchainEventProducer):
+    MPE_EVENT_READ_BATCH_LIMIT = 5000
+
+    def __init__(self, ws_provider, repository=None):
+        super().__init__(ws_provider, repository)
+
+    def push_event(self, event):
+        """
+          `row_id` int(11) NOT NULL AUTO_INCREMENT,
+          `block_no` int(11) NOT NULL,
+          `event` varchar(256) NOT NULL,
+          `json_str` text,
+          `processed` bit(1) DEFAULT NULL,
+          `transactionHash` varchar(256) DEFAULT NULL,
+          `logIndex` varchar(256) DEFAULT NULL,
+          `error_code` int(11) DEFAULT NULL,
+          `error_msg` varchar(256) DEFAULT NULL,
+          `row_updated` timestamp NULL DEFAULT NULL,
+          `row_created` timestamp NULL DEFAULT NULL,
+        :param event:
+        :return:
+        """
+
+        block_number = event.blockNumber
+        event_name = event.event
+        json_str = str(dict(event.args))
+        processed = 0
+        transaction_hash = str(event.transactionHash)
+        log_index = event.logIndex
+        error_code = 0
+        error_message = ""
+
+        # insert into database here
+
+        self.event_repository.insert_mpe_event(block_number, event_name, json_str, processed, transaction_hash,
+                                               log_index,
+                                               error_code, error_message)
+
+    def push_events_to_repository(self, events):
+        for event in events:
+            self.push_event(event)
+
+    def produce_event(self, net_id):
+        last_block_number = self.event_repository.read_last_read_block_number_for_event("MPE")
+        end_block_number = last_block_number + self.MPE_EVENT_READ_BATCH_LIMIT
+        events = self.produce_contract_events(last_block_number, end_block_number, net_id)
+        self.push_events_to_repository(events)
+        self.event_repository.update_last_read_block_number_for_event("MPE", end_block_number)
+        return events
 
 
 if __name__ == "__main__":
-    """
-        abiMPE = JSON.parse(mpe_str),
-        mpeAddr = JSON.parse(addr_str),
-        contractAddrForMPE = mpeAddr[netId].address;
-    
-    """
+
     try:
-        blockchain_event_producer = BlockchainEventProducer("wss://ropsten.infura.io/ws")
-        blockchain_event_producer.produce_all_events()
+        blockchain_event_producer = RegistryEventProducer("wss://ropsten.infura.io/ws")
+        blockchain_event_producer.produce_event(3)
+    except Exception as e:
+        raise e
+
+    try:
+        blockchain_event_producer = MPEEventProducer("wss://ropsten.infura.io/ws")
+        blockchain_event_producer.produce_event(3)
     except Exception as e:
         raise e

@@ -1,9 +1,7 @@
-class Repository(object):
-
-
+class CommonRepository(object):
 
     def __init__(self,connection):
-        self.coonection= connection
+        self.connection= connection
 
     def begin_transaction(self):
         self.connection.begin_transaction()

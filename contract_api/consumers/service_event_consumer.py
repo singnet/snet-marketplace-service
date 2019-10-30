@@ -1,55 +1,29 @@
 import web3
 from web3 import Web3
 
+from common.blockchain_util import BlockChainUtil
 from common.ipfs_util import IPFSUtil
-from event_pubsub.consumers.marketplace_event_consumer.config import ASSETS_PREFIX, ASSETS_BUCKET_NAME
-from event_pubsub.consumers.marketplace_event_consumer.dao.organization_repository import OrganizationRepository
-from event_pubsub.consumers.marketplace_event_consumer.dao.service_repository import ServiceRepository
-from event_pubsub.repository import Repository
+from contract_api.config import ASSETS_PREFIX, ASSETS_BUCKET_NAME
+
+from contract_api.dao.service_repository import ServiceRepository
+
+from config import NETWORK_ID, NETWORKS
+from common.repository import Repository
 import json
+import os
 
 
 class ServiceEventConsumer(object):
-    connection = (Repository(NETWORKS={
-        'db': {"HOST": "localhost",
-               "USER": "root",
-               "PASSWORD": "password",
-               "NAME": "pub_sub",
-               "PORT": 3306,
-               }
-    }))
-    organization_dao = OrganizationRepository(connection)
+    connection = Repository(NETWORK_ID, NETWORKS=NETWORKS)
+    service_repository = ServiceRepository(connection)
 
-    service_dao = ServiceRepository(connection)
-
-    def get_contract_file_paths(self, base_path, contract_name):
-        if contract_name == "REGISTRY":
-            json_file = "Registry.json"
-        elif contract_name == "MPE":
-            json_file = "MultiPartyEscrow.json"
-        else:
-            raise Exception("Invalid contract Type {}".format(contract_name))
-
-        contract_network_path = base_path + "{}/{}".format("networks", json_file)
-        contract_abi_path = base_path + "{}/{}".format("abi", json_file)
-
-        return contract_abi_path, contract_network_path
-
-    def get_contract_details(self, contract_abi_path, contract_network_path, net_id):
-
-        with open(contract_abi_path) as abi_file:
-            abi_value = json.load(abi_file)
-            contract_abi = abi_value
-
-        with open(contract_network_path) as network_file:
-            network_value = json.load(network_file)
-            contract_address = network_value[str(net_id)]['address']
-
-        return contract_abi, contract_address
-
-    def __init__(self,ws_provider, ipfs_url=None):
+    def __init__(self, ws_provider, ipfs_url=None):
         self.ipfs_client = IPFSUtil(ipfs_url, 80)
-        self.web3 = Web3(web3.providers.WebsocketProvider(ws_provider))
+        self.blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
+
+    def __init__(self, ws_provider, ipfs_url=None):
+        self.ipfs_client = IPFSUtil(ipfs_url, 80)
+        self.blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
 
     def fetch_tags(self, registry_contract, org_id_hex, service_id_hex):
         tags_data = registry_contract.functions.getServiceRegistrationById(
@@ -60,15 +34,11 @@ class ServiceEventConsumer(object):
 
         event_name = event['name']
         event_data = event['data']
-        net_id = 3
+        net_id = NETWORK_ID
+        base_contract_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), '..', 'node_modules', 'singularitynet-platform-contracts'))
+        registry_contract = self.blockchain_util.get_contract_instance(base_contract_path, "REGISTRY", net_id)
 
-
-
-        abi_pat,network_path=self.get_contract_file_paths("../../node_modules/singularitynet-platform-contracts/","REGISTRY")
-        contract_abi,contract_address= self.get_contract_details(abi_pat,network_path ,net_id)
-
-        registry_contract = self.web3.eth.contract(address=self.web3.toChecksumAddress(contract_address),
-                                                   abi=contract_abi)
         service_data = eval(event_data['json_str'])
 
         org_id_bytes = service_data['orgId']
@@ -76,10 +46,9 @@ class ServiceEventConsumer(object):
         service_id_bytes = service_data['serviceId']
         service_id = Web3.toText(service_id_bytes).rstrip("\x00")
 
-
-
         tags_data = self.fetch_tags(
-            registry_contract=registry_contract, org_id_hex=org_id.encode("utf-8"), service_id_hex=service_id.encode("utf-8"))
+            registry_contract=registry_contract, org_id_hex=org_id.encode("utf-8"),
+            service_id_hex=service_id.encode("utf-8"))
 
         if event_name in ['ServiceCreated', 'ServiceMetadataModified']:
             metadata_uri = Web3.toText(service_data['metadataURI'])[7:].rstrip("\u0000")
@@ -87,13 +56,13 @@ class ServiceEventConsumer(object):
             self.process_service_data(org_id=org_id, service_id=service_id, new_ipfs_hash=metadata_uri,
                                       new_ipfs_data=service_ipfs_data, tags_data=tags_data)
         elif event_name == 'ServiceTagsModified':
-            self.service_dao.update_tags(org_id=org_id, service_id=service_id,
-                                         tags_data=self.fetch_tags(org_id_hex=org_id,
-                                                                   service_id_hex=service_id))
+            self.service_repository.update_tags(org_id=org_id, service_id=service_id,
+                                                tags_data=self.fetch_tags(org_id_hex=org_id,
+                                                                          service_id_hex=service_id))
 
         elif event_name == 'ServiceDeleted':
-            self.service_dao.delete_service_dependents(org_id, service_id)
-            self.service_dao.delete_service(
+            self.service_repository.delete_service_dependents(org_id, service_id)
+            self.service_repository.delete_service(
                 org_id=org_id, service_id=service_id)
 
     def process_event(self):
@@ -102,7 +71,8 @@ class ServiceEventConsumer(object):
     def _push_asset_to_s3_using_hash(self, hash, org_id, service_id):
         io_bytes = self.ipfs_utll.read_bytesio_from_ipfs(hash)
         filename = hash.split("/")[1]
-        new_url = self.s3_util.push_io_bytes_to_s3(ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename, ASSETS_BUCKET_NAME,
+        new_url = self.s3_util.push_io_bytes_to_s3(ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename,
+                                                   ASSETS_BUCKET_NAME,
                                                    io_bytes)
         return new_url
 
@@ -175,7 +145,7 @@ class ServiceEventConsumer(object):
         existing_assets_hash = {}
         existing_assets_url = {}
 
-        existing_service_metadata = self.service_dao.get_service_metadata(service_id, org_id)
+        existing_service_metadata = self.service_repository.get_service_metadata(service_id, org_id)
         if existing_service_metadata:
             existing_assets_hash = existing_service_metadata["assets_hash"]
             existing_assets_url = existing_service_metadata["assets_url"]
@@ -192,34 +162,35 @@ class ServiceEventConsumer(object):
             assets_url = self._get_new_assets_url(
                 org_id, service_id, new_ipfs_data)
 
-            self.service_dao.delete_service_dependents(
+            self.service_repository.delete_service_dependents(
                 org_id=org_id, service_id=service_id)
-            service_data = self.service_dao.create_or_update_service(
+            service_data = self.service_repository.create_or_update_service(
                 org_id=org_id, service_id=service_id, ipfs_hash=new_ipfs_hash)
             service_row_id = service_data['last_row_id']
-            self.service_dao.create_or_update_service_metadata(service_row_id=service_row_id, org_id=org_id,
-                                                               service_id=service_id,
-                                                               ipfs_data=new_ipfs_data, assets_url=assets_url)
+            self.service_repository.create_or_update_service_metadata(service_row_id=service_row_id, org_id=org_id,
+                                                                      service_id=service_id,
+                                                                      ipfs_data=new_ipfs_data, assets_url=assets_url)
             groups = new_ipfs_data.get('groups', [])
             group_insert_count = 0
             for group in groups:
-                service_group_data = self.service_dao.create_group(service_row_id=service_row_id, org_id=org_id,
-                                                                   service_id=service_id,
-                                                                   grp_data={
-                                                                       'group_id': group['group_id'],
-                                                                       'group_name': group['group_name'],
-                                                                       'pricing': json.dumps(group['pricing'])
-                                                                   })
+                service_group_data = self.service_repository.create_group(service_row_id=service_row_id, org_id=org_id,
+                                                                          service_id=service_id,
+                                                                          grp_data={
+                                                                              'group_id': group['group_id'],
+                                                                              'group_name': group['group_name'],
+                                                                              'pricing': json.dumps(group['pricing'])
+                                                                          })
                 group_insert_count = group_insert_count + service_group_data[0]
                 endpoints = group.get('endpoints', [])
                 endpoint_insert_count = 0
                 for endpoint in endpoints:
-                    service_data = self.service_dao.create_endpoints(service_row_id=service_row_id, org_id=org_id,
-                                                                     service_id=service_id,
-                                                                     endpt_data={
-                                                                         'endpoint': endpoint,
-                                                                         'group_id': group['group_id'],
-                                                                     })
+                    service_data = self.service_repository.create_endpoints(service_row_id=service_row_id,
+                                                                            org_id=org_id,
+                                                                            service_id=service_id,
+                                                                            endpt_data={
+                                                                                'endpoint': endpoint,
+                                                                                'group_id': group['group_id'],
+                                                                            })
                     endpoint_insert_count = endpoint_insert_count + service_data[0]
 
             if (tags_data is not None and tags_data[0]):
@@ -227,9 +198,10 @@ class ServiceEventConsumer(object):
                 for tag in tags:
                     tag = tag.decode('utf-8')
                     tag = tag.rstrip("\u0000")
-                    self.service_dao.create_tags(service_row_id=service_row_id, org_id=org_id, service_id=service_id,
-                                                 tag_name=tag,
-                                                 )
+                    self.service_repository.create_tags(service_row_id=service_row_id, org_id=org_id,
+                                                        service_id=service_id,
+                                                        tag_name=tag,
+                                                        )
             self.connection.commit_transaction()
 
         except Exception as e:

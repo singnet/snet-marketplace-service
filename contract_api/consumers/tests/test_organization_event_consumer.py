@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime
 
-from event_pubsub.consumers.marketplace_event_consumer.consumers.organization_event_consumer import OrganizationEventConsumer
+from contract_api.consumers.organization_event_consumer import OrganizationEventConsumer
 
 
 class TestOrganizationEventConsumer(unittest.TestCase):
@@ -21,7 +21,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
         org_event_consumer=OrganizationEventConsumer("wss://ropsten.infura.io/ws","http://ipfs.singularitynet.io")
         org_event_consumer.on_event(event=event)
 
-        blockchain_vents = org_event_consumer.organization_dao.read_registry_events()
+        blockchain_vents = org_event_consumer.organization_repository.read_registry_events()
         print(123)
 
 

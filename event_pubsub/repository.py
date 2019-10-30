@@ -9,7 +9,7 @@ class Repository:
         self.DB_USER = NETWORKS['db']['USER']
         self.DB_PASSWORD = NETWORKS['db']['PASSWORD']
         self.DB_NAME = NETWORKS['db']['NAME']
-        self.DB_PORT = NETWORKS['db']['PORT']
+        self.DB_PORT = 3306
         self.connection = self.__get_connection()
         self.auto_commit = True
 
@@ -67,10 +67,8 @@ class Repository:
 
     def commit_transaction(self):
         self.connection.commit()
+        self.auto_commit = True
 
     def rollback_transaction(self):
         self.connection.rollback()
-
-
-    def close_connection(self):
-        self.connection.close()
+        self.auto_commit = True

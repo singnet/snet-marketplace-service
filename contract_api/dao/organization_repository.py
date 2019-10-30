@@ -1,15 +1,14 @@
 from datetime import datetime
 import json
 
-from event_pubsub.consumers.marketplace_event_consumer.dao.repository import Repository
+from contract_api.dao.common_repository import CommonRepository
 
 
-class OrganizationRepository(Repository):
+class OrganizationRepository(CommonRepository):
 
     def __init__(self, connection):
 
         super().__init__(connection)
-        self.connection = connection
 
     def create_or_updatet_organization(self, org_id, org_name, owner_address, org_metadata_uri):
         upsert_query = "Insert into organization (org_id, organization_name, owner_address, org_metadata_uri, row_updated, row_created) " \

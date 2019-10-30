@@ -3,8 +3,14 @@ import uuid
 
 import web3
 from eth_account.messages import defunct_hash_message
+from pycparser.c_ast import Enum
 from web3 import Web3
 
+
+
+class ContractType(Enum):
+    REGISTRY = "REGISTRY"
+    MPE = "MPE"
 
 
 class BlockChainUtil(object):
@@ -27,8 +33,18 @@ class BlockChainUtil(object):
         contract = self.load_contract(path)
         return Web3.toChecksumAddress(contract[str(net_id)][key])
 
-    def contract_instance(self, contract, address):
-        return self.web3_object.eth.contract(abi=contract, address=address)
+    def contract_instance(self, contract_abi, address):
+        return self.web3_object.eth.contract(abi=contract_abi, address=address)
+
+    def get_contract_instance(self, base_path, contract_name,net_id):
+        contract_network_path, contract_abi_path = self.get_contract_file_paths(base_path, contract_name)
+
+        contract_address = self.read_contract_address(net_id=net_id, path=contract_network_path,
+                                                                      key='address')
+        contract_abi = self.load_contract(contract_abi_path)
+        contract_instance = self.contract_instance(contract_abi=contract_abi, address=contract_address)
+
+        return contract_instance
 
     def generate_signature(self, data_types, values, signer_key):
         signer_key = "0x" + signer_key if not signer_key.startswith("0x") else signer_key
@@ -72,4 +88,17 @@ class BlockChainUtil(object):
         return self.web3_object.eth.blockNumber
 
     def get_transaction_receipt_from_blockchain(self, transaction_hash):
-        return  self.web3_object.eth.getTransactionReceipt(transaction_hash)
+        return self.web3_object.eth.getTransactionReceipt(transaction_hash)
+
+    def get_contract_file_paths(self, base_path, contract_name):
+        if contract_name == "REGISTRY":
+            json_file = "Registry.json"
+        elif contract_name == "MPE":
+            json_file = "MultiPartyEscrow.json"
+        else:
+            raise Exception("Invalid contract Type {}".format(contract_name))
+
+        contract_network_path = base_path + "/{}/{}".format("networks", json_file)
+        contract_abi_path = base_path + "/{}/{}".format("abi", json_file)
+
+        return contract_network_path, contract_abi_path

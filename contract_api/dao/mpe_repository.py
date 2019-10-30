@@ -1,13 +1,12 @@
 import base64
 from datetime import datetime
 
-from event_pubsub.consumers.marketplace_event_consumer.dao.repository import Repository
+from contract_api.dao.common_repository import CommonRepository
 
 
-class MPERepository(Repository):
+class MPERepository(CommonRepository):
 
     def __init__(self, connection):
-        self.connection = connection
         super().__init__(connection)
 
     def upsert_channel(self, mpe_data):
@@ -42,3 +41,17 @@ class MPERepository(Repository):
             'channelId': channel_id,
             'amount': channel_data[5]
         })
+
+    def get_mpe_channels(self, channel_id):
+        select_mp_channel = "SELECT row_id, channel_id, sender, recipient, groupId, balance_in_cogs, pending, nonce, expiration, signer, row_created, row_updated from mpe_channel where channel_id = %s"
+        params = [channel_id]
+
+        query_response = self.connection.execute(select_mp_channel, params)
+        return query_response
+
+    def delete_mpe_channel(self, channel_id):
+        select_mp_channel = "delete from mpe_channel where channel_id = %s"
+        params = [channel_id]
+
+        query_response = self.connection.execute(select_mp_channel, params)
+        return query_response
