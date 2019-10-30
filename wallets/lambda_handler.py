@@ -41,12 +41,14 @@ def route_path(path, method, payload_dict, path_parameters):
                                                                        r=payload_dict['r'],
                                                                        s=payload_dict['s'],
                                                                        v=payload_dict['v'],
-                                                                       current_block_no=payload_dict['current_block_no'],
+                                                                       current_block_no=payload_dict[
+                                                                           'current_block_no'],
                                                                        group_id=payload_dict['group_id'],
                                                                        org_id=payload_dict["org_id"],
                                                                        amount=payload_dict['amount'],
                                                                        currency=payload_dict['currency'],
-                                                                       recipient=payload_dict['recipient'])
+                                                                       recipient=payload_dict['recipient'],
+                                                                       amount_in_cogs=payload_dict['amount_in_cogs'])
 
     elif "/wallet/channel/deposit" == path and method == 'POST':
         response_data = obj_wallet_manager.add_funds_to_channel(org_id=payload_dict['org_id'],
@@ -56,7 +58,8 @@ def route_path(path, method, payload_dict, path_parameters):
                                                                 recipient=payload_dict['recipient'],
                                                                 order_id=payload_dict['order_id'],
                                                                 amount=payload_dict['amount'],
-                                                                currency=payload_dict['currency'])
+                                                                currency=payload_dict['currency'],
+                                                                amount_in_cogs=payload_dict['amount_in_cogs'])
 
     elif "/wallet/status" == path:
         response_data = obj_wallet_manager.set_default_wallet(username=payload_dict["username"],
