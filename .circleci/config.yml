@@ -18,7 +18,7 @@ jobs:
           name: generating checksum for all requirements file
           command: |
             shasum */requirement*.txt > /tmp/checksum_files_list
-            sudo chmod 777 -R /usr/local/lib/python3.6/site-packages
+            sudo chown -R circleci:circleci /usr/local/bin
             sudo chown circleci:circleci -R /usr/local/lib/python3.6
       - restore_cache:
           key: dependency-cache-{{ checksum "/tmp/checksum_files_list" }}
