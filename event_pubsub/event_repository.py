@@ -19,18 +19,18 @@ class EventRepository(object):
         events = self.connection.execute(query)
         return events
 
-    def update_mpe_raw_events(self, row_id, error_code, error_message):
+    def update_mpe_raw_events(self, processed, row_id, error_code, error_message):
         try:
-            update_events = 'UPDATE mpe_events_raw SET processed = 1, error_code = %s, error_msg = %s WHERE row_id = %s '
-            update_events_reponse = self.connection.execute(update_events, [error_code, error_message, row_id])
+            update_events = 'UPDATE mpe_events_raw SET processed = %s , error_code = %s, error_msg = %s WHERE row_id = %s '
+            update_events_reponse = self.connection.execute(update_events, [processed,error_code, error_message, row_id])
 
         except Exception as e:
             self.connection.rollback_transaction()
 
-    def update_registry_raw_events(self, row_id, error_code, error_message):
+    def update_registry_raw_events(self,processed, row_id, error_code, error_message):
         try:
-            update_events = 'UPDATE registry_events_raw SET processed = 1, error_code = %s, error_msg = %s WHERE row_id = %s '
-            update_events_reponse = self.connection.execute(update_events, [error_code, error_message, row_id])
+            update_events = 'UPDATE registry_events_raw SET processed = %s, error_code = %s, error_msg = %s WHERE row_id = %s '
+            update_events_reponse = self.connection.execute(update_events, [ processed, error_code, error_message, row_id])
 
         except Exception as e:
             self.connection.rollback_transaction()

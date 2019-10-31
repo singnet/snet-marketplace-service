@@ -1,4 +1,4 @@
-from subscriber.event_subscriber import EventSubscriber
+from event_pubsub.subscriber.event_subscriber import EventSubscriber
 
 
 def registry_event_subscription_handler(event, context):
