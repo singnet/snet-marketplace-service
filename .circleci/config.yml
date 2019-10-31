@@ -20,13 +20,13 @@ jobs:
             shasum */requirement*.txt > /tmp/checksum_files_list
             sudo chown -R circleci:circleci /usr/local/bin
             sudo chown circleci:circleci -R /usr/local/lib/python3.6
+      - restore_cache:
+          key: dependency-cache-{{ checksum "/tmp/checksum_files_list" }}
       - run:
           name: revert the permissions
           command: |
             sudo chown root:root -R /usr/local/bin
             sudo chown root:root -R /usr/local/lib/python3.6
-      - restore_cache:
-          key: dependency-cache-{{ checksum "/tmp/checksum_files_list" }}
       - run:
       # Our primary container isn't MYSQL so run a sleep command until it's ready.
           name: Waiting for MySQL to be ready
