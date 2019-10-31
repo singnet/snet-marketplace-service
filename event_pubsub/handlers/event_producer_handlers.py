@@ -1,5 +1,5 @@
 from event_pubsub.config import NETWORK_ID, NETWORKS, WS_PROVIDER
-from producers.blockchain_event_producer import RegistryEventProducer, MPEEventProducer
+from event_pubsub.producers.blockchain_event_producer import RegistryEventProducer, MPEEventProducer
 from event_pubsub.repository import Repository
 
 

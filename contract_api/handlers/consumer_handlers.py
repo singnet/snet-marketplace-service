@@ -1,14 +1,17 @@
 from common.constant import StatusCode
 from common.utils import generate_lambda_response
-from consumers.mpe_event_consumer import MPEEventConsumer
-from consumers.organization_event_consumer import OrganizationEventConsumer
-from consumers.service_event_consumer import ServiceEventConsumer
+from contract_api.config import NETWORK_ID
+from contract_api.config import IPFS_URL
+from contract_api.config import NETWORKS
+from contract_api.consumers.mpe_event_consumer import MPEEventConsumer
+from contract_api.consumers.organization_event_consumer import OrganizationEventConsumer
+from contract_api.consumers.service_event_consumer import ServiceEventConsumer
 
 
 def organization_event_consumer_handler(event, context):
     try:
 
-        OrganizationEventConsumer().on_event(event)
+        OrganizationEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"],IPFS_URL['url'],IPFS_URL['port']).on_event(event)
         return generate_lambda_response(200,StatusCode.OK)
     except Exception as e:
         print(e)
@@ -17,16 +20,16 @@ def organization_event_consumer_handler(event, context):
 
 def service_event_consumer_handler(event, context):
     try:
-        ServiceEventConsumer().on_event(event)
+        ServiceEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"],IPFS_URL['url'],IPFS_URL['port']).on_event(event)
         return generate_lambda_response(200, StatusCode.OK)
     except Exception as e:
-        print(e)
+        raise e
         return generate_lambda_response(500, str(e))
 
 
 def mpe_event_consumer_handler(event,context):
     try:
-        MPEEventConsumer().on_event(event)
+        MPEEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"]).on_event(event)
         return generate_lambda_response(200, StatusCode.OK)
 
     except Exception as e:
