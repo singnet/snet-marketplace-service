@@ -1,7 +1,7 @@
 from datetime import datetime
 import json
 
-from dao.common_repository import CommonRepository
+from contract_api.dao.common_repository import CommonRepository
 
 
 class ServiceRepository(CommonRepository):

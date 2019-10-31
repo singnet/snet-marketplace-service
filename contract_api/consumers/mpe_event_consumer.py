@@ -3,7 +3,7 @@ import os
 
 from common.blockchain_util import BlockChainUtil
 from common.repository import Repository
-from config import NETWORK_ID, NETWORKS
+from contract_api.config import NETWORK_ID, NETWORKS
 from contract_api.dao.mpe_repository import MPERepository
 
 

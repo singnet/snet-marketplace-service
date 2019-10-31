@@ -9,7 +9,7 @@ from contract_api.dao.organization_repository import OrganizationRepository
 from contract_api.dao.service_repository import ServiceRepository
 
 from common.repository import Repository
-from config import NETWORK_ID, NETWORKS
+from contract_api.config import NETWORK_ID, NETWORKS
 
 
 class OrganizationEventConsumer(object):
@@ -17,8 +17,8 @@ class OrganizationEventConsumer(object):
     organization_repository = OrganizationRepository(connection)
     service_repository = ServiceRepository(connection)
 
-    def __init__(self, ws_provider, ipfs_url=None):
-        self.ipfs_client = IPFSUtil(ipfs_url, 80)
+    def __init__(self, ws_provider, ipfs_url,ipfs_port):
+        self.ipfs_client = IPFSUtil(ipfs_url, ipfs_port)
         self.blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
 
     def get_contract_file_paths(self, base_path, contract_name):
