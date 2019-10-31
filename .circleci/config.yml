@@ -54,6 +54,7 @@ jobs:
             #sudo pip install -r signer/requirement.txt
             PYTHONPATH=$PWD python -m coverage run -m pytest signer/tests/test_signer.py wallets/testcase/unit_testcases/test_wallet_service.py
             python -m coverage report -m
+            COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} coveralls
       - save_cache:
           key: dependency-cache-{{ checksum "/tmp/checksum_files_list" }}
           paths:
