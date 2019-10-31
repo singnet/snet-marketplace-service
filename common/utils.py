@@ -62,7 +62,7 @@ class Utils:
 
     def cogs_to_agi(self, cogs):
         with decimal.localcontext() as ctx:
-            ctx.prec = 16
+            ctx.prec = 8
             """ 1 AGI equals to 100000000 cogs"""
             agi = decimal.Decimal(cogs)*decimal.Decimal(COGS_TO_AGI)
             return agi
