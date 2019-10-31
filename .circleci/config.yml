@@ -18,7 +18,7 @@ jobs:
           name: generating checksum for all requirements file
           command: |
             shasum */requirement*.txt > /tmp/checksum_files_list
-            chmod 777 -R /usr/local/lib/python3.6/site-packages
+            sudo chmod 777 -R /usr/local/lib/python3.6/site-packages
       - restore_cache:
           key: dependency-cache-{{ checksum "/tmp/checksum_files_list" }}
       - run:
