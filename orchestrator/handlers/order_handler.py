@@ -190,6 +190,7 @@ def cancel(event, context):
 
 def currency_to_token_conversion(event, context):
     try:
+        logger.info(f"currency_to_token_conversion::event: {event}")
         valid_event = validate_dict(
             data_dict=event, required_keys=REQUIRED_KEYS_FOR_CURRENCY_TO_TOKEN_CONVERSION)
         if not valid_event:
@@ -202,13 +203,14 @@ def currency_to_token_conversion(event, context):
         response_data = order_service.currency_to_token(currency=path_parameters["currency"],
                                                         amount=query_string_parameters["amount"])
         response = generate_lambda_response(200, {"status": "success", "data": response_data}, cors_enabled=True)
+        logger.info(f"currency_to_token_conversion::response: {response}")
     except Exception as e:
         error_message = format_error_message(
-            status="failed",
+            status=ResponseStatus.FAILED,
             error=repr(e),
             payload=path_parameters,
             net_id=NETWORK_ID,
-            handler="cancel_order_handler"
+            handler="currency-to-token-conversion"
         )
         utils.report_slack(1, error_message, SLACK_HOOK)
         response = generate_lambda_response(500, error_message, cors_enabled=True)
