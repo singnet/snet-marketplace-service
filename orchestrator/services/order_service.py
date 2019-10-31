@@ -1,6 +1,6 @@
 import base64
-import json
 import decimal
+import json
 from enum import Enum
 from urllib.parse import quote
 
@@ -9,7 +9,7 @@ from web3 import Web3
 
 from common.blockchain_util import BlockChainUtil
 from common.boto_utils import BotoUtils
-from common.constant import TransactionStatus
+from common.constant import TransactionStatus, COGS_TO_AGI
 from common.logger import get_logger
 from common.utils import Utils
 from orchestrator.config import CREATE_ORDER_SERVICE_ARN, INITIATE_PAYMENT_SERVICE_ARN, \
@@ -582,6 +582,7 @@ class OrderService:
     def currency_to_token(self, amount, currency):
         amount_in_cogs = self.calculate_amount_in_cogs(amount=decimal.Decimal(amount), currency=currency)
         conversion_data = {"base": currency, "amount": amount, "amount_in_cogs": str(amount_in_cogs),
-                           "amount_in_agi": str(self.utils.cogs_to_agi(cogs=amount_in_cogs))}
+                           "amount_in_agi": str(self.utils.cogs_to_agi(cogs=amount_in_cogs)),
+                           f"{currency}/cogs": str(USD_TO_COGS_CONVERSION_FACTOR), "agi/cogs": str(COGS_TO_AGI)}
         logger.debug(f"currency_to_token::conversion_data {conversion_data}")
         return conversion_data
