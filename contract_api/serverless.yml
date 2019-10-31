@@ -384,7 +384,7 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-  organization_event_conusmer:
+  organization_event_consumer:
     warmup: true
     handler: contract_api/handlers.consumer_handlers.organization_event_consumer_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -396,7 +396,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
-  service_event_conusmer:
+  service_event_consumer:
     warmup: true
     handler: contract_api/handlers.consumer_handlers.service_event_consumer_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -408,7 +408,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
-  mpe_event_conusmer:
+  mpe_event_consumer:
     warmup: true
     handler: contract_api/handlers.consumer_handlers.mpe_event_consumer_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
