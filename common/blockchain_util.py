@@ -1,11 +1,11 @@
 import json
 import uuid
+from enum import Enum
 
 import web3
 from eth_account.messages import defunct_hash_message
-from pycparser.c_ast import Enum
-from web3 import Web3
 
+from web3 import Web3
 
 
 class ContractType(Enum):
@@ -36,11 +36,11 @@ class BlockChainUtil(object):
     def contract_instance(self, contract_abi, address):
         return self.web3_object.eth.contract(abi=contract_abi, address=address)
 
-    def get_contract_instance(self, base_path, contract_name,net_id):
+    def get_contract_instance(self, base_path, contract_name, net_id):
         contract_network_path, contract_abi_path = self.get_contract_file_paths(base_path, contract_name)
 
         contract_address = self.read_contract_address(net_id=net_id, path=contract_network_path,
-                                                                      key='address')
+                                                      key='address')
         contract_abi = self.load_contract(contract_abi_path)
         contract_instance = self.contract_instance(contract_abi=contract_abi, address=contract_address)
 
