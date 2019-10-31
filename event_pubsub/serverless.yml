@@ -7,7 +7,7 @@ plugins:
 service: event-publisher-subscriber
 custom:
   pythonRequirements:
-    fileName: event_pub_sub/requirement.txt
+    fileName: event_pubsub/requirement.txt
     dockerizePip: true
     useDownloadCache: true
     useStaticCache: true
