@@ -1,2 +1,1 @@
 REQUIRED_KEYS_FOR_LAMBDA_EVENT = ["path", "httpMethod"]
-COGS_TO_AGI = 0.00000001
