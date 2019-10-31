@@ -52,8 +52,8 @@ jobs:
           name: Run tests for signer & wallets
           command: |
             #sudo pip install -r signer/requirement.txt
-            PYTHONPATH=$PWD coverage run -m pytest signer/tests/test_signer.py wallets/testcase/unit_testcases/test_wallet_service.py
-            coverage report -m
+            PYTHONPATH=$PWD python -m coverage run -m pytest signer/tests/test_signer.py wallets/testcase/unit_testcases/test_wallet_service.py
+            python -m coverage report -m
       - save_cache:
           key: dependency-cache-{{ checksum "/tmp/checksum_files_list" }}
           paths:
