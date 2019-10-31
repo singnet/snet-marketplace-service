@@ -6,6 +6,8 @@ NETWORKS = {'db': {"HOST": "localhost",
                    }
             }
 
-NET_ID = 3
+NETWORK_ID = 3
 
 EVENT_SUBSCRIPTIONS = {"OrganizationCreated": [{"name": "", "type": "webhook", "url": "https://subsribedpai1"},{"tyoe": "lambda_arn", "url": "https://subsribedpai1"}]}
+
+WS_PROVIDER = "wss://ropsten.infura.io/ws"

@@ -13,14 +13,7 @@ class BlockchainEventProducer(EventProducer):
     def __init__(self, ws_provider, repository=None, ):
         self.web3 = Web3(web3.providers.WebsocketProvider(ws_provider))
         self.blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
-        self.event_repository = EventRepository(Repository(NETWORKS={
-            'db': {"HOST": "localhost",
-                   "USER": "root",
-                   "PASSWORD": "password",
-                   "NAME": "pub_sub",
-                   "PORT": 3306,
-                   }
-        }))
+        self.event_repository=repository
 
     def get_events_from_blockchain(self, start_block_number, end_block_number, net_id):
 
@@ -91,9 +84,17 @@ class RegistryEventProducer(BlockchainEventProducer):
         for event in events:
             self.push_event(event)
 
+    def get_end_block_number(self, last_processed_block_number):
+        current_block_number = self.blockchain_util.get_current_block_no()
+        end_block_number = last_processed_block_number + self.REGISTRY_EVENT_READ_BATCH_LIMIT
+        if current_block_number <= end_block_number:
+            end_block_number = current_block_number
+
+        return end_block_number
+
     def produce_event(self, net_id):
         last_block_number = self.event_repository.read_last_read_block_number_for_event("REGISTRY")
-        end_block_number = last_block_number + self.REGISTRY_EVENT_READ_BATCH_LIMIT
+        end_block_number = self.get_end_block_number(last_block_number)
 
         events = self.produce_contract_events(last_block_number, end_block_number, net_id)
         self.push_events_to_repository(events)
@@ -103,7 +104,7 @@ class RegistryEventProducer(BlockchainEventProducer):
 
 
 class MPEEventProducer(BlockchainEventProducer):
-    MPE_EVENT_READ_BATCH_LIMIT = 5000
+    MPE_EVENT_READ_BATCH_LIMIT = 50000
 
     def __init__(self, ws_provider, repository=None):
         super().__init__(ws_provider, repository)
@@ -144,9 +145,18 @@ class MPEEventProducer(BlockchainEventProducer):
         for event in events:
             self.push_event(event)
 
+    def get_end_block_number(self, last_processed_block_number):
+        current_block_number = self.blockchain_util.get_current_block_no()
+        end_block_number = last_processed_block_number + self.MPE_EVENT_READ_BATCH_LIMIT
+        if current_block_number <= end_block_number:
+            end_block_number = current_block_number
+
+        return end_block_number
+
     def produce_event(self, net_id):
         last_block_number = self.event_repository.read_last_read_block_number_for_event("MPE")
-        end_block_number = last_block_number + self.MPE_EVENT_READ_BATCH_LIMIT
+        end_block_number = self.get_end_block_number(last_block_number)
+
         events = self.produce_contract_events(last_block_number, end_block_number, net_id)
         self.push_events_to_repository(events)
         self.event_repository.update_last_read_block_number_for_event("MPE", end_block_number)
@@ -155,11 +165,6 @@ class MPEEventProducer(BlockchainEventProducer):
 
 if __name__ == "__main__":
 
-    try:
-        blockchain_event_producer = RegistryEventProducer("wss://ropsten.infura.io/ws")
-        blockchain_event_producer.produce_event(3)
-    except Exception as e:
-        raise e
 
     try:
         blockchain_event_producer = MPEEventProducer("wss://ropsten.infura.io/ws")

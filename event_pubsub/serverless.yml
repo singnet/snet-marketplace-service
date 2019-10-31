@@ -64,7 +64,7 @@ package:
 functions:
   mpe_event_publisher:
     warmup: true
-    handler: orchestrator/lambda_handler.request_handler
+    handler: event_pubsub/handlers/event_producers_handler.mpe_event_producer_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
@@ -81,7 +81,7 @@ functions:
       - schedule: rate(2 minutes)
   registry_event_publisher:
     warmup: true
-    handler: orchestrator/lambda_handler.request_handler
+    handler:  event_pubsub/handlers/event_producers_handler.registry_event_producer_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
@@ -98,7 +98,7 @@ functions:
       - schedule: rate(2 minutes)
   mpe_event_listener:
     warmup: true
-    handler: orchestrator/lambda_handler.request_handler
+    handler: event_pubsub/handlers/event_subscrier_handler.mpe_event_subscriber_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
@@ -115,7 +115,7 @@ functions:
       - schedule: rate(2 minutes)
   registry_event_listener:
     warmup: true
-    handler: orchestrator/lambda_handler.request_handler
+    handler: event_pubsub/handlers/event_subscrier_handler.registry_event_subscriber_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}

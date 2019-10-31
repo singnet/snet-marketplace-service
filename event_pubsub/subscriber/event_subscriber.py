@@ -2,7 +2,8 @@ from event_pubsub.repository import Repository
 from event_pubsub.config import NETWORKS, EVENT_SUBSCRIPTIONS
 from event_pubsub.event_repository import EventRepository
 
-from event_pubsub.subscriber.listeners import WebHookHandler
+from event_pubsub.subscriber.listener_handlers import WebHookHandler
+from subscriber.listener_handlers import LambdaArnHandler
 
 
 class EventSubscriber(object):
@@ -55,8 +56,7 @@ class EventSubscriber(object):
                     if listener["type"] == "webhook":
                         WebHookHandler(listener["url"], push_event).push_event()
                     elif listener["type"] == "lambda_arn":
-                        # execute lambda here
-                        pass
+                        LambdaArnHandler(listener["lambda_arn"],push_event).push_event()
                 except Exception as e:
                     error_map[event["row_id"]] = {"error_code": 500, "error_message": str(e)}
 
