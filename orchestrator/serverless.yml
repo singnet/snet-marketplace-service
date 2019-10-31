@@ -343,7 +343,7 @@ functions:
 
   updateTxnStatus:
     warmup: true
-    handler: orchestrator/handler/update_transaction_status_handler.request_handler
+    handler: orchestrator/handlers.update_transaction_status_handler.request_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
