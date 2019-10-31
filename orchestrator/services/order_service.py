@@ -1,5 +1,6 @@
 import base64
 import json
+import decimal
 from enum import Enum
 from urllib.parse import quote
 
@@ -579,8 +580,8 @@ class OrderService:
             return f"Unable to cancel order with order_id {order_id}"
 
     def currency_to_token(self, amount, currency):
-        amount_in_cogs = self.calculate_amount_in_cogs(amount=amount, currency=currency)
-        conversion_data = {"base": currency, "amount": amount, "amount_in_cogs": amount_in_cogs,
+        amount_in_cogs = self.calculate_amount_in_cogs(amount=decimal.Decimal(amount), currency=currency)
+        conversion_data = {"base": currency, "amount": amount, "amount_in_cogs": str(amount_in_cogs),
                            "amount_in_agi": str(self.utils.cogs_to_agi(cogs=amount_in_cogs))}
         logger.debug(f"currency_to_token::conversion_data {conversion_data}")
         return conversion_data
