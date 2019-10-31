@@ -1,4 +1,6 @@
 import json
+
+from ssh.util import get_logger
 from web3 import Web3
 
 import os
@@ -11,7 +13,7 @@ from contract_api.dao.service_repository import ServiceRepository
 from common.repository import Repository
 from contract_api.config import NETWORK_ID, NETWORKS
 
-
+logger = get_logger(__name__)
 class OrganizationEventConsumer(object):
     connection = Repository(NETWORK_ID, NETWORKS=NETWORKS)
     organization_repository = OrganizationRepository(connection)
@@ -21,32 +23,10 @@ class OrganizationEventConsumer(object):
         self.ipfs_client = IPFSUtil(ipfs_url, ipfs_port)
         self.blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
 
-    def get_contract_file_paths(self, base_path, contract_name):
-        if contract_name == "REGISTRY":
-            json_file = "Registry.json"
-        elif contract_name == "MPE":
-            json_file = "MultiPartyEscrow.json"
-        else:
-            raise Exception("Invalid contract Type {}".format(contract_name))
 
-        contract_network_path = base_path + "{}/{}".format("networks", json_file)
-        contract_abi_path = base_path + "{}/{}".format("abi", json_file)
-
-        return contract_abi_path, contract_network_path
-
-    def get_contract_details(self, contract_abi_path, contract_network_path, net_id):
-
-        with open(contract_abi_path) as abi_file:
-            abi_value = json.load(abi_file)
-            contract_abi = abi_value
-
-        with open(contract_network_path) as network_file:
-            network_value = json.load(network_file)
-            contract_address = network_value[str(net_id)]['address']
-
-        return contract_abi, contract_address
 
     def on_event(self, event):
+        logger.info(f"processing org event {event}")
         net_id = NETWORK_ID
         base_contract_path = os.path.abspath(
             os.path.join(os.path.dirname(__file__), '..', 'node_modules', 'singularitynet-platform-contracts'))

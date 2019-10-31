@@ -2,9 +2,12 @@ import base64
 import os
 
 from common.blockchain_util import BlockChainUtil
+from common.logger import get_logger
 from common.repository import Repository
 from contract_api.config import NETWORK_ID, NETWORKS
 from contract_api.dao.mpe_repository import MPERepository
+
+logger=get_logger(__name__)
 
 
 class MPEEventConsumer(object):
@@ -19,6 +22,7 @@ class MPEEventConsumer(object):
             os.path.join(os.path.dirname(__file__), '..', 'node_modules', 'singularitynet-platform-contracts'))
         mpe_contract = self.blockchain_util.get_contract_instance(base_contract_path, "MPE", net_id)
 
+        logger.info(f"processing mpe event {event}")
         event_name = event["name"]
         event_data = event["data"]
         mpe_data = eval(event_data['json_str'])

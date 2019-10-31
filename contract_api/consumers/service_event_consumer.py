@@ -1,4 +1,5 @@
 import web3
+from ssh.util import get_logger
 from web3 import Web3
 
 from common.blockchain_util import BlockChainUtil
@@ -12,16 +13,16 @@ from common.repository import Repository
 import json
 import os
 
+logger = get_logger(__name__)
+
 
 class ServiceEventConsumer(object):
     connection = Repository(NETWORK_ID, NETWORKS=NETWORKS)
     service_repository = ServiceRepository(connection)
 
-    def __init__(self, ws_provider, ipfs_url,ipfs_port):
+    def __init__(self, ws_provider, ipfs_url, ipfs_port):
         self.ipfs_client = IPFSUtil(ipfs_url, ipfs_port)
         self.blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
-
-
 
     def fetch_tags(self, registry_contract, org_id_hex, service_id_hex):
         tags_data = registry_contract.functions.getServiceRegistrationById(
@@ -29,13 +30,13 @@ class ServiceEventConsumer(object):
         return tags_data
 
     def on_event(self, event):
-
+        logger.info(f"processing service event {event}")
         event_data = event['data']
         event_name = event["name"]
 
         net_id = NETWORK_ID
         base_contract_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '..','..','node_modules', 'singularitynet-platform-contracts'))
+            os.path.join(os.path.dirname(__file__), '..', '..', 'node_modules', 'singularitynet-platform-contracts'))
         registry_contract = self.blockchain_util.get_contract_instance(base_contract_path, "REGISTRY", net_id)
 
         service_data = eval(event_data['json_str'])
