@@ -49,10 +49,12 @@ jobs:
           command: |
             for requirement_file in `ls */requirement*.txt`;do sudo pip install -r $requirement_file --prefer-binary ;done
       - run:
-          name: Run tests for signer & wallets
+          name: Run tests for signer, wallet, orchestrator
           command: |
             #sudo pip install -r signer/requirement.txt
-            PYTHONPATH=$PWD python -m coverage run -m pytest signer/tests/test_signer.py wallets/testcase/unit_testcases/test_wallet_service.py
+            PYTHONPATH=$PWD python -m coverage run -m pytest signer/tests/test_signer.py wallets/testcase/unit_testcases/test_wallet_service.py \
+            orchestrator/tests/test_order_service.py \
+            orchestrator/tests/test_wallet_service.py
             python -m coverage report -m
             COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} python -m coveralls
       - save_cache:
