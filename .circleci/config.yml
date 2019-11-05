@@ -52,9 +52,7 @@ jobs:
           name: Run tests for signer, wallet, orchestrator
           command: |
             #sudo pip install -r signer/requirement.txt
-            PYTHONPATH=$PWD python -m coverage run -m pytest signer/tests/test_signer.py wallets/testcase/unit_testcases/test_wallet_service.py \
-            orchestrator/tests/test_order_service.py \
-            orchestrator/tests/test_wallet_service.py
+            PYTHONPATH=$PWD python -m coverage run -m pytest */testcases/integration_testcases/*.py */testcases/unit_testcases/*.py
             python -m coverage report -m
             COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} python -m coveralls
       - save_cache:
