@@ -57,6 +57,10 @@ package:
     - log_setup.py
     - heath_check.sh
     - node_modules/**
+    - wallets/**
+    - payments/**
+    - orchestrator/**
+    - notification/**
   include:
     - node_modules/singularitynet-platform-contracts/**
 
