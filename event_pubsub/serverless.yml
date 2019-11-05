@@ -56,7 +56,6 @@ package:
     - License
     - log_setup.py
     - heath_check.sh
-    - node_modules/**
     - payments/**
     - wallets/**
     - orchestrator/**
