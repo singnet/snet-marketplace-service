@@ -59,6 +59,8 @@ package:
     - payments/**
     - wallets/**
     - orchestrator/**
+  include:
+    - node_modules/singularitynet-platform-contracts/**
 
 functions:
   mpe_event_publisher:
