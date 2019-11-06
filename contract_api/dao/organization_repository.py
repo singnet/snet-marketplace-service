@@ -11,13 +11,18 @@ class OrganizationRepository(CommonRepository):
         super().__init__(connection)
 
     def get_organization(self, org_id):
-        query = "select * from organization where org_id = %s"
+        query = "select  org_id, organization_name, owner_address,org_metadata_uri, description, assets_url, assets_hash from organization where org_id = %s"
         query_param = [org_id]
         reposne = self.connection.execute(query, query_param)
-        return reposne[0]
+        if reposne:
+            return reposne[0]
+        return None
 
-
-
+    def get_organization_group(self, org_id):
+        query = "select org_id, group_id, group_name, payment from org_group where org_id = %s"
+        query_param = [org_id]
+        response = self.connection.execute(query, query_param)
+        return response
 
     def create_or_updatet_organization(self, org_id, org_name, owner_address, org_metadata_uri, description,
                                        assets_hash, assets_url):
@@ -33,7 +38,7 @@ class OrganizationRepository(CommonRepository):
 
     def delete_organization(self, org_id):
         del_org = 'DELETE FROM organization WHERE org_id = %s '
-        qry_res = self.connection.execute(del_org, org_id)
+        qry_res = self.connection.execute(del_org, [org_id])
 
     def create_organization_groups(self, org_id, groups):
         insert_qry = "Insert into org_group (org_id, group_id, group_name, payment, row_updated, row_created) " \
