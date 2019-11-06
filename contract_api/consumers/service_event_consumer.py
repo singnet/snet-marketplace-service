@@ -4,7 +4,7 @@ from web3 import Web3
 from common.blockchain_util import BlockChainUtil
 from common.ipfs_util import IPFSUtil
 from common.s3_util import S3Util
-from contract_api.config import ASSETS_PREFIX, ASSETS_BUCKET_NAME
+from consumers.event_consumer import EventConsumer
 
 from contract_api.dao.service_repository import ServiceRepository
 
@@ -17,18 +17,17 @@ from contract_api.config import ASSETS_PREFIX, ASSETS_BUCKET_NAME, S3_BUCKET_ACC
 logger = get_logger(__name__)
 
 
-class ServiceEventConsumer(object):
+class ServiceEventConsumer(EventConsumer):
     connection = Repository(NETWORK_ID, NETWORKS=NETWORKS)
     service_repository = ServiceRepository(connection)
 
     def __init__(self, ws_provider, ipfs_url, ipfs_port):
-        self.ipfs_client = IPFSUtil(ipfs_url, ipfs_port)
         self.blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
-
         self.s3_util = S3Util(S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY)
+        self.ipfs_util = IPFSUtil(ipfs_url, ipfs_port)
 
     def _push_asset_to_s3_using_hash(self, hash, org_id, service_id):
-        io_bytes = self.ipfs_utll.read_bytesio_from_ipfs(hash)
+        io_bytes = self.ipfs_util.read_bytesio_from_ipfs(hash)
         filename = hash.split("/")[1]
         if service_id:
             s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename
@@ -67,7 +66,7 @@ class ServiceEventConsumer(object):
 
         if event_name in ['ServiceCreated', 'ServiceMetadataModified']:
             metadata_uri = Web3.toText(service_data['metadataURI'])[7:].rstrip("\u0000")
-            service_ipfs_data = self.ipfs_client.read_file_from_ipfs(metadata_uri)
+            service_ipfs_data = self.ipfs_util.read_file_from_ipfs(metadata_uri)
             self.process_service_data(org_id=org_id, service_id=service_id, new_ipfs_hash=metadata_uri,
                                       new_ipfs_data=service_ipfs_data, tags_data=tags_data)
         elif event_name == 'ServiceTagsModified':
@@ -87,8 +86,8 @@ class ServiceEventConsumer(object):
 
         existing_service_metadata = self.service_repository.get_service_metadata(service_id, org_id)
         if existing_service_metadata:
-            existing_assets_hash = existing_service_metadata["assets_hash"]
-            existing_assets_url = existing_service_metadata["assets_url"]
+            existing_assets_hash = json.loads(existing_service_metadata["assets_hash"])
+            existing_assets_url = json.loads(existing_service_metadata["assets_url"])
         assets_url_mapping = self._comapre_assets_and_push_to_s3(existing_assets_hash, new_assets_hash,
                                                                  existing_assets_url, org_id,
                                                                  service_id)

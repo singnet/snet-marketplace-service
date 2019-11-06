@@ -1,5 +1,6 @@
 from common.logger import get_logger
 from web3 import Web3
+import json
 
 import os
 
@@ -14,6 +15,7 @@ from contract_api.dao.service_repository import ServiceRepository
 from common.repository import Repository
 from contract_api.config import NETWORK_ID, NETWORKS
 from contract_api.config import ASSETS_PREFIX, ASSETS_BUCKET_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY
+
 logger = get_logger(__name__)
 
 
@@ -26,8 +28,6 @@ class OrganizationEventConsumer(EventConsumer):
         self.ipfs_util = IPFSUtil(ipfs_url, ipfs_port)
         self.blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
         self.s3_util = S3Util(S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY)
-
-
 
     def _push_asset_to_s3_using_hash(self, hash, org_id, service_id):
         io_bytes = self.ipfs_util.read_bytesio_from_ipfs(hash)
@@ -86,8 +86,8 @@ class OrganizationEventConsumer(EventConsumer):
 
                 self.organization_repository.create_or_updatet_organization(
                     org_id=org_id, org_name=ipfs_org_metadata["org_name"], owner_address=org_data[3],
-                    org_metadata_uri=org_metadata_uri, description=description, assets_hash=new_assets_hash,
-                    assets_url=new_assets_url_mapping)
+                    org_metadata_uri=org_metadata_uri, description=json.dumps(description), assets_hash=json.dumps(new_assets_hash),
+                    assets_url=json.dumps(new_assets_url_mapping))
                 self.organization_repository.delete_organization_groups(org_id=org_id)
                 self.organization_repository.create_organization_groups(
                     org_id=org_id, groups=ipfs_org_metadata["groups"])
