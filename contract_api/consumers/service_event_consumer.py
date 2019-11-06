@@ -1,9 +1,9 @@
-
 from common.logger import get_logger
 from web3 import Web3
 
 from common.blockchain_util import BlockChainUtil
 from common.ipfs_util import IPFSUtil
+from common.s3_util import S3Util
 from contract_api.config import ASSETS_PREFIX, ASSETS_BUCKET_NAME
 
 from contract_api.dao.service_repository import ServiceRepository
@@ -12,6 +12,7 @@ from contract_api.config import NETWORK_ID, NETWORKS
 from common.repository import Repository
 import json
 import os
+from contract_api.config import ASSETS_PREFIX, ASSETS_BUCKET_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY
 
 logger = get_logger(__name__)
 
@@ -23,6 +24,20 @@ class ServiceEventConsumer(object):
     def __init__(self, ws_provider, ipfs_url, ipfs_port):
         self.ipfs_client = IPFSUtil(ipfs_url, ipfs_port)
         self.blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
+
+        self.s3_util = S3Util(S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY)
+
+    def _push_asset_to_s3_using_hash(self, hash, org_id, service_id):
+        io_bytes = self.ipfs_utll.read_bytesio_from_ipfs(hash)
+        filename = hash.split("/")[1]
+        if service_id:
+            s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename
+        else:
+            s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename
+
+        new_url = self.s3_util.push_io_bytes_to_s3(s3_filename,
+                                                   ASSETS_BUCKET_NAME, io_bytes)
+        return new_url
 
     def fetch_tags(self, registry_contract, org_id_hex, service_id_hex):
         tags_data = registry_contract.functions.getServiceRegistrationById(
@@ -64,81 +79,6 @@ class ServiceEventConsumer(object):
             self.service_repository.delete_service_dependents(org_id, service_id)
             self.service_repository.delete_service(
                 org_id=org_id, service_id=service_id)
-
-    def process_event(self):
-        pass
-
-    def _push_asset_to_s3_using_hash(self, hash, org_id, service_id):
-        io_bytes = self.ipfs_utll.read_bytesio_from_ipfs(hash)
-        filename = hash.split("/")[1]
-        new_url = self.s3_util.push_io_bytes_to_s3(ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename,
-                                                   ASSETS_BUCKET_NAME,
-                                                   io_bytes)
-        return new_url
-
-    def _comapre_assets_and_push_to_s3(self, existing_assets_hash, new_assets_hash, existing_assets_url, org_id,
-                                       service_id):
-        """
-
-        :param existing_assets_hash: contains asset_type and its has value stored in ipfs
-        :param new_assets_hash:  contains asset type and its updated hash value in ipfs
-        :param existing_assets_url:  contains asset type and s3_url value for given asset_type
-        :param org_id:
-        :param service_id:
-        :return: dict of asset_type and new_s3_url
-        """
-        # this function compare assets and deletes and update the new assets
-
-        assets_url_mapping = {}
-
-        if not existing_assets_hash:
-            existing_assets_hash = {}
-        if not existing_assets_url:
-            existing_assets_url = {}
-        if not new_assets_hash:
-            new_assets_hash = {}
-
-        for new_asset_type, new_asset_hash in new_assets_hash.items():
-
-            if isinstance(new_asset_hash, list):
-                # if this asset_type contains list of assets than remove all existing assetes from s3 and add all new assets to s3
-                #
-                new_urls_list = []
-
-                # remove all existing assets if exits
-                if new_asset_type in existing_assets_url:
-                    for url in existing_assets_url[new_asset_type]:
-                        self.s3_util.delete_file_from_s3(url)
-
-                # add new files to s3 and update the url
-                for hash in new_assets_hash[new_asset_type]:
-                    new_urls_list.append(
-                        self._push_asset_to_s3_using_hash(hash, org_id, service_id))
-
-                assets_url_mapping[new_asset_type] = new_urls_list
-
-            elif isinstance(new_asset_hash, str):
-                # if this asset_type has single value
-                if new_asset_type in existing_assets_hash and existing_assets_hash[new_asset_type] == new_asset_hash:
-                    # file is not updated , add existing url
-                    assets_url_mapping[new_asset_type] = existing_assets_url[new_asset_type]
-
-                else:
-                    if new_asset_type in existing_assets_url:
-                        url_of_file_to_be_removed = existing_assets_url[new_asset_type]
-                        self.s3_util.delete_file_from_s3(
-                            url_of_file_to_be_removed)
-
-                    hash_of_file_to_be_pushed_to_s3 = new_assets_hash[new_asset_type]
-
-                    assets_url_mapping[new_asset_type] = self._push_asset_to_s3_using_hash(
-                        hash_of_file_to_be_pushed_to_s3, org_id, service_id)
-
-            else:
-                print(
-                    "unknown type assets for org_id %s  service_id %s", org_id, service_id)
-
-        return assets_url_mapping
 
     def _get_new_assets_url(self, org_id, service_id, new_ipfs_data):
         new_assets_hash = new_ipfs_data.get('assets', {})
@@ -205,6 +145,5 @@ class ServiceEventConsumer(object):
             self.connection.commit_transaction()
 
         except Exception as e:
-
             self.connection.rollback_transaction()
             raise e
