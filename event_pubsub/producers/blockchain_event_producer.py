@@ -21,7 +21,7 @@ class BlockchainEventProducer(EventProducer):
         base_contract_path = os.path.abspath(
             os.path.join(os.path.dirname(__file__), '..', '..', 'node_modules', 'singularitynet-platform-contracts'))
 
-        contract = self.blockchain_util.get_contract_instance(base_contract_path, self.contract_name , net_id=net_id)
+        contract = self.blockchain_util.get_contract_instance(base_contract_path, self.contract_name, net_id=net_id)
         contract_events = contract.events
         all_blockchain_events = []
 
@@ -40,6 +40,14 @@ class BlockchainEventProducer(EventProducer):
         events = self.get_events_from_blockchain(start_block_number, end_block_number, net_id)
         logger.info(f"read no of events {len(events)}")
         return events
+
+    def get_end_block_number(self, last_processed_block_number, batch_limit):
+        current_block_number = self.blockchain_util.get_current_block_no()
+        end_block_number = last_processed_block_number + batch_limit
+        if current_block_number <= end_block_number:
+            end_block_number = current_block_number
+
+        return end_block_number
 
 
 class RegistryEventProducer(BlockchainEventProducer):
@@ -85,18 +93,10 @@ class RegistryEventProducer(BlockchainEventProducer):
         for event in events:
             self.push_event(event)
 
-    def get_end_block_number(self, last_processed_block_number):
-        current_block_number = self.blockchain_util.get_current_block_no()
-        end_block_number = last_processed_block_number + self.REGISTRY_EVENT_READ_BATCH_LIMIT
-        if current_block_number <= end_block_number:
-            end_block_number = current_block_number
-
-        return end_block_number
-
     def produce_event(self, net_id):
         last_block_number = self.event_repository.read_last_read_block_number_for_event("REGISTRY")
-        end_block_number = self.get_end_block_number(last_block_number)
-
+        end_block_number = self.get_end_block_number(last_block_number,
+                                                     RegistryEventProducer.REGISTRY_EVENT_READ_BATCH_LIMIT)
         logger.info(f"reading registry event from {last_block_number} to {end_block_number}")
         events = self.produce_contract_events(last_block_number, end_block_number, net_id)
         self.push_events_to_repository(events)
@@ -148,17 +148,9 @@ class MPEEventProducer(BlockchainEventProducer):
         for event in events:
             self.push_event(event)
 
-    def get_end_block_number(self, last_processed_block_number):
-        current_block_number = self.blockchain_util.get_current_block_no()
-        end_block_number = last_processed_block_number + self.MPE_EVENT_READ_BATCH_LIMIT
-        if current_block_number <= end_block_number:
-            end_block_number = current_block_number
-
-        return end_block_number
-
     def produce_event(self, net_id):
         last_block_number = self.event_repository.read_last_read_block_number_for_event("MPE")
-        end_block_number = self.get_end_block_number(last_block_number)
+        end_block_number = self.get_end_block_number(last_block_number, self.MPE_EVENT_READ_BATCH_LIMIT)
         logger.info(f"reading mpe event from {last_block_number} to {end_block_number}")
         events = self.produce_contract_events(last_block_number, end_block_number, net_id)
         self.push_events_to_repository(events)

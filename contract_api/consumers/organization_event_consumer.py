@@ -80,9 +80,9 @@ class OrganizationEventConsumer(EventConsumer):
             if (org_data is not None and org_data[0]):
                 self.organization_repository.begin_transaction()
 
-                new_assets_hash = ipfs_org_metadata['assets']
+                new_assets_hash = ipfs_org_metadata.get('assets', {})
                 new_assets_url_mapping = self._get_new_assets_url(org_id, ipfs_org_metadata)
-                description = ipfs_org_metadata['description']
+                description = ipfs_org_metadata.get('description', {})
 
                 self.organization_repository.create_or_updatet_organization(
                     org_id=org_id, org_name=ipfs_org_metadata["org_name"], owner_address=org_data[3],
@@ -113,6 +113,6 @@ class OrganizationEventConsumer(EventConsumer):
 
 
         except Exception as e:
-            print(e)
+            logger.exception(str(e))
             self.connection.rollback_transaction()
             raise e

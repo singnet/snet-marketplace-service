@@ -106,6 +106,7 @@ class ServiceEventConsumer(EventConsumer):
             service_data = self.service_repository.create_or_update_service(
                 org_id=org_id, service_id=service_id, ipfs_hash=new_ipfs_hash)
             service_row_id = service_data['last_row_id']
+            logger.debug(f"Created service with service {service_row_id}")
             self.service_repository.create_or_update_service_metadata(service_row_id=service_row_id, org_id=org_id,
                                                                       service_id=service_id,
                                                                       ipfs_data=new_ipfs_data, assets_url=assets_url)

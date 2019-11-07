@@ -3,21 +3,21 @@ from event_pubsub.repository import Repository
 from event_pubsub.config import NETWORKS, EVENT_SUBSCRIPTIONS
 from event_pubsub.event_repository import EventRepository
 
-from event_pubsub.subscriber.listener_handlers import WebHookHandler
-from event_pubsub.subscriber.listener_handlers import LambdaArnHandler
+from event_pubsub.listeners.listener_handlers import WebHookHandler
+from event_pubsub.listeners.listener_handlers import LambdaArnHandler
 import json
 
 logger = get_logger(__name__)
 
 
-class EventSubscriber(object):
+class EventListener(object):
     EVENTS_LIMIT = 30
 
     connection = Repository(NETWORKS=NETWORKS)
     event_repository = EventRepository(connection)
 
     def __init__(self, repository=None):
-        self.event_consumer_map = EventSubscriber.initiate_event_subscription()
+        self.event_consumer_map = EventListener.initiate_event_subscription()
 
     def subscribe(self, event_names, event_consumer):
         for event in event_names:
@@ -51,14 +51,15 @@ class EventSubscriber(object):
             self.event_repository.update_mpe_raw_events(1, row_id, error['error_code'], error['error_message'])
 
         for row_id in success_list:
-            self.event_repository.update_mpe_raw_events(1, row_id, "", "")
+            self.event_repository.update_mpe_raw_events(1, row_id, 200, "")
 
     def tranform_event_to_push(self, event):
         event['row_created'] = str(event['row_created'])
         event['row_updated'] = str(event['row_updated'])
         event['processed'] = 0
+        push_event = {"data": event, "name": event["event"]}
 
-        return event
+        return push_event
 
     def publish_events(self, events):
 
@@ -70,8 +71,7 @@ class EventSubscriber(object):
             if event['event'] in self.event_consumer_map:
                 listeners = self.event_consumer_map[event['event']]
             for listener in listeners:
-                self.tranform_event_to_push(event)
-                push_event = {"data": event, "name": event["event"]}
+                push_event=self.tranform_event_to_push(event)
                 logger.debug(f"pushing events {push_event} to listener {listener['url']}")
                 try:
                     if listener["type"] == "webhook":
@@ -79,12 +79,12 @@ class EventSubscriber(object):
                     elif listener["type"] == "lambda_arn":
                         LambdaArnHandler(listener["url"], push_event).push_event()
                 except Exception as e:
-                    logger.exception(f"Error while processing event with error {str(e)} for event {event}")
-                    error_map[event["row_id"]] = {"error_code": 500, "error_message": str(e)}
+                    logger.exception(f"Error while processing event with error {str(e)} for event {event} listener {listener['url']}")
+                    error_map[event["row_id"]] = {"error_code": 500, "error_message": f"for listener {listener['url']} got error {str(e)}"}
             success_list.append(event["row_id"])
 
         return error_map, success_list
 
 
 if __name__ == "__main__":
-    EventSubscriber().listen_and_publish_registry_events()
+    EventListener().listen_and_publish_registry_events()
