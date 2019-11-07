@@ -1,9 +1,9 @@
-from event_pubsub.listeners.event_listeners import EventListener
+from event_pubsub.listeners.event_listeners import RegistryEventListener,MPEEventListener
 
 
 def registry_event_listener_handler(event, context):
-    EventListener().listen_and_publish_registry_events()
+    RegistryEventListener().listen_and_publish_registry_events()
 
 
 def mpe_event_listener_handler(event, context):
-    EventListener().listen_and_publish_mpe_events()
+    MPEEventListener().listen_and_publish_mpe_events()

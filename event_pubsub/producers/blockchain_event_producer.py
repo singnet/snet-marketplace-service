@@ -48,6 +48,9 @@ class BlockchainEventProducer(EventProducer):
 
         return end_block_number
 
+    def produce_event(self, net_id):
+        pass
+
 
 class RegistryEventProducer(BlockchainEventProducer):
     REGISTRY_EVENT_READ_BATCH_LIMIT = 50000

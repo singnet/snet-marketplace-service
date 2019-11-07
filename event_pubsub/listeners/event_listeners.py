@@ -10,8 +10,6 @@ logger = get_logger(__name__)
 
 
 class EventListener(object):
-    EVENTS_LIMIT = 30
-
     _connection = Repository(NETWORKS=NETWORKS)
     _event_repository = EventRepository(_connection)
 
@@ -31,15 +29,47 @@ class EventListener(object):
     def initiate_event_subscription(cls):
         return EVENT_SUBSCRIPTIONS
 
-    def listen_and_publish_registry_events(self):
-        registry_events = self._event_repository.read_registry_events()
-        error_map, success_map = self._publish_events(registry_events)
-        # need to change it to batch update
-        for row_id, error in error_map.items():
-            self._event_repository.update_registry_raw_events(1, row_id, error['error_code'], error['error_message'])
+    def _tranform_event_to_push(self, event):
+        event['row_created'] = str(event['row_created'])
+        event['row_updated'] = str(event['row_updated'])
+        event['processed'] = 0
+        push_event = {"data": event, "name": event["event"]}
 
-        for row_id in success_map:
-            self._event_repository.update_mpe_raw_events(1, row_id, "", "")
+        return push_event
+
+    def _get_listener_handler(self, listener):
+        if listener["type"] == "webhook":
+            return WebHookHandler(listener["url"])
+        elif listener["type"] == "lambda_arn":
+            return LambdaArnHandler(listener["url"])
+
+    def _publish_events(self, events):
+
+        error_map = {}
+        success_list = []
+
+        for event in events:
+            listeners = []
+            if event['event'] in self.event_consumer_map:
+                listeners = self.event_consumer_map[event['event']]
+            for listener in listeners:
+                push_event = self._tranform_event_to_push(event)
+                logger.debug(f"pushing events {push_event} to listener {listener['url']}")
+                try:
+                    listener_handler = self._get_listener_handler(listener)
+                    listener_handler.push_event(push_event)
+                except Exception as e:
+                    logger.exception(
+                        f"Error while processing event with error {str(e)} for event {event} listener {listener['url']}")
+                    error_map[event["row_id"]] = {"error_code": 500,
+                                                  "error_message": f"for listener {listener['url']} got error {str(e)}"}
+            success_list.append(event["row_id"])
+
+        return error_map, success_list
+
+
+class MPEEventListener(EventListener):
+    EVENTS_LIMIT = 30
 
     def listen_and_publish_mpe_events(self):
         mpe_events = self._event_repository.read_mpe_events()
@@ -52,37 +82,19 @@ class EventListener(object):
         for row_id in success_list:
             self._event_repository.update_mpe_raw_events(1, row_id, 200, "")
 
-    def _tranform_event_to_push(self, event):
-        event['row_created'] = str(event['row_created'])
-        event['row_updated'] = str(event['row_updated'])
-        event['processed'] = 0
-        push_event = {"data": event, "name": event["event"]}
 
-        return push_event
+class RegistryEventListener(EventListener):
+    EVENTS_LIMIT = 30
 
-    def _publish_events(self, events):
+    def listen_and_publish_registry_events(self):
+        registry_events = self._event_repository.read_registry_events()
+        error_map, success_map = self._publish_events(registry_events)
+        # need to change it to batch update
+        for row_id, error in error_map.items():
+            self._event_repository.update_registry_raw_events(1, row_id, error['error_code'], error['error_message'])
 
-        error_map = {}
-        success_list = []
-
-        for event in events:
-            listeners = []
-            if event['event'] in self.event_consumer_map:
-                listeners = self.event_consumer_map[event['event']]
-            for listener in listeners:
-                push_event=self._tranform_event_to_push(event)
-                logger.debug(f"pushing events {push_event} to listener {listener['url']}")
-                try:
-                    if listener["type"] == "webhook":
-                        WebHookHandler(listener["url"], push_event).push_event()
-                    elif listener["type"] == "lambda_arn":
-                        LambdaArnHandler(listener["url"], push_event).push_event()
-                except Exception as e:
-                    logger.exception(f"Error while processing event with error {str(e)} for event {event} listener {listener['url']}")
-                    error_map[event["row_id"]] = {"error_code": 500, "error_message": f"for listener {listener['url']} got error {str(e)}"}
-            success_list.append(event["row_id"])
-
-        return error_map, success_list
+        for row_id in success_map:
+            self._event_repository.update_mpe_raw_events(1, row_id, "", "")
 
 
 if __name__ == "__main__":
