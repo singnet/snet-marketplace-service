@@ -7,7 +7,7 @@ import os
 from common.blockchain_util import BlockChainUtil
 from common.ipfs_util import IPFSUtil
 from common.s3_util import S3Util
-from consumers.event_consumer import EventConsumer
+from contract_api.consumers.event_consumer import EventConsumer
 
 from contract_api.dao.organization_repository import OrganizationRepository
 from contract_api.dao.service_repository import ServiceRepository
