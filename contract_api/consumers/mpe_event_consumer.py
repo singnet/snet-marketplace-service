@@ -20,7 +20,7 @@ class MPEEventConsumer(EventConsumer):
     def on_event(self, event):
         net_id = NETWORK_ID
         base_contract_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '..', 'node_modules', 'singularitynet-platform-contracts'))
+            os.path.join(os.path.dirname(__file__), '..', '..','node_modules', 'singularitynet-platform-contracts'))
         mpe_contract = self.blockchain_util.get_contract_instance(base_contract_path, "MPE", net_id)
 
         logger.info(f"processing mpe event {event}")
