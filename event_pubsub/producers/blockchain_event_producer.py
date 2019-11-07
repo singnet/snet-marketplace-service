@@ -1,19 +1,18 @@
 import os
 
-import web3
-from web3 import Web3
-
 from common.blockchain_util import BlockChainUtil
 from common.logger import get_logger
+from event_pubsub.config import WS_PROVIDER, NETWORKS
 from event_pubsub.event_repository import EventRepository
 from event_pubsub.producers.event_producer import EventProducer
 from event_pubsub.repository import Repository
 
-logger= get_logger(__name__)
+logger = get_logger(__name__)
+
 
 class BlockchainEventProducer(EventProducer):
     def __init__(self, ws_provider, repository=None, ):
-        self.web3 = Web3(web3.providers.WebsocketProvider(ws_provider))
+
         self.blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
         self.event_repository = EventRepository(repository)
 
@@ -111,7 +110,7 @@ class MPEEventProducer(BlockchainEventProducer):
 
     def __init__(self, ws_provider, repository=None):
         super().__init__(ws_provider, repository)
-        self.contract_name="MPE"
+        self.contract_name = "MPE"
 
     def push_event(self, event):
         """
@@ -170,7 +169,7 @@ class MPEEventProducer(BlockchainEventProducer):
 if __name__ == "__main__":
 
     try:
-        blockchain_event_producer = MPEEventProducer("wss://ropsten.infura.io/ws")
-        blockchain_event_producer.produce_event(3)
+        registry_event_producer = RegistryEventProducer(WS_PROVIDER, Repository(NETWORKS))
+        registry_event_producer.produce_event(3)
     except Exception as e:
         raise e

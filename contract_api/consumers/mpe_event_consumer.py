@@ -4,13 +4,14 @@ import os
 from common.blockchain_util import BlockChainUtil
 from common.logger import get_logger
 from common.repository import Repository
+from contract_api.consumers.event_consumer import EventConsumer
 from contract_api.config import NETWORK_ID, NETWORKS
 from contract_api.dao.mpe_repository import MPERepository
 
 logger=get_logger(__name__)
 
 
-class MPEEventConsumer(object):
+class MPEEventConsumer(EventConsumer):
     mpe_repository = MPERepository(Repository(NETWORK_ID, NETWORKS=NETWORKS))
 
     def __init__(self, ws_provider):

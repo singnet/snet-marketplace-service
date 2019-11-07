@@ -7,6 +7,9 @@ from eth_account.messages import defunct_hash_message
 
 from web3 import Web3
 
+from common.logger import get_logger
+
+logger=get_logger(__name__)
 
 class ContractType(Enum):
     REGISTRY = "REGISTRY"
@@ -42,6 +45,7 @@ class BlockChainUtil(object):
         contract_address = self.read_contract_address(net_id=net_id, path=contract_network_path,
                                                       key='address')
         contract_abi = self.load_contract(contract_abi_path)
+        logger.debug(f"contract address is {contract_address}")
         contract_instance = self.contract_instance(contract_abi=contract_abi, address=contract_address)
 
         return contract_instance
