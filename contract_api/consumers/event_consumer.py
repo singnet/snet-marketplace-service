@@ -65,5 +65,7 @@ class EventConsumer(object):
 
         return assets_url_mapping
 
+
+
     def on_event(self, event):
         pass

@@ -84,7 +84,7 @@ class MPEEventListener(EventListener):
 
 
 class RegistryEventListener(EventListener):
-    EVENTS_LIMIT = 30
+    EVENTS_LIMIT =30
 
     def listen_and_publish_registry_events(self):
         registry_events = self._event_repository.read_registry_events()

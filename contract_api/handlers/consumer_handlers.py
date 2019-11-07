@@ -2,6 +2,8 @@ from common.logger import get_logger
 
 from common.constant import StatusCode
 from common.utils import generate_lambda_response
+from consumers.consumer_factory import get_organization_event_consumer, get_service_event_consumer
+from consumers.organization_event_consumer import OrganizationCreatedEventConsumer
 from contract_api.config import NETWORK_ID
 from contract_api.config import IPFS_URL
 from contract_api.config import NETWORKS
@@ -15,8 +17,9 @@ logger = get_logger(__name__)
 def organization_event_consumer_handler(event, context):
     try:
 
-        OrganizationEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"], IPFS_URL['url'], IPFS_URL['port']).on_event(
-            event)
+        organization_event_consumer = get_organization_event_consumer(event)
+        organization_event_consumer.on_event(event)
+
         return generate_lambda_response(200, StatusCode.OK)
     except Exception as e:
         logger.exception(f"error  {str(e)} while processing event {event}")
@@ -26,7 +29,8 @@ def organization_event_consumer_handler(event, context):
 
 def service_event_consumer_handler(event, context):
     try:
-        ServiceEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"], IPFS_URL['url'], IPFS_URL['port']).on_event(event)
+        service_event_consumer = get_service_event_consumer(event)
+        service_event_consumer.on_event(event)
         return generate_lambda_response(200, StatusCode.OK)
     except Exception as e:
         logger.exception(f"error  {str(e)} while processing event {event}")

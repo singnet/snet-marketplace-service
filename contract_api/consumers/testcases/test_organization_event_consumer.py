@@ -3,6 +3,7 @@ from datetime import datetime
 from unittest.mock import patch, Mock
 
 from common.repository import Repository
+from consumers.organization_event_consumer import OrganizationCreatedEventConsumer
 from contract_api.consumers.organization_event_consumer import OrganizationEventConsumer
 from dao.organization_repository import OrganizationRepository
 from contract_api.config import NETWORK_ID, NETWORKS
@@ -76,7 +77,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
         organization_repository = OrganizationRepository(connection)
         organization_repository.delete_organization(org_id='snet')
         organization_repository.delete_organization_groups(org_id='snet')
-        org_event_consumer = OrganizationEventConsumer("wss://ropsten.infura.io/ws", "http://ipfs.singularitynet.io",
+        org_event_consumer = OrganizationCreatedEventConsumer("wss://ropsten.infura.io/ws", "http://ipfs.singularitynet.io",
                                                        80)
         org_event_consumer.on_event(event=event)
 
@@ -87,3 +88,10 @@ class TestOrganizationEventConsumer(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+    # event= {'data': {'row_id': 1, 'block_no': 6268431, 'event': 'OrganizationModified', 'json_str': "{'orgId': b'snet\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'}", 'processed': 0, 'transactionHash': "b'\\xea\\x99^\\x13\\r\\x8aZ\\x17V\\xac.\\xe2<\\xaf\\xcbn\\xccr\\xac\\x07\\xee\\xde\\xeb=\\x8f\\xa8\\xc5\\xe0%:\\xf9\\xdb'", 'logIndex': '12', 'error_code': 500, 'error_msg': '"string indices must be integers"', 'row_updated': '2019-11-05 10:02:01', 'row_created': '2019-11-05 10:02:01'}, 'name': 'OrganizationModified'}
+    # org_event_consumer = OrganizationEventConsumer("wss://ropsten.infura.io/ws", "http://ipfs.singularitynet.io",
+    #                                                80)
+    # org_event_consumer.on_event(event=event)
+
+

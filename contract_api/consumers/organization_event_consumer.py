@@ -29,17 +29,8 @@ class OrganizationEventConsumer(EventConsumer):
         self._blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
         self._s3_util = S3Util(S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY)
 
-
-
     def on_event(self, event):
-        org_id, blockchain_org_data, ipfs_org_metadata, org_metadata_uri = self._get_org_details_from_blockchain(event)
-
-        if event['name'] == "OrganizationCreated" or event['name'] == 'OrganizationModified':
-            self._process_organization_create_update_event(org_id, blockchain_org_data, ipfs_org_metadata,
-                                                           org_metadata_uri)
-        elif event['name'] == "OrganizationDeleted":
-            self._process_organization_delete_event(org_id)
-
+        pass
 
     def _push_asset_to_s3_using_hash(self, hash, org_id, service_id):
         io_bytes = self._ipfs_util.read_bytesio_from_ipfs(hash)
@@ -71,7 +62,7 @@ class OrganizationEventConsumer(EventConsumer):
         event_org_data = eval(event['data']['json_str'])
         org_id_bytes = event_org_data['orgId']
         org_id = Web3.toText(org_id_bytes).rstrip("\\x00")
-        return  org_id
+        return org_id
 
     def _get_registry_contract(self):
         net_id = NETWORK_ID
@@ -79,7 +70,7 @@ class OrganizationEventConsumer(EventConsumer):
             os.path.join(os.path.dirname(__file__), '..', '..', 'node_modules', 'singularitynet-platform-contracts'))
         registry_contract = self._blockchain_util.get_contract_instance(base_contract_path, "REGISTRY", net_id)
 
-        return  registry_contract
+        return registry_contract
 
     def _get_org_details_from_blockchain(self, event):
         logger.info(f"processing org event {event}")
@@ -93,6 +84,14 @@ class OrganizationEventConsumer(EventConsumer):
 
         return org_id, blockchain_org_data, ipfs_org_metadata, org_metadata_uri
 
+
+class OrganizationCreatedEventConsumer(OrganizationEventConsumer):
+
+    def on_event(self, event):
+        org_id, blockchain_org_data, ipfs_org_metadata, org_metadata_uri = self._get_org_details_from_blockchain(event)
+
+        self._process_organization_create_update_event(org_id, blockchain_org_data, ipfs_org_metadata,
+                                                       org_metadata_uri)
 
     def _process_organization_create_update_event(self, org_id, org_data, ipfs_org_metadata, org_metadata_uri):
 
@@ -119,6 +118,17 @@ class OrganizationEventConsumer(EventConsumer):
         except Exception as e:
             self._organization_repository.rollback_transaction()
             raise e
+
+
+class OrganizationModifiedEventConsumer(OrganizationCreatedEventConsumer):
+    pass
+
+
+class OrganizationDeletedEventConsumer(OrganizationEventConsumer):
+
+    def on_event(self, event):
+        org_id, blockchain_org_data, ipfs_org_metadata, org_metadata_uri = self._get_org_details_from_blockchain(event)
+        self._process_organization_delete_event(org_id)
 
     def _process_organization_delete_event(self, org_id):
         try:
