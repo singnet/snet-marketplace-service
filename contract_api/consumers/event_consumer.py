@@ -1,7 +1,3 @@
-from contract_api.config import ASSETS_PREFIX, ASSETS_BUCKET_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY
-
-from common.s3_util import S3Util
-
 
 class EventConsumer(object):
 

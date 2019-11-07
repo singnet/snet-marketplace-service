@@ -26,6 +26,25 @@ class ServiceEventConsumer(EventConsumer):
         self.s3_util = S3Util(S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY)
         self.ipfs_util = IPFSUtil(ipfs_url, ipfs_port)
 
+    def on_event(self, event):
+
+        event_name = event["name"]
+        org_id, service_id, tags_data = self._get_service_details_from_blockchain(event)
+
+        if event_name in ['ServiceCreated', 'ServiceMetadataModified']:
+            metadata_uri = self._get_metadata_uri_from_event(event)
+            service_ipfs_data = self.ipfs_util.read_file_from_ipfs(metadata_uri)
+            self._process_service_data(org_id=org_id, service_id=service_id, new_ipfs_hash=metadata_uri,
+                                       new_ipfs_data=service_ipfs_data, tags_data=tags_data)
+        elif event_name == 'ServiceTagsModified':
+            self.service_repository.update_tags(org_id=org_id, service_id=service_id,
+                                                tags_data=self._fetch_tags(org_id_hex=org_id,
+                                                                           service_id_hex=service_id))
+        elif event_name == 'ServiceDeleted':
+            self.service_repository.delete_service_dependents(org_id, service_id)
+            self.service_repository.delete_service(
+                org_id=org_id, service_id=service_id)
+
     def _push_asset_to_s3_using_hash(self, hash, org_id, service_id):
         io_bytes = self.ipfs_util.read_bytesio_from_ipfs(hash)
         filename = hash.split("/")[1]
@@ -38,46 +57,52 @@ class ServiceEventConsumer(EventConsumer):
                                                    ASSETS_BUCKET_NAME, io_bytes)
         return new_url
 
-    def fetch_tags(self, registry_contract, org_id_hex, service_id_hex):
+    def _fetch_tags(self, registry_contract, org_id_hex, service_id_hex):
         tags_data = registry_contract.functions.getServiceRegistrationById(
             org_id_hex, service_id_hex).call()
         return tags_data
 
-    def on_event(self, event):
-        logger.info(f"processing service event {event}")
+    def _get_org_id_from_event(self, event):
         event_data = event['data']
-        event_name = event["name"]
+        service_data = eval(event_data['json_str'])
+        org_id_bytes = service_data['orgId']
+        org_id = Web3.toText(org_id_bytes).rstrip("\x00")
+        return org_id
 
+    def _get_service_id_from_event(self, event):
+        event_data = event['data']
+        service_data = eval(event_data['json_str'])
+        service_id_bytes = service_data['serviceId']
+        service_id = Web3.toText(service_id_bytes).rstrip("\x00")
+        return service_id
+
+    def _get_metadata_uri_from_event(self, event):
+        event_data = event['data']
+        service_data = eval(event_data['json_str'])
+        metadata_uri = Web3.toText(service_data['metadataURI'])[7:].rstrip("\u0000")
+        return metadata_uri
+
+    def _get_registry_contract(self):
         net_id = NETWORK_ID
         base_contract_path = os.path.abspath(
             os.path.join(os.path.dirname(__file__), '..', '..', 'node_modules', 'singularitynet-platform-contracts'))
         registry_contract = self.blockchain_util.get_contract_instance(base_contract_path, "REGISTRY", net_id)
+        return registry_contract
 
-        service_data = eval(event_data['json_str'])
+    def _get_service_details_from_blockchain(self, event):
+        logger.info(f"processing service event {event}")
 
-        org_id_bytes = service_data['orgId']
-        org_id = Web3.toText(org_id_bytes).rstrip("\x00")
-        service_id_bytes = service_data['serviceId']
-        service_id = Web3.toText(service_id_bytes).rstrip("\x00")
+        registry_contract = self._get_registry_contract()
+        org_id = self._get_org_id_from_event(event)
+        service_id = self._get_service_id_from_event(event)
 
-        tags_data = self.fetch_tags(
+        tags_data = self._fetch_tags(
             registry_contract=registry_contract, org_id_hex=org_id.encode("utf-8"),
             service_id_hex=service_id.encode("utf-8"))
 
-        if event_name in ['ServiceCreated', 'ServiceMetadataModified']:
-            metadata_uri = Web3.toText(service_data['metadataURI'])[7:].rstrip("\u0000")
-            service_ipfs_data = self.ipfs_util.read_file_from_ipfs(metadata_uri)
-            self.process_service_data(org_id=org_id, service_id=service_id, new_ipfs_hash=metadata_uri,
-                                      new_ipfs_data=service_ipfs_data, tags_data=tags_data)
-        elif event_name == 'ServiceTagsModified':
-            self.service_repository.update_tags(org_id=org_id, service_id=service_id,
-                                                tags_data=self.fetch_tags(org_id_hex=org_id,
-                                                                          service_id_hex=service_id))
+        return org_id, service_id, tags_data
 
-        elif event_name == 'ServiceDeleted':
-            self.service_repository.delete_service_dependents(org_id, service_id)
-            self.service_repository.delete_service(
-                org_id=org_id, service_id=service_id)
+
 
     def _get_new_assets_url(self, org_id, service_id, new_ipfs_data):
         new_assets_hash = new_ipfs_data.get('assets', {})
@@ -93,7 +118,7 @@ class ServiceEventConsumer(EventConsumer):
                                                                  service_id)
         return assets_url_mapping
 
-    def process_service_data(self, org_id, service_id, new_ipfs_hash, new_ipfs_data, tags_data):
+    def _process_service_data(self, org_id, service_id, new_ipfs_hash, new_ipfs_data, tags_data):
         try:
 
             self.connection.begin_transaction()
