@@ -61,7 +61,7 @@ class OrganizationEventConsumer(EventConsumer):
         base_contract_path = os.path.abspath(
             os.path.join(os.path.dirname(__file__), '..','..','node_modules', 'singularitynet-platform-contracts'))
         registry_contract = self.blockchain_util.get_contract_instance(base_contract_path, "REGISTRY", net_id)
-        event_org_data = event['data']['json_str']
+        event_org_data = eval(event['data']['json_str'])
         org_id_bytes = event_org_data['orgId']
         org_id = Web3.toText(org_id_bytes).rstrip("\\x00")
 

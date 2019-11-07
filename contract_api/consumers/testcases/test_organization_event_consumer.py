@@ -17,8 +17,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
     @patch('common.ipfs_util.IPFSUtil.read_bytesio_from_ipfs')
     def test_organziation_create_update_event(self, nock_read_bytesio_from_ipfs, mock_ipfs_read, mock_s3_push):
         event = {"data": {'row_id': 2, 'block_no': 6243627, 'event': 'OrganizationCreated',
-                          'json_str': {
-                              'orgId': b'snet\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'},
+                          'json_str': "{'orgId': b'snet\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'}",
                           'processed': b'\x00',
                           'transactionHash': "b'y4\\xa4$By/mZ\\x17\\x1d\\xf2\\x18\\xb6aa\\x02\\x1c\\x88P\\x85\\x18w\\x19\\xc9\\x91\\xecX\\xd7E\\x98!'",
                           'logIndex': '1', 'error_code': 1, 'error_msg': '',
@@ -83,21 +82,8 @@ class TestOrganizationEventConsumer(unittest.TestCase):
 
         organization = organization_repository.get_organization(org_id='snet')
         org_group = organization_repository.get_organization_group(org_id='snet')
-        assert organization == {'org_id': 'snet', 'organization_name': 'organization_name',
-                                'owner_address': '0xB18aac9DE3852F988147287daBD19dF2791C2e0f',
-                                'org_metadata_uri': 'QmSesBRhz67FRixd3mGMNmQE5sNyZxdDgcNMEBmmhHk2X6',
-                                'description': '{}', 'assets_url': '{"hero_image": "http://test-s3-push"}',
-                                'assets_hash': '{"hero_image": "QmNW2jjz11enwbRrF1mJ2LdaQPeZVEtmKU8Uq7kpEkmXCc/hero_gene-annotation.png"}'}
-        assert org_group == [
-            {'org_id': 'snet', 'group_id': '99ybRIg2wAx55mqVsA6sB4S7WxPQHNKqa4BPu/bhj+U=',
-             'group_name': 'default_group2',
-             'payment': '{"payment_address": "0x671276c61943A35D5F230d076bDFd91B0c47bF09", "payment_channel_storage_type": "etcd", "payment_expiration_threshold": 40320, "payment_channel_storage_client": {"endpoints": ["http://127.0.0.1:2379"], "request_timeout": "3s", "connection_timeout": "5s"}}',
-             },
-            {'org_id': 'snet', 'group_id': '99ybRIg2wAx55mqVsA6sB6S7WxPQHNKqa4BPu/bhj+U=',
-             'group_name': 'default_group2',
-             'payment': '{"payment_address": "0x671276c61943A35D5F230d076bDFd91B0c47bF09", "payment_channel_storage_type": "etcd", "payment_expiration_threshold": 40320, "payment_channel_storage_client": {"endpoints": ["http://127.0.0.1:2379"], "request_timeout": "3s", "connection_timeout": "5s"}}',
-             }]
-
+        assert organization == {'org_id': 'snet\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', 'organization_name': 'organization_name', 'owner_address': '0xB18aac9DE3852F988147287daBD19dF2791C2e0f', 'org_metadata_uri': 'QmSesBRhz67FRixd3mGMNmQE5sNyZxdDgcNMEBmmhHk2X6', 'description': '{}', 'assets_url': '{"hero_image": "http://test-s3-push"}', 'assets_hash': '{"hero_image": "QmNW2jjz11enwbRrF1mJ2LdaQPeZVEtmKU8Uq7kpEkmXCc/hero_gene-annotation.png"}'}
+        assert org_group == [{'org_id': 'snet\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', 'group_id': '99ybRIg2wAx55mqVsA6sB4S7WxPQHNKqa4BPu/bhj+U=', 'group_name': 'default_group2', 'payment': '{"payment_address": "0x671276c61943A35D5F230d076bDFd91B0c47bF09", "payment_channel_storage_type": "etcd", "payment_expiration_threshold": 40320, "payment_channel_storage_client": {"endpoints": ["http://127.0.0.1:2379"], "request_timeout": "3s", "connection_timeout": "5s"}}'}, {'org_id': 'snet\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', 'group_id': '99ybRIg2wAx55mqVsA6sB6S7WxPQHNKqa4BPu/bhj+U=', 'group_name': 'default_group2', 'payment': '{"payment_address": "0x671276c61943A35D5F230d076bDFd91B0c47bF09", "payment_channel_storage_type": "etcd", "payment_expiration_threshold": 40320, "payment_channel_storage_client": {"endpoints": ["http://127.0.0.1:2379"], "request_timeout": "3s", "connection_timeout": "5s"}}'}]
 
 if __name__ == "__main__":
     unittest.main()

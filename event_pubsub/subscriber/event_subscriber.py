@@ -37,7 +37,7 @@ class EventSubscriber(object):
         error_map, success_map = self.publish_events(registry_events)
         # need to change it to batch update
         for row_id, error in error_map.items():
-            self.event_repository.update_registry_raw_events(0, row_id, error['error_code'], error['error_message'])
+            self.event_repository.update_registry_raw_events(1, row_id, error['error_code'], error['error_message'])
 
         for row_id in success_map:
             self.event_repository.update_mpe_raw_events(1, row_id, "", "")
@@ -48,7 +48,7 @@ class EventSubscriber(object):
         error_map, success_list = self.publish_events(mpe_events)
         # need to change it to batch update
         for row_id, error in error_map.items():
-            self.event_repository.update_mpe_raw_events(0, row_id, error['error_code'], error['error_message'])
+            self.event_repository.update_mpe_raw_events(1, row_id, error['error_code'], error['error_message'])
 
         for row_id in success_list:
             self.event_repository.update_mpe_raw_events(1, row_id, "", "")
