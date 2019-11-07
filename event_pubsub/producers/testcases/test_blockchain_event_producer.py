@@ -4,8 +4,10 @@ from unittest.mock import patch, Mock
 from hexbytes import HexBytes
 from web3.datastructures import AttributeDict
 
+from event_pubsub.config import NETWORKS
 from event_pubsub.producers.blockchain_event_producer import RegistryEventProducer
 from producers.blockchain_event_producer import MPEEventProducer
+from event_pubsub.repository import Repository
 
 
 class TestBlockchainEventProducer(unittest.TestCase):
@@ -15,7 +17,7 @@ class TestBlockchainEventProducer(unittest.TestCase):
     @patch('common.blockchain_util.BlockChainUtil.get_contract_instance')
     @patch('event_pubsub.event_repository.EventRepository.read_last_read_block_number_for_event')
     def test_produce_registry_events_from_blockchain(self, mock_last_block_number, mock_get_contract_instance):
-        registry_event_producer = RegistryEventProducer("wss://ropsten.infura.io/ws", "REGISTRY")
+        registry_event_producer = RegistryEventProducer("wss://ropsten.infura.io/ws", Repository(NETWORKS))
 
         org_created_event_object = Mock()
         org_created_event_object.createFilter = Mock(
@@ -35,20 +37,12 @@ class TestBlockchainEventProducer(unittest.TestCase):
         mock_last_block_number.return_value = 0
 
         blockchain_events = registry_event_producer.produce_event(3)
-        assert blockchain_events == [AttributeDict({'args': AttributeDict({
-            'orgId': b'snet\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'}),
-            'event': 'OrganizationCreated', 'logIndex': 1,
-            'transactioproduce_contract_eventsnIndex': 15, 'transactionHash': HexBytes(
-                '0x7934a42442792f6d5a171df218b66161021c885085187719c991ec58d7459821'),
-            'address': '0x663422c6999Ff94933DBCb388623952CF2407F6f',
-            'blockHash': HexBytes(
-                '0x1da77d63b7d57e0a667ffb9f6d23be92f3ffb5f4b27b39b86c5d75bb167d6779'),
-            'blockNumber': 6243627})]
+        assert blockchain_events == [AttributeDict({'args': AttributeDict({'orgId': b'snet\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'}), 'event': 'OrganizationCreated', 'logIndex': 1, 'transactionIndex': 15, 'transactionHash': HexBytes('0x7934a42442792f6d5a171df218b66161021c885085187719c991ec58d7459821'), 'address': '0x663422c6999Ff94933DBCb388623952CF2407F6f', 'blockHash': HexBytes('0x1da77d63b7d57e0a667ffb9f6d23be92f3ffb5f4b27b39b86c5d75bb167d6779'), 'blockNumber': 6243627})]
 
     @patch('common.blockchain_util.BlockChainUtil.get_contract_instance')
     @patch('event_pubsub.event_repository.EventRepository.read_last_read_block_number_for_event')
     def test_produce_mpe_events_from_blockchain(self, mock_last_block_number, mock_get_contract_instance):
-        mpe_event_producer = MPEEventProducer("wss://ropsten.infura.io/ws", "MPE")
+        mpe_event_producer = MPEEventProducer("wss://ropsten.infura.io/ws", Repository(NETWORKS))
 
         deposit_fund_Event_object = Mock()
         deposit_fund_Event_object.createFilter = Mock(
@@ -67,13 +61,7 @@ class TestBlockchainEventProducer(unittest.TestCase):
         mock_last_block_number.return_value = 0
 
         blockchain_events = mpe_event_producer.produce_event(3)
-        assert blockchain_events == [AttributeDict(
-            {'args': AttributeDict({'sender': '0xabd2cCb3828b4428bBde6C2031A865b0fb272a5A', 'amount': 30000000}),
-             'event': 'DepositFunds', 'logIndex': 1, 'transactionIndex': 18,
-             'transactionHash': HexBytes('0x562cc2fa59d9c7a4aa56106a19ad9c8078a95ae68416619fc191d86c50c91f12'),
-             'address': '0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C',
-             'blockHash': HexBytes('0xe06042a4d471351c0ee9e50056bd4fb6a0e158b2489ba70775d3c06bd29da19b'),
-             'blockNumber': 6286405})]
+        assert blockchain_events == [AttributeDict({'args': AttributeDict({'sender': '0xabd2cCb3828b4428bBde6C2031A865b0fb272a5A', 'amount': 30000000}), 'event': 'DepositFunds', 'logIndex': 1, 'transactionIndex': 18, 'transactionHash': HexBytes('0x562cc2fa59d9c7a4aa56106a19ad9c8078a95ae68416619fc191d86c50c91f12'), 'address': '0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C', 'blockHash': HexBytes('0xe06042a4d471351c0ee9e50056bd4fb6a0e158b2489ba70775d3c06bd29da19b'), 'blockNumber': 6286405})]
 
 
 if __name__ == "__main__":

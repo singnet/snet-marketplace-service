@@ -18,13 +18,13 @@ logger = get_logger(__name__)
 
 
 class ServiceEventConsumer(EventConsumer):
-    connection = Repository(NETWORK_ID, NETWORKS=NETWORKS)
-    service_repository = ServiceRepository(connection)
+    _connection = Repository(NETWORK_ID, NETWORKS=NETWORKS)
+    _service_repository = ServiceRepository(_connection)
 
     def __init__(self, ws_provider, ipfs_url, ipfs_port):
-        self.blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
-        self.s3_util = S3Util(S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY)
-        self.ipfs_util = IPFSUtil(ipfs_url, ipfs_port)
+        self._blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
+        self._s3_util = S3Util(S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY)
+        self._ipfs_util = IPFSUtil(ipfs_url, ipfs_port)
 
     def on_event(self, event):
 
@@ -33,28 +33,28 @@ class ServiceEventConsumer(EventConsumer):
 
         if event_name in ['ServiceCreated', 'ServiceMetadataModified']:
             metadata_uri = self._get_metadata_uri_from_event(event)
-            service_ipfs_data = self.ipfs_util.read_file_from_ipfs(metadata_uri)
+            service_ipfs_data = self._ipfs_util.read_file_from_ipfs(metadata_uri)
             self._process_service_data(org_id=org_id, service_id=service_id, new_ipfs_hash=metadata_uri,
                                        new_ipfs_data=service_ipfs_data, tags_data=tags_data)
         elif event_name == 'ServiceTagsModified':
-            self.service_repository.update_tags(org_id=org_id, service_id=service_id,
-                                                tags_data=self._fetch_tags(org_id_hex=org_id,
+            self._service_repository.update_tags(org_id=org_id, service_id=service_id,
+                                                 tags_data=self._fetch_tags(org_id_hex=org_id,
                                                                            service_id_hex=service_id))
         elif event_name == 'ServiceDeleted':
-            self.service_repository.delete_service_dependents(org_id, service_id)
-            self.service_repository.delete_service(
+            self._service_repository.delete_service_dependents(org_id, service_id)
+            self._service_repository.delete_service(
                 org_id=org_id, service_id=service_id)
 
     def _push_asset_to_s3_using_hash(self, hash, org_id, service_id):
-        io_bytes = self.ipfs_util.read_bytesio_from_ipfs(hash)
+        io_bytes = self._ipfs_util.read_bytesio_from_ipfs(hash)
         filename = hash.split("/")[1]
         if service_id:
             s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename
         else:
             s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename
 
-        new_url = self.s3_util.push_io_bytes_to_s3(s3_filename,
-                                                   ASSETS_BUCKET_NAME, io_bytes)
+        new_url = self._s3_util.push_io_bytes_to_s3(s3_filename,
+                                                    ASSETS_BUCKET_NAME, io_bytes)
         return new_url
 
     def _fetch_tags(self, registry_contract, org_id_hex, service_id_hex):
@@ -86,7 +86,7 @@ class ServiceEventConsumer(EventConsumer):
         net_id = NETWORK_ID
         base_contract_path = os.path.abspath(
             os.path.join(os.path.dirname(__file__), '..', '..', 'node_modules', 'singularitynet-platform-contracts'))
-        registry_contract = self.blockchain_util.get_contract_instance(base_contract_path, "REGISTRY", net_id)
+        registry_contract = self._blockchain_util.get_contract_instance(base_contract_path, "REGISTRY", net_id)
         return registry_contract
 
     def _get_service_details_from_blockchain(self, event):
@@ -109,7 +109,7 @@ class ServiceEventConsumer(EventConsumer):
         existing_assets_hash = {}
         existing_assets_url = {}
 
-        existing_service_metadata = self.service_repository.get_service_metadata(service_id, org_id)
+        existing_service_metadata = self._service_repository.get_service_metadata(service_id, org_id)
         if existing_service_metadata:
             existing_assets_hash = json.loads(existing_service_metadata["assets_hash"])
             existing_assets_url = json.loads(existing_service_metadata["assets_url"])
@@ -121,26 +121,26 @@ class ServiceEventConsumer(EventConsumer):
     def _process_service_data(self, org_id, service_id, new_ipfs_hash, new_ipfs_data, tags_data):
         try:
 
-            self.connection.begin_transaction()
+            self._connection.begin_transaction()
 
             assets_url = self._get_new_assets_url(
                 org_id, service_id, new_ipfs_data)
 
-            self.service_repository.delete_service_dependents(
+            self._service_repository.delete_service_dependents(
                 org_id=org_id, service_id=service_id)
-            service_data = self.service_repository.create_or_update_service(
+            service_data = self._service_repository.create_or_update_service(
                 org_id=org_id, service_id=service_id, ipfs_hash=new_ipfs_hash)
             service_row_id = service_data['last_row_id']
             logger.debug(f"Created service with service {service_row_id}")
-            self.service_repository.create_or_update_service_metadata(service_row_id=service_row_id, org_id=org_id,
-                                                                      service_id=service_id,
-                                                                      ipfs_data=new_ipfs_data, assets_url=assets_url)
+            self._service_repository.create_or_update_service_metadata(service_row_id=service_row_id, org_id=org_id,
+                                                                       service_id=service_id,
+                                                                       ipfs_data=new_ipfs_data, assets_url=assets_url)
             groups = new_ipfs_data.get('groups', [])
             group_insert_count = 0
             for group in groups:
-                service_group_data = self.service_repository.create_group(service_row_id=service_row_id, org_id=org_id,
-                                                                          service_id=service_id,
-                                                                          grp_data={
+                service_group_data = self._service_repository.create_group(service_row_id=service_row_id, org_id=org_id,
+                                                                           service_id=service_id,
+                                                                           grp_data={
                                                                               'group_id': group['group_id'],
                                                                               'group_name': group['group_name'],
                                                                               'pricing': json.dumps(group['pricing'])
@@ -149,10 +149,10 @@ class ServiceEventConsumer(EventConsumer):
                 endpoints = group.get('endpoints', [])
                 endpoint_insert_count = 0
                 for endpoint in endpoints:
-                    service_data = self.service_repository.create_endpoints(service_row_id=service_row_id,
-                                                                            org_id=org_id,
-                                                                            service_id=service_id,
-                                                                            endpt_data={
+                    service_data = self._service_repository.create_endpoints(service_row_id=service_row_id,
+                                                                             org_id=org_id,
+                                                                             service_id=service_id,
+                                                                             endpt_data={
                                                                                 'endpoint': endpoint,
                                                                                 'group_id': group['group_id'],
                                                                             })
@@ -163,12 +163,12 @@ class ServiceEventConsumer(EventConsumer):
                 for tag in tags:
                     tag = tag.decode('utf-8')
                     tag = tag.rstrip("\u0000")
-                    self.service_repository.create_tags(service_row_id=service_row_id, org_id=org_id,
-                                                        service_id=service_id,
-                                                        tag_name=tag,
-                                                        )
-            self.connection.commit_transaction()
+                    self._service_repository.create_tags(service_row_id=service_row_id, org_id=org_id,
+                                                         service_id=service_id,
+                                                         tag_name=tag,
+                                                         )
+            self._connection.commit_transaction()
 
         except Exception as e:
-            self.connection.rollback_transaction()
+            self._connection.rollback_transaction()
             raise e

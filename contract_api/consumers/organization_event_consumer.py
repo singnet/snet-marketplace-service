@@ -20,14 +20,14 @@ logger = get_logger(__name__)
 
 
 class OrganizationEventConsumer(EventConsumer):
-    connection = Repository(NETWORK_ID, NETWORKS=NETWORKS)
-    organization_repository = OrganizationRepository(connection)
-    service_repository = ServiceRepository(connection)
+    _connection = Repository(NETWORK_ID, NETWORKS=NETWORKS)
+    _organization_repository = OrganizationRepository(_connection)
+    _service_repository = ServiceRepository(_connection)
 
     def __init__(self, ws_provider, ipfs_url, ipfs_port):
-        self.ipfs_util = IPFSUtil(ipfs_url, ipfs_port)
-        self.blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
-        self.s3_util = S3Util(S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY)
+        self._ipfs_util = IPFSUtil(ipfs_url, ipfs_port)
+        self._blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
+        self._s3_util = S3Util(S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY)
 
 
 
@@ -42,15 +42,15 @@ class OrganizationEventConsumer(EventConsumer):
 
 
     def _push_asset_to_s3_using_hash(self, hash, org_id, service_id):
-        io_bytes = self.ipfs_util.read_bytesio_from_ipfs(hash)
+        io_bytes = self._ipfs_util.read_bytesio_from_ipfs(hash)
         filename = hash.split("/")[1]
         if service_id:
             s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename
         else:
             s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename
 
-        new_url = self.s3_util.push_io_bytes_to_s3(s3_filename,
-                                                   ASSETS_BUCKET_NAME, io_bytes)
+        new_url = self._s3_util.push_io_bytes_to_s3(s3_filename,
+                                                    ASSETS_BUCKET_NAME, io_bytes)
         return new_url
 
     def _get_new_assets_url(self, org_id, new_ipfs_data):
@@ -58,7 +58,7 @@ class OrganizationEventConsumer(EventConsumer):
         existing_assets_hash = {}
         existing_assets_url = {}
 
-        existing_organization = self.organization_repository.get_organization(org_id)
+        existing_organization = self._organization_repository.get_organization(org_id)
         if existing_organization:
             existing_assets_hash = existing_organization["assets_hash"]
             existing_assets_url = existing_organization["assets_url"]
@@ -77,7 +77,7 @@ class OrganizationEventConsumer(EventConsumer):
         net_id = NETWORK_ID
         base_contract_path = os.path.abspath(
             os.path.join(os.path.dirname(__file__), '..', '..', 'node_modules', 'singularitynet-platform-contracts'))
-        registry_contract = self.blockchain_util.get_contract_instance(base_contract_path, "REGISTRY", net_id)
+        registry_contract = self._blockchain_util.get_contract_instance(base_contract_path, "REGISTRY", net_id)
 
         return  registry_contract
 
@@ -89,7 +89,7 @@ class OrganizationEventConsumer(EventConsumer):
 
         blockchain_org_data = registry_contract.functions.getOrganizationById(org_id.encode('utf-8')).call()
         org_metadata_uri = Web3.toText(blockchain_org_data[2])[7:].rstrip("\u0000")
-        ipfs_org_metadata = self.ipfs_util.read_file_from_ipfs(org_metadata_uri)
+        ipfs_org_metadata = self._ipfs_util.read_file_from_ipfs(org_metadata_uri)
 
         return org_id, blockchain_org_data, ipfs_org_metadata, org_metadata_uri
 
@@ -98,42 +98,42 @@ class OrganizationEventConsumer(EventConsumer):
 
         try:
             if (org_data is not None and org_data[0]):
-                self.organization_repository.begin_transaction()
+                self._organization_repository.begin_transaction()
 
                 new_assets_hash = ipfs_org_metadata.get('assets', {})
                 new_assets_url_mapping = self._get_new_assets_url(org_id, ipfs_org_metadata)
                 description = ipfs_org_metadata.get('description', {})
 
-                self.organization_repository.create_or_updatet_organization(
+                self._organization_repository.create_or_updatet_organization(
                     org_id=org_id, org_name=ipfs_org_metadata["org_name"], owner_address=org_data[3],
                     org_metadata_uri=org_metadata_uri, description=json.dumps(description),
                     assets_hash=json.dumps(new_assets_hash),
                     assets_url=json.dumps(new_assets_url_mapping))
-                self.organization_repository.delete_organization_groups(org_id=org_id)
-                self.organization_repository.create_organization_groups(
+                self._organization_repository.delete_organization_groups(org_id=org_id)
+                self._organization_repository.create_organization_groups(
                     org_id=org_id, groups=ipfs_org_metadata["groups"])
-                self.organization_repository.del_members(org_id=org_id)
+                self._organization_repository.del_members(org_id=org_id)
                 # self.organization_dao.create_or_update_members(org_id, org_data[4])
-                self.organization_repository.commit_transaction()
+                self._organization_repository.commit_transaction()
 
         except Exception as e:
-            self.organization_repository.rollback_transaction()
+            self._organization_repository.rollback_transaction()
             raise e
 
     def _process_organization_delete_event(self, org_id):
         try:
-            self.connection.begin_transaction()
-            self.organization_repository.delete_organization(org_id=org_id)
-            self.organization_repository.delete_organization_groups(org_id=org_id)
-            services = self.service_repository.get_services(org_id=org_id)
+            self._connection.begin_transaction()
+            self._organization_repository.delete_organization(org_id=org_id)
+            self._organization_repository.delete_organization_groups(org_id=org_id)
+            services = self._service_repository.get_services(org_id=org_id)
             for service in services:
-                self.service_repository.delete_service_dependents(
+                self._service_repository.delete_service_dependents(
                     org_id=org_id, service_id=service['service_id'])
-                self.service_repository.delete_service(
+                self._service_repository.delete_service(
                     org_id=org_id, service_id=service['service_id'])
 
-            self.connection.commit_transaction()
+            self._connection.commit_transaction()
         except Exception as e:
             logger.exception(str(e))
-            self.connection.rollback_transaction()
+            self._connection.rollback_transaction()
             raise e
