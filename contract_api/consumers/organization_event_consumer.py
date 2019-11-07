@@ -59,7 +59,7 @@ class OrganizationEventConsumer(EventConsumer):
         logger.info(f"processing org event {event}")
         net_id = NETWORK_ID
         base_contract_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '..', 'node_modules', 'singularitynet-platform-contracts'))
+            os.path.join(os.path.dirname(__file__), '..','..','node_modules', 'singularitynet-platform-contracts'))
         registry_contract = self.blockchain_util.get_contract_instance(base_contract_path, "REGISTRY", net_id)
         event_org_data = event['data']['json_str']
         org_id_bytes = event_org_data['orgId']

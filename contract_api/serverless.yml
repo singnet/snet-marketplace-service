@@ -61,6 +61,7 @@ package:
     - payments/**
     - orchestrator/**
     - notification/**
+    - dapp_user/**
   include:
     - node_modules/singularitynet-platform-contracts/**
 
