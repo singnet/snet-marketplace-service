@@ -66,7 +66,7 @@ class EventRepository(object):
         return result[0]['last_block_number']
 
     def update_last_read_block_number_for_event(self, event_type, last_block_number):
-        update_query = "update event_blocknumber_marker set last_block_number = %s where event_type =%s "
+        update_query = "update event_blocknumber_marker set last_block_number = %s , row_updated = %s where event_type =%s "
 
-        update_params = [last_block_number, event_type]
+        update_params = [last_block_number, event_type,datetime.utcnow()]
         result = self.connection.execute(update_query, update_params)
