@@ -1,5 +1,9 @@
 from datetime import datetime
 
+from common.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 class EventRepository(object):
     EVENTS_LIMIT = 10
@@ -26,6 +30,7 @@ class EventRepository(object):
 
         except Exception as e:
             self.connection.rollback_transaction()
+            raise e
 
     def update_registry_raw_events(self,processed, row_id, error_code, error_message):
         try:
@@ -33,7 +38,9 @@ class EventRepository(object):
             update_events_reponse = self.connection.execute(update_events, [ processed, error_code, error_message, row_id])
 
         except Exception as e:
+            logger.exception(f"Error while updating the registry_raw_event {str(e)}")
             self.connection.rollback_transaction()
+            raise e
 
     def insert_registry_event(self, block_number, event_name, json_str, processed, transaction_hash, log_index,
                               error_code, error_message):
