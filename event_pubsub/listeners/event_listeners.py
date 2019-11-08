@@ -94,7 +94,7 @@ class RegistryEventListener(EventListener):
             self._event_repository.update_registry_raw_events(1, row_id, error['error_code'], error['error_message'])
 
         for row_id in success_map:
-            self._event_repository.update_mpe_raw_events(1, row_id, "", "")
+            self._event_repository.update_registry_raw_events(1, row_id, 200, "")
 
 
 if __name__ == "__main__":
