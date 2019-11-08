@@ -1,7 +1,7 @@
-from consumers.service_event_consumer import ServiceCreatedEventConsumer, ServiceMetadataModifiedConsumer, \
+from contract_api.consumers.service_event_consumer import ServiceCreatedEventConsumer, ServiceMetadataModifiedConsumer, \
     ServiceTagsModifiedEventConsumer, SeviceDeletedEventConsumer
 from contract_api.config import NETWORKS, NETWORK_ID, IPFS_URL
-from consumers.organization_event_consumer import OrganizationCreatedEventConsumer, OrganizationModifiedEventConsumer, \
+from contract_api.consumers.organization_event_consumer import OrganizationCreatedEventConsumer, OrganizationModifiedEventConsumer, \
     OrganizationDeletedEventConsumer
 
 

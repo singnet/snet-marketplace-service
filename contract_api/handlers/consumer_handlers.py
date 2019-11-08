@@ -1,15 +1,10 @@
-from common.logger import get_logger
-
 from common.constant import StatusCode
+from common.logger import get_logger
 from common.utils import generate_lambda_response
-from consumers.consumer_factory import get_organization_event_consumer, get_service_event_consumer
-from consumers.organization_event_consumer import OrganizationCreatedEventConsumer
-from contract_api.config import NETWORK_ID
-from contract_api.config import IPFS_URL
 from contract_api.config import NETWORKS
+from contract_api.config import NETWORK_ID
+from contract_api.consumers.consumer_factory import get_organization_event_consumer, get_service_event_consumer
 from contract_api.consumers.mpe_event_consumer import MPEEventConsumer
-from contract_api.consumers.organization_event_consumer import OrganizationEventConsumer
-from contract_api.consumers.service_event_consumer import ServiceEventConsumer
 
 logger = get_logger(__name__)
 

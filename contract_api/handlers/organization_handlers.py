@@ -1,17 +1,11 @@
-import json
-import re
-import traceback
 from urllib.parse import unquote
 
-from contract_api.config import NETWORKS, SLACK_HOOK, NETWORK_ID
-from common.repository import Repository
-from common.utils import Utils, make_response, generate_lambda_response
-from contract_api.lambda_handler import get_response
-from contract_api.registry import Registry
-from contract_api.mpe import MPE
 from aws_xray_sdk.core import patch_all
 
-
+from common.repository import Repository
+from common.utils import Utils, generate_lambda_response
+from contract_api.config import NETWORKS, NETWORK_ID
+from contract_api.registry import Registry
 
 patch_all()
 

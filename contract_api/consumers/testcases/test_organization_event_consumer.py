@@ -3,8 +3,8 @@ from datetime import datetime
 from unittest.mock import patch, Mock
 
 from common.repository import Repository
-from consumers.organization_event_consumer import OrganizationCreatedEventConsumer
-from contract_api.consumers.organization_event_consumer import OrganizationEventConsumer
+from contract_api.consumers.organization_event_consumer import OrganizationCreatedEventConsumer
+
 from dao.organization_repository import OrganizationRepository
 from contract_api.config import NETWORK_ID, NETWORKS
 
