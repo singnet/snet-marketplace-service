@@ -1,14 +1,13 @@
 import unittest
 from datetime import datetime
 from decimal import Decimal
-from unittest import mock
 from unittest.mock import Mock
 from unittest.mock import patch
 
 from common.repository import Repository
 from contract_api.config import NETWORK_ID, NETWORKS
 from contract_api.consumers.mpe_event_consumer import MPEEventConsumer
-from dao.mpe_repository import MPERepository
+from contract_api.dao.mpe_repository import MPERepository
 
 
 class TestOrganizationEventConsumer(unittest.TestCase):

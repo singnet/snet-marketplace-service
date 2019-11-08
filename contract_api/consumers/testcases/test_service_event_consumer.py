@@ -2,6 +2,7 @@ import unittest
 from datetime import datetime
 
 from common.repository import Repository
+from consumers.service_event_consumer import ServiceCreatedEventConsumer
 from contract_api.consumers.service_event_consumer import ServiceEventConsumer
 from unittest.mock import patch, Mock
 from contract_api.config import NETWORK_ID, NETWORKS
@@ -64,7 +65,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
         }
 
         mock_s3_push.return_value = "https://test-s3-push"
-        org_event_consumer = ServiceEventConsumer("wss://ropsten.infura.io/ws", "http://ipfs.singularitynet.io", 80)
+        org_event_consumer = ServiceCreatedEventConsumer("wss://ropsten.infura.io/ws", "http://ipfs.singularitynet.io", 80)
         org_event_consumer.on_event(event=event)
 
         service = service_repository.get_service(org_id='snet', service_id='gene-annotation-service')
@@ -102,3 +103,11 @@ class TestOrganizationEventConsumer(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+    # event ={"data": {'row_id': 536, 'block_no': 6247992, 'event': 'ServiceCreated', 'json_str': "{'orgId': b'snet\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'serviceId': b'freecall\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'metadataURI': b'ipfs://QmQtm73kmKhv6mKTkn7qW3uMPtgK6c5Qytb11sCxY98s5j\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'}", 'processed': 0, 'transactionHash': "b'~\\xb5\\x0c\\x93\\xe7y\\xc1\\x9d\\xf2I\\xef3\\xc6H\\x16\\xbd\\xab \\xa4\\xb5\\r\\xaau5eb\\x82B\\xe0\\x1c\\xf7\\xdd'", 'logIndex': '43', 'error_code': 0, 'error_msg': '', 'row_updated': '2019-11-07 07:17:06', 'row_created': '2019-11-07 07:17:06'},"name":"ServiceCreated"}
+    # org_event_consumer = ServiceEventConsumer("wss://ropsten.infura.io/ws", "http://ipfs.singularitynet.io", 80)
+    # try:
+    #     org_event_consumer.on_event(event=event)
+    # except Exception as e:
+    #     print(e)
+    #     raise e

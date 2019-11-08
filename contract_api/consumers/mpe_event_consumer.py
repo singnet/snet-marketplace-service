@@ -12,7 +12,7 @@ logger=get_logger(__name__)
 
 
 class MPEEventConsumer(EventConsumer):
-    mpe_repository = MPERepository(Repository(NETWORK_ID, NETWORKS=NETWORKS))
+    _mpe_repository = MPERepository(Repository(NETWORK_ID, NETWORKS=NETWORKS))
 
     def __init__(self, ws_provider):
         self.blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
@@ -20,7 +20,7 @@ class MPEEventConsumer(EventConsumer):
     def on_event(self, event):
         net_id = NETWORK_ID
         base_contract_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '..', 'node_modules', 'singularitynet-platform-contracts'))
+            os.path.join(os.path.dirname(__file__), '..', '..','node_modules', 'singularitynet-platform-contracts'))
         mpe_contract = self.blockchain_util.get_contract_instance(base_contract_path, "MPE", net_id)
 
         logger.info(f"processing mpe event {event}")
@@ -30,11 +30,11 @@ class MPEEventConsumer(EventConsumer):
         channel_id = int(mpe_data['channelId'])
 
         if event_name == 'ChannelOpen':
-            self.mpe_repository.create_channel(mpe_data)
+            self._mpe_repository.create_channel(mpe_data)
         else:
 
             channel_data = mpe_contract.functions.channels(
                 channel_id).call()
             group_id = base64.b64encode(channel_data[4]).decode('utf8')
-            self.mpe_repository.update_channel(
+            self._mpe_repository.update_channel(
                 channel_id=channel_id, group_id=group_id, channel_data=channel_data)
