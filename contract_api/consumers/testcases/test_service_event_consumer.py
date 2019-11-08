@@ -2,8 +2,7 @@ import unittest
 from datetime import datetime
 
 from common.repository import Repository
-from consumers.service_event_consumer import ServiceCreatedEventConsumer
-from contract_api.consumers.service_event_consumer import ServiceEventConsumer
+from contract_api.consumers.service_event_consumer import ServiceCreatedEventConsumer
 from unittest.mock import patch, Mock
 from contract_api.config import NETWORK_ID, NETWORKS
 
