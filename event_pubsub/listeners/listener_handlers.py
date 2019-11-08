@@ -13,11 +13,10 @@ class WebHookHandler(ListenersHandlers):
 
     def __init__(self, url, data):
         self.url = url
-        self.data = data
 
-    def push_event(self):
+    def push_event(self, data):
         try:
-            requests.post(self.url, self.data)
+            requests.post(self.url, data)
         except Exception as e:
             print(e)
             raise e
@@ -26,17 +25,16 @@ class WebHookHandler(ListenersHandlers):
 class LambdaArnHandler(ListenersHandlers):
     lambda_client = boto3.client('lambda')
 
-    def __init__(self, arn, data):
+    def __init__(self, arn):
         self.arn = arn
-        self.data = data
 
-    def push_event(self):
+    def push_event(self, data):
         try:
 
             response = self.lambda_client.invoke(
                 FunctionName=self.arn,
                 InvocationType='RequestResponse',
-                Payload=json.dumps(self.data)
+                Payload=json.dumps(data)
             )
             response_data = json.loads(response.get('Payload').read())
             if response_data['statusCode'] != 200:

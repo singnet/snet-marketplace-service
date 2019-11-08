@@ -1,7 +1,3 @@
-from contract_api.config import ASSETS_PREFIX, ASSETS_BUCKET_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY
-
-from common.s3_util import S3Util
-
 
 class EventConsumer(object):
 
@@ -68,6 +64,8 @@ class EventConsumer(object):
                     "unknown type assets for org_id %s  service_id %s", org_id, service_id)
 
         return assets_url_mapping
+
+
 
     def on_event(self, event):
         pass
