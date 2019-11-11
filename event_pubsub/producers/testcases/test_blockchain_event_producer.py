@@ -6,7 +6,7 @@ from web3.datastructures import AttributeDict
 
 from event_pubsub.config import NETWORKS
 from event_pubsub.producers.blockchain_event_producer import RegistryEventProducer
-from producers.blockchain_event_producer import MPEEventProducer
+from event_pubsub.producers.blockchain_event_producer import MPEEventProducer
 from event_pubsub.repository import Repository
 
 

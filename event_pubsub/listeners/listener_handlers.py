@@ -11,7 +11,7 @@ class ListenersHandlers(object):
 
 class WebHookHandler(ListenersHandlers):
 
-    def __init__(self, url, data):
+    def __init__(self, url):
         self.url = url
 
     def push_event(self, data):
