@@ -213,10 +213,3 @@ class RFAIEventProducer(BlockchainEventProducer):
         return events
 
 
-if __name__ == "__main__":
-
-    try:
-        registry_event_producer = RegistryEventProducer(WS_PROVIDER, Repository(NETWORKS))
-        registry_event_producer.produce_event(3)
-    except Exception as e:
-        raise e
