@@ -82,9 +82,11 @@ class MPEEventListener(EventListener):
         for row_id in success_list:
             self._event_repository.update_mpe_raw_events(1, row_id, 200, "")
 
+        return error_map, success_list
+
 
 class RegistryEventListener(EventListener):
-    EVENTS_LIMIT =30
+    EVENTS_LIMIT = 30
 
     def listen_and_publish_registry_events(self):
         registry_events = self._event_repository.read_registry_events()
@@ -95,6 +97,23 @@ class RegistryEventListener(EventListener):
 
         for row_id in success_map:
             self._event_repository.update_registry_raw_events(1, row_id, 200, "")
+        return error_map, success_map
+
+
+class RFAIEventListener(EventListener):
+    EVENTS_LIMIT = 30
+
+    def listen_And_publish_rfai_events(self):
+        rfai_events = self._event_repository.read_rfai_events()
+        error_map, success_map = self._publish_events(rfai_events)
+        # need to change is to batch update
+        for row_id, error in error_map.items():
+            self._event_repository.update_rfai_raw_events(1, row_id, error['error_code'], error['error_message'])
+
+        for row_id in success_map:
+            self._event_repository.update_rfai_raw_events(1, row_id, 200, "")
+
+        return error_map, success_map
 
 
 if __name__ == "__main__":

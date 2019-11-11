@@ -9,7 +9,7 @@ from web3 import Web3
 
 from common.logger import get_logger
 
-logger=get_logger(__name__)
+logger = get_logger(__name__)
 
 class ContractType(Enum):
     REGISTRY = "REGISTRY"
@@ -99,6 +99,8 @@ class BlockChainUtil(object):
             json_file = "Registry.json"
         elif contract_name == "MPE":
             json_file = "MultiPartyEscrow.json"
+        elif contract_name == "RFAI":
+            json_file = ""
         else:
             raise Exception("Invalid contract Type {}".format(contract_name))
 
