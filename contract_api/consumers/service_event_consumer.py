@@ -90,7 +90,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         if service_id:
             s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename
         else:
-            s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename
+            s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + filename
 
         new_url = self._s3_util.push_io_bytes_to_s3(s3_filename,
                                                     ASSETS_BUCKET_NAME, io_bytes)
