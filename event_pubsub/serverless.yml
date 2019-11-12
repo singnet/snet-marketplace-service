@@ -59,6 +59,9 @@ package:
     - payments/**
     - wallets/**
     - orchestrator/**
+    - node_modules/**
+  include:
+    - node_modules/singularitynet-platform-contracts/**
 
 functions:
   mpe_event_publisher:
@@ -97,7 +100,7 @@ functions:
       - schedule: rate(2 minutes)
   mpe_event_listener:
     warmup: true
-    handler: event_pubsub/handlers/event_subscriber_handlers.mpe_event_subscriber_handler
+    handler: event_pubsub/handlers/event_listener_handlers.mpe_event_listener_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
@@ -114,7 +117,7 @@ functions:
       - schedule: rate(2 minutes)
   registry_event_listener:
     warmup: true
-    handler: event_pubsub/handlers/event_subscriber_handlers.registry_event_subscriber_handler
+    handler: event_pubsub/handlers/event_listener_handlers.registry_event_listener_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}

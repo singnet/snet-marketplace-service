@@ -1,13 +1,13 @@
 import unittest
 from datetime import datetime
 from decimal import Decimal
-#
-# import unittest.mock as mock
-from unittest import mock
 from unittest.mock import Mock
 from unittest.mock import patch
 
+from common.repository import Repository
+from contract_api.config import NETWORK_ID, NETWORKS
 from contract_api.consumers.mpe_event_consumer import MPEEventConsumer
+from contract_api.dao.mpe_repository import MPERepository
 
 
 class TestOrganizationEventConsumer(unittest.TestCase):
@@ -24,10 +24,11 @@ class TestOrganizationEventConsumer(unittest.TestCase):
                           'row_created': datetime(2019, 10, 23, 12, 35, 53)}, "name": "ChannelOpen"}
         mpe_event_consumer = MPEEventConsumer("wss://ropsten.infura.io/ws")
 
-        mpe_event_consumer.mpe_repository.delete_mpe_channel(143)
+        mpe_repository = MPERepository(Repository(NETWORK_ID, NETWORKS=NETWORKS))
+        mpe_repository.delete_mpe_channel(143)
         mpe_event_consumer.on_event(event=event)
 
-        channel_result = mpe_event_consumer.mpe_repository.get_mpe_channels(143)
+        channel_result = mpe_repository.get_mpe_channels(143)
         assert channel_result[0]['channel_id'] == 143
         assert channel_result[0]['sender'] == '0x669CCF5025C08304Fd836d7A136634E22C5Dd31C'
         assert channel_result[0]['recipient'] == '0xaceB1EaCA36061ff29Ddb7c963142abbFf23e508'
@@ -50,7 +51,8 @@ class TestOrganizationEventConsumer(unittest.TestCase):
                                  'row_created': datetime(2019, 10, 23, 12, 35, 53)}, "name": "ChannelOpen"}
         mpe_event_consumer = MPEEventConsumer("wss://ropsten.infura.io/ws")
 
-        mpe_event_consumer.mpe_repository.delete_mpe_channel(143)
+        mpe_repository = MPERepository(Repository(NETWORK_ID, NETWORKS=NETWORKS))
+        mpe_repository.delete_mpe_channel(143)
 
         mpe_event_consumer.on_event(event=create_event)
 
@@ -72,7 +74,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
 
         mpe_event_consumer.on_event(event=update_event)
 
-        channel_result = mpe_event_consumer.mpe_repository.get_mpe_channels(143)
+        channel_result = mpe_repository.get_mpe_channels(143)
         assert channel_result[0]['channel_id'] == 143
         assert channel_result[0]['sender'] == '0x669CCF5025C08304Fd836d7A136634E22C5Dd31C'
         assert channel_result[0]['recipient'] == '0xaceB1EaCA36061ff29Ddb7c963142abbFf23e508'
@@ -86,3 +88,4 @@ class TestOrganizationEventConsumer(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
