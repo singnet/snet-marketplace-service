@@ -45,7 +45,7 @@ class TransactionHistoryDAO:
                   OrderStatus.PAYMENT_EXECUTION_FAILED.value, ORDER_EXPIRATION_THRESHOLD_IN_MINUTES]
         order_id_raw_data = self.__repo.execute(
             "SELECT order_id FROM transaction_history WHERE status IN (%s, %s, %s) AND "
-            "TIMESTAMPDIFF(MINUTE, NOW(), row_created) > %s ",
+            "TIMESTAMPDIFF(MINUTE, row_created, NOW()) > %s ",
             [OrderStatus.PAYMENT_INITIATED.value, OrderStatus.PAYMENT_INITIATION_FAILED.value,
              OrderStatus.PAYMENT_EXECUTION_FAILED.value, ORDER_EXPIRATION_THRESHOLD_IN_MINUTES])
         list_of_order_id = [rec["order_id"] for rec in order_id_raw_data]
