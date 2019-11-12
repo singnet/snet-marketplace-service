@@ -88,17 +88,6 @@ class TestOrganizationEventConsumer(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-    #
-    # event={'data': {'row_id': 8661, 'block_no': 6754080, 'event': 'OrganizationCreated',
-    #           'json_str': "{'orgId': b'dummy\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'}",
-    #           'processed': 0,
-    #           'transactionHash': "b'\\xc3]l\\x1c\\x8b\\xf9,F.M\\xbf\\xc6\\xd8s\\xfcO\\x1b$\\rxY9\\xc7i\\x91\\xe8(i\\xc5\\x1b%\\xc8'",
-    #           'logIndex': '9', 'error_code': 0, 'error_msg': '', 'row_updated': '2019-11-11 11:50:02',
-    #           'row_created': '2019-11-11 11:50:02'}, 'name': 'OrganizationCreated'}
-    # org_event_consumer = OrganizationCreatedEventConsumer("wss://ropsten.infura.io/ws", "http://ipfs.singularitynet.io",
-    #                                                       80)
-    # org_event_consumer.on_event(event=event)
-
 
 
 
