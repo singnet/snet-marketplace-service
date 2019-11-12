@@ -18,69 +18,70 @@ def upgrade():
     conn = op.get_bind()
 
     conn.execute("""
-CREATE TABLE `registry_events_raw` (
-  `row_id` int(11) NOT NULL AUTO_INCREMENT,
-  `block_no` int(11) NOT NULL,
-  `event` varchar(256) NOT NULL,
-  `json_str` text,
-  `processed` bit(1) DEFAULT NULL,
-  `transactionHash` varchar(256) DEFAULT NULL,
-  `logIndex` varchar(256) DEFAULT NULL,
-  `error_code` int(11) DEFAULT NULL,
-  `error_msg` varchar(256) DEFAULT NULL,
-  `row_updated` timestamp NULL DEFAULT NULL,
-  `row_created` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`row_id`),
-  KEY `blk_no_idx` (`block_no`)
-) ;
+        CREATE TABLE `registry_events_raw` (
+          `row_id` int(11) NOT NULL AUTO_INCREMENT,
+          `block_no` int(11) NOT NULL,
+          `event` varchar(256) NOT NULL,
+          `json_str` text,
+          `processed` bit(1) DEFAULT NULL,
+          `transactionHash` varchar(256) DEFAULT NULL,
+          `logIndex` varchar(256) DEFAULT NULL,
+          `error_code` int(11) DEFAULT NULL,
+          `error_msg` varchar(256) DEFAULT NULL,
+          `row_updated` timestamp NULL DEFAULT NULL,
+          `row_created` timestamp NULL DEFAULT NULL,
+          PRIMARY KEY (`row_id`),
+          KEY `blk_no_idx` (`block_no`)
+        ) ;
             """)
 
     conn.execute("""
-
-CREATE TABLE `mpe_events_raw` (
-  `row_id` int(11) NOT NULL AUTO_INCREMENT,
-  `block_no` int(11) NOT NULL,
-  `event` varchar(256) NOT NULL,
-  `json_str` text,
-  `processed` bit(1) DEFAULT NULL,
-  `transactionHash` varchar(256) DEFAULT NULL,
-  `logIndex` varchar(256) DEFAULT NULL,
-  `error_code` int(11) DEFAULT NULL,
-  `error_msg` varchar(256) DEFAULT NULL,
-  `row_updated` timestamp NULL DEFAULT NULL,
-  `row_created` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`row_id`),
-  KEY `blk_no_idx` (`block_no`)
-) ;
+        
+        CREATE TABLE `mpe_events_raw` (
+          `row_id` int(11) NOT NULL AUTO_INCREMENT,
+          `block_no` int(11) NOT NULL,
+          `event` varchar(256) NOT NULL,
+          `json_str` text,
+          `processed` bit(1) DEFAULT NULL,
+          `transactionHash` varchar(256) DEFAULT NULL,
+          `logIndex` varchar(256) DEFAULT NULL,
+          `error_code` int(11) DEFAULT NULL,
+          `error_msg` varchar(256) DEFAULT NULL,
+          `row_updated` timestamp NULL DEFAULT NULL,
+          `row_created` timestamp NULL DEFAULT NULL,
+          PRIMARY KEY (`row_id`),
+          KEY `blk_no_idx` (`block_no`)
+        ) ;
         """)
     conn.execute("""
 
-CREATE TABLE `registry_events_raw` (
-  `row_id` int(11) NOT NULL AUTO_INCREMENT,
-  `block_no` int(11) NOT NULL,
-  `event` varchar(256) NOT NULL,
-  `json_str` text,
-  `processed` bit(1) DEFAULT NULL,
-  `transactionHash` varchar(256) DEFAULT NULL,
-  `logIndex` varchar(256) DEFAULT NULL,
-  `error_code` int(11) DEFAULT NULL,
-  `error_msg` varchar(256) DEFAULT NULL,
-  `row_updated` timestamp NULL DEFAULT NULL,
-  `row_created` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`row_id`),
-  KEY `blk_no_idx` (`block_no`)
-) ;
+
+    CREATE TABLE `rfai_events_raw` (
+      `row_id` int(11) NOT NULL AUTO_INCREMENT,
+      `block_no` int(11) NOT NULL,
+      `event` varchar(256) NOT NULL,
+      `json_str` text,
+      `processed` bit(1) DEFAULT NULL,
+      `transactionHash` varchar(256) DEFAULT NULL,
+      `logIndex` varchar(256) DEFAULT NULL,
+      `error_code` int(11) DEFAULT NULL,
+      `error_msg` varchar(256) DEFAULT NULL,
+      `row_updated` timestamp NULL DEFAULT NULL,
+      `row_created` timestamp NULL DEFAULT NULL,
+      PRIMARY KEY (`row_id`),
+      KEY `blk_no_idx` (`block_no`)
+    )
 
         """)
     conn.execute("""
-CREATE TABLE `event_blocknumber_marker` (
-  `row_id` int(11) NOT NULL AUTO_INCREMENT,
-  `event_type` varchar(128) NOT NULL,
-  `last_block_number` int(11) not null,
-  `row_created` timestamp NULL DEFAULT NULL,
-  `row_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`row_id`)
-)
+        CREATE TABLE `event_blocknumber_marker` (
+          `row_id` int(11) NOT NULL AUTO_INCREMENT,
+          `event_type` varchar(128) NOT NULL,
+          `last_block_number` int(11) not null,
+          `row_created` timestamp NULL DEFAULT NULL,
+          `row_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (`row_id`)
+        )
 
         """)
 
@@ -88,11 +89,11 @@ CREATE TABLE `event_blocknumber_marker` (
 def downgrade():
     conn = op.get_bind()
     conn.execute("""
-                drop table wallet
+                drop table registry_events_raw
             """
                  )
     conn.execute("""
-                drop table wallet_transaction_history
+                drop table mpe_events_raw
                 """
                  )
     conn.execute("""
