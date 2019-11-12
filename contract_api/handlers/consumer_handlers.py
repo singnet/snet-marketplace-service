@@ -11,7 +11,7 @@ logger = get_logger(__name__)
 
 def organization_event_consumer_handler(event, context):
     try:
-
+        logger.info(f"Got Organization Event {event}")
         organization_event_consumer = get_organization_event_consumer(event)
         organization_event_consumer.on_event(event)
 
@@ -23,6 +23,7 @@ def organization_event_consumer_handler(event, context):
 
 
 def service_event_consumer_handler(event, context):
+    logger.info(f"Got Service Event {event}")
     try:
         service_event_consumer = get_service_event_consumer(event)
         service_event_consumer.on_event(event)
@@ -33,6 +34,7 @@ def service_event_consumer_handler(event, context):
 
 
 def mpe_event_consumer_handler(event, context):
+    logger.info(f"Got MPE Event {event}")
     try:
         MPEEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"]).on_event(event)
         return generate_lambda_response(200, StatusCode.OK)

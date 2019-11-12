@@ -1,40 +1,46 @@
 import unittest
+import unittest
+from unittest.mock import patch, Mock
+
+from listeners.event_listeners import EventListener, RegistryEventListener
 
 
 class TestBlockchainEventSubsriber(unittest.TestCase):
     def setUp(self):
         pass
 
-    #
-    # @patch('common.blockchain_util.BlockChainUtil.get_contract_instance')
-    # @patch('event_pubsub.event_repository.EventRepository.read_last_read_block_number_for_event')
-    # def test_produce_registry_events_from_blockchain(self, mock_last_block_number, mock_get_contract_instance):
-    #     registry_event_producer = RegistryEventProducer("wss://ropsten.infura.io/ws", "REGISTRY")
-    #
-    #     org_created_event_object = Mock()
-    #     org_created_event_object.createFilter = Mock(
-    #         return_value=Mock(get_all_entries=Mock(return_value=[AttributeDict({'args': AttributeDict({
-    #             'orgId': b'snet\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'}),
-    #             'event': 'OrganizationCreated', 'logIndex': 1, 'transactionIndex': 15,
-    #             'transactionHash': HexBytes(
-    #                 '0x7934a42442792f6d5a171df218b66161021c885085187719c991ec58d7459821'),
-    #             'address': '0x663422c6999Ff94933DBCb388623952CF2407F6f',
-    #             'blockHash': HexBytes('0x1da77d63b7d57e0a667ffb9f6d23be92f3ffb5f4b27b39b86c5d75bb167d6779'),
-    #             'blockNumber': 6243627})])))
-    #
-    #     mock_get_contract_instance.return_value = Mock(
-    #         events=Mock(organizationCreated=org_created_event_object,
-    #                     abi=[{"type": "event", "name": "organizationCreated"}]))
-    #
-    #     mock_last_block_number.return_value = 0
-    #
-    #     blockchain_events = registry_event_producer.produce_event(3)
+    @patch('event_pubsub.event_repository.EventRepository.read_registry_events')
+    @patch('event_pubsub.listeners.listener_handlers.LambdaArnHandler.push_event')
+    def test_event_publisher_success(self, mock_push_event,mock_read_registry_event):
+        mock_read_registry_event.return_value = [{'row_id': 526, 'block_no': 6247992, 'event': 'ServiceCreated',
+          'json_str': "{'orgId': b'snet\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'serviceId': b'freecall\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'metadataURI': b'ipfs://QmQtm73kmKhv6mKTkn7qW3uMPtgK6c5Qytb11sCxY98s5j\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'}",
+          'processed': 0,
+          'transactionHash': "b'~\\xb5\\x0c\\x93\\xe7y\\xc1\\x9d\\xf2I\\xef3\\xc6H\\x16\\xbd\\xab \\xa4\\xb5\\r\\xaau5eb\\x82B\\xe0\\x1c\\xf7\\xdd'",
+          'logIndex': '43', 'error_code': 200, 'error_msg': '', 'row_updated': '2019-10-31 09:44:00',
+          'row_created': '2019-10-31 09:44:00'}]
+        mock_push_event.return_value={"statusCode":200}
 
-    def test_event_subscriber(self):
-        pass
+        error_map,succes_list=RegistryEventListener().listen_and_publish_registry_events()
+        assert succes_list==[526]
 
-    def test_push_events(self):
-        pass
+
+
+    @patch('event_pubsub.event_repository.EventRepository.read_registry_events')
+    @patch('event_pubsub.listeners.listener_handlers.LambdaArnHandler.push_event', side_effect=Exception('Test Error'))
+    def test_event_publisher_failure(self, mock_lambda_handler, mock_read_registry_event):
+        mock_read_registry_event.return_value = [{'row_id': 526, 'block_no': 6247992, 'event': 'ServiceCreated',
+                                                  'json_str': "{'orgId': b'snet\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'serviceId': b'freecall\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'metadataURI': b'ipfs://QmQtm73kmKhv6mKTkn7qW3uMPtgK6c5Qytb11sCxY98s5j\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'}",
+                                                  'processed': 0,
+                                                  'transactionHash': "b'~\\xb5\\x0c\\x93\\xe7y\\xc1\\x9d\\xf2I\\xef3\\xc6H\\x16\\xbd\\xab \\xa4\\xb5\\r\\xaau5eb\\x82B\\xe0\\x1c\\xf7\\xdd'",
+                                                  'logIndex': '43', 'error_code': 200, 'error_msg': '',
+                                                  'row_updated': '2019-10-31 09:44:00',
+                                                  'row_created': '2019-10-31 09:44:00'}]
+
+        mock_lambda_handler.return_value = {"statusCode": 500}
+
+        error_map, success_list = RegistryEventListener().listen_and_publish_registry_events()
+        assert error_map == {526: {'error_code': 500,
+                                   'error_message': 'for listener arn:aws:lambda:us-east-1:533793137436:function:contract-api-ropsten-service_event_consumer got error Test Error'}}
 
 
 if __name__ == "__main__":

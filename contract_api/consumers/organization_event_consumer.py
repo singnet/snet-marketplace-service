@@ -38,7 +38,7 @@ class OrganizationEventConsumer(EventConsumer):
         if service_id:
             s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename
         else:
-            s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename
+            s3_filename = ASSETS_PREFIX + "/" + org_id  + "/" + filename
 
         new_url = self._s3_util.push_io_bytes_to_s3(s3_filename,
                                                     ASSETS_BUCKET_NAME, io_bytes)
@@ -61,7 +61,7 @@ class OrganizationEventConsumer(EventConsumer):
     def _get_org_id_from_event(self, event):
         event_org_data = eval(event['data']['json_str'])
         org_id_bytes = event_org_data['orgId']
-        org_id = Web3.toText(org_id_bytes).rstrip("\\x00")
+        org_id = Web3.toText(org_id_bytes).rstrip("\x00")
         return org_id
 
     def _get_registry_contract(self):
