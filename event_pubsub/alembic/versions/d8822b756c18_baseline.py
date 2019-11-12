@@ -1,17 +1,59 @@
--- common database schema across all networks
+"""baseline
+
+Revision ID: d8822b756c18
+Revises:
+Create Date: 2019-09-18 14:33:54.629555
+
+"""
+from alembic import op
+
+# revision identifiers, used by Alembic.
+revision = 'd8822b756c18'
+down_revision = None
+branch_labels = None
+depends_on = None
 
 
+def upgrade():
+    conn = op.get_bind()
 
-CREATE TABLE `event_blocknumber_marker` (
+    conn.execute("""
+CREATE TABLE `registry_events_raw` (
   `row_id` int(11) NOT NULL AUTO_INCREMENT,
-  `event_type` varchar(128) NOT NULL,
-  `last_block_number` int(11) not null,
+  `block_no` int(11) NOT NULL,
+  `event` varchar(256) NOT NULL,
+  `json_str` text,
+  `processed` bit(1) DEFAULT NULL,
+  `transactionHash` varchar(256) DEFAULT NULL,
+  `logIndex` varchar(256) DEFAULT NULL,
+  `error_code` int(11) DEFAULT NULL,
+  `error_msg` varchar(256) DEFAULT NULL,
+  `row_updated` timestamp NULL DEFAULT NULL,
   `row_created` timestamp NULL DEFAULT NULL,
-  `row_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`row_id`)
-)
+  PRIMARY KEY (`row_id`),
+  KEY `blk_no_idx` (`block_no`)
+) ;
+            """)
 
+    conn.execute("""
 
+CREATE TABLE `mpe_events_raw` (
+  `row_id` int(11) NOT NULL AUTO_INCREMENT,
+  `block_no` int(11) NOT NULL,
+  `event` varchar(256) NOT NULL,
+  `json_str` text,
+  `processed` bit(1) DEFAULT NULL,
+  `transactionHash` varchar(256) DEFAULT NULL,
+  `logIndex` varchar(256) DEFAULT NULL,
+  `error_code` int(11) DEFAULT NULL,
+  `error_msg` varchar(256) DEFAULT NULL,
+  `row_updated` timestamp NULL DEFAULT NULL,
+  `row_created` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`row_id`),
+  KEY `blk_no_idx` (`block_no`)
+) ;
+        """)
+    conn.execute("""
 
 CREATE TABLE `registry_events_raw` (
   `row_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -29,46 +71,31 @@ CREATE TABLE `registry_events_raw` (
   KEY `blk_no_idx` (`block_no`)
 ) ;
 
-CREATE TABLE `mpe_events_raw` (
-  `row_id` int(11) NOT NULL AUTO_INCREMENT,
-  `block_no` int(11) NOT NULL,
-  `event` varchar(256) NOT NULL,
-  `json_str` text,
-  `processed` bit(1) DEFAULT NULL,
-  `transactionHash` varchar(256) DEFAULT NULL,
-  `logIndex` varchar(256) DEFAULT NULL,
-  `error_code` int(11) DEFAULT NULL,
-  `error_msg` varchar(256) DEFAULT NULL,
-  `row_updated` timestamp NULL DEFAULT NULL,
-  `row_created` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`row_id`),
-  KEY `blk_no_idx` (`block_no`)
-) ;
-
-CREATE TABLE `rfai_events_raw` (
-  `row_id` int(11) NOT NULL AUTO_INCREMENT,
-  `block_no` int(11) NOT NULL,
-  `event` varchar(256) NOT NULL,
-  `json_str` text,
-  `processed` bit(1) DEFAULT NULL,
-  `transactionHash` varchar(256) DEFAULT NULL,
-  `logIndex` varchar(256) DEFAULT NULL,
-  `error_code` int(11) DEFAULT NULL,
-  `error_msg` varchar(256) DEFAULT NULL,
-  `row_updated` timestamp NULL DEFAULT NULL,
-  `row_created` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`row_id`),
-  KEY `blk_no_idx` (`block_no`)
-) ;
-
-
+        """)
+    conn.execute("""
 CREATE TABLE `event_blocknumber_marker` (
   `row_id` int(11) NOT NULL AUTO_INCREMENT,
   `event_type` varchar(128) NOT NULL,
-  `last_block_number` int(11) NOT NULL,
+  `last_block_number` int(11) not null,
   `row_created` timestamp NULL DEFAULT NULL,
   `row_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`row_id`)
 )
 
+        """)
 
+
+def downgrade():
+    conn = op.get_bind()
+    conn.execute("""
+                drop table wallet
+            """
+                 )
+    conn.execute("""
+                drop table wallet_transaction_history
+                """
+                 )
+    conn.execute("""
+                drop table user_wallet
+       """
+                 )
