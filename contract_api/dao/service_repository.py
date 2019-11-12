@@ -1,7 +1,7 @@
 from datetime import datetime
 import json
 
-from dao.common_repository import CommonRepository
+from contract_api.dao.common_repository import CommonRepository
 
 
 class ServiceRepository(CommonRepository):
@@ -89,6 +89,8 @@ class ServiceRepository(CommonRepository):
     def delete_service_dependents(self, org_id, service_id):
         self.delete_service_group(org_id, service_id)
         self.delete_tags(org_id=org_id, service_id=service_id)
+        self.delete_service_group(org_id=org_id, service_id=service_id)
+        self.delete_service_endpoint(org_id=org_id, service_id=service_id)
 
     def delete_service_endpoint(self, org_id, service_id):
 
@@ -106,8 +108,14 @@ class ServiceRepository(CommonRepository):
 
     def get_service_row_id(self, org_id, service_id):
         query = 'SELECT row_id FROM service WHERE service_id = %s AND org_id = %s '
-        service_data = self.repo.execute(query, [service_id, org_id])
+        service_data = self.connection.execute(query, [service_id, org_id])
         return service_data
+
+    def get_service(self,org_id,service_id):
+        query = 'SELECT org_id, service_id, service_path, ipfs_hash, is_curated FROM service WHERE service_id = %s AND org_id = %s '
+        query_response = self.connection.execute(query, [service_id, org_id])
+
+        return query_response[0]
 
     def get_services(self, org_id):
         query = 'SELECT * FROM service WHERE org_id = %s '
@@ -116,12 +124,24 @@ class ServiceRepository(CommonRepository):
         return service_data
 
     def get_service_metadata(self, service_id, org_id):
-        query = "Select * from service_metadata where service_id = %s and org_id = %s "
+        query = "select org_id, service_id, display_name, description, url, json, model_ipfs_hash, encoding, `type`, mpe_address, assets_url, assets_hash, service_rating, ranking, contributors from service_metadata where service_id = %s and org_id = %s "
         service_metadata = self.connection.execute(query, (service_id, org_id))
 
         if len(service_metadata) > 0:
             return service_metadata[0]
         return None
+
+    def get_service_endpoints(self, service_id, org_id):
+        query = "Select  org_id, service_id, group_id, endpoint from service_endpoint where service_id = %s and org_id = %s "
+        service_endpoints = self.connection.execute(query, (service_id, org_id))
+
+        return service_endpoints
+
+    def get_service_tags(self, service_id, org_id):
+        query = "Select   org_id, service_id, tag_name from service_tags where service_id = %s and org_id = %s "
+        service_tags = self.connection.execute(query, (service_id, org_id))
+
+        return service_tags
 
     def create_group(self, service_row_id, org_id, service_id, grp_data):
         insert_group = "INSERT INTO service_group (service_row_id, org_id, service_id, group_id, group_name," \

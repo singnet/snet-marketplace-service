@@ -1,5 +1,18 @@
 -- common database schema across all networks
 
+
+
+CREATE TABLE `event_blocknumber_marker` (
+  `row_id` int(11) NOT NULL AUTO_INCREMENT,
+  `event_type` varchar(128) NOT NULL,
+  `last_block_number` int(11) not null,
+  `row_created` timestamp NULL DEFAULT NULL,
+  `row_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`row_id`)
+)
+
+
+
 CREATE TABLE `registry_events_raw` (
   `row_id` int(11) NOT NULL AUTO_INCREMENT,
   `block_no` int(11) NOT NULL,
@@ -57,13 +70,5 @@ CREATE TABLE `event_blocknumber_marker` (
   `row_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`row_id`)
 )
-
-
-
-
-
-
-
-
 
 

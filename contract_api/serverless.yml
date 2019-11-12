@@ -9,7 +9,7 @@ provider:
   name: aws
   runtime: python3.6
   description: Description of what the lambda function does # optional, Description to publish to AWS
-  memorySize: 1024
+  memorySize: 512
   timeout: 30
   region: ${file(./config.${self:provider.stage}.json):REGION}
   stage: ${opt:stage,'dev'}
@@ -57,6 +57,14 @@ package:
     - log_setup.py
     - heath_check.sh
     - node_modules/**
+    - wallets/**
+    - payments/**
+    - orchestrator/**
+    - notification/**
+    - dapp_user/**
+  include:
+    - node_modules/singularitynet-platform-contracts/**
+
 
 functions:
 
