@@ -2,15 +2,15 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-from contract_api.config import NETWORKS
+from contract_api.config import NETWORKS,NETWORK_ID
 
 from alembic import context
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-MYSQL_CONNECTION_STRING = f"mysql+pymysql://{NETWORKS['db']['DB_USER']}:{NETWORKS['db']['DB_PASSWORD']}" \
-                          f"@{NETWORKS['db']['DB_HOST']}:{NETWORKS['db']['DB_PORT']}/{NETWORKS['db']['DB_NAME']}"
+MYSQL_CONNECTION_STRING = f"mysql+pymysql://{NETWORKS[NETWORK_ID]['db']['DB_USER']}:{NETWORKS[NETWORK_ID]['db']['DB_PASSWORD']}" \
+                          f"@{NETWORKS[NETWORK_ID]['db']['DB_HOST']}:{NETWORKS[NETWORK_ID]['db']['DB_PORT']}/{NETWORKS[NETWORK_ID]['db']['DB_NAME']}"
 config.set_main_option('sqlalchemy.url', MYSQL_CONNECTION_STRING)
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -70,7 +70,7 @@ def run_migrations_online():
     with connectable.connect() as connection:
         context.configure(
             connection=connection, target_metadata=target_metadata,
-            version_table="wallet_alembic_version"
+            version_table="contract_api_alembic_version"
         )
 
         with context.begin_transaction():
