@@ -15,7 +15,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: generating checksum for all requirements file
+          name: Generating checksum for all requirements file
           command: |
             shasum */requirement*.txt > /tmp/checksum_files_list
             sudo chown -R circleci:circleci /usr/local/bin
@@ -23,7 +23,7 @@ jobs:
       - restore_cache:
           key: dependency-cache-{{ checksum "/tmp/checksum_files_list" }}
       - run:
-          name: revert the permissions
+          name: Revert the permissions
           command: |
             sudo chown root:root -R /usr/local/bin
             sudo chown root:root -R /usr/local/lib/python3.6
@@ -39,20 +39,22 @@ jobs:
             done
             echo Failed waiting for MySQL && exit 1
       - run:
-          name: Install required packages.
-          command: |
-            sudo apt-get update
-            sudo apt-get install mysql-client -y
-            sudo pip install coverage coveralls pytest boto3
-      - run:
           name: Install dependencies
           command: |
             for requirement_file in `ls */requirement*.txt`;do sudo pip install -r $requirement_file --prefer-binary ;done
       - run:
-          name: Run tests for signer & wallets
+          name: Install required packages.
           command: |
-            #sudo pip install -r signer/requirement.txt
-            PYTHONPATH=$PWD python -m coverage run -m pytest signer/tests/test_signer.py wallets/testcase/unit_testcases/test_wallet_service.py
+            sudo apt-get update
+            sudo apt-get install mysql-client -y
+            sudo pip install coverage coveralls pytest boto3 alembic
+            export PYTHONPATH=$PWD
+            for alembic_file in `ls */alembic*.ini | cut -d '/' -f1`;do cd $alembic_file; alembic upgrade head; cd .. ;done
+            mysql -h 127.0.0.1 -u unittest_root -punittest_pwd unittest_db < orchestrator/testcases/script.sql
+      - run:
+          name: Run unit tests and integration test
+          command: |
+            PYTHONPATH=$PWD python -m coverage run -m pytest */testcases/integration_testcases/*.py
             python -m coverage report -m
             COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} python -m coveralls
       - save_cache:
