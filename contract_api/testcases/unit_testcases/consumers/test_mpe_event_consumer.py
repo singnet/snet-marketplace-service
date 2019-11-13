@@ -84,8 +84,3 @@ class TestOrganizationEventConsumer(unittest.TestCase):
         assert channel_result[0]['expiration'] == 8731699
         assert channel_result[0]['signer'] == '0x669CCF5025C08304Fd836d7A136634E22C5Dd31C'
         # assert str(channel_result[0]['row_created']) == '2019-10-23 13:37:09'
-
-
-if __name__ == "__main__":
-    unittest.main()
-

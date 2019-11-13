@@ -70,6 +70,3 @@ class TestBlockchainEventProducer(unittest.TestCase):
         assert blockchain_events == [AttributeDict({'args': AttributeDict({'sender': '0xabd2cCb3828b4428bBde6C2031A865b0fb272a5A', 'amount': 30000000}), 'event': 'DepositFunds', 'logIndex': 1, 'transactionIndex': 18, 'transactionHash': HexBytes('0x562cc2fa59d9c7a4aa56106a19ad9c8078a95ae68416619fc191d86c50c91f12'), 'address': '0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C', 'blockHash': HexBytes('0xe06042a4d471351c0ee9e50056bd4fb6a0e158b2489ba70775d3c06bd29da19b'), 'blockNumber': 6286405})]
         event_block_number_result=event_repository.read_last_read_block_number_for_event("MPE")
         assert  event_block_number_result == 50050
-
-if __name__ == "__main__":
-    unittest.main()

@@ -41,7 +41,3 @@ class TestBlockchainEventSubsriber(unittest.TestCase):
         error_map, success_list = RegistryEventListener().listen_and_publish_registry_events()
         assert error_map == {526: {'error_code': 500,
                                    'error_message': 'for listener arn:aws_event_consumer got error Test Error'}}
-
-
-if __name__ == "__main__":
-    unittest.main()
