@@ -8,7 +8,7 @@ from event_pubsub.config import NETWORKS
 from event_pubsub.producers.blockchain_event_producer import RegistryEventProducer
 from event_pubsub.producers.blockchain_event_producer import MPEEventProducer
 from event_pubsub.repository import Repository
-from event_repository import EventRepository
+from event_pubsub.event_repository import EventRepository
 
 
 class TestBlockchainEventProducer(unittest.TestCase):
