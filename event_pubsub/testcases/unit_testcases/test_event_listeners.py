@@ -2,7 +2,7 @@ import unittest
 import unittest
 from unittest.mock import patch, Mock
 
-from listeners.event_listeners import EventListener, RegistryEventListener
+from event_pubsub.listeners.event_listeners import EventListener, RegistryEventListener
 
 
 class TestBlockchainEventSubsriber(unittest.TestCase):
@@ -40,7 +40,7 @@ class TestBlockchainEventSubsriber(unittest.TestCase):
 
         error_map, success_list = RegistryEventListener().listen_and_publish_registry_events()
         assert error_map == {526: {'error_code': 500,
-                                   'error_message': 'for listener arn:aws:lambda:us-east-1:533793137436:function:contract-api-ropsten-service_event_consumer got error Test Error'}}
+                                   'error_message': 'for listener arn:aws_event_consumer got error Test Error'}}
 
 
 if __name__ == "__main__":
