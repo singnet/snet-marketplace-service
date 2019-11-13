@@ -2,7 +2,7 @@ import unittest
 import unittest
 from unittest.mock import patch, Mock
 
-from listeners.event_listeners import EventListener, RegistryEventListener
+from event_pubsub.listeners.event_listeners import EventListener, RegistryEventListener
 
 
 class TestBlockchainEventSubsriber(unittest.TestCase):
