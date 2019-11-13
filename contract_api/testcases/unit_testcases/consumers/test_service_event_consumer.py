@@ -98,7 +98,3 @@ class TestOrganizationEventConsumer(unittest.TestCase):
                                 {'org_id': 'snet', 'service_id': 'gene-annotation-service',
                                  'tag_name': 'human-gene-annotation'},
                                 {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'tag_name': 'reactome'}]
-
-
-if __name__ == "__main__":
-    unittest.main()

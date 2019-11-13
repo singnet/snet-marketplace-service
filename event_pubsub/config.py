@@ -1,3 +1,7 @@
+import os
+
+os.environ["LOG_LEVEL"] = "DEBUG"
+
 NETWORKS = {"db": {
     "HOST": "localhost",
     "USER": "unittest_root",
@@ -44,4 +48,13 @@ EVENT_SUBSCRIPTIONS = {"OrganizationCreated": [{"name": "", "type": "lambda_arn"
                        }
 
 WS_PROVIDER = "wss://ropsten.infura.io/"
-REGION_NAME=""
+REGION_NAME="us-east-2"
+SLACK_HOOK = {
+    'hostname' : 'https://hooks.slack.com',
+    'port': 443,
+    'path': '',
+    'method': 'POST',
+    'headers': {
+        'Content-Type': 'application/json'
+    }
+}
