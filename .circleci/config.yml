@@ -15,6 +15,19 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Generating checksum for all requirements file
+          command: |
+            shasum */requirement*.txt > /tmp/checksum_files_list
+            sudo chown -R circleci:circleci /usr/local/bin
+            sudo chown circleci:circleci -R /usr/local/lib/python3.6
+      - restore_cache:
+          key: dependency-cache-{{ checksum "/tmp/checksum_files_list" }}
+      - run:
+          name: Revert the permissions
+          command: |
+            sudo chown root:root -R /usr/local/bin
+            sudo chown root:root -R /usr/local/lib/python3.6
+      - run:
       # Our primary container isn't MYSQL so run a sleep command until it's ready.
           name: Waiting for MySQL to be ready
           command: |
@@ -26,20 +39,25 @@ jobs:
             done
             echo Failed waiting for MySQL && exit 1
       - run:
-          name: Initialise tables.
+          name: Install dependencies
+          command: |
+            for requirement_file in `ls */requirement*.txt`;do sudo pip install -r $requirement_file --prefer-binary ;done
+      - run:
+          name: Install required packages.
           command: |
             sudo apt-get update
             sudo apt-get install mysql-client -y
-            sudo pip install coverage coveralls pytest boto3
+            sudo pip install coverage coveralls pytest boto3 alembic
+            export PYTHONPATH=$PWD
+            for alembic_file in `ls */alembic*.ini | cut -d '/' -f1`;do cd $alembic_file; alembic upgrade head; cd .. ;done
+            mysql -h 127.0.0.1 -u unittest_root -punittest_pwd unittest_db < orchestrator/testcases/script.sql
       - run:
-          name: run tests for signer
+          name: Run unit tests and integration test
           command: |
-            sudo pip install -r signer/requirement.txt
-            PYTHONPATH=$PWD coverage run -m pytest signer/tests/test_signer.py
-            coverage report -m
-      - run:
-          name: run tests for wallet
-          command: |
-            sudo pip install -r wallets/requirement.txt
-            PYTHONPATH=$PWD coverage run -m pytest wallets/testcase/unit_testcases/test_wallet_service.py
-            coverage report -m
+            PYTHONPATH=$PWD python -m coverage run -m pytest */testcases/integration_testcases/*.py
+            python -m coverage report -m
+            COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} python -m coveralls
+      - save_cache:
+          key: dependency-cache-{{ checksum "/tmp/checksum_files_list" }}
+          paths:
+            - /usr/local/lib/python3.6/site-packages

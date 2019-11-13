@@ -4,10 +4,13 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from payments.infrastructure.models import Base
 from alembic import context
-
+from payments.config import NETWORK
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+MYSQL_CONNECTION_STRING = f"mysql+pymysql://{NETWORK['db']['DB_USER']}:{NETWORK['db']['DB_PASSWORD']}" \
+                          f"@{NETWORK['db']['DB_HOST']}:{NETWORK['db']['DB_PORT']}/{NETWORK['db']['DB_NAME']}"
+config.set_main_option('sqlalchemy.url', MYSQL_CONNECTION_STRING)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

@@ -5,9 +5,8 @@ import json
 import requests
 import web3
 from web3 import Web3
-
+from common.constant import COGS_TO_AGI
 IGNORED_LIST = ['row_id', 'row_created', 'row_updated']
-
 
 class Utils:
     def __init__(self):
@@ -60,6 +59,13 @@ class Utils:
     def get_current_block_no(self, ws_provider):
         w3Obj = Web3(web3.providers.WebsocketProvider(ws_provider))
         return w3Obj.eth.blockNumber
+
+    def cogs_to_agi(self, cogs):
+        with decimal.localcontext() as ctx:
+            ctx.prec = 8
+            """ 1 AGI equals to 100000000 cogs"""
+            agi = decimal.Decimal(cogs)*decimal.Decimal(COGS_TO_AGI)
+            return agi
 
 
 def make_response(status_code, body, header=None):
