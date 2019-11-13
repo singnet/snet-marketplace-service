@@ -1,3 +1,7 @@
+import os
+
+os.environ["LOG_LEVEL"] = "DEBUG"
+
 NETWORKS = {"db": {
     "HOST": "localhost",
     "USER": "unittest_root",
