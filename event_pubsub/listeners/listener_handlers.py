@@ -2,6 +2,8 @@ import requests
 import json
 import boto3
 
+from event_pubsub.config import REGION_NAME
+
 
 class ListenersHandlers(object):
 
@@ -23,7 +25,7 @@ class WebHookHandler(ListenersHandlers):
 
 
 class LambdaArnHandler(ListenersHandlers):
-    lambda_client = boto3.client('lambda')
+    lambda_client = boto3.client('lambda',region_name=REGION_NAME)
 
     def __init__(self, arn):
         self.arn = arn
