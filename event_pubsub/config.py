@@ -1,10 +1,11 @@
-NETWORKS = {'db': {"HOST": "localhost",
-                   "USER": "root",
-                   "PASSWORD": "password",
-                   "NAME": "pub_sub",
-                   "PORT": 3306,
-                   }
-            }
+NETWORKS = {"db": {
+    "HOST": "localhost",
+    "USER": "unittest_root",
+    "PASSWORD": "unittest_pwd",
+    "NAME": "unittest_db",
+    "PORT": 3306,
+},
+}
 
 NETWORK_ID = 0
 
