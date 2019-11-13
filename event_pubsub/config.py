@@ -1,9 +1,9 @@
 NETWORKS = {"db": {
-    "DB_HOST": "localhost",
-    "DB_USER": "unittest_root",
-    "DB_PASSWORD": "unittest_pwd",
-    "DB_NAME": "unittest_db",
-    "DB_PORT": 3306,
+    "HOST": "localhost",
+    "USER": "unittest_root",
+    "PASSWORD": "unittest_pwd",
+    "NAME": "unittest_db",
+    "PORT": 3306,
 },
 }
 
