@@ -1,11 +1,10 @@
-NETWORKS = {"db": {
-    "HOST": "localhost",
-    "USER": "unittest_root",
-    "PASSWORD": "unittest_pwd",
-    "NAME": "unittest_db",
-    "PORT": 3306,
-},
-}
+NETWORKS = {'db': {"HOST": "localhost",
+                   "USER": "root",
+                   "PASSWORD": "password",
+                   "NAME": "pub_sub",
+                   "PORT": 3306,
+                   }
+            }
 
 NETWORK_ID = 0
 
@@ -44,3 +43,4 @@ EVENT_SUBSCRIPTIONS = {"OrganizationCreated": [{"name": "", "type": "lambda_arn"
                        }
 
 WS_PROVIDER = "wss://ropsten.infura.io/"
+REGION_NAME=""
