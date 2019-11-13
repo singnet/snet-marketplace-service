@@ -58,7 +58,3 @@ class TestWalletAPI(unittest.TestCase):
     @patch("common.utils.Utils.report_slack")
     def test_set_default_wallet(self, mock_report_slack):
         pass
-
-
-if __name__ == "__main__":
-    unittest.main()

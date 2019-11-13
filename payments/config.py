@@ -1,5 +1,13 @@
-NETWORKS = {
-    0: {
+MODE = 'sandbox'
+PAYPAL_CLIENT = ''
+PAYPAL_SECRET = ''
+PAYMENT_RETURN_URL = ""
+PAYMENT_CANCEL_URL = ""
+DB_URL = ""
+SLACK_HOOK = {}
+REGION_NAME = "us-east-2"
+NETWORK_ID = 0
+NETWORK = {
         "name": "test",
         "http_provider": "https://ropsten.infura.io",
         "ws_provider": "wss://ropsten.infura.io/ws",
@@ -11,13 +19,3 @@ NETWORKS = {
             "DB_PORT": 3306,
         },
     }
-}
-SIGNER_KEY = ""
-SIGNER_ADDRESS = ""
-EXECUTOR_KEY = ""
-EXECUTOR_ADDRESS = ""
-NETWORK_ID = 0
-SLACK_HOOK = {}
-REGION_NAME = "us-east-2"
-WALLET_TYPES_ALLOWED = []
-MINIMUM_AMOUNT_IN_COGS_ALLOWED = 0

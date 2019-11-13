@@ -5,9 +5,9 @@ NETWORKS = {
         "ws_provider": "wss://ropsten.infura.io/ws",
         "db": {
             "DB_HOST": "localhost",
-            "DB_USER": "root",
-            "DB_PASSWORD": "root",
-            "DB_NAME": "contract_index_test",
+            "DB_USER": "unittest_root",
+            "DB_PASSWORD": "unittest_pwd",
+            "DB_NAME": "unittest_db",
             "DB_PORT": 3306,
         },
     }
@@ -24,7 +24,7 @@ SLACK_HOOK = {}
 CONTRACT_API_ARN = ""
 ORDER_DETAILS_ORDER_ID_ARN = ""
 ORDER_DETAILS_BY_USERNAME_ARN = ""
-REGION_NAME = ""
+REGION_NAME = "us-east-2"
 SIGNER_ADDRESS = ""
 EXECUTOR_ADDRESS = ""
 SIGNER_SERVICE_ARN = ""
