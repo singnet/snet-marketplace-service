@@ -9,8 +9,8 @@ from event_pubsub.config import NETWORKS
 config = context.config
 
 config = context.config
-MYSQL_CONNECTION_STRING = f"mysql+pymysql://{NETWORKS['db']['DB_USER']}:{NETWORKS['db']['DB_PASSWORD']}" \
-                          f"@{NETWORKS['db']['DB_HOST']}:{NETWORKS['db']['DB_PORT']}/{NETWORKS['db']['DB_NAME']}"
+MYSQL_CONNECTION_STRING = f"mysql+pymysql://{NETWORKS['db']['USER']}:{NETWORKS['db']['PASSWORD']}" \
+                          f"@{NETWORKS['db']['HOST']}:{NETWORKS['db']['PORT']}/{NETWORKS['db']['NAME']}"
 config.set_main_option('sqlalchemy.url', MYSQL_CONNECTION_STRING)
 
 # Interpret the config file for Python logging.
