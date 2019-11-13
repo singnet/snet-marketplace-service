@@ -44,4 +44,4 @@ EVENT_SUBSCRIPTIONS = {"OrganizationCreated": [{"name": "", "type": "lambda_arn"
                        }
 
 WS_PROVIDER = "wss://ropsten.infura.io/"
-REGION_NAME=""
+REGION_NAME="us-east-2"
