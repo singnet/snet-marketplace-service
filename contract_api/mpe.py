@@ -170,3 +170,9 @@ class MPE:
         except Exception as e:
             print(repr(e))
             raise e
+
+    def update_consumed_balance(self, channel_id, authorized_amount):
+        self.repo.execute(
+            "UPDATE `mpe_channel` SET consumed_balance = %s WHERE channel_id = %s", [authorized_amount, channel_id]
+        )
+        return {}

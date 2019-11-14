@@ -1,10 +1,14 @@
+import json
+import traceback
+
 from aws_xray_sdk.core import patch_all
 
-from common.constant import StatusCode
+from common.constant import StatusCode, ResponseStatus
 from common.logger import get_logger
 from common.repository import Repository
-from common.utils import generate_lambda_response, validate_dict, Utils
+from common.utils import generate_lambda_response, validate_dict, Utils, make_response_body
 from contract_api.config import NETWORKS, SLACK_HOOK, NETWORK_ID
+from contract_api.errors import Error
 from contract_api.mpe import MPE
 
 patch_all()
@@ -64,3 +68,45 @@ def get_channels_old_api(event, context):
     )
     return generate_lambda_response(
         200, {"status": "success", "data": response_data}, cors_enabled=True)
+
+
+def update_consumed_balance(event, context):
+    logger.info("Received request to update consumed balance")
+    try:
+        path_parameters = event["pathParameters"]
+        payload = json.loads(event["body"])
+        if validate_dict(
+                payload, ["OrganizationID", "ServiceID", "GroupID", "AuthorizedAmount",
+                          "FullAmount", "ChannelId", "Nonce"]) \
+                and "channel_id" in path_parameters:
+            org_id = payload["OrganizationID"]
+            service_id = payload["ServiceID"]
+            group_id = payload["GroupID"]
+            authorized_amount = payload["AuthorizedAmount"]
+            full_amount = payload["FullAmount"]
+            nonce = payload["Nonce"]
+            channel_id = path_parameters["channel_id"]
+            logger.info(f"Fetched values from request\n"
+                        f"org_id: {org_id} group_id: {group_id} service_id: {service_id} "
+                        f"authorized_amount: {authorized_amount} full_amount: {full_amount} nonce: {nonce}")
+            response = obj_mpe.update_consumed_balance(channel_id, authorized_amount)
+            status_code = StatusCode.CREATED
+            status = ResponseStatus.SUCCESS
+        else:
+            status_code = StatusCode.BAD_REQUEST
+            response = "Bad Request"
+            status = ResponseStatus.FAILED
+            logger.error(response)
+            logger.info(event)
+        error = {}
+    except Exception as e:
+        response = "Failed to update consumed balance"
+        logger.error(response)
+        status = ResponseStatus.FAILED
+        logger.info(event)
+        logger.error(e)
+        status_code = StatusCode.INTERNAL_SERVER_ERROR
+        error = Error.undefined_error(repr(e))
+        utils.report_slack(1, str(error), SLACK_HOOK)
+        traceback.print_exc()
+    return generate_lambda_response(status_code, make_response_body(status, response, error), cors_enabled=True)

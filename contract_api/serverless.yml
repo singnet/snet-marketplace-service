@@ -392,6 +392,37 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+
+  update-consumed-balance:
+    handler: contract_api/handlers.channel_handlers.update_consumed_balance
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: POST
+          authorizer:
+            type: request
+            arn: ${file(./config.${self:provider.stage}.json):SIGN_AUTHORIZER}
+            identitySource: ${file(./config.${self:provider.stage}.json):SIGN_HEADERS}
+            name: update-consume-balance-authorizer
+          path: /channel/{channel_id}/consume
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
   organization_event_consumer:
     warmup: true
     handler: contract_api/handlers.consumer_handlers.organization_event_consumer_handler
