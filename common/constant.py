@@ -26,10 +26,8 @@ class StatusCode:
     CREATED = 201
     OK = 200
 
-
 class ResponseStatus:
     FAILED = "failed"
     SUCCESS = "success"
-
 
 COGS_TO_AGI = "0.00000001"
