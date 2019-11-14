@@ -1,11 +1,10 @@
-from aws_xray_sdk.core import patch_all
-
 from common.constant import StatusCode
 from common.logger import get_logger
 from common.repository import Repository
 from common.utils import generate_lambda_response, validate_dict, Utils
 from contract_api.config import NETWORKS, SLACK_HOOK, NETWORK_ID
 from contract_api.mpe import MPE
+from aws_xray_sdk.core import patch_all
 
 patch_all()
 logger = get_logger(__name__)
