@@ -10,3 +10,6 @@ SLACK_HOOK = {
         'Content-Type': 'application/json'
     }
 }
+CONTRACT_API_ARN = ""
+REGION_NAME = "us-east-2"
+NETWORK_ID = 0
