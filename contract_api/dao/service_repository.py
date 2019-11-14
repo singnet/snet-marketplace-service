@@ -21,11 +21,11 @@ class ServiceRepository(CommonRepository):
     def create_or_update_service_metadata(self, service_row_id, org_id, service_id, ipfs_data, assets_url):
         upsrt_servicec_metadata = "INSERT INTO service_metadata (service_row_id, org_id, service_id, " \
                                   "display_name, model_ipfs_hash, description, url, json, encoding, type, " \
-                                  "mpe_address, assets_hash , assets_url, service_rating, row_updated, row_created) " \
-                                  "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s ) " \
+                                  "mpe_address, assets_hash , assets_url, service_rating,contributors, row_updated, row_created) " \
+                                  "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s ,%s ) " \
                                   "ON DUPLICATE KEY UPDATE service_row_id = %s, " \
                                   "display_name = %s, model_ipfs_hash = %s, description = %s, url = %s, json = %s, " \
-                                  "encoding = %s, type = %s, mpe_address = %s, row_updated = %s ,assets_hash = %s ,assets_url = %s"
+                                  "encoding = %s, type = %s, mpe_address = %s, row_updated = %s ,assets_hash = %s ,assets_url = %s , contributors =%s "
 
         service_desc = ipfs_data.get('service_description', {})
         desc = service_desc.get('description', '')
@@ -33,17 +33,18 @@ class ServiceRepository(CommonRepository):
         json_str = ipfs_data.get('json', '')
         assets_hash = json.dumps(ipfs_data.get('assets', {}))
         assets_url_str = json.dumps(assets_url)
+        contributors = json.dumps(ipfs_data.get('contributors', {}))
         upsrt_service_metadata_params = [service_row_id, org_id, service_id, ipfs_data['display_name'],
                                          ipfs_data['model_ipfs_hash'], desc, url, json_str, ipfs_data['encoding'],
                                          ipfs_data['service_type'], ipfs_data['mpe_address'], assets_hash,
                                          assets_url_str,
-                                         '{"rating": 0.0 , "total_users_rated": 0 }', datetime.utcnow(
+                                         '{"rating": 0.0 , "total_users_rated": 0 }', contributors, datetime.utcnow(
             ), datetime.utcnow(),
                                          service_row_id, ipfs_data['display_name'],
                                          ipfs_data['model_ipfs_hash'], desc, url, json_str, ipfs_data['encoding'],
                                          ipfs_data['service_type'], ipfs_data['mpe_address'], datetime.utcnow(),
                                          assets_hash,
-                                         assets_url_str]
+                                         assets_url_str, contributors]
 
         query_response = self.connection.execute(upsrt_servicec_metadata, upsrt_service_metadata_params)
 
