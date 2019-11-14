@@ -69,7 +69,7 @@ class BlockChainUtil(object):
         nonce = self.get_nonce(address=address)
         self.contract = self.load_contract(path=contract_path)
         self.contract_address = self.read_contract_address(net_id=net_id, path=contract_address_path, key='address')
-        self.contract_instance = self.contract_instance(contract=self.contract, address=self.contract_address)
+        self.contract_instance = self.contract_instance(contract_abi=self.contract, address=self.contract_address)
         print("gas_price == ", self.web3_object.eth.gasPrice)
         print("nonce == ", nonce)
         transaction_object = getattr(self.contract_instance.functions, method_name)(
