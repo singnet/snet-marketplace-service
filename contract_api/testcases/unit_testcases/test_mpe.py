@@ -1,5 +1,4 @@
 from unittest import TestCase
-from unittest.mock import patch
 
 from common.repository import Repository
 from contract_api.config import NETWORKS, NETWORK_ID
