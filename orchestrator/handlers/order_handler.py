@@ -9,7 +9,7 @@ from common.repository import Repository
 from common.utils import validate_dict, generate_lambda_response, make_response_body, Utils, format_error_message
 from orchestrator.config import NETWORKS, NETWORK_ID, SLACK_HOOK
 from orchestrator.errors import Error
-from orchestrator.exceptions import PaymentInitiateFailed, ChannelCreationFailed
+from orchestrator.exceptions import PaymentInitiateFailed, ChannelCreationFailed, FundChannelFailed
 from orchestrator.services.order_service import OrderService
 
 patch_all()
@@ -85,7 +85,16 @@ def execute(event, context):
         response = e.get_wallet_details()
         logger.error(response)
         logger.info(event)
-        error = Error.PAYMENT_INITIATE_FAILED
+        error = Error.CHANNEL_CREATION_FAILED
+        status = ResponseStatus.FAILED
+        status_code = StatusCode.INTERNAL_SERVER_ERROR
+        utils.report_slack(1, str(error), SLACK_HOOK)
+
+    except FundChannelFailed as e:
+        response = "Failed to fund channel"
+        logger.error(response)
+        logger.info(event)
+        error = Error.FUND_CHANNEL_FAILED
         status = ResponseStatus.FAILED
         status_code = StatusCode.INTERNAL_SERVER_ERROR
         utils.report_slack(1, str(error), SLACK_HOOK)
