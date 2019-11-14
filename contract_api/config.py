@@ -1,3 +1,7 @@
+import os
+
+os.environ["AWS_XRAY_SDK_ENABLED"] = "False"
+
 NETWORKS = {
     3: {
         "name": "test",
