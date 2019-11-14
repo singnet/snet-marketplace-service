@@ -1,6 +1,7 @@
 import os
 
 os.environ["AWS_XRAY_SDK_ENABLED"] = "False"
+os.environ["AWS_XRAY_CONTEXT_MISSING"] = "LOG_ERROR"
 
 NETWORKS = {
     3: {
