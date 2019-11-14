@@ -4,6 +4,7 @@ from common.blockchain_util import BlockChainUtil
 from common.logger import get_logger
 from common.utils import Utils
 from contract_api.config import NETWORKS, NETWORK_ID
+from contract_api.dao.mpe_repository import MPERepository
 
 logger = get_logger(__name__)
 
@@ -172,14 +173,10 @@ class MPE:
             raise e
 
     def update_consumed_balance(self, channel_id, authorized_amount, full_amount, nonce):
-        channel = self.repo.execute(
-            "SELECT C.channel_id, C.balance_in_cogs, C.consumed_balance, C.nonce FROM `mpe_channel` as C "
-            "WHERE channel_id = %s", [channel_id]
-        )
+        mpe_repo = MPERepository(self.repo)
+        channel = mpe_repo.get_mpe_channels(channel_id)
         if len(channel) != 0 and self.validate_channel_consume_data(channel[0], authorized_amount, full_amount, nonce):
-            self.repo.execute(
-                "UPDATE `mpe_channel` SET consumed_balance = %s WHERE channel_id = %s", [authorized_amount, channel_id]
-            )
+            mpe_repo.update_consumed_balance(channel_id, authorized_amount)
         else:
             raise Exception("Channel validation failed")
         return {}
@@ -187,7 +184,7 @@ class MPE:
     @staticmethod
     def validate_channel_consume_data(channel_details, authorized_amount, full_amount, nonce):
         if channel_details["consumed_balance"] < authorized_amount \
-                and channel_details["balance_in_cogs"] == full_amount\
+                and channel_details["balance_in_cogs"] == full_amount \
                 and channel_details["nonce"] == nonce:
             return True
         return False
