@@ -6,7 +6,7 @@ from common.utils import validate_dict
 from orchestrator.services.wallet_service import WalletService
 
 
-class TestWalletService(unittest.TestCase):
+class TestWalletClientService(unittest.TestCase):
 
     @patch("orchestrator.services.wallet_service.WalletService.get_channel_transactions")
     @patch("orchestrator.services.wallet_service.WalletService.get_channels_from_contract")
