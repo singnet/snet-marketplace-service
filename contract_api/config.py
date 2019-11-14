@@ -1,5 +1,5 @@
 NETWORKS = {
-    0: {
+    3: {
         "name": "test",
         "http_provider": "https://ropsten.infura.io",
         "ws_provider": "wss://ropsten.infura.io/ws",
@@ -27,8 +27,8 @@ IPFS_URL = {
     'port': '80',
 
 }
-NETWORK_ID = 0
-REGION_NAME = ""
+NETWORK_ID = 3
+REGION_NAME = "us-east-2"
 S3_BUCKET_ACCESS_KEY = ""
 S3_BUCKET_SECRET_KEY = ""
 ASSETS_BUCKET_NAME = ""
