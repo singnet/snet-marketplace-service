@@ -32,7 +32,8 @@ class MPE:
         last_block_no = self.blockchain_util.get_current_block_no()
         logger.info(f"got block number {last_block_no}")
         channel_details_query = "SELECT mc.channel_id, mc.sender, mc.recipient, mc.groupId as group_id, " \
-                                "mc.balance_in_cogs, mc.pending, mc.nonce, mc.expiration, mc.signer, og.org_id, " \
+                                "mc.balance_in_cogs, mc.pending, mc.nonce, mc.consumed_balance, mc.expiration, " \
+                                "mc.signer, og.org_id, " \
                                 "org.organization_name, IF(mc.expiration > %s, 'active','inactive') AS status, " \
                                 "og.group_name, org.org_assets_url " \
                                 "FROM mpe_channel AS mc JOIN org_group AS og ON mc.groupId = og.group_id " \
@@ -74,6 +75,7 @@ class MPE:
                 "recipient": channel_record["recipient"],
                 "balance_in_cogs": channel_record["balance_in_cogs"],
                 "pending": channel_record["pending"],
+                "consumed_balance": channel_record["consumed_balance"],
                 "nonce": channel_record["nonce"],
                 "expiration": channel_record["expiration"],
                 "signer": channel_record["signer"],
@@ -115,15 +117,17 @@ class MPE:
                                          'channels': []
                                          }
 
-            channel = {'channel_id': rec['channel_id'],
-                       'recipient': rec['recipient'],
-                       'balance_in_cogs': rec['balance_in_cogs'],
-                       'pending': rec['pending'],
-                       'nonce': rec['nonce'],
-                       'expiration': rec['expiration'],
-                       'signer': rec['signer'],
-                       'status': rec['status']
-                       }
+            channel = {
+                'channel_id': rec['channel_id'],
+                'recipient': rec['recipient'],
+                'balance_in_cogs': rec['balance_in_cogs'],
+                'pending': rec['pending'],
+                'consumed_balance': rec["consumed_balance"],
+                'nonce': rec['nonce'],
+                'expiration': rec['expiration'],
+                'signer': rec['signer'],
+                'status': rec['status']
+            }
             endpoint = {'endpoint': rec['endpoint'],
                         'is_available': rec['endpoint'],
                         'last_check_timestamp': rec['last_check_timestamp']
