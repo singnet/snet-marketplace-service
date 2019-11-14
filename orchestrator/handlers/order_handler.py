@@ -85,7 +85,7 @@ def execute(event, context):
         response = e.get_wallet_details()
         logger.error(response)
         logger.info(event)
-        error = Error.PAYMENT_INITIATE_FAILED
+        error = Error.CHANNEL_CREATION_FAILED
         status = ResponseStatus.FAILED
         status_code = StatusCode.INTERNAL_SERVER_ERROR
         utils.report_slack(1, str(error), SLACK_HOOK)
