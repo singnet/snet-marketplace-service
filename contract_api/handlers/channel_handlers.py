@@ -14,7 +14,7 @@ from contract_api.mpe import MPE
 patch_all()
 logger = get_logger(__name__)
 repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
-obj_mpe = MPE(net_id=NETWORK_ID, obj_repo=repo)
+obj_mpe = MPE(obj_repo=repo)
 utils = Utils()
 
 
@@ -89,7 +89,7 @@ def update_consumed_balance(event, context):
             logger.info(f"Fetched values from request\n"
                         f"org_id: {org_id} group_id: {group_id} service_id: {service_id} "
                         f"authorized_amount: {authorized_amount} full_amount: {full_amount} nonce: {nonce}")
-            response = obj_mpe.update_consumed_balance(channel_id, authorized_amount)
+            response = obj_mpe.update_consumed_balance(channel_id, authorized_amount, full_amount, nonce)
             status_code = StatusCode.CREATED
             status = ResponseStatus.SUCCESS
         else:

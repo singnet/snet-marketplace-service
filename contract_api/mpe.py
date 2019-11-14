@@ -3,16 +3,16 @@ import json
 from common.blockchain_util import BlockChainUtil
 from common.logger import get_logger
 from common.utils import Utils
-from contract_api.config import NETWORKS
+from contract_api.config import NETWORKS, NETWORK_ID
 
 logger = get_logger(__name__)
 
 
 class MPE:
-    def __init__(self, net_id, obj_repo):
+    def __init__(self, obj_repo):
         self.repo = obj_repo
         self.obj_util = Utils()
-        self.blockchain_util = BlockChainUtil(provider_type="WS_PROVIDER", provider=NETWORKS[net_id]["ws_provider"])
+        self.blockchain_util = BlockChainUtil(provider_type="WS_PROVIDER", provider=NETWORKS[NETWORK_ID]["ws_provider"])
 
     def get_channels(self, user_address, org_id=None, service_id=None, group_id=None):
         if user_address and org_id and group_id:
@@ -171,8 +171,23 @@ class MPE:
             print(repr(e))
             raise e
 
-    def update_consumed_balance(self, channel_id, authorized_amount):
-        self.repo.execute(
-            "UPDATE `mpe_channel` SET consumed_balance = %s WHERE channel_id = %s", [authorized_amount, channel_id]
+    def update_consumed_balance(self, channel_id, authorized_amount, full_amount, nonce):
+        channel = self.repo.execute(
+            "SELECT C.channel_id, C.balance_in_cogs, C.consumed_balance, C.nonce FROM `mpe_channel` as C "
+            "WHERE channel_id = %s", [channel_id]
         )
+        if len(channel) != 0 and self.validate_channel_consume_data(channel[0], authorized_amount, full_amount, nonce):
+            self.repo.execute(
+                "UPDATE `mpe_channel` SET consumed_balance = %s WHERE channel_id = %s", [authorized_amount, channel_id]
+            )
+        else:
+            raise Exception("Channel validation failed")
         return {}
+
+    @staticmethod
+    def validate_channel_consume_data(channel_details, authorized_amount, full_amount, nonce):
+        if channel_details["consumed_balance"] < authorized_amount \
+                and channel_details["balance_in_cogs"] == full_amount\
+                and channel_details["nonce"] == nonce:
+            return True
+        return False
