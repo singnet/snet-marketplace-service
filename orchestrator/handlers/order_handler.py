@@ -35,15 +35,15 @@ def initiate(event, context):
             status = ResponseStatus.FAILED
             error = {}
             response = "Bad Request"
-            logger.error(response)
-            logger.info(event)
+            logger.error(f"response: {response}\n"
+                         f"event: {event}")
         error = {}
 
     except PaymentInitiateFailed:
         response = "Failed to initiate order"
         error = Error.PAYMENT_INITIATE_FAILED
-        logger.error(f"response: {response}"
-                     f"event: {event}"
+        logger.error(f"response: {response}\n"
+                     f"event: {event}\n"
                      f"error: PAYMENT_INITIATE_FAILED")
         status = ResponseStatus.FAILED
         utils.report_slack(1, error, SLACK_HOOK)
@@ -52,8 +52,8 @@ def initiate(event, context):
 
     except Exception as e:
         response = "Failed to initiate order"
-        logger.error(f"response: {response}"
-                     f"event: {event}"
+        logger.error(f"response: {response}\n"
+                     f"event: {event}\n"
                      f"error: {repr(e)}")
         traceback.print_exc()
         error = Error.UNDEFINED_ERROR
@@ -84,8 +84,8 @@ def execute(event, context):
         error = {}
     except ChannelCreationFailed as e:
         response = e.get_wallet_details()
-        logger.error(f"response: {response}"
-                     f"event: {event}"
+        logger.error(f"response: {response}\n"
+                     f"event: {event}\n"
                      f"error: CHANNEL_CREATION_FAILED")
         error = Error.CHANNEL_CREATION_FAILED
         status = ResponseStatus.FAILED
@@ -94,8 +94,8 @@ def execute(event, context):
 
     except FundChannelFailed as e:
         response = "Failed to fund channel"
-        logger.error(f"response: {response}"
-                     f"event: {event}"
+        logger.error(f"response: {response}\n"
+                     f"event: {event}\n"
                      f"error: FUND_CHANNEL_FAILED")
         error = Error.FUND_CHANNEL_FAILED
         status = ResponseStatus.FAILED
@@ -104,8 +104,8 @@ def execute(event, context):
 
     except Exception as e:
         response = "Failed to execute order"
-        logger.error(f"response: {response}"
-                     f"event: {event}"
+        logger.error(f"response: {response}\n"
+                     f"event: {event}\n"
                      f"error: {repr(e)}")
         error = Error.UNDEFINED_ERROR
         status = ResponseStatus.FAILED
@@ -142,7 +142,7 @@ def get(event, context):
             status_code = StatusCode.BAD_REQUEST
             status = ResponseStatus.FAILED
             response = "Bad Request"
-            logger.error(f"response: {response}"
+            logger.error(f"response: {response}\n"
                          f"event: {event}")
         else:
             status_code = StatusCode.CREATED
@@ -150,8 +150,8 @@ def get(event, context):
 
     except Exception as e:
         response = "Failed to get orders"
-        logger.error(f"response: {response}"
-                     f"event: {event}"
+        logger.error(f"response: {response}\n"
+                     f"event: {event}\n"
                      f"error: {repr(e)}")
         error = Error.UNDEFINED_ERROR
         status = ResponseStatus.FAILED
@@ -181,7 +181,7 @@ def cancel(event, context):
             status_code = StatusCode.BAD_REQUEST
             status = ResponseStatus.FAILED
             response = "Bad Request"
-            logger.error(f"response: {response}"
+            logger.error(f"response: {response}\n"
                          f"event: {event}")
         else:
             status_code = StatusCode.CREATED
@@ -192,8 +192,8 @@ def cancel(event, context):
         error = Error.UNDEFINED_ERROR
         status = ResponseStatus.FAILED
         status_code = StatusCode.INTERNAL_SERVER_ERROR
-        logger.error(f"response: {response}"
-                     f"event: {event}"
+        logger.error(f"response: {response}\n"
+                     f"event: {event}\n"
                      f"error: {repr(e)}")
         utils.report_slack(1, error, SLACK_HOOK)
         traceback.print_exc()
