@@ -51,6 +51,7 @@ def upgrade():
               `description` json DEFAULT NULL,
               `assets_url` json DEFAULT NULL,
               `assets_hash` json DEFAULT NULL,
+              `contacts` json DEFAULT NULL,
               PRIMARY KEY (`row_id`),
               UNIQUE KEY `uq_org` (`org_id`)
             )
