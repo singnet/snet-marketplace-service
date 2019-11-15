@@ -20,7 +20,7 @@ def create_channel(event, context):
     logger.info("Received request to initiate order")
     try:
         payload = json.loads(event["body"])
-        required_keys = ["order_id", "sender", "signature", "r", "s", "v", "current_block_number",
+        required_keys = ["order_id", "sender", "signature", "r", "s", "v", "current_block_no",
                          "group_id", "org_id", "amount", "currency", "recipient", "amount_in_cogs"]
         if validate_dict(payload, required_keys):
             logger.info(f"Payload for create channel: {payload}")
