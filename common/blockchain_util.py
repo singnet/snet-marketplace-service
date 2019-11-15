@@ -58,7 +58,7 @@ class BlockChainUtil(object):
 
     def get_nonce(self, address):
         """ transaction count includes pending transaction also. """
-        nonce = self.web3_object.eth.getTransactionCount(address, 'pending')
+        nonce = self.web3_object.eth.getTransactionCount(address)
         return nonce
 
     def sign_transaction_with_private_key(self, private_key, transaction_object):
@@ -72,12 +72,13 @@ class BlockChainUtil(object):
         self.contract_instance = self.contract_instance(contract_abi=self.contract, address=self.contract_address)
         print("gas_price == ", self.web3_object.eth.gasPrice)
         print("nonce == ", nonce)
+        gas_price = 3 * (self.web3_object.eth.gasPrice)
         transaction_object = getattr(self.contract_instance.functions, method_name)(
             *positional_inputs).buildTransaction({
             "from": address,
             "nonce": nonce,
-            "gasPrice": self.web3_object.eth.gasPrice,
-            "chainId": 3
+            "gasPrice": gas_price,
+            "chainId": net_id
         })
         return transaction_object
 
