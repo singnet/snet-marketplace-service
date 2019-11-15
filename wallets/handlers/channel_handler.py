@@ -31,26 +31,22 @@ def create_channel(event, context):
                 amount=payload['amount'], currency=payload['currency'],
                 amount_in_cogs=payload['amount_in_cogs']
             )
-            status_code = StatusCode.CREATED
-            status = ResponseStatus.SUCCESS
+            return generate_lambda_response(StatusCode.CREATED, make_response_body(
+                ResponseStatus.SUCCESS, response, {}), cors_enabled=False)
         else:
-            status_code = StatusCode.BAD_REQUEST
-            status = ResponseStatus.FAILED
             response = "Bad Request"
             logger.error(f"response: {response}\n"
                          f"event: {event}")
-        error = {}
+            return generate_lambda_response(StatusCode.BAD_REQUEST, make_response_body(
+                ResponseStatus.FAILED, "Bad Request", {}
+            ), cors_enabled=False)
     except Exception as e:
         response = "Failed create channel"
-        status = ResponseStatus.FAILED
-        status_code = StatusCode.INTERNAL_SERVER_ERROR
         logger.error(f"response: {response}\n"
                      f"event: {event}\n"
                      f"error: {repr(e)}")
-        error = Error.undefined_error(repr(e))
-        utils.report_slack(1, str(error), SLACK_HOOK)
+        utils.report_slack(1, str(repr(e)), SLACK_HOOK)
         traceback.print_exc()
-
-    return generate_lambda_response(status_code, make_response_body(
-        status, response, error
-    ), cors_enabled=True)
+        return generate_lambda_response(StatusCode.INTERNAL_SERVER_ERROR, make_response_body(
+            ResponseStatus.FAILED, response, Error.undefined_error(repr(e))
+        ), cors_enabled=False)
