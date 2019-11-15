@@ -38,7 +38,7 @@ def create_channel(event, context):
             logger.error(f"response: {response}\n"
                          f"event: {event}")
             return generate_lambda_response(StatusCode.BAD_REQUEST, make_response_body(
-                ResponseStatus.FAILED, "Bad Request", {}
+                ResponseStatus.FAILED, response, {}
             ), cors_enabled=False)
     except Exception as e:
         response = "Failed create channel"
