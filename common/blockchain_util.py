@@ -72,11 +72,12 @@ class BlockChainUtil(object):
         self.contract_instance = self.contract_instance(contract_abi=self.contract, address=self.contract_address)
         print("gas_price == ", self.web3_object.eth.gasPrice)
         print("nonce == ", nonce)
+        gas_price = 3 * (self.web3_object.eth.gasPrice)
         transaction_object = getattr(self.contract_instance.functions, method_name)(
             *positional_inputs).buildTransaction({
             "from": address,
             "nonce": nonce,
-            "gasPrice": self.web3_object.eth.gasPrice,
+            "gasPrice": gas_price,
             "chainId": net_id
         })
         return transaction_object
