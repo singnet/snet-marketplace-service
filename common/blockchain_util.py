@@ -58,7 +58,7 @@ class BlockChainUtil(object):
 
     def get_nonce(self, address):
         """ transaction count includes pending transaction also. """
-        nonce = self.web3_object.eth.getTransactionCount(address, 'pending')
+        nonce = self.web3_object.eth.getTransactionCount(address)
         return nonce
 
     def sign_transaction_with_private_key(self, private_key, transaction_object):
