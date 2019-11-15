@@ -127,7 +127,6 @@ def request_handler(event, context):
 
         if not path_exist:
             return generate_lambda_response(404, "Not Found")
-        logger.info(f"Wallets::response_data: {response_data}")
 
         if response_data is None:
             error_message = format_error_message(status="failed", error="Bad Request", resource=path,
