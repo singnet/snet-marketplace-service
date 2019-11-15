@@ -25,7 +25,7 @@ class WalletService:
         )
 
         logger.info(f"create_channel_response {create_channel_response}")
-        if create_channel_response["statusCode"] != 200:
+        if create_channel_response["statusCode"] != 201:
             raise Exception(f"Failed to create channel")
 
         create_channel_response_body = json.loads(create_channel_response["body"])
