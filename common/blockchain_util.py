@@ -77,7 +77,7 @@ class BlockChainUtil(object):
             "from": address,
             "nonce": nonce,
             "gasPrice": self.web3_object.eth.gasPrice,
-            "chainId": 3
+            "chainId": net_id
         })
         return transaction_object
 
