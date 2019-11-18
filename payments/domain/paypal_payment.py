@@ -1,34 +1,32 @@
 import paypalrestsdk
 
+from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from common.constant import PaymentStatus, PAYMENT_METHOD_PAYPAL
-from common.ssm_utils import get_ssm_parameter
 from payments.domain.payment import Payment
-from payments.config import MODE, PAYPAL_CLIENT, PAYPAL_SECRET, PAYMENT_CANCEL_URL, PAYMENT_RETURN_URL
+from payments.config import MODE, PAYPAL_CLIENT, PAYPAL_SECRET, PAYMENT_CANCEL_URL, PAYMENT_RETURN_URL, REGION_NAME
 
 logger = get_logger(__name__)
-
-client_id = get_ssm_parameter(PAYPAL_CLIENT)
-client_secret = get_ssm_parameter(PAYPAL_SECRET)
 
 
 class PaypalPayment(Payment):
 
     def __init__(self, payment_id, amount, currency, payment_status, created_at, payment_details):
         super().__init__(payment_id, amount, currency, payment_status, created_at, payment_details)
+        self.boto_utils = BotoUtils(region_name=REGION_NAME)
+
+    def initiate_payment(self, order_id, item_details):
         try:
-            self.payee_client_api = paypalrestsdk.Api({
-              'mode': MODE,
-              'client_id': client_id,
-              'client_secret': client_secret}
-            )
+            payee_client_api = paypalrestsdk.Api({
+                'mode': MODE,
+                'client_id': self.boto_utils.get_ssm_parameter(PAYPAL_CLIENT),
+                'client_secret': self.boto_utils.get_ssm_parameter(PAYPAL_SECRET)
+            })
         except Exception as e:
             logger.error("Failed to get ssm parameters")
             raise e
-
-    def initiate_payment(self, order_id, item_details):
         paypal_payload = self.get_paypal_payload(order_id, item_details["org_id"], item_details["service_id"])
-        payment = paypalrestsdk.Payment(paypal_payload, api=self.payee_client_api)
+        payment = paypalrestsdk.Payment(paypal_payload, api=payee_client_api)
 
         if not payment.create():
             logger.error(f"Paypal error:{payment.error}")
@@ -55,9 +53,18 @@ class PaypalPayment(Payment):
         return response_payload
 
     def execute_transaction(self, paid_payment_details):
+        try:
+            payee_client_api = paypalrestsdk.Api({
+                'mode': MODE,
+                'client_id': self.boto_utils.get_ssm_parameter(PAYPAL_CLIENT),
+                'client_secret': self.boto_utils.get_ssm_parameter(PAYPAL_SECRET)
+            })
+        except Exception as e:
+            logger.error("Failed to get ssm parameters")
+            raise e
         paypal_payment_id = self._payment_details["payment_id"]
         payer_id = paid_payment_details["payer_id"]
-        payment = paypalrestsdk.Payment.find(paypal_payment_id, api=self.payee_client_api)
+        payment = paypalrestsdk.Payment.find(paypal_payment_id, api=payee_client_api)
 
         if payment.execute({"payer_id": payer_id}):
             logger.info(f"Paypal payment execution is success for paypal_payment_id:{paypal_payment_id}")

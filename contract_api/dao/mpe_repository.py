@@ -18,8 +18,7 @@ class MPERepository(CommonRepository):
         upsert_mpe_channel_params = [mpe_data['channelId'], mpe_data['sender'], mpe_data['recipient'],
                                      mpe_data['groupId'],
                                      mpe_data['amount'], 0.0, mpe_data['nonce'], mpe_data['expiration'],
-                                     mpe_data['signer'], datetime.utcnow(
-            ),
+                                     mpe_data['signer'], datetime.utcnow(),
                                      datetime.utcnow(), mpe_data['amount'], 0.0, mpe_data['nonce'],
                                      mpe_data['expiration'], datetime.utcnow()]
         query_response = self.connection.execute(upsert_mpe_channel, upsert_mpe_channel_params)
@@ -43,7 +42,7 @@ class MPERepository(CommonRepository):
         })
 
     def get_mpe_channels(self, channel_id):
-        select_mp_channel = "SELECT row_id, channel_id, sender, recipient, groupId, balance_in_cogs, pending, nonce, expiration, signer, row_created, row_updated from mpe_channel where channel_id = %s"
+        select_mp_channel = "SELECT row_id, channel_id, sender, recipient, groupId, balance_in_cogs, pending, nonce, consumed_balance, expiration, signer, row_created, row_updated from mpe_channel where channel_id = %s"
         params = [channel_id]
 
         query_response = self.connection.execute(select_mp_channel, params)
@@ -55,3 +54,8 @@ class MPERepository(CommonRepository):
 
         query_response = self.connection.execute(select_mp_channel, params)
         return query_response
+
+    def update_consumed_balance(self, channel_id, consumed_balance):
+        self.connection.execute(
+            "UPDATE `mpe_channel` SET consumed_balance = %s WHERE channel_id = %s", [consumed_balance, channel_id]
+        )

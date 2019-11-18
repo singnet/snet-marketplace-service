@@ -70,7 +70,7 @@ def run_migrations_online():
     with connectable.connect() as connection:
         context.configure(
             connection=connection, target_metadata=target_metadata,
-            version_table="contract_api_alembic_version"
+            version_table="alembic_version_contract_api"
         )
 
         with context.begin_transaction():
