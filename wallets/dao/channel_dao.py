@@ -1,3 +1,4 @@
+import json
 from datetime import datetime as dt
 
 from common.constant import TransactionStatus
@@ -48,3 +49,11 @@ class ChannelDAO:
 
         transaction_history = self.repo.execute(query, order_id)
         return transaction_history
+
+    def persist_create_channel_event(self, payload, created_at):
+        query = "INSERT INTO create_channel_event (payload, row_created, row_updated, status)" \
+                "VALUES (%s, %s, %s, %s)"
+        query_response = self.repo.execute(query, [json.dumps(payload), created_at, created_at, TransactionStatus.PENDING])
+        if query_response[0] == 1:
+            return True
+        return False
