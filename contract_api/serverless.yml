@@ -410,7 +410,7 @@ functions:
             type: request
             arn: ${file(./config.${self:provider.stage}.json):SIGN_AUTHORIZER}
             identitySource: ${file(./config.${self:provider.stage}.json):SIGN_HEADERS}
-            name: update-consume-balance-authorizer
+            name: update_consume_balance_authorizer
           path: /channel/{channel_id}/consume
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
