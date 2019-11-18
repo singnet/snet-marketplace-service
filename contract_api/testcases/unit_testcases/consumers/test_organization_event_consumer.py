@@ -34,6 +34,18 @@ class TestOrganizationEventConsumer(unittest.TestCase):
                 "email_id": "abcd@abcdef.com",
                 "phone": "1234567890",
             },
+            "contacts": [
+                {
+                    "contact_type": "support",
+                    "email_id": "abcd@abcdef.com",
+                    "phone": "1234567890"
+                },
+                {
+                    "contact_type": "dummy",
+                    "email_id": "dummy@abcdef.com",
+                    "phone": "1234567890"
+                }
+            ],
             "description": {},
             "assets": {
                 "hero_image": "QmNW2jjz11enwbRrF1mJ2LdaQPeZVEtmKU8Uq7kpEkmXCc/hero_gene-annotation.png"
@@ -83,5 +95,6 @@ class TestOrganizationEventConsumer(unittest.TestCase):
 
         organization = organization_repository.get_organization(org_id='snet')
         org_group = organization_repository.get_organization_group(org_id='snet')
-        assert organization =={'org_id': 'snet', 'organization_name': 'organization_name', 'owner_address': '0xB18aac9DE3852F988147287daBD19dF2791C2e0f', 'org_metadata_uri': 'QmSesBRhz67FRixd3mGMNmQE5sNyZxdDgcNMEBmmhHk2X6', 'description': '{}', 'org_assets_url': '{"hero_image": "http://test-s3-push"}', 'assets_hash': '{"hero_image": "QmNW2jjz11enwbRrF1mJ2LdaQPeZVEtmKU8Uq7kpEkmXCc/hero_gene-annotation.png"}'}
+        assert organization ==  {'org_id': 'snet', 'organization_name': 'organization_name', 'owner_address': '0xB18aac9DE3852F988147287daBD19dF2791C2e0f', 'org_metadata_uri': 'QmSesBRhz67FRixd3mGMNmQE5sNyZxdDgcNMEBmmhHk2X6', 'description': '{}', 'org_assets_url': '{"hero_image": "http://test-s3-push"}', 'assets_hash': '{"hero_image": "QmNW2jjz11enwbRrF1mJ2LdaQPeZVEtmKU8Uq7kpEkmXCc/hero_gene-annotation.png"}', 'contacts': '[{"phone": "1234567890", "email_id": "abcd@abcdef.com", "contact_type": "support"}, {"phone": "1234567890", "email_id": "dummy@abcdef.com", "contact_type": "dummy"}]'}
         assert org_group == [{'org_id': 'snet', 'group_id': '99ybRIg2wAx55mqVsA6sB4S7WxPQHNKqa4BPu/bhj+U=', 'group_name': 'default_group2', 'payment': '{"payment_address": "0x671276c61943A35D5F230d076bDFd91B0c47bF09", "payment_channel_storage_type": "etcd", "payment_expiration_threshold": 40320, "payment_channel_storage_client": {"endpoints": ["http://127.0.0.1:2379"], "request_timeout": "3s", "connection_timeout": "5s"}}'}, {'org_id': 'snet', 'group_id': '99ybRIg2wAx55mqVsA6sB6S7WxPQHNKqa4BPu/bhj+U=', 'group_name': 'default_group2', 'payment': '{"payment_address": "0x671276c61943A35D5F230d076bDFd91B0c47bF09", "payment_channel_storage_type": "etcd", "payment_expiration_threshold": 40320, "payment_channel_storage_client": {"endpoints": ["http://127.0.0.1:2379"], "request_timeout": "3s", "connection_timeout": "5s"}}'}]
+

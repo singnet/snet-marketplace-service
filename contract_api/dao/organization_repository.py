@@ -11,7 +11,7 @@ class OrganizationRepository(CommonRepository):
         super().__init__(connection)
 
     def get_organization(self, org_id):
-        query = "select  org_id, organization_name, owner_address,org_metadata_uri, description, org_assets_url, assets_hash from organization where org_id = %s"
+        query = "select  org_id, organization_name, owner_address,org_metadata_uri, description, org_assets_url, assets_hash ,contacts from organization where org_id = %s"
         query_param = [org_id]
         reposne = self.connection.execute(query, query_param)
         if reposne:
@@ -25,14 +25,14 @@ class OrganizationRepository(CommonRepository):
         return response
 
     def create_or_updatet_organization(self, org_id, org_name, owner_address, org_metadata_uri, description,
-                                       assets_hash, assets_url):
-        upsert_query = "Insert into organization (org_id, organization_name, owner_address, org_metadata_uri,description, assets_hash,org_assets_url, row_updated, row_created) " \
-                       "VALUES ( %s, %s, %s, %s, %s , %s ,%s ,%s, %s ) " \
-                       "ON DUPLICATE KEY UPDATE organization_name = %s, owner_address = %s, org_metadata_uri = %s, row_updated = %s  ,description = %s ,assets_hash =%s , org_assets_url = %s"
-        upsert_params = [org_id, org_name, owner_address, org_metadata_uri, description, assets_hash, assets_url,
+                                       assets_hash, assets_url,contacts):
+        upsert_query = "Insert into organization (org_id, organization_name, owner_address, org_metadata_uri,description, assets_hash,org_assets_url, contacts, row_updated, row_created) " \
+                       "VALUES ( %s, %s, %s, %s, %s , %s ,%s ,%s, %s ,%s) " \
+                       "ON DUPLICATE KEY UPDATE organization_name = %s, owner_address = %s, org_metadata_uri = %s, row_updated = %s  ,description = %s ,assets_hash =%s , org_assets_url = %s , contacts = %s"
+        upsert_params = [org_id, org_name, owner_address, org_metadata_uri, description, assets_hash, assets_url,contacts,
                          datetime.utcnow(), datetime.utcnow(),
                          org_name, owner_address, org_metadata_uri,
-                         datetime.utcnow(), description, assets_hash, assets_url]
+                         datetime.utcnow(), description, assets_hash, assets_url,contacts]
 
         reposne = self.connection.execute(upsert_query, upsert_params)
 
