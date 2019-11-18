@@ -102,12 +102,13 @@ class OrganizationCreatedEventConsumer(OrganizationEventConsumer):
                 new_assets_hash = ipfs_org_metadata.get('assets', {})
                 new_assets_url_mapping = self._get_new_assets_url(org_id, ipfs_org_metadata)
                 description = ipfs_org_metadata.get('description', {})
+                contacts= ipfs_org_metadata.get('contacts', {})
 
                 self._organization_repository.create_or_updatet_organization(
                     org_id=org_id, org_name=ipfs_org_metadata["org_name"], owner_address=org_data[3],
                     org_metadata_uri=org_metadata_uri, description=json.dumps(description),
                     assets_hash=json.dumps(new_assets_hash),
-                    assets_url=json.dumps(new_assets_url_mapping))
+                    assets_url=json.dumps(new_assets_url_mapping),contacts=json.dumps(contacts))
                 self._organization_repository.delete_organization_groups(org_id=org_id)
                 self._organization_repository.create_organization_groups(
                     org_id=org_id, groups=ipfs_org_metadata["groups"])

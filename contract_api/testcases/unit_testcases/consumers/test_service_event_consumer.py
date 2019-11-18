@@ -60,7 +60,13 @@ class TestOrganizationEventConsumer(unittest.TestCase):
             "service_description": {
                 "url": "https://mozi-ai.github.io/annotation-service/",
                 "description": "Use this service to annotate a humane genome with uniform terms, Reactome pathway memberships, and BioGrid protein interactions."
-            }
+            },
+            "contributors": [
+                {
+                    "name": "dummy dummy",
+                    "email_id": "dummy@dummy.io"
+                }
+            ]
         }
 
         mock_s3_push.return_value = "https://test-s3-push"
@@ -73,20 +79,10 @@ class TestOrganizationEventConsumer(unittest.TestCase):
                                                                      service_id='gene-annotation-service')
         service_tags = service_repository.get_service_tags(org_id='snet', service_id='gene-annotation-service')
 
-        print(123)
+
         assert service == {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'service_path': None,
                            'ipfs_hash': 'QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf', 'is_curated': 0}
-        assert service_metadata == {'org_id': 'snet', 'service_id': 'gene-annotation-service',
-                                    'display_name': 'Annotation Service',
-                                    'description': 'Use this service to annotate a humane genome with uniform terms, Reactome pathway memberships, and BioGrid protein interactions.',
-                                    'url': 'https://mozi-ai.github.io/annotation-service/', 'json': '',
-                                    'model_ipfs_hash': 'QmXqonxB9EvNBe11J8oCYXMQAtPKAb2x8CyFLmQpkvVaLf',
-                                    'encoding': 'proto', 'type': 'grpc',
-                                    'mpe_address': '0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C',
-                                    'assets_url': '{"hero_image": "https://test-s3-push"}',
-                                    'assets_hash': '{"hero_image": "QmVcE6fEDP764ibadXTjZHk251Lmt5xAxdc4P9mPA4kksk/hero_gene-annotation-2b.png"}',
-                                    'service_rating': '{"rating": 0.0, "total_users_rated": 0}', 'ranking': 1,
-                                    'contributors': None}
+        assert service_metadata ==  {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'display_name': 'Annotation Service', 'description': 'Use this service to annotate a humane genome with uniform terms, Reactome pathway memberships, and BioGrid protein interactions.', 'url': 'https://mozi-ai.github.io/annotation-service/', 'json': '', 'model_ipfs_hash': 'QmXqonxB9EvNBe11J8oCYXMQAtPKAb2x8CyFLmQpkvVaLf', 'encoding': 'proto', 'type': 'grpc', 'mpe_address': '0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C', 'assets_url': '{"hero_image": "https://test-s3-push"}', 'assets_hash': '{"hero_image": "QmVcE6fEDP764ibadXTjZHk251Lmt5xAxdc4P9mPA4kksk/hero_gene-annotation-2b.png"}', 'service_rating': '{"rating": 0.0, "total_users_rated": 0}', 'ranking': 1, 'contributors': '[{"name": "dummy dummy", "email_id": "dummy@dummy.io"}]'}
         assert service_endpoints == [{'org_id': 'snet', 'service_id': 'gene-annotation-service',
                                       'group_id': 'm5FKWq4hW0foGW5qSbzGSjgZRuKs7A1ZwbIrJ9e96rc=',
                                       'endpoint': 'https://mozi.ai:8000'}]
