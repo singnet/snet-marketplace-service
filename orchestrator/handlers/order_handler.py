@@ -9,7 +9,7 @@ from common.repository import Repository
 from common.utils import validate_dict, generate_lambda_response, make_response_body, Utils, format_error_message
 from orchestrator.config import NETWORKS, NETWORK_ID, SLACK_HOOK
 from orchestrator.errors import Error
-from orchestrator.exceptions import PaymentInitiateFailed, ChannelCreationFailed
+from orchestrator.exceptions import PaymentInitiateFailed, ChannelCreationFailed, FundChannelFailed
 from orchestrator.services.order_service import OrderService
 
 patch_all()
@@ -35,15 +35,16 @@ def initiate(event, context):
             status = ResponseStatus.FAILED
             error = {}
             response = "Bad Request"
-            logger.error(response)
-            logger.info(event)
+            logger.error(f"response: {response}\n"
+                         f"event: {event}")
         error = {}
 
     except PaymentInitiateFailed:
         response = "Failed to initiate order"
-        logger.error(response)
-        logger.info(event)
         error = Error.PAYMENT_INITIATE_FAILED
+        logger.error(f"response: {response}\n"
+                     f"event: {event}\n"
+                     f"error: PAYMENT_INITIATE_FAILED")
         status = ResponseStatus.FAILED
         utils.report_slack(1, error, SLACK_HOOK)
         status_code = StatusCode.INTERNAL_SERVER_ERROR
@@ -51,14 +52,14 @@ def initiate(event, context):
 
     except Exception as e:
         response = "Failed to initiate order"
-        logger.error(response)
-        logger.info(event)
-        logger.error(e)
+        logger.error(f"response: {response}\n"
+                     f"event: {event}\n"
+                     f"error: {repr(e)}")
+        traceback.print_exc()
         error = Error.UNDEFINED_ERROR
         status = ResponseStatus.FAILED
         status_code = StatusCode.INTERNAL_SERVER_ERROR
         utils.report_slack(1, str(error), SLACK_HOOK)
-        traceback.print_exc()
     return generate_lambda_response(status_code, make_response_body(
         status, response, error
     ), cors_enabled=True)
@@ -83,18 +84,29 @@ def execute(event, context):
         error = {}
     except ChannelCreationFailed as e:
         response = e.get_wallet_details()
-        logger.error(response)
-        logger.info(event)
-        error = Error.PAYMENT_INITIATE_FAILED
+        logger.error(f"response: {response}\n"
+                     f"event: {event}\n"
+                     f"error: CHANNEL_CREATION_FAILED")
+        error = Error.CHANNEL_CREATION_FAILED
+        status = ResponseStatus.FAILED
+        status_code = StatusCode.INTERNAL_SERVER_ERROR
+        utils.report_slack(1, str(error), SLACK_HOOK)
+
+    except FundChannelFailed as e:
+        response = "Failed to fund channel"
+        logger.error(f"response: {response}\n"
+                     f"event: {event}\n"
+                     f"error: FUND_CHANNEL_FAILED")
+        error = Error.FUND_CHANNEL_FAILED
         status = ResponseStatus.FAILED
         status_code = StatusCode.INTERNAL_SERVER_ERROR
         utils.report_slack(1, str(error), SLACK_HOOK)
 
     except Exception as e:
         response = "Failed to execute order"
-        logger.error(response)
-        logger.info(event)
-        logger.error(e)
+        logger.error(f"response: {response}\n"
+                     f"event: {event}\n"
+                     f"error: {repr(e)}")
         error = Error.UNDEFINED_ERROR
         status = ResponseStatus.FAILED
         status_code = StatusCode.INTERNAL_SERVER_ERROR
@@ -130,19 +142,20 @@ def get(event, context):
             status_code = StatusCode.BAD_REQUEST
             status = ResponseStatus.FAILED
             response = "Bad Request"
-            logger.error(response)
-            logger.info(event)
+            logger.error(f"response: {response}\n"
+                         f"event: {event}")
         else:
             status_code = StatusCode.CREATED
             status = ResponseStatus.SUCCESS
 
     except Exception as e:
         response = "Failed to get orders"
+        logger.error(f"response: {response}\n"
+                     f"event: {event}\n"
+                     f"error: {repr(e)}")
         error = Error.UNDEFINED_ERROR
         status = ResponseStatus.FAILED
         status_code = StatusCode.INTERNAL_SERVER_ERROR
-        logger.error(response)
-        logger.info(event)
         utils.report_slack(1, str(error), SLACK_HOOK)
         traceback.print_exc()
     return generate_lambda_response(status_code, make_response_body(
@@ -168,8 +181,8 @@ def cancel(event, context):
             status_code = StatusCode.BAD_REQUEST
             status = ResponseStatus.FAILED
             response = "Bad Request"
-            logger.error(response)
-            logger.info(event)
+            logger.error(f"response: {response}\n"
+                         f"event: {event}")
         else:
             status_code = StatusCode.CREATED
             status = ResponseStatus.SUCCESS
@@ -179,8 +192,9 @@ def cancel(event, context):
         error = Error.UNDEFINED_ERROR
         status = ResponseStatus.FAILED
         status_code = StatusCode.INTERNAL_SERVER_ERROR
-        logger.error(response)
-        logger.info(event)
+        logger.error(f"response: {response}\n"
+                     f"event: {event}\n"
+                     f"error: {repr(e)}")
         utils.report_slack(1, error, SLACK_HOOK)
         traceback.print_exc()
     return generate_lambda_response(status_code, make_response_body(
