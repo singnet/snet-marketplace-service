@@ -80,11 +80,3 @@ def record_create_channel_event(event, context):
         return generate_lambda_response(StatusCode.INTERNAL_SERVER_ERROR, make_response_body(
             ResponseStatus.FAILED, response, Error.undefined_error(repr(e))
         ), cors_enabled=False)
-
-
-if __name__ == "__main__":
-    record_create_channel_event({
-        "path": "/wallet/channel",
-        "body": "{\"order_id\": \"b7d9ffa0-07a3-11ea-b3cf-9e57fd86be16\", \"sender\": \"0x4A3Beb90be90a28fd6a54B6AE449dd93A3E26dd0\", \"signature\": \"0x7be1502b09f5997339571f4885194417d6ca84ca65f98a9a2883d981d071ba6255bcc83399b93bc60d70d4b10e33db626eac0dafd863b91e00a6b4b2c3586eb61b\", \"r\": \"0x7be1502b09f5997339571f4885194417d6ca84ca65f98a9a2883d981d071ba62\", \"s\": \"0x55bcc83399b93bc60d70d4b10e33db626eac0dafd863b91e00a6b4b2c3586eb6\", \"v\": 27, \"group_id\": \"m5FKWq4hW0foGW5qSbzGSjgZRuKs7A1ZwbIrJ9e96rc=\", \"org_id\": \"snet\", \"amount\": 2, \"currency\": \"USD\", \"recipient\": \"0xfA8a01E837c30a3DA3Ea862e6dB5C6232C9b800A\", \"current_block_no\": 6780504, \"amount_in_cogs\": 4000}",
-        "httpMethod": "POST"
-    }, None)
