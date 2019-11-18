@@ -90,23 +90,30 @@ def update_consumed_balance(event, context):
                         f"org_id: {org_id} group_id: {group_id} service_id: {service_id} "
                         f"authorized_amount: {authorized_amount} full_amount: {full_amount} nonce: {nonce}")
             response = obj_mpe.update_consumed_balance(channel_id, authorized_amount, full_amount, nonce)
-            status_code = StatusCode.CREATED
-            status = ResponseStatus.SUCCESS
+            return generate_lambda_response(
+                StatusCode.CREATED,
+                make_response_body(ResponseStatus.SUCCESS, response, {}),
+                cors_enabled=True
+            )
         else:
-            status_code = StatusCode.BAD_REQUEST
-            response = "Bad Request"
-            status = ResponseStatus.FAILED
-            logger.error(response)
+            logger.error("Bad Request")
             logger.info(event)
-        error = {}
+            return generate_lambda_response(
+                StatusCode.BAD_REQUEST,
+                make_response_body(ResponseStatus.FAILED, "Bad Request", {}),
+                cors_enabled=True
+            )
+
     except Exception as e:
         response = "Failed to update consumed balance"
         logger.error(response)
-        status = ResponseStatus.FAILED
         logger.info(event)
         logger.error(e)
-        status_code = StatusCode.INTERNAL_SERVER_ERROR
         error = Error.undefined_error(repr(e))
         utils.report_slack(1, str(error), SLACK_HOOK)
         traceback.print_exc()
-    return generate_lambda_response(status_code, make_response_body(status, response, error), cors_enabled=True)
+        return generate_lambda_response(
+            StatusCode.INTERNAL_SERVER_ERROR,
+            make_response_body(ResponseStatus.FAILED, response, error),
+            cors_enabled=True
+        )
