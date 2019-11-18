@@ -405,7 +405,7 @@ class OrderService:
             except Exception as e:
                 logger.error("Failed to create channel")
                 logger.error(repr(e))
-                raise ChannelCreationFailed
+                raise ChannelCreationFailed("Failed to create channel", wallet_details=order_data)
 
         elif order_type == OrderType.FUND_CHANNEL.value:
 
@@ -443,7 +443,7 @@ class OrderService:
             except Exception as e:
                 logger.error("Failed to fund channel")
                 logger.error(repr(e))
-                raise FundChannelFailed
+                raise FundChannelFailed()
         else:
             raise Exception("Order type is not valid.")
 
