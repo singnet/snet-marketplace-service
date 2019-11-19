@@ -12,15 +12,14 @@ class TestDappMananger(unittest.TestCase):
     dapp_order_manager = OrderManager()
 
     def test_create_order(self):
-        status, response = self.dapp_order_manager.create_order(100, "USD", {"item": "item", "quantity": 2}, "user")
-        if status:
-            assert "order_id" in response
-            assert "item_details" in response
-            if "price" in response:
-                assert "amount" in response["price"]
-                assert "currency" in response["price"]
-            else:
-                assert False
+        response = self.dapp_order_manager.create_order(100, "USD", {"item": "item", "quantity": 2}, "user")
+        assert "order_id" in response
+        assert "item_details" in response
+        if "price" in response:
+            assert "amount" in response["price"]
+            assert "currency" in response["price"]
+        else:
+            assert False
 
     def test_initiate_order(self):
         self.repo.add_item(
@@ -38,16 +37,15 @@ class TestDappMananger(unittest.TestCase):
                 username="user",
             )
         )
-        status, response = self.dapp_order_manager.initiate_payment_against_order("order_test_123", 100, "USD", "paypal")
-        if status:
-            if "price" in response:
-                assert "amount" in response["price"]
-                assert "currency" in response["price"]
-            else:
-                assert False
-            assert "payment_id" in response
-            assert "payment" in response
-            assert "order_id" in response
+        response = self.dapp_order_manager.initiate_payment_against_order("order_test_123", 100, "USD", "paypal")
+        if "price" in response:
+            assert "amount" in response["price"]
+            assert "currency" in response["price"]
+        else:
+            assert False
+        assert "payment_id" in response
+        assert "payment" in response
+        assert "order_id" in response
 
     def test_execute_order(self):
         pass

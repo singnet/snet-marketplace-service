@@ -16,7 +16,7 @@ class OrderManager:
         logger.info(f"Order({order.get_order_id()}) created and persisted into database")
 
         response = {
-            "order_id": order.get_order_id(),
+            "order_idcreate_payment": order.get_order_id(),
             "item_details": order.get_item_details(),
             "price": {
                 "amount": order.get_amount(),
