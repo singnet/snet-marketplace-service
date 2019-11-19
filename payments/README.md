@@ -1,8 +1,8 @@
 # Payment service
 
-It consist of there components
+It consist of three components
 
-Order ,Payment Refund
+Order, Payment and Refund
 
 A order can have mulitple payments and multiple refunds
 
