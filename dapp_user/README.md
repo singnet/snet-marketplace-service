@@ -1,4 +1,3 @@
-
 # User Service
   
 It consist of following components  
