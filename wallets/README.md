@@ -8,6 +8,10 @@ We support two types of wallet
 
 It consist of following components
 
+**User**  &rarr;* **Wallet**
+
+**Wallet**  &rarr;* **Channel**
+
 Wallet Creation, View and Register Wallet, Channel Creation For Third Party and Update Channel Transaction
 
 ### Wallet Creation
@@ -18,7 +22,7 @@ Creates wallet on Ethereum platform. Multiple wallet can be created by user. A w
 
 View and Register wallet for a user.
 
-### Channel creation for third party and Add funds to channel.
+### Channel Creation for third party and Add funds to channel.
 
 Channel with funds is needed to use AI service in DApp. This component helps to create channel for third party and has capability to add funds to a channel.
 
