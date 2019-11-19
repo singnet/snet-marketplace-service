@@ -157,6 +157,7 @@ class MPE:
                            'recipient': record['recipient'],
                            'balance_in_cogs': record['balance_in_cogs'],
                            'pending': record['pending'],
+                           'consumed_balance': record["consumed_balance"],
                            'nonce': record['nonce'],
                            'expiration': record['expiration'],
                            'signer': record['signer'],
