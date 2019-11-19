@@ -120,9 +120,8 @@ class MPE:
             channel = {
                 'channel_id': rec['channel_id'],
                 'recipient': rec['recipient'],
-                'balance_in_cogs': rec['balance_in_cogs'],
+                'balance_in_cogs': rec['balance_in_cogs'] - rec["consumed_balance"],
                 'pending': rec['pending'],
-                'consumed_balance': rec["consumed_balance"],
                 'nonce': rec['nonce'],
                 'expiration': rec['expiration'],
                 'signer': rec['signer'],
@@ -155,9 +154,8 @@ class MPE:
             if record["recipient"] == record["payment"]["payment_address"]:
                 channel = {'channel_id': record['channel_id'],
                            'recipient': record['recipient'],
-                           'balance_in_cogs': record['balance_in_cogs'],
+                           'balance_in_cogs': record['balance_in_cogs'] - record["consumed_balance"],
                            'pending': record['pending'],
-                           'consumed_balance': record["consumed_balance"],
                            'nonce': record['nonce'],
                            'expiration': record['expiration'],
                            'signer': record['signer'],
