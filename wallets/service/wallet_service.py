@@ -3,11 +3,12 @@ from datetime import datetime
 
 from web3 import Web3
 from common.blockchain_util import BlockChainUtil
+from common.boto_utils import BotoUtils
 from common.constant import TransactionStatus
 from common.logger import get_logger
-from common.ssm_utils import get_ssm_parameter
 from common.utils import Utils
-from wallets.config import NETWORK_ID, NETWORKS, SIGNER_ADDRESS, EXECUTOR_ADDRESS, EXECUTOR_KEY, MINIMUM_AMOUNT_IN_COGS_ALLOWED
+from wallets.config import NETWORK_ID, NETWORKS, SIGNER_ADDRESS, EXECUTOR_ADDRESS, EXECUTOR_KEY, \
+    MINIMUM_AMOUNT_IN_COGS_ALLOWED, REGION_NAME
 from wallets.constant import GENERAL_WALLET_TYPE, MPE_ADDR_PATH, MPE_CNTRCT_PATH
 from wallets.dao.channel_dao import ChannelDAO
 from wallets.dao.wallet_data_access_object import WalletDAO
@@ -19,6 +20,7 @@ logger = get_logger(__name__)
 class WalletService:
     def __init__(self, obj_repo):
         self.repo = obj_repo
+        self.boto_utils = BotoUtils(region_name=REGION_NAME)
         self.obj_blockchain_util = BlockChainUtil(
             provider_type="HTTP_PROVIDER",
             provider=NETWORKS[NETWORK_ID]['http_provider']
@@ -86,8 +88,8 @@ class WalletService:
 
     def open_channel_by_third_party(self, order_id, sender, signature, r, s, v, group_id,
                                     org_id, amount, currency, recipient, current_block_no, amount_in_cogs):
-        self.EXECUTOR_WALLET_ADDRESS = get_ssm_parameter(EXECUTOR_ADDRESS)
-        self.EXECUTOR_WALLET_KEY = get_ssm_parameter(EXECUTOR_KEY)
+        self.EXECUTOR_WALLET_ADDRESS = self.boto_utils.get_ssm_parameter(EXECUTOR_ADDRESS)
+        self.EXECUTOR_WALLET_KEY = self.boto_utils.get_ssm_parameter(EXECUTOR_KEY)
         method_name = "openChannelByThirdParty"
         self.mpe_address = self.obj_blockchain_util.read_contract_address(
             net_id=NETWORK_ID, path=MPE_ADDR_PATH,
@@ -142,8 +144,8 @@ class WalletService:
         return "OK"
 
     def add_funds_to_channel(self, org_id, group_id, channel_id, sender, recipient, order_id, amount, currency, amount_in_cogs):
-        self.EXECUTOR_WALLET_ADDRESS = get_ssm_parameter(EXECUTOR_ADDRESS)
-        self.EXECUTOR_WALLET_KEY = get_ssm_parameter(EXECUTOR_KEY)
+        self.EXECUTOR_WALLET_ADDRESS = self.boto_utils.get_ssm_parameter(EXECUTOR_ADDRESS)
+        self.EXECUTOR_WALLET_KEY = self.boto_utils.get_ssm_parameter(EXECUTOR_KEY)
         method_name = "channelAddFunds"
         # amount_in_cogs = self.__calculate_amount_in_cogs(amount=amount, currency=currency)
         self.__validate__cogs(amount_in_cogs=amount_in_cogs)
