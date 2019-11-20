@@ -10,4 +10,4 @@ def mpe_event_listener_handler(event, context):
 
 
 def rfai_event_listener_handler(event,context):
-    RFAIEventListener().listen_And_publish_rfai_events()
+    RFAIEventListener().listen_and_publish_rfai_events()
