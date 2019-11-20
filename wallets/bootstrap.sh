@@ -1,4 +1,4 @@
 set -ex
 
 export PYTHONPATH=$PWD
-python wallets/my_file.py
+python wallets/create_channel_event_consumer.py

@@ -1,7 +1,7 @@
 import json
 
 from common.constant import TransactionStatus
-from common.logger import file_logger
+from common.logger import get_logger
 from common.repository import Repository
 from common.utils import Utils
 from wallets.config import NETWORKS, NETWORK_ID, SLACK_HOOK
@@ -12,7 +12,7 @@ connection = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
 wallet_dao = WalletDAO(connection)
 utils = Utils()
 
-logger = file_logger(__name__)
+logger = get_logger(__name__)
 
 
 def create_channel_event_consumer():

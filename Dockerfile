@@ -1,8 +1,7 @@
-FROM python:3.6-slim
+ARG BASE_IMAGE=ubuntu:18.04
+FROM $BASE_IMAGE
 
 WORKDIR /usr/src/app
-RUN apt-get update && \
-    apt-get -y install bash gcc
 COPY wallets/requirement.txt ./
 RUN pip install --no-cache-dir -r requirement.txt
 COPY wallets/ wallets/
