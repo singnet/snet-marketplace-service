@@ -1,4 +1,5 @@
 import json
+from time import sleep
 
 from common.constant import TransactionStatus
 from common.logger import get_logger
@@ -48,4 +49,6 @@ def create_channel_event_consumer():
 
 
 if __name__ == "__main__":
-    create_channel_event_consumer()
+    while True:
+        create_channel_event_consumer()
+        sleep(300)
