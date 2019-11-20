@@ -103,7 +103,7 @@ class RegistryEventListener(EventListener):
 class RFAIEventListener(EventListener):
     EVENTS_LIMIT = 30
 
-    def listen_And_publish_rfai_events(self):
+    def listen_and_publish_rfai_events(self):
         rfai_events = self._event_repository.read_rfai_events()
         error_map, success_map = self._publish_events(rfai_events)
         # need to change is to batch update
@@ -115,6 +115,3 @@ class RFAIEventListener(EventListener):
 
         return error_map, success_map
 
-
-if __name__ == "__main__":
-    EventListener().listen_and_publish_registry_events()
