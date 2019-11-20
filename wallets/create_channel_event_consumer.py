@@ -48,4 +48,4 @@ def create_channel_event_consumer():
 
 
 if __name__ == "__main__":
-    create_channel_wrapper()
+    create_channel_event_consumer()
