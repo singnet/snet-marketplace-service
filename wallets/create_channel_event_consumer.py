@@ -15,7 +15,7 @@ utils = Utils()
 logger = file_logger(__name__)
 
 
-def create_channel_wrapper():
+def create_channel_event_consumer():
 
     try:
         create_channel_event_details = wallet_dao.get_pending_create_channel_event()
