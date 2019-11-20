@@ -1,4 +1,5 @@
 attrdict==2.0.1
+boto3
 certifi==2019.6.16
 chardet==3.0.4
 cytoolz==0.10.0
