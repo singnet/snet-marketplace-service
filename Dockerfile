@@ -8,4 +8,4 @@ RUN pip install --no-cache-dir -r requirement.txt
 COPY wallets/ wallets/
 COPY common/ common/
 
-#ENTRYPOINT bash wallets/bootstrap.sh
+ENTRYPOINT bash wallets/bootstrap.sh
