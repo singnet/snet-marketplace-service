@@ -96,7 +96,7 @@ class RegistryEventProducer(BlockchainEventProducer):
 
     def _get_base_contract_path(self):
         return os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '..', '..', 'node_modules', 'singularitynet-rfai-contracts'))
+            os.path.join(os.path.dirname(__file__), '..', '..', 'node_modules', 'singularitynet-platform-contracts'))
 
     def produce_event(self, net_id):
         last_block_number = self._event_repository.read_last_read_block_number_for_event(self._contract_name)
@@ -151,7 +151,7 @@ class MPEEventProducer(BlockchainEventProducer):
 
     def _get_base_contract_path(self):
         return os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '..', '..', 'node_modules', 'singularitynet-rfai-contracts'))
+            os.path.join(os.path.dirname(__file__), '..', '..', 'node_modules', 'singularitynet-platform-contracts'))
 
     def _push_events_to_repository(self, events):
         for event in events:
