@@ -17,7 +17,7 @@ logger = get_logger(__name__)
 
 
 def create_channel_event_consumer():
-
+    logger.info("Getting events")
     try:
         create_channel_event_details = wallet_dao.get_pending_create_channel_event()
         if create_channel_event_details is None:
@@ -31,6 +31,7 @@ def create_channel_event_consumer():
         return
 
     try:
+        logger.info(f"fetched event:{create_channel_event_details}")
         response = wallet_manager.open_channel_by_third_party(
             order_id=payload['order_id'], sender=payload['sender'], signature=payload['signature'],
             r=payload['r'], s=payload['s'], v=payload['v'], current_block_no=payload['current_block_no'],
@@ -46,6 +47,7 @@ def create_channel_event_consumer():
                               f"event_id: {create_channel_event_details['row_id']} "
                               f"NETWORK_ID:{NETWORK_ID}, error: {(repr(e))}", SLACK_HOOK)
         wallet_dao.update_create_channel_event(create_channel_event_details, TransactionStatus.FAILED)
+    logger.info("done getting events")
 
 
 if __name__ == "__main__":
