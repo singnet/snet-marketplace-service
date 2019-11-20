@@ -3,7 +3,7 @@ FROM $BASE_IMAGE
 
 WORKDIR /usr/src/app
 COPY wallets/requirement.txt ./
-RUN pip install --no-cache-dir -r requirement.txt
+RUN pip3 install --no-cache-dir -r requirement.txt
 COPY wallets/ wallets/
 COPY common/ common/
 
