@@ -1,5 +1,6 @@
 from datetime import datetime as dt
 
+from common.constant import TransactionStatus
 from common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -65,3 +66,18 @@ class WalletDAO:
         except Exception as e:
             self.repo.rollback_transaction()
             print(repr(e))
+
+    def get_pending_create_channel_event(self):
+        query = "SELECT row_id, payload, status, row_created FROM create_channel_event WHERE status = %s LIMIT 1"
+        create_channel_event = self.repo.execute(query, TransactionStatus.PENDING)
+        if len(create_channel_event) == 0:
+            return None
+        return create_channel_event[0]
+
+    def update_create_channel_event(self, event_details, status):
+        query = "UPDATE `create_channel_event` SET status = %s WHERE row_id = %s"
+        execute_query_result =  self.repo.execute(query, [event_details["row_id"], status])
+        if execute_query_result[0] == 1:
+            return True
+        else:
+            return False
