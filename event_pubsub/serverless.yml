@@ -62,6 +62,7 @@ package:
     - node_modules/**
   include:
     - node_modules/singularitynet-platform-contracts/**
+    - node_modules/singularitynet-rfai-contracts/**
 
 functions:
   rfai_event_publisher:
