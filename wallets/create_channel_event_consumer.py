@@ -6,11 +6,11 @@ from common.logger import get_logger
 from common.repository import Repository
 from common.utils import Utils
 from wallets.config import NETWORKS, NETWORK_ID, SLACK_HOOK
-from wallets.dao.wallet_data_access_object import WalletDAO
+from wallets.dao.channel_dao import ChannelDAO
 from wallets.service.wallet_service import WalletService
 
 connection = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
-wallet_dao = WalletDAO(connection)
+channel_dao = ChannelDAO(connection)
 utils = Utils()
 
 logger = get_logger(__name__)
@@ -19,7 +19,7 @@ logger = get_logger(__name__)
 def create_channel_event_consumer():
     logger.info("Getting events")
     try:
-        create_channel_event_details = wallet_dao.get_pending_create_channel_event()
+        create_channel_event_details = channel_dao.get_one_create_channel_event(TransactionStatus.PENDING)
         if create_channel_event_details is None:
             return
         wallet_manager = WalletService(connection)
@@ -39,14 +39,14 @@ def create_channel_event_consumer():
             amount=payload['amount'], currency=payload['currency'],
             amount_in_cogs=payload['amount_in_cogs']
         )
-        wallet_dao.update_create_channel_event(create_channel_event_details, TransactionStatus.SUCCESS)
+        channel_dao.update_create_channel_event(create_channel_event_details, TransactionStatus.SUCCESS)
 
     except Exception as e:
         logger.error(f"Exception occurred while create channel, event: {create_channel_event_details}")
         utils.report_slack(1, f"Exception occurred while create channel, module: create_channel_consumer, "
                               f"event_id: {create_channel_event_details['row_id']} "
                               f"NETWORK_ID:{NETWORK_ID}, error: {(repr(e))}", SLACK_HOOK)
-        wallet_dao.update_create_channel_event(create_channel_event_details, TransactionStatus.FAILED)
+        channel_dao.update_create_channel_event(create_channel_event_details, TransactionStatus.FAILED)
     logger.info("done getting events")
 
 
