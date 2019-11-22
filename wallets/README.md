@@ -1,4 +1,4 @@
-### Wallet Service
+# Wallet Service
 
 We support two types of wallet
 * General Wallet
