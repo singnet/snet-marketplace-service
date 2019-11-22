@@ -1,3 +1,4 @@
+import decimal
 import json
 
 from common.blockchain_util import BlockChainUtil
@@ -73,9 +74,9 @@ class MPE:
             channel = {
                 "channel_id": channel_record["channel_id"],
                 "recipient": channel_record["recipient"],
-                'balance_in_cogs': channel_record['balance_in_cogs'],
-                'consumed_balance': channel_record["consumed_balance"],
-                'current_balance': channel_record['balance_in_cogs'] - channel_record["consumed_balance"],
+                'balance_in_cogs': decimal.Decimal(channel_record['balance_in_cogs']),
+                'consumed_balance': decimal.Decimal(channel_record["consumed_balance"]),
+                'current_balance': decimal.Decimal(channel_record['balance_in_cogs']) - decimal.Decimal(channel_record["consumed_balance"]),
                 "pending": channel_record["pending"],
                 "nonce": channel_record["nonce"],
                 "expiration": channel_record["expiration"],
@@ -121,9 +122,9 @@ class MPE:
             channel = {
                 'channel_id': rec['channel_id'],
                 'recipient': rec['recipient'],
-                'balance_in_cogs': rec['balance_in_cogs'],
-                'consumed_balance': rec["consumed_balance"],
-                'current_balance': rec['balance_in_cogs'] - rec["consumed_balance"],
+                'balance_in_cogs': decimal.Decimal(rec['balance_in_cogs']),
+                'consumed_balance': decimal.Decimal(rec["consumed_balance"]),
+                'current_balance': decimal.Decimal(rec['balance_in_cogs']) - decimal.Decimal(rec["consumed_balance"]),
                 'pending': rec['pending'],
                 'nonce': rec['nonce'],
                 'expiration': rec['expiration'],
