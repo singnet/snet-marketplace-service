@@ -81,7 +81,7 @@ class WalletService:
         return amount_in_cogs
 
     def record_create_channel_event(self, payload):
-        current_time = datetime.utcnow().strftime("%Y/%m/%d %H:%M:%S")
+        current_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         if not self.channel_dao.persist_create_channel_event(payload, current_time):
             raise Exception("Failed to create record")
         return {}

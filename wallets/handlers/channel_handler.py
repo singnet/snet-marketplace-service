@@ -73,6 +73,7 @@ def record_create_channel_event(event, context):
     except Exception as e:
         response = "Failed to record create channel event"
         logger.error(f"response: {response}\n"
+                     f"stage: {NETWORK_ID}"
                      f"event: {event}\n"
                      f"error: {repr(e)}")
         utils.report_slack(1, str(repr(e)), SLACK_HOOK)
