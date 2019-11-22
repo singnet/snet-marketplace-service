@@ -76,7 +76,8 @@ class MPE:
                 "recipient": channel_record["recipient"],
                 'balance_in_cogs': decimal.Decimal(channel_record['balance_in_cogs']),
                 'consumed_balance': decimal.Decimal(channel_record["consumed_balance"]),
-                'current_balance': decimal.Decimal(channel_record['balance_in_cogs']) - decimal.Decimal(channel_record["consumed_balance"]),
+                'current_balance': decimal.Decimal(channel_record['balance_in_cogs']) - decimal.Decimal(
+                    channel_record["consumed_balance"]),
                 "pending": channel_record["pending"],
                 "nonce": channel_record["nonce"],
                 "expiration": channel_record["expiration"],
@@ -158,9 +159,10 @@ class MPE:
             if record["recipient"] == record["payment"]["payment_address"]:
                 channel = {'channel_id': record['channel_id'],
                            'recipient': record['recipient'],
-                           'balance_in_cogs': record['balance_in_cogs'],
-                           'consumed_balance': record["consumed_balance"],
-                           'current_balance': record['balance_in_cogs'] - record["consumed_balance"],
+                           'balance_in_cogs': decimal.Decimal(record['balance_in_cogs']),
+                           'consumed_balance': decimal.Decimal(record["consumed_balance"]),
+                           'current_balance': decimal.Decimal(record['balance_in_cogs']) - decimal.Decimal(
+                               record["consumed_balance"]),
                            'pending': record['pending'],
                            'nonce': record['nonce'],
                            'expiration': record['expiration'],
