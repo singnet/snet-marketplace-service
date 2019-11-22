@@ -51,8 +51,8 @@ class OrganizationEventConsumer(EventConsumer):
 
         existing_organization = self._organization_repository.get_organization(org_id)
         if existing_organization:
-            existing_assets_hash = existing_organization["assets_hash"]
-            existing_assets_url = existing_organization["org_assets_url"]
+            existing_assets_hash = json.loads(existing_organization["assets_hash"])
+            existing_assets_url = json.loads(existing_organization["org_assets_url"])
         new_assets_url_mapping = self._comapre_assets_and_push_to_s3(existing_assets_hash, new_assets_hash,
                                                                      existing_assets_url, org_id,
                                                                      "")
