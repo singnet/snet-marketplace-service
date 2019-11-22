@@ -13,7 +13,7 @@ class WalletService:
 
     def create_channel(self, open_channel_body):
         create_channel_transaction_payload = {
-            "path": "/wallet/channel",
+            "path": "/wallet/channel/event",
             "body": json.dumps(open_channel_body),
             "httpMethod": "POST"
         }

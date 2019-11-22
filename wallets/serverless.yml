@@ -163,7 +163,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /wallet/channel/push
+          path: /wallet/channel/event
           private: true
 
   channelTxnStatus:
