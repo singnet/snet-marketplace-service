@@ -1,4 +1,5 @@
 import base64
+from datetime import datetime
 
 from web3 import Web3
 from common.blockchain_util import BlockChainUtil
@@ -78,6 +79,12 @@ class WalletService:
             raise Exception("Currency %s not supported.", currency)
 
         return amount_in_cogs
+
+    def record_create_channel_event(self, payload):
+        current_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        if not self.channel_dao.persist_create_channel_event(payload, current_time):
+            raise Exception("Failed to create record")
+        return {}
 
     def open_channel_by_third_party(self, order_id, sender, signature, r, s, v, group_id,
                                     org_id, amount, currency, recipient, current_block_no, amount_in_cogs):

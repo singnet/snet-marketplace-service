@@ -1,6 +1,7 @@
 
 class EventConsumer(object):
 
+    #move s3 util to this construc
     def _comapre_assets_and_push_to_s3(self, existing_assets_hash, new_assets_hash, existing_assets_url, org_id,
                                        service_id):
         """
@@ -33,7 +34,7 @@ class EventConsumer(object):
                 # remove all existing assets if exits
                 if new_asset_type in existing_assets_url:
                     for url in existing_assets_url[new_asset_type]:
-                        self.s3_util.delete_file_from_s3(url)
+                        self._s3_util.delete_file_from_s3(url)
 
                 # add new files to s3 and update the url
                 for hash in new_assets_hash[new_asset_type]:
@@ -51,7 +52,7 @@ class EventConsumer(object):
                 else:
                     if new_asset_type in existing_assets_url:
                         url_of_file_to_be_removed = existing_assets_url[new_asset_type]
-                        self.s3_util.delete_file_from_s3(
+                        self._s3_util.delete_file_from_s3(
                             url_of_file_to_be_removed)
 
                     hash_of_file_to_be_pushed_to_s3 = new_assets_hash[new_asset_type]

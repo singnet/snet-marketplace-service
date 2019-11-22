@@ -1,5 +1,6 @@
 from datetime import datetime as dt
 
+from common.constant import TransactionStatus
 from common.logger import get_logger
 
 logger = get_logger(__name__)
