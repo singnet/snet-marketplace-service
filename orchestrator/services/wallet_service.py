@@ -1,7 +1,7 @@
 import json
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
-from orchestrator.config import REGION_NAME, WALLETS_SERVICE_ARN, GET_CHANNEL_API_OLD_ARN, CREATE_CHANNEL_ARN, \
+from orchestrator.config import REGION_NAME, WALLETS_SERVICE_ARN, GET_CHANNEL_API_OLD_ARN, \
     CREATE_CHANNEL_EVENT_ARN
 
 logger = get_logger(__name__)
