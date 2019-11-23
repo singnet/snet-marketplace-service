@@ -149,7 +149,7 @@ functions:
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
 
-  push-create-channel-event:
+  create-channel-event:
     warmup: true
     handler: wallets/handlers/channel_handler.record_create_channel_event
     role: ${file(./config.${self:provider.stage}.json):ROLE}
