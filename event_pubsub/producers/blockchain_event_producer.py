@@ -79,7 +79,7 @@ class RegistryEventProducer(BlockchainEventProducer):
         event_name = event.event
         json_str = str(dict(event.args))
         processed = 0
-        transaction_hash = str(event.transactionHash)
+        transaction_hash =  event.transactionHash.hex()
         log_index = event.logIndex
         error_code = 0
         error_message = ""
@@ -138,7 +138,7 @@ class MPEEventProducer(BlockchainEventProducer):
         event_name = event.event
         json_str = str(dict(event.args))
         processed = 0
-        transaction_hash = str(event.transactionHash)
+        transaction_hash = event.transactionHash.hex()
         log_index = event.logIndex
         error_code = 0
         error_message = ""
@@ -195,7 +195,7 @@ class RFAIEventProducer(BlockchainEventProducer):
         event_name = event.event
         json_str = str(dict(event.args))
         processed = 0
-        transaction_hash = str(event.transactionHash)
+        transaction_hash = event.transactionHash.hex()
         log_index = event.logIndex
         error_code = 0
         error_message = ""
