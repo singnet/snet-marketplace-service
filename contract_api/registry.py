@@ -96,6 +96,8 @@ class Registry:
         record["assets_url"] = json.loads(record["assets_url"])
         record["org_assets_url"] = json.loads(record["org_assets_url"])
         record["assets_hash"] = json.loads(record["assets_hash"])
+        record["contributors"] = json.loads(record["contributors"])
+        record["contacts"] = json.loads(record["contacts"])
 
     def _search_query_data(self, sub_qry, sort_by, order_by, offset, limit, filter_query, values):
         try:
@@ -317,6 +319,7 @@ class Registry:
                 return []
             self.obj_utils.clean(basic_service_data)
 
+
             org_group_data = self.repo.execute(
                 "SELECT * FROM org_group WHERE org_id = %s", [org_id])
             self.obj_utils.clean(org_group_data)
@@ -328,6 +331,7 @@ class Registry:
                                      [org_id, service_id])
 
             result = basic_service_data[0]
+
             self._convert_service_metadata_str_to_json(result)
 
             for rec in org_group_data:
