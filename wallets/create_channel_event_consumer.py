@@ -1,4 +1,5 @@
 import json
+import traceback
 from time import sleep
 
 from common.constant import TransactionStatus
@@ -25,7 +26,8 @@ def create_channel_event_consumer():
         wallet_manager = WalletService(connection)
         payload = json.loads(create_channel_event_details["payload"])
     except Exception as e:
-        logger.error("Failed to get record for create channel")
+        logger.error(f"Failed to get record for create channel, error:{repr(e)}")
+        traceback.print_exc()
         utils.report_slack(1, f"Failed to get record for create channel, module: create_channel_consumer, "
                               f"NETWORK_ID:{NETWORK_ID}, error: {(repr(e))}", SLACK_HOOK)
         return
@@ -42,10 +44,11 @@ def create_channel_event_consumer():
         channel_dao.update_create_channel_event(create_channel_event_details, TransactionStatus.SUCCESS)
 
     except Exception as e:
-        logger.error(f"Exception occurred while create channel, event: {create_channel_event_details}")
+        logger.error(f"Exception occurred while create channel, event: {create_channel_event_details}, error:{repr(e)}")
         utils.report_slack(1, f"Exception occurred while create channel, module: create_channel_consumer, "
                               f"event_id: {create_channel_event_details['row_id']} "
                               f"NETWORK_ID:{NETWORK_ID}, error: {(repr(e))}", SLACK_HOOK)
+        traceback.print_exc()
         channel_dao.update_create_channel_event(create_channel_event_details, TransactionStatus.FAILED)
     logger.info("done getting events")
 
