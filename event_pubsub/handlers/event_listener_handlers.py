@@ -1,4 +1,4 @@
-from event_pubsub.listeners.event_listeners import RegistryEventListener,MPEEventListener
+from event_pubsub.listeners.event_listeners import RegistryEventListener, MPEEventListener, RFAIEventListener
 
 
 def registry_event_listener_handler(event, context):
@@ -7,3 +7,7 @@ def registry_event_listener_handler(event, context):
 
 def mpe_event_listener_handler(event, context):
     MPEEventListener().listen_and_publish_mpe_events()
+
+
+def rfai_event_listener_handler(event,context):
+    RFAIEventListener().listen_and_publish_rfai_events()

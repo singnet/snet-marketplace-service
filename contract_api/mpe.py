@@ -1,18 +1,20 @@
+import decimal
 import json
 
 from common.blockchain_util import BlockChainUtil
 from common.logger import get_logger
 from common.utils import Utils
-from contract_api.config import NETWORKS
+from contract_api.config import NETWORKS, NETWORK_ID
+from contract_api.dao.mpe_repository import MPERepository
 
 logger = get_logger(__name__)
 
 
 class MPE:
-    def __init__(self, net_id, obj_repo):
+    def __init__(self, obj_repo):
         self.repo = obj_repo
         self.obj_util = Utils()
-        self.blockchain_util = BlockChainUtil(provider_type="WS_PROVIDER", provider=NETWORKS[net_id]["ws_provider"])
+        self.blockchain_util = BlockChainUtil(provider_type="WS_PROVIDER", provider=NETWORKS[NETWORK_ID]["ws_provider"])
 
     def get_channels(self, user_address, org_id=None, service_id=None, group_id=None):
         if user_address and org_id and group_id:
@@ -31,7 +33,8 @@ class MPE:
         last_block_no = self.blockchain_util.get_current_block_no()
         logger.info(f"got block number {last_block_no}")
         channel_details_query = "SELECT mc.channel_id, mc.sender, mc.recipient, mc.groupId as group_id, " \
-                                "mc.balance_in_cogs, mc.pending, mc.nonce, mc.expiration, mc.signer, og.org_id, " \
+                                "mc.balance_in_cogs, mc.pending, mc.nonce, mc.consumed_balance, mc.expiration, " \
+                                "mc.signer, og.org_id, " \
                                 "org.organization_name, IF(mc.expiration > %s, 'active','inactive') AS status, " \
                                 "og.group_name, org.org_assets_url " \
                                 "FROM mpe_channel AS mc JOIN org_group AS og ON mc.groupId = og.group_id " \
@@ -71,7 +74,10 @@ class MPE:
             channel = {
                 "channel_id": channel_record["channel_id"],
                 "recipient": channel_record["recipient"],
-                "balance_in_cogs": channel_record["balance_in_cogs"],
+                'balance_in_cogs': channel_record['balance_in_cogs'],
+                'consumed_balance': channel_record["consumed_balance"],
+                'current_balance': str(decimal.Decimal(channel_record['balance_in_cogs']) - decimal.Decimal(
+                    channel_record["consumed_balance"])),
                 "pending": channel_record["pending"],
                 "nonce": channel_record["nonce"],
                 "expiration": channel_record["expiration"],
@@ -114,15 +120,19 @@ class MPE:
                                          'channels': []
                                          }
 
-            channel = {'channel_id': rec['channel_id'],
-                       'recipient': rec['recipient'],
-                       'balance_in_cogs': rec['balance_in_cogs'],
-                       'pending': rec['pending'],
-                       'nonce': rec['nonce'],
-                       'expiration': rec['expiration'],
-                       'signer': rec['signer'],
-                       'status': rec['status']
-                       }
+            channel = {
+                'channel_id': rec['channel_id'],
+                'recipient': rec['recipient'],
+                'balance_in_cogs': rec['balance_in_cogs'],
+                'consumed_balance': rec["consumed_balance"],
+                'current_balance': str(decimal.Decimal(rec['balance_in_cogs']) - decimal.Decimal(
+                    rec["consumed_balance"])),
+                'pending': rec['pending'],
+                'nonce': rec['nonce'],
+                'expiration': rec['expiration'],
+                'signer': rec['signer'],
+                'status': rec['status']
+            }
             endpoint = {'endpoint': rec['endpoint'],
                         'is_available': rec['endpoint'],
                         'last_check_timestamp': rec['last_check_timestamp']
@@ -151,6 +161,9 @@ class MPE:
                 channel = {'channel_id': record['channel_id'],
                            'recipient': record['recipient'],
                            'balance_in_cogs': record['balance_in_cogs'],
+                           'consumed_balance': record["consumed_balance"],
+                           'current_balance': str(decimal.Decimal(record['balance_in_cogs']) - decimal.Decimal(
+                               record["consumed_balance"])),
                            'pending': record['pending'],
                            'nonce': record['nonce'],
                            'expiration': record['expiration'],
@@ -170,3 +183,20 @@ class MPE:
         except Exception as e:
             print(repr(e))
             raise e
+
+    def update_consumed_balance(self, channel_id, authorized_amount, full_amount, nonce):
+        mpe_repo = MPERepository(self.repo)
+        channel = mpe_repo.get_mpe_channels(channel_id)
+        if len(channel) != 0 and self.validate_channel_consume_data(channel[0], authorized_amount, full_amount, nonce):
+            mpe_repo.update_consumed_balance(channel_id, authorized_amount)
+        else:
+            raise Exception("Channel validation failed")
+        return {}
+
+    @staticmethod
+    def validate_channel_consume_data(channel_details, authorized_amount, full_amount, nonce):
+        if channel_details["consumed_balance"] < authorized_amount \
+                and channel_details["balance_in_cogs"] == full_amount \
+                and channel_details["nonce"] == nonce:
+            return True
+        return False

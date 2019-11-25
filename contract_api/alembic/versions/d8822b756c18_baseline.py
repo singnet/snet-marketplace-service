@@ -48,9 +48,9 @@ def upgrade():
               `org_assets_url` json DEFAULT NULL,
               `row_created` timestamp NULL DEFAULT NULL,
               `row_updated` timestamp NULL DEFAULT NULL,
-              `description` json DEFAULT NULL,
-              `assets_url` json DEFAULT NULL,
+              `description` varchar(256) DEFAULT NULL,
               `assets_hash` json DEFAULT NULL,
+              `contacts` json DEFAULT NULL,
               PRIMARY KEY (`row_id`),
               UNIQUE KEY `uq_org` (`org_id`)
             )
@@ -104,6 +104,7 @@ def upgrade():
               `service_id` varchar(128) NOT NULL,
               `display_name` varchar(256) DEFAULT NULL,
               `description` varchar(1024) DEFAULT NULL,
+              `short_description` varchar(1024) DEFAULT NULL,
               `url` varchar(256) DEFAULT NULL,
               `json` varchar(1024) DEFAULT NULL,
               `model_ipfs_hash` varchar(256) DEFAULT NULL,
@@ -114,7 +115,7 @@ def upgrade():
               `assets_hash` json DEFAULT NULL,
               `service_rating` json DEFAULT NULL,
               `ranking` int(4) DEFAULT '1',
-              `contributors` varchar(128) DEFAULT NULL,
+              `contributors` json DEFAULT NULL,
               `row_created` timestamp NULL DEFAULT NULL,
               `row_updated` timestamp NULL DEFAULT NULL,
               PRIMARY KEY (`row_id`),

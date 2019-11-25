@@ -14,6 +14,7 @@ down_revision = None
 branch_labels = None
 depends_on = None
 
+
 def upgrade():
     conn = op.get_bind()
     conn.execute("""
@@ -25,7 +26,6 @@ def upgrade():
           `row_created` timestamp NULL DEFAULT NULL,
           `row_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
           PRIMARY KEY (`row_id`),
-          UNIQUE KEY `uq_user` (`username`),
           UNIQUE KEY `uq_wallet` (`address`)
        );
     """)

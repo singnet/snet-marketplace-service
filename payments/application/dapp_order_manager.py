@@ -11,7 +11,7 @@ class OrderManager:
 
     def create_order(self, amount, currency, item_details, username):
         order = OrderFactory.create_order(amount, currency, item_details, username)
-        
+
         self.order_repository.persist_order(order)
         logger.info(f"Order({order.get_order_id()}) created and persisted into database")
 
@@ -27,14 +27,14 @@ class OrderManager:
 
     def initiate_payment_against_order(self, order_id, amount, currency, payment_method):
         order = OrderFactory.create_order_from_repository_order(self.order_repository.get_order_by_order_id(order_id))
-        
+
         payment_details = order.create_payment(amount, currency, payment_method)
         payment = payment_details["payment_object"]
         logger.info(f"Payment {payment.get_payment_id()} created against order {order.get_order_id()}")
-        
+
         self.order_repository.persist_payment(order, payment.get_payment_id())
         logger.info(f"Payment persisted into the database")
-        
+
         response = {
             "price": {
                 "amount": payment.get_amount(),
@@ -45,24 +45,24 @@ class OrderManager:
             "order_id": order.get_order_id()
         }
         response["payment"]["payment_method"] = payment_method
-        
+
         return response
 
     def execute_payment_against_order(self, order_id, payment_id, payment_details, payment_method):
         order = OrderFactory.create_order_from_repository_order(self.order_repository.get_order_by_order_id(order_id))
-        
+
         payment = order.execute_payment(payment_id, payment_details, payment_method)
         logger.info("Payment execution is complete")
-        
+
         OrderRepository().update_payment_status(order, payment.get_payment_id())
         logger.info("Payment status updated in the database")
-        
+
         response = {
             "payment_id": payment.get_payment_id(),
             "payment": payment.get_payment_details(),
             "order_id": order.get_order_id()
         }
-        
+
         return response
 
     def get_order_details_for_user(self, username):

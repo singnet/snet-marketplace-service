@@ -65,11 +65,9 @@ class Repository:
     def begin_transaction(self):
         self.connection.begin()
 
-
     def commit_transaction(self):
         self.connection.commit()
         self.auto_commit = True
 
     def rollback_transaction(self):
         self.connection.rollback()
-

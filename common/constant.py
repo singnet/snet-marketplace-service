@@ -26,6 +26,7 @@ class StatusCode:
     CREATED = 201
     OK = 200
 
+
 class ResponseStatus:
     FAILED = "failed"
     SUCCESS = "success"
