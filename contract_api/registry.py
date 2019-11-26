@@ -96,8 +96,13 @@ class Registry:
         record["assets_url"] = json.loads(record["assets_url"])
         record["org_assets_url"] = json.loads(record["org_assets_url"])
         record["assets_hash"] = json.loads(record["assets_hash"])
-        record["contributors"] = json.loads(record["contributors"])
-        record["contacts"] = json.loads(record["contacts"])
+        record["contributors"] = json.loads(record.get("contributors", []))
+        record["contacts"] = json.loads(record.get("contacts", []))
+
+        if record["contacts"] is None:
+            record["contacts"] = []
+        if record["contributors"] is None:
+            record["contributors"] = []
 
     def _search_query_data(self, sub_qry, sort_by, order_by, offset, limit, filter_query, values):
         try:
