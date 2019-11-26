@@ -96,8 +96,8 @@ class Registry:
         record["assets_url"] = json.loads(record["assets_url"])
         record["org_assets_url"] = json.loads(record["org_assets_url"])
         record["assets_hash"] = json.loads(record["assets_hash"])
-        record["contributors"] = json.loads(record.get("contributors", []))
-        record["contacts"] = json.loads(record.get("contacts", []))
+        record["contributors"] = json.loads(record.get("contributors", "[]"))
+        record["contacts"] = json.loads(record.get("contacts", "[]"))
 
         if record["contacts"] is None:
             record["contacts"] = []
