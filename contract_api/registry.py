@@ -316,15 +316,8 @@ class Registry:
             tags = []
             org_groups_dict = {}
             basic_service_data = self.repo.execute(
-                "SELECT M.service_row_id, M.org_id, M.service_id, M.display_name, "
-                "M.description as service_description, M.url as service_url, M.json as `json`, "
-                "M.model_ipfs_hash as service_model_ipfs_hash, M.encoding as service_encoding, "
-                "M.`type` as service_type, M.mpe_address, M.assets_url as service_assets_url, "
-                "M.assets_hash as service_assets_hash, M.service_rating, M.ranking as service_ranking, "
-                "M.contributors as service_contributors, M.short_description as service_short_description, "
-                "S.service_path, S.ipfs_hash as service_ipfs_hash, S.is_curated, S.service_email,"
-                "O.org_id, O.organization_name, O.owner_address, O.org_metadata_uri, O.org_email, O.org_assets_url, "
-                "O.assets_hash as org_assets_hash, O.description as org_description, O.contacts as org_contacts "
+                "SELECT M.*, S.*, O.org_id, O.organization_name, O.owner_address, O.org_metadata_uri, O.org_email, "
+                "O.org_assets_url, O.assets_hash, O.description as org_description, O.contacts "
                 "FROM service_metadata M, service S, organization O;"
                 "WHERE O.org_id = S.org_id AND S.row_id = M.service_row_id AND S.org_id = %s "
                 "AND S.service_id = %s AND S.is_curated = 1", [org_id, service_id])
