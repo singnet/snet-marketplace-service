@@ -318,7 +318,7 @@ class Registry:
             basic_service_data = self.repo.execute(
                 "SELECT M.*, S.*, O.org_id, O.organization_name, O.owner_address, O.org_metadata_uri, O.org_email, "
                 "O.org_assets_url, O.assets_hash, O.description as org_description, O.contacts "
-                "FROM service_metadata M, service S, organization O"
+                "FROM service_metadata M, service S, organization O "
                 "WHERE O.org_id = S.org_id AND S.row_id = M.service_row_id AND S.org_id = %s "
                 "AND S.service_id = %s AND S.is_curated = 1", [org_id, service_id])
             if len(basic_service_data) == 0:
