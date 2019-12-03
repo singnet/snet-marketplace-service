@@ -16,7 +16,7 @@ class NotificationType(Enum):
     SUPPORT = "support"
 
 
-SENDERS = {NotificationType.SUPPORT: "Tech Support <tech-support@singularitynet.io>"}
+SENDERS = {NotificationType.SUPPORT.value: "Tech Support <tech-support@singularitynet.io>"}
 BODY_HTMLS = {NotificationType.SUPPORT.value: """<html>
 <head></head>
 <body>
@@ -79,3 +79,6 @@ def main(proxy_event, context):
         'statusCode': 200,
         'body': json.dumps('Received!')
     }
+
+if __name__ == '__main__':
+    main()
