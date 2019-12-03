@@ -96,6 +96,13 @@ class Registry:
         record["assets_url"] = json.loads(record["assets_url"])
         record["org_assets_url"] = json.loads(record["org_assets_url"])
         record["assets_hash"] = json.loads(record["assets_hash"])
+        record["contributors"] = json.loads(record.get("contributors", "[]"))
+        record["contacts"] = json.loads(record.get("contacts", "[]"))
+
+        if record["contacts"] is None:
+            record["contacts"] = []
+        if record["contributors"] is None:
+            record["contributors"] = []
 
     def _search_query_data(self, sub_qry, sort_by, order_by, offset, limit, filter_query, values):
         try:
@@ -309,13 +316,15 @@ class Registry:
             tags = []
             org_groups_dict = {}
             basic_service_data = self.repo.execute(
-
-                "SELECT * FROM service S, service_metadata M, organization O WHERE O.org_id = S.org_id AND S.row_id = M.service_row_id AND S.org_id = %s "
-
+                "SELECT M.*, S.*, O.org_id, O.organization_name, O.owner_address, O.org_metadata_uri, O.org_email, "
+                "O.org_assets_url, O.assets_hash, O.description as org_description, O.contacts "
+                "FROM service_metadata M, service S, organization O "
+                "WHERE O.org_id = S.org_id AND S.row_id = M.service_row_id AND S.org_id = %s "
                 "AND S.service_id = %s AND S.is_curated = 1", [org_id, service_id])
             if len(basic_service_data) == 0:
                 return []
             self.obj_utils.clean(basic_service_data)
+
 
             org_group_data = self.repo.execute(
                 "SELECT * FROM org_group WHERE org_id = %s", [org_id])
@@ -328,6 +337,7 @@ class Registry:
                                      [org_id, service_id])
 
             result = basic_service_data[0]
+
             self._convert_service_metadata_str_to_json(result)
 
             for rec in org_group_data:

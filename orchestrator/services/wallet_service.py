@@ -1,7 +1,8 @@
 import json
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
-from orchestrator.config import REGION_NAME, WALLETS_SERVICE_ARN, GET_CHANNEL_API_OLD_ARN, CREATE_CHANNEL_ARN
+from orchestrator.config import REGION_NAME, WALLETS_SERVICE_ARN, GET_CHANNEL_API_OLD_ARN, \
+    CREATE_CHANNEL_EVENT_ARN
 
 logger = get_logger(__name__)
 
@@ -13,13 +14,13 @@ class WalletService:
 
     def create_channel(self, open_channel_body):
         create_channel_transaction_payload = {
-            "path": "/wallet/channel",
+            "path": "/wallet/channel/event",
             "body": json.dumps(open_channel_body),
             "httpMethod": "POST"
         }
 
         create_channel_response = self.boto_client.invoke_lambda(
-            lambda_function_arn=CREATE_CHANNEL_ARN,
+            lambda_function_arn=CREATE_CHANNEL_EVENT_ARN,
             invocation_type='RequestResponse',
             payload=json.dumps(create_channel_transaction_payload)
         )

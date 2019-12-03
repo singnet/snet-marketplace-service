@@ -223,8 +223,7 @@ class OrderService:
                 username=username, order_id=order_id, order_type=order_type,
                 status=status, payment_id=payment_id,
                 payment_method=payment_method,
-                raw_payment_data=json.dumps(paid_payment_details),
-                transaction_hash=processed_order_data["transaction_hash"]
+                raw_payment_data=json.dumps(paid_payment_details)
             )
             self.obj_transaction_history_dao.insert_transaction_history(obj_transaction_history=obj_transaction_history)
             processed_order_data["price"] = price

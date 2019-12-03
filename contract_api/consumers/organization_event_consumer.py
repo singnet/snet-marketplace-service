@@ -51,8 +51,8 @@ class OrganizationEventConsumer(EventConsumer):
 
         existing_organization = self._organization_repository.get_organization(org_id)
         if existing_organization:
-            existing_assets_hash = existing_organization["assets_hash"]
-            existing_assets_url = existing_organization["org_assets_url"]
+            existing_assets_hash = json.loads(existing_organization["assets_hash"])
+            existing_assets_url = json.loads(existing_organization["org_assets_url"])
         new_assets_url_mapping = self._comapre_assets_and_push_to_s3(existing_assets_hash, new_assets_hash,
                                                                      existing_assets_url, org_id,
                                                                      "")
@@ -101,7 +101,7 @@ class OrganizationCreatedEventConsumer(OrganizationEventConsumer):
 
                 new_assets_hash = ipfs_org_metadata.get('assets', {})
                 new_assets_url_mapping = self._get_new_assets_url(org_id, ipfs_org_metadata)
-                description = ipfs_org_metadata.get('description', {})
+                description = ipfs_org_metadata.get('description', "")
                 contacts= ipfs_org_metadata.get('contacts', {})
 
                 self._organization_repository.create_or_updatet_organization(
@@ -148,3 +148,4 @@ class OrganizationDeletedEventConsumer(OrganizationEventConsumer):
             logger.exception(str(e))
             self._connection.rollback_transaction()
             raise e
+

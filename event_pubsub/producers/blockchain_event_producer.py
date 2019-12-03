@@ -1,11 +1,9 @@
 import os
 
-from common.blockchain_util import BlockChainUtil
+from common.blockchain_util import BlockChainUtil, ContractType
 from common.logger import get_logger
-from event_pubsub.config import WS_PROVIDER, NETWORKS
 from event_pubsub.event_repository import EventRepository
 from event_pubsub.producers.event_producer import EventProducer
-from event_pubsub.repository import Repository
 
 logger = get_logger(__name__)
 
@@ -15,11 +13,12 @@ class BlockchainEventProducer(EventProducer):
         self._blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
         self._event_repository = EventRepository(repository)
 
+    def _get_base_contract_path(self):
+        pass
+
     def _get_events_from_blockchain(self, start_block_number, end_block_number, net_id):
 
-        base_contract_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '..', '..', 'node_modules', 'singularitynet-platform-contracts'))
-
+        base_contract_path = self._get_base_contract_path()
         contract = self._blockchain_util.get_contract_instance(base_contract_path, self._contract_name, net_id=net_id)
         contract_events = contract.events
         all_blockchain_events = []
@@ -80,7 +79,7 @@ class RegistryEventProducer(BlockchainEventProducer):
         event_name = event.event
         json_str = str(dict(event.args))
         processed = 0
-        transaction_hash = str(event.transactionHash)
+        transaction_hash =  event.transactionHash.hex()
         log_index = event.logIndex
         error_code = 0
         error_message = ""
@@ -95,14 +94,18 @@ class RegistryEventProducer(BlockchainEventProducer):
         for event in events:
             self._push_event(event)
 
+    def _get_base_contract_path(self):
+        return os.path.abspath(
+            os.path.join(os.path.dirname(__file__), '..', '..', 'node_modules', 'singularitynet-platform-contracts'))
+
     def produce_event(self, net_id):
-        last_block_number = self._event_repository.read_last_read_block_number_for_event("REGISTRY")
+        last_block_number = self._event_repository.read_last_read_block_number_for_event(self._contract_name)
         end_block_number = self._get_end_block_number(last_block_number,
                                                       RegistryEventProducer.REGISTRY_EVENT_READ_BATCH_LIMIT)
         logger.info(f"reading registry event from {last_block_number} to {end_block_number}")
         events = self._produce_contract_events(last_block_number, end_block_number, net_id)
         self._push_events_to_repository(events)
-        self._event_repository.update_last_read_block_number_for_event("REGISTRY", end_block_number)
+        self._event_repository.update_last_read_block_number_for_event(self._contract_name, end_block_number)
 
         return events
 
@@ -135,7 +138,7 @@ class MPEEventProducer(BlockchainEventProducer):
         event_name = event.event
         json_str = str(dict(event.args))
         processed = 0
-        transaction_hash = str(event.transactionHash)
+        transaction_hash = event.transactionHash.hex()
         log_index = event.logIndex
         error_code = 0
         error_message = ""
@@ -146,17 +149,21 @@ class MPEEventProducer(BlockchainEventProducer):
                                                 log_index,
                                                 error_code, error_message)
 
+    def _get_base_contract_path(self):
+        return os.path.abspath(
+            os.path.join(os.path.dirname(__file__), '..', '..', 'node_modules', 'singularitynet-platform-contracts'))
+
     def _push_events_to_repository(self, events):
         for event in events:
             self._push_event(event)
 
     def produce_event(self, net_id):
-        last_block_number = self._event_repository.read_last_read_block_number_for_event("MPE")
+        last_block_number = self._event_repository.read_last_read_block_number_for_event(self._contract_name)
         end_block_number = self._get_end_block_number(last_block_number, self.MPE_EVENT_READ_BATCH_LIMIT)
         logger.info(f"reading mpe event from {last_block_number} to {end_block_number}")
         events = self._produce_contract_events(last_block_number, end_block_number, net_id)
         self._push_events_to_repository(events)
-        self._event_repository.update_last_read_block_number_for_event("MPE", end_block_number)
+        self._event_repository.update_last_read_block_number_for_event(self._contract_name, end_block_number)
         return events
 
 
@@ -188,7 +195,7 @@ class RFAIEventProducer(BlockchainEventProducer):
         event_name = event.event
         json_str = str(dict(event.args))
         processed = 0
-        transaction_hash = str(event.transactionHash)
+        transaction_hash = event.transactionHash.hex()
         log_index = event.logIndex
         error_code = 0
         error_message = ""
@@ -196,20 +203,22 @@ class RFAIEventProducer(BlockchainEventProducer):
         # insert into database here
 
         self._event_repository.insert_rfai_event(block_number, event_name, json_str, processed, transaction_hash,
-                                                log_index,
-                                                error_code, error_message)
+                                                 log_index,
+                                                 error_code, error_message)
+
+    def _get_base_contract_path(self):
+        return os.path.abspath(
+            os.path.join(os.path.dirname(__file__), '..', '..', 'node_modules', 'singularitynet-rfai-contracts'))
 
     def _push_events_to_repository(self, events):
         for event in events:
             self._push_event(event)
 
     def produce_event(self, net_id):
-        last_block_number = self._event_repository.read_last_read_block_number_for_event("RFAI")
+        last_block_number = self._event_repository.read_last_read_block_number_for_event(self._contract_name)
         end_block_number = self._get_end_block_number(last_block_number, self.RFAI_EVENT_READ_BATCH_LIMIT)
         logger.info(f"reading mpe event from {last_block_number} to {end_block_number}")
         events = self._produce_contract_events(last_block_number, end_block_number, net_id)
         self._push_events_to_repository(events)
-        self._event_repository.update_last_read_block_number_for_event("RFAI", end_block_number)
+        self._event_repository.update_last_read_block_number_for_event(self._contract_name, end_block_number)
         return events
-
-

@@ -1,3 +1,4 @@
+import decimal
 import json
 
 from common.blockchain_util import BlockChainUtil
@@ -73,9 +74,11 @@ class MPE:
             channel = {
                 "channel_id": channel_record["channel_id"],
                 "recipient": channel_record["recipient"],
-                "balance_in_cogs": channel_record["balance_in_cogs"],
+                'balance_in_cogs': channel_record['balance_in_cogs'],
+                'consumed_balance': channel_record["consumed_balance"],
+                'current_balance': str(decimal.Decimal(channel_record['balance_in_cogs']) - decimal.Decimal(
+                    channel_record["consumed_balance"])),
                 "pending": channel_record["pending"],
-                "consumed_balance": channel_record["consumed_balance"],
                 "nonce": channel_record["nonce"],
                 "expiration": channel_record["expiration"],
                 "signer": channel_record["signer"],
@@ -121,8 +124,10 @@ class MPE:
                 'channel_id': rec['channel_id'],
                 'recipient': rec['recipient'],
                 'balance_in_cogs': rec['balance_in_cogs'],
-                'pending': rec['pending'],
                 'consumed_balance': rec["consumed_balance"],
+                'current_balance': str(decimal.Decimal(rec['balance_in_cogs']) - decimal.Decimal(
+                    rec["consumed_balance"])),
+                'pending': rec['pending'],
                 'nonce': rec['nonce'],
                 'expiration': rec['expiration'],
                 'signer': rec['signer'],
@@ -156,6 +161,9 @@ class MPE:
                 channel = {'channel_id': record['channel_id'],
                            'recipient': record['recipient'],
                            'balance_in_cogs': record['balance_in_cogs'],
+                           'consumed_balance': record["consumed_balance"],
+                           'current_balance': str(decimal.Decimal(record['balance_in_cogs']) - decimal.Decimal(
+                               record["consumed_balance"])),
                            'pending': record['pending'],
                            'nonce': record['nonce'],
                            'expiration': record['expiration'],
