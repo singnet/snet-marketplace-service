@@ -17,7 +17,7 @@ class NotificationType(Enum):
 
 
 SENDERS = {NotificationType.SUPPORT: "Tech Support <tech-support@singularitynet.io>"}
-BODY_HTMLS = {NotificationType.SUPPORT: """<html>
+BODY_HTMLS = {NotificationType.SUPPORT.value: """<html>
 <head></head>
 <body>
   <h1>Header message</h1>
