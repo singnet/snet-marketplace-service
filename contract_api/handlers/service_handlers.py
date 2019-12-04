@@ -1,6 +1,6 @@
 import json
 
-from contract_api.config import NETWORKS, NETWORK_ID
+from contract_api.config import NETWORKS, NETWORK_ID, SLACK_HOOK
 from common.repository import Repository
 from common.utils import Utils, generate_lambda_response
 from contract_api.registry import Registry
@@ -15,7 +15,7 @@ obj_util = Utils()
 logger = get_logger(__name__)
 
 
-@handle_exception_with_slack_notification(logger=logger)
+@handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
 def get_service_get(event, context):
     obj_reg = Registry(obj_repo=db)
     payload_dict = event.get('queryStringParameters')
@@ -25,7 +25,7 @@ def get_service_get(event, context):
         200, {"status": "success", "data": response_data}, cors_enabled=True)
 
 
-@handle_exception_with_slack_notification(logger=logger)
+@handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
 def get_service_post(event, context):
     obj_reg = Registry(obj_repo=db)
     payload_dict = json.loads(event['body'])
@@ -34,7 +34,7 @@ def get_service_post(event, context):
         200, {"status": "success", "data": response_data}, cors_enabled=True)
 
 
-@handle_exception_with_slack_notification(logger=logger)
+@handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
 def get_service_for_given_org(event, context):
     obj_reg = Registry(obj_repo=db)
     org_id = event['pathParameters']['orgId']
@@ -45,7 +45,7 @@ def get_service_for_given_org(event, context):
         200, {"status": "success", "data": response_data}, cors_enabled=True)
 
 
-@handle_exception_with_slack_notification(logger=logger)
+@handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
 def get_group_for_service(event, context):
     obj_reg = Registry(obj_repo=db)
     org_id = event['pathParameters']['orgId']
@@ -56,7 +56,7 @@ def get_group_for_service(event, context):
         200, {"status": "success", "data": response_data}, cors_enabled=True)
 
 
-@handle_exception_with_slack_notification(logger=logger)
+@handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
 def post_rating_for_given_service(event, context):
     obj_reg = Registry(obj_repo=db)
     org_id = event['pathParameters']['orgId']
