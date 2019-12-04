@@ -1,12 +1,16 @@
 import datetime
 import decimal
 import json
-
+import os
+import sys
+import traceback
 import requests
 import web3
 from web3 import Web3
 from common.constant import COGS_TO_AGI
+
 IGNORED_LIST = ['row_id', 'row_created', 'row_updated']
+
 
 class Utils:
     def __init__(self):
@@ -64,7 +68,7 @@ class Utils:
         with decimal.localcontext() as ctx:
             ctx.prec = 8
             """ 1 AGI equals to 100000000 cogs"""
-            agi = decimal.Decimal(cogs)*decimal.Decimal(COGS_TO_AGI)
+            agi = decimal.Decimal(cogs) * decimal.Decimal(COGS_TO_AGI)
             return agi
 
 
@@ -125,4 +129,40 @@ def extract_payload(method, event):
 
 def format_error_message(status, error, payload, net_id, handler=None, resource=None):
     return json.dumps(
-        {'status': status, 'error': error, 'resource': resource, 'payload': payload, 'network_id': net_id, 'handler': handler})
+        {'status': status, 'error': error, 'resource': resource, 'payload': payload, 'network_id': net_id,
+         'handler': handler})
+
+
+def handle_exception_with_slack_notification(*decorator_args, **decorator_kwargs):
+    logger = decorator_kwargs["logger"]
+    NETWORK_ID = os.environ.get("NETWORK_ID")
+
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                path = kwargs.get("event", {}).get("path", None)
+                handler_name = decorator_kwargs.get("handler_name", func.__name__)
+                path_parameters = kwargs.get("event", {}).get("pathParameters", None)
+                query_string_parameters = kwargs.get("event", {}).get("queryStringParameters", None)
+                body = kwargs.get("event", {}).get("body", None)
+                slack_msg = f"\n```Error Reported !! \n" \
+                            f"network_id: {int(NETWORK_ID)}\n" \
+                            f"path: {path}, \n" \
+                            f"handler: {handler_name} \n" \
+                            f"pathParameters: {path_parameters} \n" \
+                            f"queryStringParameters: {query_string_parameters} \n" \
+                            f"body: {body} \n" \
+                            f"x-ray-trace-id: None \n" \
+                            f"error_description: {repr(traceback.format_tb(tb=exc_tb))}```"
+
+                logger.info(f"{slack_msg}")
+                print(slack_msg)
+                Utils().report_slack(type=0, slack_msg=slack_msg, SLACK_HOOK=json.loads(os.environ.get("SLACK_HOOK")))
+
+        return wrapper
+
+    return decorator
+
