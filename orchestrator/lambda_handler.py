@@ -62,7 +62,7 @@ def route_path(path, method, payload_dict, request_context, path_parameters):
 
 
 def request_handler(event, context):
-    logger.info("Orchestrator::event: ", json.dumps(event))
+    logger.info(f"Orchestrator::event: {event}")
     try:
         valid_event = validate_dict(
             data_dict=event, required_keys=REQUIRED_KEYS_FOR_LAMBDA_EVENT)
@@ -87,8 +87,7 @@ def request_handler(event, context):
         )
         if not path_exist:
             return generate_lambda_response(404, "Not Found", cors_enabled=True)
-        print("response_data == ", response_data)
-        logger.info("Orchestrator::response_data: ", json.dumps(response_data))
+        logger.info(f"Orchestrator::response_data: {response_data}")
         if response_data is None:
             error_message = format_error_message(
                 status="failed",
