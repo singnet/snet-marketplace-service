@@ -135,7 +135,8 @@ def format_error_message(status, error, payload, net_id, handler=None, resource=
 
 def handle_exception_with_slack_notification(*decorator_args, **decorator_kwargs):
     logger = decorator_kwargs["logger"]
-    NETWORK_ID = os.environ.get("NETWORK_ID")
+    NETWORK_ID = decorator_kwargs.get("NETWORK_ID", None)
+    SLACK_HOOK = decorator_kwargs.get("SLACK_HOOK", None)
 
     def decorator(func):
         def wrapper(*args, **kwargs):
@@ -149,7 +150,7 @@ def handle_exception_with_slack_notification(*decorator_args, **decorator_kwargs
                 query_string_parameters = kwargs.get("event", {}).get("queryStringParameters", None)
                 body = kwargs.get("event", {}).get("body", None)
                 slack_msg = f"\n```Error Reported !! \n" \
-                            f"network_id: {int(NETWORK_ID)}\n" \
+                            f"network_id: {NETWORK_ID}\n" \
                             f"path: {path}, \n" \
                             f"handler: {handler_name} \n" \
                             f"pathParameters: {path_parameters} \n" \
@@ -159,7 +160,7 @@ def handle_exception_with_slack_notification(*decorator_args, **decorator_kwargs
                             f"error_description: {repr(traceback.format_tb(tb=exc_tb))}```"
 
                 logger.info(f"{slack_msg}")
-                Utils().report_slack(type=0, slack_msg=slack_msg, SLACK_HOOK=json.loads(os.environ.get("SLACK_HOOK")))
+                Utils().report_slack(type=0, slack_msg=slack_msg, SLACK_HOOK=SLACK_HOOK)
 
         return wrapper
 
