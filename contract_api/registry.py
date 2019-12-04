@@ -354,9 +354,8 @@ class Registry:
                             break
                 rec.update(org_groups_dict.get(rec['group_id'], {}))
 
-            result.update({"is_available": is_available})
-            result.update({"groups": service_group_data})
-            result.update({"tags": tags})
+            # Hard Coded Free calls
+            result.update({"is_available": is_available, "groups": service_group_data, "tags": tags, "free_calls": 15 })
             return result
         except Exception as e:
             print(repr(e))
