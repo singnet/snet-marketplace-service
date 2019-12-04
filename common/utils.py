@@ -159,7 +159,6 @@ def handle_exception_with_slack_notification(*decorator_args, **decorator_kwargs
                             f"error_description: {repr(traceback.format_tb(tb=exc_tb))}```"
 
                 logger.info(f"{slack_msg}")
-                print(slack_msg)
                 Utils().report_slack(type=0, slack_msg=slack_msg, SLACK_HOOK=json.loads(os.environ.get("SLACK_HOOK")))
 
         return wrapper
