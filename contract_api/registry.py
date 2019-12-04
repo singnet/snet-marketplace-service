@@ -345,7 +345,9 @@ class Registry:
                     "payment": json.loads(rec["payment"])}
 
             is_available = 0
+            # Hard Coded Free calls in group data
             for rec in service_group_data:
+                rec["free_calls"] = 15
                 if is_available == 0:
                     endpoints = rec['endpoints']
                     for endpoint in endpoints:
@@ -354,9 +356,7 @@ class Registry:
                             break
                 rec.update(org_groups_dict.get(rec['group_id'], {}))
 
-            result.update({"is_available": is_available})
-            result.update({"groups": service_group_data})
-            result.update({"tags": tags})
+            result.update({"is_available": is_available, "groups": service_group_data, "tags": tags})
             return result
         except Exception as e:
             print(repr(e))
