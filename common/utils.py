@@ -137,11 +137,14 @@ def handle_exception_with_slack_notification(*decorator_args, **decorator_kwargs
     logger = decorator_kwargs["logger"]
     NETWORK_ID = decorator_kwargs.get("NETWORK_ID", None)
     SLACK_HOOK = decorator_kwargs.get("SLACK_HOOK", None)
+    IGNORE_EXCEPTION_TUPLE = decorator_kwargs.get("IGNORE_EXCEPTION_TUPLE", ())
 
     def decorator(func):
         def wrapper(*args, **kwargs):
             try:
                 return func(*args, **kwargs)
+            except IGNORE_EXCEPTION_TUPLE as e:
+                logger.info("Exception is part of IGNORE_EXCEPTION List. Error description: %s", repr(e))
             except Exception as e:
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 path = kwargs.get("event", {}).get("path", None)
@@ -165,4 +168,3 @@ def handle_exception_with_slack_notification(*decorator_args, **decorator_kwargs
         return wrapper
 
     return decorator
-
