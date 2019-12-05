@@ -141,17 +141,25 @@ def handle_exception_with_slack_notification(*decorator_args, **decorator_kwargs
 
     def decorator(func):
         def wrapper(*args, **kwargs):
+            handler_name = decorator_kwargs.get("handler_name", func.__name__)
+            path = kwargs.get("event", {}).get("path", None)
+            path_parameters = kwargs.get("event", {}).get("pathParameters", {})
+            query_string_parameters = kwargs.get("event", {}).get("queryStringParameters", {})
+            body = kwargs.get("event", {}).get("body", "{}")
+            payload = {"pathParameters": path_parameters,
+                       "queryStringParameters": query_string_parameters,
+                       "body": json.loads(body)}
             try:
                 return func(*args, **kwargs)
             except IGNORE_EXCEPTION_TUPLE as e:
-                logger.info("Exception is part of IGNORE_EXCEPTION List. Error description: %s", repr(e))
+                logger.exception("Exception is part of IGNORE_EXCEPTION list. Error description: %s", repr(e))
+                return generate_lambda_response(
+                    status_code=500,
+                    message=format_error_message(
+                        status="failed", error=repr(e), payload=payload, net_id=NETWORK_ID, handler=handler_name),
+                    cors_enabled=True)
             except Exception as e:
                 exc_type, exc_obj, exc_tb = sys.exc_info()
-                path = kwargs.get("event", {}).get("path", None)
-                handler_name = decorator_kwargs.get("handler_name", func.__name__)
-                path_parameters = kwargs.get("event", {}).get("pathParameters", None)
-                query_string_parameters = kwargs.get("event", {}).get("queryStringParameters", None)
-                body = kwargs.get("event", {}).get("body", None)
                 slack_msg = f"\n```Error Reported !! \n" \
                             f"network_id: {NETWORK_ID}\n" \
                             f"path: {path}, \n" \
@@ -162,8 +170,13 @@ def handle_exception_with_slack_notification(*decorator_args, **decorator_kwargs
                             f"x-ray-trace-id: None \n" \
                             f"error_description: {repr(traceback.format_tb(tb=exc_tb))}```"
 
-                logger.info(f"{slack_msg}")
+                logger.exception(f"{slack_msg}")
                 Utils().report_slack(type=0, slack_msg=slack_msg, SLACK_HOOK=SLACK_HOOK)
+                return generate_lambda_response(
+                    status_code=500,
+                    message=format_error_message(
+                        status="failed", error=repr(e), payload=payload, net_id=NETWORK_ID, handler=handler_name),
+                    cors_enabled=True)
 
         return wrapper
 
