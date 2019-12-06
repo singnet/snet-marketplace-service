@@ -14,7 +14,7 @@ from aws_xray_sdk.core import patch_all
 patch_all()
 
 
-db = Repository(NETWORK_ID=NETWORK_ID, NETWORKS=NETWORKS)
+db = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
 logger = get_logger(__name__)
 obj_util = Utils()
 
@@ -28,7 +28,7 @@ def request_handler(event, context):
     path = event['path'].lower()
     path = re.sub(r"^(\/dapp-user)", "", path)
     stage = event['requestContext']['stage']
-    usr_obj = User(obj_repo=db[NETWORK_ID])
+    usr_obj = User(obj_repo=db)
     response_data = None
 
     if event['httpMethod'] == 'POST':
