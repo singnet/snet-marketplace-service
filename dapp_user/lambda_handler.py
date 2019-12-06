@@ -27,7 +27,6 @@ def request_handler(event, context):
     payload_dict = None
     path = event['path'].lower()
     path = re.sub(r"^(\/dapp-user)", "", path)
-    stage = event['requestContext']['stage']
     usr_obj = User(obj_repo=db)
     response_data = None
 
@@ -87,6 +86,7 @@ def request_handler(event, context):
     else:
         response = get_response(
             200, {"status": "success", "data": response_data})
+    return response
 
 
 def get_response(status_code, message):
