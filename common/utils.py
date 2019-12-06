@@ -22,8 +22,9 @@ class Utils:
     def report_slack(self, type, slack_msg, SLACK_HOOK):
         url = SLACK_HOOK['hostname'] + SLACK_HOOK['path']
         prefix = self.msg_type.get(type, "")
+        slack_channel = SLACK_HOOK.get("channel","contract-index-alerts")
         print(url)
-        payload = {"channel": "#contract-index-alerts",
+        payload = {"channel": f"#{slack_channel}",
                    "username": "webhookbot",
                    "text": prefix + slack_msg,
                    "icon_emoji": ":ghost:"
