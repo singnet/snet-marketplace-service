@@ -40,7 +40,7 @@ class ServiceStatus:
                 return 1
             return 0
         except Exception as e:
-            logger.info("error in making grpc call::url: ", url, "|err: ", e)
+            logger.info(f"error in making grpc call::url: {url}, |error: {e}")
             return 0
 
     def ping_url(self, url):
