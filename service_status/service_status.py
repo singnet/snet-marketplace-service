@@ -89,8 +89,8 @@ class ServiceStatus:
             "recipient": recipient}
 
     def get_slack_message(self, org_id, service_id):
-        slack_message = f"```Alert!!\n Service {service_id} under organization {org_id} is down.\n\n For any queries " \
-                        f"please email at cs-marketplace@singularitynet.io. \n Warmest regards,\nSingularityNET " \
+        slack_message = f"```Alert!\n\nService {service_id} under organization {org_id} is down.\n\nFor any queries " \
+                        f"please email at tech-support@singularitynet.io. \n\nWarmest regards,\nSingularityNET " \
                         f"Marketplace Team```"
         return slack_message
 
