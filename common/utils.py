@@ -1,12 +1,16 @@
 import datetime
 import decimal
 import json
-
+import os
+import sys
+import traceback
 import requests
 import web3
 from web3 import Web3
 from common.constant import COGS_TO_AGI
+
 IGNORED_LIST = ['row_id', 'row_created', 'row_updated']
+
 
 class Utils:
     def __init__(self):
@@ -18,8 +22,9 @@ class Utils:
     def report_slack(self, type, slack_msg, SLACK_HOOK):
         url = SLACK_HOOK['hostname'] + SLACK_HOOK['path']
         prefix = self.msg_type.get(type, "")
+        slack_channel = SLACK_HOOK.get("channel","contract-index-alerts")
         print(url)
-        payload = {"channel": "#contract-index-alerts",
+        payload = {"channel": f"#{slack_channel}",
                    "username": "webhookbot",
                    "text": prefix + slack_msg,
                    "icon_emoji": ":ghost:"
@@ -64,7 +69,7 @@ class Utils:
         with decimal.localcontext() as ctx:
             ctx.prec = 8
             """ 1 AGI equals to 100000000 cogs"""
-            agi = decimal.Decimal(cogs)*decimal.Decimal(COGS_TO_AGI)
+            agi = decimal.Decimal(cogs) * decimal.Decimal(COGS_TO_AGI)
             return agi
 
 
@@ -125,4 +130,55 @@ def extract_payload(method, event):
 
 def format_error_message(status, error, payload, net_id, handler=None, resource=None):
     return json.dumps(
-        {'status': status, 'error': error, 'resource': resource, 'payload': payload, 'network_id': net_id, 'handler': handler})
+        {'status': status, 'error': error, 'resource': resource, 'payload': payload, 'network_id': net_id,
+         'handler': handler})
+
+
+def handle_exception_with_slack_notification(*decorator_args, **decorator_kwargs):
+    logger = decorator_kwargs["logger"]
+    NETWORK_ID = decorator_kwargs.get("NETWORK_ID", None)
+    SLACK_HOOK = decorator_kwargs.get("SLACK_HOOK", None)
+    IGNORE_EXCEPTION_TUPLE = decorator_kwargs.get("IGNORE_EXCEPTION_TUPLE", ())
+
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            handler_name = decorator_kwargs.get("handler_name", func.__name__)
+            path = kwargs.get("event", {}).get("path", None)
+            path_parameters = kwargs.get("event", {}).get("pathParameters", {})
+            query_string_parameters = kwargs.get("event", {}).get("queryStringParameters", {})
+            body = kwargs.get("event", {}).get("body", "{}")
+            payload = {"pathParameters": path_parameters,
+                       "queryStringParameters": query_string_parameters,
+                       "body": json.loads(body)}
+            try:
+                return func(*args, **kwargs)
+            except IGNORE_EXCEPTION_TUPLE as e:
+                logger.exception("Exception is part of IGNORE_EXCEPTION list. Error description: %s", repr(e))
+                return generate_lambda_response(
+                    status_code=500,
+                    message=format_error_message(
+                        status="failed", error=repr(e), payload=payload, net_id=NETWORK_ID, handler=handler_name),
+                    cors_enabled=True)
+            except Exception as e:
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                slack_msg = f"\n```Error Reported !! \n" \
+                            f"network_id: {NETWORK_ID}\n" \
+                            f"path: {path}, \n" \
+                            f"handler: {handler_name} \n" \
+                            f"pathParameters: {path_parameters} \n" \
+                            f"queryStringParameters: {query_string_parameters} \n" \
+                            f"body: {body} \n" \
+                            f"x-ray-trace-id: None \n" \
+                            f"error_description: {repr(traceback.format_tb(tb=exc_tb))}```"
+
+                logger.exception(f"{slack_msg}")
+                Utils().report_slack(type=0, slack_msg=slack_msg, SLACK_HOOK=SLACK_HOOK)
+                return generate_lambda_response(
+                    status_code=500,
+                    message=format_error_message(
+                        status="failed", error=repr(e), payload=payload, net_id=NETWORK_ID, handler=handler_name),
+                    cors_enabled=True)
+
+        return wrapper
+
+    return decorator

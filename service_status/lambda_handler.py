@@ -1,26 +1,16 @@
-import json
-import re
-import traceback
-
-from service_status.config import NETWORKS, NETWORK_ID
+from service_status.config import NETWORKS, NETWORK_ID, SLACK_HOOK
 from common.repository import Repository
 from common.utils import Utils
+from common.utils import handle_exception_with_slack_notification
+from common.logger import get_logger
 from service_status.service_status import ServiceStatus
 
-NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId)
-                     for netId in NETWORKS.keys())
 obj_util = Utils()
-db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS))
-          for netId in NETWORKS.keys())
+db = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
+logger = get_logger(__name__)
 
 
+@handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
 def request_handler(event, context):
-    print(event)
-    try:
-        obj_srvc_st = ServiceStatus(repo=db[NETWORK_ID], net_id=NETWORK_ID)
-        obj_srvc_st.update_service_status()
-    except Exception as e:
-        print(repr(e))
-        obj_util.report_slack(1, "Error in updating service status::NETWORK_ID:" + NETWORK_ID + "|err:" + e)
-        traceback.print_exc()
-    return
+    service_status = ServiceStatus(repo=db, net_id=NETWORK_ID)
+    service_status.update_service_status()

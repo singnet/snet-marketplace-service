@@ -96,8 +96,8 @@ class Registry:
         record["assets_url"] = json.loads(record["assets_url"])
         record["org_assets_url"] = json.loads(record["org_assets_url"])
         record["assets_hash"] = json.loads(record["assets_hash"])
-        record["contributors"] = json.loads(record.get("contributors", []))
-        record["contacts"] = json.loads(record.get("contacts", []))
+        record["contributors"] = json.loads(record.get("contributors", "[]"))
+        record["contacts"] = json.loads(record.get("contacts", "[]"))
 
         if record["contacts"] is None:
             record["contacts"] = []
@@ -316,9 +316,10 @@ class Registry:
             tags = []
             org_groups_dict = {}
             basic_service_data = self.repo.execute(
-
-                "SELECT * FROM service S, service_metadata M, organization O WHERE O.org_id = S.org_id AND S.row_id = M.service_row_id AND S.org_id = %s "
-
+                "SELECT M.*, S.*, O.org_id, O.organization_name, O.owner_address, O.org_metadata_uri, O.org_email, "
+                "O.org_assets_url, O.assets_hash, O.description as org_description, O.contacts "
+                "FROM service_metadata M, service S, organization O "
+                "WHERE O.org_id = S.org_id AND S.row_id = M.service_row_id AND S.org_id = %s "
                 "AND S.service_id = %s AND S.is_curated = 1", [org_id, service_id])
             if len(basic_service_data) == 0:
                 return []
@@ -344,7 +345,9 @@ class Registry:
                     "payment": json.loads(rec["payment"])}
 
             is_available = 0
+            # Hard Coded Free calls in group data
             for rec in service_group_data:
+                rec["free_calls"] = 15
                 if is_available == 0:
                     endpoints = rec['endpoints']
                     for endpoint in endpoints:
@@ -353,9 +356,7 @@ class Registry:
                             break
                 rec.update(org_groups_dict.get(rec['group_id'], {}))
 
-            result.update({"is_available": is_available})
-            result.update({"groups": service_group_data})
-            result.update({"tags": tags})
+            result.update({"is_available": is_available, "groups": service_group_data, "tags": tags})
             return result
         except Exception as e:
             print(repr(e))

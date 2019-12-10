@@ -18,7 +18,9 @@ SLACK_HOOK = {
     'method': 'POST',
     'headers': {
         'Content-Type': 'application/json'
-    }
+    },
+    'channel': ''
 }
 NETWORK_ID = 0
 REGION_NAME="us-east-2"
+NOTIFICATION_ARN = ""
