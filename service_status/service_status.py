@@ -1,11 +1,13 @@
 import re
 import json
-from datetime import datetime
+from datetime import datetime as dt
+from datetime import timedelta
 from common.utils import Utils
 from service_status.config import REGION_NAME, NOTIFICATION_ARN, SLACK_HOOK
 from common.boto_utils import BotoUtils
 from common.utils import Utils
 from common.logger import get_logger
+from service_status.constant import MAXIMUM_INTERVAL_IN_HOUR, MINIMUM_INTERVAL_IN_HOUR
 from service_status.constant import SRVC_STATUS_GRPC_TIMEOUT, LIMIT
 from grpc_health.v1 import health_pb2 as heartb_pb2
 from grpc_health.v1 import health_pb2_grpc as heartb_pb2_grpc
@@ -43,7 +45,7 @@ class ServiceStatus:
             logger.info(f"error in making grpc call::url: {url}, |error: {e}")
             return 0
 
-    def ping_url(self, url):
+    def _ping_url(self, url):
         search_count = re.subn(self.rex_for_pb_ip, "", url)[1]
         if search_count == 0:
             secure = True
@@ -53,32 +55,59 @@ class ServiceStatus:
             return self._get_service_status(url=url, secure=secure)
         return 0
 
-    def update_service_status(self):
-        query = "SELECT row_id, org_id, service_id, endpoint FROM service_endpoint WHERE endpoint not regexp %s ORDER BY last_check_timestamp ASC LIMIT %s"
+    def _get_service_endpoint_data(self):
+        query = "SELECT row_id, org_id, service_id, endpoint, is_available, status_change_count FROM service_endpoint WHERE " \
+                "next_check_timestamp < CURRENT_TIMESTAMP AND endpoint not regexp %s ORDER BY last_check_timestamp ASC " \
+                "LIMIT %s"
         result = self.repo.execute(query, [self.rex_for_pb_ip, LIMIT])
         if result is None or result == []:
             raise Exception("Unable to find services.")
-        update_query = "UPDATE service_endpoint SET is_available = %s, last_check_timestamp = current_timestamp WHERE row_id = %s "
-        rows_updated = 0
-        for rec in result:
-            status = self.ping_url(rec["endpoint"])
-            res = self.repo.execute(update_query, [status, rec["row_id"]])
+
+    def _update_service_endpoint(self, status, next_check_timestamp, status_change_count, row_id):
+        update_query = "UPDATE service_endpoint SET is_available = %s, last_check_timestamp = current_timestamp, " \
+                       "next_check_timestamp = %s, status_change_count = %s WHERE row_id = %s "
+        response = self.repo.execute(update_query, [status, next_check_timestamp, status_change_count, row_id])
+        return response
+
+    def update_service_status(self):
+        service_endpoint_data = self._get_service_endpoint_data()
+        for record in service_endpoint_data:
+            status = self._ping_url(record["endpoint"])
+            status_change_count = self._calculate_status_change_count(
+                current_status=status, old_status=record["is_available"],
+                old_status_change_count=record["status_change_count"])
+            next_check_timestamp = self._calculate_next_check_timestamp(status_change_count=status_change_count)
+            query_data = self._update_service_endpoint(status=status, next_check_timestamp=next_check_timestamp,
+                                                       status_change_count=status_change_count, row_id=record["row_id"])
+            rows_updated = 0
             if status == 0:
-                org_id = rec["org_id"]
-                service_id = rec["service_id"]
-                self.send_notification(org_id=org_id, service_id=service_id, recipient=None)
-            rows_updated = rows_updated + res[0]
+                org_id = record["org_id"]
+                service_id = record["service_id"]
+                self._send_notification(org_id=org_id, service_id=service_id, recipient=None)
+            rows_updated = rows_updated + query_data[0]
         logger.info(f"no of rows updated: {rows_updated}")
 
-    def send_notification(self, org_id, service_id, recipient=None):
-        slack_message = self.get_slack_message(org_id=org_id, service_id=service_id)
+    def _calculate_status_change_count(self, current_status, old_status, old_status_change_count):
+        if current_status == old_status == 0:
+            return old_status_change_count + 1
+        return 1
+
+    def _calculate_next_check_timestamp(self, status_change_count):
+        time_delta_in_hours = MINIMUM_INTERVAL_IN_HOUR * (2 ** (status_change_count - 1))
+        if time_delta_in_hours > MAXIMUM_INTERVAL_IN_HOUR:
+            time_delta_in_hours = MAXIMUM_INTERVAL_IN_HOUR
+        next_check_timestamp = dt.utcnow() + timedelta(hours=time_delta_in_hours)
+        return next_check_timestamp
+
+    def _send_notification(self, org_id, service_id, recipient=None):
+        slack_message = self._get_slack_message(org_id=org_id, service_id=service_id)
         util.report_slack(type=0, slack_msg=slack_message, SLACK_HOOK=SLACK_HOOK)
         if recipient is None:
             pass
         else:
-            self.send_email_notification(org_id=org_id, service_id=service_id)
+            self._send_email_notification(org_id=org_id, service_id=service_id)
 
-    def get_email_notification_payload(self, org_id, service_id, recipient):
+    def _get_email_notification_payload(self, org_id, service_id, recipient):
         send_notification_payload = {
             "message": f"<html><head></head><body><div><p>Hello,</p><p>Your service {service_id} under organization "
                        f"{org_id} is down.</p><br /> <br /><p><em>Please do not reply to the email for any enquiries "
@@ -88,13 +117,13 @@ class ServiceStatus:
             "notification_type": "support",
             "recipient": recipient}
 
-    def get_slack_message(self, org_id, service_id):
+    def _get_slack_message(self, org_id, service_id):
         slack_message = f"```Alert!\n\nService {service_id} under organization {org_id} is down.\n\nFor any queries " \
                         f"please email at tech-support@singularitynet.io. \n\nWarmest regards,\nSingularityNET " \
                         f"Marketplace Team```"
         return slack_message
 
-    def send_email_notification(self, org_id, service_id, recipient):
+    def _send_email_notification(self, org_id, service_id, recipient):
         send_notification_payload = {
             "message": f"<html><head></head><body><div><p>Hello,</p><p>Your service {service_id} under organization "
                        f"{org_id} is down.</p><br /> <br /><p><em>Please do not reply to the email for any enquiries "
