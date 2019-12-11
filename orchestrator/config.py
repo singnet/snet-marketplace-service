@@ -36,8 +36,8 @@ GET_ALL_ORG_API_ARN=""
 USD_TO_COGS_CONVERSION_FACTOR = 1
 
 # Verification
-TRULIOO_BASE_URL="https://gateway.trulioo.com/trial/"
-TRULIOO_API_KEY= "d5a165e97fec65a53d499e0a2826df62"
+TRULIOO_BASE_URL=""
+TRULIOO_API_KEY= ""
 GET_FIELDS=""
 
 
