@@ -357,7 +357,7 @@ functions:
 
   get-verfication-fields:
     warmup: true
-    handler: orchestrator/handlers.verification_handler.get_fields
+    handler: orchestrator/handlers.verification_handler.get_fields_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}

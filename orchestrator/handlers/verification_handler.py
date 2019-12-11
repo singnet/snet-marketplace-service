@@ -11,7 +11,7 @@ Service = VerificationService()
 
 
 @handle_exception_with_slack_notification(logger=logger, SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID)
-def get_fields(event, context):
+def get_fields_handler(event, context):
     configuration_name = event["pathParameters"]["configurationName"]
     country_code = event["pathParameters"]["countryCode"]
     response = Service.get_fields(configuration_name, country_code)
