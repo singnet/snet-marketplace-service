@@ -58,7 +58,7 @@ class ServiceStatus:
 
     def _get_service_endpoint_data(self):
         query = "SELECT row_id, org_id, service_id, endpoint, is_available, failed_status_count FROM service_endpoint WHERE " \
-                "next_check_timestamp < CURRENT_TIMESTAMP AND endpoint not regexp %s ORDER BY last_check_timestamp ASC " \
+                "next_check_timestamp < UTC_TIMESTAMP AND endpoint not regexp %s ORDER BY last_check_timestamp ASC " \
                 "LIMIT %s"
         result = self.repo.execute(query, [self.rex_for_pb_ip, LIMIT])
         if result is None or result == []:
@@ -73,15 +73,15 @@ class ServiceStatus:
 
     def update_service_status(self):
         service_endpoint_data = self._get_service_endpoint_data()
+        rows_updated = 0
         for record in service_endpoint_data:
             status = self._ping_url(record["endpoint"])
             failed_status_count = self._calculate_failed_status_count(
-                current_status=status, old_status=record["is_available"],
+                current_status=status, old_status=int.from_bytes(record["is_available"], "big"),
                 old_failed_status_count=record["failed_status_count"])
             next_check_timestamp = self._calculate_next_check_timestamp(failed_status_count=failed_status_count)
             query_data = self._update_service_status_parameters(status=status, next_check_timestamp=next_check_timestamp,
                                                                 failed_status_count=failed_status_count, row_id=record["row_id"])
-            rows_updated = 0
             if status == 0:
                 org_id = record["org_id"]
                 service_id = record["service_id"]
