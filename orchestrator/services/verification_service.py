@@ -17,7 +17,3 @@ class VerificationService:
             raise Exception(response)
 
         return response;
-
-
-if __name__ == '__main__':
-    VerificationService().get_fields("IdentityVerification", "AU")
