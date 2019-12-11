@@ -12,6 +12,7 @@ from service_status.constant import SRVC_STATUS_GRPC_TIMEOUT, LIMIT
 from grpc_health.v1 import health_pb2 as heartb_pb2
 from grpc_health.v1 import health_pb2_grpc as heartb_pb2_grpc
 import grpc
+import sys
 
 logger = get_logger(__name__)
 boto_util = BotoUtils(region_name=REGION_NAME)
@@ -56,29 +57,30 @@ class ServiceStatus:
         return 0
 
     def _get_service_endpoint_data(self):
-        query = "SELECT row_id, org_id, service_id, endpoint, is_available, status_change_count FROM service_endpoint WHERE " \
+        query = "SELECT row_id, org_id, service_id, endpoint, is_available, failed_status_count FROM service_endpoint WHERE " \
                 "next_check_timestamp < CURRENT_TIMESTAMP AND endpoint not regexp %s ORDER BY last_check_timestamp ASC " \
                 "LIMIT %s"
         result = self.repo.execute(query, [self.rex_for_pb_ip, LIMIT])
         if result is None or result == []:
-            raise Exception("Unable to find services.")
+            logger.info("Unable to find services.")
+        return result
 
-    def _update_service_endpoint(self, status, next_check_timestamp, status_change_count, row_id):
+    def _update_service_status_parameters(self, status, next_check_timestamp, failed_status_count, row_id):
         update_query = "UPDATE service_endpoint SET is_available = %s, last_check_timestamp = current_timestamp, " \
-                       "next_check_timestamp = %s, status_change_count = %s WHERE row_id = %s "
-        response = self.repo.execute(update_query, [status, next_check_timestamp, status_change_count, row_id])
+                       "next_check_timestamp = %s, failed_status_count = %s WHERE row_id = %s "
+        response = self.repo.execute(update_query, [status, next_check_timestamp, failed_status_count, row_id])
         return response
 
     def update_service_status(self):
         service_endpoint_data = self._get_service_endpoint_data()
         for record in service_endpoint_data:
             status = self._ping_url(record["endpoint"])
-            status_change_count = self._calculate_status_change_count(
+            failed_status_count = self._calculate_failed_status_count(
                 current_status=status, old_status=record["is_available"],
-                old_status_change_count=record["status_change_count"])
-            next_check_timestamp = self._calculate_next_check_timestamp(status_change_count=status_change_count)
-            query_data = self._update_service_endpoint(status=status, next_check_timestamp=next_check_timestamp,
-                                                       status_change_count=status_change_count, row_id=record["row_id"])
+                old_failed_status_count=record["failed_status_count"])
+            next_check_timestamp = self._calculate_next_check_timestamp(failed_status_count=failed_status_count)
+            query_data = self._update_service_status_parameters(status=status, next_check_timestamp=next_check_timestamp,
+                                                                failed_status_count=failed_status_count, row_id=record["row_id"])
             rows_updated = 0
             if status == 0:
                 org_id = record["org_id"]
@@ -87,13 +89,13 @@ class ServiceStatus:
             rows_updated = rows_updated + query_data[0]
         logger.info(f"no of rows updated: {rows_updated}")
 
-    def _calculate_status_change_count(self, current_status, old_status, old_status_change_count):
+    def _calculate_failed_status_count(self, current_status, old_status, old_failed_status_count):
         if current_status == old_status == 0:
-            return old_status_change_count + 1
+            return old_failed_status_count + 1
         return 1
 
-    def _calculate_next_check_timestamp(self, status_change_count):
-        time_delta_in_hours = MINIMUM_INTERVAL_IN_HOUR * (2 ** (status_change_count - 1))
+    def _calculate_next_check_timestamp(self, failed_status_count):
+        time_delta_in_hours = MINIMUM_INTERVAL_IN_HOUR * (2 ** (failed_status_count - 1))
         if time_delta_in_hours > MAXIMUM_INTERVAL_IN_HOUR:
             time_delta_in_hours = MAXIMUM_INTERVAL_IN_HOUR
         next_check_timestamp = dt.utcnow() + timedelta(hours=time_delta_in_hours)
