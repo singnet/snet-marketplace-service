@@ -115,7 +115,3 @@ event_pubsub/node_modules/
 
 #IDE files
 .idea/
-
-##Configuration files
-orchestrator/config.py
-
