@@ -80,12 +80,15 @@ class ServiceStatus:
                 current_status=status, old_status=int.from_bytes(record["is_available"], "big"),
                 old_failed_status_count=record["failed_status_count"])
             next_check_timestamp = self._calculate_next_check_timestamp(failed_status_count=failed_status_count)
-            query_data = self._update_service_status_parameters(status=status, next_check_timestamp=next_check_timestamp,
-                                                                failed_status_count=failed_status_count, row_id=record["row_id"])
+            query_data = self._update_service_status_parameters(status=status,
+                                                                next_check_timestamp=next_check_timestamp,
+                                                                failed_status_count=failed_status_count,
+                                                                row_id=record["row_id"])
             if status == 0:
                 org_id = record["org_id"]
                 service_id = record["service_id"]
-                self._send_notification(org_id=org_id, service_id=service_id, recipient=None)
+                recipients = self.get_service_provider_email(org_id=org_id, service_id=service_id)
+                self.send_notification(org_id=org_id, service_id=service_id, recipients=recipients)
             rows_updated = rows_updated + query_data[0]
         logger.info(f"no of rows updated: {rows_updated}")
 
@@ -101,13 +104,23 @@ class ServiceStatus:
         next_check_timestamp = dt.utcnow() + timedelta(hours=time_delta_in_hours)
         return next_check_timestamp
 
-    def _send_notification(self, org_id, service_id, recipient=None):
+    def _valid_email(self, email):
+        regex = '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$'
+        if re.search(regex, email):
+            return True
+        return False
+
+    def send_notification(self, org_id, service_id, recipients):
         slack_message = self._get_slack_message(org_id=org_id, service_id=service_id)
         util.report_slack(type=0, slack_msg=slack_message, SLACK_HOOK=SLACK_HOOK)
-        if recipient is None:
-            pass
-        else:
-            self._send_email_notification(org_id=org_id, service_id=service_id)
+        for recipient in recipients:
+            if recipient is None:
+                logger.info(f"Email Id is not present for Org Id: {org_id} and Service Id: {service_id}")
+            else:
+                if self._valid_email(email=recipient):
+                    self._send_email_notification(org_id=org_id, service_id=service_id, recipient=recipient)
+                else:
+                    logger.info(f"Invalid email_id: {recipient}")
 
     def _get_email_notification_payload(self, org_id, service_id, recipient):
         send_notification_payload = {
@@ -126,16 +139,25 @@ class ServiceStatus:
         return slack_message
 
     def _send_email_notification(self, org_id, service_id, recipient):
-        send_notification_payload = {
+        send_notification_payload = {"body": json.dumps({
             "message": f"<html><head></head><body><div><p>Hello,</p><p>Your service {service_id} under organization "
                        f"{org_id} is down.</p><br /> <br /><p><em>Please do not reply to the email for any enquiries "
                        f"for any queries please email at cs-marketplace@singularitynet.io.</em></p><p>Warmest regards,"
                        f"<br />SingularityNET Marketplace Team</p></div></body></html>",
             "subject": f"Your service {service_id} is down.",
             "notification_type": "support",
-            "recipient": recipient}
+            "recipient": recipient})}
         boto_util.invoke_lambda(lambda_function_arn=NOTIFICATION_ARN, invocation_type="RequestResponse",
                                 payload=json.dumps(send_notification_payload))
 
-    def get_service_provider_email(self, org_id, service_id):
-        pass
+    def get_service_provider_email(self, org_id, service_id=None):
+        emails = []
+        query_response = self.repo.execute("SELECT contacts FROM organization WHERE org_id = %s ", [org_id])
+        if len(query_response) == 0:
+            logger.info(f"Org Id {org_id} is not present.")
+        contacts = json.loads(query_response[0].get("contacts", '[]'))
+        for contact in contacts:
+            email_id = contact.get("email_id", None)
+            if email_id is not None:
+                emails.append(email_id)
+        return emails
