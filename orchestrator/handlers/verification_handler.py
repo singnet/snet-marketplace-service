@@ -1,5 +1,6 @@
 from common.logger import get_logger
 from common.utils import handle_exception_with_slack_notification, generate_lambda_response, validate_dict
+from common.constant import StatusCode, ResponseStatus
 from contract_api.config import NETWORK_ID, SLACK_HOOK
 from aws_xray_sdk.core import patch_all
 from orchestrator.services.verification_service import VerificationService
@@ -19,4 +20,4 @@ def get_fields_handler(event, context):
     configuration_name = event["pathParameters"]["configurationName"]
     country_code = event["pathParameters"]["countryCode"]
     response = Service.get_fields(configuration_name, country_code)
-    return generate_lambda_response(200, {"status": "success", "data": response})
+    return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response})

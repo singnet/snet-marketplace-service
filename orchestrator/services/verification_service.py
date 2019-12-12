@@ -1,7 +1,7 @@
 import requests
 
 from orchestrator.config import TRULIOO_BASE_URL, TRULIOO_API_KEY
-
+from common.constant import StatusCode
 
 class VerificationService:
 
@@ -14,7 +14,7 @@ class VerificationService:
         status = request.status_code;
         response = request.json();
 
-        if status != 200:
+        if status != StatusCode.OK:
             raise Exception(response)
 
         return response;
