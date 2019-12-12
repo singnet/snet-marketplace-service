@@ -5,7 +5,7 @@ from orchestrator.services.verification_service import VerificationService
 from requests import Response
 
 
-class MyTestCase(unittest.TestCase):
+class VerificationServiceTestCase(unittest.TestCase):
 
     @patch("requests.get")
     def test_get_fields(self, mock_requests):
