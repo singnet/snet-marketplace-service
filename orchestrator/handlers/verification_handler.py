@@ -16,7 +16,7 @@ Service = VerificationService()
 def get_fields_handler(event, context):
     required_keys = ["configurationName", "countryCode"]
     if not validate_dict(event["pathParameters"], required_keys):
-        raise BadRequestException
+        raise BadRequestException()
     configuration_name = event["pathParameters"]["configurationName"]
     country_code = event["pathParameters"]["countryCode"]
     response = Service.get_fields(configuration_name, country_code)
