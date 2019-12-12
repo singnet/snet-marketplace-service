@@ -361,8 +361,6 @@ functions:
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
-      Team: ${file(./config.${self:provider.stage}.json):TEAM}
-      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
       - http:
           method: GET
           path: /verification/getFields/{configurationName}/{countryCode}
