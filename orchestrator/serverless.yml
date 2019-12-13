@@ -11,7 +11,7 @@ custom:
     dockerizePip: true
     useDownloadCache: true
     useStaticCache: true
-    cacheLocation: '/var/cache/serverless'
+    cacheLocation: "/var/cache/serverless"
   prune:
     automatic: true
     includeLayers: true
@@ -150,7 +150,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-
 
   get-order:
     warmup: true
@@ -361,6 +360,7 @@ functions:
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+    events:
       - http:
           method: GET
           path: /verification/getFields/{configurationName}/{countryCode}
@@ -368,6 +368,32 @@ functions:
             name: user-authorizer
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            header:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
+  get-document-types:
+    warmup: true
+    handler: orchestrator/handlers.verification_handler.get_documents_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config${self:provider.stage}.json):ENVIRONMENT}
+    events:
+      - http:
+          method: GET
+          path: /verification/getDocumentTypes/{countryCode}
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}

@@ -21,3 +21,13 @@ def get_fields_handler(event, context):
     country_code = event["pathParameters"]["countryCode"]
     response = Service.get_fields(configuration_name, country_code)
     return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response})
+
+
+@handle_exception_with_slack_notification(logger=logger, SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID)
+def get_fields_handler(event, context):
+    required_keys = ["countryCode"]
+    if not validate_dict(event["pathParameters"], required_keys):
+        raise BadRequestException()
+    country_code = event["pathParameters"]["countryCode"]
+    response = Service.get_document_types(country_code)
+    return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response})
