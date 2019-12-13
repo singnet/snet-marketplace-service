@@ -9,9 +9,11 @@ from datetime import datetime as dt
 
 
 class VerificationService:
+
     def __init__(self):
         self.repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
         self.trulioo_trxn_dao = TruliooTransactionHistoryDAO(repo=self.repo)
+
 
     def get_fields(self, configuration_name, country_code):
         url = f"{TRULIOO_BASE_URL}configuration/v1/fields/{configuration_name}/{country_code}"
