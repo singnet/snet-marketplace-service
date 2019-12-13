@@ -36,7 +36,7 @@ def get_document_types_handler(event, context):
 
 @handle_exception_with_slack_notification(logger=logger, SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID)
 def get_verification_transaction_data(event, context):
-    payload = json.dumps(event["body"])
+    payload = json.loads(event["body"])
     response = verification_service.get_verification_transaction(
         payload=payload)
     return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response})
