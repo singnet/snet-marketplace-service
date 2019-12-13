@@ -9,7 +9,7 @@ from common.exceptions import BadRequestException
 patch_all()
 logger = get_logger(__name__)
 
-Service = VerificationService()
+service = VerificationService()
 
 
 @handle_exception_with_slack_notification(logger=logger, SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID)
@@ -19,7 +19,7 @@ def get_fields_handler(event, context):
         raise BadRequestException()
     configuration_name = event["pathParameters"]["configurationName"]
     country_code = event["pathParameters"]["countryCode"]
-    response = Service.get_fields(configuration_name, country_code)
+    response = service.get_fields(configuration_name, country_code)
     return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response})
 
 
@@ -29,5 +29,5 @@ def get_document_types_handler(event, context):
     if not validate_dict(event["pathParameters"], required_keys):
         raise BadRequestException()
     country_code = event["pathParameters"]["countryCode"]
-    response = Service.get_document_types(country_code)
+    response = service.get_document_types(country_code)
     return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response})
