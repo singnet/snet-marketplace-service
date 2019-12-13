@@ -436,7 +436,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /verification/getFields/{configurationName}/{countryCode}
+          path: /verification/verify
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
