@@ -14,9 +14,21 @@ class VerificationService:
         self.repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
         self.trulioo_trxn_dao = TruliooTransactionHistoryDAO(repo=self.repo)
 
-
     def get_fields(self, configuration_name, country_code):
         url = f"{TRULIOO_BASE_URL}configuration/v1/fields/{configuration_name}/{country_code}"
+        headers = {"x-trulioo-api-key": TRULIOO_API_KEY}
+        request = requests.get(url=url, headers=headers)
+
+        status = request.status_code
+        response = request.json()
+
+        if status != StatusCode.OK:
+            raise Exception(response)
+
+        return response
+
+    def get_document_types(self, country_code):
+        url = f"{TRULIOO_BASE_URL}configuration/v1/documentTypes/{country_code}"
         headers = {"x-trulioo-api-key": TRULIOO_API_KEY}
         request = requests.get(url=url, headers=headers)
 
