@@ -382,7 +382,7 @@ functions:
 
   get-document-types:
     warmup: true
-    handler: orchestrator/handlers.verification_handler.get_documents_handler
+    handler: orchestrator/handlers.verification_handler.get_document_types_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config${self:provider.stage}.json):ENVIRONMENT}

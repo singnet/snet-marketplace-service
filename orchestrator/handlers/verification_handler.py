@@ -24,7 +24,7 @@ def get_fields_handler(event, context):
 
 
 @handle_exception_with_slack_notification(logger=logger, SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID)
-def get_fields_handler(event, context):
+def get_document_types_handler(event, context):
     required_keys = ["countryCode"]
     if not validate_dict(event["pathParameters"], required_keys):
         raise BadRequestException()
