@@ -16,12 +16,11 @@ class NotificationType(Enum):
     SUPPORT = "support"
 
 
-SENDERS = {NotificationType.SUPPORT.value: "Tech Support <tech-support@singularitynet.io>"}
+SENDERS = {NotificationType.SUPPORT.value: "<no-reply@singularitynet.io>"}
 BODY_HTMLS = {NotificationType.SUPPORT.value: """<html>
 <head></head>
 <body>
-  <h1>Header message</h1>
-  <p>Custom message {}</p>
+  <p>{}</p>
 </body>
 </html>
 """}
