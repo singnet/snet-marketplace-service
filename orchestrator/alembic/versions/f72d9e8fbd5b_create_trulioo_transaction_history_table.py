@@ -29,8 +29,11 @@ def upgrade():
             `record_status` varchar(64) NOT NULL,
             `row_created` timestamp NULL DEFAULT NULL,
             `row_updated` timestamp NULL DEFAULT NULL,
-            PRIMARY KEY (`row_id`));
-            """)
+            PRIMARY KEY (`row_id`),
+            UNIQUE KEY `uq_trxn_id` (`transaction_id`),
+            UNIQUE KEY `uq_trxn_rec_id` (`transaction_record_id`)
+        );
+    """)
 
 
 def downgrade():

@@ -1,3 +1,4 @@
+import json
 from common.logger import get_logger
 from common.utils import handle_exception_with_slack_notification, generate_lambda_response, validate_dict
 from common.constant import StatusCode, ResponseStatus
@@ -9,15 +10,22 @@ from common.exceptions import BadRequestException
 patch_all()
 logger = get_logger(__name__)
 
-Service = VerificationService()
+verification_service = VerificationService()
 
 
 @handle_exception_with_slack_notification(logger=logger, SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID)
-def get_fields_handler(event, context):
+def get_verification_fields(event, context):
     required_keys = ["configurationName", "countryCode"]
     if not validate_dict(event["pathParameters"], required_keys):
         raise BadRequestException()
     configuration_name = event["pathParameters"]["configurationName"]
     country_code = event["pathParameters"]["countryCode"]
-    response = Service.get_fields(configuration_name, country_code)
+    response = verification_service.get_fields(configuration_name, country_code)
+    return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response})
+
+
+@handle_exception_with_slack_notification(logger=logger, SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID)
+def get_verification_transaction_data(event, context):
+    payload = json.dumps(event["body"])
+    response = verification_service.get_verification_transaction(payload=payload)
     return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response})

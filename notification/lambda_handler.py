@@ -20,8 +20,7 @@ SENDERS = {NotificationType.SUPPORT.value: "Tech Support <tech-support@singulari
 BODY_HTMLS = {NotificationType.SUPPORT.value: """<html>
 <head></head>
 <body>
-  <h1>Header message</h1>
-  <p>Custom message {}</p>
+  <p>{}</p>
 </body>
 </html>
 """}
