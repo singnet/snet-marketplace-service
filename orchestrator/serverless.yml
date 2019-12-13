@@ -358,6 +358,13 @@ functions:
     warmup: true
     handler: orchestrator/handlers.verification_handler.get_verification_fields
     role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
     events:
@@ -380,10 +387,17 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-  get-document-types:
+  get-verification-document-types:
     warmup: true
     handler: orchestrator/handlers.verification_handler.get_document_types_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
     events:
