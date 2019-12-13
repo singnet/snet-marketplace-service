@@ -32,6 +32,7 @@ def get_document_types_handler(event, context):
         raise BadRequestException()
     country_code = event["pathParameters"]["countryCode"]
     response = verification_service.get_document_types(country_code)
+    return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response})
 
 
 @handle_exception_with_slack_notification(logger=logger, SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID)
