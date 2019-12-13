@@ -31,7 +31,7 @@ def get_document_types_handler(event, context):
     if not validate_dict(event["pathParameters"], required_keys):
         raise BadRequestException()
     country_code = event["pathParameters"]["countryCode"]
-    response = service.get_document_types(country_code)
+    response = verification_service.get_document_types(country_code)
 
 
 @handle_exception_with_slack_notification(logger=logger, SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID)
