@@ -1,8 +1,8 @@
 from sqlalchemy import Column, Integer, VARCHAR
-from sqlalchemy.dialects.mysql import JSON
-from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.mysql import JSON, TIMESTAMP
+from sqlalchemy.ext.declarative import declarative_base
 
-from registry.infrastructure.models import Base
+Base = declarative_base()
 
 
 class Organization(Base):
@@ -16,7 +16,6 @@ class Organization(Base):
     url = Column("url", VARCHAR(512), nullable=False)
     contacts = Column("contacts", JSON, nullable=False)
     assets = Column("assets", JSON, nullable=False)
-    groups = relationship('Group', backref='organization', lazy='joined')
 
 
 class WorkFlow(Base):
@@ -27,6 +26,8 @@ class WorkFlow(Base):
     created_by = Column("created_by", VARCHAR(128), nullable=False)
     updated_by = Column("updated_by", VARCHAR(128), nullable=False)
     approved_by = Column("approved_by", VARCHAR(128))
+    create_on = Column("created_on", TIMESTAMP(timezone=False))
+    updated_on = Column("modified_on", TIMESTAMP(timezone=False))
 
 
 class OrganizationArchive(Base):
@@ -40,4 +41,13 @@ class OrganizationArchive(Base):
     url = Column("url", VARCHAR(512), nullable=False)
     contacts = Column("contacts", JSON, nullable=False)
     assets = Column("assets", JSON, nullable=False)
-    groups = relationship('Group', backref='organization', lazy='joined')
+
+
+class Group(Base):
+    __tablename__ = "groups"
+    row_id = Column("row_id", Integer, primary_key=True)
+    name = Column("name", VARCHAR(128), nullable=False)
+    id = Column("id", VARCHAR(128), nullable=False)
+    org_id = Column("org_id", VARCHAR(128))
+    payment_address = Column("payment_address", VARCHAR(128), nullable=False)
+    payment_config = Column("payment_config", JSON, nullable=False)

@@ -1,5 +1,8 @@
+from common.logger import get_logger
 from registry.domain.models.group import Group
 from registry.domain.models.organization import Organization
+
+logger = get_logger(__name__)
 
 
 class OrganizationFactory:
@@ -10,7 +13,11 @@ class OrganizationFactory:
         org_name = payload["org_name"]
         org_type = payload["org_type"]
         description = payload["description"]
-        short_description = payload["description"]
+        short_description = payload["short_description"]
+        if short_description and len(short_description) > 180:
+            logger.info(f"short description is logger than 180 chars, {short_description}")
+            short_description = short_description[:180]
+            logger.info(f"modified short description is {short_description}")
         url = payload["url"]
         contacts = payload["contacts"]
         assets = payload["assets"]
