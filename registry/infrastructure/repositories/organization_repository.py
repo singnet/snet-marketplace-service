@@ -44,3 +44,8 @@ class OrganizationRepository(BaseRepository):
                 )
             )
         self.add_all_items(items)
+
+    def get_org_latest_from_org_id(self, org_id):
+        query = self.session.query(WorkFlow)\
+            .join(Organization, WorkFlow.org_row_id == Organization.row_id).filter(Organization.id == org_id)
+        return query.all()

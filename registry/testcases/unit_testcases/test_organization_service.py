@@ -1,12 +1,13 @@
 import unittest
 
 from registry.domain.services.organization_service import OrganizationService
+from registry.infrastructure.repositories.organization_repository import OrganizationRepository
 
 
 class TestOrganizationService(unittest.TestCase):
 
     def setUp(self):
-        pass
+        self.repository = OrganizationRepository()
 
     def test_add_org_draft(self):
         payload = {
@@ -30,6 +31,9 @@ class TestOrganizationService(unittest.TestCase):
         }
         username = "dummy@dummy.com"
         OrganizationService().add_organization_draft(payload, username)
+        organizations = self.repository.get_org_latest_from_org_id("org_dummy")
+        if len(organizations) > 0:
+            assert organizations[0].status == "DRAFT"
 
     def tearDown(self):
         pass
