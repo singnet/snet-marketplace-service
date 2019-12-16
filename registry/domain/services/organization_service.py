@@ -1,5 +1,4 @@
 from registry.domain.factory.organization_factory import OrganizationFactory
-from registry.domain.item_pipeline import ItemPipeline
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
 
 

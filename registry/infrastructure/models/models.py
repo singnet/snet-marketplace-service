@@ -16,6 +16,7 @@ class Organization(Base):
     url = Column("url", VARCHAR(512), nullable=False)
     contacts = Column("contacts", JSON, nullable=False)
     assets = Column("assets", JSON, nullable=False)
+    ipfs_hash = Column("ipfs_hash", VARCHAR(255))
 
 
 class WorkFlow(Base):
@@ -41,6 +42,7 @@ class OrganizationArchive(Base):
     url = Column("url", VARCHAR(512), nullable=False)
     contacts = Column("contacts", JSON, nullable=False)
     assets = Column("assets", JSON, nullable=False)
+    ipfs_hash = Column("ipfs_hash", VARCHAR(255))
 
 
 class Group(Base):

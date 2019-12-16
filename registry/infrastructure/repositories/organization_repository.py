@@ -17,7 +17,8 @@ class OrganizationRepository(BaseRepository):
             short_description=organization.short_description,
             url=organization.url,
             contacts=organization.contacts,
-            assets=organization.assets
+            assets=organization.assets,
+            ipfs_hash=organization.ipfs_hash
         )
         self.add_item(organization_item)
         org_row_id = organization_item.row_id

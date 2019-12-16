@@ -1,47 +1,19 @@
+from common.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class Organization:
-    def __init__(self, name, org_id, org_type, description, short_description, url, contacts, assets):
-        if name is None:
-            self.name = ""
-        else:
-            self.name = name
-
-        if org_id is None:
-            self.org_id = ""
-        else:
-            self.org_id = org_id
-
-        if org_type is None:
-            self.org_type = ""
-        else:
-            self.org_type = org_type
-
-        if description is None:
-            self.description = ""
-        else:
-            self.description = description
-
-        if short_description is None:
-            self.short_description = ""
-        else:
-            self.short_description = short_description
-
-        if url is None:
-            self.url = ""
-        else:
-            self.url = url
-
-        if contacts is None:
-            self.contacts = []
-        else:
-            self.contacts = contacts
-
-        if assets is None:
-            self.assets = {}
-        else:
-            self.assets = assets
-
+    def __init__(self, name, org_id, org_type, description, short_description, url, contacts, assets, ipfs_hash):
+        self.name = name
+        self.org_id = org_id
+        self.org_type = org_type
+        self.description = description
+        self.short_description = short_description
+        self.url = url
+        self.contacts = contacts
+        self.assets = assets
+        self.ipfs_hash = ipfs_hash
         self.groups = []
 
     def add_group(self, group):
@@ -64,5 +36,23 @@ class Organization:
             "assets": {
 
             },
-            "groups": [ group.to_dict() for group in self.groups ]
+            "groups": [group.to_dict() for group in self.groups]
         }
+
+    def validate_draft(self):
+        validation = True
+        validation_keys = [self.org_id, self.name, self.org_type]
+        for key in validation_keys:
+            if key is None or len(key):
+                validation = False
+
+        if self.short_description is not None and len(self.short_description) > 180:
+            return False
+        return validation
+
+    def validate_approval_state(self):
+        validation = False
+        return self.validate_draft() and validation
+
+    def validate_publish(self):
+        return self.validate_approval_state() and (self.ipfs_hash is not None and len(self.ipfs_hash)!=0)
