@@ -1,7 +1,7 @@
 import unittest
 import json
 from unittest.mock import patch
-from orchestrator.services.verification_service import VerificationService
+from verification.services.verification_service import VerificationService
 from requests import Response
 
 
