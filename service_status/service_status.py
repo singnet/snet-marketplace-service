@@ -136,7 +136,7 @@ class ServiceStatus:
 
     def _get_slack_message(self, org_id, service_id, endpoint):
         slack_message = f"```Alert!\n\nService {service_id} under organization {org_id} is down.\nEndpoint: {endpoint}" \
-                        f"\n\nFor any queries please email at tech-support@singularitynet.io. \n\nWarmest regards," \
+                        f"\n\nFor any queries please email at cs-marketplace@singularitynet.io. \n\nWarmest regards," \
                         f"\nSingularityNET Marketplace Team```"
         return slack_message
 
