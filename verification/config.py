@@ -14,6 +14,11 @@ NETWORKS = {
     }
 }
 SLACK_HOOK = {}
-# Verification
+
+# TRULIOO
 TRULIOO_BASE_URL = ""
 TRULIOO_API_KEY = ""
+
+# Passbase
+PASSBASE_BASE_URL = "https://app.passbase.com/api/v1/"
+PASSBASE_API_SECRET = "Epr1QDBkkBatekhRt9tU3FOD8uNrfg28ABUCOrwKgKCRzp6WS07IjCSqb5NXjsKRXgDBnQKivRvgDp9qFKDUZ3XgnQCVeCJRtccdmKcgOFeSHzskUKL3zOF7UQt0lFUd"
