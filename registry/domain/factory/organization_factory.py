@@ -18,10 +18,10 @@ class OrganizationFactory:
         url = payload.get("url", None)
         contacts = payload.get("contacts", None)
         assets = payload.get("assets", None)
-        ipfs_hash = payload.get("ipfs_hash", None)
+        metadata_ipfs_hash = payload.get("metadata_ipfs_hash", None)
         groups = OrganizationFactory.parse_raw_list_groups(payload.get("groups", []))
         organization = Organization(org_name, org_id, org_uuid, org_type, description,
-                                    short_description, url, contacts, assets, ipfs_hash)
+                                    short_description, url, contacts, assets, metadata_ipfs_hash)
         organization.add_all_groups(groups)
         return organization
 
@@ -44,7 +44,14 @@ class OrganizationFactory:
     @staticmethod
     def parse_organization_data_model(item):
         organization = Organization(
-            item.name, item.org_id, item.org_uuid, item.org_type, item.description,
-            item.short_description, item.url, item.contacts, item.assets, item.ipfs_hash
+            item.name, item.org_id, item.org_uuid, item.type, item.description,
+            item.short_description, item.url, item.contacts, item.assets, item.metadata_ipfs_hash
         )
         return organization
+
+    @staticmethod
+    def parse_organization_data_model_list(items):
+        organizations = []
+        for item in items:
+            organizations.append(OrganizationFactory.parse_organization_data_model(item))
+        return organizations

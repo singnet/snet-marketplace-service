@@ -1,6 +1,8 @@
 from datetime import datetime
 
-from registry.infrastructure.models.models import Group, OrganizationReviewWorkflow, OrganizationHistory
+from registry.domain.factory.organization_factory import OrganizationFactory
+from registry.infrastructure.models.models import Group, OrganizationReviewWorkflow, \
+    OrganizationHistory, OrganizationMember
 from registry.infrastructure.models.models import Organization
 from registry.infrastructure.repositories.base_repository import BaseRepository
 
@@ -8,7 +10,7 @@ from registry.infrastructure.repositories.base_repository import BaseRepository
 class OrganizationRepository(BaseRepository):
 
     def draft_update_org(self, organization, username):
-        current_drafts = self.get_current_drafts(organization)
+        current_drafts = self._get_current_drafts(organization)
         if len(current_drafts) > 0:
             self.update_org_draft(current_drafts[0], organization, username)
         else:
@@ -26,7 +28,7 @@ class OrganizationRepository(BaseRepository):
             url=organization.url,
             contacts=organization.contacts,
             assets=organization.assets,
-            ipfs_hash=organization.ipfs_hash
+            metadata_ipfs_hash=organization.metadata_ipfs_hash
         )
         self.add_item(organization_item)
         org_row_id = organization_item.row_id
@@ -52,18 +54,25 @@ class OrganizationRepository(BaseRepository):
         current_draft.url = organization.url
         current_draft.contacts = organization.contacts
         current_draft.assets = organization.assets
-        current_draft.ipfs_hash = organization.ipfs_hash
+        current_draft.metadata_ipfs_hash = organization.metadata_ipfs_hash
         current_draft.updated_by = username
         current_draft.updated_on = datetime.utcnow()
         self.session.commit()
 
-    def get_latest_org_from_org_id(self, org_uuid):
-        query = self.session.query(OrganizationReviewWorkflow)\
-            .join(Organization, OrganizationReviewWorkflow.org_row_id == Organization.row_id)\
-            .filter(Organization.org_uuid == org_uuid)
-        return query.all()
+    def get_latest_org_from_org_uuid(self, org_uuid):
+        pass
 
-    def get_current_drafts(self, organization):
+    def changed_status_publish_inprogress(self, org_uuid, metadata_ipfs_hash):
+        self.get_approved_org_from_org_uuid(org_uuid)
+
+    def get_approved_org_from_org_uuid(self, org_uuid):
+        organizations = self.session.query(Organization) \
+            .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
+            .filter(Organization.org_uuid == org_uuid)\
+            .filter(OrganizationReviewWorkflow.status == "APPROVED").all()
+        return OrganizationFactory.parse_organization_data_model_list(organizations)
+
+    def _get_current_drafts(self, organization):
         current_drafts = self.session.query(Organization) \
             .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
             .filter(Organization.org_uuid == organization.org_uuid) \
@@ -91,13 +100,36 @@ class OrganizationRepository(BaseRepository):
                     url=org.url,
                     contacts=org.contacts,
                     assets=org.assets,
-                    ipfs_hash=org.ipfs_hash
+                    metadata_ipfs_hash=org.metadata_ipfs_hash
                 ))
 
             self.add_all_items(org_history)
-            self.session.commit()
-            self.session.query(Organization).filter(Organization.row_id.in_(row_ids))\
+            self.session.query(Organization).filter(Organization.row_id.in_(row_ids)) \
                 .delete(synchronize_session='fetch')
+            self.add_all_items(org_history)
             self.session.commit()
-            x = 0
-        self.add_all_items(items)
+
+    def get_organization_for_user(self, username):
+        subquery = self.session.query(Organization)\
+            .join(OrganizationMember, Organization.org_uuid == OrganizationMember.org_uuid)\
+            .filter(OrganizationMember.username == username).subquery()
+        organizations = self.session.query(
+            subquery.c.row_id.label("row_id"),
+            subquery.c.name.label("name"),
+            subquery.c.org_uuid.label("org_uuid"),
+            subquery.c.org_id.label("org_id"),
+            subquery.c.type.label("type"),
+            subquery.c.description.label("description"),
+            subquery.c.short_description.label("short_description"),
+            subquery.c.url.label("url"),
+            subquery.c.contacts.label("contacts"),
+            subquery.c.metadata_ipfs_hash.label("metadata_ipfs_hash"),
+            OrganizationReviewWorkflow
+        ).join(OrganizationReviewWorkflow, subquery.c.row_id == OrganizationReviewWorkflow.org_row_id).all()
+        return organizations
+
+    def get_published_organization(self):
+        organization = self.session.query(Organization)\
+            .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id)\
+            .filter(OrganizationReviewWorkflow == "PUBLISHED")
+        return OrganizationFactory.parse_organization_data_model_list(organization)

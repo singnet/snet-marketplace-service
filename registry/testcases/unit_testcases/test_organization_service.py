@@ -15,7 +15,7 @@ class TestOrganizationService(unittest.TestCase):
             "org_uuid": "c8494b71dca1469f931686bf3798ab14",
             "org_name": "dummy_org",
             "org_type": "individual",
-            "ipfs_hash": "",
+            "metadata_ipfs_hash": "",
             "description": "this is the dummy org for testcases",
             "short_description": "that is the short description",
             "url": "https://dummy.dummy",
@@ -57,6 +57,16 @@ class TestOrganizationService(unittest.TestCase):
         username = "dummy@dummy.com"
         OrganizationService().add_organization_draft(payload, username)
         assert True
+
+    def test_get_org_for_username(self):
+        username = "dummy@dummy.io"
+        OrganizationService().get_organizations_for_user(username)
+
+    def test_get_organizations(self):
+        OrganizationService().get_organization()
+
+    def test_publish_org_ipfs(self):
+        OrganizationService().publish_org_ipfs("c8494b71dca1469f931686bf3798ab14")
 
     def tearDown(self):
         pass

@@ -22,3 +22,8 @@ SLACK_HOOK = {
         'Content-Type': 'application/json'
     }
 }
+IPFS_URL = {
+    'url': '',
+    'port': '80',
+
+}
