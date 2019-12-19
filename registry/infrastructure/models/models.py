@@ -7,9 +7,10 @@ Base = declarative_base()
 
 class Organization(Base):
     __tablename__ = "organization"
-    row_id = Column("row_id", Integer, primary_key=True)
+    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
     name = Column("name", VARCHAR(128), nullable=False)
-    id = Column("id", VARCHAR(128), nullable=False, unique=True)
+    org_uuid = Column("org_uuid", VARCHAR(128))
+    org_id = Column("id", VARCHAR(128), nullable=False)
     type = Column("type", VARCHAR(128), nullable=False)
     description = Column("description", VARCHAR(1024), nullable=False)
     short_description = Column("short_description", VARCHAR(1024), nullable=False)
@@ -19,9 +20,9 @@ class Organization(Base):
     ipfs_hash = Column("ipfs_hash", VARCHAR(255))
 
 
-class WorkFlow(Base):
+class OrganizationReviewWorkflow(Base):
     __tablename__ = "organization_review_workflow"
-    row_id = Column("row_id", Integer, primary_key=True)
+    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
     org_row_id = Column("organization_row_id", Integer, nullable=False)
     status = Column("status", VARCHAR(128), nullable=False)
     created_by = Column("created_by", VARCHAR(128), nullable=False)
@@ -31,11 +32,12 @@ class WorkFlow(Base):
     updated_on = Column("modified_on", TIMESTAMP(timezone=False))
 
 
-class OrganizationArchive(Base):
-    __tablename__ = "organization_archive"
+class OrganizationHistory(Base):
+    __tablename__ = "organization_hostory"
     row_id = Column("row_id", Integer, primary_key=True)
     name = Column("name", VARCHAR(128), nullable=False)
-    id = Column("id", VARCHAR(128), nullable=False, unique=True)
+    org_uuid = Column("org_uuid", VARCHAR(128))
+    org_id = Column("id", VARCHAR(128), nullable=False)
     type = Column("type", VARCHAR(128), nullable=False)
     description = Column("description", VARCHAR(1024), nullable=False)
     short_description = Column("short_description", VARCHAR(1024), nullable=False)
@@ -47,9 +49,17 @@ class OrganizationArchive(Base):
 
 class Group(Base):
     __tablename__ = "groups"
-    row_id = Column("row_id", Integer, primary_key=True)
+    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
     name = Column("name", VARCHAR(128), nullable=False)
     id = Column("id", VARCHAR(128), nullable=False)
-    org_id = Column("org_id", VARCHAR(128))
+    org_uuid = Column("org_uuid", VARCHAR(128))
     payment_address = Column("payment_address", VARCHAR(128), nullable=False)
     payment_config = Column("payment_config", JSON, nullable=False)
+
+
+class OrganizationMember(Base):
+    __tablename__ = "org_member"
+    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
+    org_uuid = Column("org_uuid", VARCHAR(128))
+    role = Column("role", VARCHAR(128))
+    username = Column("username", VARCHAR(128))

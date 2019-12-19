@@ -12,6 +12,7 @@ class OrganizationFactory:
         org_id = payload.get("org_id", None)
         org_name = payload.get("org_name", None)
         org_type = payload.get("org_type", None)
+        org_uuid = payload.get("org_uuid", None)
         description = payload.get("description", None)
         short_description = payload.get("short_description", None)
         url = payload.get("url", None)
@@ -19,7 +20,7 @@ class OrganizationFactory:
         assets = payload.get("assets", None)
         ipfs_hash = payload.get("ipfs_hash", None)
         groups = OrganizationFactory.parse_raw_list_groups(payload.get("groups", []))
-        organization = Organization(org_name, org_id, org_type, description,
+        organization = Organization(org_name, org_id, org_uuid, org_type, description,
                                     short_description, url, contacts, assets, ipfs_hash)
         organization.add_all_groups(groups)
         return organization
@@ -39,3 +40,11 @@ class OrganizationFactory:
         payment_config = raw_group.get("payment_config", None)
         group = Group(group_name, group_id, payment_address, payment_config)
         return group
+
+    @staticmethod
+    def parse_organization_data_model(item):
+        organization = Organization(
+            item.name, item.org_id, item.org_uuid, item.org_type, item.description,
+            item.short_description, item.url, item.contacts, item.assets, item.ipfs_hash
+        )
+        return organization

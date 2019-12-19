@@ -1,12 +1,15 @@
+from uuid import uuid4
 from common.logger import get_logger
 
 logger = get_logger(__name__)
 
 
 class Organization:
-    def __init__(self, name, org_id, org_type, description, short_description, url, contacts, assets, ipfs_hash):
+    def __init__(self, name, org_id, org_uuid, org_type, description,
+                 short_description, url, contacts, assets, ipfs_hash):
         self.name = name
         self.org_id = org_id
+        self.org_uuid = org_uuid
         self.org_type = org_type
         self.description = description
         self.short_description = short_description
@@ -15,6 +18,12 @@ class Organization:
         self.assets = assets
         self.ipfs_hash = ipfs_hash
         self.groups = []
+
+    def setup_id(self):
+        if self.org_uuid is None:
+            self.org_uuid = uuid4()
+        if self.org_type is "individual" and self.org_id is None:
+            self.org_id = self.org_uuid
 
     def add_group(self, group):
         self.groups.append(group)
@@ -55,4 +64,4 @@ class Organization:
         return self.validate_draft() and validation
 
     def validate_publish(self):
-        return self.validate_approval_state() and (self.ipfs_hash is not None and len(self.ipfs_hash)!=0)
+        return self.validate_approval_state() and (self.ipfs_hash is not None and len(self.ipfs_hash) != 0)
