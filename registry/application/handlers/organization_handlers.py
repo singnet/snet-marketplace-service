@@ -18,7 +18,7 @@ def get_all_org(event, context):
 def add_org(event, context):
     payload = json.loads(event["body"])
     required_keys = ["org_id", "org_uuid", "org_name", "org_type", "metadata_ipfs_hash", "description",
-                     "short_description", "url", "contacts", "assets", "groups"]
+                     "short_description", "url", "contacts", "assets"]
 
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     if not validate_dict(payload, required_keys):
@@ -37,7 +37,7 @@ def submit_org(event, context):
     if not "org_id" not in path_parameters:
         raise BadRequestException()
     org_uuid = path_parameters["org_id"]
-    response = OrganizationService().submit_org_for_approval(org_uuid)
+    response = OrganizationService().submit_org_for_approval(org_uuid, username)
 
     return generate_lambda_response(
         StatusCode,
@@ -51,7 +51,7 @@ def publish_org(event, context):
     if not "org_id" not in path_parameters:
         raise BadRequestException()
     org_uuid = path_parameters["org_id"]
-    response = OrganizationService().publish_org(org_uuid)
+    response = OrganizationService().publish_org(org_uuid, username)
 
     return generate_lambda_response(
         StatusCode,

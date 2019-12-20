@@ -8,6 +8,7 @@ from registry.infrastructure.repositories.organization_repository import Organiz
 class OrganizationService:
     def __init__(self):
         self.org_repo = OrganizationRepository()
+
     def add_organization_draft(self, payload, username):
         """
             TODO: add member owner validation
@@ -20,8 +21,9 @@ class OrganizationService:
         self.org_repo.export_org_with_status(organization, "PENDING_APPROVAL")
         return organization.to_dict()
 
-    def submit_org_for_approval(self, org_uuid):
-        pass
+    def submit_org_for_approval(self, org_uuid, username):
+        self.org_repo.change_org_status(org_uuid, "DRAFT", "APPROVAL_PENDING", username)
+        return "OK"
 
     def publish_org(self, org_uuid, username):
         orgs = self.org_repo.get_approved_org(org_uuid)
@@ -29,13 +31,13 @@ class OrganizationService:
             raise Exception(f"Organization not found with uuid {org_uuid}")
         organization = orgs[0]
         metadata = organization.to_metadata()
-        metadata_ipfs_hash = self.publish_org_to_ipfs(metadata, org_uuid)
+        metadata_ipfs_hash = self._publish_org_to_ipfs(metadata, org_uuid)
         organization.set_metadata_ipfs_hash(metadata_ipfs_hash)
         self.org_repo.export_org_with_status(organization, "APPROVED")
         self.org_repo.add_org_with_status(organization, "PUBLISH_IN_PROGRESS", username)
         return organization.to_dict()
 
-    def publish_org_to_ipfs(self, metadata, org_uuid):
+    def _publish_org_to_ipfs(self, metadata, org_uuid):
         filename = f"{org_uuid}_org_metadata.json"
         json_to_file(metadata, filename)
         ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])

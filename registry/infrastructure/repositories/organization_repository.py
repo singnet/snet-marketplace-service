@@ -10,7 +10,7 @@ from registry.infrastructure.repositories.base_repository import BaseRepository
 class OrganizationRepository(BaseRepository):
 
     def draft_update_org(self, organization, username):
-        current_drafts = self._get_current_drafts(organization.org_uuid)
+        current_drafts = self._get_org_with_status(organization.org_uuid, "DRAFT")
         if len(current_drafts) > 0:
             self.update_org_draft(current_drafts[0], organization, username)
         else:
@@ -46,42 +46,36 @@ class OrganizationRepository(BaseRepository):
         self.session.commit()
 
     def update_org_draft(self, current_draft, organization, username):
-        current_draft.name = organization.name
-        current_draft.org_id = organization.org_id
-        current_draft.type = organization.org_type
-        current_draft.description = organization.description
-        current_draft.short_description = organization.short_description
-        current_draft.url = organization.url
-        current_draft.contacts = organization.contacts
-        current_draft.assets = organization.assets
-        current_draft.metadata_ipfs_hash = organization.metadata_ipfs_hash
-        current_draft.updated_by = username
-        current_draft.updated_on = datetime.utcnow()
+        current_draft.Organization.name = organization.name
+        current_draft.Organization.org_id = organization.org_id
+        current_draft.Organization.type = organization.org_type
+        current_draft.Organization.description = organization.description
+        current_draft.Organization.short_description = organization.short_description
+        current_draft.Organization.url = organization.url
+        current_draft.Organization.contacts = organization.contacts
+        current_draft.Organization.assets = organization.assets
+        current_draft.Organization.metadata_ipfs_hash = organization.metadata_ipfs_hash
+        current_draft.OrganizationReviewWorkflow.updated_by = username
+        current_draft.OrganizationReviewWorkflow.updated_on = datetime.utcnow()
         self.session.commit()
 
     def get_latest_org_from_org_uuid(self, org_uuid):
         pass
 
-    def get_approved_org(self, org_uuid):
-        organizations = self._get_approved_org_for_org_uuid(org_uuid)
+    def get_organization_draft(self, org_uuid):
+        organizations = self._get_org_with_status(org_uuid, "DRAFT")
         return OrganizationFactory.parse_organization_workflow_data_model_list(organizations)
 
-    def _get_approved_org_for_org_uuid(self, org_uuid):
+    def get_approved_org(self, org_uuid):
+        organizations = self._get_org_with_status(org_uuid, "APPROVED")
+        return OrganizationFactory.parse_organization_workflow_data_model_list(organizations)
+
+    def _get_org_with_status(self, org_uuid, status):
         organizations = self.session.query(Organization, OrganizationReviewWorkflow) \
             .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
             .filter(Organization.org_uuid == org_uuid) \
-            .filter(OrganizationReviewWorkflow.status == "APPROVED").all()
+            .filter(OrganizationReviewWorkflow.status == status).all()
         return organizations
-
-    def get_draft_for_org(self, org_uuid):
-        pass
-
-    def _get_current_drafts(self, org_uuid):
-        current_drafts = self.session.query(Organization) \
-            .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
-            .filter(Organization.org_uuid == org_uuid) \
-            .filter(OrganizationReviewWorkflow.status == "DRAFT").all()
-        return current_drafts
 
     def export_org_with_status(self, organization, status):
         pending_approval_org = self.session.query(Organization) \
@@ -137,3 +131,16 @@ class OrganizationRepository(BaseRepository):
             .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id)\
             .filter(OrganizationReviewWorkflow == "PUBLISHED")
         return OrganizationFactory.parse_organization_data_model_list(organization)
+
+    def change_org_status(self, org_uuid, current_status, new_status, username):
+        orgs = self._get_org_with_status(org_uuid, current_status)
+        if len(orgs) > 0:
+            self._update_org_status(orgs[0], new_status, username)
+        else:
+            raise Exception(f"DRAFT for organization {org_uuid} not found")
+
+    def _update_org_status(self, org_workflow_model, status, username):
+        current_utc_time = datetime.utcnow()
+        org_workflow_model.OrganizationReviewWorkflow.status = status
+        org_workflow_model.OrganizationReviewWorkflow.updated_on = current_utc_time
+        org_workflow_model.OrganizationReviewWorkflow.updated_by = username
