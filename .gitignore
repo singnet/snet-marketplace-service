@@ -103,9 +103,7 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-**/config*py
 **/setting*py
-config*py
 setting*py
 .serverless
 .serverless/**

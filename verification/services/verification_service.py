@@ -1,10 +1,10 @@
 import requests
 
-from orchestrator.config import TRULIOO_BASE_URL, TRULIOO_API_KEY
+from verification.config import TRULIOO_BASE_URL, TRULIOO_API_KEY
 from common.constant import StatusCode
 from common.repository import Repository
-from orchestrator.config import NETWORK_ID, NETWORKS
-from orchestrator.dao.trulioo_transaction_history_dao import TruliooTransactionHistoryDAO
+from verification.config import NETWORK_ID, NETWORKS
+from verification.dao.transaction_history_dao import TruliooTransactionHistoryDAO
 from datetime import datetime as dt
 
 
