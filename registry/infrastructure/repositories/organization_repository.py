@@ -10,7 +10,7 @@ from registry.infrastructure.repositories.base_repository import BaseRepository
 class OrganizationRepository(BaseRepository):
 
     def draft_update_org(self, organization, username):
-        current_drafts = self._get_org_with_status(organization.org_uuid, "DRAFT")
+        current_drafts = self.get_org_with_status(organization.org_uuid, "DRAFT")
         if len(current_drafts) > 0:
             self.update_org_draft(current_drafts[0], organization, username)
         else:
@@ -63,14 +63,14 @@ class OrganizationRepository(BaseRepository):
         pass
 
     def get_organization_draft(self, org_uuid):
-        organizations = self._get_org_with_status(org_uuid, "DRAFT")
+        organizations = self.get_org_with_status(org_uuid, "DRAFT")
         return OrganizationFactory.parse_organization_workflow_data_model_list(organizations)
 
     def get_approved_org(self, org_uuid):
-        organizations = self._get_org_with_status(org_uuid, "APPROVED")
+        organizations = self.get_org_with_status(org_uuid, "APPROVED")
         return OrganizationFactory.parse_organization_workflow_data_model_list(organizations)
 
-    def _get_org_with_status(self, org_uuid, status):
+    def get_org_with_status(self, org_uuid, status):
         organizations = self.session.query(Organization, OrganizationReviewWorkflow) \
             .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
             .filter(Organization.org_uuid == org_uuid) \
@@ -133,9 +133,10 @@ class OrganizationRepository(BaseRepository):
         return OrganizationFactory.parse_organization_data_model_list(organization)
 
     def change_org_status(self, org_uuid, current_status, new_status, username):
-        orgs = self._get_org_with_status(org_uuid, current_status)
+        orgs = self.get_org_with_status(org_uuid, current_status)
         if len(orgs) > 0:
             self._update_org_status(orgs[0], new_status, username)
+            self.session.commit()
         else:
             raise Exception(f"DRAFT for organization {org_uuid} not found")
 

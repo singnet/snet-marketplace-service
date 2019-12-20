@@ -32,10 +32,16 @@ class Organization:
         self.metadata_ipfs_hash = metadata_ipfs_hash
 
     def setup_id(self):
-        if self.org_uuid is None or len(self.org_uuid) == 0:
+        if self.is_org_uuid_set():
             self.org_uuid = uuid4().hex
-        if self.org_type is "individual" and self.org_id is None:
+        if self.org_type is "individual" and self.is_org_id_set():
             self.org_id = self.org_uuid
+
+    def is_org_id_set(self):
+        return self.org_id is None or len(self.org_id) == 0
+
+    def is_org_uuid_set(self):
+        return self.org_uuid is None or len(self.org_uuid) == 0
 
     def add_group(self, group):
         self.groups.append(group)
