@@ -38,7 +38,7 @@ class TestOrganizationService(unittest.TestCase):
         if len(orgs) == 0:
             assert False
         else:
-            self.assertEqual(orgs[0].uuid, test_org_id)
+            self.assertEqual(orgs[0].org_uuid, test_org_id)
 
         payload = {
             "org_id": "test_org_id",
@@ -57,7 +57,7 @@ class TestOrganizationService(unittest.TestCase):
         if len(orgs) == 0:
             assert False
         else:
-            self.assertEqual(orgs[0].uuid, test_org_id)
+            self.assertEqual(orgs[0].org_uuid, test_org_id)
             self.assertEqual(orgs[0].short_description, "that is the short description")
 
     def test_add_new_org_draft_two(self):
