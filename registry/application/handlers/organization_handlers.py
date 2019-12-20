@@ -34,7 +34,7 @@ def add_org(event, context):
 def submit_org(event, context):
     path_parameters = event["pathParameters"]
     username = event["requestContext"]["authorizer"]["claims"]["email"]
-    if not "org_id" not in path_parameters:
+    if "org_id" not in path_parameters:
         raise BadRequestException()
     org_uuid = path_parameters["org_id"]
     response = OrganizationService().submit_org_for_approval(org_uuid, username)
@@ -48,7 +48,7 @@ def submit_org(event, context):
 def publish_org(event, context):
     path_parameters = event["pathParameters"]
     username = event["requestContext"]["authorizer"]["claims"]["email"]
-    if not "org_id" not in path_parameters:
+    if "org_id" not in path_parameters:
         raise BadRequestException()
     org_uuid = path_parameters["org_id"]
     response = OrganizationService().publish_org(org_uuid, username)
