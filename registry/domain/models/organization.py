@@ -34,7 +34,7 @@ class Organization:
     def setup_id(self):
         if self.is_org_uuid_set():
             self.org_uuid = uuid4().hex
-        if self.org_type is "individual" and self.is_org_id_set():
+        if self.org_type == "individual" and self.is_org_id_set():
             self.org_id = self.org_uuid
 
     def is_org_id_set(self):
