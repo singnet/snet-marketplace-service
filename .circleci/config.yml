@@ -47,7 +47,7 @@ jobs:
             sudo apt-get update
             sudo apt-get install mysql-client -y
             sudo pip install coverage coveralls pytest boto3 alembic
-            mysql -h 127.0.0.1 -u unittest_root -punittest_pwd unittest_db -e "create database registry_unittest_db"
+            mysql -h 127.0.0.1 -u unittest_root -punittest_pwd -e "create database registry_unittest_db"
             export PYTHONPATH=$PWD
             for alembic_file in `ls */alembic*.ini | cut -d '/' -f1`;do cd $alembic_file; echo $alembic_file; alembic upgrade head; cd .. ;done
             mysql -h 127.0.0.1 -u unittest_root -punittest_pwd unittest_db < orchestrator/testcases/script.sql
