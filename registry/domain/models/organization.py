@@ -32,8 +32,8 @@ class Organization:
         self.metadata_ipfs_hash = metadata_ipfs_hash
 
     def setup_id(self):
-        if self.org_uuid is None:
-            self.org_uuid = uuid4()
+        if self.org_uuid is None or len(self.org_uuid) == 0:
+            self.org_uuid = uuid4().hex
         if self.org_type is "individual" and self.org_id is None:
             self.org_id = self.org_uuid
 
@@ -76,11 +76,11 @@ class Organization:
             "groups": [group.to_dict() for group in self.groups]
         }
 
-    def validate_draft(self):
+    def is_valid_draft(self):
         validation = True
         validation_keys = [self.org_id, self.name, self.org_type, self.org_uuid]
         for key in validation_keys:
-            if key is None or len(key):
+            if key is None or len(key) == 0:
                 validation = False
 
         if self.short_description is not None and len(self.short_description) > 180:
@@ -89,7 +89,7 @@ class Organization:
 
     def validate_approval_state(self):
         validation = False
-        return self.validate_draft() and validation
+        return self.is_valid_draft() and validation
 
     def validate_publish(self):
         return self.validate_approval_state() and (

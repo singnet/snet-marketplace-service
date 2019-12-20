@@ -17,26 +17,47 @@ def get_all_org(event, context):
 @handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def add_org(event, context):
     payload = json.loads(event["body"])
-    query_parameters = event["queryStringParameters"]
     required_keys = ["org_id", "org_uuid", "org_name", "org_type", "metadata_ipfs_hash", "description",
                      "short_description", "url", "contacts", "assets", "groups"]
 
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     if not validate_dict(payload, required_keys):
         raise BadRequestException()
-
-    if query_parameters["act"] == "DRAFT":
-        response = OrganizationService().add_organization_draft(payload, username)
-    else:
-        raise Exception("Invalid action")
+    response = OrganizationService().add_organization_draft(payload, username)
 
     return generate_lambda_response(
         StatusCode,
-        {"status": "success", "message": response, "error": {}}, cors_enabled=True
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
-def publish_org_ipfs(event, context):
-    pass
+
+def submit_org(event, context):
+    path_parameters = event["pathParameters"]
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    if not "org_id" not in path_parameters:
+        raise BadRequestException()
+    org_uuid = path_parameters["org_id"]
+    response = OrganizationService().submit_org_for_approval(org_uuid)
+
+    return generate_lambda_response(
+        StatusCode,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+def publish_org(event, context):
+    path_parameters = event["pathParameters"]
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    if not "org_id" not in path_parameters:
+        raise BadRequestException()
+    org_uuid = path_parameters["org_id"]
+    response = OrganizationService().publish_org(org_uuid)
+
+    return generate_lambda_response(
+        StatusCode,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
 
 def get_org(event, context):
     pass

@@ -10,13 +10,13 @@ from registry.infrastructure.repositories.base_repository import BaseRepository
 class OrganizationRepository(BaseRepository):
 
     def draft_update_org(self, organization, username):
-        current_drafts = self._get_current_drafts(organization)
+        current_drafts = self._get_current_drafts(organization.org_uuid)
         if len(current_drafts) > 0:
             self.update_org_draft(current_drafts[0], organization, username)
         else:
-            self.add_org_draft(organization, username)
+            self.add_org_with_status(organization, "DRAFT", username)
 
-    def add_org_draft(self, organization, username):
+    def add_org_with_status(self, organization, status, username):
         current_time = datetime.utcnow()
         organization_item = Organization(
             name=organization.name,
@@ -36,7 +36,7 @@ class OrganizationRepository(BaseRepository):
         self.add_item(
             OrganizationReviewWorkflow(
                 org_row_id=org_row_id,
-                status="DRAFT",
+                status=status,
                 created_by=username,
                 updated_by=username,
                 create_on=current_time,
@@ -62,28 +62,32 @@ class OrganizationRepository(BaseRepository):
     def get_latest_org_from_org_uuid(self, org_uuid):
         pass
 
-    def changed_status_publish_inprogress(self, org_uuid, metadata_ipfs_hash):
-        self.get_approved_org_from_org_uuid(org_uuid)
+    def get_approved_org(self, org_uuid):
+        organizations = self._get_approved_org_for_org_uuid(org_uuid)
+        return OrganizationFactory.parse_organization_workflow_data_model_list(organizations)
 
-    def get_approved_org_from_org_uuid(self, org_uuid):
-        organizations = self.session.query(Organization) \
+    def _get_approved_org_for_org_uuid(self, org_uuid):
+        organizations = self.session.query(Organization, OrganizationReviewWorkflow) \
             .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
-            .filter(Organization.org_uuid == org_uuid)\
+            .filter(Organization.org_uuid == org_uuid) \
             .filter(OrganizationReviewWorkflow.status == "APPROVED").all()
-        return OrganizationFactory.parse_organization_data_model_list(organizations)
+        return organizations
 
-    def _get_current_drafts(self, organization):
+    def get_draft_for_org(self, org_uuid):
+        pass
+
+    def _get_current_drafts(self, org_uuid):
         current_drafts = self.session.query(Organization) \
             .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
-            .filter(Organization.org_uuid == organization.org_uuid) \
+            .filter(Organization.org_uuid == org_uuid) \
             .filter(OrganizationReviewWorkflow.status == "DRAFT").all()
         return current_drafts
 
-    def remove_pending_approval_for_org(self, organization):
+    def export_org_with_status(self, organization, status):
         pending_approval_org = self.session.query(Organization) \
             .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
             .filter(Organization.org_uuid == organization.org_uuid) \
-            .filter(OrganizationReviewWorkflow.status == "PENDING_APPROVAL").all()
+            .filter(OrganizationReviewWorkflow.status == status).all()
         if len(pending_approval_org) > 0:
             org_history = []
             row_ids = []

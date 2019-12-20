@@ -55,3 +55,10 @@ class OrganizationFactory:
         for item in items:
             organizations.append(OrganizationFactory.parse_organization_data_model(item))
         return organizations
+
+    @staticmethod
+    def parse_organization_workflow_data_model_list(items):
+        organizations = []
+        for item in items:
+            organizations.append(OrganizationFactory.parse_organization_data_model(item.Organization))
+        return organizations

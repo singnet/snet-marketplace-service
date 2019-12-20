@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch, Mock
 
 from registry.domain.services.organization_service import OrganizationService
 
@@ -12,7 +13,7 @@ class TestOrganizationService(unittest.TestCase):
     def test_add_new_org_draft(self):
         payload = {
             "org_id": "org_dummy",
-            "org_uuid": "c8494b71dca1469f931686bf3798ab14",
+            "org_uuid": "",
             "org_name": "dummy_org",
             "org_type": "individual",
             "metadata_ipfs_hash": "",
@@ -65,8 +66,9 @@ class TestOrganizationService(unittest.TestCase):
     def test_get_organizations(self):
         OrganizationService().get_organization()
 
-    def test_publish_org_ipfs(self):
-        OrganizationService().publish_org_ipfs("c8494b71dca1469f931686bf3798ab14")
+    @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
+    def test_publish_org_ipfs(self, ipfs_mock):
+        OrganizationService().publish_org("184bd22274de45ae9feda73598086fd8", "pratik@dummy.io")
 
     def tearDown(self):
         pass
