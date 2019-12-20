@@ -26,7 +26,7 @@ def add_org(event, context):
     response = OrganizationService().add_organization_draft(payload, username)
 
     return generate_lambda_response(
-        StatusCode,
+        StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
@@ -40,7 +40,7 @@ def submit_org(event, context):
     response = OrganizationService().submit_org_for_approval(org_uuid, username)
 
     return generate_lambda_response(
-        StatusCode,
+        StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
@@ -54,7 +54,7 @@ def publish_org(event, context):
     response = OrganizationService().publish_org(org_uuid, username)
 
     return generate_lambda_response(
-        StatusCode,
+        StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
