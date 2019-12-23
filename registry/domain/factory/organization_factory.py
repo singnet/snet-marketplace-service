@@ -1,4 +1,8 @@
+from datetime import datetime
+
+from common.boto_utils import BotoUtils
 from common.logger import get_logger
+from registry.config import METADATA_FILE_PATH, ASSET_BUCKET, REGION_NAME
 from registry.domain.models.group import Group
 from registry.domain.models.organization import Organization
 
@@ -23,6 +27,22 @@ class OrganizationFactory:
         organization = Organization(org_name, org_id, org_uuid, org_type, description,
                                     short_description, url, contacts, assets, metadata_ipfs_hash)
         organization.add_all_groups(groups)
+        organization.setup_id()
+
+        def extract_and_upload_assets(raw_assets):
+            org_assets = {}
+            boto_utils = BotoUtils(region_name=REGION_NAME)
+            for asset_type, value in raw_assets:
+                current_time = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+                key_name = f"{organization.org_uuid}_{asset_type}_{current_time}.{value['file_type']}"
+                filename = f"{METADATA_FILE_PATH}/{key_name}"
+                with open(filename, 'wb') as image:
+                    image.write(value["raw"])
+                boto_utils.s3_upload_file(filename, ASSET_BUCKET, key_name)
+                asset_url = f"https://{REGION_NAME}.s3.amazonaws.com/{ASSET_BUCKET}/{key_name}"
+                org_assets[asset_type] = asset_url
+            return assets
+
         return organization
 
     @staticmethod

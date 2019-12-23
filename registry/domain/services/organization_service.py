@@ -1,6 +1,7 @@
 import common.ipfs_util as ipfs_util
+from common.boto_utils import BotoUtils
 from common.utils import json_to_file
-from registry.config import IPFS_URL, METADATA_FILE_PATH
+from registry.config import IPFS_URL, METADATA_FILE_PATH, REGION_NAME
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
 
@@ -8,13 +9,13 @@ from registry.infrastructure.repositories.organization_repository import Organiz
 class OrganizationService:
     def __init__(self):
         self.org_repo = OrganizationRepository()
+        self.boto_utils = BotoUtils(region_name=REGION_NAME)
 
     def add_organization_draft(self, payload, username):
         """
             TODO: add member owner validation
         """
         organization = OrganizationFactory.parse_raw_organization(payload)
-        organization.setup_id()
         if not organization.is_valid_draft():
             raise Exception(f"Validation failed for the Organization {organization.to_dict()}")
         self.org_repo.draft_update_org(organization, username)

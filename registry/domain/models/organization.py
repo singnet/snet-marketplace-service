@@ -51,8 +51,8 @@ class Organization:
 
     def to_metadata(self):
         assets = {}
-        for asset in self.assets:
-            assets[asset["type"]] = asset["hash"]
+        for key, value in self.assets:
+            assets[key] = value["hash"]
         return {
             "name": self.name,
             "org_id": self.org_id,

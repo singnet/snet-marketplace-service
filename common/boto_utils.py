@@ -20,3 +20,11 @@ class BotoUtils:
         lambda_response = lambda_client.invoke(FunctionName=lambda_function_arn, InvocationType=invocation_type,
                                                Payload=payload)
         return json.loads(lambda_response.get('Payload').read())
+
+    def s3_upload_file(self, filename, bucket, key):
+        s3_client = boto3.client('s3')
+        s3_client.upload_file(filename, bucket, key)
+
+    def s3_download_file(self, bucket, key, filename):
+        s3_client = boto3.client('s3')
+        s3_client.download_file(bucket, key, filename)

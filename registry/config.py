@@ -28,3 +28,5 @@ IPFS_URL = {
 
 }
 METADATA_FILE_PATH = "/tmp"
+REGION_NAME = ""
+ASSET_BUCKET = ""

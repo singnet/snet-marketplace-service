@@ -60,7 +60,16 @@ def publish_org(event, context):
 
 
 def get_org(event, context):
-    pass
+    path_parameters = event["pathParameters"]
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    if "org_id" not in path_parameters:
+        raise BadRequestException()
+    response = OrganizationService().get_organizations_for_user(username)
+
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
 
 
 def get_all_groups_for_org(event, context):
