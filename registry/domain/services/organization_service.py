@@ -1,6 +1,6 @@
 import common.ipfs_util as ipfs_util
 from common.utils import json_to_file
-from registry.config import IPFS_URL
+from registry.config import IPFS_URL, METADATA_FILE_PATH
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
 
@@ -38,7 +38,7 @@ class OrganizationService:
         return organization.to_dict()
 
     def _publish_org_to_ipfs(self, metadata, org_uuid):
-        filename = f"{org_uuid}_org_metadata.json"
+        filename = f"{METADATA_FILE_PATH}/{org_uuid}_org_metadata.json"
         json_to_file(metadata, filename)
         ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
         metadata_ipfs_hash = ipfs_utils.write_file_in_ipfs(filename)

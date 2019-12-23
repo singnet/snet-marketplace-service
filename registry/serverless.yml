@@ -81,6 +81,11 @@ functions:
       - http:
           method: GET
           path: /org
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -107,6 +112,11 @@ functions:
       - http:
           method: POST
           path: /org
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
           request:
             parameters:
               paths:
@@ -137,6 +147,11 @@ functions:
       - http:
           method: POST
           path: /org/{org_id}/submit
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
           request:
             parameters:
               paths:
@@ -167,6 +182,11 @@ functions:
       - http:
           method: POST
           path: /org/{org_id}/publish
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
           request:
             parameters:
               paths:
@@ -227,6 +247,11 @@ functions:
       - http:
           method: GET
           path: /org/{org_id}/group
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
           request:
             parameters:
               paths:
@@ -257,6 +282,11 @@ functions:
       - http:
           method: POST
           path: /org/{org_id}/group
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
           request:
             parameters:
               paths:
@@ -287,6 +317,11 @@ functions:
       - http:
           method: GET
           path: /org/{org_id}/group/{group_id}
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
           request:
             parameters:
               paths:
