@@ -27,4 +27,4 @@ IPFS_URL = {
     'port': '80',
 
 }
-METADATA_FILE_PATH = ""
+METADATA_FILE_PATH = "/tmp"
