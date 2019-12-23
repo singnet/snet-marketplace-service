@@ -38,7 +38,8 @@ class OrganizationService:
         return organization.to_dict()
 
     def _publish_org_to_ipfs(self, metadata, org_uuid):
-        filename = f"{org_uuid}_org_metadata.json"
+        metadata_dir = "/tmp"
+        filename = f"{metadata_dir}/{org_uuid}_org_metadata.json"
         json_to_file(metadata, filename)
         ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
         metadata_ipfs_hash = ipfs_utils.write_file_in_ipfs(filename)
