@@ -1,6 +1,8 @@
-import common.ipfs_util as ipfs_util
-from common.utils import json_to_file
-from registry.config import IPFS_URL, METADATA_FILE_PATH
+import requests
+
+from urllib.parse import urlparse
+from common.boto_utils import BotoUtils
+from registry.config import IPFS_URL, METADATA_FILE_PATH, REGION_NAME, ASSET_DIR
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
 
@@ -8,13 +10,13 @@ from registry.infrastructure.repositories.organization_repository import Organiz
 class OrganizationService:
     def __init__(self):
         self.org_repo = OrganizationRepository()
+        self.boto_utils = BotoUtils(region_name=REGION_NAME)
 
     def add_organization_draft(self, payload, username):
         """
             TODO: add member owner validation
         """
         organization = OrganizationFactory.parse_raw_organization(payload)
-        organization.setup_id()
         if not organization.is_valid_draft():
             raise Exception(f"Validation failed for the Organization {organization.to_dict()}")
         self.org_repo.draft_update_org(organization, username)
@@ -30,19 +32,10 @@ class OrganizationService:
         if len(orgs) == 0:
             raise Exception(f"Organization not found with uuid {org_uuid}")
         organization = orgs[0]
-        metadata = organization.to_metadata()
-        metadata_ipfs_hash = self._publish_org_to_ipfs(metadata, org_uuid)
-        organization.set_metadata_ipfs_hash(metadata_ipfs_hash)
+        organization.publish_org()
         self.org_repo.export_org_with_status(organization, "APPROVED")
         self.org_repo.add_org_with_status(organization, "PUBLISH_IN_PROGRESS", username)
         return organization.to_dict()
-
-    def _publish_org_to_ipfs(self, metadata, org_uuid):
-        filename = f"{METADATA_FILE_PATH}/{org_uuid}_org_metadata.json"
-        json_to_file(metadata, filename)
-        ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
-        metadata_ipfs_hash = ipfs_utils.write_file_in_ipfs(filename)
-        return metadata_ipfs_hash
 
     def get_organizations_for_user(self, username):
         organization = self.org_repo.get_organization_for_user(username)

@@ -1,4 +1,10 @@
+import common.ipfs_util as ipfs_util
+import requests
+
+from urllib.parse import urlparse
 from uuid import uuid4
+from common.utils import json_to_file
+from registry.config import IPFS_URL, METADATA_FILE_PATH, ASSET_DIR
 from common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -28,9 +34,6 @@ class Organization:
         self.metadata_ipfs_hash = metadata_ipfs_hash
         self.groups = []
 
-    def set_metadata_ipfs_hash(self, metadata_ipfs_hash):
-        self.metadata_ipfs_hash = metadata_ipfs_hash
-
     def setup_id(self):
         if self.is_org_uuid_set():
             self.org_uuid = uuid4().hex
@@ -51,8 +54,8 @@ class Organization:
 
     def to_metadata(self):
         assets = {}
-        for asset in self.assets:
-            assets[asset["type"]] = asset["hash"]
+        for key, value in self.assets:
+            assets[key] = value["hash"]
         return {
             "name": self.name,
             "org_id": self.org_id,
@@ -100,3 +103,23 @@ class Organization:
     def validate_publish(self):
         return self.validate_approval_state() and (
                     self.metadata_ipfs_hash is not None and len(self.metadata_ipfs_hash) != 0)
+
+    def publish_assets(self):
+        ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
+        for asset_type in self.assets:
+            url = self.assets[asset_type]["url"]
+            filename = urlparse(url).path.split("/")[-1]
+            response = requests.get(url)
+            filepath = f"{ASSET_DIR}/{filename}"
+            with open(filepath, 'wb') as asset_file:
+                asset_file.write(response.content)
+            asset_ipfs_hash = ipfs_utils.write_file_in_ipfs(filepath)
+            self.assets[asset_type]["ipfs_hash"] = asset_ipfs_hash
+
+    def publish_org(self):
+        self.publish_assets()
+        ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
+        metadata = self.to_metadata()
+        filename = f"{METADATA_FILE_PATH}/{self.org_uuid}_org_metadata.json"
+        json_to_file(metadata, filename)
+        self.metadata_ipfs_hash = ipfs_utils.write_file_in_ipfs(filename)

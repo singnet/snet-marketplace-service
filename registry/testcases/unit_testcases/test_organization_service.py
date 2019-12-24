@@ -11,10 +11,11 @@ from registry.infrastructure.repositories.organization_repository import Organiz
 class TestOrganizationService(unittest.TestCase):
 
     def setUp(self):
-        self.org_service = OrganizationService()
         self.org_repo = OrganizationRepository()
 
-    def test_add_new_org_draft_one(self):
+    @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
+    @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock(return_value="Q3E12")))
+    def test_add_new_org_draft_one(self, mock_boto, mock_ipfs):
         """
         Add organization draft with type individual, org_id wont be given
         """
@@ -28,7 +29,12 @@ class TestOrganizationService(unittest.TestCase):
             "short_description": "that is the short description",
             "url": "https://dummy.dummy",
             "contacts": [],
-            "assets": {}
+            "assets": {
+                "hero_image": {
+                    "raw": b"\x00\x00",
+                    "file_type": "jpg"
+                }
+            }
         }
         username = "pratik@dummy.com"
         response_org = OrganizationService().add_organization_draft(payload, username)
@@ -49,7 +55,12 @@ class TestOrganizationService(unittest.TestCase):
             "short_description": "that is the short description",
             "url": "https://dummy.dummy",
             "contacts": [],
-            "assets": {}
+            "assets": {
+                "hero_image": {
+                    "raw": b"\x00\x00",
+                    "file_type": "jpg"
+                }
+            }
         }
         username = "dummy@dummy.com"
         OrganizationService().add_organization_draft(payload, username)
@@ -60,7 +71,8 @@ class TestOrganizationService(unittest.TestCase):
             self.assertEqual(orgs[0].org_uuid, test_org_id)
             self.assertEqual(orgs[0].short_description, "that is the short description")
 
-    def test_add_new_org_draft_two(self):
+    @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
+    def test_add_new_org_draft_two(self, ipfs_mock):
         """
         Add organization draft without org id with type "organization"
         """
@@ -74,12 +86,19 @@ class TestOrganizationService(unittest.TestCase):
             "short_description": "",
             "url": "",
             "contacts": [],
-            "assets": {}
+            "assets": {
+                "hero_image": {
+                    "raw": b"\x00\x00",
+                    "file_type": "jpg"
+                }
+            }
         }
         username = "pratik@dummy.com"
         self.assertRaises(Exception, OrganizationService().add_organization_draft, payload, username)
 
-    def test_submit_org_for_approval(self):
+    @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
+    def test_submit_org_for_approval(self, ipfs_mock):
+        org_service = OrganizationService()
         payload = {
             "org_id": "",
             "org_uuid": "",
@@ -93,10 +112,10 @@ class TestOrganizationService(unittest.TestCase):
             "assets": {}
         }
         username = "pratik@dummy.com"
-        response_org = self.org_service.add_organization_draft(payload, username)
+        response_org = org_service.add_organization_draft(payload, username)
         test_org_id = response_org["org_uuid"]
 
-        self.org_service.submit_org_for_approval(test_org_id, "dummy@snet.io")
+        org_service.submit_org_for_approval(test_org_id, "dummy@snet.io")
 
         orgs = self.org_repo.get_org_with_status(test_org_id, "APPROVAL_PENDING")
         if len(orgs) == 0:
