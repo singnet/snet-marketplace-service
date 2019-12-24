@@ -10,10 +10,6 @@ from registry.domain.services.organization_service import OrganizationService
 logger = get_logger(__name__)
 
 
-def get_all_org(event, context):
-    pass
-
-
 @handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def add_org(event, context):
     payload = json.loads(event["body"])
@@ -31,6 +27,7 @@ def add_org(event, context):
     )
 
 
+@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def submit_org(event, context):
     path_parameters = event["pathParameters"]
     username = event["requestContext"]["authorizer"]["claims"]["email"]
@@ -45,6 +42,7 @@ def submit_org(event, context):
     )
 
 
+@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def publish_org(event, context):
     path_parameters = event["pathParameters"]
     username = event["requestContext"]["authorizer"]["claims"]["email"]
@@ -59,7 +57,8 @@ def publish_org(event, context):
     )
 
 
-def get_org(event, context):
+@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def get_all_org(event, context):
     path_parameters = event["pathParameters"]
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     if "org_id" not in path_parameters:
@@ -70,6 +69,10 @@ def get_org(event, context):
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
+
+
+def get_org(event, context):
+    pass
 
 
 def get_all_groups_for_org(event, context):
