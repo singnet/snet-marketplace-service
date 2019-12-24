@@ -1,7 +1,10 @@
+import requests
 import common.ipfs_util as ipfs_util
+
+from urllib.parse import urlparse
 from common.boto_utils import BotoUtils
 from common.utils import json_to_file
-from registry.config import IPFS_URL, METADATA_FILE_PATH, REGION_NAME
+from registry.config import IPFS_URL, METADATA_FILE_PATH, REGION_NAME, ASSET_DIR
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
 
@@ -10,6 +13,7 @@ class OrganizationService:
     def __init__(self):
         self.org_repo = OrganizationRepository()
         self.boto_utils = BotoUtils(region_name=REGION_NAME)
+        self.ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
 
     def add_organization_draft(self, payload, username):
         """
@@ -31,18 +35,30 @@ class OrganizationService:
         if len(orgs) == 0:
             raise Exception(f"Organization not found with uuid {org_uuid}")
         organization = orgs[0]
-        metadata = organization.to_metadata()
-        metadata_ipfs_hash = self._publish_org_to_ipfs(metadata, org_uuid)
+        self._publish_assets_to_ipfs(organization)
+        metadata_ipfs_hash = self._publish_org_to_ipfs(organization)
         organization.set_metadata_ipfs_hash(metadata_ipfs_hash)
         self.org_repo.export_org_with_status(organization, "APPROVED")
         self.org_repo.add_org_with_status(organization, "PUBLISH_IN_PROGRESS", username)
         return organization.to_dict()
 
-    def _publish_org_to_ipfs(self, metadata, org_uuid):
-        filename = f"{METADATA_FILE_PATH}/{org_uuid}_org_metadata.json"
+    def _publish_assets_to_ipfs(self, organization):
+        assets = organization.assets
+        for asset_type, value in assets:
+            url = value["url"]
+            filename = urlparse(url).path.split("/")[-1]
+            response = requests.get(url)
+            filepath = f"{ASSET_DIR}/{filename}"
+            with open(filepath, 'wb') as asset_file:
+                asset_file.write(response.content)
+            asset_ipfs_hash = self.ipfs_utils.write_file_in_ipfs(filepath)
+            value["ipfs_hash"] = asset_ipfs_hash
+
+    def _publish_org_to_ipfs(self, organization):
+        metadata = organization.to_metadata()
+        filename = f"{METADATA_FILE_PATH}/{organization.org_uuid}_org_metadata.json"
         json_to_file(metadata, filename)
-        ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
-        metadata_ipfs_hash = ipfs_utils.write_file_in_ipfs(filename)
+        metadata_ipfs_hash = self.ipfs_utils.write_file_in_ipfs(filename)
         return metadata_ipfs_hash
 
     def get_organizations_for_user(self, username):

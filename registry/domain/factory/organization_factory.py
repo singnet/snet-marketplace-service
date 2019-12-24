@@ -25,7 +25,7 @@ class OrganizationFactory:
                     image.write(value["raw"])
                 boto_utils.s3_upload_file(filename, ASSET_BUCKET, key_name)
                 asset_url = f"https://{REGION_NAME}.s3.amazonaws.com/{ASSET_BUCKET}/{key_name}"
-                org_assets[asset_type] = asset_url
+                org_assets[asset_type]["url"] = asset_url
             return assets
 
         org_id = payload.get("org_id", None)
@@ -83,3 +83,6 @@ class OrganizationFactory:
         for item in items:
             organizations.append(OrganizationFactory.parse_organization_data_model(item.Organization))
         return organizations
+
+
+url = "https://www.google.com/"
