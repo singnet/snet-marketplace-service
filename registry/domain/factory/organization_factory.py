@@ -13,21 +13,6 @@ class OrganizationFactory:
 
     @staticmethod
     def parse_raw_organization(payload):
-        org_id = payload.get("org_id", None)
-        org_name = payload.get("org_name", None)
-        org_type = payload.get("org_type", None)
-        org_uuid = payload.get("org_uuid", None)
-        description = payload.get("description", None)
-        short_description = payload.get("short_description", None)
-        url = payload.get("url", None)
-        contacts = payload.get("contacts", None)
-        assets = payload.get("assets", None)
-        metadata_ipfs_hash = payload.get("metadata_ipfs_hash", None)
-        groups = OrganizationFactory.parse_raw_list_groups(payload.get("groups", []))
-        organization = Organization(org_name, org_id, org_uuid, org_type, description,
-                                    short_description, url, contacts, assets, metadata_ipfs_hash)
-        organization.add_all_groups(groups)
-        organization.setup_id()
 
         def extract_and_upload_assets(raw_assets):
             org_assets = {}
@@ -42,6 +27,22 @@ class OrganizationFactory:
                 asset_url = f"https://{REGION_NAME}.s3.amazonaws.com/{ASSET_BUCKET}/{key_name}"
                 org_assets[asset_type] = asset_url
             return assets
+
+        org_id = payload.get("org_id", None)
+        org_name = payload.get("org_name", None)
+        org_type = payload.get("org_type", None)
+        org_uuid = payload.get("org_uuid", None)
+        description = payload.get("description", None)
+        short_description = payload.get("short_description", None)
+        url = payload.get("url", None)
+        contacts = payload.get("contacts", None)
+        assets = extract_and_upload_assets(payload.get("assets", {}))
+        metadata_ipfs_hash = payload.get("metadata_ipfs_hash", None)
+        groups = OrganizationFactory.parse_raw_list_groups(payload.get("groups", []))
+        organization = Organization(org_name, org_id, org_uuid, org_type, description,
+                                    short_description, url, contacts, assets, metadata_ipfs_hash)
+        organization.add_all_groups(groups)
+        organization.setup_id()
 
         return organization
 
