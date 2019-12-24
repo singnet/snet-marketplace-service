@@ -32,7 +32,6 @@ class OrganizationService:
         if len(orgs) == 0:
             raise Exception(f"Organization not found with uuid {org_uuid}")
         organization = orgs[0]
-        organization.publish_assets()
         organization.publish_org()
         self.org_repo.export_org_with_status(organization, "APPROVED")
         self.org_repo.add_org_with_status(organization, "PUBLISH_IN_PROGRESS", username)

@@ -117,6 +117,7 @@ class Organization:
             self.assets[asset_type]["ipfs_hash"] = asset_ipfs_hash
 
     def publish_org(self):
+        self.publish_assets()
         ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
         metadata = self.to_metadata()
         filename = f"{METADATA_FILE_PATH}/{self.org_uuid}_org_metadata.json"
