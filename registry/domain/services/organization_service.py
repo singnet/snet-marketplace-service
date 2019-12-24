@@ -44,7 +44,8 @@ class OrganizationService:
 
     def _publish_assets_to_ipfs(self, organization):
         assets = organization.assets
-        for asset_type, value in assets:
+        for asset_type in assets:
+            value = assets[asset_type]
             url = value["url"]
             filename = urlparse(url).path.split("/")[-1]
             response = requests.get(url)
