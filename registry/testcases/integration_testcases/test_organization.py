@@ -29,7 +29,7 @@ class TestOrganization(TestCase):
                 "groups": []
             })
         }
-        add_org(event, None)
+        # add_org(event, None)
         assert True
 
     def post_publish_organization(self):
