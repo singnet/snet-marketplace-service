@@ -1,3 +1,5 @@
+import base64
+
 import common.boto_utils as boto_utils
 
 from datetime import datetime
@@ -21,12 +23,13 @@ class OrganizationFactory:
                 org_assets[asset_type] = {}
                 asset = raw_assets[asset_type]
                 current_time = datetime.utcnow().strftime("%Y%m%d%H%M%S")
-                key_name = f"{uuid}_{asset_type}_{current_time}.{asset['file_type']}"
+                key_name = f"{uuid}-{asset_type}-{current_time}.{asset['file_type']}"
                 filename = f"{METADATA_FILE_PATH}/{key_name}"
+                raw_file = base64.b64decode(asset["raw"].encode())
                 with open(filename, 'wb') as image:
-                    image.write(asset["raw"])
+                    image.write(raw_file)
                 boto_client.s3_upload_file(filename, ASSET_BUCKET, key_name)
-                asset_url = f"https://{REGION_NAME}.s3.amazonaws.com/{ASSET_BUCKET}/{key_name}"
+                asset_url = f"https://{ASSET_BUCKET}.s3.amazonaws.com/{key_name}"
                 org_assets[asset_type]["url"] = asset_url
             return org_assets
 
