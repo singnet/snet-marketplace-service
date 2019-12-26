@@ -54,8 +54,8 @@ class Organization:
 
     def to_metadata(self):
         assets = {}
-        for key, value in self.assets:
-            assets[key] = value["hash"]
+        for key in self.assets:
+            assets[key] = self.assets[key]["ipfs_hash"]
         return {
             "name": self.name,
             "org_id": self.org_id,
