@@ -21,8 +21,6 @@ class Organization(Base):
     contacts = Column("contacts", JSON, nullable=False)
     assets = Column("assets", JSON, nullable=False)
     metadata_ipfs_hash = Column("metadata_ipfs_hash", VARCHAR(255))
-    create_on = Column("created_on", TIMESTAMP(timezone=False))
-    updated_on = Column("modified_on", TIMESTAMP(timezone=False))
     groups = relationship("Group", backref='organization', lazy='joined')
 
 
@@ -38,14 +36,13 @@ class OrganizationReviewWorkflow(Base):
     updated_on = Column("modified_on", TIMESTAMP(timezone=False))
 
 
+
 class OrganizationAddress(Base):
     __tablename__ = "organization_address"
     row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
     org_row_id = Column("organization_row_id", Integer, nullable=False)
     headquater_address = Column("headquater_address", JSON, nullable=False)
     mailing_address = Column("mailing_address", JSON, nullable=False)
-    create_on = Column("created_on", TIMESTAMP(timezone=False))
-    updated_on = Column("updated_on", TIMESTAMP(timezone=False))
 
 
 class OrganizationHistory(Base):
@@ -61,8 +58,6 @@ class OrganizationHistory(Base):
     contacts = Column("contacts", JSON, nullable=False)
     assets = Column("assets", JSON, nullable=False)
     metadata_ipfs_hash = Column("metadata_ipfs_hash", VARCHAR(255))
-    create_on = Column("created_on", TIMESTAMP(timezone=False))
-    updated_on = Column("updated_on", TIMESTAMP(timezone=False))
     groups = relationship('GroupHistory', backref='organization_history', lazy='joined')
 
 
@@ -91,8 +86,6 @@ class GroupHistory(Base):
                         nullable=False)
     payment_address = Column("payment_address", VARCHAR(128), nullable=False)
     payment_config = Column("payment_config", JSON, nullable=False)
-    create_on = Column("created_on", TIMESTAMP(timezone=False))
-    updated_on = Column("updated_on", TIMESTAMP(timezone=False))
     status = Column("status", VARCHAR(128))
 
 
@@ -102,5 +95,3 @@ class OrganizationMember(Base):
     org_uuid = Column("org_uuid", VARCHAR(128))
     role = Column("role", VARCHAR(128))
     username = Column("username", VARCHAR(128))
-    create_on = Column("created_on", TIMESTAMP(timezone=False))
-    updated_on = Column("updated_on", TIMESTAMP(timezone=False))

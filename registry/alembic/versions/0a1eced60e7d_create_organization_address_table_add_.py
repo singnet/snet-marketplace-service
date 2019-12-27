@@ -28,38 +28,8 @@ def upgrade():
                     )
     op.add_column('organization',
                   sa.Column('duns_no', sa.VARCHAR(length=20), nullable=True))
-    op.add_column('organization',
-                  sa.Column('created_on', mysql.TIMESTAMP(), nullable=True))
-    op.add_column('organization',
-                  sa.Column('updated_on', mysql.TIMESTAMP(), nullable=True))
-
-    op.add_column('org_member',
-                  sa.Column('created_on', mysql.TIMESTAMP(), nullable=True))
-    op.add_column('org_member',
-                  sa.Column('updated_on', mysql.TIMESTAMP(), nullable=True))
-
-    op.add_column('group',
-                  sa.Column('created_on', mysql.TIMESTAMP(), nullable=True))
-    op.add_column('group',
-                  sa.Column('updated_on', mysql.TIMESTAMP(), nullable=True))
-
-    op.add_column('organization_history',
-                  sa.Column('created_on', mysql.TIMESTAMP(), nullable=True))
-    op.add_column('organization_history',
-                  sa.Column('updated_on', mysql.TIMESTAMP(), nullable=True))
 
 
 def downgrade():
     op.drop_table('organization_address')
     op.drop_column('organization', 'duns_no')
-    op.drop_column('organization', 'created_on')
-    op.drop_column('organization', 'updated_on')
-
-    op.drop_column('organization_history', 'created_on')
-    op.drop_column('organization_history', 'updated_on')
-
-    op.drop_column('group', 'created_on')
-    op.drop_column('group', 'updated_on')
-
-    op.drop_column('org_member', 'created_on')
-    op.drop_column('org_member', 'updated_on')
