@@ -19,8 +19,8 @@ class OrganizationRepository(BaseRepository):
 
     def add_org_with_status(self, organization, status, username):
         current_time = datetime.utcnow()
-        groups_entity = organization.groups
-        group_data = []
+        groups = organization.groups
+        group_data = self.group_data_items_from_group_list(groups, )
         for group in groups_entity:
             group_data.append(Group(
                 name=group.name, id=group.group_id, org_uuid=organization.org_uuid,
@@ -162,7 +162,7 @@ class OrganizationRepository(BaseRepository):
         org_workflow_model.OrganizationReviewWorkflow.updated_on = current_utc_time
         org_workflow_model.OrganizationReviewWorkflow.updated_by = username
 
-    def add_group(self, groups, org_uuid):
+    def add_group(self, groups, org_uuid, username):
         organizations = self.get_org_for_uuid(org_uuid)
         if len(organizations) > 0:
             latest_org_record = None
@@ -170,7 +170,8 @@ class OrganizationRepository(BaseRepository):
                 if org.OrganizationReviewWorkflow.status == OrganizationStatus.DRAFT.value:
                     latest_org_record = org
             if latest_org_record is None:
-                pass
+                published_record = organizations[0]
+                self.add_new_draft_groups_in_published_org(published_record, groups, username)
             else:
                 org_row_id = latest_org_record.Organization.row_id
                 self.session.query(Group).filter(Group.org_row_id == org_row_id).delete()
@@ -180,7 +181,52 @@ class OrganizationRepository(BaseRepository):
                     org_uuid=org_uuid, id=group.group_id, name=group.name,
                     payment_config=group.payment_config, payment_address=group.payment_address, status=""
                 ) for group in groups]
+                latest_org_record.OrganizationReviewWorkflow.updated_on = datetime.utcnow()
+                latest_org_record.OrganizationReviewWorkflow.updated_by = username
                 self.add_all_items(groups)
                 self.session.commit()
         else:
-            pass
+            raise Exception(f"No org data for the org_uuid {org_uuid}")
+
+    def group_data_items_from_group_list(self, groups, org_uuid):
+        group_data = []
+        for group in groups:
+            group_data.append(Group(
+                name=group.name, id=group.group_id, org_uuid=org_uuid,
+                payment_address=group.payment_address,
+                payment_config=group.payment_config, status=""
+            ))
+        return group_data
+
+    def add_new_draft_groups_in_published_org(self, organization, groups, username):
+        current_time = datetime.utcnow()
+        organization = organization.Organization
+        group_data = self.group_data_items_from_group_list(groups, organization.org_uuid)
+
+        organization_item = Organization(
+            name=organization.name,
+            org_uuid=organization.org_uuid,
+            org_id=organization.org_id,
+            type=organization.type,
+            description=organization.description,
+            short_description=organization.short_description,
+            url=organization.url,
+            contacts=organization.contacts,
+            assets=organization.assets,
+            metadata_ipfs_hash=organization.metadata_ipfs_hash,
+            groups=group_data
+        )
+        self.add_item(organization_item)
+        org_row_id = organization_item.row_id
+
+        self.add_item(
+            OrganizationReviewWorkflow(
+                org_row_id=org_row_id,
+                status=OrganizationStatus.DRAFT.value,
+                created_by=username,
+                updated_by=username,
+                create_on=current_time,
+                updated_on=current_time,
+            )
+        )
+        self.session.commit()

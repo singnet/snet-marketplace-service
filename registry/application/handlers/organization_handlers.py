@@ -85,7 +85,7 @@ def add_group_draft_for_org(event, context):
     if "org_id" not in path_parameters and validate_dict_list(payload, required_keys):
         raise BadRequestException()
     org_uuid = path_parameters["org_id"]
-    response = OrganizationService().add_group(payload, org_uuid)
+    response = OrganizationService().add_group(payload, org_uuid, username)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True

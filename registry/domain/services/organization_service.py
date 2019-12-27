@@ -43,11 +43,11 @@ class OrganizationService:
         organizations = self.org_repo.get_published_organization()
         return organizations
 
-    def add_group(self, payload, org_uuid):
+    def add_group(self, payload, org_uuid, username):
         groups = OrganizationFactory().parse_raw_list_groups(payload)
         for group in groups:
             group.setup_id()
             if not group.validate_draft():
                 raise Exception(f"validation failed for the group {group.to_dict()}")
-        self.org_repo.add_group(groups, org_uuid)
+        self.org_repo.add_group(groups, org_uuid, username)
         return "OK"
