@@ -38,9 +38,9 @@ def upgrade():
     op.add_column('org_member',
                   sa.Column('updated_on', mysql.TIMESTAMP(), nullable=True))
 
-    op.add_column('groups',
+    op.add_column('group',
                   sa.Column('created_on', mysql.TIMESTAMP(), nullable=True))
-    op.add_column('groups',
+    op.add_column('group',
                   sa.Column('updated_on', mysql.TIMESTAMP(), nullable=True))
 
     op.add_column('organization_history',
@@ -58,8 +58,8 @@ def downgrade():
     op.drop_column('organization_history', 'created_on')
     op.drop_column('organization_history', 'updated_on')
 
-    op.drop_column('groups', 'created_on')
-    op.drop_column('groups', 'updated_on')
+    op.drop_column('group', 'created_on')
+    op.drop_column('group', 'updated_on')
 
     op.drop_column('org_member', 'created_on')
     op.drop_column('org_member', 'updated_on')
