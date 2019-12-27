@@ -1,7 +1,7 @@
 """create organization address table, add audit columns and add duns attribute in organization table
 
 Revision ID: 0a1eced60e7d
-Revises: 62a51f872f15
+Revises: e70a6807544e
 Create Date: 2019-12-27 14:49:21.280864
 
 """
