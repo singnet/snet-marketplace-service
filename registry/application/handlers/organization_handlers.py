@@ -3,7 +3,8 @@ import json
 from common.constant import StatusCode
 from common.exceptions import BadRequestException
 from common.logger import get_logger
-from common.utils import validate_dict, handle_exception_with_slack_notification, generate_lambda_response
+from common.utils import validate_dict, handle_exception_with_slack_notification, generate_lambda_response, \
+    validate_dict_list
 from registry.config import SLACK_HOOK, NETWORK_ID
 from registry.domain.services.organization_service import OrganizationService
 
@@ -76,8 +77,19 @@ def get_all_groups_for_org(event, context):
     pass
 
 
-def add_group_for_org(event, context):
-    pass
+def add_group_draft_for_org(event, context):
+    path_parameters = event["pathParameters"]
+    payload = json.loads(event["body"])
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    required_keys = ["name", "id", "payment_address", "payment_config"]
+    if "org_id" not in path_parameters and validate_dict_list(payload, required_keys):
+        raise BadRequestException()
+    org_uuid = path_parameters["org_id"]
+    response = OrganizationService().add_group(payload, org_uuid)
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
 
 
 def get_group_for_org(event, context):

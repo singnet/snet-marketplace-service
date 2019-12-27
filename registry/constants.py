@@ -1,0 +1,9 @@
+from enum import Enum
+
+
+class OrganizationStatus(Enum):
+    DRAFT = "DRAFT"
+    APPROVAL_PENDING = "APPROVAL_PENDING"
+    APPROVED = "APPROVED"
+    PUBLISH_IN_PROGRESS = "PUBLISH_IN_PROGRESS"
+    PUBLISHED = "PUBLISHED"
