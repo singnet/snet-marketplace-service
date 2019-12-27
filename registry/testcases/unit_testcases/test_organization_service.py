@@ -2,8 +2,10 @@ import unittest
 from unittest.mock import patch, Mock
 from uuid import uuid4
 
+from registry.constants import OrganizationStatus
 from registry.domain.services.organization_service import OrganizationService
 from registry.domain.models.organization import Organization as DomainOrganization
+from registry.domain.models.group import Group as DomainGroup
 from registry.infrastructure.models.models import Organization, OrganizationReviewWorkflow, OrganizationHistory
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
 
@@ -129,7 +131,7 @@ class TestOrganizationService(unittest.TestCase):
         username = "dummy@snet.io"
         self.org_repo.add_org_with_status(DomainOrganization(
             "dummy_org", "org_id", test_org_id, "organization",
-            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], [], ""),
+            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, ""),
             "APPROVED", username)
         response = OrganizationService().publish_org(test_org_id, username)
         self.assertEqual(response["metadata_ipfs_hash"], "Q3E12")
@@ -139,6 +141,106 @@ class TestOrganizationService(unittest.TestCase):
             assert False
         else:
             self.assertEqual(orgs[0].OrganizationReviewWorkflow.updated_by, username)
+
+    def test_add_group(self):
+        """ adding new group without existing draft """
+        test_org_id = uuid4().hex
+        username = "dummy@snet.io"
+        organization = DomainOrganization(
+            "dummy_org", "org_id", test_org_id, "organization",
+            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "")
+        organization.add_group(DomainGroup(
+            name="my-group",
+            group_id="group_id",
+            payment_address="0x123",
+            payment_config={}
+        ))
+        self.org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISHED.value, username)
+        payload = [
+            {
+                "name": "my-group",
+                "id": "",
+                "payment_address": "0x123",
+                "payment_config": {
+                    "payment_expiration_threshold": 40320,
+                    "payment_channel_storage_type": "etcd",
+                    "payment_channel_storage_client": {
+                        "connection_timeout": "5s",
+                        "request_timeout": "3s",
+                        "endpoints": [
+                            "http://127.0.0.1:2379"
+                        ]
+                    }
+                }
+            },
+            {
+                "name": "group-123",
+                "id": "",
+                "payment_address": "0x123",
+                "payment_config": {
+                    "payment_expiration_threshold": 40320,
+                    "payment_channel_storage_type": "etcd",
+                    "payment_channel_storage_client": {
+                        "connection_timeout": "5s",
+                        "request_timeout": "3s",
+                        "endpoints": [
+                            "http://127.0.0.1:2379"
+                        ]
+                    }
+                }
+            }
+        ]
+        OrganizationService().add_group(payload, test_org_id)
+
+    def test_add_group_two(self):
+        """ adding new group without existing draft """
+        test_org_id = uuid4().hex
+        username = "dummy@snet.io"
+        organization = DomainOrganization(
+            "dummy_org", "org_id", test_org_id, "organization",
+            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "")
+        organization.add_group(DomainGroup(
+            name="my-group",
+            group_id="group_id",
+            payment_address="0x123",
+            payment_config={}
+        ))
+        self.org_repo.add_org_with_status(organization, OrganizationStatus.DRAFT.value, username)
+        payload = [
+            {
+                "name": "my-group",
+                "id": "",
+                "payment_address": "0x123",
+                "payment_config": {
+                    "payment_expiration_threshold": 40320,
+                    "payment_channel_storage_type": "etcd",
+                    "payment_channel_storage_client": {
+                        "connection_timeout": "5s",
+                        "request_timeout": "3s",
+                        "endpoints": [
+                            "http://127.0.0.1:2379"
+                        ]
+                    }
+                }
+            },
+            {
+                "name": "group-123",
+                "id": "",
+                "payment_address": "0x123",
+                "payment_config": {
+                    "payment_expiration_threshold": 40320,
+                    "payment_channel_storage_type": "etcd",
+                    "payment_channel_storage_client": {
+                        "connection_timeout": "5s",
+                        "request_timeout": "3s",
+                        "endpoints": [
+                            "http://127.0.0.1:2379"
+                        ]
+                    }
+                }
+            }
+        ]
+        OrganizationService().add_group(payload, test_org_id)
 
     def tearDown(self):
         self.org_repo.session.query(Organization).delete()
