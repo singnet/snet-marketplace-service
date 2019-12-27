@@ -3,7 +3,7 @@ from datetime import datetime
 from registry.constants import OrganizationStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.models.models import Group, OrganizationReviewWorkflow, \
-    OrganizationHistory, OrganizationMember
+    OrganizationHistory, OrganizationMember, GroupHistory
 from registry.infrastructure.models.models import Organization
 from registry.infrastructure.repositories.base_repository import BaseRepository
 
@@ -27,6 +27,7 @@ class OrganizationRepository(BaseRepository):
                 payment_address=group.payment_address,
                 payment_config=group.payment_config, status=""
             ))
+
         organization_item = Organization(
             name=organization.name,
             org_uuid=organization.org_uuid,
@@ -103,6 +104,13 @@ class OrganizationRepository(BaseRepository):
             row_ids = []
             for org in orgs_with_status:
                 row_ids.append(org.row_id)
+                group_data = []
+                for group in org.groups:
+                    group_data.append(GroupHistory(
+                        name=group.name, id=group.id, org_uuid=organization.org_uuid,
+                        payment_address=group.payment_address,
+                        payment_config=group.payment_config, status=""
+                    ))
                 org_history.append(OrganizationHistory(
                     row_id=org.row_id,
                     name=org.name,
@@ -114,7 +122,8 @@ class OrganizationRepository(BaseRepository):
                     url=org.url,
                     contacts=org.contacts,
                     assets=org.assets,
-                    metadata_ipfs_hash=org.metadata_ipfs_hash
+                    metadata_ipfs_hash=org.metadata_ipfs_hash,
+                    groups=group_data
                 ))
 
             self.add_all_items(org_history)
@@ -184,3 +193,10 @@ class OrganizationRepository(BaseRepository):
                 self.session.commit()
         else:
             pass
+
+    def get_org_with_status_using_org_id(self, org_id, status):
+        organizations = self.session.query(Organization, OrganizationReviewWorkflow) \
+            .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
+            .filter(Organization.org_id == org_id) \
+            .filter(OrganizationReviewWorkflow.status == status).all()
+        return organizations

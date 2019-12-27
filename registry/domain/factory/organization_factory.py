@@ -68,11 +68,23 @@ class OrganizationFactory:
         return group
 
     @staticmethod
+    def parse_group_data_model(item):
+        group = Group(item.name, item.id, item.payment_address, item.payment_config)
+        return group
+
+    @staticmethod
     def parse_organization_data_model(item):
+
+        groups = []
+        for group_item in item.groups:
+            groups.append(OrganizationFactory.parse_group_data_model(group_item))
+
         organization = Organization(
             item.name, item.org_id, item.org_uuid, item.type, item.description,
             item.short_description, item.url, item.contacts, item.assets, item.metadata_ipfs_hash
         )
+
+        organization.add_all_groups(groups)
         return organization
 
     @staticmethod
@@ -90,14 +102,18 @@ class OrganizationFactory:
         return organizations
 
     @staticmethod
-    def parse_organization_metadata(org_uuid,ipfs_org_metadata):
+    def parse_organization_metadata(org_uuid, ipfs_org_metadata):
         org_id = ipfs_org_metadata.get("org_id", None)
         org_name = ipfs_org_metadata.get("org_name", None)
         org_type = ipfs_org_metadata.get("org_type", None)
         description = ipfs_org_metadata.get("description", None)
+        short_description = ""
+        url = ""
+        long_description = ""
+
         if description:
             short_description = description.get("short_description", None)
-            long_description = description.get("description",None)
+            long_description = description.get("description", None)
             url = description.get("url", None)
 
         contacts = ipfs_org_metadata.get("contacts", None)
@@ -107,7 +123,5 @@ class OrganizationFactory:
         organization = Organization(org_name, org_id, org_uuid, org_type, long_description,
                                     short_description, url, contacts, assets, metadata_ipfs_hash)
         organization.add_all_groups(groups)
+
         return organization
-
-
-
