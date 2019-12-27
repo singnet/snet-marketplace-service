@@ -269,7 +269,7 @@ functions:
 
   add_group_for_org:
     warmup: true
-    handler: registry.application.handlers.organization_handlers.add_group_for_org
+    handler: registry.application.handlers.organization_handlers.add_group_draft_for_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:

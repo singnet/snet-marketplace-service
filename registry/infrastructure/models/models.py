@@ -1,6 +1,8 @@
-from sqlalchemy import Column, Integer, VARCHAR
+from sqlalchemy import Column, Integer, VARCHAR, ForeignKey
 from sqlalchemy.dialects.mysql import JSON, TIMESTAMP
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
+
 
 Base = declarative_base()
 
@@ -18,6 +20,7 @@ class Organization(Base):
     contacts = Column("contacts", JSON, nullable=False)
     assets = Column("assets", JSON, nullable=False)
     metadata_ipfs_hash = Column("metadata_ipfs_hash", VARCHAR(255))
+    groups = relationship("Group", backref='organization', lazy='joined')
 
 
 class OrganizationReviewWorkflow(Base):
@@ -45,16 +48,35 @@ class OrganizationHistory(Base):
     contacts = Column("contacts", JSON, nullable=False)
     assets = Column("assets", JSON, nullable=False)
     metadata_ipfs_hash = Column("metadata_ipfs_hash", VARCHAR(255))
+    groups = relationship('GroupHistory', backref='organization_history', lazy='joined')
 
 
 class Group(Base):
-    __tablename__ = "groups"
+    __tablename__ = "group"
     row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
     name = Column("name", VARCHAR(128), nullable=False)
     id = Column("id", VARCHAR(128), nullable=False)
     org_uuid = Column("org_uuid", VARCHAR(128))
+    org_row_id = Column("org_row_id", Integer,
+                        ForeignKey("organization.row_id", ondelete="CASCADE", onupdate="CASCADE"),
+                        nullable=False)
     payment_address = Column("payment_address", VARCHAR(128), nullable=False)
     payment_config = Column("payment_config", JSON, nullable=False)
+    status = Column("status", VARCHAR(128))
+
+
+class GroupHistory(Base):
+    __tablename__ = "group_history"
+    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
+    name = Column("name", VARCHAR(128), nullable=False)
+    id = Column("id", VARCHAR(128), nullable=False)
+    org_uuid = Column("org_uuid", VARCHAR(128))
+    org_row_id = Column("org_row_id", Integer,
+                        ForeignKey("organization_history.row_id", ondelete="CASCADE", onupdate="CASCADE"),
+                        nullable=False)
+    payment_address = Column("payment_address", VARCHAR(128), nullable=False)
+    payment_config = Column("payment_config", JSON, nullable=False)
+    status = Column("status", VARCHAR(128))
 
 
 class OrganizationMember(Base):
