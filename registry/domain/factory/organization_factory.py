@@ -1,5 +1,5 @@
 import base64
-
+import json
 import common.boto_utils as boto_utils
 
 from datetime import datetime
@@ -49,6 +49,10 @@ class OrganizationFactory:
         organization.add_all_groups(groups)
         organization.setup_id()
         organization.assets = extract_and_upload_assets(organization.org_uuid, payload.get("assets", {}))
+        organization.duns_no = payload.get("duns_no", None)
+        organization.address = json.loads(
+            payload.get("address", json.dumps(
+                {"headquater_address": {}, "mailing_address": {}, "mail_address_same_hq_address": False})))
         return organization
 
     @staticmethod

@@ -3,10 +3,10 @@ from datetime import datetime
 from registry.constants import OrganizationStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.models.models import Group, OrganizationReviewWorkflow, \
-    OrganizationHistory, OrganizationMember
+    OrganizationHistory, OrganizationMember, OrganizationAddress, OrganizationAddressHistory
 from registry.infrastructure.models.models import Organization
 from registry.infrastructure.repositories.base_repository import BaseRepository
-
+from datetime import datetime as dt
 
 class OrganizationRepository(BaseRepository):
 
@@ -38,7 +38,8 @@ class OrganizationRepository(BaseRepository):
             contacts=organization.contacts,
             assets=organization.assets,
             metadata_ipfs_hash=organization.metadata_ipfs_hash,
-            groups=group_data
+            groups=group_data,
+            duns_no=organization.duns_no,
         )
         self.add_item(organization_item)
         org_row_id = organization_item.row_id
@@ -53,6 +54,14 @@ class OrganizationRepository(BaseRepository):
                 updated_on=current_time,
             )
         )
+        self.add_item(
+            OrganizationAddress(
+                org_row_id=org_row_id,
+                headquater_address=organization.address["headquater_address"],
+                mailing_address=organization.address["mailing_address"],
+                create_on=current_time,
+                updated_on=current_time,
+        ))
         self.session.commit()
 
     def update_org_draft(self, current_draft, organization, username):
@@ -65,8 +74,11 @@ class OrganizationRepository(BaseRepository):
         current_draft.Organization.contacts = organization.contacts
         current_draft.Organization.assets = organization.assets
         current_draft.Organization.metadata_ipfs_hash = organization.metadata_ipfs_hash
+        current_draft.Organization.duns_no = organization.duns_no
         current_draft.OrganizationReviewWorkflow.updated_by = username
         current_draft.OrganizationReviewWorkflow.updated_on = datetime.utcnow()
+        current_draft.OrganizationAddress.headquater_address = organization.address["headquater_address"]
+        current_draft.OrganizationAddress.mailing_address = organization.address["mailing_address"]
         self.session.commit()
 
     def get_latest_org_from_org_uuid(self, org_uuid):
@@ -81,8 +93,9 @@ class OrganizationRepository(BaseRepository):
         return OrganizationFactory.parse_organization_workflow_data_model_list(organizations)
 
     def get_org_with_status(self, org_uuid, status):
-        organizations = self.session.query(Organization, OrganizationReviewWorkflow) \
+        organizations = self.session.query(Organization, OrganizationReviewWorkflow, OrganizationAddress) \
             .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
+            .join(OrganizationAddress, OrganizationAddress.org_row_id == Organization.row_id) \
             .filter(Organization.org_uuid == org_uuid) \
             .filter(OrganizationReviewWorkflow.status == status).all()
         return organizations
@@ -94,33 +107,48 @@ class OrganizationRepository(BaseRepository):
         return organizations
 
     def move_org_to_history(self, organization, status):
-        orgs_with_status = self.session.query(Organization) \
+        orgs_with_status = self.session.query(Organization, OrganizationAddress) \
             .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
+            .join(OrganizationAddress, Organization.row_id == OrganizationAddress.org_row_id) \
             .filter(Organization.org_uuid == organization.org_uuid) \
             .filter(OrganizationReviewWorkflow.status == status).all()
         if len(orgs_with_status) > 0:
             org_history = []
+            org_address_history = []
             row_ids = []
+            org_address_row_ids = []
             for org in orgs_with_status:
-                row_ids.append(org.row_id)
+                row_ids.append(org.Organization.row_id)
                 org_history.append(OrganizationHistory(
-                    row_id=org.row_id,
-                    name=org.name,
-                    org_uuid=org.org_uuid,
-                    org_id=org.org_id,
-                    type=org.type,
-                    description=org.description,
-                    short_description=org.short_description,
-                    url=org.url,
-                    contacts=org.contacts,
-                    assets=org.assets,
-                    metadata_ipfs_hash=org.metadata_ipfs_hash
+                    row_id=org.Organization.row_id,
+                    name=org.Organization.name,
+                    org_uuid=org.Organization.org_uuid,
+                    org_id=org.Organization.org_id,
+                    type=org.Organization.type,
+                    description=org.Organization.description,
+                    short_description=org.Organization.short_description,
+                    url=org.Organization.url,
+                    contacts=org.Organization.contacts,
+                    assets=org.Organization.assets,
+                    metadata_ipfs_hash=org.Organization.metadata_ipfs_hash
                 ))
+                org_address_row_ids.append(org.OrganizationAddress.row_id)
+                org_address_history.append(
+                    OrganizationAddressHistory(
+                        row_id=org.OrganizationAddress.row_id,
+                        org_row_id=org.OrganizationAddress.org_row_id,
+                        headquater_address=org.OrganizationAddress.headquater_address,
+                        mailing_address=org.OrganizationAddress.mailing_address,
+                        created_on=dt.utcnow(),
+                        updated_on=dt.utcnow(),
+                    ))
 
             self.add_all_items(org_history)
+            self.add_all_items(org_address_history)
             self.session.query(Organization).filter(Organization.row_id.in_(row_ids)) \
                 .delete(synchronize_session='fetch')
-            self.add_all_items(org_history)
+            self.session.query(OrganizationAddress).filter(OrganizationAddress.row_id.in_(org_address_row_ids)) \
+                .delete(synchronize_session='fetch')
             self.session.commit()
 
     def get_organization_for_user(self, username):

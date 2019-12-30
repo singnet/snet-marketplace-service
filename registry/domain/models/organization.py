@@ -33,6 +33,8 @@ class Organization:
         self.assets = assets
         self.metadata_ipfs_hash = metadata_ipfs_hash
         self.groups = []
+        self.duns_no = None
+        self.address = {"headquater_address": {}, "mailing_address": {}, "mail_address_same_hq_address": False}
 
     def setup_id(self):
         if self.is_org_uuid_set():

@@ -3,7 +3,6 @@ from sqlalchemy.dialects.mysql import JSON, TIMESTAMP
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
-
 Base = declarative_base()
 
 
@@ -36,13 +35,24 @@ class OrganizationReviewWorkflow(Base):
     updated_on = Column("modified_on", TIMESTAMP(timezone=False))
 
 
-
 class OrganizationAddress(Base):
     __tablename__ = "organization_address"
     row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
     org_row_id = Column("organization_row_id", Integer, nullable=False)
     headquater_address = Column("headquater_address", JSON, nullable=False)
     mailing_address = Column("mailing_address", JSON, nullable=False)
+    created_on = Column("created_on", TIMESTAMP(timezone=False))
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False))
+
+
+class OrganizationAddressHistory(Base):
+    __tablename__ = "organization_address_history"
+    row_id = Column("row_id", Integer, primary_key=True)
+    org_row_id = Column("organization_row_id", Integer, nullable=False)
+    headquater_address = Column("headquater_address", JSON, nullable=False)
+    mailing_address = Column("mailing_address", JSON, nullable=False)
+    created_on = Column("created_on", TIMESTAMP(timezone=False))
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False))
 
 
 class OrganizationHistory(Base):
