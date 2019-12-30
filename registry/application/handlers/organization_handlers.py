@@ -14,28 +14,21 @@ logger = get_logger(__name__)
 @handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def add_org(event, context):
     payload = json.loads(event["body"])
+    action = event["queryStringParameters"]["act"]
     required_keys = ["org_id", "org_uuid", "org_name", "org_type", "metadata_ipfs_hash", "description",
                      "short_description", "url", "contacts", "assets"]
 
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     if not validate_dict(payload, required_keys):
         raise BadRequestException()
-    response = OrganizationService().add_organization_draft(payload, username)
-
-    return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
-    )
-
-
-@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
-def submit_org(event, context):
-    path_parameters = event["pathParameters"]
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    if "org_id" not in path_parameters:
-        raise BadRequestException()
-    org_uuid = path_parameters["org_id"]
-    response = OrganizationService().submit_org_for_approval(org_uuid, username)
+    org_service = OrganizationService()
+    if action == "draft":
+        response = org_service.add_organization_draft(payload, username)
+    elif action == "submit":
+        response = org_service.add_organization_draft(payload, username)
+        org_service.submit_org_for_approval(response["org_uuid"], username)
+    else:
+        raise Exception("Invalid action")
 
     return generate_lambda_response(
         StatusCode.OK,
