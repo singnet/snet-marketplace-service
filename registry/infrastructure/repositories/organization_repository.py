@@ -76,8 +76,11 @@ class OrganizationRepository(BaseRepository):
         current_draft.Organization.duns_no = organization.get_duns_no()
         current_draft.OrganizationReviewWorkflow.updated_by = username
         current_draft.OrganizationReviewWorkflow.updated_on = datetime.utcnow()
-        current_draft.OrganizationAddress.headquater_address = organization.get_address()["headquater_address"]
-        current_draft.OrganizationAddress.mailing_address = organization.get_address()["mailing_address"]
+        current_draft.Organization.address = OrganizationAddress(
+            headquater_address=organization.get_address()["headquater_address"],
+            mailing_address=organization.get_address()["mailing_address"],
+            created_on=datetime.utcnow(),
+            updated_on=datetime.utcnow(),)
         self.session.commit()
 
     def get_organization_draft(self, org_uuid):
@@ -106,7 +109,7 @@ class OrganizationRepository(BaseRepository):
         orgs_with_status = self.session.query(Organization) \
             .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
             .filter(Organization.org_uuid == org_uuid) \
-            .filter(OrganizationReviewWorkflow.status == OrganizationStatus.APPROVAL_PENDING.value)\
+            .filter(OrganizationReviewWorkflow.status == OrganizationStatus.APPROVAL_PENDING.value) \
             .filter(OrganizationReviewWorkflow.status == OrganizationStatus.APPROVED.value).all()
         self.move_organizations_to_history(orgs_with_status)
 
@@ -210,7 +213,7 @@ class OrganizationRepository(BaseRepository):
     def get_latest_org_from_org_uuid(self, org_uuid):
         organizations = self.session.query(Organization, OrganizationReviewWorkflow) \
             .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
-            .filter(Organization.org_uuid == org_uuid)\
+            .filter(Organization.org_uuid == org_uuid) \
             .order_by(desc(OrganizationReviewWorkflow.updated_on)).all()
         return organizations
 

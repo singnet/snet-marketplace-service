@@ -49,6 +49,8 @@ class OrganizationFactory:
         address = json.loads(
             payload.get("address", json.dumps(
                 {"headquater_address": {}, "mailing_address": {}, "mail_address_same_hq_address": False})))
+        if address["mail_address_same_hq_address"]:
+            address["mailing_address"] = address["headquater_address"]
         organization = Organization(org_name, org_id, org_uuid, org_type, description,
                                     short_description, url, contacts, assets, metadata_ipfs_hash, duns_no, address)
         organization.add_all_groups(groups)
