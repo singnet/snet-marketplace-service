@@ -59,6 +59,7 @@ class OrganizationAddressHistory(Base):
     mailing_address = Column("mailing_address", JSON, nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False))
     updated_on = Column("updated_on", TIMESTAMP(timezone=False))
+    organization = relationship("OrganizationHistory", back_populates="address")
 
 
 class OrganizationHistory(Base):
@@ -75,7 +76,7 @@ class OrganizationHistory(Base):
     assets = Column("assets", JSON, nullable=False)
     metadata_ipfs_hash = Column("metadata_ipfs_hash", VARCHAR(255))
     groups = relationship('GroupHistory', backref='organization_history', lazy='joined')
-    address = relationship('OrganizationAddressHistory', backref='organization_history', lazy='joined')
+    address = relationship("OrganizationAddressHistory", uselist=False, back_populates="organization")
 
 
 class Group(Base):
