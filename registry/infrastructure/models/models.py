@@ -51,7 +51,9 @@ class OrganizationAddress(Base):
 class OrganizationAddressHistory(Base):
     __tablename__ = "organization_address_history"
     row_id = Column("row_id", Integer, primary_key=True)
-    org_row_id = Column("organization_row_id", Integer, nullable=False)
+    org_row_id = Column("organization_row_id", Integer,
+                        ForeignKey("organization_history.row_id", ondelete="CASCADE", onupdate="CASCADE"),
+                        nullable=False)
     headquater_address = Column("headquater_address", JSON, nullable=False)
     mailing_address = Column("mailing_address", JSON, nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False))

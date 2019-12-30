@@ -7,6 +7,9 @@ from registry.infrastructure.models.models import Group, OrganizationReviewWorkf
 from registry.infrastructure.models.models import Organization
 from registry.infrastructure.repositories.base_repository import BaseRepository
 from datetime import datetime as dt
+from common.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class OrganizationRepository(BaseRepository):
@@ -107,37 +110,37 @@ class OrganizationRepository(BaseRepository):
         return organizations
 
     def move_org_to_history(self, organization, status):
-        orgs_with_status = self.session.query(Organization, OrganizationAddress) \
+        orgs_with_status = self.session.query(Organization) \
             .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
-            .join(OrganizationAddress, Organization.row_id == OrganizationAddress.org_row_id) \
             .filter(Organization.org_uuid == organization.org_uuid) \
             .filter(OrganizationReviewWorkflow.status == status).all()
+        logger.info(f"orgs_data :: {orgs_with_status}")
         if len(orgs_with_status) > 0:
             org_history = []
             org_address_history = []
             row_ids = []
             org_address_row_ids = []
             for org in orgs_with_status:
-                row_ids.append(org.Organization.row_id)
+                row_ids.append(org.row_id)
                 address = OrganizationAddressHistory(
-                    row_id=org.OrganizationAddress.row_id,
-                    headquater_address=org.OrganizationAddress.headquater_address,
-                    mailing_address=org.OrganizationAddress.mailing_address,
+                    row_id=org.address.row_id,
+                    headquater_address=org.address.headquater_address,
+                    mailing_address=org.address.mailing_address,
                     created_on=dt.utcnow(),
                     updated_on=dt.utcnow(),
                 )
                 org_history.append(OrganizationHistory(
-                    row_id=org.Organization.row_id,
-                    name=org.Organization.name,
-                    org_uuid=org.Organization.org_uuid,
-                    org_id=org.Organization.org_id,
-                    type=org.Organization.type,
-                    description=org.Organization.description,
-                    short_description=org.Organization.short_description,
-                    url=org.Organization.url,
-                    contacts=org.Organization.contacts,
-                    assets=org.Organization.assets,
-                    metadata_ipfs_hash=org.Organization.metadata_ipfs_hash,
+                    row_id=org.row_id,
+                    name=org.name,
+                    org_uuid=org.org_uuid,
+                    org_id=org.org_id,
+                    type=org.type,
+                    description=org.description,
+                    short_description=org.short_description,
+                    url=org.url,
+                    contacts=org.contacts,
+                    assets=org.assets,
+                    metadata_ipfs_hash=org.metadata_ipfs_hash,
                     address=address,
                 ))
                 # org_address_history.append()

@@ -19,11 +19,13 @@ depends_on = None
 def upgrade():
     op.create_table('organization_address_history',
                     sa.Column('row_id', sa.Integer(), nullable=False),
-                    sa.Column('organization_row_id', sa.Integer(), nullable=False),
+                    sa.Column('org_row_id', sa.Integer(), nullable=False),
                     sa.Column('headquater_address', mysql.JSON(), nullable=False),
                     sa.Column('mailing_address', mysql.JSON(), nullable=False),
                     sa.Column('created_on', mysql.TIMESTAMP(), nullable=True),
                     sa.Column('updated_on', mysql.TIMESTAMP(), nullable=True),
+                    sa.ForeignKeyConstraint(['org_row_id'], ['organization_history.row_id'], onupdate='CASCADE',
+                                            ondelete='CASCADE'),
                     sa.PrimaryKeyConstraint('row_id')
                     )
 
