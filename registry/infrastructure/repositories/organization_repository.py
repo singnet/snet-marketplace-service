@@ -20,13 +20,7 @@ class OrganizationRepository(BaseRepository):
     def add_org_with_status(self, organization, status, username):
         current_time = datetime.utcnow()
         groups = organization.groups
-        group_data = self.group_data_items_from_group_list(groups, )
-        for group in groups_entity:
-            group_data.append(Group(
-                name=group.name, id=group.group_id, org_uuid=organization.org_uuid,
-                payment_address=group.payment_address,
-                payment_config=group.payment_config, status=""
-            ))
+        group_data = self.group_data_items_from_group_list(groups, organization.org_uuid)
         organization_item = Organization(
             name=organization.name,
             org_uuid=organization.org_uuid,
