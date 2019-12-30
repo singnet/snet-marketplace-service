@@ -27,7 +27,7 @@ class Organization(Base):
 class OrganizationReviewWorkflow(Base):
     __tablename__ = "organization_review_workflow"
     row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
-    org_row_id = Column("organization_row_id", Integer, nullable=False)
+    org_row_id = Column("org_row_id", Integer, nullable=False)
     status = Column("status", VARCHAR(128), nullable=False)
     created_by = Column("created_by", VARCHAR(128), nullable=False)
     updated_by = Column("updated_by", VARCHAR(128), nullable=False)
@@ -39,7 +39,7 @@ class OrganizationReviewWorkflow(Base):
 class OrganizationAddress(Base):
     __tablename__ = "organization_address"
     row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
-    org_row_id = Column("organization_row_id", Integer,
+    org_row_id = Column("org_row_id", Integer,
                         ForeignKey("organization.row_id", ondelete="CASCADE", onupdate="CASCADE"),
                         nullable=False)
     headquater_address = Column("headquater_address", JSON, nullable=False)
@@ -51,7 +51,7 @@ class OrganizationAddress(Base):
 class OrganizationAddressHistory(Base):
     __tablename__ = "organization_address_history"
     row_id = Column("row_id", Integer, primary_key=True)
-    org_row_id = Column("organization_row_id", Integer,
+    org_row_id = Column("org_row_id", Integer,
                         ForeignKey("organization_history.row_id", ondelete="CASCADE", onupdate="CASCADE"),
                         nullable=False)
     headquater_address = Column("headquater_address", JSON, nullable=False)
