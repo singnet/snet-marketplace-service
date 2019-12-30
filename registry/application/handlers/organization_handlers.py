@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 @handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def add_org(event, context):
     payload = json.loads(event["body"])
-    action = event["queryStringParameters"]["act"]
+    action = event["queryStringParameters"]["action"]
     required_keys = ["org_id", "org_uuid", "org_name", "org_type", "metadata_ipfs_hash", "description",
                      "short_description", "url", "contacts", "assets"]
 
