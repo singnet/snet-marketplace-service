@@ -29,7 +29,7 @@ class Group:
         }
 
     def setup_id(self):
-        if self.group_id is None:
+        if self.group_id is None or len(self.group_id) == 0:
             self.group_id = base64.b64encode(secrets.token_bytes(32))
 
     def validate_draft(self):

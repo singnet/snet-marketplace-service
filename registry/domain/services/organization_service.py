@@ -10,6 +10,11 @@ class OrganizationService:
         self.org_repo = OrganizationRepository()
         self.boto_utils = BotoUtils(region_name=REGION_NAME)
 
+    """
+    Whenever new draft will come,
+    move APPROVAL_PENDING, APPROVED to the history table
+    """
+
     def add_organization_draft(self, payload, username):
         """
             TODO: add member owner validation
@@ -18,7 +23,7 @@ class OrganizationService:
         if not organization.is_valid_draft():
             raise Exception(f"Validation failed for the Organization {organization.to_dict()}")
         self.org_repo.draft_update_org(organization, username)
-        self.org_repo.move_org_to_history(organization, OrganizationStatus.APPROVAL_PENDING.value)
+        self.org_repo.move_non_published_org_to_history(organization.org_uuid)
         return organization.to_dict()
 
     def submit_org_for_approval(self, org_uuid, username):
@@ -31,7 +36,7 @@ class OrganizationService:
             raise Exception(f"Organization not found with uuid {org_uuid}")
         organization = orgs[0]
         organization.publish_org()
-        self.org_repo.move_org_to_history(organization, OrganizationStatus.APPROVED.value)
+        self.org_repo.move_org_to_history_with_status(organization.org_uuid, OrganizationStatus.APPROVED.value)
         self.org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISH_IN_PROGRESS.value, username)
         return organization.to_dict()
 
@@ -43,11 +48,11 @@ class OrganizationService:
         organizations = self.org_repo.get_published_organization()
         return organizations
 
-    def add_group(self, payload, org_uuid):
+    def add_group(self, payload, org_uuid, username):
         groups = OrganizationFactory().parse_raw_list_groups(payload)
         for group in groups:
             group.setup_id()
             if not group.validate_draft():
                 raise Exception(f"validation failed for the group {group.to_dict()}")
-        self.org_repo.add_group(groups, org_uuid)
+        self.org_repo.add_group(groups, org_uuid, username)
         return "OK"

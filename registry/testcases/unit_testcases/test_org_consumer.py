@@ -71,9 +71,9 @@ class TestOrganizationService(unittest.TestCase):
             }]
         }
 
-        org_event_consumer=OrganizationCreatedEventConsumer("wss://ropsten.infura.io/ws",
-                                                               "http://ipfs.singularitynet.io",
-                                                               80)
+        org_event_consumer = OrganizationCreatedEventConsumer("wss://ropsten.infura.io/ws",
+                                                              "http://ipfs.singularitynet.io",
+                                                              80)
         org_event_consumer.on_event(event)
         self.org_repo.session.commit()
         published_org = self.org_repo.get_org_with_status(test_org_id, "PUBLISHED")
