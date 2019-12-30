@@ -12,7 +12,8 @@ logger = get_logger(__name__)
 
 class Organization:
     def __init__(self, name, org_id, org_uuid, org_type, description,
-                 short_description, url, contacts, assets, metadata_ipfs_hash, duns_no, address):
+                 short_description, url, contacts, assets, metadata_ipfs_hash, duns_no=None,
+                 address={"headquater_address": {}, "mailing_address": {}, "mail_address_same_hq_address": False}):
         """
         assets = [
             {
@@ -104,7 +105,7 @@ class Organization:
 
     def validate_publish(self):
         return self.validate_approval_state() and (
-                    self.metadata_ipfs_hash is not None and len(self.metadata_ipfs_hash) != 0)
+                self.metadata_ipfs_hash is not None and len(self.metadata_ipfs_hash) != 0)
 
     def publish_assets(self):
         ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
