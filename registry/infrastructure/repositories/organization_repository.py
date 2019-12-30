@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from sqlalchemy import desc
+
 from registry.constants import OrganizationStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.models.models import Group, OrganizationReviewWorkflow, \
@@ -62,9 +64,6 @@ class OrganizationRepository(BaseRepository):
         current_draft.OrganizationReviewWorkflow.updated_by = username
         current_draft.OrganizationReviewWorkflow.updated_on = datetime.utcnow()
         self.session.commit()
-
-    def get_latest_org_from_org_uuid(self, org_uuid):
-        pass
 
     def get_organization_draft(self, org_uuid):
         organizations = self.get_org_with_status(org_uuid, OrganizationStatus.DRAFT.value)
@@ -157,30 +156,36 @@ class OrganizationRepository(BaseRepository):
         org_workflow_model.OrganizationReviewWorkflow.updated_by = username
 
     def add_group(self, groups, org_uuid, username):
-        organizations = self.get_org_for_uuid(org_uuid)
-        if len(organizations) > 0:
-            latest_org_record = None
-            for org in organizations:
-                if org.OrganizationReviewWorkflow.status == OrganizationStatus.DRAFT.value:
-                    latest_org_record = org
-            if latest_org_record is None:
-                published_record = organizations[0]
-                self.add_new_draft_groups_in_published_org(published_record, groups, username)
-            else:
-                org_row_id = latest_org_record.Organization.row_id
-                self.session.query(Group).filter(Group.org_row_id == org_row_id).delete()
-                self.session.commit()
-                groups = [Group(
-                    org_row_id=org_row_id,
-                    org_uuid=org_uuid, id=group.group_id, name=group.name,
-                    payment_config=group.payment_config, payment_address=group.payment_address, status=""
-                ) for group in groups]
-                latest_org_record.OrganizationReviewWorkflow.updated_on = datetime.utcnow()
-                latest_org_record.OrganizationReviewWorkflow.updated_by = username
-                self.add_all_items(groups)
-                self.session.commit()
-        else:
+        organizations = self.get_latest_org_from_org_uuid(org_uuid)
+        if len(organizations) == 0:
             raise Exception(f"No org data for the org_uuid {org_uuid}")
+        org = organizations[0]
+        if org.OrganizationReviewWorkflow.status == OrganizationStatus.DRAFT.value:
+            self.add_new_draft_groups_in_draft_org(groups, org, username)
+        else:
+            self.add_new_draft_groups_in_org(groups, org, username)
+
+
+    def get_latest_org_from_org_uuid(self, org_uuid):
+        organizations = self.session.query(Organization, OrganizationReviewWorkflow) \
+            .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
+            .filter(Organization.org_uuid == org_uuid)\
+            .order_by(desc(OrganizationReviewWorkflow.updated_on)).all()
+        return organizations
+
+    def add_new_draft_groups_in_draft_org(self, groups, organization, username):
+        org_row_id = organization.Organization.row_id
+        self.session.query(Group).filter(Group.org_row_id == org_row_id).delete()
+        self.session.commit()
+        groups = [Group(
+            org_row_id=org_row_id,
+            org_uuid=organization.Organization.org_uuid, id=group.group_id, name=group.name,
+            payment_config=group.payment_config, payment_address=group.payment_address, status=""
+        ) for group in groups]
+        organization.OrganizationReviewWorkflow.updated_on = datetime.utcnow()
+        organization.OrganizationReviewWorkflow.updated_by = username
+        self.add_all_items(groups)
+        self.session.commit()
 
     def group_data_items_from_group_list(self, groups, org_uuid):
         group_data = []
@@ -192,7 +197,7 @@ class OrganizationRepository(BaseRepository):
             ))
         return group_data
 
-    def add_new_draft_groups_in_published_org(self, organization, groups, username):
+    def add_new_draft_groups_in_org(self, groups, organization, username):
         current_time = datetime.utcnow()
         organization = organization.Organization
         group_data = self.group_data_items_from_group_list(groups, organization.org_uuid)
