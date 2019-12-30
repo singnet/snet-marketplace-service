@@ -77,6 +77,7 @@ class OrganizationRepository(BaseRepository):
         current_draft.OrganizationReviewWorkflow.updated_by = username
         current_draft.OrganizationReviewWorkflow.updated_on = datetime.utcnow()
         current_draft.Organization.address = OrganizationAddress(
+            org_row_id=current_draft.Organization.row_id,
             headquater_address=organization.get_address()["headquater_address"],
             mailing_address=organization.get_address()["mailing_address"],
             created_on=datetime.utcnow(),
