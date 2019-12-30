@@ -8,6 +8,7 @@ from registry.infrastructure.models.models import Organization
 from registry.infrastructure.repositories.base_repository import BaseRepository
 from datetime import datetime as dt
 
+
 class OrganizationRepository(BaseRepository):
 
     def draft_update_org(self, organization, username):
@@ -27,6 +28,12 @@ class OrganizationRepository(BaseRepository):
                 payment_address=group.payment_address,
                 payment_config=group.payment_config, status=""
             ))
+        address = OrganizationAddress(
+            headquater_address=organization.get_address()["headquater_address"],
+            mailing_address=organization.get_address()["mailing_address"],
+            created_on=current_time,
+            updated_on=current_time,
+        )
         organization_item = Organization(
             name=organization.name,
             org_uuid=organization.org_uuid,
@@ -39,7 +46,8 @@ class OrganizationRepository(BaseRepository):
             assets=organization.assets,
             metadata_ipfs_hash=organization.metadata_ipfs_hash,
             groups=group_data,
-            duns_no=organization.duns_no,
+            duns_no=organization.get_duns_no(),
+            address=address,
         )
         self.add_item(organization_item)
         org_row_id = organization_item.row_id
@@ -54,14 +62,6 @@ class OrganizationRepository(BaseRepository):
                 updated_on=current_time,
             )
         )
-        self.add_item(
-            OrganizationAddress(
-                org_row_id=org_row_id,
-                headquater_address=organization.address["headquater_address"],
-                mailing_address=organization.address["mailing_address"],
-                created_on=current_time,
-                updated_on=current_time,
-        ))
         self.session.commit()
 
     def update_org_draft(self, current_draft, organization, username):
@@ -74,11 +74,11 @@ class OrganizationRepository(BaseRepository):
         current_draft.Organization.contacts = organization.contacts
         current_draft.Organization.assets = organization.assets
         current_draft.Organization.metadata_ipfs_hash = organization.metadata_ipfs_hash
-        current_draft.Organization.duns_no = organization.duns_no
+        current_draft.Organization.duns_no = organization.get_duns_no()
         current_draft.OrganizationReviewWorkflow.updated_by = username
         current_draft.OrganizationReviewWorkflow.updated_on = datetime.utcnow()
-        current_draft.OrganizationAddress.headquater_address = organization.address["headquater_address"]
-        current_draft.OrganizationAddress.mailing_address = organization.address["mailing_address"]
+        current_draft.OrganizationAddress.headquater_address = organization.get_address()["headquater_address"]
+        current_draft.OrganizationAddress.mailing_address = organization.get_address()["mailing_address"]
         self.session.commit()
 
     def get_latest_org_from_org_uuid(self, org_uuid):
@@ -119,6 +119,13 @@ class OrganizationRepository(BaseRepository):
             org_address_row_ids = []
             for org in orgs_with_status:
                 row_ids.append(org.Organization.row_id)
+                address = OrganizationAddressHistory(
+                    row_id=org.OrganizationAddress.row_id,
+                    headquater_address=org.OrganizationAddress.headquater_address,
+                    mailing_address=org.OrganizationAddress.mailing_address,
+                    created_on=dt.utcnow(),
+                    updated_on=dt.utcnow(),
+                )
                 org_history.append(OrganizationHistory(
                     row_id=org.Organization.row_id,
                     name=org.Organization.name,
@@ -130,24 +137,13 @@ class OrganizationRepository(BaseRepository):
                     url=org.Organization.url,
                     contacts=org.Organization.contacts,
                     assets=org.Organization.assets,
-                    metadata_ipfs_hash=org.Organization.metadata_ipfs_hash
+                    metadata_ipfs_hash=org.Organization.metadata_ipfs_hash,
+                    address=address,
                 ))
-                org_address_row_ids.append(org.OrganizationAddress.row_id)
-                org_address_history.append(
-                    OrganizationAddressHistory(
-                        row_id=org.OrganizationAddress.row_id,
-                        org_row_id=org.OrganizationAddress.org_row_id,
-                        headquater_address=org.OrganizationAddress.headquater_address,
-                        mailing_address=org.OrganizationAddress.mailing_address,
-                        created_on=dt.utcnow(),
-                        updated_on=dt.utcnow(),
-                    ))
+                # org_address_history.append()
 
             self.add_all_items(org_history)
-            self.add_all_items(org_address_history)
             self.session.query(Organization).filter(Organization.row_id.in_(row_ids)) \
-                .delete(synchronize_session='fetch')
-            self.session.query(OrganizationAddress).filter(OrganizationAddress.row_id.in_(org_address_row_ids)) \
                 .delete(synchronize_session='fetch')
             self.session.commit()
 

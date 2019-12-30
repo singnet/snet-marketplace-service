@@ -12,7 +12,7 @@ logger = get_logger(__name__)
 
 class Organization:
     def __init__(self, name, org_id, org_uuid, org_type, description,
-                 short_description, url, contacts, assets, metadata_ipfs_hash):
+                 short_description, url, contacts, assets, metadata_ipfs_hash, duns_no, address):
         """
         assets = [
             {
@@ -33,8 +33,8 @@ class Organization:
         self.assets = assets
         self.metadata_ipfs_hash = metadata_ipfs_hash
         self.groups = []
-        self.duns_no = None
-        self.address = {"headquater_address": {}, "mailing_address": {}, "mail_address_same_hq_address": False}
+        self.__duns_no = duns_no
+        self.__address = address
 
     def setup_id(self):
         if self.is_org_uuid_set():
@@ -125,3 +125,9 @@ class Organization:
         filename = f"{METADATA_FILE_PATH}/{self.org_uuid}_org_metadata.json"
         json_to_file(metadata, filename)
         self.metadata_ipfs_hash = ipfs_utils.write_file_in_ipfs(filename)
+
+    def get_duns_no(self):
+        return self.__duns_no
+
+    def get_address(self):
+        return self.__address

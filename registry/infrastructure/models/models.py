@@ -21,6 +21,7 @@ class Organization(Base):
     assets = Column("assets", JSON, nullable=False)
     metadata_ipfs_hash = Column("metadata_ipfs_hash", VARCHAR(255))
     groups = relationship("Group", backref='organization', lazy='joined')
+    address = relationship("OrganizationAddress", backref='organization', lazy='joined')
 
 
 class OrganizationReviewWorkflow(Base):
@@ -38,7 +39,9 @@ class OrganizationReviewWorkflow(Base):
 class OrganizationAddress(Base):
     __tablename__ = "organization_address"
     row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
-    org_row_id = Column("organization_row_id", Integer, nullable=False)
+    org_row_id = Column("organization_row_id", Integer,
+                        ForeignKey("organization.row_id", ondelete="CASCADE", onupdate="CASCADE"),
+                        nullable=False)
     headquater_address = Column("headquater_address", JSON, nullable=False)
     mailing_address = Column("mailing_address", JSON, nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False))
@@ -69,6 +72,7 @@ class OrganizationHistory(Base):
     assets = Column("assets", JSON, nullable=False)
     metadata_ipfs_hash = Column("metadata_ipfs_hash", VARCHAR(255))
     groups = relationship('GroupHistory', backref='organization_history', lazy='joined')
+    address = relationship('OrganizationAddressHistory', backref='organization_history', lazy='joined')
 
 
 class Group(Base):
