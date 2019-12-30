@@ -120,7 +120,7 @@ class OrganizationRepository(BaseRepository):
             self.add_all_items(org_history)
             self.session.commit()
 
-    def move_org_to_history(self, org_uuid, status):
+    def move_org_to_history_with_status(self, org_uuid, status):
         orgs_with_status = self.session.query(Organization) \
             .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
             .filter(Organization.org_uuid == org_uuid) \
