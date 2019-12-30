@@ -18,7 +18,7 @@ class OrganizationService:
         if not organization.is_valid_draft():
             raise Exception(f"Validation failed for the Organization {organization.to_dict()}")
         self.org_repo.draft_update_org(organization, username)
-        self.org_repo.move_org_to_history(organization, OrganizationStatus.APPROVAL_PENDING.value)
+        self.org_repo.move_non_published_org_to_history(organization.org_uuid)
         return organization.to_dict()
 
     def submit_org_for_approval(self, org_uuid, username):
@@ -31,7 +31,7 @@ class OrganizationService:
             raise Exception(f"Organization not found with uuid {org_uuid}")
         organization = orgs[0]
         organization.publish_org()
-        self.org_repo.move_org_to_history(organization, OrganizationStatus.APPROVED.value)
+        self.org_repo.move_org_to_history(organization.org_uuid, OrganizationStatus.APPROVED.value)
         self.org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISH_IN_PROGRESS.value, username)
         return organization.to_dict()
 

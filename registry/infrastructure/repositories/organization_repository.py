@@ -86,15 +86,19 @@ class OrganizationRepository(BaseRepository):
             .filter(Organization.org_uuid == org_uuid).all()
         return organizations
 
-    def move_org_to_history(self, organization, status):
+    def move_non_published_org_to_history(self, org_uuid):
         orgs_with_status = self.session.query(Organization) \
             .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
-            .filter(Organization.org_uuid == organization.org_uuid) \
-            .filter(OrganizationReviewWorkflow.status == status).all()
-        if len(orgs_with_status) > 0:
+            .filter(Organization.org_uuid == org_uuid) \
+            .filter(OrganizationReviewWorkflow.status == OrganizationStatus.APPROVAL_PENDING.value)\
+            .filter(OrganizationReviewWorkflow.status == OrganizationStatus.APPROVED.value).all()
+        self.move_organizations_to_history(orgs_with_status)
+
+    def move_organizations_to_history(self, organizations):
+        if len(organizations) > 0:
             org_history = []
             row_ids = []
-            for org in orgs_with_status:
+            for org in organizations:
                 row_ids.append(org.row_id)
                 org_history.append(OrganizationHistory(
                     row_id=org.row_id,
@@ -115,6 +119,13 @@ class OrganizationRepository(BaseRepository):
                 .delete(synchronize_session='fetch')
             self.add_all_items(org_history)
             self.session.commit()
+
+    def move_org_to_history(self, org_uuid, status):
+        orgs_with_status = self.session.query(Organization) \
+            .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
+            .filter(Organization.org_uuid == org_uuid) \
+            .filter(OrganizationReviewWorkflow.status == status).all()
+        self.move_organizations_to_history(orgs_with_status)
 
     def get_organization_for_user(self, username):
         subquery = self.session.query(Organization) \
@@ -142,9 +153,9 @@ class OrganizationRepository(BaseRepository):
         return OrganizationFactory.parse_organization_data_model_list(organization)
 
     def change_org_status(self, org_uuid, current_status, new_status, username):
-        orgs = self.get_org_with_status(org_uuid, current_status)
-        if len(orgs) > 0:
-            self._update_org_status(orgs[0], new_status, username)
+        organizations = self.get_org_with_status(org_uuid, current_status)
+        if len(organizations) > 0:
+            self._update_org_status(organizations[0], new_status, username)
             self.session.commit()
         else:
             raise Exception(f"DRAFT for organization {org_uuid} not found")
@@ -162,9 +173,13 @@ class OrganizationRepository(BaseRepository):
         org = organizations[0]
         if org.OrganizationReviewWorkflow.status == OrganizationStatus.DRAFT.value:
             self.add_new_draft_groups_in_draft_org(groups, org, username)
+        elif org.OrganizationReviewWorkflow.status == OrganizationStatus.APPROVAL_PENDING.value:
+            self.add_new_draft_groups_in_draft_org(groups, org, username)
+            self.move_org_to_history()
+        elif org.OrganizationReviewWorkflow.status == OrganizationStatus.APPROVED.value:
+            self.add_new_draft_groups_in_draft_org(groups, org, username)
         else:
             self.add_new_draft_groups_in_org(groups, org, username)
-
 
     def get_latest_org_from_org_uuid(self, org_uuid):
         organizations = self.session.query(Organization, OrganizationReviewWorkflow) \
