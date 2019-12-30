@@ -59,7 +59,7 @@ class OrganizationRepository(BaseRepository):
                 org_row_id=org_row_id,
                 headquater_address=organization.address["headquater_address"],
                 mailing_address=organization.address["mailing_address"],
-                create_on=current_time,
+                created_on=current_time,
                 updated_on=current_time,
         ))
         self.session.commit()
