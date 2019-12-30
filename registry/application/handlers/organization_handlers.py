@@ -7,6 +7,7 @@ from common.utils import validate_dict, handle_exception_with_slack_notification
     validate_dict_list
 from registry.config import SLACK_HOOK, NETWORK_ID
 from registry.domain.services.organization_service import OrganizationService
+from registry.constants import PostOrganizationActions
 
 logger = get_logger(__name__)
 
@@ -22,9 +23,9 @@ def add_org(event, context):
     if not validate_dict(payload, required_keys):
         raise BadRequestException()
     org_service = OrganizationService()
-    if action == "draft":
+    if action == PostOrganizationActions.DRAFT.value:
         response = org_service.add_organization_draft(payload, username)
-    elif action == "submit":
+    elif action == PostOrganizationActions.SUBMIT.value:
         response = org_service.add_organization_draft(payload, username)
         org_service.submit_org_for_approval(response["org_uuid"], username)
     else:
