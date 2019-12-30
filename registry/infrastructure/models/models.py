@@ -21,7 +21,7 @@ class Organization(Base):
     assets = Column("assets", JSON, nullable=False)
     metadata_ipfs_hash = Column("metadata_ipfs_hash", VARCHAR(255))
     groups = relationship("Group", backref='organization', lazy='joined')
-    address = relationship("OrganizationAddress", backref='organization', lazy='joined')
+    address = relationship("OrganizationAddress", uselist=False, back_populates="organization")
 
 
 class OrganizationReviewWorkflow(Base):
@@ -46,7 +46,7 @@ class OrganizationAddress(Base):
     mailing_address = Column("mailing_address", JSON, nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False))
     updated_on = Column("updated_on", TIMESTAMP(timezone=False))
-
+    organization = relationship("organization", back_populates="organization_address")
 
 class OrganizationAddressHistory(Base):
     __tablename__ = "organization_address_history"
