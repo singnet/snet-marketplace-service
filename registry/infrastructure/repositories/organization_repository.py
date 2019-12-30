@@ -175,9 +175,10 @@ class OrganizationRepository(BaseRepository):
             self.add_new_draft_groups_in_draft_org(groups, org, username)
         elif org.OrganizationReviewWorkflow.status == OrganizationStatus.APPROVAL_PENDING.value:
             self.add_new_draft_groups_in_draft_org(groups, org, username)
-            self.move_org_to_history()
+            self.move_org_to_history_with_status(org_uuid, OrganizationStatus.APPROVAL_PENDING.value)
         elif org.OrganizationReviewWorkflow.status == OrganizationStatus.APPROVED.value:
             self.add_new_draft_groups_in_draft_org(groups, org, username)
+            self.move_org_to_history_with_status(org_uuid, OrganizationStatus.APPROVED.value)
         else:
             self.add_new_draft_groups_in_org(groups, org, username)
 
