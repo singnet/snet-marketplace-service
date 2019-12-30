@@ -46,7 +46,8 @@ class OrganizationAddress(Base):
     mailing_address = Column("mailing_address", JSON, nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False))
     updated_on = Column("updated_on", TIMESTAMP(timezone=False))
-    organization = relationship("organization", back_populates="organization_address")
+    organization = relationship("Organization", back_populates="organization_address")
+
 
 class OrganizationAddressHistory(Base):
     __tablename__ = "organization_address_history"
