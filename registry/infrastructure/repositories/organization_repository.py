@@ -76,12 +76,9 @@ class OrganizationRepository(BaseRepository):
         current_draft.Organization.duns_no = organization.get_duns_no()
         current_draft.OrganizationReviewWorkflow.updated_by = username
         current_draft.OrganizationReviewWorkflow.updated_on = datetime.utcnow()
-        current_draft.Organization.address = OrganizationAddress(
-            org_row_id=current_draft.Organization.row_id,
-            headquater_address=organization.get_address()["headquater_address"],
-            mailing_address=organization.get_address()["mailing_address"],
-            created_on=datetime.utcnow(),
-            updated_on=datetime.utcnow(),)
+        current_draft.Organization.address.headquater_address = organization.get_address()["headquater_address"]
+        current_draft.Organization.address.mailing_address = organization.get_address()["mailing_address"]
+        current_draft.Organization.address.updated_on = datetime.utcnow()
         self.session.commit()
 
     def get_organization_draft(self, org_uuid):
