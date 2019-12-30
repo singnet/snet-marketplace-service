@@ -190,7 +190,7 @@ class TestOrganizationService(unittest.TestCase):
                 }
             }
         ]
-        OrganizationService().add_group(payload, test_org_id)
+        OrganizationService().add_group(payload, test_org_id, username)
 
     def test_add_group_two(self):
         """ adding new group without existing draft """
@@ -240,7 +240,7 @@ class TestOrganizationService(unittest.TestCase):
                 }
             }
         ]
-        OrganizationService().add_group(payload, test_org_id)
+        OrganizationService().add_group(payload, test_org_id, username)
 
     def tearDown(self):
         self.org_repo.session.query(Organization).delete()
