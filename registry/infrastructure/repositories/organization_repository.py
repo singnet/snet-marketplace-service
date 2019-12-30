@@ -25,12 +25,12 @@ class OrganizationRepository(BaseRepository):
 
     def add_org_with_status(self, organization, status, username):
         current_time = datetime.utcnow()
-        address = list(OrganizationAddress(
+        address = [OrganizationAddress(
             headquater_address=organization.get_address()["headquater_address"],
             mailing_address=organization.get_address()["mailing_address"],
             created_on=current_time,
             updated_on=current_time,
-        ))
+        )]
         groups = organization.groups
         group_data = self.group_data_items_from_group_list(groups, organization.org_uuid)
         organization_item = Organization(
