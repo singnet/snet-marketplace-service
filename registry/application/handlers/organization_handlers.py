@@ -17,7 +17,7 @@ def add_org(event, context):
     payload = json.loads(event["body"])
     action = event["queryStringParameters"]["action"]
     required_keys = ["org_id", "org_uuid", "org_name", "org_type", "metadata_ipfs_hash", "description",
-                     "short_description", "url", "contacts", "assets"]
+                     "short_description", "url", "contacts", "assets", "address", "duns_no"]
 
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     if not validate_dict(payload, required_keys):
