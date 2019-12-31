@@ -88,6 +88,13 @@ def validate_dict(data_dict, required_keys):
     return True
 
 
+def validate_dict_list(data_list, required_keys):
+    for data in data_list:
+        if not validate_dict(data, required_keys):
+            return False
+    return True
+
+
 def make_response_body(status, data, error):
     return {
         "status": status,
@@ -182,3 +189,8 @@ def handle_exception_with_slack_notification(*decorator_args, **decorator_kwargs
         return wrapper
 
     return decorator
+
+
+def json_to_file(payload, filename):
+    with open(filename, 'w') as f:
+        f.write(json.dumps(payload, indent=4))

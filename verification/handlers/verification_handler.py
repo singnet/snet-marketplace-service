@@ -2,9 +2,9 @@ import json
 from common.logger import get_logger
 from common.utils import handle_exception_with_slack_notification, generate_lambda_response, validate_dict
 from common.constant import StatusCode, ResponseStatus
-from orchestrator.config import NETWORK_ID, SLACK_HOOK
+from verification.config import NETWORK_ID, SLACK_HOOK
 from aws_xray_sdk.core import patch_all
-from orchestrator.services.verification_service import VerificationService
+from verification.services.verification_service import VerificationService
 from common.exceptions import BadRequestException
 
 patch_all()
