@@ -16,6 +16,7 @@ class Organization(Base):
     description = Column("description", VARCHAR(1024), nullable=False)
     short_description = Column("short_description", VARCHAR(1024), nullable=False)
     url = Column("url", VARCHAR(512), nullable=False)
+    duns_no = Column("duns_no", VARCHAR(20), nullable=True)
     contacts = Column("contacts", JSON, nullable=False)
     assets = Column("assets", JSON, nullable=False)
     metadata_ipfs_hash = Column("metadata_ipfs_hash", VARCHAR(255))
