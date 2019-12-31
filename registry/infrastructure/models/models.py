@@ -109,7 +109,7 @@ class OrganizationAddressHistory(Base):
     __tablename__ = "organization_address_history"
     row_id = Column("row_id", Integer, primary_key=True)
     org_row_id = Column("org_row_id", Integer,
-                        ForeignKey("organization.row_id", ondelete="CASCADE", onupdate="CASCADE"),
+                        ForeignKey("organization_history.row_id", ondelete="CASCADE", onupdate="CASCADE"),
                         nullable=False)
     address_type = Column("address_type", VARCHAR(64), nullable=False),
     street_address = Column("street_address", VARCHAR(256), nullable=False),
