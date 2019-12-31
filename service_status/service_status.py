@@ -154,11 +154,12 @@ class ServiceStatus:
 
     def _get_service_provider_email(self, org_id, service_id=None):
         emails = []
-        query_response = self.repo.execute("SELECT contacts FROM organization WHERE org_id = %s ", [org_id])
+        query_response = self.repo.execute("SELECT contributors FROM service_metadata WHERE org_id = %s AND "
+                                           "service_id = %s", [org_id, service_id])
         if len(query_response) == 0:
             logger.info(f"Org Id {org_id} is not present.")
             return None
-        contacts = json.loads(query_response[0].get("contacts", '[]'))
+        contacts = json.loads(query_response[0].get("contributors", '[]'))
         for contact in contacts:
             email_id = contact.get("email_id", None)
             if email_id is not None:
