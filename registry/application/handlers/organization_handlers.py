@@ -53,6 +53,11 @@ def publish_org(event, context):
 
 
 @handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def save_transaction(event, context):
+    pass
+
+
+@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def get_all_org(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     response = OrganizationService().get_organizations_for_user(username)

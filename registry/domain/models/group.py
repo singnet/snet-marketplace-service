@@ -3,11 +3,12 @@ import secrets
 
 
 class Group:
-    def __init__(self, name, group_id, payment_address, payment_config):
+    def __init__(self, name, group_id, payment_address, payment_config, status):
         self.name = name
         self.group_id = group_id
         self.payment_address = payment_address
         self.payment_config = payment_config
+        self.status = status
 
     def to_metadata(self):
         return {

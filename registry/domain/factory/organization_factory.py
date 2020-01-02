@@ -64,7 +64,7 @@ class OrganizationFactory:
         group_name = raw_group.get("name", None)
         payment_address = raw_group.get("payment_address", None)
         payment_config = raw_group.get("payment_config", None)
-        group = Group(group_name, group_id, payment_address, payment_config)
+        group = Group(group_name, group_id, payment_address, payment_config, '')
         return group
 
     @staticmethod
@@ -73,6 +73,7 @@ class OrganizationFactory:
             item.name, item.org_id, item.org_uuid, item.type, item.description,
             item.short_description, item.url, item.contacts, item.assets, item.metadata_ipfs_hash
         )
+        organization.add_all_groups(item.groups)
         return organization
 
     @staticmethod
@@ -88,3 +89,10 @@ class OrganizationFactory:
         for item in items:
             organizations.append(OrganizationFactory.parse_organization_data_model(item.Organization))
         return organizations
+
+    @staticmethod
+    def parse_group_data_model(items):
+        groups = []
+        for group in items:
+            groups.append(Group(group.name, group.id, group.payment_address, group.payment_config, group.status))
+        return groups

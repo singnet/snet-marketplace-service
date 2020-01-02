@@ -12,3 +12,8 @@ class OrganizationStatus(Enum):
 class PostOrganizationActions(Enum):
     DRAFT = "draft"
     SUBMIT = "submit"
+
+
+class MemberRole(Enum):
+    OWNER = "OWNER"
+    MEMBER = "MEMBER"

@@ -31,7 +31,7 @@ class OrganizationReviewWorkflow(Base):
     created_by = Column("created_by", VARCHAR(128), nullable=False)
     updated_by = Column("updated_by", VARCHAR(128), nullable=False)
     approved_by = Column("approved_by", VARCHAR(128))
-    create_on = Column("created_on", TIMESTAMP(timezone=False))
+    created_on = Column("created_on", TIMESTAMP(timezone=False))
     updated_on = Column("modified_on", TIMESTAMP(timezone=False))
 
 

@@ -2,7 +2,7 @@ from datetime import datetime
 
 from sqlalchemy import desc
 
-from registry.constants import OrganizationStatus
+from registry.constants import OrganizationStatus, MemberRole
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.models.models import Group, OrganizationReviewWorkflow, \
     OrganizationHistory, OrganizationMember
@@ -45,7 +45,7 @@ class OrganizationRepository(BaseRepository):
                 status=status,
                 created_by=username,
                 updated_by=username,
-                create_on=current_time,
+                created_on=current_time,
                 updated_on=current_time,
             )
         )
@@ -64,6 +64,7 @@ class OrganizationRepository(BaseRepository):
         current_draft.OrganizationReviewWorkflow.updated_by = username
         current_draft.OrganizationReviewWorkflow.updated_on = datetime.utcnow()
         self.session.commit()
+        self.add_new_draft_groups_in_draft_org(organization.groups, current_draft, username)
 
     def get_organization_draft(self, org_uuid):
         organizations = self.get_org_with_status(org_uuid, OrganizationStatus.DRAFT.value)
@@ -240,7 +241,7 @@ class OrganizationRepository(BaseRepository):
                 status=OrganizationStatus.DRAFT.value,
                 created_by=username,
                 updated_by=username,
-                create_on=current_time,
+                created_on=current_time,
                 updated_on=current_time,
             )
         )
