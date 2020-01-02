@@ -12,7 +12,7 @@ logger = get_logger(__name__)
 
 class Organization:
     def __init__(self, name, org_id, org_uuid, org_type, description,
-                 short_description, url, contacts, assets, metadata_ipfs_hash):
+                 short_description, url, contacts, assets, metadata_ipfs_hash, duns_no=None):
         """
         assets = [
             {
@@ -29,10 +29,12 @@ class Organization:
         self.description = description
         self.short_description = short_description
         self.url = url
+        self.__duns_no = duns_no
         self.contacts = contacts
         self.assets = assets
         self.metadata_ipfs_hash = metadata_ipfs_hash
         self.groups = []
+        self.__addresses = []
 
     def setup_id(self):
         if self.is_org_uuid_set():
@@ -102,7 +104,7 @@ class Organization:
 
     def validate_publish(self):
         return self.validate_approval_state() and (
-                    self.metadata_ipfs_hash is not None and len(self.metadata_ipfs_hash) != 0)
+                self.metadata_ipfs_hash is not None and len(self.metadata_ipfs_hash) != 0)
 
     def publish_assets(self):
         ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
@@ -123,3 +125,14 @@ class Organization:
         filename = f"{METADATA_FILE_PATH}/{self.org_uuid}_org_metadata.json"
         json_to_file(metadata, filename)
         self.metadata_ipfs_hash = ipfs_utils.write_file_in_ipfs(filename)
+
+    @property
+    def duns_no(self):
+        return self.__duns_no
+
+    @property
+    def addresses(self):
+        return self.__addresses
+
+    def all_all_address(self, org_addresses):
+        self.__addresses.extend(org_addresses)

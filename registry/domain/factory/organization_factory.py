@@ -7,6 +7,7 @@ from common.logger import get_logger
 from registry.config import METADATA_FILE_PATH, ASSET_BUCKET, REGION_NAME
 from registry.domain.models.group import Group
 from registry.domain.models.organization import Organization
+from registry.domain.models.organization_address import OrganizationAddress
 
 logger = get_logger(__name__)
 
@@ -44,9 +45,11 @@ class OrganizationFactory:
         contacts = payload.get("contacts", None)
         metadata_ipfs_hash = payload.get("metadata_ipfs_hash", None)
         groups = OrganizationFactory.parse_raw_list_groups(payload.get("groups", []))
+        addresses = OrganizationFactory.parse_raw_address_list(payload.get("addresses", []))
         organization = Organization(org_name, org_id, org_uuid, org_type, description,
                                     short_description, url, contacts, assets, metadata_ipfs_hash)
         organization.add_all_groups(groups)
+        organization.all_all_address(addresses)
         organization.setup_id()
         organization.assets = extract_and_upload_assets(organization.org_uuid, payload.get("assets", {}))
         return organization
@@ -59,6 +62,13 @@ class OrganizationFactory:
         return groups
 
     @staticmethod
+    def parse_raw_address_list(raw_addresses):
+        addresses = []
+        for address in raw_addresses:
+            addresses.append(OrganizationFactory.parse_raw_address(address))
+        return addresses
+
+    @staticmethod
     def parse_raw_group(raw_group):
         group_id = raw_group.get("id", None)
         group_name = raw_group.get("name", None)
@@ -66,6 +76,18 @@ class OrganizationFactory:
         payment_config = raw_group.get("payment_config", None)
         group = Group(group_name, group_id, payment_address, payment_config)
         return group
+
+    @staticmethod
+    def parse_raw_address(raw_address):
+        address_type = raw_address.get("address_type", None)
+        street_address = raw_address.get("street_address", None)
+        city = raw_address.get("city", None)
+        pincode = raw_address.get("pincode", None)
+        state = raw_address.get("state", None)
+        country = raw_address.get("country", None)
+        address = OrganizationAddress(address_type=address_type, street_address=street_address, pincode=pincode,
+                                      city=city, state=state, country=country)
+        return address
 
     @staticmethod
     def parse_organization_data_model(item):

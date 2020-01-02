@@ -95,12 +95,12 @@ class OrganizationAddress(Base):
     org_row_id = Column("org_row_id", Integer,
                         ForeignKey("organization.row_id", ondelete="CASCADE", onupdate="CASCADE"),
                         nullable=False)
-    address_type = Column("address_type", VARCHAR(64), nullable=False),
-    street_address = Column("street_address", VARCHAR(256), nullable=False),
-    city = Column("city", VARCHAR(64), nullable=False),
-    pincode = Column("pincode", VARCHAR(10), nullable=False),
-    state = Column("state", VARCHAR(64), nullable=True),
-    country = Column("country", VARCHAR(64), nullable=False),
+    address_type = Column("address_type", VARCHAR(64), nullable=False)
+    street_address = Column("street_address", VARCHAR(256), nullable=False)
+    city = Column("city", VARCHAR(64), nullable=False)
+    pincode = Column("pincode", Integer, nullable=False)
+    state = Column("state", VARCHAR(64), nullable=True)
+    country = Column("country", VARCHAR(64), nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False))
     updated_on = Column("updated_on", TIMESTAMP(timezone=False))
 
@@ -111,11 +111,11 @@ class OrganizationAddressHistory(Base):
     org_row_id = Column("org_row_id", Integer,
                         ForeignKey("organization_history.row_id", ondelete="CASCADE", onupdate="CASCADE"),
                         nullable=False)
-    address_type = Column("address_type", VARCHAR(64), nullable=False),
-    street_address = Column("street_address", VARCHAR(256), nullable=False),
-    city = Column("city", VARCHAR(64), nullable=False),
-    pincode = Column("pincode", VARCHAR(10), nullable=False),
-    state = Column("state", VARCHAR(64), nullable=True),
-    country = Column("country", VARCHAR(64), nullable=False),
+    address_type = Column("address_type", VARCHAR(64), nullable=False)
+    street_address = Column("street_address", VARCHAR(256), nullable=False)
+    city = Column("city", VARCHAR(64), nullable=False)
+    pincode = Column("pincode", Integer, nullable=False)
+    state = Column("state", VARCHAR(64), nullable=True)
+    country = Column("country", VARCHAR(64), nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False))
     updated_on = Column("updated_on", TIMESTAMP(timezone=False))
