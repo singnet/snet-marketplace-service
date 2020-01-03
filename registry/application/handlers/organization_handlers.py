@@ -44,7 +44,7 @@ def publish_org(event, context):
     if "org_id" not in path_parameters:
         raise BadRequestException()
     org_uuid = path_parameters["org_id"]
-    response = OrganizationService().publish_org_ipfs(org_uuid, username)
+    response = OrganizationService().publish_org_to_ipfs(org_uuid, username)
 
     return generate_lambda_response(
         StatusCode.OK,

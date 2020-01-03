@@ -201,7 +201,7 @@ class TestOrganizationService(unittest.TestCase):
             "dummy_org", "org_id", test_org_id, "organization",
             "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, ""),
             "APPROVED", username)
-        response = OrganizationService().publish_org_ipfs(test_org_id, username)
+        response = OrganizationService().publish_org_to_ipfs(test_org_id, username)
         self.assertEqual(response["metadata_ipfs_hash"], "Q3E12")
 
         orgs = self.org_repo.get_org_with_status(test_org_id, "APPROVED")

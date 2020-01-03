@@ -31,12 +31,12 @@ class OrganizationService:
                                         OrganizationStatus.APPROVAL_PENDING.value, username)
         return "OK"
 
-    def publish_org_ipfs(self, org_uuid, username):
+    def publish_org_to_ipfs(self, org_uuid, username):
         orgs = self.org_repo.get_approved_org(org_uuid)
         if len(orgs) == 0:
             raise Exception(f"Organization not found with uuid {org_uuid}")
         organization = orgs[0]
-        organization.publish_org_ipfs()
+        organization.publish_to_ipfs()
         self.org_repo.persist_ipfs_hash(organization)
         return organization.to_dict()
 
