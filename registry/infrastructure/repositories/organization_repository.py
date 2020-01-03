@@ -19,7 +19,7 @@ class OrganizationRepository(BaseRepository):
         else:
             self.add_org_with_status(organization, OrganizationStatus.DRAFT.value, username)
 
-    def add_org_with_status(self, organization, status, username, transaction_hash=None, user_address=None):
+    def add_org_with_status(self, organization, status, username, transaction_hash=None, wallet_address=None):
         current_time = datetime.utcnow()
         groups = organization.groups
         group_data = self.group_data_items_from_group_list(groups, organization.org_uuid)
@@ -48,7 +48,7 @@ class OrganizationRepository(BaseRepository):
                 created_on=current_time,
                 updated_on=current_time,
                 transaction_hash=transaction_hash,
-                user_address=user_address
+                wallet_address=wallet_address
             )
         )
         self.session.commit()

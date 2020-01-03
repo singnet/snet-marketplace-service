@@ -61,7 +61,7 @@ def save_transaction(event, context):
         raise BadRequestException()
     org_uuid = path_parameters["org_id"]
     response = OrganizationService().save_transaction(org_uuid, username,
-                                                      payload['transaction_hash'], payload['user_address'])
+                                                      payload['transaction_hash'], payload['wallet_address'])
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True

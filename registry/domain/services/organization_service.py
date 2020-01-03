@@ -40,14 +40,14 @@ class OrganizationService:
         self.org_repo.persist_ipfs_hash(organization)
         return organization.to_dict()
 
-    def save_transaction(self, org_uuid, transaction_hash, user_address, username):
+    def save_transaction(self, org_uuid, transaction_hash, wallet_address, username):
         orgs = self.org_repo.get_approved_org(org_uuid)
         if len(orgs) == 0:
             raise Exception(f"Organization not found with uuid {org_uuid}")
         organization = orgs[0]
         self.org_repo.move_org_to_history_with_status(organization.org_uuid, OrganizationStatus.APPROVED.value)
         self.org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISH_IN_PROGRESS.value, username,
-                                          transaction_hash=transaction_hash, user_address=user_address)
+                                          transaction_hash=transaction_hash, wallet_address=wallet_address)
         return "OK"
 
     def get_organizations_for_user(self, username):
