@@ -83,7 +83,7 @@ class TestOrganization(TestCase):
                 "action": "DRAFT"
             },
             "body": json.dumps({"org_id": "org_id",
-                                "org_uuid": "12ba76e57230403da870856fd85b019f",
+                                "org_uuid": "12ba76e57230403da870856fd85b019h",
                                 "org_name": "org_name",
                                 "org_type": "organization",
                                 "metadata_ipfs_hash": "",
@@ -100,14 +100,16 @@ class TestOrganization(TestCase):
                                 "mail_address_same_hq_address": False,
                                 "addresses": [{
                                     "address_type": "headquater_address",
-                                    "street_address": "F102 ABC Apartment XYZ",
+                                    "street_address": "F102",
+                                    "apartment": "ABC Apartment",
                                     "city": "TestCity",
                                     "pincode": 123456,
                                     "country": "TestCountry"
                                 },
                                     {
                                         "address_type": "mailing_address",
-                                        "street_address": "F102 ABC Apartment XYZ",
+                                        "street_address": "F102",
+                                        "apartment": "ABC Apartment",
                                         "city": "TestCity",
                                         "pincode": 123456,
                                         "country": "TestCountry"
