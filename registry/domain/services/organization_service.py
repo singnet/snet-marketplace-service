@@ -38,7 +38,7 @@ class OrganizationService:
             raise Exception(f"Organization not found with uuid {org_uuid}")
         organization = orgs[0]
         organization.publish_to_ipfs()
-        self.org_repo.persist_ipfs_hash(organization)
+        self.org_repo.persist_metadata_and_assets_ipfs_hash(organization)
         return organization.to_dict()
 
     def save_transaction_hash_for_publish_org(self, org_uuid, transaction_hash, wallet_address, username):

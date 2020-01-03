@@ -249,7 +249,7 @@ class OrganizationRepository(BaseRepository):
         )
         self.session.commit()
 
-    def persist_ipfs_hash(self, organization):
+    def persist_metadata_and_assets_ipfs_hash(self, organization):
         org_data = self.get_org_with_status(organization.org_uuid, OrganizationStatus.APPROVED.value)
         if len(org_data) == 0:
             raise Exception(f"No organization found with {organization.org_uuid}")
