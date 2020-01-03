@@ -94,7 +94,8 @@ class OrganizationFactory:
     def parse_organization_data_model(item):
         organization = Organization(
             item.name, item.org_id, item.org_uuid, item.type, item.description,
-            item.short_description, item.url, item.contacts, item.assets, item.metadata_ipfs_hash
+            item.short_description, item.url, item.contacts, item.assets, item.metadata_ipfs_hash,
+            item.duns_no, item.addresses, item.groups
         )
         organization.add_all_groups(item.groups)
         return organization

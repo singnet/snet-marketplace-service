@@ -323,7 +323,8 @@ class TestOrganizationService(unittest.TestCase):
         username = "dummy@snet.io"
         organization = DomainOrganization(
             org_name, org_id, test_org_uuid, "organization",
-            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "QWE")
+            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "QWE",
+            duns_no=12345678, groups=[], addresses=[])
         self.org_repo.add_org_with_status(organization, OrganizationStatus.APPROVED.value, username)
         OrganizationService().save_transaction_hash_for_publish_org(test_org_uuid, "0x98765", "0x123", username)
         org_db_models = self.org_repo.get_org_with_status(test_org_uuid, OrganizationStatus.PUBLISH_IN_PROGRESS.value)
