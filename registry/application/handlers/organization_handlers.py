@@ -17,13 +17,13 @@ def add_org(event, context):
     payload = json.loads(event["body"])
     action = event["queryStringParameters"]["action"]
     required_keys = ["org_id", "org_uuid", "org_name", "org_type", "metadata_ipfs_hash", "description",
-                     "short_description", "url", "contacts", "assets"]
+                     "short_description", "url", "contacts", "assets", "addresses", "duns_no"]
 
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     if not validate_dict(payload, required_keys):
         raise BadRequestException()
     org_service = OrganizationService()
-    if action == PostOrganizationActions.DRAFT.value:
+    if action == PostOrganizationActions.DRAFT.value.upper():
         response = org_service.add_organization_draft(payload, username)
     elif action == PostOrganizationActions.SUBMIT.value:
         response = org_service.add_organization_draft(payload, username)
