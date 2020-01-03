@@ -5,7 +5,7 @@ from sqlalchemy import desc, or_
 from registry.constants import OrganizationStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.models.models import Group, OrganizationReviewWorkflow, \
-    OrganizationHistory, OrganizationMember, OrganizationAddress, OrganizationAddressHistory
+    OrganizationHistory, OrganizationAddress, OrganizationAddressHistory
 from registry.infrastructure.models.models import Organization
 from registry.infrastructure.repositories.base_repository import BaseRepository
 
@@ -177,24 +177,10 @@ class OrganizationRepository(BaseRepository):
             .filter(OrganizationReviewWorkflow.status == status).all()
         self.move_organizations_to_history(orgs_with_status)
 
-    def get_organization_for_user(self, username):
-        subquery = self.session.query(Organization) \
-            .join(OrganizationMember, Organization.org_uuid == OrganizationMember.org_uuid) \
-            .filter(OrganizationMember.username == username).subquery()
-        organizations = self.session.query(
-            subquery.c.row_id.label("row_id"),
-            subquery.c.name.label("name"),
-            subquery.c.org_uuid.label("org_uuid"),
-            subquery.c.org_id.label("org_id"),
-            subquery.c.type.label("type"),
-            subquery.c.description.label("description"),
-            subquery.c.short_description.label("short_description"),
-            subquery.c.url.label("url"),
-            subquery.c.contacts.label("contacts"),
-            subquery.c.metadata_ipfs_hash.label("metadata_ipfs_hash"),
-            OrganizationReviewWorkflow
-        ).join(OrganizationReviewWorkflow, subquery.c.row_id == OrganizationReviewWorkflow.org_row_id).all()
-        return organizations
+    def get_latest_organization(self, username):
+        organizations = self.session.query(Organization, OrganizationReviewWorkflow)\
+            .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id).all()
+        return OrganizationFactory.parse_organization_details(organizations)
 
     def get_published_organization(self):
         organization = self.session.query(Organization) \

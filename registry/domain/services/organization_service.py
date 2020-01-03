@@ -52,8 +52,13 @@ class OrganizationService:
         return "OK"
 
     def get_organizations_for_user(self, username):
-        organization = self.org_repo.get_organization_for_user(username)
-        return organization
+        organizations = self.org_repo.get_latest_organization(username)
+        response = []
+        for org_data in organizations:
+            org = {"status": org_data["status"]}
+            org.update(org_data["organization"].to_dict())
+            response.append(org)
+        return response
 
     def get_organization(self):
         organizations = self.org_repo.get_published_organization()

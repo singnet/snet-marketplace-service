@@ -137,3 +137,15 @@ class OrganizationFactory:
                     country=address.country
                 ))
         return addresses
+
+
+    @staticmethod
+    def parse_organization_details(items):
+        orgs = []
+        for item in items:
+            orgs.append({
+                "organization": OrganizationFactory.parse_organization_data_model(item.Organization),
+                "status": item.OrganizationReviewWorkflow.status
+            })
+
+        return orgs

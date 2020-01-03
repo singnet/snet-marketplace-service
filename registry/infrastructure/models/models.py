@@ -35,7 +35,7 @@ class OrganizationReviewWorkflow(Base):
     updated_by = Column("updated_by", VARCHAR(128), nullable=False)
     approved_by = Column("approved_by", VARCHAR(128))
     created_on = Column("created_on", TIMESTAMP(timezone=False))
-    updated_on = Column("modified_on", TIMESTAMP(timezone=False))
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False))
 
 
 class OrganizationHistory(Base):
