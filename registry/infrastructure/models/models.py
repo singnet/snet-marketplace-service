@@ -3,7 +3,6 @@ from sqlalchemy.dialects.mysql import JSON, TIMESTAMP
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
-
 Base = declarative_base()
 
 
@@ -17,10 +16,12 @@ class Organization(Base):
     description = Column("description", VARCHAR(1024), nullable=False)
     short_description = Column("short_description", VARCHAR(1024), nullable=False)
     url = Column("url", VARCHAR(512), nullable=False)
+    duns_no = Column("duns_no", VARCHAR(20), nullable=True)
     contacts = Column("contacts", JSON, nullable=False)
     assets = Column("assets", JSON, nullable=False)
     metadata_ipfs_hash = Column("metadata_ipfs_hash", VARCHAR(255))
     groups = relationship("Group", backref='organization', lazy='joined')
+    address = relationship("OrganizationAddress", backref='organization', lazy='joined')
 
 
 class OrganizationReviewWorkflow(Base):
@@ -47,10 +48,12 @@ class OrganizationHistory(Base):
     description = Column("description", VARCHAR(1024), nullable=False)
     short_description = Column("short_description", VARCHAR(1024), nullable=False)
     url = Column("url", VARCHAR(512), nullable=False)
+    duns_no = Column("duns_no", VARCHAR(20), nullable=True)
     contacts = Column("contacts", JSON, nullable=False)
     assets = Column("assets", JSON, nullable=False)
     metadata_ipfs_hash = Column("metadata_ipfs_hash", VARCHAR(255))
     groups = relationship('GroupHistory', backref='organization_history', lazy='joined')
+    address = relationship('OrganizationAddressHistory', backref='organization_history', lazy='joined')
 
 
 class Group(Base):
@@ -87,3 +90,35 @@ class OrganizationMember(Base):
     org_uuid = Column("org_uuid", VARCHAR(128))
     role = Column("role", VARCHAR(128))
     username = Column("username", VARCHAR(128))
+
+
+class OrganizationAddress(Base):
+    __tablename__ = "organization_address"
+    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
+    org_row_id = Column("org_row_id", Integer,
+                        ForeignKey("organization.row_id", ondelete="CASCADE", onupdate="CASCADE"),
+                        nullable=False)
+    address_type = Column("address_type", VARCHAR(64), nullable=False)
+    street_address = Column("street_address", VARCHAR(256), nullable=False)
+    city = Column("city", VARCHAR(64), nullable=False)
+    pincode = Column("pincode", Integer, nullable=False)
+    state = Column("state", VARCHAR(64), nullable=True)
+    country = Column("country", VARCHAR(64), nullable=False)
+    created_on = Column("created_on", TIMESTAMP(timezone=False))
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False))
+
+
+class OrganizationAddressHistory(Base):
+    __tablename__ = "organization_address_history"
+    row_id = Column("row_id", Integer, primary_key=True)
+    org_row_id = Column("org_row_id", Integer,
+                        ForeignKey("organization_history.row_id", ondelete="CASCADE", onupdate="CASCADE"),
+                        nullable=False)
+    address_type = Column("address_type", VARCHAR(64), nullable=False)
+    street_address = Column("street_address", VARCHAR(256), nullable=False)
+    city = Column("city", VARCHAR(64), nullable=False)
+    pincode = Column("pincode", Integer, nullable=False)
+    state = Column("state", VARCHAR(64), nullable=True)
+    country = Column("country", VARCHAR(64), nullable=False)
+    created_on = Column("created_on", TIMESTAMP(timezone=False))
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False))
