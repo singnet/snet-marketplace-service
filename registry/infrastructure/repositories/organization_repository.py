@@ -23,8 +23,7 @@ class OrganizationRepository(BaseRepository):
         current_time = datetime.utcnow()
         groups = organization.groups
         group_data = self.group_data_items_from_group_list(groups, organization.org_uuid)
-        address_data = self.address_data_items_from_address_list(addresses=organization.addresses,
-                                                                 org_row_id=organization.org_id)
+        address_data = self.address_data_items_from_address_list(addresses=organization.addresses)
         organization_item = Organization(
             name=organization.name,
             org_uuid=organization.org_uuid,
@@ -135,7 +134,6 @@ class OrganizationRepository(BaseRepository):
                     org_addresses_history.append(
                         OrganizationAddressHistory(
                             row_id=address.row_id,
-                            org_row_id=address.org_row_id,
                             address_type=address.address_type,
                             street_address=address.street_address,
                             city=address.city,
@@ -261,13 +259,12 @@ class OrganizationRepository(BaseRepository):
             ))
         return group_data
 
-    def address_data_items_from_address_list(self, addresses, org_row_id):
+    def address_data_items_from_address_list(self, addresses):
         address_data = []
         for address in addresses:
             address_dict = address.to_dict()
             address_data.append(
                 OrganizationAddress(
-                    org_row_id=org_row_id,
                     address_type=address_dict["address_type"],
                     street_address=address_dict["street_address"],
                     city=address_dict["city"],
