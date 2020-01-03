@@ -9,7 +9,7 @@ from registry.consumer.organization_event_consumer import OrganizationCreatedEve
 from registry.domain.services.organization_service import OrganizationService
 from registry.domain.models.organization import Organization as DomainOrganization
 from registry.domain.models.group import Group as DomainGroup
-from registry.infrastructure.models.models import Organization, OrganizationReviewWorkflow, OrganizationHistory
+from registry.infrastructure.models.models import Organization, OrganizationReviewWorkflow, OrganizationHistory, Group
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
 
 
@@ -29,13 +29,13 @@ class TestOrganizationService(unittest.TestCase):
         username = "dummy@snet.io"
         organization = DomainOrganization(
             "dummy_org", "org_id", test_org_id, "organization",
-            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "Q3E12")
-        organization.add_group(DomainGroup(
+            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "Q3E12","",[],[DomainGroup(
             name="my-group",
             group_id="group_id",
             payment_address="0x123",
-            payment_config={}
-        ))
+            payment_config={},
+            status=""
+        )])
 
         self.org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISH_IN_PROGRESS.value, username)
         event = {"data": {'row_id': 2, 'block_no': 6243627, 'event': 'OrganizationCreated',
@@ -89,25 +89,27 @@ class TestOrganizationService(unittest.TestCase):
         username = "dummy@snet.io"
         organization = DomainOrganization(
             "dummy_org", "org_id", test_org_id, "organization",
-            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "Q3E12")
-        organization.add_group(DomainGroup(
+            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "Q3E12","",[],[DomainGroup(
             name="my-group",
             group_id="group_id",
             payment_address="0x123",
-            payment_config={}
-        ))
+            payment_config={},
+            status=""
+        )])
+
 
         self.org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISHED.value, username)
         draft_organization = DomainOrganization(
             "dummy_org", "org_id", test_org_id, "organization",
-            "that is the dummy org for testcases", "that is the short description", "draft_dummy.com", [], {}, "Q3E12")
-
-        draft_organization.add_group(DomainGroup(
+            "that is the dummy org for testcases", "that is the short description", "draft_dummy.com", [], {}, "Q3E12","",[],[DomainGroup(
             name="my-group",
             group_id="group_id",
             payment_address="0x123",
-            payment_config={}
-        ))
+            payment_config={},
+            status=""
+        )])
+
+
 
         self.org_repo.add_org_with_status(draft_organization, OrganizationStatus.PUBLISH_IN_PROGRESS.value, username)
 
@@ -158,4 +160,6 @@ class TestOrganizationService(unittest.TestCase):
         self.org_repo.session.query(Organization).delete()
         self.org_repo.session.query(OrganizationReviewWorkflow).delete()
         self.org_repo.session.query(OrganizationHistory).delete()
+        self.org_repo.session.query(Group).delete()
+
         self.org_repo.session.commit()
