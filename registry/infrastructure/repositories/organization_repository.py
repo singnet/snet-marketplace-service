@@ -87,6 +87,7 @@ class OrganizationRepository(BaseRepository):
                 OrganizationAddress(org_row_id=org_row_id,
                                     address_type=address_data["address_type"],
                                     street_address=address_data["street_address"],
+                                    apartment=address_data["apartment"],
                                     city=address_data["city"],
                                     pincode=address_data["pincode"],
                                     state=address_data["state"],
