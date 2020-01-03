@@ -138,6 +138,18 @@ class OrganizationFactory:
 
 
     @staticmethod
+    def parse_organization_details(items):
+        orgs = []
+        for item in items:
+            orgs.append({
+                "organization": OrganizationFactory.parse_organization_data_model(item.Organization),
+                "status": item.OrganizationReviewWorkflow.status
+            })
+
+        return orgs
+
+
+    @staticmethod
     def parse_organization_metadata(org_uuid, ipfs_org_metadata):
         org_id = ipfs_org_metadata.get("org_id", None)
         org_name = ipfs_org_metadata.get("org_name", None)
