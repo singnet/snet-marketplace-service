@@ -7,7 +7,8 @@ import traceback
 import requests
 import web3
 from web3 import Web3
-from common.constant import COGS_TO_AGI
+from common.constant import COGS_TO_AGI, StatusCode
+from common.exceptions import OrganizationNotFound
 
 IGNORED_LIST = ['row_id', 'row_created', 'row_updated']
 
@@ -22,7 +23,7 @@ class Utils:
     def report_slack(self, type, slack_msg, SLACK_HOOK):
         url = SLACK_HOOK['hostname'] + SLACK_HOOK['path']
         prefix = self.msg_type.get(type, "")
-        slack_channel = SLACK_HOOK.get("channel","contract-index-alerts")
+        slack_channel = SLACK_HOOK.get("channel", "contract-index-alerts")
         print(url)
         payload = {"channel": f"#{slack_channel}",
                    "username": "webhookbot",
@@ -166,6 +167,12 @@ def handle_exception_with_slack_notification(*decorator_args, **decorator_kwargs
                     message=format_error_message(
                         status="failed", error=repr(e), payload=payload, net_id=NETWORK_ID, handler=handler_name),
                     cors_enabled=True)
+            except OrganizationNotFound as e:
+                logger.exception(f"Organization no found {repr(e)}")
+                return generate_lambda_response(
+                    StatusCode.INTERNAL_SERVER_ERROR,
+                    {"status": "success", "data": "", "error": {"code": "", "message": "ORG_NOT_FOUND"}}, cors_enabled=True
+                )
             except Exception as e:
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 slack_msg = f"\n```Error Reported !! \n" \
