@@ -95,9 +95,9 @@ class OrganizationFactory:
         organization = Organization(
             item.name, item.org_id, item.org_uuid, item.type, item.description,
             item.short_description, item.url, item.contacts, item.assets, item.metadata_ipfs_hash,
-            item.duns_no, item.addresses, item.groups
+            item.duns_no, OrganizationFactory.parse_organization_address_data_model(item.address),
+            OrganizationFactory.parse_group_data_model(item.groups)
         )
-        organization.add_all_groups(item.groups)
         return organization
 
     @staticmethod
@@ -120,3 +120,18 @@ class OrganizationFactory:
         for group in items:
             groups.append(Group(group.name, group.id, group.payment_address, group.payment_config, group.status))
         return groups
+
+    @staticmethod
+    def parse_organization_address_data_model(items):
+        addresses = []
+        for address in items:
+            addresses.append(
+                OrganizationAddress(
+                    address_type=address.address_type,
+                    street_address=address.street_address,
+                    pincode=address.pincode,
+                    city=address.city,
+                    state=address.state,
+                    country=address.country
+                ))
+        return addresses
