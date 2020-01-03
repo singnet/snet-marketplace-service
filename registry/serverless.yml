@@ -23,7 +23,7 @@ provider:
 
 custom:
   pythonRequirements:
-    fileName: registry/requirement.txt
+    fileName: registry/requirements.txt
     dockerizePip: true
     useDownloadCache: true
     useStaticCache: true
