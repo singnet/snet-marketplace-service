@@ -131,7 +131,8 @@ class TestOrganizationService(unittest.TestCase):
         username = "dummy@snet.io"
         self.org_repo.add_org_with_status(DomainOrganization(
             "dummy_org", "org_id", test_org_id, "organization",
-            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, ""),
+            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "",
+            duns_no=12345678, groups=[], addresses=[]),
             "APPROVED", username)
         response = OrganizationService().publish_org(test_org_id, username)
         self.assertEqual(response["metadata_ipfs_hash"], "Q3E12")
@@ -148,7 +149,8 @@ class TestOrganizationService(unittest.TestCase):
         username = "dummy@snet.io"
         organization = DomainOrganization(
             "dummy_org", "org_id", test_org_id, "organization",
-            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "")
+            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "",
+            duns_no=12345678, groups=[], addresses=[])
         organization.add_group(DomainGroup(
             name="my-group",
             group_id="group_id",
@@ -198,7 +200,8 @@ class TestOrganizationService(unittest.TestCase):
         username = "dummy@snet.io"
         organization = DomainOrganization(
             "dummy_org", "org_id", test_org_id, "organization",
-            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "")
+            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "",
+            duns_no=12345678, groups=[], addresses=[])
         organization.add_group(DomainGroup(
             name="my-group",
             group_id="group_id",
