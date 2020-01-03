@@ -116,7 +116,7 @@ class Organization:
             asset_ipfs_hash = ipfs_utils.write_file_in_ipfs(filepath)
             self.assets[asset_type]["ipfs_hash"] = asset_ipfs_hash
 
-    def publish_org(self):
+    def publish_org_ipfs(self):
         self.publish_assets()
         ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
         metadata = self.to_metadata()

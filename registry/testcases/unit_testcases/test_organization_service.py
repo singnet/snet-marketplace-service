@@ -201,14 +201,15 @@ class TestOrganizationService(unittest.TestCase):
             "dummy_org", "org_id", test_org_id, "organization",
             "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, ""),
             "APPROVED", username)
-        response = OrganizationService().publish_org(test_org_id, username)
+        response = OrganizationService().publish_org_ipfs(test_org_id, username)
         self.assertEqual(response["metadata_ipfs_hash"], "Q3E12")
 
-        orgs = self.org_repo.get_org_with_status(test_org_id, "PUBLISH_IN_PROGRESS")
+        orgs = self.org_repo.get_org_with_status(test_org_id, "APPROVED")
         if len(orgs) == 0:
             assert False
         else:
             self.assertEqual(orgs[0].OrganizationReviewWorkflow.updated_by, username)
+            self.assertEqual(orgs[0].Organization.metadata_ipfs_hash, response["metadata_ipfs_hash"])
 
     def test_add_group(self):
         """ adding new group without existing draft """
@@ -311,6 +312,24 @@ class TestOrganizationService(unittest.TestCase):
             }
         ]
         OrganizationService().add_group(payload, test_org_id, username)
+
+    def test_save_transaction(self):
+        test_org_uuid = uuid4().hex
+        org_id = "org_id"
+        org_name = "dummmy_org"
+        username = "dummy@snet.io"
+        organization = DomainOrganization(
+            org_name, org_id, test_org_uuid, "organization",
+            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "QWE")
+        self.org_repo.add_org_with_status(organization, OrganizationStatus.APPROVED.value, username)
+        OrganizationService().save_transaction(test_org_uuid, "0x98765", "0x123", username)
+        org_db_models = self.org_repo.get_org_with_status(test_org_uuid, OrganizationStatus.PUBLISH_IN_PROGRESS.value)
+        if len(org_db_models) == 0:
+            assert False
+        else:
+            org = org_db_models[0]
+            self.assertEqual(org_id, org.Organization.org_id)
+            self.assertEqual(org_name, org.Organization.name)
 
     def tearDown(self):
         self.org_repo.session.query(Organization).delete()

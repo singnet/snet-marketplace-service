@@ -44,7 +44,7 @@ def publish_org(event, context):
     if "org_id" not in path_parameters:
         raise BadRequestException()
     org_uuid = path_parameters["org_id"]
-    response = OrganizationService().publish_org(org_uuid, username)
+    response = OrganizationService().publish_org_ipfs(org_uuid, username)
 
     return generate_lambda_response(
         StatusCode.OK,
@@ -54,7 +54,18 @@ def publish_org(event, context):
 
 @handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def save_transaction(event, context):
-    pass
+    payload = json.loads(event["body"])
+    path_parameters = event["pathParameters"]
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    if "org_id" not in path_parameters:
+        raise BadRequestException()
+    org_uuid = path_parameters["org_id"]
+    response = OrganizationService().save_transaction(org_uuid, username,
+                                                      payload['transaction_hash'], payload['user_address'])
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
 
 
 @handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)

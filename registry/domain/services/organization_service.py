@@ -27,18 +27,28 @@ class OrganizationService:
         return organization.to_dict()
 
     def submit_org_for_approval(self, org_uuid, username):
-        self.org_repo.change_org_status(org_uuid, OrganizationStatus.DRAFT.value, OrganizationStatus.APPROVAL_PENDING.value, username)
+        self.org_repo.change_org_status(org_uuid, OrganizationStatus.DRAFT.value,
+                                        OrganizationStatus.APPROVAL_PENDING.value, username)
         return "OK"
 
-    def publish_org(self, org_uuid, username):
+    def publish_org_ipfs(self, org_uuid, username):
         orgs = self.org_repo.get_approved_org(org_uuid)
         if len(orgs) == 0:
             raise Exception(f"Organization not found with uuid {org_uuid}")
         organization = orgs[0]
-        organization.publish_org()
-        self.org_repo.move_org_to_history_with_status(organization.org_uuid, OrganizationStatus.APPROVED.value)
-        self.org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISH_IN_PROGRESS.value, username)
+        organization.publish_org_ipfs()
+        self.org_repo.persist_ipfs_hash(organization)
         return organization.to_dict()
+
+    def save_transaction(self, org_uuid, transaction_hash, user_address, username):
+        orgs = self.org_repo.get_approved_org(org_uuid)
+        if len(orgs) == 0:
+            raise Exception(f"Organization not found with uuid {org_uuid}")
+        organization = orgs[0]
+        self.org_repo.move_org_to_history_with_status(organization.org_uuid, OrganizationStatus.APPROVED.value)
+        self.org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISH_IN_PROGRESS.value, username,
+                                          transaction_hash=transaction_hash, user_address=user_address)
+        return "OK"
 
     def get_organizations_for_user(self, username):
         organization = self.org_repo.get_organization_for_user(username)

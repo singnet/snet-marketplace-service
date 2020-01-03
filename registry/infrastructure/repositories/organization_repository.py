@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from sqlalchemy import desc
+from sqlalchemy import desc, or_
 
-from registry.constants import OrganizationStatus, MemberRole
+from registry.constants import OrganizationStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.models.models import Group, OrganizationReviewWorkflow, \
     OrganizationHistory, OrganizationMember
@@ -19,7 +19,7 @@ class OrganizationRepository(BaseRepository):
         else:
             self.add_org_with_status(organization, OrganizationStatus.DRAFT.value, username)
 
-    def add_org_with_status(self, organization, status, username):
+    def add_org_with_status(self, organization, status, username, transaction_hash=None, user_address=None):
         current_time = datetime.utcnow()
         groups = organization.groups
         group_data = self.group_data_items_from_group_list(groups, organization.org_uuid)
@@ -47,6 +47,8 @@ class OrganizationRepository(BaseRepository):
                 updated_by=username,
                 created_on=current_time,
                 updated_on=current_time,
+                transaction_hash=transaction_hash,
+                user_address=user_address
             )
         )
         self.session.commit()
@@ -91,8 +93,8 @@ class OrganizationRepository(BaseRepository):
         orgs_with_status = self.session.query(Organization) \
             .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
             .filter(Organization.org_uuid == org_uuid) \
-            .filter(OrganizationReviewWorkflow.status == OrganizationStatus.APPROVAL_PENDING.value)\
-            .filter(OrganizationReviewWorkflow.status == OrganizationStatus.APPROVED.value).all()
+            .filter(or_(OrganizationReviewWorkflow.status == OrganizationStatus.APPROVAL_PENDING.value,
+                        OrganizationReviewWorkflow.status == OrganizationStatus.APPROVED.value)).all()
         self.move_organizations_to_history(orgs_with_status)
 
     def move_organizations_to_history(self, organizations):
@@ -245,4 +247,13 @@ class OrganizationRepository(BaseRepository):
                 updated_on=current_time,
             )
         )
+        self.session.commit()
+
+    def persist_ipfs_hash(self, organization):
+        org_data = self.get_org_with_status(organization.org_uuid, OrganizationStatus.APPROVED.value)
+        if len(org_data) == 0:
+            raise Exception(f"No organization found with {organization.org_uuid}")
+        org_item = org_data[0]
+        org_item.Organization.metadata_ipfs_hash = organization.metadata_ipfs_hash
+        org_item.Organization.assets = organization.assets
         self.session.commit()
