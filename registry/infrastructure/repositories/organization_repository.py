@@ -320,3 +320,12 @@ class OrganizationRepository(BaseRepository):
         org_item.Organization.metadata_ipfs_hash = organization.metadata_ipfs_hash
         org_item.Organization.assets = organization.assets
         self.session.commit()
+
+
+    def get_org_with_status_using_org_id(self, org_id, status):
+        organizations = self.session.query(Organization, OrganizationReviewWorkflow) \
+            .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
+            .filter(Organization.org_id == org_id) \
+            .filter(OrganizationReviewWorkflow.status == status).all()
+        return organizations
+

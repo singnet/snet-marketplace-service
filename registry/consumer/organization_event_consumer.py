@@ -113,7 +113,7 @@ class OrganizationModifiedEventConsumer(OrganizationEventConsumer):
 
         if not org_diff:
             # Move current published org record to  archive table marks this record as published
-            self._organization_repository.move_org_to_history(existing_published_organization,
+            self._organization_repository.move_org_to_history_with_status(existing_published_organization.org_uuid,
                                                               OrganizationStatus.PUBLISHED.value)
             self._organization_repository.change_org_status(existing_publish_in_progress_organization.org_uuid,
                                                             OrganizationStatus.PUBLISH_IN_PROGRESS.value,
