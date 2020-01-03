@@ -28,10 +28,12 @@ class OrganizationReviewWorkflow(Base):
     row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
     org_row_id = Column("organization_row_id", Integer, nullable=False)
     status = Column("status", VARCHAR(128), nullable=False)
+    transaction_hash = Column("transaction_hash", VARCHAR(128))
+    wallet_address = Column("user_address", VARCHAR(128))
     created_by = Column("created_by", VARCHAR(128), nullable=False)
     updated_by = Column("updated_by", VARCHAR(128), nullable=False)
     approved_by = Column("approved_by", VARCHAR(128))
-    create_on = Column("created_on", TIMESTAMP(timezone=False))
+    created_on = Column("created_on", TIMESTAMP(timezone=False))
     updated_on = Column("modified_on", TIMESTAMP(timezone=False))
 
 
