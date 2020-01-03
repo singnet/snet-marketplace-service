@@ -1,8 +1,8 @@
 """baseline
 
-Revision ID: e70a6807544e
+Revision ID: 204f1079d3f6
 Revises: 
-Create Date: 2019-12-27 11:59:49.670975
+Create Date: 2020-01-02 17:30:12.970796
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = 'e70a6807544e'
+revision = '204f1079d3f6'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -57,6 +57,8 @@ def upgrade():
     sa.Column('row_id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('organization_row_id', sa.Integer(), nullable=False),
     sa.Column('status', sa.VARCHAR(length=128), nullable=False),
+    sa.Column('transaction_hash', sa.VARCHAR(length=128), nullable=True),
+    sa.Column('user_address', sa.VARCHAR(length=128), nullable=True),
     sa.Column('created_by', sa.VARCHAR(length=128), nullable=False),
     sa.Column('updated_by', sa.VARCHAR(length=128), nullable=False),
     sa.Column('approved_by', sa.VARCHAR(length=128), nullable=True),

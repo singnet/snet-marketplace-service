@@ -1,4 +1,5 @@
 from common.boto_utils import BotoUtils
+from common.exceptions import OrganizationNotFound
 from registry.config import IPFS_URL, METADATA_FILE_PATH, REGION_NAME, ASSET_DIR
 from registry.constants import OrganizationStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
@@ -27,18 +28,28 @@ class OrganizationService:
         return organization.to_dict()
 
     def submit_org_for_approval(self, org_uuid, username):
-        self.org_repo.change_org_status(org_uuid, OrganizationStatus.DRAFT.value, OrganizationStatus.APPROVAL_PENDING.value, username)
+        self.org_repo.change_org_status(org_uuid, OrganizationStatus.DRAFT.value,
+                                        OrganizationStatus.APPROVAL_PENDING.value, username)
         return "OK"
 
-    def publish_org(self, org_uuid, username):
+    def publish_org_to_ipfs(self, org_uuid, username):
         orgs = self.org_repo.get_approved_org(org_uuid)
         if len(orgs) == 0:
             raise Exception(f"Organization not found with uuid {org_uuid}")
         organization = orgs[0]
-        organization.publish_org()
-        self.org_repo.move_org_to_history_with_status(organization.org_uuid, OrganizationStatus.APPROVED.value)
-        self.org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISH_IN_PROGRESS.value, username)
+        organization.publish_to_ipfs()
+        self.org_repo.persist_metadata_and_assets_ipfs_hash(organization)
         return organization.to_dict()
+
+    def save_transaction_hash_for_publish_org(self, org_uuid, transaction_hash, wallet_address, username):
+        orgs = self.org_repo.get_approved_org(org_uuid)
+        if len(orgs) == 0:
+            raise OrganizationNotFound(f"Organization not found with uuid {org_uuid}")
+        organization = orgs[0]
+        self.org_repo.move_org_to_history_with_status(organization.org_uuid, OrganizationStatus.APPROVED.value)
+        self.org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISH_IN_PROGRESS.value, username,
+                                          transaction_hash=transaction_hash, wallet_address=wallet_address)
+        return "OK"
 
     def get_organizations_for_user(self, username):
         organization = self.org_repo.get_organization_for_user(username)

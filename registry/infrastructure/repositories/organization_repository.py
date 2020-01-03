@@ -19,7 +19,7 @@ class OrganizationRepository(BaseRepository):
         else:
             self.add_org_with_status(organization, OrganizationStatus.DRAFT.value, username)
 
-    def add_org_with_status(self, organization, status, username):
+    def add_org_with_status(self, organization, status, username, transaction_hash=None, wallet_address=None):
         current_time = datetime.utcnow()
         groups = organization.groups
         group_data = self.group_data_items_from_group_list(groups, organization.org_uuid)
@@ -48,8 +48,10 @@ class OrganizationRepository(BaseRepository):
                 status=status,
                 created_by=username,
                 updated_by=username,
-                create_on=current_time,
+                created_on=current_time,
                 updated_on=current_time,
+                transaction_hash=transaction_hash,
+                wallet_address=wallet_address
             )
         )
         self.session.commit()
@@ -70,6 +72,7 @@ class OrganizationRepository(BaseRepository):
         self.delete_and_insert_organization_address(org_row_id=current_draft.Organization.row_id,
                                                     addresses=organization.addresses)
         self.session.commit()
+        self.add_new_draft_groups_in_draft_org(organization.groups, current_draft, username)
 
     def delete_and_insert_organization_address(self, org_row_id, addresses):
         self.session.query(OrganizationAddress).filter(
@@ -303,8 +306,17 @@ class OrganizationRepository(BaseRepository):
                 status=OrganizationStatus.DRAFT.value,
                 created_by=username,
                 updated_by=username,
-                create_on=current_time,
+                created_on=current_time,
                 updated_on=current_time,
             )
         )
+        self.session.commit()
+
+    def persist_metadata_and_assets_ipfs_hash(self, organization):
+        org_data = self.get_org_with_status(organization.org_uuid, OrganizationStatus.APPROVED.value)
+        if len(org_data) == 0:
+            raise Exception(f"No organization found with {organization.org_uuid}")
+        org_item = org_data[0]
+        org_item.Organization.metadata_ipfs_hash = organization.metadata_ipfs_hash
+        org_item.Organization.assets = organization.assets
         self.session.commit()
