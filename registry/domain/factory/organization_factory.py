@@ -42,14 +42,15 @@ class OrganizationFactory:
         assets = {}
         short_description = payload.get("short_description", None)
         url = payload.get("url", None)
+        duns_no = payload.get("duns_no", None)
         contacts = payload.get("contacts", None)
         metadata_ipfs_hash = payload.get("metadata_ipfs_hash", None)
         groups = OrganizationFactory.parse_raw_list_groups(payload.get("groups", []))
         addresses = OrganizationFactory.parse_raw_address_list(payload.get("addresses", []))
-        organization = Organization(org_name, org_id, org_uuid, org_type, description,
-                                    short_description, url, contacts, assets, metadata_ipfs_hash)
-        organization.add_all_groups(groups)
-        organization.all_all_address(addresses)
+        organization = Organization(name=org_name, org_id=org_id, org_uuid=org_uuid, org_type=org_type,
+                                    description=description, short_description=short_description, url=url,
+                                    contacts=contacts, assets=assets, metadata_ipfs_hash=metadata_ipfs_hash,
+                                    duns_no=duns_no, groups=groups, addresses=addresses)
         organization.setup_id()
         organization.assets = extract_and_upload_assets(organization.org_uuid, payload.get("assets", {}))
         return organization

@@ -83,7 +83,7 @@ class TestOrganization(TestCase):
                 "action": "DRAFT"
             },
             "body": json.dumps({"org_id": "org_id",
-                                "org_uuid": "12ba76e57230403da870856fd85b019e",
+                                "org_uuid": "12ba76e57230403da870856fd85b019f",
                                 "org_name": "org_name",
                                 "org_type": "organization",
                                 "metadata_ipfs_hash": "",
@@ -119,3 +119,6 @@ class TestOrganization(TestCase):
         response_body = json.loads(response['body'])
         assert (response_body["status"] == "success")
         assert (response_body["data"]["name"] == "org_name")
+        assert (response_body["data"]["org_id"] == "org_id")
+        assert (response_body["data"]["org_type"] == "organization")
+        assert (len(response_body["data"]["addresses"]) == 2)

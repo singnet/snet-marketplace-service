@@ -1,11 +1,11 @@
 from datetime import datetime
 
-from sqlalchemy import desc
+from sqlalchemy import desc, or_
 
 from registry.constants import OrganizationStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.models.models import Group, OrganizationReviewWorkflow, \
-    OrganizationHistory, OrganizationMember, OrganizationAddress
+    OrganizationHistory, OrganizationMember, OrganizationAddress, OrganizationAddressHistory
 from registry.infrastructure.models.models import Organization
 from registry.infrastructure.repositories.base_repository import BaseRepository
 
@@ -33,6 +33,7 @@ class OrganizationRepository(BaseRepository):
             description=organization.description,
             short_description=organization.short_description,
             url=organization.url,
+            duns_no=organization.duns_no,
             contacts=organization.contacts,
             assets=organization.assets,
             metadata_ipfs_hash=organization.metadata_ipfs_hash,
@@ -67,10 +68,14 @@ class OrganizationRepository(BaseRepository):
         current_draft.Organization.metadata_ipfs_hash = organization.metadata_ipfs_hash
         current_draft.OrganizationReviewWorkflow.updated_by = username
         current_draft.OrganizationReviewWorkflow.updated_on = datetime.utcnow()
-        self.session.query(OrganizationAddress).filter(
-            OrganizationAddress.org_row_id == current_draft.Organization.row_id).delete(synchronize_session='fetch')
-        self.add_organization_address(addresses=organization.addresses, org_row_id=current_draft.Organization.row_id)
+        self.delete_and_insert_organization_address(org_row_id=current_draft.Organization.row_id,
+                                                    addresses=organization.addresses)
         self.session.commit()
+
+    def delete_and_insert_organization_address(self, org_row_id, addresses):
+        self.session.query(OrganizationAddress).filter(
+            OrganizationAddress.org_row_id == org_row_id).delete(synchronize_session='fetch')
+        self.add_organization_address(addresses=addresses, org_row_id=org_row_id)
 
     def add_organization_address(self, addresses, org_row_id):
         org_addresses = []
@@ -115,8 +120,8 @@ class OrganizationRepository(BaseRepository):
         orgs_with_status = self.session.query(Organization) \
             .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
             .filter(Organization.org_uuid == org_uuid) \
-            .filter(OrganizationReviewWorkflow.status == OrganizationStatus.APPROVAL_PENDING.value) \
-            .filter(OrganizationReviewWorkflow.status == OrganizationStatus.APPROVED.value).all()
+            .filter(or_(OrganizationReviewWorkflow.status == OrganizationStatus.APPROVAL_PENDING.value,
+                        OrganizationReviewWorkflow.status == OrganizationStatus.APPROVED.value)).all()
         self.move_organizations_to_history(orgs_with_status)
 
     def move_organizations_to_history(self, organizations):
@@ -125,6 +130,22 @@ class OrganizationRepository(BaseRepository):
             row_ids = []
             for org in organizations:
                 row_ids.append(org.row_id)
+                org_addresses_history = []
+                for address in org.address:
+                    org_addresses_history.append(
+                        OrganizationAddressHistory(
+                            row_id=address.row_id,
+                            org_row_id=address.org_row_id,
+                            address_type=address.address_type,
+                            street_address=address.street_address,
+                            city=address.city,
+                            pincode=address.pincode,
+                            state=address.state,
+                            country=address.country,
+                            updated_on=datetime.utcnow(),
+                            created_on=datetime.utcnow()
+
+                        ))
                 org_history.append(OrganizationHistory(
                     row_id=org.row_id,
                     name=org.name,
@@ -134,15 +155,17 @@ class OrganizationRepository(BaseRepository):
                     description=org.description,
                     short_description=org.short_description,
                     url=org.url,
+                    duns_no=org.duns_no,
                     contacts=org.contacts,
                     assets=org.assets,
-                    metadata_ipfs_hash=org.metadata_ipfs_hash
+                    metadata_ipfs_hash=org.metadata_ipfs_hash,
+                    address=org_addresses_history
                 ))
+                org_addresses_history = None
 
             self.add_all_items(org_history)
             self.session.query(Organization).filter(Organization.row_id.in_(row_ids)) \
                 .delete(synchronize_session='fetch')
-            self.add_all_items(org_history)
             self.session.commit()
 
     def move_org_to_history_with_status(self, org_uuid, status):
@@ -250,7 +273,9 @@ class OrganizationRepository(BaseRepository):
                     city=address_dict["city"],
                     pincode=address_dict["pincode"],
                     state=address_dict["state"],
-                    country=address_dict["country"]
+                    country=address_dict["country"],
+                    updated_on=datetime.utcnow(),
+                    created_on=datetime.utcnow()
                 ))
         return address_data
 

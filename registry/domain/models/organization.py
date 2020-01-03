@@ -12,7 +12,7 @@ logger = get_logger(__name__)
 
 class Organization:
     def __init__(self, name, org_id, org_uuid, org_type, description,
-                 short_description, url, contacts, assets, metadata_ipfs_hash, duns_no=None):
+                 short_description, url, contacts, assets, metadata_ipfs_hash, duns_no, addresses, groups):
         """
         assets = [
             {
@@ -33,8 +33,8 @@ class Organization:
         self.contacts = contacts
         self.assets = assets
         self.metadata_ipfs_hash = metadata_ipfs_hash
-        self.groups = []
-        self.__addresses = []
+        self.groups = groups
+        self.__addresses = addresses
 
     def setup_id(self):
         if self.is_org_uuid_set():
@@ -81,10 +81,12 @@ class Organization:
             "description": self.description,
             "short_description": self.short_description,
             "url": self.url,
+            "duns_no": self.duns_no,
             "contacts": self.contacts,
             "assets": self.assets,
             "metadata_ipfs_hash": self.metadata_ipfs_hash,
-            "groups": [group.to_dict() for group in self.groups]
+            "groups": [group.to_dict() for group in self.groups],
+            "addresses": [address.to_dict() for address in self.addresses]
         }
 
     def is_valid_draft(self):
@@ -133,6 +135,3 @@ class Organization:
     @property
     def addresses(self):
         return self.__addresses
-
-    def all_all_address(self, org_addresses):
-        self.__addresses.extend(org_addresses)

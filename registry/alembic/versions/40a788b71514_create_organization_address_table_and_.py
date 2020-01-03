@@ -37,6 +37,8 @@ def upgrade():
                     )
     op.add_column('organization',
                   sa.Column('duns_no', sa.VARCHAR(length=20), nullable=True))
+    op.add_column('organization_history',
+                  sa.Column('duns_no', sa.VARCHAR(length=20), nullable=True))
     op.create_table('organization_address_history',
                     sa.Column('row_id', sa.Integer(), nullable=False),
                     sa.Column('org_row_id', sa.Integer(), nullable=False),
@@ -48,7 +50,7 @@ def upgrade():
                     sa.Column('country', sa.VARCHAR(length=64), nullable=False),
                     sa.Column('created_on', mysql.TIMESTAMP(), nullable=True),
                     sa.Column('updated_on', mysql.TIMESTAMP(), nullable=True),
-                    sa.ForeignKeyConstraint(['org_row_id'], ['organization.row_id'], onupdate='CASCADE',
+                    sa.ForeignKeyConstraint(['org_row_id'], ['organization_history.row_id'], onupdate='CASCADE',
                                             ondelete='CASCADE'),
                     sa.PrimaryKeyConstraint('row_id')
                     )
@@ -57,4 +59,5 @@ def upgrade():
 def downgrade():
     op.drop_table('organization_address')
     op.drop_column('organization', 'duns_no')
+    op.drop_column('organization_history', 'duns_no')
     op.drop_table('organization_address_history')
