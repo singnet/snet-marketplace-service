@@ -322,7 +322,7 @@ class TestOrganizationService(unittest.TestCase):
             org_name, org_id, test_org_uuid, "organization",
             "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "QWE")
         self.org_repo.add_org_with_status(organization, OrganizationStatus.APPROVED.value, username)
-        OrganizationService().save_transaction(test_org_uuid, "0x98765", "0x123", username)
+        OrganizationService().save_transaction_hash_for_publish_org(test_org_uuid, "0x98765", "0x123", username)
         org_db_models = self.org_repo.get_org_with_status(test_org_uuid, OrganizationStatus.PUBLISH_IN_PROGRESS.value)
         if len(org_db_models) == 0:
             assert False

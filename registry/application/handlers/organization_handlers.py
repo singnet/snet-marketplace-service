@@ -53,15 +53,15 @@ def publish_org(event, context):
 
 
 @handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
-def save_transaction(event, context):
+def save_transaction_hash_for_publish_org(event, context):
     payload = json.loads(event["body"])
     path_parameters = event["pathParameters"]
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     if "org_id" not in path_parameters:
         raise BadRequestException()
     org_uuid = path_parameters["org_id"]
-    response = OrganizationService().save_transaction(org_uuid, username,
-                                                      payload['transaction_hash'], payload['wallet_address'])
+    response = OrganizationService().save_transaction_hash_for_publish_org(org_uuid, username,
+                                                                           payload['transaction_hash'], payload['wallet_address'])
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
