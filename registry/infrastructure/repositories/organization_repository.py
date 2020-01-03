@@ -2,7 +2,7 @@ from datetime import datetime
 
 from sqlalchemy import desc, or_
 
-from registry.constants import OrganizationStatus
+from registry.constants import OrganizationStatus, MemberRole
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.models.models import Group, OrganizationReviewWorkflow, \
     OrganizationHistory, OrganizationMember
@@ -18,6 +18,15 @@ class OrganizationRepository(BaseRepository):
             self.update_org_draft(current_drafts[0], organization, username)
         else:
             self.add_org_with_status(organization, OrganizationStatus.DRAFT.value, username)
+            self.add_org_member(organization, username, MemberRole.OWNER.value)
+
+    def add_org_member(self, organization, username, role):
+        member = OrganizationMember(
+            org_uuid=organization.org_uuid,
+            username=username,
+            role=role
+        )
+        self.add_item(member)
 
     def add_org_with_status(self, organization, status, username, transaction_hash=None, wallet_address=None):
         current_time = datetime.utcnow()
@@ -133,7 +142,8 @@ class OrganizationRepository(BaseRepository):
     def get_organization_for_user(self, username):
         subquery = self.session.query(Organization) \
             .join(OrganizationMember, Organization.org_uuid == OrganizationMember.org_uuid) \
-            .filter(OrganizationMember.username == username).subquery()
+            .filter(OrganizationMember.username == username)\
+            .filter(OrganizationMember.role == MemberRole.OWNER.value).subquery()
         organizations = self.session.query(
             subquery.c.row_id.label("row_id"),
             subquery.c.name.label("name"),
@@ -147,7 +157,7 @@ class OrganizationRepository(BaseRepository):
             subquery.c.metadata_ipfs_hash.label("metadata_ipfs_hash"),
             OrganizationReviewWorkflow
         ).join(OrganizationReviewWorkflow, subquery.c.row_id == OrganizationReviewWorkflow.org_row_id).all()
-        return organizations
+        return OrganizationFactory.parse_organization_data_model_list(organizations)
 
     def get_published_organization(self):
         organization = self.session.query(Organization) \
