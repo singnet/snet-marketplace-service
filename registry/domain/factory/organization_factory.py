@@ -82,12 +82,13 @@ class OrganizationFactory:
     def parse_raw_address(raw_address):
         address_type = raw_address.get("address_type", None)
         street_address = raw_address.get("street_address", None)
+        apartment = raw_address.get("apartment", None)
         city = raw_address.get("city", None)
         pincode = raw_address.get("pincode", None)
         state = raw_address.get("state", None)
         country = raw_address.get("country", None)
-        address = OrganizationAddress(address_type=address_type, street_address=street_address, pincode=pincode,
-                                      city=city, state=state, country=country)
+        address = OrganizationAddress(address_type=address_type, street_address=street_address, apartment=apartment,
+                                      pincode=pincode, city=city, state=state, country=country)
         return address
 
     @staticmethod
@@ -129,6 +130,7 @@ class OrganizationFactory:
                 OrganizationAddress(
                     address_type=address.address_type,
                     street_address=address.street_address,
+                    apartment=address.apartment,
                     pincode=address.pincode,
                     city=address.city,
                     state=address.state,

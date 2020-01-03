@@ -87,6 +87,7 @@ class OrganizationRepository(BaseRepository):
                 OrganizationAddress(org_row_id=org_row_id,
                                     address_type=address_data["address_type"],
                                     street_address=address_data["street_address"],
+                                    apartment=address_data["apartment"],
                                     city=address_data["city"],
                                     pincode=address_data["pincode"],
                                     state=address_data["state"],
@@ -139,6 +140,7 @@ class OrganizationRepository(BaseRepository):
                             row_id=address.row_id,
                             address_type=address.address_type,
                             street_address=address.street_address,
+                            apartment=address.apartment,
                             city=address.city,
                             pincode=address.pincode,
                             state=address.state,
@@ -256,6 +258,7 @@ class OrganizationRepository(BaseRepository):
                 OrganizationAddress(
                     address_type=address_dict["address_type"],
                     street_address=address_dict["street_address"],
+                    apartment=address_dict["apartment"],
                     city=address_dict["city"],
                     pincode=address_dict["pincode"],
                     state=address_dict["state"],
