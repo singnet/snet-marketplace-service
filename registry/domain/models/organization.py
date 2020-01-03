@@ -1,11 +1,14 @@
-import common.ipfs_util as ipfs_util
-import requests
-
 from urllib.parse import urlparse
 from uuid import uuid4
-from common.utils import json_to_file
-from registry.config import IPFS_URL, METADATA_FILE_PATH, ASSET_DIR
+
+import requests
+from deepdiff import DeepDiff
+
+import common.ipfs_util as ipfs_util
 from common.logger import get_logger
+from common.utils import json_to_file
+from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH
+from registry.domain.models.organization_address import OrganizationAddress
 
 logger = get_logger(__name__)
 
@@ -127,6 +130,14 @@ class Organization:
         filename = f"{METADATA_FILE_PATH}/{self.org_uuid}_org_metadata.json"
         json_to_file(metadata, filename)
         self.metadata_ipfs_hash = ipfs_utils.write_file_in_ipfs(filename)
+
+    def is_same_organization_as_organization_from_metadata(self, metadata_organization):
+        diff = DeepDiff(self, metadata_organization, exclude_types=[OrganizationAddress], exclude_paths=["root.org_uuid","root._Organization__duns_no"])
+        if not diff:
+            return True
+        return False
+
+
 
     @property
     def duns_no(self):

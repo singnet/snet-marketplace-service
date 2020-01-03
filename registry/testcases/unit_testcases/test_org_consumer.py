@@ -1,15 +1,15 @@
 import unittest
-from unittest.mock import patch, Mock
+from datetime import datetime
+from unittest.mock import Mock, patch
 from uuid import uuid4
 
 from registry.constants import OrganizationStatus
-from datetime import datetime
 from registry.consumer.organization_event_consumer import OrganizationCreatedEventConsumer, \
     OrganizationModifiedEventConsumer
-from registry.domain.services.organization_service import OrganizationService
-from registry.domain.models.organization import Organization as DomainOrganization
 from registry.domain.models.group import Group as DomainGroup
-from registry.infrastructure.models.models import Organization, OrganizationReviewWorkflow, OrganizationHistory, Group
+from registry.domain.models.organization import Organization as DomainOrganization
+from registry.domain.services.organization_service import OrganizationService
+from registry.infrastructure.models.models import Group, Organization, OrganizationHistory, OrganizationReviewWorkflow
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
 
 
@@ -29,13 +29,14 @@ class TestOrganizationService(unittest.TestCase):
         username = "dummy@snet.io"
         organization = DomainOrganization(
             "dummy_org", "org_id", test_org_id, "organization",
-            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "Q3E12","",[],[DomainGroup(
-            name="my-group",
-            group_id="group_id",
-            payment_address="0x123",
-            payment_config={},
-            status=""
-        )])
+            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "Q3E12", "duns",
+            [], [DomainGroup(
+                name="my-group",
+                group_id="group_id",
+                payment_address="0x123",
+                payment_config={},
+                status=""
+            )])
 
         self.org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISH_IN_PROGRESS.value, username)
         event = {"data": {'row_id': 2, 'block_no': 6243627, 'event': 'OrganizationCreated',
@@ -89,27 +90,26 @@ class TestOrganizationService(unittest.TestCase):
         username = "dummy@snet.io"
         organization = DomainOrganization(
             "dummy_org", "org_id", test_org_id, "organization",
-            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "Q3E12","",[],[DomainGroup(
-            name="my-group",
-            group_id="group_id",
-            payment_address="0x123",
-            payment_config={},
-            status=""
-        )])
-
+            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "Q3E12", "",
+            [], [DomainGroup(
+                name="my-group",
+                group_id="group_id",
+                payment_address="0x123",
+                payment_config={},
+                status=""
+            )])
 
         self.org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISHED.value, username)
         draft_organization = DomainOrganization(
             "dummy_org", "org_id", test_org_id, "organization",
-            "that is the dummy org for testcases", "that is the short description", "draft_dummy.com", [], {}, "Q3E12","",[],[DomainGroup(
-            name="my-group",
-            group_id="group_id",
-            payment_address="0x123",
-            payment_config={},
-            status=""
-        )])
-
-
+            "that is the dummy org for testcases", "that is the short description", "draft_dummy.com", [], {}, "Q3E12",
+            "", [], [DomainGroup(
+                name="my-group",
+                group_id="group_id",
+                payment_address="0x123",
+                payment_config={},
+                status=""
+            )])
 
         self.org_repo.add_org_with_status(draft_organization, OrganizationStatus.PUBLISH_IN_PROGRESS.value, username)
 

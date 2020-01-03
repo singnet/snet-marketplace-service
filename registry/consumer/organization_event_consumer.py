@@ -1,15 +1,12 @@
+import os
 import traceback
 
-from common.logger import get_logger
 from web3 import Web3
-
-import os
 
 from common.blockchain_util import BlockChainUtil
 from common.ipfs_util import IPFSUtil
-from common.s3_util import S3Util
+from common.logger import get_logger
 from contract_api.consumers.event_consumer import EventConsumer
-
 from registry.config import NETWORK_ID
 from registry.constants import OrganizationStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
@@ -17,7 +14,7 @@ from registry.infrastructure.repositories.organization_repository import Organiz
 
 logger = get_logger(__name__)
 
-from deepdiff import DeepDiff
+BLOCKCHAIN_USER = "BLOCKCHAIN_EVENT"
 
 
 class OrganizationEventConsumer(EventConsumer):
@@ -63,25 +60,34 @@ class OrganizationCreatedEventConsumer(OrganizationEventConsumer):
         org_id, ipfs_org_metadata = self._get_org_details_from_blockchain(event)
         self._process_organization_create_event(org_id, ipfs_org_metadata)
 
+    def _get_existing_organization_records(self, org_id):
+        persisted_publish_in_progress_organization = self._organization_repository.get_org_with_status_using_org_id(
+            org_id, OrganizationStatus.PUBLISH_IN_PROGRESS.value)
+
+        if len(persisted_publish_in_progress_organization) == 0:
+            raise Exception("This organization is not published through publisher portal")
+        existing_publish_in_progress_organization = OrganizationFactory.parse_organization_data_model(
+            persisted_publish_in_progress_organization[0].Organization)
+
+        return existing_publish_in_progress_organization
+
+    def _mark_existing_publish_in_progress_as_published(self, existing_publish_in_progress_organization):
+        self._organization_repository.change_org_status(existing_publish_in_progress_organization.org_uuid,
+                                                        OrganizationStatus.PUBLISH_IN_PROGRESS.value,
+                                                        OrganizationStatus.PUBLISHED.value, BLOCKCHAIN_USER
+                                                        )
+
     def _process_organization_create_event(self, org_id, ipfs_org_metadata):
         try:
-            persisted_publish_in_progress_organization = self._organization_repository.get_org_with_status_using_org_id(
-                org_id, OrganizationStatus.PUBLISH_IN_PROGRESS.value)
 
-            if len(persisted_publish_in_progress_organization) == 0:
-                raise Exception("This organization is not published through publisher portal")
-
-            existing_publish_in_progress_organization = OrganizationFactory.parse_organization_data_model(
-                persisted_publish_in_progress_organization[0].Organization)
-            recieved_organization_event = OrganizationFactory.parse_organization_metadata(
+            existing_publish_in_progress_organization = self._get_existing_organization_records(org_id)
+            received_organization_event = OrganizationFactory.parse_organization_metadata(
                 existing_publish_in_progress_organization.org_uuid, ipfs_org_metadata)
 
-            org_diff = DeepDiff(existing_publish_in_progress_organization, recieved_organization_event)
+            if existing_publish_in_progress_organization.is_same_organization_as_organization_from_metadata(
+                received_organization_event):
+                self._mark_existing_publish_in_progress_as_published(existing_publish_in_progress_organization)
 
-            if not org_diff:
-                self._organization_repository.change_org_status(existing_publish_in_progress_organization.org_uuid,
-                                                                OrganizationStatus.PUBLISH_IN_PROGRESS.value,
-                                                                OrganizationStatus.PUBLISHED.value, "blockchain_event")
             else:
                 raise Exception("Event data is not same as it was published through publisher portal")
         except Exception as e:
@@ -94,10 +100,7 @@ class OrganizationModifiedEventConsumer(OrganizationEventConsumer):
         org_id, ipfs_org_metadata = self._get_org_details_from_blockchain(event)
         self._process_organization_update_event(org_id, ipfs_org_metadata)
 
-    def _process_organization_update_event(self, org_id, ipfs_org_metadata):
-        # In case of update one orgnaization record will be in published state
-        # and one org record(latest changes) will be in publish in progress
-
+    def _get_existing_organization_records(self, org_id):
         persisted_publish_in_progress_organization = self._organization_repository.get_org_with_status_using_org_id(
             org_id, OrganizationStatus.PUBLISH_IN_PROGRESS.value)
         persisted_published_organization = self._organization_repository.get_org_with_status_using_org_id(org_id,
@@ -106,50 +109,35 @@ class OrganizationModifiedEventConsumer(OrganizationEventConsumer):
             persisted_publish_in_progress_organization[0].Organization)
         existing_published_organization = OrganizationFactory.parse_organization_data_model(
             persisted_published_organization[0].Organization)
-        recieved_organization_event = OrganizationFactory.parse_organization_metadata(
+
+        return existing_publish_in_progress_organization, existing_published_organization
+
+    def _move_exsiting_published_record_to_histroy(self, existing_published_organization):
+        # Move current published org record to  archive table marks this record as published
+        self._organization_repository.move_org_to_history_with_status(existing_published_organization.org_uuid,
+                                                                      OrganizationStatus.PUBLISHED.value)
+
+    def _mark_existing_publish_in_progress_as_published(self, existing_publish_in_progress_organization):
+        self._organization_repository.change_org_status(existing_publish_in_progress_organization.org_uuid,
+                                                        OrganizationStatus.PUBLISH_IN_PROGRESS.value,
+                                                        OrganizationStatus.PUBLISHED.value, BLOCKCHAIN_USER
+                                                        )
+
+    def _update_existing_org_records(self, existing_publish_in_progress_organization, existing_published_organization):
+        self._move_exsiting_published_record_to_histroy(existing_published_organization)
+        self._mark_existing_publish_in_progress_as_published(existing_publish_in_progress_organization)
+
+    def _process_organization_update_event(self, org_id, ipfs_org_metadata):
+        # In case of update one orgnaization record will be in published state
+        # and one org record(latest changes) will be in publish in progress
+
+        existing_publish_in_progress_organization, existing_published_organization = self._get_existing_organization_records(
+            org_id)
+
+        received_organization_event = OrganizationFactory.parse_organization_metadata(
             existing_publish_in_progress_organization.org_uuid, ipfs_org_metadata)
 
-        org_diff = DeepDiff(existing_publish_in_progress_organization, recieved_organization_event)
-
-        if not org_diff:
-            # Move current published org record to  archive table marks this record as published
-            self._organization_repository.move_org_to_history_with_status(existing_published_organization.org_uuid,
-                                                              OrganizationStatus.PUBLISHED.value)
-            self._organization_repository.change_org_status(existing_publish_in_progress_organization.org_uuid,
-                                                            OrganizationStatus.PUBLISH_IN_PROGRESS.value,
-                                                            OrganizationStatus.PUBLISHED.value, "blockchain_event"
-                                                            )
-
-
-if __name__ == '__main__':
-    payload = {
-        "org_id": "",
-        "org_uuid": "",
-        "org_name": "dummy_org",
-        "org_type": "individual",
-        "metadata_ipfs_hash": "",
-        "description": "that is the dummy org for testcases",
-        "short_description": "that is the short description",
-        "url": "https://dummy.dummy",
-        "contacts": [],
-        "assets": {"hero_iamge": {"test": 12344}}
-    }
-
-    payload1 = {
-        "org_id": "",
-        "org_uuid": "",
-        "org_name": "dummy_org",
-        "org_type": "individual",
-        "metadata_ipfs_hash": "",
-        "description": "that is the dummy org for testcases",
-        "short_description": "that is the short description",
-        "url": "https://dummy.dummy",
-        "contacts": [],
-        "assets": {"hero_iamge": {"test": 1234}}
-    }
-    org1 = OrganizationFactory.parse_raw_organization(payload)
-
-    org2 = OrganizationFactory.parse_raw_organization(payload1)
-
-    ddiff = DeepDiff(org1, org2)
-    print(ddiff)
+        if existing_publish_in_progress_organization.is_same_organization_as_organization_from_metadata(
+            received_organization_event):
+            self._update_existing_org_records(existing_publish_in_progress_organization,
+                                              existing_published_organization)
