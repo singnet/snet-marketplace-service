@@ -12,7 +12,7 @@ logger = get_logger(__name__)
 
 class Organization:
     def __init__(self, name, org_id, org_uuid, org_type, description,
-                 short_description, url, contacts, assets, metadata_ipfs_hash):
+                 short_description, url, contacts, assets, metadata_ipfs_hash, duns_no, addresses, groups):
         """
         assets = [
             {
@@ -29,10 +29,12 @@ class Organization:
         self.description = description
         self.short_description = short_description
         self.url = url
+        self.__duns_no = duns_no
         self.contacts = contacts
         self.assets = assets
         self.metadata_ipfs_hash = metadata_ipfs_hash
-        self.groups = []
+        self.groups = groups
+        self.__addresses = addresses
 
     def setup_id(self):
         if self.is_org_uuid_set():
@@ -79,10 +81,12 @@ class Organization:
             "description": self.description,
             "short_description": self.short_description,
             "url": self.url,
+            "duns_no": self.duns_no,
             "contacts": self.contacts,
             "assets": self.assets,
             "metadata_ipfs_hash": self.metadata_ipfs_hash,
-            "groups": [group.to_dict() for group in self.groups]
+            "groups": [group.to_dict() for group in self.groups],
+            "addresses": [address.to_dict() for address in self.addresses]
         }
 
     def is_valid_draft(self):
@@ -102,7 +106,7 @@ class Organization:
 
     def validate_publish(self):
         return self.validate_approval_state() and (
-                    self.metadata_ipfs_hash is not None and len(self.metadata_ipfs_hash) != 0)
+                self.metadata_ipfs_hash is not None and len(self.metadata_ipfs_hash) != 0)
 
     def publish_assets(self):
         ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
@@ -116,10 +120,18 @@ class Organization:
             asset_ipfs_hash = ipfs_utils.write_file_in_ipfs(filepath)
             self.assets[asset_type]["ipfs_hash"] = asset_ipfs_hash
 
-    def publish_org(self):
+    def publish_to_ipfs(self):
         self.publish_assets()
         ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
         metadata = self.to_metadata()
         filename = f"{METADATA_FILE_PATH}/{self.org_uuid}_org_metadata.json"
         json_to_file(metadata, filename)
         self.metadata_ipfs_hash = ipfs_utils.write_file_in_ipfs(filename)
+
+    @property
+    def duns_no(self):
+        return self.__duns_no
+
+    @property
+    def addresses(self):
+        return self.__addresses

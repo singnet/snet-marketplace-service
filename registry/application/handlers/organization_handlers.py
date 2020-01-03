@@ -17,13 +17,13 @@ def add_org(event, context):
     payload = json.loads(event["body"])
     action = event["queryStringParameters"]["action"]
     required_keys = ["org_id", "org_uuid", "org_name", "org_type", "metadata_ipfs_hash", "description",
-                     "short_description", "url", "contacts", "assets"]
+                     "short_description", "url", "contacts", "assets", "addresses", "duns_no"]
 
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     if not validate_dict(payload, required_keys):
         raise BadRequestException()
     org_service = OrganizationService()
-    if action == PostOrganizationActions.DRAFT.value:
+    if action == PostOrganizationActions.DRAFT.value.upper():
         response = org_service.add_organization_draft(payload, username)
     elif action == PostOrganizationActions.SUBMIT.value:
         response = org_service.add_organization_draft(payload, username)
@@ -44,8 +44,24 @@ def publish_org(event, context):
     if "org_id" not in path_parameters:
         raise BadRequestException()
     org_uuid = path_parameters["org_id"]
-    response = OrganizationService().publish_org(org_uuid, username)
+    response = OrganizationService().publish_org_to_ipfs(org_uuid, username)
 
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def save_transaction_hash_for_publish_org(event, context):
+    payload = json.loads(event["body"])
+    path_parameters = event["pathParameters"]
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    if "org_id" not in path_parameters:
+        raise BadRequestException()
+    org_uuid = path_parameters["org_id"]
+    response = OrganizationService().save_transaction_hash_for_publish_org(org_uuid, username,
+                                                                           payload['transaction_hash'], payload['wallet_address'])
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True

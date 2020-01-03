@@ -1,6 +1,7 @@
 import json
+import unittest
 from unittest import TestCase
-
+from unittest.mock import patch
 from registry.application.handlers.organization_handlers import add_org
 
 
@@ -66,3 +67,58 @@ class TestOrganization(TestCase):
             })
         }
         assert True
+
+    @patch("common.boto_utils.BotoUtils.s3_upload_file")
+    def test_add_org(self, mock_s3_upload):
+        mock_s3_upload.return_value = None
+        event = {
+            "requestContext": {
+                "authorizer": {
+                    "claims": {
+                        "email": "dummy@dummy.io"
+                    }
+                }
+            },
+            "queryStringParameters": {
+                "action": "DRAFT"
+            },
+            "body": json.dumps({"org_id": "org_id",
+                                "org_uuid": "12ba76e57230403da870856fd85b019f",
+                                "org_name": "org_name",
+                                "org_type": "organization",
+                                "metadata_ipfs_hash": "",
+                                "description": "long desc",
+                                "short_description": "short desc",
+                                "url": "https://dummy.com/dummy",
+                                "contacts": [],
+                                "assets": {"hero_image": {
+                                    "raw": "",
+                                    "file_type": "png"}
+                                },
+                                "groups": [],
+                                "duns_no": 123456789,
+                                "mail_address_same_hq_address": False,
+                                "addresses": [{
+                                    "address_type": "headquater_address",
+                                    "street_address": "F102 ABC Apartment XYZ",
+                                    "city": "TestCity",
+                                    "pincode": 123456,
+                                    "country": "TestCountry"
+                                },
+                                    {
+                                        "address_type": "mailing_address",
+                                        "street_address": "F102 ABC Apartment XYZ",
+                                        "city": "TestCity",
+                                        "pincode": 123456,
+                                        "country": "TestCountry"
+                                    }
+                                ]})
+        }
+        response = add_org(event=event, context=None)
+        assert (response["statusCode"] == 200)
+        response_body = json.loads(response['body'])
+        assert (response_body["status"] == "success")
+        assert (response_body["data"]["name"] == "org_name")
+        assert (response_body["data"]["org_id"] == "org_id")
+        assert (response_body["data"]["org_type"] == "organization")
+        assert (len(response_body["data"]["addresses"]) == 2)
