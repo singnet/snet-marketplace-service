@@ -92,6 +92,7 @@ class Organization:
             "short_description": self.short_description,
             "url": self.url,
             "duns_no": self.duns_no,
+            "owner_name": self.owner_name,
             "contacts": self.contacts,
             "assets": self.assets,
             "metadata_ipfs_hash": self.metadata_ipfs_hash,

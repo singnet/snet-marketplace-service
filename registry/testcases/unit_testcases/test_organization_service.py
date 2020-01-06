@@ -8,7 +8,8 @@ from registry.constants import OrganizationStatus
 from registry.domain.services.organization_service import OrganizationService
 from registry.domain.models.organization import Organization as DomainOrganization
 from registry.domain.models.group import Group as DomainGroup
-from registry.infrastructure.models.models import Organization, OrganizationReviewWorkflow, OrganizationHistory, Group
+from registry.infrastructure.models.models import Organization, OrganizationReviewWorkflow, OrganizationHistory, Group, \
+    OrganizationAddress
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
 
 
@@ -486,4 +487,6 @@ class TestOrganizationService(unittest.TestCase):
         self.org_repo.session.query(Organization).delete()
         self.org_repo.session.query(OrganizationReviewWorkflow).delete()
         self.org_repo.session.query(OrganizationHistory).delete()
+        self.org_repo.session.query(OrganizationAddress).delete()
+        self.org_repo.session.query(Group).delete()
         self.org_repo.session.commit()
