@@ -32,10 +32,20 @@ class OrganizationService:
             self.org_repo.move_non_published_org_to_history(organization.org_uuid)
         return organization.to_dict()
 
-    def submit_org_for_approval(self, org_uuid, username):
-        self.org_repo.change_org_status(org_uuid, OrganizationStatus.DRAFT.value,
-                                        OrganizationStatus.APPROVAL_PENDING.value, username)
-        return "OK"
+    def submit_org_for_approval(self, payload, username):
+        organization = OrganizationFactory.parse_raw_organization(payload)
+        organization.add_owner(username)
+        if not organization.is_valid_draft():
+            raise Exception(f"Validation failed for the Organization {organization.to_dict()}")
+        if self.is_on_boarding_approved(organization.org_uuid, username):
+            self.org_repo.move_non_published_org_to_history(organization.org_uuid)
+            self.org_repo.add_org_with_status(organization, OrganizationStatus.APPROVED.value, username)
+        else:
+            self.org_repo.draft_update_org(organization, username)
+            self.org_repo.move_non_published_org_to_history(organization.org_uuid)
+            self.org_repo.change_org_status(organization.org_uuid, OrganizationStatus.DRAFT.value,
+                                            OrganizationStatus.APPROVAL_PENDING.value, username)
+        return organization.to_dict()
 
     def is_on_boarding_approved(self, org_uuid, username):
 
