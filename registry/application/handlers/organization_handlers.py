@@ -26,8 +26,7 @@ def add_org(event, context):
     if action == PostOrganizationActions.DRAFT.value:
         response = org_service.add_organization_draft(payload, username)
     elif action == PostOrganizationActions.SUBMIT.value:
-        response = org_service.add_organization_draft(payload, username)
-        org_service.submit_org_for_approval(response["org_uuid"], username)
+        response = org_service.submit_org_for_approval(payload, username)
     else:
         raise Exception("Invalid action")
 
