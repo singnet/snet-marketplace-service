@@ -1,11 +1,11 @@
 from datetime import datetime
 
-from sqlalchemy import desc, or_
+from sqlalchemy import desc, or_, func
 
 from registry.constants import OrganizationStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.models.models import Group, OrganizationReviewWorkflow, \
-    OrganizationHistory, OrganizationAddress, OrganizationAddressHistory
+    OrganizationHistory, OrganizationAddress, OrganizationAddressHistory, GroupHistory
 from registry.infrastructure.models.models import Organization
 from registry.infrastructure.repositories.base_repository import BaseRepository
 
@@ -35,6 +35,7 @@ class OrganizationRepository(BaseRepository):
             duns_no=organization.duns_no,
             contacts=organization.contacts,
             assets=organization.assets,
+            owner=organization.owner,
             metadata_ipfs_hash=organization.metadata_ipfs_hash,
             groups=group_data,
             address=address_data
@@ -78,6 +79,13 @@ class OrganizationRepository(BaseRepository):
         self.session.query(OrganizationAddress).filter(
             OrganizationAddress.org_row_id == org_row_id).delete(synchronize_session='fetch')
         self.add_organization_address(addresses=addresses, org_row_id=org_row_id)
+
+    def approve_org(self, org_uuid, approver):
+        org = self.get_latest_org_from_org_uuid(org_uuid)
+        if org[0].OrganizationReviewWorkflow.status == OrganizationStatus.APPROVAL_PENDING.value:
+            org[0].OrganizationReviewWorkflow.status = OrganizationStatus.APPROVED.value
+            org[0].OrganizationReviewWorkflow.approved_by = approver
+        self.session.commit()
 
     def add_organization_address(self, addresses, org_row_id):
         org_addresses = []
@@ -127,6 +135,10 @@ class OrganizationRepository(BaseRepository):
                         OrganizationReviewWorkflow.status == OrganizationStatus.APPROVED.value)).all()
         self.move_organizations_to_history(orgs_with_status)
 
+    def get_org_status(self, org_uuid):
+        organizations = self.get_latest_org_from_org_uuid(org_uuid)
+        return OrganizationFactory.parse_organization_details(organizations)
+
     def move_organizations_to_history(self, organizations):
         if len(organizations) > 0:
             org_history = []
@@ -134,6 +146,7 @@ class OrganizationRepository(BaseRepository):
             for org in organizations:
                 row_ids.append(org.row_id)
                 org_addresses_history = []
+                org_group_history = []
                 for address in org.address:
                     org_addresses_history.append(
                         OrganizationAddressHistory(
@@ -147,8 +160,13 @@ class OrganizationRepository(BaseRepository):
                             country=address.country,
                             updated_on=datetime.utcnow(),
                             created_on=datetime.utcnow()
-
                         ))
+                for group in org.groups:
+                    org_group_history.append(GroupHistory(
+                            org_row_id=group.row_id, org_uuid=group.org_uuid, id=group.group_id, name=group.name,
+                            payment_config=group.payment_config, payment_address=group.payment_address, status=""
+                        )
+                    )
                 org_history.append(OrganizationHistory(
                     row_id=org.row_id,
                     name=org.name,
@@ -161,8 +179,10 @@ class OrganizationRepository(BaseRepository):
                     duns_no=org.duns_no,
                     contacts=org.contacts,
                     assets=org.assets,
+                    owner=org.owner,
                     metadata_ipfs_hash=org.metadata_ipfs_hash,
-                    address=org_addresses_history
+                    address=org_addresses_history,
+                    groups=org_group_history
                 ))
                 org_addresses_history = None
 
@@ -178,9 +198,23 @@ class OrganizationRepository(BaseRepository):
             .filter(OrganizationReviewWorkflow.status == status).all()
         self.move_organizations_to_history(orgs_with_status)
 
+    def get_published_org_for_user(self, username):
+        organizations = self.session.query(Organization) \
+            .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
+            .filter(OrganizationReviewWorkflow == OrganizationStatus.PUBLISHED.value)\
+            .filter(Organization.owner == username).all()
+        return OrganizationFactory.parse_organization_details(organizations)
+
     def get_latest_organization(self, username):
-        organizations = self.session.query(Organization, OrganizationReviewWorkflow)\
-            .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id).all()
+        organizations = self.session.query(
+            Organization, OrganizationReviewWorkflow, func.row_number().over(
+                partition_by=Organization.org_uuid, order_by=OrganizationReviewWorkflow.updated_on).label("rn")
+        ).join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id)\
+            .filter(Organization.owner == username).all()
+        latest_orgs = []
+        for org in organizations:
+            if org.rn == 1:
+                latest_orgs.append(org)
         return OrganizationFactory.parse_organization_details(organizations)
 
     def get_published_organization(self):
@@ -224,7 +258,9 @@ class OrganizationRepository(BaseRepository):
             .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
             .filter(Organization.org_uuid == org_uuid) \
             .order_by(desc(OrganizationReviewWorkflow.updated_on)).all()
-        return organizations
+        if len(organizations) == 0:
+            return []
+        return [organizations[0]]
 
     def add_new_draft_groups_in_draft_org(self, groups, organization, username):
         org_row_id = organization.Organization.row_id
@@ -278,6 +314,7 @@ class OrganizationRepository(BaseRepository):
             org_uuid=organization.org_uuid,
             org_id=organization.org_id,
             type=organization.type,
+            owner=organization.owner,
             description=organization.description,
             short_description=organization.short_description,
             url=organization.url,
@@ -309,7 +346,6 @@ class OrganizationRepository(BaseRepository):
         org_item.Organization.metadata_ipfs_hash = organization.metadata_ipfs_hash
         org_item.Organization.assets = organization.assets
         self.session.commit()
-
 
     def get_org_with_status_using_org_id(self, org_id, status):
         organizations = self.session.query(Organization, OrganizationReviewWorkflow) \

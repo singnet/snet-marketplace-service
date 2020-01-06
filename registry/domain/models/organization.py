@@ -14,8 +14,8 @@ logger = get_logger(__name__)
 
 
 class Organization:
-    def __init__(self, name, org_id, org_uuid, org_type, description,
-                 short_description, url, contacts, assets, metadata_ipfs_hash, duns_no, addresses, groups):
+    def __init__(self, name, org_id, org_uuid, org_type, owner, description,
+                 short_description, url, contacts, assets, metadata_ipfs_hash, duns_no, addresses, groups,):
         """
         assets = [
             {
@@ -29,6 +29,7 @@ class Organization:
         self.org_id = org_id
         self.org_uuid = org_uuid
         self.org_type = org_type
+        self.owner = owner
         self.description = description
         self.short_description = short_description
         self.url = url
@@ -56,6 +57,10 @@ class Organization:
 
     def add_all_groups(self, groups):
         self.groups.extend(groups)
+
+    def add_owner(self, owner):
+        if self.owner is None or len(self.owner) == 0:
+            self.owner = owner
 
     def to_metadata(self):
         assets = {}
