@@ -21,16 +21,36 @@ class OrganizationService:
             TODO: add member owner validation
         """
         organization = OrganizationFactory.parse_raw_organization(payload)
+        organization.add_owner(username)
         if not organization.is_valid_draft():
             raise Exception(f"Validation failed for the Organization {organization.to_dict()}")
-        self.org_repo.draft_update_org(organization, username)
-        self.org_repo.move_non_published_org_to_history(organization.org_uuid)
+        if self.is_on_boarding_approved(organization.org_uuid, username):
+            self.org_repo.move_non_published_org_to_history(organization.org_uuid)
+            self.org_repo.add_org_with_status(organization, OrganizationStatus.APPROVED.value, username)
+        else:
+            self.org_repo.draft_update_org(organization, username)
+            self.org_repo.move_non_published_org_to_history(organization.org_uuid)
         return organization.to_dict()
 
     def submit_org_for_approval(self, org_uuid, username):
         self.org_repo.change_org_status(org_uuid, OrganizationStatus.DRAFT.value,
                                         OrganizationStatus.APPROVAL_PENDING.value, username)
         return "OK"
+
+    def is_on_boarding_approved(self, org_uuid, username):
+
+        published_orgs = self.org_repo.get_published_org_for_user(username)
+        latest_orgs = self.org_repo.get_org_status(org_uuid)
+
+        if len(published_orgs) != 0:
+            return False
+        if len(latest_orgs) == 0:
+            return False
+
+        if latest_orgs[0]["status"] == "APPROVED":
+            return True
+
+        return False
 
     def publish_org_to_ipfs(self, org_uuid, username):
         orgs = self.org_repo.get_approved_org(org_uuid)
