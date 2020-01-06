@@ -99,7 +99,7 @@ class OrganizationFactory:
             item.name, item.org_id, item.org_uuid, item.type, item.description,
             item.short_description, item.url, item.contacts, item.assets, item.metadata_ipfs_hash,
             item.duns_no, OrganizationFactory.parse_organization_address_data_model(item.address),
-            OrganizationFactory.parse_group_data_model(item.groups)
+            OrganizationFactory.parse_group_data_model(item.groups), item.owner_name
         )
         return organization
 
