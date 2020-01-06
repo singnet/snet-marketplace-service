@@ -33,6 +33,7 @@ class TestOrganizationService(unittest.TestCase):
             "url": "https://dummy.dummy",
             "contacts": [],
             "assets": {},
+            "owner_name": "Dummy Name",
             "addresses": [
                 {
                     "address_type": "headquater_address",
