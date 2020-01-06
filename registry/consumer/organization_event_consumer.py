@@ -143,23 +143,3 @@ class OrganizationModifiedEventConsumer(OrganizationEventConsumer):
             self._update_existing_org_records(existing_publish_in_progress_organization,
                                               existing_published_organization)
 
-
-if __name__ == '__main__':
-    OrganizationCreatedEventConsumer("wss://ropsten.infura.io/ws/v3/e7732e1f679e461b9bb4da5653ac3fc2",
-                                     "http://ipfs.singularitynet.io", 80).on_event(event={"data":
-        {
-            "row_id": 18005,
-            "block_no": 7079709,
-            "event": "OrganizationCreated",
-            "json_str": "{'orgId': b'org_id_200\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'}",
-            "processed": 1,
-            "transactionHash": "0xf3342a68a1daff1bbef785e92e27dd30143073f0290c7a162cfb5bf792ec590b",
-            "logIndex": "3",
-            "error_code": 200,
-            "error_msg": "",
-            "row_updated": "2020-01-06 15:42:01",
-            "row_created": "2020-01-06 15:42:01"
-
-        }
-
-        , "name": "OrganizationCreated"})
