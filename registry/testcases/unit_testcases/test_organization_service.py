@@ -70,6 +70,7 @@ class TestOrganizationService(unittest.TestCase):
             "description": "that is the dummy org for testcases",
             "short_description": "that is the short description",
             "url": "https://dummy.dummy",
+            "owner_name": "Dummy Name",
             "contacts": [],
             "assets": {
                 "hero_image": {
