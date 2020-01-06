@@ -163,7 +163,7 @@ class OrganizationRepository(BaseRepository):
                         ))
                 for group in org.groups:
                     org_group_history.append(GroupHistory(
-                            org_row_id=group.row_id, org_uuid=group.org_uuid, id=group.group_id, name=group.name,
+                            org_row_id=group.row_id, org_uuid=group.org_uuid, id=group.id, name=group.name,
                             payment_config=group.payment_config, payment_address=group.payment_address, status=""
                         )
                     )

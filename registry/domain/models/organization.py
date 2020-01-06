@@ -137,12 +137,10 @@ class Organization:
         self.metadata_ipfs_hash = ipfs_utils.write_file_in_ipfs(filename)
 
     def is_same_organization_as_organization_from_metadata(self, metadata_organization):
-        diff = DeepDiff(self, metadata_organization, exclude_types=[OrganizationAddress], exclude_paths=["root.org_uuid","root._Organization__duns_no,root.owner"])
+        diff = DeepDiff(self, metadata_organization, exclude_types=[OrganizationAddress], exclude_paths=["root.org_uuid","root._Organization__duns_no","root.owner"])
         if not diff:
             return True
         return False
-
-
 
     @property
     def duns_no(self):
