@@ -23,15 +23,18 @@ class OrganizationFactory:
             for asset_type in raw_assets:
                 org_assets[asset_type] = {}
                 asset = raw_assets[asset_type]
-                current_time = datetime.utcnow().strftime("%Y%m%d%H%M%S")
-                key_name = f"{uuid}-{asset_type}-{current_time}.{asset['file_type']}"
-                filename = f"{METADATA_FILE_PATH}/{key_name}"
-                raw_file = base64.b64decode(asset["raw"].encode())
-                with open(filename, 'wb') as image:
-                    image.write(raw_file)
-                boto_client.s3_upload_file(filename, ASSET_BUCKET, key_name)
-                asset_url = f"https://{ASSET_BUCKET}.s3.amazonaws.com/{key_name}"
-                org_assets[asset_type]["url"] = asset_url
+                if "raw" in asset and len(asset["raw"]) != 0:
+                    current_time = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+                    key_name = f"{uuid}-{asset_type}-{current_time}.{asset['file_type']}"
+                    filename = f"{METADATA_FILE_PATH}/{key_name}"
+                    raw_file = base64.b64decode(asset["raw"].encode())
+                    with open(filename, 'wb') as image:
+                        image.write(raw_file)
+                    boto_client.s3_upload_file(filename, ASSET_BUCKET, key_name)
+                    asset_url = f"https://{ASSET_BUCKET}.s3.amazonaws.com/{key_name}"
+                    org_assets[asset_type]["url"] = asset_url
+                if "url" in asset:
+                    org_assets[asset_type]["url"] = asset["url"]
             return org_assets
 
         org_id = payload.get("org_id", None)
