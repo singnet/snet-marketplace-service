@@ -28,7 +28,7 @@ class TestOrganizationService(unittest.TestCase):
         test_org_id = uuid4().hex
         username = "dummy@snet.io"
         organization = DomainOrganization(
-            "dummy_org", "org_id", test_org_id, "organization",
+            "dummy_org", "org_id", test_org_id, "organization", username,
             "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "Q3E12", "duns",
             [], [DomainGroup(
                 name="my-group",
@@ -89,7 +89,7 @@ class TestOrganizationService(unittest.TestCase):
         test_org_id = uuid4().hex
         username = "dummy@snet.io"
         organization = DomainOrganization(
-            "dummy_org", "org_id", test_org_id, "organization",
+            "dummy_org", "org_id", test_org_id, "organization", username,
             "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "Q3E12", "",
             [], [DomainGroup(
                 name="my-group",
@@ -101,7 +101,7 @@ class TestOrganizationService(unittest.TestCase):
 
         self.org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISHED.value, username)
         draft_organization = DomainOrganization(
-            "dummy_org", "org_id", test_org_id, "organization",
+            "dummy_org", "org_id", test_org_id, "organization", username,
             "that is the dummy org for testcases", "that is the short description", "draft_dummy.com", [], {}, "Q3E12",
             "", [], [DomainGroup(
                 name="my-group",
