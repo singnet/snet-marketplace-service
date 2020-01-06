@@ -284,6 +284,7 @@ class OrganizationRepository(BaseRepository):
             description=organization.description,
             short_description=organization.short_description,
             url=organization.url,
+            owner_name=organization.owner_name,
             contacts=organization.contacts,
             assets=organization.assets,
             metadata_ipfs_hash=organization.metadata_ipfs_hash,
