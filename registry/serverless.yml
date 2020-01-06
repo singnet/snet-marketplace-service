@@ -169,7 +169,7 @@ functions:
 
   save_transaction:
     warmup: true
-    handler: registry.application.handlers.organization_handlers.save_transaction
+    handler: registry.application.handlers.organization_handlers.save_transaction_hash_for_publish_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
