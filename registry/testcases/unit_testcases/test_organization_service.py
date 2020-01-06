@@ -55,7 +55,8 @@ class TestOrganizationService(unittest.TestCase):
         response_org = org_service.add_organization_draft(payload, username)
         test_org_uuid = response_org["org_uuid"]
         test_org_id = response_org["org_id"]
-        org_service.submit_org_for_approval(test_org_uuid, username)
+        payload["org_uuid"] = test_org_uuid
+        org_service.submit_org_for_approval(payload, username)
         self.org_repo.approve_org(test_org_uuid, username)
 
         payload = {
@@ -326,8 +327,8 @@ class TestOrganizationService(unittest.TestCase):
         username = "pratik@dummy.com"
         response_org = org_service.add_organization_draft(payload, username)
         test_org_id = response_org["org_uuid"]
-
-        org_service.submit_org_for_approval(test_org_id, "dummy@snet.io")
+        payload["org_uuid"] = test_org_id
+        org_service.submit_org_for_approval(payload, "dummy@snet.io")
 
         orgs = self.org_repo.get_org_with_status(test_org_id, "APPROVAL_PENDING")
         if len(orgs) == 0:
