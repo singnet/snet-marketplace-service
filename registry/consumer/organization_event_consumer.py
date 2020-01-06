@@ -1,12 +1,12 @@
 import os
 import traceback
 
+
 from web3 import Web3
 
 from common.blockchain_util import BlockChainUtil
 from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
-
 from registry.config import NETWORK_ID
 from registry.constants import OrganizationStatus
 from registry.consumer.event_consumer import EventConsumer
@@ -49,7 +49,7 @@ class OrganizationEventConsumer(EventConsumer):
         org_id = self._get_org_id_from_event(event)
 
         blockchain_org_data = registry_contract.functions.getOrganizationById(org_id.encode('utf-8')).call()
-        org_metadata_uri = Web3.toText(blockchain_org_data[2])[7:].rstrip("\u0000")
+        org_metadata_uri = Web3.toText(blockchain_org_data[2]).rstrip("\x00").lstrip("ipfs://")
         ipfs_org_metadata = self._ipfs_util.read_file_from_ipfs(org_metadata_uri)
 
         return org_id, ipfs_org_metadata
@@ -142,3 +142,24 @@ class OrganizationModifiedEventConsumer(OrganizationEventConsumer):
             received_organization_event):
             self._update_existing_org_records(existing_publish_in_progress_organization,
                                               existing_published_organization)
+
+
+if __name__ == '__main__':
+    OrganizationCreatedEventConsumer("wss://ropsten.infura.io/ws/v3/e7732e1f679e461b9bb4da5653ac3fc2",
+                                     "http://ipfs.singularitynet.io", 80).on_event(event={"data":
+        {
+            "row_id": 18005,
+            "block_no": 7079709,
+            "event": "OrganizationCreated",
+            "json_str": "{'orgId': b'org_id_200\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'}",
+            "processed": 1,
+            "transactionHash": "0xf3342a68a1daff1bbef785e92e27dd30143073f0290c7a162cfb5bf792ec590b",
+            "logIndex": "3",
+            "error_code": 200,
+            "error_msg": "",
+            "row_updated": "2020-01-06 15:42:01",
+            "row_created": "2020-01-06 15:42:01"
+
+        }
+
+        , "name": "OrganizationCreated"})
