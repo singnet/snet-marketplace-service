@@ -32,7 +32,7 @@ def upgrade():
     sa.Column('org_id', sa.VARCHAR(length=128), nullable=False),
     sa.Column('owner_name', sa.VARCHAR(length=256), nullable=False),
     sa.Column('type', sa.VARCHAR(length=128), nullable=False),
-    sa.Column('owner', sa.VARCHAR(length=256), nullable=False),
+    sa.Column('owner', sa.VARCHAR(length=128), nullable=False),
     sa.Column('description', sa.VARCHAR(length=1024), nullable=False),
     sa.Column('short_description', sa.VARCHAR(length=1024), nullable=False),
     sa.Column('url', sa.VARCHAR(length=512), nullable=False),
