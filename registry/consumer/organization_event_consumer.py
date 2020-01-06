@@ -6,9 +6,10 @@ from web3 import Web3
 from common.blockchain_util import BlockChainUtil
 from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
-from contract_api.consumers.event_consumer import EventConsumer
+
 from registry.config import NETWORK_ID
 from registry.constants import OrganizationStatus
+from registry.consumer.event_consumer import EventConsumer
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
 

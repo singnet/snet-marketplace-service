@@ -23,7 +23,7 @@ class TestOrganizationService(unittest.TestCase):
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
     @patch('common.ipfs_util.IPFSUtil.read_file_from_ipfs')
     @patch('common.ipfs_util.IPFSUtil.read_bytesio_from_ipfs')
-    def test_orgnaization_create_event(self, nock_read_bytesio_from_ipfs, mock_ipfs_read, mock_s3_push,
+    def test_organization_create_event(self, nock_read_bytesio_from_ipfs, mock_ipfs_read, mock_s3_push,
                                        mock_ipfs_write):
         test_org_id = uuid4().hex
         username = "dummy@snet.io"
@@ -79,12 +79,19 @@ class TestOrganizationService(unittest.TestCase):
         self.org_repo.session.commit()
         published_org = self.org_repo.get_org_with_status(test_org_id, "PUBLISHED")
         assert len(published_org) == 1
+        assert published_org[0].Organization.name == "dummy_org"
+        assert published_org[0].Organization.org_id == "org_id"
+        assert published_org[0].Organization.type == "organization"
+        assert published_org[0].Organization.metadata_ipfs_hash == "Q3E12"
+        assert published_org[0].Organization.groups[0].id == "group_id"
+        assert published_org[0].Organization.groups[0].name == "my-group"
+        assert published_org[0].Organization.groups[0].payment_address == "0x123"
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
     @patch('common.ipfs_util.IPFSUtil.read_file_from_ipfs')
     @patch('common.ipfs_util.IPFSUtil.read_bytesio_from_ipfs')
-    def test_orgnaization_modify_event(self, nock_read_bytesio_from_ipfs, mock_ipfs_read, mock_s3_push,
+    def test_organization_modify_event(self, nock_read_bytesio_from_ipfs, mock_ipfs_read, mock_s3_push,
                                        mock_ipfs_write):
         test_org_id = uuid4().hex
         username = "dummy@snet.io"
@@ -155,6 +162,14 @@ class TestOrganizationService(unittest.TestCase):
         self.org_repo.session.commit()
         published_org = self.org_repo.get_org_with_status(test_org_id, "PUBLISHED")
         assert len(published_org) == 1
+        assert published_org[0].Organization.name == "dummy_org"
+        assert published_org[0].Organization.org_id == "org_id"
+        assert published_org[0].Organization.type == "organization"
+        assert published_org[0].Organization.metadata_ipfs_hash == "Q3E12"
+        assert published_org[0].Organization.groups[0].id == "group_id"
+        assert published_org[0].Organization.groups[0].name == "my-group"
+        assert published_org[0].Organization.groups[0].payment_address == "0x123"
+
 
     def tearDown(self):
         self.org_repo.session.query(Organization).delete()

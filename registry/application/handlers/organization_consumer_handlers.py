@@ -19,7 +19,6 @@ def get_organization_event_consumer(event):
 
 @handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def organization_event_consumer_handler(event, context):
-    print(event)
     logger.info(f"Got Organization Event {event}")
     organization_event_consumer = get_organization_event_consumer(event)
     organization_event_consumer.on_event(event)
