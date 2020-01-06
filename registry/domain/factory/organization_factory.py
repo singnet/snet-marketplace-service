@@ -21,9 +21,9 @@ class OrganizationFactory:
             org_assets = {}
             boto_client = boto_utils.BotoUtils(region_name=REGION_NAME)
             for asset_type in raw_assets:
-                if len(assets["raw"]) != 0:
-                    org_assets[asset_type] = {}
-                    asset = raw_assets[asset_type]
+                org_assets[asset_type] = {}
+                asset = raw_assets[asset_type]
+                if "raw" in asset and len(asset["raw"]) != 0:
                     current_time = datetime.utcnow().strftime("%Y%m%d%H%M%S")
                     key_name = f"{uuid}-{asset_type}-{current_time}.{asset['file_type']}"
                     filename = f"{METADATA_FILE_PATH}/{key_name}"
