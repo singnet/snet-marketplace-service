@@ -33,6 +33,7 @@ class OrganizationRepository(BaseRepository):
             short_description=organization.short_description,
             url=organization.url,
             duns_no=organization.duns_no,
+            owner_name=organization.owner_name,
             contacts=organization.contacts,
             assets=organization.assets,
             metadata_ipfs_hash=organization.metadata_ipfs_hash,
@@ -64,6 +65,7 @@ class OrganizationRepository(BaseRepository):
         current_draft.Organization.short_description = organization.short_description
         current_draft.Organization.url = organization.url
         current_draft.Organization.duns_no = organization.duns_no
+        current_draft.Organization.owner_name = organization.owner_name
         current_draft.Organization.contacts = organization.contacts
         current_draft.Organization.assets = organization.assets
         current_draft.Organization.metadata_ipfs_hash = organization.metadata_ipfs_hash
@@ -159,6 +161,7 @@ class OrganizationRepository(BaseRepository):
                     short_description=org.short_description,
                     url=org.url,
                     duns_no=org.duns_no,
+                    owner_name=org.owner_name,
                     contacts=org.contacts,
                     assets=org.assets,
                     metadata_ipfs_hash=org.metadata_ipfs_hash,
@@ -179,7 +182,7 @@ class OrganizationRepository(BaseRepository):
         self.move_organizations_to_history(orgs_with_status)
 
     def get_latest_organization(self, username):
-        organizations = self.session.query(Organization, OrganizationReviewWorkflow)\
+        organizations = self.session.query(Organization, OrganizationReviewWorkflow) \
             .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id).all()
         return OrganizationFactory.parse_organization_details(organizations)
 
@@ -310,11 +313,9 @@ class OrganizationRepository(BaseRepository):
         org_item.Organization.assets = organization.assets
         self.session.commit()
 
-
     def get_org_with_status_using_org_id(self, org_id, status):
         organizations = self.session.query(Organization, OrganizationReviewWorkflow) \
             .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
             .filter(Organization.org_id == org_id) \
             .filter(OrganizationReviewWorkflow.status == status).all()
         return organizations
-

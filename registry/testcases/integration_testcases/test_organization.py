@@ -97,6 +97,7 @@ class TestOrganization(TestCase):
                                 },
                                 "groups": [],
                                 "duns_no": 123456789,
+                                "owner_name": "Dummy Name",
                                 "mail_address_same_hq_address": False,
                                 "addresses": [{
                                     "address_type": "headquater_address",

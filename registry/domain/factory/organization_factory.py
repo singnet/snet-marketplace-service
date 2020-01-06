@@ -43,14 +43,16 @@ class OrganizationFactory:
         short_description = payload.get("short_description", None)
         url = payload.get("url", None)
         duns_no = payload.get("duns_no", None)
+        owner_name = payload.get("owner_name", None)
         contacts = payload.get("contacts", None)
         metadata_ipfs_hash = payload.get("metadata_ipfs_hash", None)
         groups = OrganizationFactory.parse_raw_list_groups(payload.get("groups", []))
         addresses = OrganizationFactory.parse_raw_address_list(payload.get("addresses", []))
-        organization = Organization(name=org_name, org_id=org_id, org_uuid=org_uuid, org_type=org_type,
-                                    description=description, short_description=short_description, url=url,
-                                    contacts=contacts, assets=assets, metadata_ipfs_hash=metadata_ipfs_hash,
-                                    duns_no=duns_no, groups=groups, addresses=addresses)
+        organization = Organization(
+            name=org_name, org_id=org_id, org_uuid=org_uuid, org_type=org_type, description=description,
+            short_description=short_description, url=url, contacts=contacts, assets=assets,
+            metadata_ipfs_hash=metadata_ipfs_hash, duns_no=duns_no, owner_name=owner_name, groups=groups,
+            addresses=addresses)
         organization.setup_id()
         organization.assets = extract_and_upload_assets(organization.org_uuid, payload.get("assets", {}))
         return organization
@@ -138,7 +140,6 @@ class OrganizationFactory:
                 ))
         return addresses
 
-
     @staticmethod
     def parse_organization_details(items):
         orgs = []
@@ -149,7 +150,6 @@ class OrganizationFactory:
             })
 
         return orgs
-
 
     @staticmethod
     def parse_organization_metadata(org_uuid, ipfs_org_metadata):
@@ -171,6 +171,6 @@ class OrganizationFactory:
         metadata_ipfs_hash = ipfs_org_metadata.get("metadata_ipfs_hash", None)
         groups = OrganizationFactory.parse_raw_list_groups(ipfs_org_metadata.get("groups", []))
         organization = Organization(org_name, org_id, org_uuid, org_type, long_description,
-                                    short_description, url, contacts, assets, metadata_ipfs_hash,"",[],groups)
+                                    short_description, url, contacts, assets, metadata_ipfs_hash, "", [], groups)
 
         return organization
