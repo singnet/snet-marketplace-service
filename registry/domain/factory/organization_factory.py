@@ -33,6 +33,8 @@ class OrganizationFactory:
                     boto_client.s3_upload_file(filename, ASSET_BUCKET, key_name)
                     asset_url = f"https://{ASSET_BUCKET}.s3.amazonaws.com/{key_name}"
                     org_assets[asset_type]["url"] = asset_url
+                if "url" in asset:
+                    org_assets[asset_type]["url"] = asset["url"]
             return org_assets
 
         org_id = payload.get("org_id", None)
