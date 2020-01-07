@@ -51,7 +51,7 @@ class TestOrganizationService(unittest.TestCase):
         nock_read_bytesio_from_ipfs.return_value = ""
         mock_s3_push.return_value = "http://test-s3-push"
         mock_ipfs_read.return_value = {
-            "org_name": "dummy_org",
+            "name": "dummy_org",
             "org_id": "org_id",
             "metadata_ipfs_hash": "Q3E12",
             "org_type": "organization",
@@ -134,7 +134,7 @@ class TestOrganizationService(unittest.TestCase):
         nock_read_bytesio_from_ipfs.return_value = ""
         mock_s3_push.return_value = "http://test-s3-push"
         mock_ipfs_read.return_value = {
-            "org_name": "dummy_org",
+            "name": "dummy_org",
             "org_id": "org_id",
             "metadata_ipfs_hash": "Q3E12",
             "org_type": "organization",
