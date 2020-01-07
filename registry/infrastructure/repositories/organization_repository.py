@@ -219,7 +219,7 @@ class OrganizationRepository(BaseRepository):
         for org in organizations:
             if org.rn == 1:
                 latest_orgs.append(org)
-        return OrganizationFactory.parse_organization_details(organizations)
+        return OrganizationFactory.parse_organization_details(latest_orgs)
 
     def get_published_organization(self):
         organization = self.session.query(Organization) \
