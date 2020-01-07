@@ -156,9 +156,9 @@ class OrganizationModifiedEventConsumer(OrganizationEventConsumer):
             self._organization_repository.add_org_with_status(existing_publish_in_progress_organization,
                                                               OrganizationStatus.APPROVAL_PENDING, BLOCKCHAIN_USER)
 
-        def _update_event_outside_publisher_portal(received_organization_event):
-            self._organization_repository.add_org_with_status(received_organization_event,
-                                                              OrganizationStatus.APPROVAL_PENDING, BLOCKCHAIN_USER)
+    def _update_event_outside_publisher_portal(self, received_organization_event):
+        self._organization_repository.add_org_with_status(received_organization_event,
+                                                          OrganizationStatus.APPROVAL_PENDING, BLOCKCHAIN_USER)
 
     def _draft_and_published_record_recieve_update_event(self, existing_draft_organization,
                                                          existing_published_organization, received_organization_event):
