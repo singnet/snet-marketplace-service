@@ -25,9 +25,9 @@ class IPFSUtil(object):
                     file, pin=True, wrap_with_directory=wrap_with_directory)
                 if wrap_with_directory:
                     return result[1]['Hash'] + '/' + result[0]['Name']
-                return result[1]['Hash']
+                return result['Hash']
         except Exception as err:
-            logging.error("File error ", err)
+            logging.error("File error ", repr(err))
         return ''
 
     def read_file_from_ipfs(self, ipfs_hash):
