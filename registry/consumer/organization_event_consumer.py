@@ -85,11 +85,13 @@ class OrganizationCreatedEventConsumer(OrganizationEventConsumer):
         try:
 
             existing_publish_in_progress_organization = self._get_existing_organization_records(org_id)
-            received_organization_event = OrganizationFactory.parse_organization_metadata(
-                existing_publish_in_progress_organization.org_uuid, ipfs_org_metadata)
+
+            received_organization_event = OrganizationFactory.parse_organization_metadata( ipfs_org_metadata)
 
             if not existing_publish_in_progress_organization:
                 self._create_event_outside_publisher_portal(received_organization_event)
+
+
 
             elif existing_publish_in_progress_organization.is_major_change(received_organization_event):
                 self._organization_repository.add_org_with_status(received_organization_event,
@@ -175,8 +177,7 @@ class OrganizationModifiedEventConsumer(OrganizationEventConsumer):
 
         existing_publish_in_progress_organization, existing_published_organization, existing_draft_organization = self._get_existing_organization_records(
             org_id)
-        received_organization_event = OrganizationFactory.parse_organization_metadata(
-            existing_publish_in_progress_organization.org_uuid, ipfs_org_metadata)
+        received_organization_event = OrganizationFactory.parse_organization_metadata(ipfs_org_metadata)
 
         if existing_publish_in_progress_organization and existing_published_organization:
             self._publish_in_progress_and_published_record_recieve_update_event(
