@@ -11,11 +11,12 @@ from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH
 from registry.domain.models.organization_address import OrganizationAddress
 
 logger = get_logger(__name__)
+EXCLUDE_PATHS = ["root.org_uuid", "root._Organization__duns_no", "root.owner", "root._Organization__owner_name"]
 
 
 class Organization:
-    def __init__(self, name, org_id, org_uuid, org_type, owner, description,
-                 short_description, url, contacts, assets, metadata_ipfs_hash, duns_no, addresses, groups,):
+    def __init__(self, name, org_id, org_uuid, org_type, owner, description, short_description, url, contacts, assets,
+                 metadata_ipfs_hash, duns_no, addresses, groups, owner_name=None):
         """
         assets = [
             {
@@ -27,6 +28,7 @@ class Organization:
         """
         self.name = name
         self.org_id = org_id
+        self.__owner_name = owner_name
         self.org_uuid = org_uuid
         self.org_type = org_type
         self.owner = owner
@@ -90,6 +92,7 @@ class Organization:
             "short_description": self.short_description,
             "url": self.url,
             "duns_no": self.duns_no,
+            "owner_name": self.owner_name,
             "contacts": self.contacts,
             "assets": self.assets,
             "metadata_ipfs_hash": self.metadata_ipfs_hash,
@@ -138,7 +141,8 @@ class Organization:
         self.metadata_ipfs_hash = ipfs_utils.write_file_in_ipfs(filename)
 
     def is_same_organization_as_organization_from_metadata(self, metadata_organization):
-        diff = DeepDiff(self, metadata_organization, exclude_types=[OrganizationAddress], exclude_paths=["root.org_uuid","root._Organization__duns_no","root.owner"])
+        diff = DeepDiff(self, metadata_organization, exclude_types=[OrganizationAddress],
+                        exclude_paths=EXCLUDE_PATHS)
         if not diff:
             return True
         return False
@@ -146,6 +150,10 @@ class Organization:
     @property
     def duns_no(self):
         return self.__duns_no
+
+    @property
+    def owner_name(self):
+        return self.__owner_name
 
     @property
     def addresses(self):
