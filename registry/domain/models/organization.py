@@ -141,6 +141,10 @@ class Organization:
         json_to_file(metadata, filename)
         self.metadata_ipfs_hash = ipfs_utils.write_file_in_ipfs(filename)
 
+
+    def is_major_change(self,metdata_organziation):
+        return False
+
     def is_same_organization_as_organization_from_metadata(self, metadata_organization):
         diff = DeepDiff(self, metadata_organization, exclude_types=[OrganizationAddress],
                         exclude_paths=EXCLUDE_PATHS)
