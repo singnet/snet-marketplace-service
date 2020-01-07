@@ -46,14 +46,16 @@ class OrganizationFactory:
         short_description = payload.get("short_description", None)
         url = payload.get("url", None)
         duns_no = payload.get("duns_no", None)
+        owner_name = payload.get("owner_name", None)
         contacts = payload.get("contacts", None)
         metadata_ipfs_hash = payload.get("metadata_ipfs_hash", None)
         groups = OrganizationFactory.parse_raw_list_groups(payload.get("groups", []))
         addresses = OrganizationFactory.parse_raw_address_list(payload.get("addresses", []))
-        organization = Organization(name=org_name, org_id=org_id, org_uuid=org_uuid, org_type=org_type,
-                                    description=description, short_description=short_description, url=url,
-                                    contacts=contacts, assets=assets, metadata_ipfs_hash=metadata_ipfs_hash,
-                                    duns_no=duns_no, groups=groups, addresses=addresses, owner="")
+        organization = Organization(
+            name=org_name, org_id=org_id, org_uuid=org_uuid, org_type=org_type, description=description,
+            short_description=short_description, url=url, contacts=contacts, assets=assets,
+            metadata_ipfs_hash=metadata_ipfs_hash, duns_no=duns_no, owner_name=owner_name, groups=groups,
+            addresses=addresses, owner="")
         organization.setup_id()
         organization.assets = extract_and_upload_assets(organization.org_uuid, payload.get("assets", {}))
         return organization
@@ -100,7 +102,7 @@ class OrganizationFactory:
             item.name, item.org_id, item.org_uuid, item.type, item.owner, item.description,
             item.short_description, item.url, item.contacts, item.assets, item.metadata_ipfs_hash,
             item.duns_no, OrganizationFactory.parse_organization_address_data_model(item.address),
-            OrganizationFactory.parse_group_data_model(item.groups)
+            OrganizationFactory.parse_group_data_model(item.groups), item.owner_name
         )
         return organization
 
@@ -141,6 +143,7 @@ class OrganizationFactory:
                 ))
         return addresses
 
+
     @staticmethod
     def parse_organization_details(items):
         orgs = []
@@ -149,7 +152,9 @@ class OrganizationFactory:
                 "organization": OrganizationFactory.parse_organization_data_model(item.Organization),
                 "status": item.OrganizationReviewWorkflow.status
             })
+
         return orgs
+
 
     @staticmethod
     def parse_organization_metadata(org_uuid, ipfs_org_metadata):
@@ -172,6 +177,6 @@ class OrganizationFactory:
         owner = ""
         groups = OrganizationFactory.parse_raw_list_groups(ipfs_org_metadata.get("groups", []))
         organization = Organization(org_name, org_id, org_uuid, org_type, owner, long_description,
-                                    short_description, url, contacts, assets, metadata_ipfs_hash, "", [], groups)
+                                    short_description, url, contacts, assets, metadata_ipfs_hash,"",[],groups)
 
         return organization
