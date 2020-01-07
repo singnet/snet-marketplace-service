@@ -29,7 +29,9 @@ class TestOrganizationService(unittest.TestCase):
         username = "dummy@snet.io"
         organization = DomainOrganization(
             "dummy_org", "org_id", test_org_id, "organization", username,
-            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "Q3E12", "duns",
+            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {'hero_image': {
+                "ipfs_hash": 'QmagaSbQAdEtFkwc9ZQUDdYgUtXz93MPByngbx1b4cPidj/484b38d1c1fe4717ad4acab99394ea82-hero_image-20200107083215.png',
+                "url": ""}}, "Q3E12", "duns",
             [], [DomainGroup(
                 name="my-group",
                 group_id="group_id",
@@ -61,7 +63,7 @@ class TestOrganizationService(unittest.TestCase):
                 "short_description": "that is the short description",
                 "url": "dummy.com"
             },
-            "assets": {},
+            "assets": {'hero_image': 'QmagaSbQAdEtFkwc9ZQUDdYgUtXz93MPByngbx1b4cPidj/484b38d1c1fe4717ad4acab99394ea82-hero_image-20200107083215.png'},
             "groups": [{
                 "name": "my-group",
                 "id": "group_id",
@@ -109,7 +111,9 @@ class TestOrganizationService(unittest.TestCase):
         self.org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISHED.value, username)
         draft_organization = DomainOrganization(
             "dummy_org", "org_id", test_org_id, "organization", username,
-            "that is the dummy org for testcases", "that is the short description", "draft_dummy.com", [], {}, "Q3E12",
+            "that is the dummy org for testcases", "that is the short description", "draft_dummy.com", [], {'hero_image': {
+                "ipfs_hash": 'QmagaSbQAdEtFkwc9ZQUDdYgUtXz93MPByngbx1b4cPidj/484b38d1c1fe4717ad4acab99394ea82-hero_image-20200107083215.png',
+                "url": ""}}, "Q3E12",
             "", [], [DomainGroup(
                 name="my-group",
                 group_id="group_id",
@@ -142,7 +146,7 @@ class TestOrganizationService(unittest.TestCase):
                 "short_description": "that is the short description",
                 "url": "draft_dummy.com"
             },
-            "assets": {},
+            "assets": {'hero_image': 'QmagaSbQAdEtFkwc9ZQUDdYgUtXz93MPByngbx1b4cPidj/484b38d1c1fe4717ad4acab99394ea82-hero_image-20200107083215.png'},
             "groups": [{
                 "name": "my-group",
                 "id": "group_id",
