@@ -165,7 +165,7 @@ class OrganizationFactory:
         return assets
 
     @staticmethod
-    def parse_organization_metadata(org_uuid, ipfs_org_metadata):
+    def parse_organization_metadata(ipfs_org_metadata):
         org_id = ipfs_org_metadata.get("org_id", None)
         org_name = ipfs_org_metadata.get("name", None)
         org_type = ipfs_org_metadata.get("org_type", None)
@@ -184,7 +184,8 @@ class OrganizationFactory:
         metadata_ipfs_hash = ipfs_org_metadata.get("metadata_ipfs_hash", None)
         owner = ""
         groups = OrganizationFactory.parse_raw_list_groups(ipfs_org_metadata.get("groups", []))
-        organization = Organization(org_name, org_id, org_uuid, org_type, owner, long_description,
+
+        organization = Organization(org_name, org_id, "", org_type, owner, long_description,
                                     short_description, url, contacts, assets, metadata_ipfs_hash, "", [], groups)
 
         return organization
