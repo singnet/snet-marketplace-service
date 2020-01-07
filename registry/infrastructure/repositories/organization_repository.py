@@ -33,6 +33,7 @@ class OrganizationRepository(BaseRepository):
             short_description=organization.short_description,
             url=organization.url,
             duns_no=organization.duns_no,
+            owner_name=organization.owner_name,
             contacts=organization.contacts,
             assets=organization.assets,
             owner=organization.owner,
@@ -65,6 +66,7 @@ class OrganizationRepository(BaseRepository):
         current_draft.Organization.short_description = organization.short_description
         current_draft.Organization.url = organization.url
         current_draft.Organization.duns_no = organization.duns_no
+        current_draft.Organization.owner_name = organization.owner_name
         current_draft.Organization.contacts = organization.contacts
         current_draft.Organization.assets = organization.assets
         current_draft.Organization.metadata_ipfs_hash = organization.metadata_ipfs_hash
@@ -160,6 +162,7 @@ class OrganizationRepository(BaseRepository):
                             country=address.country,
                             updated_on=datetime.utcnow(),
                             created_on=datetime.utcnow()
+
                         ))
                 for group in org.groups:
                     org_group_history.append(GroupHistory(
@@ -177,6 +180,7 @@ class OrganizationRepository(BaseRepository):
                     short_description=org.short_description,
                     url=org.url,
                     duns_no=org.duns_no,
+                    owner_name=org.owner_name,
                     contacts=org.contacts,
                     assets=org.assets,
                     owner=org.owner,
@@ -318,6 +322,7 @@ class OrganizationRepository(BaseRepository):
             description=organization.description,
             short_description=organization.short_description,
             url=organization.url,
+            owner_name=organization.owner_name,
             contacts=organization.contacts,
             assets=organization.assets,
             metadata_ipfs_hash=organization.metadata_ipfs_hash,
