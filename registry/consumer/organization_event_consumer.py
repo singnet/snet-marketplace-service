@@ -66,7 +66,7 @@ class OrganizationCreatedEventConsumer(OrganizationEventConsumer):
             org_id, OrganizationStatus.PUBLISH_IN_PROGRESS.value)
 
         if len(persisted_publish_in_progress_organization) == 0:
-            raise Exception("This organization is not published through publisher portal")
+            raise Exception(f"This organization  {org_id} is not published through publisher portal")
         existing_publish_in_progress_organization = OrganizationFactory.parse_organization_data_model(
             persisted_publish_in_progress_organization[0].Organization)
 
@@ -90,10 +90,10 @@ class OrganizationCreatedEventConsumer(OrganizationEventConsumer):
                 self._mark_existing_publish_in_progress_as_published(existing_publish_in_progress_organization)
 
             else:
-                raise Exception("Event data is not same as it was published through publisher portal")
+                raise Exception(f"Event data is not same as it was published through publisher portal for org_id {org_id}")
         except Exception as e:
-            print(traceback)
-            raise Exception("Error while processing org created event")
+            traceback.print_exc()
+            raise Exception(f"Error while processing org created event for org_id {org_id}")
 
 
 class OrganizationModifiedEventConsumer(OrganizationEventConsumer):

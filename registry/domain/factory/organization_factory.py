@@ -1,10 +1,9 @@
 import base64
+from datetime import datetime
 
 import common.boto_utils as boto_utils
-
-from datetime import datetime
 from common.logger import get_logger
-from registry.config import METADATA_FILE_PATH, ASSET_BUCKET, REGION_NAME
+from registry.config import ASSET_BUCKET, METADATA_FILE_PATH, REGION_NAME
 from registry.domain.models.group import Group
 from registry.domain.models.organization import Organization
 from registry.domain.models.organization_address import OrganizationAddress
@@ -143,7 +142,6 @@ class OrganizationFactory:
                 ))
         return addresses
 
-
     @staticmethod
     def parse_organization_details(items):
         orgs = []
@@ -155,11 +153,21 @@ class OrganizationFactory:
 
         return orgs
 
+    @staticmethod
+    def parse_organization_metadata_assets(assets):
+        if assets is None:
+            return None
+        for key, value in assets.items():
+            assets[key] = {
+                "ipfs_hash": value,
+                "url": ""
+            }
+        return assets
 
     @staticmethod
     def parse_organization_metadata(org_uuid, ipfs_org_metadata):
         org_id = ipfs_org_metadata.get("org_id", None)
-        org_name = ipfs_org_metadata.get("org_name", None)
+        org_name = ipfs_org_metadata.get("name", None)
         org_type = ipfs_org_metadata.get("org_type", None)
         description = ipfs_org_metadata.get("description", None)
         short_description = ""
@@ -172,11 +180,11 @@ class OrganizationFactory:
             url = description.get("url", None)
 
         contacts = ipfs_org_metadata.get("contacts", None)
-        assets = ipfs_org_metadata.get("assets", None)
+        assets = OrganizationFactory.parse_organization_metadata_assets(ipfs_org_metadata.get("assets", None))
         metadata_ipfs_hash = ipfs_org_metadata.get("metadata_ipfs_hash", None)
         owner = ""
         groups = OrganizationFactory.parse_raw_list_groups(ipfs_org_metadata.get("groups", []))
         organization = Organization(org_name, org_id, org_uuid, org_type, owner, long_description,
-                                    short_description, url, contacts, assets, metadata_ipfs_hash,"",[],groups)
+                                    short_description, url, contacts, assets, metadata_ipfs_hash, "", [], groups)
 
         return organization

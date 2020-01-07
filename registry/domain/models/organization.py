@@ -11,7 +11,8 @@ from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH
 from registry.domain.models.organization_address import OrganizationAddress
 
 logger = get_logger(__name__)
-EXCLUDE_PATHS = ["root.org_uuid", "root._Organization__duns_no", "root.owner", "root._Organization__owner_name"]
+EXCLUDE_PATHS = ["root.org_uuid", "root._Organization__duns_no", "root.owner", "root._Organization__owner_name",
+                 "root.assets['hero_image']['url']", "root.metadata_ipfs_hash"]
 
 
 class Organization:
@@ -117,7 +118,7 @@ class Organization:
 
     def validate_publish(self):
         return self.validate_approval_state() and (
-                self.metadata_ipfs_hash is not None and len(self.metadata_ipfs_hash) != 0)
+            self.metadata_ipfs_hash is not None and len(self.metadata_ipfs_hash) != 0)
 
     def publish_assets(self):
         ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
@@ -143,6 +144,8 @@ class Organization:
     def is_same_organization_as_organization_from_metadata(self, metadata_organization):
         diff = DeepDiff(self, metadata_organization, exclude_types=[OrganizationAddress],
                         exclude_paths=EXCLUDE_PATHS)
+
+        logger.info(f"DIff for metadata organization {diff}")
         if not diff:
             return True
         return False
