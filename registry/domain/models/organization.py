@@ -122,14 +122,15 @@ class Organization:
     def publish_assets(self):
         ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
         for asset_type in self.assets:
-            url = self.assets[asset_type]["url"]
-            filename = urlparse(url).path.split("/")[-1]
-            response = requests.get(url)
-            filepath = f"{ASSET_DIR}/{filename}"
-            with open(filepath, 'wb') as asset_file:
-                asset_file.write(response.content)
-            asset_ipfs_hash = ipfs_utils.write_file_in_ipfs(filepath)
-            self.assets[asset_type]["ipfs_hash"] = asset_ipfs_hash
+            if "url" in self.assets[asset_type]:
+                url = self.assets[asset_type]["url"]
+                filename = urlparse(url).path.split("/")[-1]
+                response = requests.get(url)
+                filepath = f"{ASSET_DIR}/{filename}"
+                with open(filepath, 'wb') as asset_file:
+                    asset_file.write(response.content)
+                asset_ipfs_hash = ipfs_utils.write_file_in_ipfs(filepath)
+                self.assets[asset_type]["ipfs_hash"] = asset_ipfs_hash
 
     def publish_to_ipfs(self):
         self.publish_assets()
