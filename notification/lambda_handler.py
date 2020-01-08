@@ -5,7 +5,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 from common.logger import get_logger
-
+from notification.config import EMAIL_FOR_SENDING_NOTIFICATION
 logger = get_logger(__name__)
 
 CHARSET = "UTF-8"
@@ -16,7 +16,7 @@ class NotificationType(Enum):
     SUPPORT = "support"
 
 
-SENDERS = {NotificationType.SUPPORT.value: "<no-reply@singularitynet.io>"}
+SENDERS = {NotificationType.SUPPORT.value: EMAIL_FOR_SENDING_NOTIFICATION}
 BODY_HTMLS = {NotificationType.SUPPORT.value: """<html>
 <head></head>
 <body>

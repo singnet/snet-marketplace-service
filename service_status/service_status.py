@@ -3,7 +3,7 @@ import json
 from datetime import datetime as dt
 from datetime import timedelta
 from common.utils import Utils
-from service_status.config import REGION_NAME, NOTIFICATION_ARN, SLACK_HOOK
+from service_status.config import REGION_NAME, NOTIFICATION_ARN, SLACK_HOOK, NETWORKS, NETWORK_ID
 from common.boto_utils import BotoUtils
 from common.utils import Utils
 from common.logger import get_logger
@@ -17,6 +17,7 @@ import sys
 logger = get_logger(__name__)
 boto_util = BotoUtils(region_name=REGION_NAME)
 util = Utils()
+NETWORK_NAME = NETWORKS[NETWORK_ID]["name"]
 
 
 class ServiceStatus:
@@ -135,17 +136,18 @@ class ServiceStatus:
             "recipient": recipient}
 
     def _get_slack_message(self, org_id, service_id, endpoint):
-        slack_message = f"```Alert!\n\nService {service_id} under organization {org_id} is down.\nEndpoint: {endpoint}" \
-                        f"\n\nFor any queries please email at cs-marketplace@singularitynet.io. \n\nWarmest regards," \
-                        f"\nSingularityNET Marketplace Team```"
+        slack_message = f"```Alert!\n\nService {service_id} under organization {org_id} is down for {NETWORK_NAME} " \
+                        f"network.\nEndpoint: {endpoint} \n\nFor any queries please email at " \
+                        f"cs-marketplace@singularitynet.io. \n\nWarmest regards, \nSingularityNET Marketplace Team```"
         return slack_message
 
     def _send_email_notification(self, org_id, service_id, recipient, endpoint):
         send_notification_payload = {"body": json.dumps({
             "message": f"<html><head></head><body><div><p>Hello,</p><p>Your service {service_id} under organization "
-                       f"{org_id} is down.</p><p>Endpoint: {endpoint}</p><br /> <br /><p><em>Please do not reply to "
-                       f"the email for any enquiries for any queries please email at cs-marketplace@singularitynet.io."
-                       f"</em></p><p>Warmest regards, <br />SingularityNET Marketplace Team</p></div></body></html>",
+                       f"{org_id} is down for {NETWORK_NAME} network.</p><p>Endpoint: {endpoint}</p><br /> <br /><p>"
+                       f"<em>Please do not reply to the email for any enquiries for any queries please email at "
+                       f"cs-marketplace@singularitynet.io.</em></p><p>Warmest regards, <br />SingularityNET Marketplace "
+                       f"Team</p></div></body></html>",
             "subject": f"Your service {service_id} is down.",
             "notification_type": "support",
             "recipient": recipient})}
