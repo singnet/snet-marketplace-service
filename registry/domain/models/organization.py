@@ -1,18 +1,23 @@
-import common.ipfs_util as ipfs_util
-import requests
-
 from urllib.parse import urlparse
 from uuid import uuid4
-from common.utils import json_to_file
-from registry.config import IPFS_URL, METADATA_FILE_PATH, ASSET_DIR
+
+import requests
+from deepdiff import DeepDiff
+
+import common.ipfs_util as ipfs_util
 from common.logger import get_logger
+from common.utils import json_to_file
+from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH
+from registry.domain.models.organization_address import OrganizationAddress
 
 logger = get_logger(__name__)
+EXCLUDE_PATHS = ["root.org_uuid", "root._Organization__duns_no", "root.owner", "root._Organization__owner_name",
+                 "root.assets['hero_image']['url']", "root.metadata_ipfs_hash"]
 
 
 class Organization:
-    def __init__(self, name, org_id, org_uuid, org_type, description,
-                 short_description, url, contacts, assets, metadata_ipfs_hash):
+    def __init__(self, name, org_id, org_uuid, org_type, owner, description, short_description, url, contacts, assets,
+                 metadata_ipfs_hash, duns_no, addresses, groups, owner_name=None):
         """
         assets = [
             {
@@ -24,15 +29,19 @@ class Organization:
         """
         self.name = name
         self.org_id = org_id
+        self.__owner_name = owner_name
         self.org_uuid = org_uuid
         self.org_type = org_type
+        self.owner = owner
         self.description = description
         self.short_description = short_description
         self.url = url
+        self.__duns_no = duns_no
         self.contacts = contacts
         self.assets = assets
         self.metadata_ipfs_hash = metadata_ipfs_hash
-        self.groups = []
+        self.groups = groups
+        self.__addresses = addresses
 
     def setup_id(self):
         if self.is_org_uuid_set():
@@ -51,6 +60,10 @@ class Organization:
 
     def add_all_groups(self, groups):
         self.groups.extend(groups)
+
+    def add_owner(self, owner):
+        if self.owner is None or len(self.owner) == 0:
+            self.owner = owner
 
     def to_metadata(self):
         assets = {}
@@ -79,10 +92,13 @@ class Organization:
             "description": self.description,
             "short_description": self.short_description,
             "url": self.url,
+            "duns_no": self.duns_no,
+            "owner_name": self.owner_name,
             "contacts": self.contacts,
             "assets": self.assets,
             "metadata_ipfs_hash": self.metadata_ipfs_hash,
-            "groups": [group.to_dict() for group in self.groups]
+            "groups": [group.to_dict() for group in self.groups],
+            "addresses": [address.to_dict() for address in self.addresses]
         }
 
     def is_valid_draft(self):
@@ -102,24 +118,50 @@ class Organization:
 
     def validate_publish(self):
         return self.validate_approval_state() and (
-                    self.metadata_ipfs_hash is not None and len(self.metadata_ipfs_hash) != 0)
+            self.metadata_ipfs_hash is not None and len(self.metadata_ipfs_hash) != 0)
 
     def publish_assets(self):
         ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
         for asset_type in self.assets:
-            url = self.assets[asset_type]["url"]
-            filename = urlparse(url).path.split("/")[-1]
-            response = requests.get(url)
-            filepath = f"{ASSET_DIR}/{filename}"
-            with open(filepath, 'wb') as asset_file:
-                asset_file.write(response.content)
-            asset_ipfs_hash = ipfs_utils.write_file_in_ipfs(filepath)
-            self.assets[asset_type]["ipfs_hash"] = asset_ipfs_hash
+            if "url" in self.assets[asset_type]:
+                url = self.assets[asset_type]["url"]
+                filename = urlparse(url).path.split("/")[-1]
+                response = requests.get(url)
+                filepath = f"{ASSET_DIR}/{filename}"
+                with open(filepath, 'wb') as asset_file:
+                    asset_file.write(response.content)
+                asset_ipfs_hash = ipfs_utils.write_file_in_ipfs(filepath)
+                self.assets[asset_type]["ipfs_hash"] = asset_ipfs_hash
 
-    def publish_org(self):
+    def publish_to_ipfs(self):
         self.publish_assets()
         ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
         metadata = self.to_metadata()
         filename = f"{METADATA_FILE_PATH}/{self.org_uuid}_org_metadata.json"
         json_to_file(metadata, filename)
-        self.metadata_ipfs_hash = ipfs_utils.write_file_in_ipfs(filename)
+        self.metadata_ipfs_hash = ipfs_utils.write_file_in_ipfs(filename, wrap_with_directory=False)
+
+
+    def is_major_change(self,metdata_organziation):
+        return False
+
+    def is_same_organization_as_organization_from_metadata(self, metadata_organization):
+        diff = DeepDiff(self, metadata_organization, exclude_types=[OrganizationAddress],
+                        exclude_paths=EXCLUDE_PATHS)
+
+        logger.info(f"DIff for metadata organization {diff}")
+        if not diff:
+            return True
+        return False
+
+    @property
+    def duns_no(self):
+        return self.__duns_no
+
+    @property
+    def owner_name(self):
+        return self.__owner_name
+
+    @property
+    def addresses(self):
+        return self.__addresses
