@@ -148,7 +148,7 @@ class ServiceStatus:
                        f"<em>Please do not reply to the email for any enquiries for any queries please email at "
                        f"cs-marketplace@singularitynet.io.</em></p><p>Warmest regards, <br />SingularityNET Marketplace "
                        f"Team</p></div></body></html>",
-            "subject": f"Your service {service_id} is down.",
+            "subject": f"Your service {service_id} is down for {NETWORK_NAME} network.",
             "notification_type": "support",
             "recipient": recipient})}
         boto_util.invoke_lambda(lambda_function_arn=NOTIFICATION_ARN, invocation_type="RequestResponse",
