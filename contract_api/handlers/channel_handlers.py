@@ -6,7 +6,8 @@ from aws_xray_sdk.core import patch_all
 from common.constant import StatusCode, ResponseStatus
 from common.logger import get_logger
 from common.repository import Repository
-from common.utils import generate_lambda_response, validate_dict, Utils, make_response_body
+from common.utils import generate_lambda_response, validate_dict, Utils, make_response_body, \
+    handle_exception_with_slack_notification
 from contract_api.config import NETWORKS, SLACK_HOOK, NETWORK_ID
 from contract_api.errors import Error
 from contract_api.mpe import MPE
@@ -17,7 +18,7 @@ repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
 obj_mpe = MPE(obj_repo=repo)
 utils = Utils()
 
-
+@handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
 def get_channels(event, context):
     logger.info("Received request to get channel details from user address")
     try:
@@ -44,7 +45,7 @@ def get_channels(event, context):
         cors_enabled=True
     )
 
-
+@handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
 def get_channels_for_group(event, context):
     group_id = event['pathParameters']['groupId']
     channel_id = event['pathParameters']['channelId']
@@ -53,7 +54,7 @@ def get_channels_for_group(event, context):
     return generate_lambda_response(
         200, {"status": "success", "data": response_data}, cors_enabled=True)
 
-
+@handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
 def get_channels_old_api(event, context):
     payload_dict = event.get('queryStringParameters')
     user_address = payload_dict["user_address"]
