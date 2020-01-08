@@ -68,11 +68,10 @@ class ServiceRepository(CommonRepository):
 
     def create_endpoints(self, service_row_id, org_id, service_id, endpt_data):
         insert_endpoints = "INSERT INTO service_endpoint (service_row_id, org_id, service_id, group_id, endpoint, " \
-                           "row_created, row_updated) " \
-                           "VALUES(%s, %s, %s, %s, %s, %s, %s)"
+                           "is_available, row_created, row_updated) " \
+                           "VALUES(%s, %s, %s, %s, %s, %s, %s, %s)"
         insert_endpoint_paramteres = [service_row_id, org_id, service_id, endpt_data['group_id'],
-                                      endpt_data['endpoint'],
-                                      datetime.utcnow(), datetime.utcnow()]
+                                      endpt_data['endpoint'], b'1', datetime.utcnow(), datetime.utcnow()]
         return self.connection.execute(insert_endpoints, insert_endpoint_paramteres)
 
     def create_tags(self, service_row_id, org_id, service_id, tag_name):
