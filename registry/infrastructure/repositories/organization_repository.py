@@ -134,8 +134,8 @@ class OrganizationRepository(BaseRepository):
             row_ids = []
             for org in organizations:
                 row_ids.append(org.row_id)
-                org_addresses_history = self.address_db_models_from_address_db_model_list(org.address, history=True)
-                org_group_history = self.group_db_models_from_group_db_model_list(org.groups, history=True)
+                org_addresses_history = self.clone_address_db_model_list(org.address, history=True)
+                org_group_history = self.clone_group_db_model_list(org.groups, history=True)
                 org_history.append(OrganizationHistory(
                     row_id=org.row_id,
                     name=org.name,
@@ -273,7 +273,7 @@ class OrganizationRepository(BaseRepository):
                 ))
         return address_data
 
-    def group_db_models_from_group_db_model_list(self, groups, history):
+    def clone_group_db_model_list(self, groups, history):
         group_data = []
         if history:
             for group in groups:
@@ -291,7 +291,7 @@ class OrganizationRepository(BaseRepository):
                 ))
         return group_data
 
-    def address_db_models_from_address_db_model_list(self, addresses, history):
+    def clone_address_db_model_list(self, addresses, history):
         address_data = []
         current_time = datetime.utcnow()
         if history:
@@ -314,7 +314,7 @@ class OrganizationRepository(BaseRepository):
         current_time = datetime.utcnow()
         organization = organization.Organization
         group_data = self.group_data_items_from_group_list(groups, organization.org_uuid)
-        address_data = self.address_db_models_from_address_db_model_list(organization.address, history=False)
+        address_data = self.clone_address_db_model_list(organization.address, history=False)
         organization_item = Organization(
             name=organization.name,
             org_uuid=organization.org_uuid,
