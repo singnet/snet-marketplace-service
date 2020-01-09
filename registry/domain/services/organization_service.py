@@ -1,6 +1,6 @@
 from common.boto_utils import BotoUtils
 from common.exceptions import OrganizationNotFound
-from registry.config import IPFS_URL, METADATA_FILE_PATH, REGION_NAME, ASSET_DIR
+from registry.config import REGION_NAME
 from registry.constants import OrganizationStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
@@ -57,7 +57,7 @@ class OrganizationService:
         if len(latest_orgs) == 0:
             return False
 
-        if latest_orgs[0]["status"] == "APPROVED":
+        if latest_orgs[0].status == "APPROVED":
             return True
 
         return False
@@ -85,7 +85,7 @@ class OrganizationService:
         organizations = self.org_repo.get_latest_organization(username)
         response = []
         for org_data in organizations:
-            org = {"status": org_data["status"]}
+            org = {"status": org_data.status}
             org.update(org_data["organization"].to_dict())
             response.append(org)
         return response
@@ -102,3 +102,8 @@ class OrganizationService:
                 raise Exception(f"validation failed for the group {group.to_dict()}")
         self.org_repo.add_group(groups, org_uuid, username)
         return "OK"
+
+    def get_role_for_org_member(self, org_uuid):
+        organizations = self.org_repo.get_org_using_org_id(org_uuid);
+        for organization in organizations:
+            pass

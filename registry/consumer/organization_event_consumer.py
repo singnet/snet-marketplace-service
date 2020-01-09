@@ -61,14 +61,8 @@ class OrganizationCreatedEventConsumer(OrganizationEventConsumer):
         self._process_organization_create_event(org_id, ipfs_org_metadata)
 
     def _get_existing_organization_records(self, org_id):
-        persisted_publish_in_progress_organization = self._organization_repository.get_org_with_status_using_org_id(
+        existing_publish_in_progress_organization = self._organization_repository.get_org_with_status_using_org_id(
             org_id, OrganizationStatus.PUBLISH_IN_PROGRESS.value)
-
-        if len(persisted_publish_in_progress_organization) == 0:
-            return None
-        existing_publish_in_progress_organization = OrganizationFactory.parse_organization_data_model(
-            persisted_publish_in_progress_organization[0].Organization)
-
         return existing_publish_in_progress_organization
 
     def _mark_existing_publish_in_progress_as_published(self, existing_publish_in_progress_organization):
@@ -86,18 +80,18 @@ class OrganizationCreatedEventConsumer(OrganizationEventConsumer):
 
             existing_publish_in_progress_organization = self._get_existing_organization_records(org_id)
 
-            received_organization_event = OrganizationFactory.parse_organization_metadata( ipfs_org_metadata)
+            received_organization_event = OrganizationFactory.parse_organization_metadata(ipfs_org_metadata)
 
-            if not existing_publish_in_progress_organization:
+            if len(existing_publish_in_progress_organization) == 0:
                 self._create_event_outside_publisher_portal(received_organization_event)
 
 
 
-            elif existing_publish_in_progress_organization.is_major_change(received_organization_event):
+            elif existing_publish_in_progress_organization[0].is_major_change(received_organization_event):
                 self._organization_repository.add_org_with_status(received_organization_event,
                                                                   OrganizationStatus.APPROVAL_PENDING, BLOCKCHAIN_USER)
             else:
-                self._mark_existing_publish_in_progress_as_published(existing_publish_in_progress_organization)
+                self._mark_existing_publish_in_progress_as_published(existing_publish_in_progress_organization[0])
 
         except Exception as e:
             traceback.print_exc()
@@ -111,14 +105,9 @@ class OrganizationModifiedEventConsumer(OrganizationEventConsumer):
         self._process_organization_update_event(org_id, ipfs_org_metadata)
 
     def _get_organization_with_status(self, org_id, status):
-        persisted__organization = self._organization_repository.get_org_with_status_using_org_id(
+        existing_organizations = self._organization_repository.get_org_with_status_using_org_id(
             org_id, status)
-        organization = None
-        if len(persisted__organization) > 0:
-            organization = OrganizationFactory.parse_organization_data_model(
-                persisted__organization[0].Organization)
-
-        return organization
+        return existing_organizations
 
     def _get_existing_organization_records(self, org_id):
 
@@ -179,20 +168,20 @@ class OrganizationModifiedEventConsumer(OrganizationEventConsumer):
             org_id)
         received_organization_event = OrganizationFactory.parse_organization_metadata(ipfs_org_metadata)
 
-        if existing_publish_in_progress_organization and existing_published_organization:
+        if len(existing_publish_in_progress_organization) > 0 and len(existing_published_organization) > 0:
             self._publish_in_progress_and_published_record_recieve_update_event(
-                existing_publish_in_progress_organization,
-                existing_published_organization,
+                existing_publish_in_progress_organization[0],
+                existing_published_organization[0],
                 received_organization_event)
 
 
-        elif existing_draft_organization and existing_published_organization:
-            self._draft_and_published_record_recieve_update_event(existing_draft_organization,
-                                                                  existing_published_organization,
+        elif len(existing_draft_organization) > 0 and len(existing_published_organization) > 0:
+            self._draft_and_published_record_recieve_update_event(existing_draft_organization[0],
+                                                                  existing_published_organization[0],
                                                                   received_organization_event)
 
 
-        elif not existing_published_organization:
+        elif len(existing_published_organization) == 0:
             self._update_event_outside_publisher_portal(received_organization_event)
 
         else:

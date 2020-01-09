@@ -104,3 +104,12 @@ def add_group_draft_for_org(event, context):
 
 def get_group_for_org(event, context):
     pass
+
+
+@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def get_role_for_org_member(event,context):
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    path_parameters = event["pathParameters"]
+    org_uuid = path_parameters["org_id"]
+    pass
+

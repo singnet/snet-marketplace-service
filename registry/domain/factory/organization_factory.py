@@ -4,6 +4,7 @@ from datetime import datetime
 import common.boto_utils as boto_utils
 from common.logger import get_logger
 from registry.config import ASSET_BUCKET, METADATA_FILE_PATH, REGION_NAME
+from registry.constants import OrganizationStatus
 from registry.domain.models.group import Group
 from registry.domain.models.organization import Organization
 from registry.domain.models.organization_address import OrganizationAddress
@@ -54,7 +55,7 @@ class OrganizationFactory:
             name=org_name, org_id=org_id, org_uuid=org_uuid, org_type=org_type, description=description,
             short_description=short_description, url=url, contacts=contacts, assets=assets,
             metadata_ipfs_hash=metadata_ipfs_hash, duns_no=duns_no, owner_name=owner_name, groups=groups,
-            addresses=addresses, owner="")
+            addresses=addresses,status=OrganizationStatus.APPROVAL_PENDING.value, owner="")
         organization.setup_id()
         organization.assets = extract_and_upload_assets(organization.org_uuid, payload.get("assets", {}))
         return organization
@@ -96,12 +97,12 @@ class OrganizationFactory:
         return address
 
     @staticmethod
-    def parse_organization_data_model(item):
+    def parse_organization_data_model(item, status=""):
         organization = Organization(
             item.name, item.org_id, item.org_uuid, item.type, item.owner, item.description,
             item.short_description, item.url, item.contacts, item.assets, item.metadata_ipfs_hash,
             item.duns_no, OrganizationFactory.parse_organization_address_data_model(item.address),
-            OrganizationFactory.parse_group_data_model(item.groups), item.owner_name
+            OrganizationFactory.parse_group_data_model(item.groups), status, item.owner_name
         )
         return organization
 
@@ -146,10 +147,8 @@ class OrganizationFactory:
     def parse_organization_details(items):
         orgs = []
         for item in items:
-            orgs.append({
-                "organization": OrganizationFactory.parse_organization_data_model(item.Organization),
-                "status": item.OrganizationReviewWorkflow.status
-            })
+            orgs.append(OrganizationFactory.parse_organization_data_model(item.Organization,
+                                                                          item.OrganizationReviewWorkflow.status))
 
         return orgs
 
@@ -186,6 +185,6 @@ class OrganizationFactory:
         groups = OrganizationFactory.parse_raw_list_groups(ipfs_org_metadata.get("groups", []))
 
         organization = Organization(org_name, org_id, "", org_type, owner, long_description,
-                                    short_description, url, contacts, assets, metadata_ipfs_hash, "", [], groups)
+                                    short_description, url, contacts, assets, metadata_ipfs_hash, "", [], groups,OrganizationStatus.PUBLISHED.value)
 
         return organization

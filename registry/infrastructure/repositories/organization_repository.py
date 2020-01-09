@@ -1,12 +1,11 @@
 from datetime import datetime
 
-from sqlalchemy import desc, or_, func
+from sqlalchemy import desc, func, or_
 
 from registry.constants import OrganizationStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
-from registry.infrastructure.models.models import Group, OrganizationReviewWorkflow, \
-    OrganizationHistory, OrganizationAddress, OrganizationAddressHistory, GroupHistory
-from registry.infrastructure.models.models import Organization
+from registry.infrastructure.models.models import Group, GroupHistory, Organization, OrganizationAddress, \
+    OrganizationAddressHistory, OrganizationHistory, OrganizationReviewWorkflow
 from registry.infrastructure.repositories.base_repository import BaseRepository
 
 
@@ -166,9 +165,9 @@ class OrganizationRepository(BaseRepository):
                         ))
                 for group in org.groups:
                     org_group_history.append(GroupHistory(
-                            org_row_id=group.row_id, org_uuid=group.org_uuid, id=group.id, name=group.name,
-                            payment_config=group.payment_config, payment_address=group.payment_address, status=""
-                        )
+                        org_row_id=group.row_id, org_uuid=group.org_uuid, id=group.id, name=group.name,
+                        payment_config=group.payment_config, payment_address=group.payment_address, status=""
+                    )
                     )
                 org_history.append(OrganizationHistory(
                     row_id=org.row_id,
@@ -205,7 +204,7 @@ class OrganizationRepository(BaseRepository):
     def get_published_org_for_user(self, username):
         organizations = self.session.query(Organization) \
             .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
-            .filter(OrganizationReviewWorkflow == OrganizationStatus.PUBLISHED.value)\
+            .filter(OrganizationReviewWorkflow == OrganizationStatus.PUBLISHED.value) \
             .filter(Organization.owner == username).all()
         return OrganizationFactory.parse_organization_details(organizations)
 
@@ -213,7 +212,7 @@ class OrganizationRepository(BaseRepository):
         organizations = self.session.query(
             Organization, OrganizationReviewWorkflow, func.row_number().over(
                 partition_by=Organization.org_uuid, order_by=OrganizationReviewWorkflow.updated_on).label("rn")
-        ).join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id)\
+        ).join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
             .filter(Organization.owner == username).all()
         latest_orgs = []
         for org in organizations:
@@ -357,5 +356,10 @@ class OrganizationRepository(BaseRepository):
             .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
             .filter(Organization.org_id == org_id) \
             .filter(OrganizationReviewWorkflow.status == status).all()
-        return organizations
+        return OrganizationFactory.parse_organization_details(organizations)
 
+    def get_org_using_org_id(self, org_uuid):
+        organizations = self.session.query(Organization, OrganizationReviewWorkflow) \
+            .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
+            .filter(Organization.org_uuid == org_uuid).all()
+        return OrganizationFactory.parse_organization_details(organizations)
