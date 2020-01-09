@@ -16,8 +16,9 @@ logger = get_logger(__name__)
 def add_org(event, context):
     payload = json.loads(event["body"])
     action = event["queryStringParameters"]["action"]
-    required_keys = ["org_id", "org_uuid", "org_name", "org_type", "metadata_ipfs_hash", "description",
-                     "short_description", "url", "contacts", "assets", "addresses", "duns_no"]
+    required_keys = ["org_id", "org_uuid", "org_name", "origin", "org_type", "metadata_ipfs_hash", "description",
+                     "short_description", "url", "contacts", "assets", "mail_address_same_hq_address",
+                     "addresses", "duns_no", "owner_name"]
 
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     if not validate_dict(payload, required_keys):
