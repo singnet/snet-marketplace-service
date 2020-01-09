@@ -17,7 +17,7 @@ EXCLUDE_PATHS = ["root.org_uuid", "root._Organization__duns_no", "root.owner", "
 
 class Organization:
     def __init__(self, name, org_id, org_uuid, org_type, owner, description, short_description, url, contacts, assets,
-                 metadata_ipfs_hash, duns_no, origin, addresses, groups, status, owner_name):
+                 metadata_ipfs_hash, duns_no, origin, addresses, groups, status, owner_name=None):
         """
         assets = [
             {
