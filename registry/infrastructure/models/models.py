@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, VARCHAR, ForeignKey
+from sqlalchemy import Column, ForeignKey, Integer, VARCHAR
 from sqlalchemy.dialects.mysql import JSON, TIMESTAMP
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -96,6 +96,11 @@ class OrganizationMember(Base):
     org_uuid = Column("org_uuid", VARCHAR(128))
     role = Column("role", VARCHAR(128))
     username = Column("username", VARCHAR(128))
+    address = Column("address", VARCHAR(128))
+    status = Column("status", VARCHAR(128))
+    invite_code = Column("invite_code", VARCHAR(128))
+
+
 
 
 class OrganizationAddress(Base):
@@ -130,3 +135,5 @@ class OrganizationAddressHistory(Base):
     country = Column("country", VARCHAR(64), nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False))
     updated_on = Column("updated_on", TIMESTAMP(timezone=False))
+
+

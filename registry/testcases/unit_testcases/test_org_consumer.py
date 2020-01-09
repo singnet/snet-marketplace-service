@@ -39,8 +39,8 @@ class TestOrganizationService(unittest.TestCase):
                 group_id="group_id",
                 payment_address="0x123",
                 payment_config={},
-                status=""
-            )], owner_name="Dummy Name")
+                status="",
+            )],status=OrganizationStatus.APPROVAL_PENDING.value, owner_name="Dummy Name")
 
         self.org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISH_IN_PROGRESS.value, username)
         event = {"data": {'row_id': 2, 'block_no': 6243627, 'event': 'OrganizationCreated',
@@ -109,7 +109,7 @@ class TestOrganizationService(unittest.TestCase):
                 payment_address="0x123",
                 payment_config={},
                 status=""
-            )], owner_name="Dummy Name")
+            )], status=OrganizationStatus.APPROVAL_PENDING.value,owner_name="Dummy Name")
 
         self.org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISHED.value, username)
         draft_organization = DomainOrganization(
@@ -123,7 +123,7 @@ class TestOrganizationService(unittest.TestCase):
                 payment_address="0x123",
                 payment_config={},
                 status=""
-            )], owner_name="Dummy Name")
+            )], status=OrganizationStatus.APPROVAL_PENDING.value,owner_name="Dummy Name")
 
         self.org_repo.add_org_with_status(draft_organization, OrganizationStatus.PUBLISH_IN_PROGRESS.value, username)
 

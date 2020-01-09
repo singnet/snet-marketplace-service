@@ -389,7 +389,7 @@ class TestOrganizationService(unittest.TestCase):
         self.org_repo.add_org_with_status(DomainOrganization(
             "dummy_org", "org_id", test_org_id, "organization", username,
             "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "",
-            duns_no=12345678, origin=ORIGIN, groups=[], addresses=[], owner_name="Dummy Name"),
+            duns_no=12345678, origin=ORIGIN, groups=[], addresses=[],status=OrganizationStatus.APPROVAL_PENDING.value, owner_name="Dummy Name"),
             "APPROVED", username)
         response = OrganizationService().publish_org_to_ipfs(test_org_id, username)
         self.assertEqual(response["metadata_ipfs_hash"], "Q3E12")
@@ -408,7 +408,7 @@ class TestOrganizationService(unittest.TestCase):
         organization = DomainOrganization(
             "dummy_org", "org_id", test_org_id, "organization", username,
             "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "",
-            duns_no=12345678, origin=ORIGIN, groups=[], addresses=[], owner_name="Dummy Name")
+            duns_no=12345678, origin=ORIGIN, groups=[], addresses=[], status=OrganizationStatus.APPROVAL_PENDING.value,owner_name="Dummy Name")
         organization.add_group(DomainGroup(
             name="my-group",
             group_id="group_id",
@@ -460,7 +460,7 @@ class TestOrganizationService(unittest.TestCase):
         organization = DomainOrganization(
             "dummy_org", "org_id", test_org_id, "organization", username,
             "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "",
-            duns_no=12345678, origin=ORIGIN, groups=[], addresses=[], owner_name="Dummy Name")
+            duns_no=12345678, origin=ORIGIN, groups=[], addresses=[], status=OrganizationStatus.APPROVAL_PENDING.value,owner_name="Dummy Name")
         organization.add_group(DomainGroup(
             name="my-group",
             group_id="group_id",
@@ -513,7 +513,7 @@ class TestOrganizationService(unittest.TestCase):
         organization = DomainOrganization(
             org_name, org_id, test_org_uuid, "organization", username,
             "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "QWE",
-            duns_no=12345678, origin=ORIGIN, groups=[], addresses=[], owner_name="Dummy Name")
+            duns_no=12345678, origin=ORIGIN, groups=[], addresses=[], status=OrganizationStatus.APPROVAL_PENDING.value,owner_name="Dummy Name")
         self.org_repo.add_org_with_status(organization, OrganizationStatus.APPROVED.value, username)
         OrganizationService().save_transaction_hash_for_publish_org(test_org_uuid, "0x98765", "0x123", username)
         org_db_models = self.org_repo.get_org_with_status(test_org_uuid, OrganizationStatus.PUBLISH_IN_PROGRESS.value)

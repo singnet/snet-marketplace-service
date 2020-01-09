@@ -1,12 +1,11 @@
 from datetime import datetime
 
-from sqlalchemy import desc, or_, func
+from sqlalchemy import desc, func, or_
 
 from registry.constants import OrganizationStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
-from registry.infrastructure.models.models import Group, OrganizationReviewWorkflow, \
-    OrganizationHistory, OrganizationAddress, OrganizationAddressHistory, GroupHistory
-from registry.infrastructure.models.models import Organization
+from registry.infrastructure.models.models import Group, GroupHistory, Organization, OrganizationAddress, \
+    OrganizationAddressHistory, OrganizationHistory, OrganizationReviewWorkflow
 from registry.infrastructure.repositories.base_repository import BaseRepository
 
 
@@ -362,4 +361,10 @@ class OrganizationRepository(BaseRepository):
             .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
             .filter(Organization.org_id == org_id) \
             .filter(OrganizationReviewWorkflow.status == status).all()
-        return organizations
+        return OrganizationFactory.parse_organization_details(organizations)
+
+    def get_org_using_org_id(self, org_uuid):
+        organizations = self.session.query(Organization, OrganizationReviewWorkflow) \
+            .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
+            .filter(Organization.org_uuid == org_uuid).all()
+        return OrganizationFactory.parse_organization_details(organizations)
