@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, VARCHAR, ForeignKey
+from sqlalchemy import Column, ForeignKey, Integer, VARCHAR
 from sqlalchemy.dialects.mysql import JSON, TIMESTAMP
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -19,6 +19,7 @@ class Organization(Base):
     short_description = Column("short_description", VARCHAR(1024), nullable=False)
     url = Column("url", VARCHAR(512), nullable=False)
     duns_no = Column("duns_no", VARCHAR(20), nullable=True)
+    origin = Column("origin", VARCHAR(128))
     contacts = Column("contacts", JSON, nullable=False)
     assets = Column("assets", JSON, nullable=False)
     metadata_ipfs_hash = Column("metadata_ipfs_hash", VARCHAR(255))
@@ -53,6 +54,7 @@ class OrganizationHistory(Base):
     short_description = Column("short_description", VARCHAR(1024), nullable=False)
     url = Column("url", VARCHAR(512), nullable=False)
     duns_no = Column("duns_no", VARCHAR(20), nullable=True)
+    origin = Column("origin", VARCHAR(128))
     contacts = Column("contacts", JSON, nullable=False)
     assets = Column("assets", JSON, nullable=False)
     metadata_ipfs_hash = Column("metadata_ipfs_hash", VARCHAR(255))
@@ -94,6 +96,11 @@ class OrganizationMember(Base):
     org_uuid = Column("org_uuid", VARCHAR(128))
     role = Column("role", VARCHAR(128))
     username = Column("username", VARCHAR(128))
+    address = Column("address", VARCHAR(128))
+    status = Column("status", VARCHAR(128))
+    invite_code = Column("invite_code", VARCHAR(128))
+
+
 
 
 class OrganizationAddress(Base):
@@ -128,3 +135,5 @@ class OrganizationAddressHistory(Base):
     country = Column("country", VARCHAR(64), nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False))
     updated_on = Column("updated_on", TIMESTAMP(timezone=False))
+
+

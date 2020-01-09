@@ -16,8 +16,9 @@ logger = get_logger(__name__)
 def add_org(event, context):
     payload = json.loads(event["body"])
     action = event["queryStringParameters"]["action"]
-    required_keys = ["org_id", "org_uuid", "org_name", "org_type", "metadata_ipfs_hash", "description",
-                     "short_description", "url", "contacts", "assets", "addresses", "duns_no"]
+    required_keys = ["org_id", "org_uuid", "org_name", "origin", "org_type", "metadata_ipfs_hash", "description",
+                     "short_description", "url", "contacts", "assets", "mail_address_same_hq_address",
+                     "addresses", "duns_no", "owner_name"]
 
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     if not validate_dict(payload, required_keys):
@@ -104,3 +105,12 @@ def add_group_draft_for_org(event, context):
 
 def get_group_for_org(event, context):
     pass
+
+
+@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def get_role_for_org_member(event,context):
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    path_parameters = event["pathParameters"]
+    org_uuid = path_parameters["org_id"]
+    pass
+
