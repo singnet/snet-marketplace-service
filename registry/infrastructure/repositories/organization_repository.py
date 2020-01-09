@@ -277,14 +277,14 @@ class OrganizationRepository(BaseRepository):
         group_data = []
         if history:
             for group in groups:
-                group_data.append(Group(
+                group_data.append(GroupHistory(
                     name=group.name, id=group.id, org_uuid=group.org_uuid,
                     payment_address=group.payment_address,
                     payment_config=group.payment_config, status=""
                 ))
         else:
             for group in groups:
-                group_data.append(GroupHistory(
+                group_data.append(Group(
                     name=group.name, id=group.id, org_uuid=group.org_uuid,
                     payment_address=group.payment_address,
                     payment_config=group.payment_config, status=""
