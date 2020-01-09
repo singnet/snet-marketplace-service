@@ -100,7 +100,8 @@ class Organization:
             "assets": self.assets,
             "metadata_ipfs_hash": self.metadata_ipfs_hash,
             "groups": [group.to_dict() for group in self.groups],
-            "addresses": [address.to_dict() for address in self.addresses]
+            "addresses": [address.to_dict() for address in self.addresses],
+            "status":self.status
         }
 
     def is_valid_draft(self):

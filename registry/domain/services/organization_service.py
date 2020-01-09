@@ -85,9 +85,7 @@ class OrganizationService:
         organizations = self.org_repo.get_latest_organization(username)
         response = []
         for org_data in organizations:
-            org = {"status": org_data.status}
-            org.update(org_data["organization"].to_dict())
-            response.append(org)
+            response.append(org_data.to_dict())
         return response
 
     def get_organization(self):
