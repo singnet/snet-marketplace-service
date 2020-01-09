@@ -55,7 +55,7 @@ class OrganizationFactory:
             name=org_name, org_id=org_id, org_uuid=org_uuid, org_type=org_type, description=description,
             short_description=short_description, url=url, contacts=contacts, assets=assets,
             metadata_ipfs_hash=metadata_ipfs_hash, duns_no=duns_no, owner_name=owner_name, groups=groups,
-            addresses=addresses,status=OrganizationStatus.APPROVAL_PENDING.value, owner="")
+            addresses=addresses, status="", owner="")
         organization.setup_id()
         organization.assets = extract_and_upload_assets(organization.org_uuid, payload.get("assets", {}))
         return organization
@@ -117,7 +117,8 @@ class OrganizationFactory:
     def parse_organization_workflow_data_model_list(items):
         organizations = []
         for item in items:
-            organizations.append(OrganizationFactory.parse_organization_data_model(item.Organization,item.OrganizationReviewWorkflow.status))
+            organizations.append(OrganizationFactory.parse_organization_data_model(item.Organization,
+                                                                                   item.OrganizationReviewWorkflow.status))
         return organizations
 
     @staticmethod
@@ -185,6 +186,7 @@ class OrganizationFactory:
         groups = OrganizationFactory.parse_raw_list_groups(ipfs_org_metadata.get("groups", []))
 
         organization = Organization(org_name, org_id, "", org_type, owner, long_description,
-                                    short_description, url, contacts, assets, metadata_ipfs_hash, "", [], groups,OrganizationStatus.PUBLISHED.value)
+                                    short_description, url, contacts, assets, metadata_ipfs_hash, "", [], groups,
+                                    OrganizationStatus.PUBLISHED.value)
 
         return organization
