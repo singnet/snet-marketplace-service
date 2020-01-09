@@ -97,7 +97,7 @@ class OrganizationFactory:
         return address
 
     @staticmethod
-    def parse_organization_data_model(item, status=""):
+    def parse_organization_data_model(item, status):
         organization = Organization(
             item.name, item.org_id, item.org_uuid, item.type, item.owner, item.description,
             item.short_description, item.url, item.contacts, item.assets, item.metadata_ipfs_hash,
@@ -117,7 +117,7 @@ class OrganizationFactory:
     def parse_organization_workflow_data_model_list(items):
         organizations = []
         for item in items:
-            organizations.append(OrganizationFactory.parse_organization_data_model(item.Organization))
+            organizations.append(OrganizationFactory.parse_organization_data_model(item.Organization,item.OrganizationReviewWorkflow.status))
         return organizations
 
     @staticmethod
