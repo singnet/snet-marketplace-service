@@ -17,7 +17,7 @@ EXCLUDE_PATHS = ["root.org_uuid", "root._Organization__duns_no", "root.owner", "
 
 class Organization:
     def __init__(self, name, org_id, org_uuid, org_type, owner, description, short_description, url, contacts, assets,
-                 metadata_ipfs_hash, duns_no, addresses, groups, owner_name=None):
+                 metadata_ipfs_hash, duns_no, addresses, groups, status,owner_name=None):
         """
         assets = [
             {
@@ -42,6 +42,8 @@ class Organization:
         self.metadata_ipfs_hash = metadata_ipfs_hash
         self.groups = groups
         self.__addresses = addresses
+        self.__status = status
+        self.__members = []
 
     def setup_id(self):
         if self.is_org_uuid_set():
@@ -98,7 +100,8 @@ class Organization:
             "assets": self.assets,
             "metadata_ipfs_hash": self.metadata_ipfs_hash,
             "groups": [group.to_dict() for group in self.groups],
-            "addresses": [address.to_dict() for address in self.addresses]
+            "addresses": [address.to_dict() for address in self.addresses],
+            "status":self.status
         }
 
     def is_valid_draft(self):
@@ -141,8 +144,7 @@ class Organization:
         json_to_file(metadata, filename)
         self.metadata_ipfs_hash = ipfs_utils.write_file_in_ipfs(filename, wrap_with_directory=False)
 
-
-    def is_major_change(self,metdata_organziation):
+    def is_major_change(self, metdata_organziation):
         return False
 
     def is_same_organization_as_organization_from_metadata(self, metadata_organization):
@@ -165,3 +167,39 @@ class Organization:
     @property
     def addresses(self):
         return self.__addresses
+
+    @property
+    def status(self):
+        return self.__status
+
+    @property
+    def members(self):
+        return self.__members
+
+class OrganizationMember(object):
+    def __init__(self, username, status, role, address=None, invite_code=None):
+        self.__role = role
+        self.__username = username
+        self.__status = status
+        self.__address = address
+        self.__invite_code = invite_code
+
+    @property
+    def username(self):
+        return self.__username
+
+    @property
+    def owner_name(self):
+        return self.__status
+
+    @property
+    def address(self):
+        return self.__addresses
+
+    @property
+    def role(self):
+        return self.__role
+
+    @property
+    def invite_code(self):
+        return self.__invite_code
