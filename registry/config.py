@@ -27,6 +27,7 @@ IPFS_URL = {
     'port': '80',
 
 }
+ALLOWED_ORIGIN = ["PUBLISHER_PORTAL"]
 METADATA_FILE_PATH = "/tmp"
 REGION_NAME = ""
 ASSET_BUCKET = ""

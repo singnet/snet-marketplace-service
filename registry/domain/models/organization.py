@@ -12,12 +12,12 @@ from registry.domain.models.organization_address import OrganizationAddress
 
 logger = get_logger(__name__)
 EXCLUDE_PATHS = ["root.org_uuid", "root._Organization__duns_no", "root.owner", "root._Organization__owner_name",
-                 "root.assets['hero_image']['url']", "root.metadata_ipfs_hash"]
+                 "root.assets['hero_image']['url']", "root.metadata_ipfs_hash", "root.origin"]
 
 
 class Organization:
     def __init__(self, name, org_id, org_uuid, org_type, owner, description, short_description, url, contacts, assets,
-                 metadata_ipfs_hash, duns_no, addresses, groups, status,owner_name=None):
+                 metadata_ipfs_hash, duns_no, origin, addresses, groups, status, owner_name=None):
         """
         assets = [
             {
@@ -37,6 +37,7 @@ class Organization:
         self.short_description = short_description
         self.url = url
         self.__duns_no = duns_no
+        self.__origin = origin
         self.contacts = contacts
         self.assets = assets
         self.metadata_ipfs_hash = metadata_ipfs_hash
@@ -95,13 +96,15 @@ class Organization:
             "short_description": self.short_description,
             "url": self.url,
             "duns_no": self.duns_no,
+            "owner": self.owner,
+            "origin": self.origin,
             "owner_name": self.owner_name,
             "contacts": self.contacts,
             "assets": self.assets,
             "metadata_ipfs_hash": self.metadata_ipfs_hash,
             "groups": [group.to_dict() for group in self.groups],
             "addresses": [address.to_dict() for address in self.addresses],
-            "status":self.status
+            "status": self.status
         }
 
     def is_valid_draft(self):
@@ -169,12 +172,17 @@ class Organization:
         return self.__addresses
 
     @property
+    def origin(self):
+        return self.__origin
+
+    @property
     def status(self):
         return self.__status
 
     @property
     def members(self):
         return self.__members
+
 
 class OrganizationMember(object):
     def __init__(self, username, status, role, address=None, invite_code=None):
@@ -194,7 +202,7 @@ class OrganizationMember(object):
 
     @property
     def address(self):
-        return self.__addresses
+        return self.__address
 
     @property
     def role(self):
