@@ -13,4 +13,11 @@ class CommunicationType(Enum):
 
 
 class PreferenceType(Enum):
-    ANNOUNCEMENT = "ANNOUNCEMENT"
+    FEATURE_RELEASE = "FEATURE_RELEASE"
+    WEEKLY_SUMMARY = "WEEKLY_SUMMARY"
+    COMMENTS_AND_MESSAGES = "COMMENTS_AND_MESSAGES"
+
+
+class Status(Enum):
+    ENABLED = "ENABLED"
+    DISABLED = "DISABLED"

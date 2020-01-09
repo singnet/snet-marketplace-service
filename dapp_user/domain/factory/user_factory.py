@@ -6,12 +6,15 @@ class UserFactory:
 
     @staticmethod
     def parse_raw_user_preference_data(payload):
-        communication_type = getattr(CommunicationType, payload["communication_type"].upper()).value
-        preference_type = getattr(PreferenceType, payload["preference_type"].upper()).value
-        source = getattr(SourceDApp, payload["source"].upper()).value
-        status = payload["status"]
-        opt_out_reason = payload.get("opt_out_reason", None)
-        user_preference = UserPreference(
-            communication_type=communication_type, preference_type=preference_type,
-            source=source, status=status, opt_out_reason=opt_out_reason)
-        return user_preference
+        user_preference_list = []
+        for record in payload:
+            communication_type = getattr(CommunicationType, record["communication_type"].upper()).value
+            preference_type = getattr(PreferenceType, record["preference_type"].upper()).value
+            source = getattr(SourceDApp, record["source"].upper()).value
+            status = record["status"]
+            opt_out_reason = record.get("opt_out_reason", None)
+            user_preference = UserPreference(
+                communication_type=communication_type, preference_type=preference_type,
+                source=source, status=status, opt_out_reason=opt_out_reason)
+            user_preference_list.append(user_preference)
+        return user_preference_list
