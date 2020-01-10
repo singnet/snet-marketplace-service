@@ -16,7 +16,7 @@ class TestUserService(TestCase):
         user_service = UserService()
         username = "dummy@dummy.io"
         account_id = "123"
-        nickname = "dummy_135"
+        name = "dummy_135"
         status = 1
         request_id = "id_123"
         current_time = datetime.utcnow()
@@ -24,7 +24,7 @@ class TestUserService(TestCase):
         self.repo.execute(
             "INSERT INTO user (username, account_id, name, email, email_verified, status, request_id, "
             "request_time_epoch, row_created, row_updated) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-            [username, account_id, nickname, username, status,
+            [username, account_id, name, username, 1,
              status, request_id, epoch_time, current_time, current_time]
         )
         mock_invoke_lambda.return_value = {
