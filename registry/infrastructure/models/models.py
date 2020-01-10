@@ -97,6 +97,7 @@ class OrganizationMember(Base):
     address = Column("address", VARCHAR(128))
     status = Column("status", VARCHAR(128))
     invite_code = Column("invite_code", VARCHAR(128))
+    invite_sent_at = Column("invite_sent_at", TIMESTAMP(timezone=False))
 
 
 
