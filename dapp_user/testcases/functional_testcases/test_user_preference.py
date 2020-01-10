@@ -38,7 +38,7 @@ class TestUserPreference(TestCase):
              status, request_id, epoch_time, current_time, current_time]
         )
         row_id = 1111
-        user_row_id = user_one_row_id
+        user_row_id = user_two_row_id
         preference_type = "FEATURE_RELEASE"
         communication_type = "SMS"
         source = "PUBLISHER_DAPP"
