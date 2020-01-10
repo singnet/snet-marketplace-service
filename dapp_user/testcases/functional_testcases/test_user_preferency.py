@@ -1,7 +1,7 @@
 import json
 import unittest
 from unittest import TestCase
-from dapp_user.application.handlers.user_handlers import add_or_update_user_preference
+from dapp_user.application.handlers.user_handlers import add_or_update_user_preference, get_user_preference
 from dapp_user.constant import Status
 
 
@@ -82,6 +82,26 @@ class TestUserPreference(TestCase):
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
         assert (response_body["data"] == [Status.ENABLED.value, Status.DISABLED.value])
+
+    def test_get_user_preference(self):
+        event = {
+            "requestContext": {
+                "authorizer": {
+                    "claims": {
+                        "email": "dummy_name@dummy.io"
+                    }
+                }
+            }
+        }
+        response = get_user_preference(event=event, context=None)
+        print(response)
+        assert (response["statusCode"] == 200)
+        response_body = json.loads(response["body"])
+        assert (response_body["status"] == "success")
+        assert (response_body["data"][0]["preference_type"] == "FEATURE_RELEASE")
+        assert (response_body["data"][0]["communication_type"] == "SMS")
+        assert (response_body["data"][0]["source"] == "PUBLISHER_DAPP")
+        assert (response_body["data"][0]["status"] == 0)
 
 
 if __name__ == '__main__':

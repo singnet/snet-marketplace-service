@@ -18,3 +18,17 @@ class UserFactory:
                 source=source, status=status, opt_out_reason=opt_out_reason)
             user_preference_list.append(user_preference)
         return user_preference_list
+
+    def parse_user_preference_raw_data(self, user_preference_raw_data):
+        preferences = []
+        for record in user_preference_raw_data:
+            communication_type = record["communication_type"]
+            preference_type = record["preference_type"]
+            source = record["source"]
+            status = record["status"]
+            opt_out_reason = record.get("opt_out_reason", None)
+            preference = UserPreference(
+                communication_type=communication_type, preference_type=preference_type,
+                source=source, status=status, opt_out_reason=opt_out_reason)
+            preferences.append(preference)
+        return preferences

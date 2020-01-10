@@ -28,3 +28,12 @@ class UserPreference:
     @property
     def status(self):
         return self._status
+
+    def to_dict(self):
+        return {
+            "preference_type": self._preference_type,
+            "communication_type": self.communication_type,
+            "source": self.source,
+            "opt_out_reason": self.opt_out_reason,
+            "status": self.status
+        }
