@@ -5,11 +5,14 @@ import boto3
 from schema import Schema, And
 
 from common.boto_utils import BotoUtils
+from common.logger import get_logger
 from common.utils import Utils
 from dapp_user.config import PATH_PREFIX, REGION_NAME
 
 DEFAULT_WALLET_TYPE = "METAMASK"
 CREATED_BY = "snet"
+
+logger = get_logger(__name__)
 
 
 class User:
@@ -17,7 +20,7 @@ class User:
         self.repo = obj_repo
         self.obj_utils = Utils()
         self.ssm_client = boto3.client('ssm')
-        self.boto_utils = BotoUtils(region_name=REGION_NAME)
+        self.boto_client = BotoUtils(region_name=REGION_NAME)
 
     def _set_user_data(self, user_data):
         """ Method to set user information. """
@@ -65,25 +68,6 @@ class User:
             self.repo.rollback_transaction()
             print(repr(e))
             raise e
-
-    def del_user_data(self, user_data):
-        """ Method to delete user data and wallet address.
-            Deregister User.
-        """
-        try:
-            username = user_data['authorizer']['claims']['email']
-            self.repo.begin_transaction()
-            del_user = self.repo.execute(
-                "DELETE FROM user WHERE username = %s ", [username])
-            self.repo.commit_transaction()
-            return []
-        except Exception as e:
-            self.repo.rollback_transaction()
-            print(repr(e))
-            raise e
-
-    def _unlink_wallet_from_user(self, username):
-        self.boto_utils.invoke_lambda()
 
     def get_user_profile(self, user_data):
         """

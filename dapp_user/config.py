@@ -24,5 +24,6 @@ SLACK_HOOK = {
     }
 }
 CONTRACT_API_ARN = ""
+DELETE_USER_WALLET_ARN = ""
 REGION_NAME = "us-east-2"
 NETWORK_ID = 3
