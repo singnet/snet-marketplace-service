@@ -13,7 +13,7 @@ NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys
 repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
 utils = Utils()
 logger = get_logger(__name__)
-wallet_service = WalletService(obj_repo=repo)
+wallet_service = WalletService(repo=repo)
 
 
 def create_channel(event, context):
