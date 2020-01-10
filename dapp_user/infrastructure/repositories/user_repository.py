@@ -42,3 +42,7 @@ class UserRepository:
             "SELECT status, preference_type, communication_type, source, opt_out_reason FROM user_preference WHERE user_row_id = %s "
         query_response = self._repo.execute(get_user_preference, [user_row_id])
         return query_response
+
+    def delete_user(self, username):
+        query = "DELETE FROM user WHERE username = %s "
+        self._repo.execute(query, [username])

@@ -9,8 +9,8 @@ logger = get_logger(__name__)
 
 class ChannelDAO:
 
-    def __init__(self, obj_repo):
-        self.repo = obj_repo
+    def __init__(self, repo):
+        self.repo = repo
 
     def get_channel_transactions_for_username_recipient(self, username, org_id, group_id):
         params = [username, group_id, org_id, TransactionStatus.FAILED, TransactionStatus.PENDING]
