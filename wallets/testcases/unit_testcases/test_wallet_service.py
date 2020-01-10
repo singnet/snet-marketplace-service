@@ -62,3 +62,7 @@ class TestWalletService(unittest.TestCase):
             assert True
         else:
             assert False
+
+    def tearDown(self):
+        self.repo.execute("DELETE FROM wallet")
+        self.repo.execute("DELETE FROM user_wallet")
