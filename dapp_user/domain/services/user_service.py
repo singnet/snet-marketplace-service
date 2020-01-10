@@ -27,3 +27,11 @@ class UserService:
                 response.append(Status.ENABLED.value)
 
         return response
+
+    def get_user_preference(self, username):
+        user_data = self.user_repo.get_user_data_for_given_username(username=username)
+        if len(user_data) == 0:
+            raise Exception("User is not registered.")
+        user_preference_raw_data = self.user_repo.get_user_preferences(user_row_id=user_data[0]["row_id"])
+        preferences = self.user_factory.parse_user_preference_raw_data(user_preference_raw_data)
+        return [preference.to_dict() for preference in preferences]
