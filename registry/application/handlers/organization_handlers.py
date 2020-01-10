@@ -3,11 +3,11 @@ import json
 from common.constant import StatusCode
 from common.exceptions import BadRequestException
 from common.logger import get_logger
-from common.utils import validate_dict, handle_exception_with_slack_notification, generate_lambda_response, \
+from common.utils import generate_lambda_response, handle_exception_with_slack_notification, validate_dict, \
     validate_dict_list
-from registry.config import SLACK_HOOK, NETWORK_ID
-from registry.domain.services.organization_service import OrganizationService
+from registry.config import NETWORK_ID, SLACK_HOOK
 from registry.constants import PostOrganizationActions
+from registry.application.services.organization_publisher_service import OrganizationService
 
 logger = get_logger(__name__)
 
@@ -107,9 +107,9 @@ def get_group_for_org(event, context):
 
 
 @handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
-def get_role_for_org_member(event,context):
+def get_role_for_org_member(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
     org_uuid = path_parameters["org_id"]
-    pass
-
+    response = OrganizationService().get_role_for_org_member(org_uuid)
+    return response

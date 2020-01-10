@@ -17,7 +17,7 @@ EXCLUDE_PATHS = ["root.org_uuid", "root._Organization__duns_no", "root.owner", "
 
 class Organization:
     def __init__(self, name, org_id, org_uuid, org_type, owner, description, short_description, url, contacts, assets,
-                 metadata_ipfs_hash, duns_no, addresses, groups, status,owner_name=None):
+                 metadata_ipfs_hash, duns_no, addresses, groups, status, owner_name=None):
         """
         assets = [
             {
@@ -101,7 +101,7 @@ class Organization:
             "metadata_ipfs_hash": self.metadata_ipfs_hash,
             "groups": [group.to_dict() for group in self.groups],
             "addresses": [address.to_dict() for address in self.addresses],
-            "status":self.status
+            "status": self.status
         }
 
     def is_valid_draft(self):
@@ -176,6 +176,7 @@ class Organization:
     def members(self):
         return self.__members
 
+
 class OrganizationMember(object):
     def __init__(self, username, status, role, address=None, invite_code=None):
         self.__role = role
@@ -189,12 +190,12 @@ class OrganizationMember(object):
         return self.__username
 
     @property
-    def owner_name(self):
+    def status(self):
         return self.__status
 
     @property
     def address(self):
-        return self.__addresses
+        return self.__address
 
     @property
     def role(self):
@@ -203,3 +204,25 @@ class OrganizationMember(object):
     @property
     def invite_code(self):
         return self.__invite_code
+
+    def __repr__(self):
+        return "Item(%s, %s,%s)" % (self.address, self.username, self.role)
+
+    def __eq__(self, other):
+        if isinstance(other, OrganizationMember):
+            return self.address == other.address and self.username == other.username and self.role == other.role
+        else:
+            return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash(self.__repr__())
+
+    def role_response(self):
+        return {
+            "username": self.username,
+            "address": self.address,
+            "role": self.role
+        }
