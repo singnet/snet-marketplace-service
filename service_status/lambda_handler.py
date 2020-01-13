@@ -4,7 +4,7 @@ from common.utils import Utils
 from common.utils import handle_exception_with_slack_notification
 from common.logger import get_logger
 from service_status.service_status import ServiceStatus
-from service_status.monitor_service import MonitorService
+from service_status.monitor_service import MonitorServiceCertificate
 
 obj_util = Utils()
 db = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
@@ -18,6 +18,6 @@ def request_handler(event, context):
 
 
 @handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
-def monitor_service_endpoints_certificate_expiry_handler(event, context):
-    monitor_status = MonitorService(repo=db, net_id=NETWORK_ID)
+def monitor_service_certificates_expiry_handler(event, context):
+    monitor_status = MonitorServiceCertificate(repo=db, net_id=NETWORK_ID)
     monitor_status.notify_service_contributors_for_certificate_expiration()
