@@ -19,11 +19,13 @@ class Organization(Base):
     short_description = Column("short_description", VARCHAR(1024), nullable=False)
     url = Column("url", VARCHAR(512), nullable=False)
     duns_no = Column("duns_no", VARCHAR(20), nullable=True)
+    origin = Column("origin", VARCHAR(128))
     contacts = Column("contacts", JSON, nullable=False)
     assets = Column("assets", JSON, nullable=False)
     metadata_ipfs_hash = Column("metadata_ipfs_hash", VARCHAR(255))
     groups = relationship("Group", backref='organization', lazy='joined')
     address = relationship("OrganizationAddress", backref='organization', lazy='joined')
+    members = relationship("OrganizationMember", backref='organization', lazy='joined')
 
 
 class OrganizationReviewWorkflow(Base):
@@ -53,6 +55,7 @@ class OrganizationHistory(Base):
     short_description = Column("short_description", VARCHAR(1024), nullable=False)
     url = Column("url", VARCHAR(512), nullable=False)
     duns_no = Column("duns_no", VARCHAR(20), nullable=True)
+    origin = Column("origin", VARCHAR(128))
     contacts = Column("contacts", JSON, nullable=False)
     assets = Column("assets", JSON, nullable=False)
     metadata_ipfs_hash = Column("metadata_ipfs_hash", VARCHAR(255))
@@ -90,15 +93,17 @@ class GroupHistory(Base):
 
 class OrganizationMember(Base):
     __tablename__ = "org_member"
+
     row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
-    org_uuid = Column("org_uuid", VARCHAR(128))
+    org_row_id = Column("org_row_id", Integer,
+                        ForeignKey("organization.row_id", ondelete="CASCADE", onupdate="CASCADE"),
+                        nullable=False)
+    org_uuid = Column("row_id", Integer)
     role = Column("role", VARCHAR(128))
     username = Column("username", VARCHAR(128))
     address = Column("address", VARCHAR(128))
     status = Column("status", VARCHAR(128))
     invite_code = Column("invite_code", VARCHAR(128))
-
-
 
 
 class OrganizationAddress(Base):
@@ -133,5 +138,3 @@ class OrganizationAddressHistory(Base):
     country = Column("country", VARCHAR(64), nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False))
     updated_on = Column("updated_on", TIMESTAMP(timezone=False))
-
-

@@ -3,10 +3,10 @@ from datetime import datetime
 
 import common.boto_utils as boto_utils
 from common.logger import get_logger
-from registry.config import ASSET_BUCKET, METADATA_FILE_PATH, REGION_NAME
+from registry.config import ALLOWED_ORIGIN, ASSET_BUCKET, METADATA_FILE_PATH, REGION_NAME
 from registry.constants import OrganizationStatus
 from registry.domain.models.group import Group
-from registry.domain.models.organization import Organization
+from registry.domain.models.organization import Organization, OrganizationMember
 from registry.domain.models.organization_address import OrganizationAddress
 
 logger = get_logger(__name__)
@@ -46,6 +46,9 @@ class OrganizationFactory:
         short_description = payload.get("short_description", None)
         url = payload.get("url", None)
         duns_no = payload.get("duns_no", None)
+        origin = payload.get("origin", None)
+        if origin not in ALLOWED_ORIGIN:
+            raise Exception(f"Invalid origin {origin}")
         owner_name = payload.get("owner_name", None)
         contacts = payload.get("contacts", None)
         metadata_ipfs_hash = payload.get("metadata_ipfs_hash", None)
@@ -55,7 +58,7 @@ class OrganizationFactory:
             name=org_name, org_id=org_id, org_uuid=org_uuid, org_type=org_type, description=description,
             short_description=short_description, url=url, contacts=contacts, assets=assets,
             metadata_ipfs_hash=metadata_ipfs_hash, duns_no=duns_no, owner_name=owner_name, groups=groups,
-            addresses=addresses, status="", owner="")
+            addresses=addresses, owner="", status="", origin=origin)
         organization.setup_id()
         organization.assets = extract_and_upload_assets(organization.org_uuid, payload.get("assets", {}))
         return organization
@@ -101,7 +104,7 @@ class OrganizationFactory:
         organization = Organization(
             item.name, item.org_id, item.org_uuid, item.type, item.owner, item.description,
             item.short_description, item.url, item.contacts, item.assets, item.metadata_ipfs_hash,
-            item.duns_no, OrganizationFactory.parse_organization_address_data_model(item.address),
+            item.duns_no, item.origin, OrganizationFactory.parse_organization_address_data_model(item.address),
             OrganizationFactory.parse_group_data_model(item.groups), status, item.owner_name
         )
         return organization
@@ -117,8 +120,10 @@ class OrganizationFactory:
     def parse_organization_workflow_data_model_list(items):
         organizations = []
         for item in items:
-            organizations.append(OrganizationFactory.parse_organization_data_model(item.Organization,
-                                                                                   item.OrganizationReviewWorkflow.status))
+            organizations.append(
+                OrganizationFactory.parse_organization_data_model(
+                    item.Organization, item.OrganizationReviewWorkflow.status)
+            )
         return organizations
 
     @staticmethod
@@ -186,7 +191,20 @@ class OrganizationFactory:
         groups = OrganizationFactory.parse_raw_list_groups(ipfs_org_metadata.get("groups", []))
 
         organization = Organization(org_name, org_id, "", org_type, owner, long_description,
-                                    short_description, url, contacts, assets, metadata_ipfs_hash, "", [], groups,
+                                    short_description, url, contacts, assets, metadata_ipfs_hash, "", "", [], groups,
                                     OrganizationStatus.PUBLISHED.value)
 
         return organization
+
+    @staticmethod
+    def org_member_from_db(org_member_item):
+
+        username = org_member_item.username
+        role = org_member_item.role
+        address = org_member_item.address
+        status = org_member_item.status
+        invite_code = org_member_item.invite_code
+
+        org_member = OrganizationMember(username, status, role, address, invite_code)
+
+        return org_member

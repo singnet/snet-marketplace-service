@@ -12,6 +12,8 @@ from registry.application.services.organization_publisher_service import Organiz
 from registry.infrastructure.models.models import Group, Organization, OrganizationHistory, OrganizationReviewWorkflow
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
 
+ORIGIN = "PUBLISHER_PORTAL"
+
 
 class TestOrganizationService(unittest.TestCase):
 
@@ -31,7 +33,7 @@ class TestOrganizationService(unittest.TestCase):
             "dummy_org", "org_id", test_org_id, "organization", username,
             "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {'hero_image': {
                 "ipfs_hash": 'QmagaSbQAdEtFkwc9ZQUDdYgUtXz93MPByngbx1b4cPidj/484b38d1c1fe4717ad4acab99394ea82-hero_image-20200107083215.png',
-                "url": ""}}, "Q3E12", "duns",
+                "url": ""}}, "Q3E12", "123456789", ORIGIN,
             [], [DomainGroup(
                 name="my-group",
                 group_id="group_id",
@@ -99,7 +101,8 @@ class TestOrganizationService(unittest.TestCase):
         username = "dummy@snet.io"
         organization = DomainOrganization(
             "dummy_org", "org_id", test_org_id, "organization", username,
-            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "Q3E12", "",
+            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "Q3E12",
+            "123456789", ORIGIN,
             [], [DomainGroup(
                 name="my-group",
                 group_id="group_id",
@@ -114,7 +117,7 @@ class TestOrganizationService(unittest.TestCase):
             "that is the dummy org for testcases", "that is the short description", "draft_dummy.com", [], {'hero_image': {
                 "ipfs_hash": 'QmagaSbQAdEtFkwc9ZQUDdYgUtXz93MPByngbx1b4cPidj/484b38d1c1fe4717ad4acab99394ea82-hero_image-20200107083215.png',
                 "url": ""}}, "Q3E12",
-            "", [], [DomainGroup(
+            "", ORIGIN, [], [DomainGroup(
                 name="my-group",
                 group_id="group_id",
                 payment_address="0x123",

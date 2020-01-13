@@ -5,7 +5,7 @@ from sqlalchemy import desc, func, or_
 from registry.constants import OrganizationStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.models.models import Group, GroupHistory, Organization, OrganizationAddress, \
-    OrganizationAddressHistory, OrganizationHistory, OrganizationReviewWorkflow
+    OrganizationAddressHistory, OrganizationHistory, OrganizationMember, OrganizationReviewWorkflow
 from registry.infrastructure.repositories.base_repository import BaseRepository
 
 
@@ -24,34 +24,20 @@ class OrganizationRepository(BaseRepository):
         group_data = self.group_data_items_from_group_list(groups, organization.org_uuid)
         address_data = self.address_data_items_from_address_list(addresses=organization.addresses)
         organization_item = Organization(
-            name=organization.name,
-            org_uuid=organization.org_uuid,
-            org_id=organization.org_id,
-            type=organization.org_type,
-            description=organization.description,
-            short_description=organization.short_description,
-            url=organization.url,
-            duns_no=organization.duns_no,
-            owner_name=organization.owner_name,
-            contacts=organization.contacts,
-            assets=organization.assets,
-            owner=organization.owner,
-            metadata_ipfs_hash=organization.metadata_ipfs_hash,
-            groups=group_data,
-            address=address_data
+            name=organization.name, org_uuid=organization.org_uuid, org_id=organization.org_id,
+            type=organization.org_type, description=organization.description,
+            short_description=organization.short_description, url=organization.url, duns_no=organization.duns_no,
+            origin=organization.origin, owner_name=organization.owner_name, contacts=organization.contacts,
+            assets=organization.assets, owner=organization.owner, metadata_ipfs_hash=organization.metadata_ipfs_hash,
+            groups=group_data, address=address_data
         )
         self.add_item(organization_item)
         org_row_id = organization_item.row_id
 
         self.add_item(
             OrganizationReviewWorkflow(
-                org_row_id=org_row_id,
-                status=status,
-                created_by=username,
-                updated_by=username,
-                created_on=current_time,
-                updated_on=current_time,
-                transaction_hash=transaction_hash,
+                org_row_id=org_row_id, status=status, created_by=username, updated_by=username,
+                created_on=current_time, updated_on=current_time, transaction_hash=transaction_hash,
                 wallet_address=wallet_address
             )
         )
@@ -65,6 +51,7 @@ class OrganizationRepository(BaseRepository):
         current_draft.Organization.short_description = organization.short_description
         current_draft.Organization.url = organization.url
         current_draft.Organization.duns_no = organization.duns_no
+        current_draft.Organization.origin = organization.origin
         current_draft.Organization.owner_name = organization.owner_name
         current_draft.Organization.contacts = organization.contacts
         current_draft.Organization.assets = organization.assets
@@ -77,8 +64,8 @@ class OrganizationRepository(BaseRepository):
         self.add_new_draft_groups_in_draft_org(organization.groups, current_draft, username)
 
     def delete_and_insert_organization_address(self, org_row_id, addresses):
-        self.session.query(OrganizationAddress).filter(
-            OrganizationAddress.org_row_id == org_row_id).delete(synchronize_session='fetch')
+        self.session.query(OrganizationAddress).filter(OrganizationAddress.org_row_id == org_row_id) \
+            .delete(synchronize_session='fetch')
         self.add_organization_address(addresses=addresses, org_row_id=org_row_id)
 
     def approve_org(self, org_uuid, approver):
@@ -93,17 +80,18 @@ class OrganizationRepository(BaseRepository):
         for address in addresses:
             address_data = address.to_dict()
             org_addresses.append(
-                OrganizationAddress(org_row_id=org_row_id,
-                                    address_type=address_data["address_type"],
-                                    street_address=address_data["street_address"],
-                                    apartment=address_data["apartment"],
-                                    city=address_data["city"],
-                                    pincode=address_data["pincode"],
-                                    state=address_data["state"],
-                                    country=address_data["country"],
-                                    created_on=datetime.utcnow(),
-                                    updated_on=datetime.utcnow(),
-                                    )
+                OrganizationAddress(
+                    org_row_id=org_row_id,
+                    address_type=address_data["address_type"],
+                    street_address=address_data["street_address"],
+                    apartment=address_data["apartment"],
+                    city=address_data["city"],
+                    pincode=address_data["pincode"],
+                    state=address_data["state"],
+                    country=address_data["country"],
+                    created_on=datetime.utcnow(),
+                    updated_on=datetime.utcnow(),
+                )
             )
         self.add_all_items(org_addresses)
 
@@ -146,29 +134,8 @@ class OrganizationRepository(BaseRepository):
             row_ids = []
             for org in organizations:
                 row_ids.append(org.row_id)
-                org_addresses_history = []
-                org_group_history = []
-                for address in org.address:
-                    org_addresses_history.append(
-                        OrganizationAddressHistory(
-                            row_id=address.row_id,
-                            address_type=address.address_type,
-                            street_address=address.street_address,
-                            apartment=address.apartment,
-                            city=address.city,
-                            pincode=address.pincode,
-                            state=address.state,
-                            country=address.country,
-                            updated_on=datetime.utcnow(),
-                            created_on=datetime.utcnow()
-
-                        ))
-                for group in org.groups:
-                    org_group_history.append(GroupHistory(
-                        org_row_id=group.row_id, org_uuid=group.org_uuid, id=group.id, name=group.name,
-                        payment_config=group.payment_config, payment_address=group.payment_address, status=""
-                    )
-                    )
+                org_addresses_history = self.clone_address_db_model_list(org.address, history=True)
+                org_group_history = self.clone_group_db_model_list(org.groups, history=True)
                 org_history.append(OrganizationHistory(
                     row_id=org.row_id,
                     name=org.name,
@@ -179,6 +146,7 @@ class OrganizationRepository(BaseRepository):
                     short_description=org.short_description,
                     url=org.url,
                     duns_no=org.duns_no,
+                    origin=org.origin,
                     owner_name=org.owner_name,
                     contacts=org.contacts,
                     assets=org.assets,
@@ -187,7 +155,6 @@ class OrganizationRepository(BaseRepository):
                     address=org_addresses_history,
                     groups=org_group_history
                 ))
-                org_addresses_history = None
 
             self.add_all_items(org_history)
             self.session.query(Organization).filter(Organization.row_id.in_(row_ids)) \
@@ -209,10 +176,10 @@ class OrganizationRepository(BaseRepository):
         return OrganizationFactory.parse_organization_details(organizations)
 
     def get_latest_organization(self, username):
-        organizations = self.session.query(
-            Organization, OrganizationReviewWorkflow, func.row_number().over(
-                partition_by=Organization.org_uuid, order_by=OrganizationReviewWorkflow.updated_on).label("rn")
-        ).join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
+        organizations = self.session.query(Organization, OrganizationReviewWorkflow, func.row_number().over(
+            partition_by=Organization.org_uuid, order_by=OrganizationReviewWorkflow.updated_on).label("rn")
+                                           ).join(OrganizationReviewWorkflow,
+                                                  Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
             .filter(Organization.owner == username).all()
         latest_orgs = []
         for org in organizations:
@@ -307,25 +274,64 @@ class OrganizationRepository(BaseRepository):
                 ))
         return address_data
 
+    def clone_group_db_model_list(self, groups, history):
+        group_data = []
+        if history:
+            for group in groups:
+                group_data.append(GroupHistory(
+                    name=group.name, id=group.id, org_uuid=group.org_uuid,
+                    payment_address=group.payment_address,
+                    payment_config=group.payment_config, status=""
+                ))
+        else:
+            for group in groups:
+                group_data.append(Group(
+                    name=group.name, id=group.id, org_uuid=group.org_uuid,
+                    payment_address=group.payment_address,
+                    payment_config=group.payment_config, status=""
+                ))
+        return group_data
+
+    def clone_address_db_model_list(self, addresses, history):
+        address_data = []
+        current_time = datetime.utcnow()
+        if history:
+            for address in addresses:
+                address_data.append(OrganizationAddressHistory(
+                    address_type=address.address_type, street_address=address.address_type, apartment=address.apartment,
+                    city=address.city, pincode=address.pincode, state=address.state,
+                    country=address.country, created_on=current_time, updated_on=current_time
+                ))
+        else:
+            for address in addresses:
+                address_data.append(OrganizationAddress(
+                    address_type=address.address_type, street_address=address.address_type, apartment=address.apartment,
+                    city=address.city, pincode=address.pincode, state=address.state,
+                    country=address.country, created_on=current_time, updated_on=current_time
+                ))
+        return address_data
+
     def add_new_draft_groups_in_org(self, groups, organization, username):
         current_time = datetime.utcnow()
         organization = organization.Organization
         group_data = self.group_data_items_from_group_list(groups, organization.org_uuid)
-
+        address_data = self.clone_address_db_model_list(organization.address, history=False)
         organization_item = Organization(
             name=organization.name,
             org_uuid=organization.org_uuid,
             org_id=organization.org_id,
             type=organization.type,
             owner=organization.owner,
+            duns_no=organization.duns_no,
+            owner_name=organization.owner_name,
             description=organization.description,
             short_description=organization.short_description,
             url=organization.url,
-            owner_name=organization.owner_name,
             contacts=organization.contacts,
             assets=organization.assets,
             metadata_ipfs_hash=organization.metadata_ipfs_hash,
-            groups=group_data
+            groups=group_data,
+            address=address_data
         )
         self.add_item(organization_item)
         org_row_id = organization_item.row_id
@@ -363,3 +369,11 @@ class OrganizationRepository(BaseRepository):
             .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
             .filter(Organization.org_uuid == org_uuid).all()
         return OrganizationFactory.parse_organization_details(organizations)
+
+    def get_member_details_for_org(self, username, org_uuid):
+        org_member = self.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == org_uuid).filter(
+            OrganizationMember.username == username).all()
+        if len(org_member) > 0:
+            return OrganizationFactory.org_member_from_db(org_member[0])
+
+        return None
