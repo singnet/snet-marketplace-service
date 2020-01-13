@@ -22,7 +22,6 @@ class TestMonitorService(TestCase):
         days_left_for_expiration = 10
         response = self.monitor_service_certificate._get_certificate_expiration_slack_notification_message(
             org_id=org_id, service_id=service_id, endpoint=endpoint, days_left_for_expiration=days_left_for_expiration)
-        print(response)
         assert (response == "```Alert!\n\nCertificates for service test_service_id under organization test_org_id for "
                             "the TEST network are about to expire in 10 days.\nEndpoint: https://dummyendpoint.com \n\n"
                             "For any queries please email at cs-marketplace@singularitynet.io. \n\nWarmest regards, \n"
@@ -58,7 +57,3 @@ class TestMonitorService(TestCase):
         endpoint = "127.0.0.1:9999"
         response = MonitorService()._valid_url(url=endpoint)
         assert (response == False)
-
-
-if __name__ == '__main__':
-    unittest.main()
