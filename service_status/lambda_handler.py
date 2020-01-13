@@ -21,3 +21,4 @@ def request_handler(event, context):
 def monitor_service_certificates_expiry_handler(event, context):
     monitor_status = MonitorServiceCertificate(repo=db, net_id=NETWORK_ID)
     monitor_status.notify_service_contributors_for_certificate_expiration()
+    return "success"
