@@ -10,7 +10,7 @@ from unittest.mock import patch
 NETWORK_NAME = NETWORKS[NETWORK_ID]["name"]
 
 
-class TestMonitorService(TestCase):
+class TestMonitorServiceCertificatesExpiry(TestCase):
     def setUp(self):
         self.monitor_service_certificate = MonitorServiceCertificate(
             repo=Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS), net_id=NETWORK_ID)
