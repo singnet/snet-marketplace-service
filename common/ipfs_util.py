@@ -15,17 +15,19 @@ class IPFSUtil(object):
         f = io.BytesIO(ipfs_data)
         return f
 
-    def write_file_in_ipfs(self, filepath):
+    def write_file_in_ipfs(self, filepath, wrap_with_directory=True):
         """
             push a file to ipfs given its path
         """
         try:
             with open(filepath, 'r+b') as file:
                 result = self.ipfs_conn.add(
-                    file, pin=True, wrap_with_directory=True)
-                return result[1]['Hash'] + '/' + result[0]['Name']
+                    file, pin=True, wrap_with_directory=wrap_with_directory)
+                if wrap_with_directory:
+                    return result[1]['Hash'] + '/' + result[0]['Name']
+                return result['Hash']
         except Exception as err:
-            logging.error("File error ", err)
+            logging.error("File error ", repr(err))
         return ''
 
     def read_file_from_ipfs(self, ipfs_hash):

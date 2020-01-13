@@ -7,7 +7,8 @@ import traceback
 import requests
 import web3
 from web3 import Web3
-from common.constant import COGS_TO_AGI
+from common.constant import COGS_TO_AGI, StatusCode
+from common.exceptions import OrganizationNotFound
 
 IGNORED_LIST = ['row_id', 'row_created', 'row_updated']
 
@@ -22,7 +23,7 @@ class Utils:
     def report_slack(self, type, slack_msg, SLACK_HOOK):
         url = SLACK_HOOK['hostname'] + SLACK_HOOK['path']
         prefix = self.msg_type.get(type, "")
-        slack_channel = SLACK_HOOK.get("channel","contract-index-alerts")
+        slack_channel = SLACK_HOOK.get("channel", "contract-index-alerts")
         print(url)
         payload = {"channel": f"#{slack_channel}",
                    "username": "webhookbot",
@@ -84,6 +85,13 @@ def make_response(status_code, body, header=None):
 def validate_dict(data_dict, required_keys):
     for key in required_keys:
         if key not in data_dict:
+            return False
+    return True
+
+
+def validate_dict_list(data_list, required_keys):
+    for data in data_list:
+        if not validate_dict(data, required_keys):
             return False
     return True
 
@@ -159,6 +167,12 @@ def handle_exception_with_slack_notification(*decorator_args, **decorator_kwargs
                     message=format_error_message(
                         status="failed", error=repr(e), payload=payload, net_id=NETWORK_ID, handler=handler_name),
                     cors_enabled=True)
+            except OrganizationNotFound as e:
+                logger.exception(f"Organization no found {repr(e)}")
+                return generate_lambda_response(
+                    StatusCode.INTERNAL_SERVER_ERROR,
+                    {"status": "success", "data": "", "error": {"code": "", "message": "ORG_NOT_FOUND"}}, cors_enabled=True
+                )
             except Exception as e:
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 slack_msg = f"\n```Error Reported !! \n" \
@@ -182,3 +196,8 @@ def handle_exception_with_slack_notification(*decorator_args, **decorator_kwargs
         return wrapper
 
     return decorator
+
+
+def json_to_file(payload, filename):
+    with open(filename, 'w') as f:
+        f.write(json.dumps(payload, indent=4))
