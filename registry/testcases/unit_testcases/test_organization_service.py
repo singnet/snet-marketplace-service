@@ -5,7 +5,6 @@ from uuid import uuid4
 from common.utils import validate_dict
 from registry.application.services.organization_publisher_service import OrganizationService, org_repo
 from registry.constants import OrganizationStatus
-from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.group import Group as DomainGroup
 from registry.domain.models.organization import Organization as DomainOrganization
 from registry.infrastructure.models.models import Group, Organization, OrganizationAddress, OrganizationHistory, \
