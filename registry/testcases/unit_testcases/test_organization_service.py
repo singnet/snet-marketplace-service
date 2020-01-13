@@ -1,16 +1,14 @@
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 from uuid import uuid4
 
-from sqlalchemy import func
-
 from common.utils import validate_dict
+from registry.application.services.organization_publisher_service import OrganizationService
 from registry.constants import OrganizationStatus
-from registry.domain.services.organization_service import OrganizationService
-from registry.domain.models.organization import Organization as DomainOrganization
 from registry.domain.models.group import Group as DomainGroup
-from registry.infrastructure.models.models import Organization, OrganizationReviewWorkflow, OrganizationHistory, Group, \
-    OrganizationAddress
+from registry.domain.models.organization import Organization as DomainOrganization
+from registry.infrastructure.models.models import Group, Organization, OrganizationAddress, OrganizationHistory, \
+    OrganizationReviewWorkflow
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
 
 ORIGIN = "PUBLISHER_PORTAL"
@@ -27,8 +25,9 @@ class TestOrganizationService(unittest.TestCase):
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock(return_value="Q3E12")))
     def test_on_boarding(self, mock_boto, mock_ipfs):
-        org_service = OrganizationService()
+
         username = "dummy@snet.io"
+        org_service = OrganizationService("", username)
         payload = {
             "org_id": "dummy_is_dummy",
             "org_uuid": "",
@@ -66,11 +65,12 @@ class TestOrganizationService(unittest.TestCase):
         }
         if not validate_dict(payload, ORG_PAYLOAD_REQUIRED_KEYS):
             raise Exception("Testcase payload is invalid")
-        response_org = org_service.add_organization_draft(payload, username)
+        response_org = org_service.add_organization_draft(payload)
         test_org_uuid = response_org["org_uuid"]
+        org_service = OrganizationService(test_org_uuid, username)
         test_org_id = response_org["org_id"]
         payload["org_uuid"] = test_org_uuid
-        org_service.submit_org_for_approval(payload, username)
+        org_service.submit_org_for_approval(payload)
         self.org_repo.approve_org(test_org_uuid, username)
 
         payload = {
@@ -148,7 +148,8 @@ class TestOrganizationService(unittest.TestCase):
         }
         if not validate_dict(payload, ORG_PAYLOAD_REQUIRED_KEYS):
             raise Exception("Testcase payload is invalid")
-        response_org = OrganizationService().add_organization_draft(payload, username)
+
+        response_org = OrganizationService(test_org_uuid, username).add_organization_draft(payload)
         orgs = self.org_repo.get_latest_org_from_org_uuid(test_org_uuid)
         if len(orgs) != 1:
             assert False
@@ -241,7 +242,9 @@ class TestOrganizationService(unittest.TestCase):
         }
         if not validate_dict(payload, ORG_PAYLOAD_REQUIRED_KEYS):
             raise Exception("Testcase payload is invalid")
-        response_org = OrganizationService().add_organization_draft(payload, username)
+        response_org = OrganizationService("", username).add_organization_draft(payload)
+        username = "pratik@dummy.com"
+        response_org = OrganizationService("", username).add_organization_draft(payload)
         test_org_id = response_org["org_uuid"]
         orgs = self.org_repo.get_organization_draft(test_org_id)
         groups = self.org_repo.session.query(Group).filter(Group.org_uuid == test_org_id).all()
@@ -308,7 +311,9 @@ class TestOrganizationService(unittest.TestCase):
         }
         if not validate_dict(payload, ORG_PAYLOAD_REQUIRED_KEYS):
             raise Exception("Testcase payload is invalid")
-        OrganizationService().add_organization_draft(payload, username)
+        OrganizationService(test_org_id, username).add_organization_draft(payload)
+        username = "dummy@dummy.com"
+        OrganizationService(test_org_id, username).add_organization_draft(payload)
         orgs = self.org_repo.get_organization_draft(test_org_id)
         if len(orgs) == 0:
             assert False
@@ -346,11 +351,12 @@ class TestOrganizationService(unittest.TestCase):
         username = "pratik@dummy.com"
         if not validate_dict(payload, ORG_PAYLOAD_REQUIRED_KEYS):
             raise Exception("Testcase payload is invalid")
-        self.assertRaises(Exception, OrganizationService().add_organization_draft, payload, username)
+        self.assertRaises(Exception, OrganizationService("", username).add_organization_draft, payload)
+        self.assertRaises(Exception, OrganizationService("", username).add_organization_draft, payload)
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     def test_submit_org_for_approval(self, ipfs_mock):
-        org_service = OrganizationService()
+
         payload = {
             "org_id": "",
             "org_uuid": "",
@@ -369,18 +375,20 @@ class TestOrganizationService(unittest.TestCase):
             "addresses": []
         }
         username = "pratik@dummy.com"
+        org_service = OrganizationService("", username)
         if not validate_dict(payload, ORG_PAYLOAD_REQUIRED_KEYS):
             raise Exception("Testcase payload is invalid")
-        response_org = org_service.add_organization_draft(payload, username)
+        response_org = org_service.add_organization_draft(payload)
         test_org_id = response_org["org_uuid"]
         payload["org_uuid"] = test_org_id
-        org_service.submit_org_for_approval(payload, "dummy@snet.io")
+        org_service = OrganizationService(test_org_id,username)
+        org_service.submit_org_for_approval(payload)
 
         orgs = self.org_repo.get_org_with_status(test_org_id, "APPROVAL_PENDING")
         if len(orgs) == 0:
             assert False
         else:
-            self.assertEqual(orgs[0].OrganizationReviewWorkflow.updated_by, "dummy@snet.io")
+            self.assertEqual(orgs[0].OrganizationReviewWorkflow.updated_by, "pratik@dummy.com")
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     def test_publish_org_ipfs(self, ipfs_mock):
@@ -389,9 +397,10 @@ class TestOrganizationService(unittest.TestCase):
         self.org_repo.add_org_with_status(DomainOrganization(
             "dummy_org", "org_id", test_org_id, "organization", username,
             "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "",
-            duns_no=12345678, origin=ORIGIN, groups=[], addresses=[],status=OrganizationStatus.APPROVAL_PENDING.value, owner_name="Dummy Name"),
+            duns_no=12345678, origin=ORIGIN, groups=[], addresses=[], status=OrganizationStatus.APPROVAL_PENDING.value,
+            owner_name="Dummy Name"),
             "APPROVED", username)
-        response = OrganizationService().publish_org_to_ipfs(test_org_id, username)
+        response = OrganizationService(test_org_id, username).publish_org_to_ipfs()
         self.assertEqual(response["metadata_ipfs_hash"], "Q3E12")
 
         orgs = self.org_repo.get_org_with_status(test_org_id, "APPROVED")
@@ -408,7 +417,8 @@ class TestOrganizationService(unittest.TestCase):
         organization = DomainOrganization(
             "dummy_org", "org_id", test_org_id, "organization", username,
             "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "",
-            duns_no=12345678, origin=ORIGIN, groups=[], addresses=[], status=OrganizationStatus.APPROVAL_PENDING.value,owner_name="Dummy Name")
+            duns_no=12345678, origin=ORIGIN, groups=[], addresses=[], status=OrganizationStatus.APPROVAL_PENDING.value,
+            owner_name="Dummy Name")
         organization.add_group(DomainGroup(
             name="my-group",
             group_id="group_id",
@@ -451,7 +461,7 @@ class TestOrganizationService(unittest.TestCase):
                 }
             }
         ]
-        OrganizationService().add_group(payload, test_org_id, username)
+        OrganizationService(test_org_id, username).add_group(payload)
 
     def test_add_group_two(self):
         """ adding new group without existing draft """
@@ -460,7 +470,8 @@ class TestOrganizationService(unittest.TestCase):
         organization = DomainOrganization(
             "dummy_org", "org_id", test_org_id, "organization", username,
             "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "",
-            duns_no=12345678, origin=ORIGIN, groups=[], addresses=[], status=OrganizationStatus.APPROVAL_PENDING.value,owner_name="Dummy Name")
+            duns_no=12345678, origin=ORIGIN, groups=[], addresses=[], status=OrganizationStatus.APPROVAL_PENDING.value,
+            owner_name="Dummy Name")
         organization.add_group(DomainGroup(
             name="my-group",
             group_id="group_id",
@@ -503,7 +514,7 @@ class TestOrganizationService(unittest.TestCase):
                 }
             }
         ]
-        OrganizationService().add_group(payload, test_org_id, username)
+        OrganizationService(test_org_id, username).add_group(payload)
 
     def test_save_transaction(self):
         test_org_uuid = uuid4().hex
@@ -513,9 +524,10 @@ class TestOrganizationService(unittest.TestCase):
         organization = DomainOrganization(
             org_name, org_id, test_org_uuid, "organization", username,
             "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "QWE",
-            duns_no=12345678, origin=ORIGIN, groups=[], addresses=[], status=OrganizationStatus.APPROVAL_PENDING.value,owner_name="Dummy Name")
+            duns_no=12345678, origin=ORIGIN, groups=[], addresses=[], status=OrganizationStatus.APPROVAL_PENDING.value,
+            owner_name="Dummy Name")
         self.org_repo.add_org_with_status(organization, OrganizationStatus.APPROVED.value, username)
-        OrganizationService().save_transaction_hash_for_publish_org(test_org_uuid, "0x98765", "0x123", username)
+        OrganizationService(test_org_uuid, username).save_transaction_hash_for_publish_org("0x98765", "0x123")
         org_db_models = self.org_repo.get_org_with_status(test_org_uuid, OrganizationStatus.PUBLISH_IN_PROGRESS.value)
         if len(org_db_models) == 0:
             assert False

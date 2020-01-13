@@ -197,7 +197,7 @@ class OrganizationMember(object):
         return self.__username
 
     @property
-    def owner_name(self):
+    def status(self):
         return self.__status
 
     @property
@@ -211,3 +211,25 @@ class OrganizationMember(object):
     @property
     def invite_code(self):
         return self.__invite_code
+
+    def __repr__(self):
+        return "Item(%s, %s,%s)" % (self.address, self.username, self.role)
+
+    def __eq__(self, other):
+        if isinstance(other, OrganizationMember):
+            return self.address == other.address and self.username == other.username and self.role == other.role
+        else:
+            return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash(self.__repr__())
+
+    def role_response(self):
+        return {
+            "username": self.username,
+            "address": self.address,
+            "role": self.role
+        }

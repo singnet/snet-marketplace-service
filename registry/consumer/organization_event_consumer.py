@@ -73,7 +73,8 @@ class OrganizationCreatedEventConsumer(OrganizationEventConsumer):
 
     def _create_event_outside_publisher_portal(self, received_organization_event):
         self._organization_repository.add_org_with_status(received_organization_event,
-                                                          OrganizationStatus.APPROVAL_PENDING, BLOCKCHAIN_USER)
+                                                          OrganizationStatus.PUBLISHED_UNAPPROVED.value,
+                                                          BLOCKCHAIN_USER)
 
     def _process_organization_create_event(self, org_id, ipfs_org_metadata):
         try:
