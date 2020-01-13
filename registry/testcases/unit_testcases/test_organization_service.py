@@ -3,13 +3,12 @@ from unittest.mock import Mock, patch
 from uuid import uuid4
 
 from common.utils import validate_dict
-from registry.application.services.organization_publisher_service import OrganizationService
+from registry.application.services.organization_publisher_service import OrganizationService, org_repo
 from registry.constants import OrganizationStatus
 from registry.domain.models.group import Group as DomainGroup
 from registry.domain.models.organization import Organization as DomainOrganization
 from registry.infrastructure.models.models import Group, Organization, OrganizationAddress, OrganizationHistory, \
-    OrganizationReviewWorkflow
-from registry.infrastructure.repositories.organization_repository import OrganizationRepository
+    OrganizationReviewWorkflow, GroupHistory, OrganizationMember
 
 ORIGIN = "PUBLISHER_PORTAL"
 ORG_PAYLOAD_REQUIRED_KEYS = ["org_id", "org_uuid", "org_name", "origin", "org_type", "metadata_ipfs_hash",
@@ -20,7 +19,7 @@ ORG_PAYLOAD_REQUIRED_KEYS = ["org_id", "org_uuid", "org_name", "origin", "org_ty
 class TestOrganizationService(unittest.TestCase):
 
     def setUp(self):
-        self.org_repo = OrganizationRepository()
+        self.org_repo = org_repo
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock(return_value="Q3E12")))
@@ -381,7 +380,7 @@ class TestOrganizationService(unittest.TestCase):
         response_org = org_service.add_organization_draft(payload)
         test_org_id = response_org["org_uuid"]
         payload["org_uuid"] = test_org_id
-        org_service = OrganizationService(test_org_id,username)
+        org_service = OrganizationService(test_org_id, username)
         org_service.submit_org_for_approval(payload)
 
         orgs = self.org_repo.get_org_with_status(test_org_id, "APPROVAL_PENDING")
@@ -542,4 +541,6 @@ class TestOrganizationService(unittest.TestCase):
         self.org_repo.session.query(OrganizationHistory).delete()
         self.org_repo.session.query(OrganizationAddress).delete()
         self.org_repo.session.query(Group).delete()
+        self.org_repo.session.query(GroupHistory).delete()
+        self.org_repo.session.query(OrganizationMember).delete()
         self.org_repo.session.commit()

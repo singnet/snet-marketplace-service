@@ -21,9 +21,9 @@ class OrganizationService(object):
     """
     We have three actions
 
-    DRFAT add_organization_draft
+    DRAFT add_organization_draft
     SUBMIT submit_org_for_approval
-    PUBLLISH publish_org_to_ipfs,save_transaction_hash_for_publish_org
+    PUBLISH publish_org_to_ipfs,save_transaction_hash_for_publish_org
 
 
 
@@ -130,16 +130,10 @@ class OrganizationService(object):
 
     @secured(action=Action.READ)
     def get_role_for_org_member(self):
-
-        print(22222222)
-        organizations = org_repo.get_org_using_org_id(self.org_uuid);
+        organizations = org_repo.get_org_using_org_id(self.org_uuid)
         members = set()
         for organization in organizations:
             members.add(organization.members)
 
         response = [member.role_response() for member in members]
         return response
-
-
-if __name__ == '__main__':
-    OrganizationService("", "nn").get_role_for_org_member()
