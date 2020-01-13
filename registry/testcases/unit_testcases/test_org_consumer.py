@@ -18,8 +18,7 @@ ORIGIN = "PUBLISHER_PORTAL"
 class TestOrganizationService(unittest.TestCase):
 
     def setUp(self):
-        self.org_service = OrganizationService()
-        org_repo = OrganizationRepository()
+        self.org_repo = OrganizationRepository()
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
