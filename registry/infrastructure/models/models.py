@@ -98,7 +98,7 @@ class OrganizationMember(Base):
     org_row_id = Column("org_row_id", Integer,
                         ForeignKey("organization.row_id", ondelete="CASCADE", onupdate="CASCADE"),
                         nullable=False)
-    org_uuid = Column("row_id", Integer)
+    org_uuid = Column("org_uuid", Integer)
     role = Column("role", VARCHAR(128))
     username = Column("username", VARCHAR(128))
     address = Column("address", VARCHAR(128))
