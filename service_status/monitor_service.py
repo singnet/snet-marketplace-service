@@ -22,7 +22,7 @@ CERT_EXP_EMAIL_NOTIFICATION_MSG = \
     "Team</p></div></body></html>"
 CERT_EXP_EMAIL_NOTIFICATION_SUBJ = "Certificates are about to expire for service %s for %s network."
 CERT_EXP_SLACK_NOTIFICATION_MSG = \
-    "Alert!\n\nCertificates for service %s under organization %s for the %s network are about to expire in %s days.\n" \
+    "```Alert!\n\nCertificates for service %s under organization %s for the %s network are about to expire in %s days.\n" \
     "Endpoint: %s \n\nFor any queries please email at cs-marketplace@singularitynet.io. \n\nWarmest regards, " \
     "\nSingularityNET Marketplace Team```"
 CERTIFICATION_EXPIRATION_THRESHOLD = 30
@@ -63,6 +63,7 @@ class MonitorService:
         search_count = re.subn(self.rex_for_pb_ip, "", url)[1]
         if search_count == 0:
             return True
+        return False
 
     @staticmethod
     def _send_slack_notification(slack_message):
@@ -148,7 +149,7 @@ class MonitorServiceCertificate(MonitorService):
 
     @staticmethod
     def _get_certificate_expiration_slack_notification_message(org_id, service_id, endpoint, days_left_for_expiration):
-        return CERT_EXP_EMAIL_NOTIFICATION_MSG % (service_id, org_id, NETWORK_NAME, days_left_for_expiration, endpoint)
+        return CERT_EXP_SLACK_NOTIFICATION_MSG % (service_id, org_id, NETWORK_NAME, days_left_for_expiration, endpoint)
 
 
 class MonitorServiceHealth(MonitorService):
