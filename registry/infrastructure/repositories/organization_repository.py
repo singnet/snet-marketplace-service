@@ -5,7 +5,7 @@ from sqlalchemy import desc, func, or_
 from registry.constants import OrganizationStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.models.models import Group, GroupHistory, Organization, OrganizationAddress, \
-    OrganizationAddressHistory, OrganizationHistory, OrganizationReviewWorkflow
+    OrganizationAddressHistory, OrganizationHistory, OrganizationMember, OrganizationReviewWorkflow
 from registry.infrastructure.repositories.base_repository import BaseRepository
 
 
@@ -64,7 +64,7 @@ class OrganizationRepository(BaseRepository):
         self.add_new_draft_groups_in_draft_org(organization.groups, current_draft, username)
 
     def delete_and_insert_organization_address(self, org_row_id, addresses):
-        self.session.query(OrganizationAddress).filter(OrganizationAddress.org_row_id == org_row_id)\
+        self.session.query(OrganizationAddress).filter(OrganizationAddress.org_row_id == org_row_id) \
             .delete(synchronize_session='fetch')
         self.add_organization_address(addresses=addresses, org_row_id=org_row_id)
 
@@ -177,8 +177,9 @@ class OrganizationRepository(BaseRepository):
 
     def get_latest_organization(self, username):
         organizations = self.session.query(Organization, OrganizationReviewWorkflow, func.row_number().over(
-                partition_by=Organization.org_uuid, order_by=OrganizationReviewWorkflow.updated_on).label("rn")
-        ).join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
+            partition_by=Organization.org_uuid, order_by=OrganizationReviewWorkflow.updated_on).label("rn")
+                                           ).join(OrganizationReviewWorkflow,
+                                                  Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
             .filter(Organization.owner == username).all()
         latest_orgs = []
         for org in organizations:
@@ -368,3 +369,11 @@ class OrganizationRepository(BaseRepository):
             .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
             .filter(Organization.org_uuid == org_uuid).all()
         return OrganizationFactory.parse_organization_details(organizations)
+
+    def get_member_details_for_org(self, username, org_uuid):
+        org_member = self.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == org_uuid).filter(
+            OrganizationMember.username == username).all()
+        if len(org_member) > 0:
+            return OrganizationFactory.org_member_from_db(org_member[0])
+
+        return None

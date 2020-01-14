@@ -10,6 +10,7 @@ engine = create_engine(f"mysql+pymysql://{NETWORKS[NETWORK_ID]['db']['DB_USER']}
 Session = sessionmaker(bind=engine)
 
 
+
 class BaseRepository:
 
     def __init__(self):

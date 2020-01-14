@@ -3,10 +3,10 @@ from datetime import datetime
 
 import common.boto_utils as boto_utils
 from common.logger import get_logger
-from registry.config import ASSET_BUCKET, METADATA_FILE_PATH, REGION_NAME, ALLOWED_ORIGIN
+from registry.config import ALLOWED_ORIGIN, ASSET_BUCKET, METADATA_FILE_PATH, REGION_NAME
 from registry.constants import OrganizationStatus
 from registry.domain.models.group import Group
-from registry.domain.models.organization import Organization
+from registry.domain.models.organization import Organization, OrganizationMember
 from registry.domain.models.organization_address import OrganizationAddress
 
 logger = get_logger(__name__)
@@ -195,3 +195,16 @@ class OrganizationFactory:
                                     OrganizationStatus.PUBLISHED.value)
 
         return organization
+
+    @staticmethod
+    def org_member_from_db(org_member_item):
+
+        username = org_member_item.username
+        role = org_member_item.role
+        address = org_member_item.address
+        status = org_member_item.status
+        invite_code = org_member_item.invite_code
+
+        org_member = OrganizationMember(username, status, role, address, invite_code)
+
+        return org_member
