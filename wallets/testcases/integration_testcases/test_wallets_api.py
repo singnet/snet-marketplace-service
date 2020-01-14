@@ -2,16 +2,20 @@ import json
 import unittest
 from unittest.mock import patch
 
+from common.repository import Repository
 from wallets import lambda_handler
+from wallets.config import NETWORKS, NETWORK_ID
 
 
 class TestWalletAPI(unittest.TestCase):
     def setUp(self):
-        pass
+        self.NETWORKS_NAME = dict((NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
+        self.repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
 
     @patch("common.utils.Utils.report_slack")
     @patch("common.blockchain_util.BlockChainUtil.create_account")
     def test_create_wallet(self, mock_create_account, mock_report_slack):
+
         create_wallet_event = {
             "path": "/wallet",
             "httpMethod": "POST",
@@ -58,3 +62,7 @@ class TestWalletAPI(unittest.TestCase):
     @patch("common.utils.Utils.report_slack")
     def test_set_default_wallet(self, mock_report_slack):
         pass
+
+    def tearDown(self):
+        self.repo.execute("DELETE FROM wallet")
+        self.repo.execute("DELETE FROM user_wallet")

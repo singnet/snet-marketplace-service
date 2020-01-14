@@ -4,6 +4,8 @@ from unittest import TestCase
 from unittest.mock import patch
 from registry.application.handlers.organization_handlers import add_org
 
+ORIGIN = "PUBLISHER_PORTAL"
+
 
 class TestOrganization(TestCase):
 
@@ -88,6 +90,7 @@ class TestOrganization(TestCase):
                                 "org_type": "organization",
                                 "metadata_ipfs_hash": "",
                                 "description": "long desc",
+                                "origin": ORIGIN,
                                 "short_description": "short desc",
                                 "url": "https://dummy.com/dummy",
                                 "contacts": [],

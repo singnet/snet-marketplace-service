@@ -53,10 +53,6 @@ def request_handler(event, context):
         """ Deprecated """
         response_data = []
 
-    elif "/delete-user" == path:
-        response_data = usr_obj.del_user_data(
-            user_data=event['requestContext'])
-
     elif "/feedback" == path and event['httpMethod'] == 'GET':
         response_data = usr_obj.get_user_feedback(user_data=event['requestContext'], org_id=payload_dict.get("org_id", None),
                                                   service_id=payload_dict.get("service_id", None))

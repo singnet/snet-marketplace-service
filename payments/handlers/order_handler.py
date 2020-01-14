@@ -2,14 +2,16 @@ import json
 
 from common.constant import StatusCode
 from common.logger import get_logger
-from common.utils import generate_lambda_response, validate_dict
+from common.utils import generate_lambda_response, validate_dict, Utils
 from payments.application.dapp_order_manager import OrderManager
 from aws_xray_sdk.core import patch_all
+
+from payments.config import SLACK_HOOK
 
 patch_all()
 
 logger = get_logger(__name__)
-
+utils=Utils()
 
 def create(event, context):
     logger.info("Received request to create order")
@@ -37,6 +39,7 @@ def create(event, context):
         logger.info(event)
         logger.error(e)
         status_code = StatusCode.INTERNAL_SERVER_ERROR
+        utils.report_slack("ERROR", f"got error : {response} \n {str(e)} \n for event : {event} ", SLACK_HOOK)
     return generate_lambda_response(
         status_code=status_code,
         message=response
@@ -63,6 +66,7 @@ def get_order_details_for_user(event, context):
         logger.info(event)
         logger.error(e)
         status_code = StatusCode.INTERNAL_SERVER_ERROR
+        utils.report_slack("ERROR", f"got error : {response} \n {str(e)} \n for event : {event} ", SLACK_HOOK)
     return generate_lambda_response(
         status_code=status_code,
         message=response
@@ -89,6 +93,7 @@ def get_order_from_order_id(event, context):
         logger.info(event)
         logger.error(e)
         status_code = StatusCode.INTERNAL_SERVER_ERROR
+        utils.report_slack("ERROR", f"got error : {response} \n {str(e)} \n for event : {event} ", SLACK_HOOK)
     return generate_lambda_response(
         status_code=status_code,
         message=response
