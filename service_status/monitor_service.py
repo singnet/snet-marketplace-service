@@ -31,6 +31,7 @@ NO_OF_ENDPOINT_TO_TEST_LIMIT = 5
 
 class MonitorService:
     def __init__(self):
+        # regex helps to check url is localhost or external address.
         self.rex_for_pb_ip = "^(http://)*(https://)*127.0.0.1|^(http://)*(https://)*localhost|^(http://)*" \
                              "(https://)*192.|^(http://)*(https://)*172.|^(http://)*(https://)*10."
 
@@ -64,6 +65,12 @@ class MonitorService:
         if search_count == 0:
             return True
         return False
+
+    @staticmethod
+    def _is_https_endpoint(endpoint):
+        if endpoint[:4].lower() == "http" and endpoint[:5].lower() != "https":
+            return False
+        return True
 
     @staticmethod
     def _send_slack_notification(slack_message):
@@ -126,18 +133,16 @@ class MonitorServiceCertificate(MonitorService):
     def _get_certification_expiration_date_for_given_service(self, endpoint):
         endpoint = endpoint.lstrip()
         if self._valid_url(url=endpoint):
-            if endpoint[:4].lower() == "http" and endpoint[:5].lower() != "https":
-                logger.info("Not applicable for http endpoint")
-                return
-            endpoint = self.obj_util.remove_http_https_prefix(url=endpoint)
-            hostname = endpoint.split(":")[0]
-            port = endpoint.split(":")[1]
-            context = ssl.create_default_context()
-            with socket.create_connection((hostname, port)) as sock:
-                with context.wrap_socket(sock, server_hostname=hostname) as ssock:
-                    data = json.dumps(ssock.getpeercert())
-                    expiration_date = json.loads(data)["notAfter"]
-                    return dt.strptime(expiration_date, "%b %d %H:%M:%S %Y %Z")
+            if self._is_https_endpoint(endpoint):
+                endpoint = self.obj_util.remove_http_https_prefix(url=endpoint)
+                hostname = endpoint.split(":")[0]
+                port = endpoint.split(":")[1]
+                context = ssl.create_default_context()
+                with socket.create_connection((hostname, port)) as sock:
+                    with context.wrap_socket(sock, server_hostname=hostname) as ssock:
+                        data = json.dumps(ssock.getpeercert())
+                        expiration_date = json.loads(data)["notAfter"]
+                        return dt.strptime(expiration_date, "%b %d %H:%M:%S %Y %Z")
 
     @staticmethod
     def _get_certificate_expiration_email_notification_subject(org_id, service_id, endpoint):
