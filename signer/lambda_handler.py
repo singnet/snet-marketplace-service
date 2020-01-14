@@ -42,6 +42,7 @@ def request_handler(event, context):
                 user_data=event["requestContext"],
                 org_id=payload_dict["org_id"],
                 service_id=payload_dict["service_id"],
+                group_id=payload_dict["group_id"]
             )
 
         elif "/state-service" == path:
