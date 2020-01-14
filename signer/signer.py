@@ -8,7 +8,7 @@ from web3 import Web3
 from common.blockchain_util import BlockChainUtil
 from common.logger import get_logger
 from common.utils import Utils
-from signer.config import GET_FREE_CALLS_METERING_ARN
+from signer.config import METERING_ARN, GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_ARN
 from signer.config import NETWORKS
 from signer.config import PREFIX_FREE_CALL
 from signer.config import REGION_NAME
@@ -32,49 +32,70 @@ class Signer:
         self.current_block_no = self.obj_blockchain_utils.get_current_block_no(
         )
 
-    def _free_calls_allowed(self, username, org_id, service_id):
+    def _get_free_calls_allowed(self, org_id, service_id, group_id):
+        lambda_payload = {
+            "httpMethod": "GET",
+            "pathParameters": {
+                "orgId": org_id,
+                "serviceId": service_id
+            },
+        }
+        response = self.lambda_client.invoke(
+            FunctionName=GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_ARN,
+            InvocationType="RequestResponse",
+            Payload=json.dumps(lambda_payload),
+        )
+        response_body_raw = json.loads(response.get("Payload").read())["body"]
+        get_service_response = json.loads(response_body_raw)
+        if get_service_response["status"] == "success":
+            groups_data = get_service_response["data"].get("groups", [])
+            for group_data in groups_data:
+                if group_data["group_id"] == group_id:
+                    return group_data["free_calls"]
+        raise Exception("Unable to fetch free calls information for service %s under organization %s for %s group.",
+                        service_id, org_id, group_id)
+
+    def _get_total_calls_made(self, username, org_id, service_id, group_id):
+        lambda_payload = {
+            "httpMethod": "GET",
+            "queryStringParameters": {
+                "organization_id": org_id,
+                "service_id": service_id,
+                "username": username,
+                "group_id": group_id,
+            },
+        }
+        response = self.lambda_client.invoke(
+            FunctionName=METERING_ARN,
+            InvocationType="RequestResponse",
+            Payload=json.dumps(lambda_payload),
+        )
+        if response["StatusCode"] == 200:
+            metering_data_raw = json.loads(response.get("Payload").read())["body"]
+            total_calls_made = json.loads(metering_data_raw).get("total_calls_made", None)
+            if total_calls_made is not None:
+                return total_calls_made
+        raise Exception("Unable to fetch total calls made for service %s under organization %s for %s group.",
+                        service_id, org_id, group_id)
+
+    def _free_calls_allowed(self, username, org_id, service_id, group_id):
         """
             Method to check free calls exists for given user or not.
             Call monitoring service to get the details
         """
-        try:
-            lambda_payload = {
-                "httpMethod": "GET",
-                "queryStringParameters": {
-                    "organization_id": org_id,
-                    "service_id": service_id,
-                    "username": username,
-                },
-            }
+        free_calls_allowed = self._get_free_calls_allowed(org_id, service_id, group_id)
+        total_calls_made = self._get_total_calls_made(username, org_id, service_id, group_id)
+        is_free_calls_allowed = (True if ((free_calls_allowed - total_calls_made) > 0) else False)
+        return is_free_calls_allowed
 
-            response = self.lambda_client.invoke(
-                FunctionName=GET_FREE_CALLS_METERING_ARN,
-                InvocationType="RequestResponse",
-                Payload=json.dumps(lambda_payload),
-            )
-            response_body_raw = json.loads(
-                response.get("Payload").read())["body"]
-            get_free_calls_response_body = json.loads(response_body_raw)
-            logger.info("Signer::get_free_calls_response_body: %s for payload: %s", get_free_calls_response_body,
-                        json.dumps(lambda_payload))
-            free_calls_allowed = get_free_calls_response_body["free_calls_allowed"]
-            total_calls_made = get_free_calls_response_body["total_calls_made"]
-            is_free_calls_allowed = (True if (
-                    (free_calls_allowed - total_calls_made) > 0) else False)
-            return is_free_calls_allowed
-        except Exception as e:
-            logger.error(repr(e))
-            raise e
-
-    def signature_for_free_call(self, user_data, org_id, service_id):
+    def signature_for_free_call(self, user_data, org_id, service_id, group_id):
         """
             Method to generate signature for free call.
         """
         try:
             username = user_data["authorizer"]["claims"]["email"]
-            if self._free_calls_allowed(username=username,
-                                        org_id=org_id,
-                                        service_id=service_id):
+            if self._free_calls_allowed(
+                    username=username, org_id=org_id, service_id=service_id, group_id=group_id):
                 current_block_no = self.obj_utils.get_current_block_no(
                     ws_provider=NETWORKS[self.net_id]["ws_provider"])
                 provider = Web3.HTTPProvider(
