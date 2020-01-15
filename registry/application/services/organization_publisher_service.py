@@ -1,3 +1,5 @@
+from web3 import Web3
+
 from common.boto_utils import BotoUtils
 from common.exceptions import OrganizationNotFound
 from registry.application.access import secured
@@ -162,7 +164,10 @@ class OrganizationService(object):
         org_repo.delete_members(org_member_list)
 
     def register_member(self, wallet_address):
-        org_repo.update_member_wallet_address(self.org_uuid, self.username, wallet_address)
+        if Web3.isAddress(wallet_address):
+            org_repo.update_member_wallet_address(self.org_uuid, self.username, wallet_address)
+        else:
+            raise Exception("Invalid wallet address")
         return "OK"
 
     def get_all_members(self, status, pagination_details):

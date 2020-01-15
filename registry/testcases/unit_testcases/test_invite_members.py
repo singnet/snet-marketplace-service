@@ -274,7 +274,8 @@ class TestInviteMembers(TestCase):
                 invite_code=member_invite_code
             )
         )
-        member_wallet_address = "0x9876"
+        member_wallet_address = "0x962FD47b5afBc8D03025cE52155890667E58dEBA"
+        self.assertRaises(Exception, OrganizationService(test_org_id, member_username).register_member, "0x9876")
         OrganizationService(test_org_id, member_username).register_member(member_wallet_address)
         members = org_repo.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == test_org_id)\
             .filter(OrganizationMember.username == member_username) \
