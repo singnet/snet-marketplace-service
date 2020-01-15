@@ -161,7 +161,7 @@ def verify_code(event, context):
     invite_code = query_string_parameters["invite_code"]
     response = OrganizationService(None, username).verify_invite(invite_code)
     return generate_lambda_response(
-        StatusCode.CREATED,
+        StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 

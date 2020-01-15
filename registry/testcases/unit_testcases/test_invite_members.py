@@ -229,18 +229,8 @@ class TestInviteMembers(TestCase):
                 invite_code=member_invite_code
             )
         )
-        OrganizationService(None, member_username).verify_invite(member_invite_code)
-        members = org_repo.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == test_org_id)\
-            .filter(OrganizationMember.username == member_username) \
-            .all()
-        if len(members) == 1:
-            org_member = members[0]
-            if org_member.status == OrganizationMemberStatus.VERIFIED.value:
-                assert True
-            else:
-                assert False
-        else:
-            assert False
+        self.assertEqual(OrganizationService(None, member_username).verify_invite(member_invite_code), "OK")
+        self.assertEqual(OrganizationService(None, member_username).verify_invite("1234"), "NOT_FOUND")
 
     def test_register_member(self):
         test_org_id = uuid4().hex
@@ -279,7 +269,7 @@ class TestInviteMembers(TestCase):
                 org_uuid=test_org_id,
                 role=Role.MEMBER.value,
                 address="",
-                status=OrganizationMemberStatus.VERIFIED.value,
+                status=OrganizationMemberStatus.PENDING.value,
                 transaction_hash="0x123",
                 invite_code=member_invite_code
             )
@@ -291,7 +281,8 @@ class TestInviteMembers(TestCase):
             .all()
         if len(members) == 1:
             org_member = members[0]
-            if org_member.status == OrganizationMemberStatus.ACCEPTED.value and org_member.address == member_wallet_address:
+            if org_member.status == OrganizationMemberStatus.ACCEPTED.value \
+                    and org_member.address == member_wallet_address:
                 assert True
             else:
                 assert False

@@ -361,7 +361,7 @@ class OrganizationRepository(BaseRepository):
         organizations = self.session.query(Organization, OrganizationReviewWorkflow) \
             .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
             .filter(Organization.org_id == org_id) \
-            .filter(OrganizationReviewWorkflow.sorg_memberstatus == status).all()
+            .filter(OrganizationReviewWorkflow.status == status).all()
         return OrganizationFactory.parse_organization_details(organizations)
 
     def get_org_using_org_id(self, org_uuid):
@@ -379,7 +379,7 @@ class OrganizationRepository(BaseRepository):
 
     def persist_transaction_hash(self, org_member_list, transaction_hash):
         member_username_list = [member.username for member in org_member_list]
-        org_members_db_items = self.session.query(OrganizationMember)\
+        org_members_db_items = self.session.query(OrganizationMember) \
             .filter(OrganizationMember.username.in_(member_username_list))
         for org_member in org_members_db_items:
             org_member.status = OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value
@@ -405,26 +405,28 @@ class OrganizationRepository(BaseRepository):
         self.add_all_items(member_db_models)
 
     def org_member_verify(self, username, invite_code):
-        org_members = self.session.query(OrganizationMember)\
-            .filter(OrganizationMember.invite_code == invite_code)\
-            .filter(OrganizationMember.username == username).all()
+        org_members = self.session.query(OrganizationMember) \
+            .filter(OrganizationMember.invite_code == invite_code) \
+            .filter(OrganizationMember.username == username) \
+            .filter(OrganizationMember.status == OrganizationMemberStatus.PENDING.value) \
+            .all()
         if len(org_members) == 0:
-            raise Exception(f"No invite found for the {invite_code}")
-        org_members[0].status = OrganizationMemberStatus.VERIFIED.value
-        org_members[0].updated_on = datetime.utcnow()
-        self.session.commit()
-        return OrganizationFactory.org_member_from_db(org_members[0])
+            return False
+        return True
 
     def delete_members(self, org_member_list):
         allowed_delete_member_status = [OrganizationMemberStatus.PENDING.value,
-                                        OrganizationMemberStatus.ACCEPTED.value,
-                                        OrganizationMemberStatus.VERIFIED.value]
+                                        OrganizationMemberStatus.ACCEPTED.value]
         member_username_list = [member.username for member in org_member_list]
-        self.session.query(OrganizationMember).filter(OrganizationMember.username.in_(member_username_list))\
+        self.session.query(OrganizationMember).filter(OrganizationMember.username.in_(member_username_list)) \
             .filter(OrganizationMember.status.in_(allowed_delete_member_status)).delete(synchronize_session='fetch')
 
     def update_member_wallet_address(self, org_uuid, username, wallet_address):
-        org_member = self.session.query(OrganizationMember).filter(OrganizationMember.username == username).filter(OrganizationMember.org_uuid == org_uuid).all()
+        org_member = self.session.query(OrganizationMember) \
+            .filter(OrganizationMember.username == username) \
+            .filter(OrganizationMember.org_uuid == org_uuid) \
+            .filter(OrganizationMember.status == OrganizationMemberStatus.PENDING.value) \
+            .all()
         if len(org_member) == 0:
             raise Exception(f"No member found for org_uuid: {org_uuid} ")
         org_member[0].address = wallet_address
