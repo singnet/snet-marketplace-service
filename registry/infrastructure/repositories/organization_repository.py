@@ -361,7 +361,7 @@ class OrganizationRepository(BaseRepository):
         organizations = self.session.query(Organization, OrganizationReviewWorkflow) \
             .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
             .filter(Organization.org_id == org_id) \
-            .filter(OrganizationReviewWorkflow.status == status).all()
+            .filter(OrganizationReviewWorkflow.sorg_memberstatus == status).all()
         return OrganizationFactory.parse_organization_details(organizations)
 
     def get_org_using_org_id(self, org_uuid):
@@ -384,10 +384,12 @@ class OrganizationRepository(BaseRepository):
         for org_member in org_members_db_items:
             org_member.status = OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value
             org_member.transaction_hash = transaction_hash
+            org_member.updated_on = datetime.utcnow()
         self.session.commit()
 
     def add_member(self, org_member_list, status):
         member_db_models = []
+        current_time = datetime.utcnow()
         for member in org_member_list:
             member_db_models.append(
                 OrganizationMember(
@@ -395,7 +397,9 @@ class OrganizationRepository(BaseRepository):
                     role=Role.MEMBER.value,
                     status=status,
                     transaction_hash=member.transaction_hash,
-                    invite_code=member.invite_code
+                    invite_code=member.invite_code,
+                    updated_on=current_time,
+                    created_on=current_time
                 )
             )
         self.add_all_items(member_db_models)
@@ -407,6 +411,7 @@ class OrganizationRepository(BaseRepository):
         if len(org_members) == 0:
             raise Exception(f"No invite found for the {invite_code}")
         org_members[0].status = OrganizationMemberStatus.VERIFIED.value
+        org_members[0].updated_on = datetime.utcnow()
         self.session.commit()
         return OrganizationFactory.org_member_from_db(org_members[0])
 
@@ -423,4 +428,6 @@ class OrganizationRepository(BaseRepository):
         if len(org_member) == 0:
             raise Exception(f"No member found for org_uuid: {org_uuid} ")
         org_member[0].address = wallet_address
+        org_member[0].status = OrganizationMemberStatus.ACCEPTED.value
+        org_member[0].updated_on = datetime.utcnow()
         self.session.commit()

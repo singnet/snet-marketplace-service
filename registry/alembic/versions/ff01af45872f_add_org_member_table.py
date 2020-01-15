@@ -22,7 +22,6 @@ def upgrade():
     op.add_column('org_member', sa.Column('invite_code', sa.VARCHAR(length=128), nullable=True))
     op.add_column('org_member', sa.Column('org_row_id', sa.Integer(), nullable=False))
     op.add_column('org_member', sa.Column('status', sa.VARCHAR(length=128), nullable=True))
-    op.create_foreign_key(None, 'org_member', 'organization', ['org_row_id'], ['row_id'], onupdate='CASCADE', ondelete='CASCADE')
     # ### end Alembic commands ###
 
 

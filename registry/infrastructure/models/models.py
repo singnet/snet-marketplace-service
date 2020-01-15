@@ -101,6 +101,8 @@ class OrganizationMember(Base):
     status = Column("status", VARCHAR(128))
     transaction_hash = Column("transaction_hash", VARCHAR(128))
     invite_code = Column("invite_code", VARCHAR(128))
+    created_on = Column("created_on", TIMESTAMP(timezone=False))
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False))
 
 
 class OrganizationAddress(Base):

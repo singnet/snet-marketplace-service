@@ -122,6 +122,14 @@ def get_member(event, context):
 
 @handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def get_all_members(event, context):
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    path_parameters = event["pathParameters"]
+    query_parameters = event["queryStringParameters"]
+    if "org_uuid" not in path_parameters or "status" not in query_parameters:
+        raise BadRequestException()
+    org_uuid = path_parameters["org_uuid"]
+    status = query_parameters["status"]
+    OrganizationService(org_uuid, username).get_all_members(status, query_parameters)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": "Not implemented", "error": {}}, cors_enabled=True

@@ -162,3 +162,9 @@ class OrganizationService(object):
     def register_member(self, wallet_address):
         org_repo.update_member_wallet_address(self.org_uuid, self.username, wallet_address)
         return "OK"
+
+    def get_all_members(self, status, pagination_details):
+        offset = pagination_details.get("offset", None)
+        limit = pagination_details.get("limit", None)
+        sort = pagination_details.get("sort", None)
+        return ""
