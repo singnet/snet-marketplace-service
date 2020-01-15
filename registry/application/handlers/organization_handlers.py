@@ -147,13 +147,11 @@ def invite_members(event, context):
 @handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def verify_code(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
-    path_parameters = event["pathParameters"]
     query_string_parameters = event["queryStringParameters"]
-    if "org_uuid" not in path_parameters or "invite_code" not in query_string_parameters:
+    if "invite_code" not in query_string_parameters:
         raise BadRequestException()
-    org_uuid = path_parameters["org_uuid"]
     invite_code = query_string_parameters["invite_code"]
-    response = OrganizationService(org_uuid, username).verify_invite(invite_code)
+    response = OrganizationService(None, username).verify_invite(invite_code)
     return generate_lambda_response(
         StatusCode.CREATED,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True

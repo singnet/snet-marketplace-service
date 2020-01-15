@@ -408,6 +408,7 @@ class OrganizationRepository(BaseRepository):
             raise Exception(f"No invite found for the {invite_code}")
         org_members[0].status = OrganizationMemberStatus.VERIFIED.value
         self.session.commit()
+        return OrganizationFactory.org_member_from_db(org_members[0])
 
     def delete_members(self, org_member_list):
         allowed_delete_member_status = [OrganizationMemberStatus.PENDING.value,

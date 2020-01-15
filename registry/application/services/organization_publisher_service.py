@@ -152,8 +152,8 @@ class OrganizationService(object):
         pass
 
     def verify_invite(self, invite_code):
-        org_repo.org_member_verify(self.username, invite_code)
-        return "OK"
+        org_member = org_repo.org_member_verify(self.username, invite_code)
+        return org_member.to_dict()
 
     def delete_members(self, org_members):
         org_member_list = OrganizationFactory.org_member_from_dict_list(org_members, self.org_uuid)
