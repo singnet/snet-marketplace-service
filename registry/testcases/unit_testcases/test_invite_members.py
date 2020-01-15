@@ -224,7 +224,7 @@ class TestInviteMembers(TestCase):
                 org_uuid=test_org_id,
                 role=Role.MEMBER.value,
                 address="0x123",
-                status=OrganizationMemberStatus.ACCEPTED.value,
+                status=OrganizationMemberStatus.PENDING.value,
                 transaction_hash="0x123",
                 invite_code=member_invite_code
             )
@@ -236,6 +236,62 @@ class TestInviteMembers(TestCase):
         if len(members) == 1:
             org_member = members[0]
             if org_member.status == OrganizationMemberStatus.VERIFIED.value:
+                assert True
+            else:
+                assert False
+        else:
+            assert False
+
+    def test_register_member(self):
+        test_org_id = uuid4().hex
+        owner_invite_code = uuid4().hex
+        owner_wallet_address = "0x123"
+        owner_username = "dummy@snet.io"
+        organization = DomainOrganization(
+            "dummy_org", "org_id", test_org_id, "organization", owner_username,
+            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "",
+            duns_no=12345678, origin=ORIGIN, groups=[], addresses=[], status=OrganizationStatus.APPROVAL_PENDING.value,
+            owner_name="Dummy Name")
+        organization.add_group(DomainGroup(
+            name="my-group",
+            group_id="group_id",
+            payment_address="0x123",
+            payment_config={},
+            status=''
+        ))
+        org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISHED.value, owner_username)
+        org_repo.add_item(
+            OrganizationMember(
+                username=owner_username,
+                org_uuid=test_org_id,
+                role=Role.OWNER.value,
+                address=owner_wallet_address,
+                status=OrganizationMemberStatus.PUBLISHED.value,
+                transaction_hash="0x123",
+                invite_code=owner_invite_code
+            )
+        )
+        member_username = "karl@dummy.io"
+        member_invite_code = uuid4().hex
+        org_repo.add_item(
+            OrganizationMember(
+                username=member_username,
+                org_uuid=test_org_id,
+                role=Role.MEMBER.value,
+                address="",
+                status=OrganizationMemberStatus.VERIFIED.value,
+                transaction_hash="0x123",
+                invite_code=member_invite_code
+            )
+        )
+        member_wallet_address = "0x9876"
+        OrganizationService(test_org_id, member_username).register_member(member_wallet_address)
+        members = org_repo.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == test_org_id)\
+            .filter(OrganizationMember.username == member_username) \
+            .all()
+        if len(members) == 1:
+            org_member = members[0]
+            if org_member.status == OrganizationMemberStatus.ACCEPTED.value and org_member.address == member_wallet_address:
                 assert True
             else:
                 assert False

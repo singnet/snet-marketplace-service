@@ -158,3 +158,7 @@ class OrganizationService(object):
     def delete_members(self, org_members):
         org_member_list = OrganizationFactory.org_member_from_dict_list(org_members, self.org_uuid)
         org_repo.delete_members(org_member_list)
+
+    def register_member(self, wallet_address):
+        org_repo.update_member_wallet_address(self.org_uuid, self.username, wallet_address)
+        return "OK"

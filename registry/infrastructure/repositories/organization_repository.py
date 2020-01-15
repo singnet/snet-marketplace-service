@@ -417,3 +417,10 @@ class OrganizationRepository(BaseRepository):
         member_username_list = [member.username for member in org_member_list]
         self.session.query(OrganizationMember).filter(OrganizationMember.username.in_(member_username_list))\
             .filter(OrganizationMember.status.in_(allowed_delete_member_status)).delete(synchronize_session='fetch')
+
+    def update_member_wallet_address(self, org_uuid, username, wallet_address):
+        org_member = self.session.query(OrganizationMember).filter(OrganizationMember.username == username).filter(OrganizationMember.org_uuid == org_uuid).all()
+        if len(org_member) == 0:
+            raise Exception(f"No member found for org_uuid: {org_uuid} ")
+        org_member[0].address = wallet_address
+        self.session.commit()

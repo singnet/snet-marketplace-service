@@ -72,7 +72,7 @@ def save_transaction_hash_for_publish_org(event, context):
 @handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def get_all_org(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
-    response = OrganizationService("",username).get_organizations_for_user()
+    response = OrganizationService("", username).get_organizations_for_user()
 
     return generate_lambda_response(
         StatusCode.OK,
@@ -186,6 +186,22 @@ def delete_members(event, context):
     org_uuid = path_parameters["org_uuid"]
     org_members = payload["members"]
     response = OrganizationService(org_uuid, username).delete_members(org_members)
+    return generate_lambda_response(
+        StatusCode.CREATED,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def register_member(event, context):
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    path_parameters = event["pathParameters"]
+    query_string_parameters = event["queryStringParameters"]
+    if "org_uuid" not in path_parameters or "wallet_address" not in query_string_parameters:
+        raise BadRequestException()
+    org_uuid = path_parameters["org_uuid"]
+    wallet_address = query_string_parameters["wallet_address"]
+    response = OrganizationService(org_uuid, username).register_member(wallet_address)
     return generate_lambda_response(
         StatusCode.CREATED,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
