@@ -108,9 +108,87 @@ def get_group_for_org(event, context):
 
 
 @handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
-def get_role_for_org_member(event, context):
+def get_member(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
-    org_uuid = path_parameters["org_id"]
-    response = OrganizationService(org_uuid, username).get_role_for_org_member()
-    return response
+    org_uuid = path_parameters["org_uuid"]
+    member_username = path_parameters["username"]
+    response = OrganizationService(org_uuid, username).get_member(member_username)
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def get_all_members(event, context):
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": "Not implemented", "error": {}}, cors_enabled=True
+    )
+
+
+@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def invite_members(event, context):
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    payload = json.loads(event["body"])
+    path_parameters = event["pathParameters"]
+    if "org_uuid" not in path_parameters or "members" not in payload:
+        raise BadRequestException()
+    org_uuid = path_parameters["org_uuid"]
+    org_members = payload["members"]
+    response = OrganizationService(org_uuid, username).invite_members(org_members)
+    return generate_lambda_response(
+        StatusCode.CREATED,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def verify_code(event, context):
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    path_parameters = event["pathParameters"]
+    query_string_parameters = event["queryStringParameters"]
+    if "org_uuid" not in path_parameters or "invite_code" not in query_string_parameters:
+        raise BadRequestException()
+    org_uuid = path_parameters["org_uuid"]
+    invite_code = query_string_parameters["invite_code"]
+    response = OrganizationService(org_uuid, username).verify_invite(invite_code)
+    return generate_lambda_response(
+        StatusCode.CREATED,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def publish_members(event, context):
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    payload = json.loads(event["body"])
+    path_parameters = event["pathParameters"]
+
+    if "org_uuid" not in path_parameters or not validate_dict(payload, ["transaction_hash", "members"]):
+        raise BadRequestException()
+    org_uuid = path_parameters["org_uuid"]
+    transaction_hash = payload["transaction_hash"]
+    org_members = payload["members"]
+    response = OrganizationService(org_uuid, username).publish_members(transaction_hash, org_members)
+    return generate_lambda_response(
+        StatusCode.CREATED,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def delete_members(event, context):
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    payload = json.loads(event["body"])
+    path_parameters = event["pathParameters"]
+    if "org_uuid" not in path_parameters or "members" not in payload:
+        raise BadRequestException()
+    org_uuid = path_parameters["org_uuid"]
+    org_members = payload["members"]
+    response = OrganizationService(org_uuid, username).delete_members(org_members)
+    return generate_lambda_response(
+        StatusCode.CREATED,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )

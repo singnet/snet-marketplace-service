@@ -1,8 +1,8 @@
 from common.boto_utils import BotoUtils
 from common.exceptions import OrganizationNotFound
-from registry.application.access import Action, secured
+from registry.application.access import secured
 from registry.config import REGION_NAME
-from registry.constants import OrganizationStatus
+from registry.constants import OrganizationStatus, Role, Action
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
 
@@ -10,7 +10,6 @@ org_repo = OrganizationRepository()
 
 
 class OrganizationService(object):
-    # __metaclass__ = OrganizationAccessControl
 
     def __init__(self, org_uuid, username):
 
@@ -128,12 +127,34 @@ class OrganizationService(object):
         org_repo.add_group(groups, self.org_uuid, self.username)
         return "OK"
 
-    @secured(action=Action.READ)
-    def get_role_for_org_member(self):
-        organizations = org_repo.get_org_using_org_id(self.org_uuid)
-        members = set()
-        for organization in organizations:
-            members.add(organization.members)
+    def get_member(self, member_username):
+        member = org_repo.get_org_member_details_from_username(member_username, self.org_uuid)
+        if member is None:
+            raise Exception(f"No member {member_username} for the organization {self.org_uuid}")
+        return [member.to_dict()]
 
-        response = [member.role_response() for member in members]
-        return response
+    def publish_members(self, transaction_hash, org_members):
+        org_member_list = OrganizationFactory.org_member_from_dict_list(org_members, self.org_uuid)
+        org_repo.persist_transaction_hash(org_member_list, transaction_hash)
+        return "OK"
+
+    def invite_members(self, org_members):
+        org_member_list = OrganizationFactory.org_member_from_dict_list(org_members, self.org_uuid)
+        for org_member in org_member_list:
+            org_member.generate_invite_code()
+        self._send_invitation(org_member_list)
+        org_repo.add_member(org_member_list, status=Role.MEMBER.value)
+
+    def _send_invitation(self, org_member_list):
+        """
+        ToDo: add email flow for the invitation
+        """
+        pass
+
+    def verify_invite(self, invite_code):
+        org_repo.org_member_verify(self.username, invite_code)
+        return "OK"
+
+    def delete_members(self, org_members):
+        org_member_list = OrganizationFactory.org_member_from_dict_list(org_members, self.org_uuid)
+        org_repo.delete_members(org_member_list)

@@ -1,20 +1,5 @@
-from enum import Enum
-
+from registry.constants import Role, Action
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
-
-
-class Role(Enum):
-    OWNER = "OWNER"
-    MEMBER = "MEMBER"
-
-
-class Action(Enum):
-    CREATE = "CREATE"
-    SUBMIT = "SUBMIT"
-    PUBLISH = "PUBLISH"
-    UPDATE = "UPDATE"
-    READ = "READ"
-
 
 POLICY = {Role.OWNER: [Action.CREATE, Action.SUBMIT, Action.PUBLISH, Action.UPDATE, Action.READ],
           Role.MEMBER: [Action.CREATE, Action.SUBMIT, Action.UPDATE, Action.READ]}
@@ -23,7 +8,7 @@ org_repo = OrganizationRepository()
 
 
 def is_access_allowed(username, action, org_uuid):
-    org_member_details = org_repo.get_member_details_for_org(username, org_uuid)
+    org_member_details = org_repo.get_org_member_details_from_username(username, org_uuid)
 
     if not org_member_details:
         return False

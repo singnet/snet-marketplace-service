@@ -15,6 +15,23 @@ class PostOrganizationActions(Enum):
     SUBMIT = "SUBMIT"
 
 
-class MemberRole(Enum):
+class OrganizationMemberStatus(Enum):
+    PUBLISHED = "PUBLISHED"
+    PENDING = "PENDING"
+    VERIFIED = "VERIFIED"
+    PUBLISH_IN_PROGRESS = "PUBLISH_IN_PROGRESS"
+    ACCEPTED = "ACCEPTED"
+
+
+class Role(Enum):
     OWNER = "OWNER"
     MEMBER = "MEMBER"
+
+
+class Action(Enum):
+    CREATE = "CREATE"
+    SUBMIT = "SUBMIT"
+    PUBLISH = "PUBLISH"
+    UPDATE = "UPDATE"
+    READ = "READ"
+
