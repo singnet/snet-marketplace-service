@@ -117,10 +117,6 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
-          request:
-            parameters:
-              paths:
-                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -152,10 +148,6 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
-          request:
-            parameters:
-              paths:
-                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -187,10 +179,6 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
-          request:
-            parameters:
-              paths:
-                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -217,10 +205,6 @@ functions:
       - http:
           method: GET
           path: /org/{org_id}
-          request:
-            parameters:
-              paths:
-                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -252,10 +236,6 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
-          request:
-            parameters:
-              paths:
-                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -287,10 +267,6 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
-          request:
-            parameters:
-              paths:
-                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -322,10 +298,6 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
-          request:
-            parameters:
-              paths:
-                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -357,10 +329,6 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
-          request:
-            parameters:
-              paths:
-                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -392,10 +360,6 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
-          request:
-            parameters:
-              paths:
-                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -427,10 +391,6 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
-          request:
-            parameters:
-              paths:
-                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -462,10 +422,6 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
-          request:
-            parameters:
-              paths:
-                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -497,10 +453,6 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
-          request:
-            parameters:
-              paths:
-                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -532,10 +484,6 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
-          request:
-            parameters:
-              paths:
-                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
