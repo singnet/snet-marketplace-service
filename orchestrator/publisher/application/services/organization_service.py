@@ -18,8 +18,8 @@ class OrganizationOrchestratorService:
         wallet_address = payload["wallet_address"]
 
         self.dapp_update_user_details(full_name, phone_number)
-        self.register_wallet(username, wallet_address)
         self.registry_register_org_member(org_uuid, username, wallet_address)
+        self.register_wallet(username, wallet_address)
         return "OK"
 
     def dapp_update_user_details(self, full_name, phone_number):
