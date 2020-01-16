@@ -152,8 +152,7 @@ class OrganizationService(object):
         if len(org_data) > 0:
             org_name = org_data[0]["name"]
         else:
-            org_name = "Test"
-            # raise Exception("Unable to find organization.")
+            raise Exception("Unable to find organization.")
         self._send_invitation(org_member_list, org_name)
         org_repo.add_member(org_member_list, status=Role.MEMBER.value)
 
