@@ -7,7 +7,7 @@ class OrganizationStatus(Enum):
     APPROVED = "APPROVED"
     PUBLISH_IN_PROGRESS = "PUBLISH_IN_PROGRESS"
     PUBLISHED = "PUBLISHED"
-    PUBLISHED_UNAPPROVED ="PUBLISHED_UNAPPROVED"
+    PUBLISHED_UNAPPROVED = "PUBLISHED_UNAPPROVED"
 
 
 class PostOrganizationActions(Enum):
@@ -15,6 +15,22 @@ class PostOrganizationActions(Enum):
     SUBMIT = "SUBMIT"
 
 
-class MemberRole(Enum):
+class OrganizationMemberStatus(Enum):
+    PUBLISHED = "PUBLISHED"
+    PENDING = "PENDING"
+    PUBLISH_IN_PROGRESS = "PUBLISH_IN_PROGRESS"
+    ACCEPTED = "ACCEPTED"
+
+
+class Role(Enum):
     OWNER = "OWNER"
     MEMBER = "MEMBER"
+
+
+class Action(Enum):
+    CREATE = "CREATE"
+    SUBMIT = "SUBMIT"
+    PUBLISH = "PUBLISH"
+    UPDATE = "UPDATE"
+    READ = "READ"
+

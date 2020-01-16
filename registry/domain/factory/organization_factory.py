@@ -100,6 +100,24 @@ class OrganizationFactory:
         return address
 
     @staticmethod
+    def org_member_from_dict(org_member, org_uuid):
+        username = org_member.get("username", "")
+        status = org_member.get("status", "")
+        role = org_member.get("role", "")
+        address = org_member.get("address", "")
+        invite_code = org_member.get("invite_code", "")
+        transaction_hash = org_member.get("transaction_hash", "")
+        org_member = OrganizationMember(org_uuid, username, status, role, address, invite_code, transaction_hash)
+        return org_member
+
+    @staticmethod
+    def org_member_from_dict_list(org_member_dict_list, org_uuid):
+        org_member_list = []
+        for org_member in org_member_dict_list:
+            org_member_list.append(OrganizationFactory.org_member_from_dict(org_member, org_uuid))
+        return org_member_list
+
+    @staticmethod
     def parse_organization_data_model(item, status):
         organization = Organization(
             item.name, item.org_id, item.org_uuid, item.type, item.owner, item.description,
@@ -197,14 +215,22 @@ class OrganizationFactory:
         return organization
 
     @staticmethod
+    def org_member_list_from_db(org_member_items):
+        members = []
+        for member_item in org_member_items:
+            members.append(OrganizationFactory.org_member_from_db(member_item))
+        return members
+
+    @staticmethod
     def org_member_from_db(org_member_item):
 
         username = org_member_item.username
         role = org_member_item.role
+        org_uuid = org_member_item.org_uuid
         address = org_member_item.address
         status = org_member_item.status
         invite_code = org_member_item.invite_code
-
-        org_member = OrganizationMember(username, status, role, address, invite_code)
+        transaction_hash = org_member_item.transaction_hash
+        org_member = OrganizationMember(org_uuid, username, status, role, address, invite_code, transaction_hash)
 
         return org_member

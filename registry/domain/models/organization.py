@@ -185,12 +185,14 @@ class Organization:
 
 
 class OrganizationMember(object):
-    def __init__(self, username, status, role, address=None, invite_code=None):
+    def __init__(self, org_uuid, username, status, role, address=None, invite_code=None, transaction_hash=None):
         self.__role = role
+        self.__org_uuid = org_uuid
         self.__username = username
         self.__status = status
         self.__address = address
         self.__invite_code = invite_code
+        self.__transaction_hash = transaction_hash
 
     @property
     def username(self):
@@ -211,6 +213,13 @@ class OrganizationMember(object):
     @property
     def invite_code(self):
         return self.__invite_code
+
+    @property
+    def transaction_hash(self):
+        return self.__transaction_hash
+
+    def set_transaction_hash(self, transaction_hash):
+        self.__transaction_hash = transaction_hash
 
     def __repr__(self):
         return "Item(%s, %s,%s)" % (self.address, self.username, self.role)
@@ -233,3 +242,14 @@ class OrganizationMember(object):
             "address": self.address,
             "role": self.role
         }
+
+    def to_dict(self):
+        return {
+            "username": self.username,
+            "address": self.address,
+            "status": self.status,
+            "role": self.role
+        }
+
+    def generate_invite_code(self):
+        self.__invite_code = uuid4().hex
