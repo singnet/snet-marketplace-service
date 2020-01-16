@@ -1,15 +1,18 @@
 from common.boto_utils import BotoUtils
 from common.exceptions import OrganizationNotFound
-from registry.config import REGION_NAME
+from registry.config import REGION_NAME, NETWORKS, NETWORK_ID
 from registry.constants import OrganizationStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
+from common.blockchain_util import BlockChainUtil
 
 
 class OrganizationService:
     def __init__(self):
         self.org_repo = OrganizationRepository()
         self.boto_utils = BotoUtils(region_name=REGION_NAME)
+        self.blockchain_utils = BlockChainUtil(provider_type="HTTP_PROVIDER",
+                                               provider=NETWORKS[NETWORK_ID]["http_provider"])
 
     """
     Whenever new draft will come,
@@ -105,3 +108,13 @@ class OrganizationService:
         organizations = self.org_repo.get_org_using_org_id(org_uuid);
         for organization in organizations:
             pass
+
+    def get_organizations_transaction_data(self):
+        orgs_transaction_data = self.org_repo.get_all_organization_transaction_data()
+        for org_transaction_data in orgs_transaction_data:
+            transaction_receipt = self.blockchain_utils.get_transaction_receipt_from_blockchain(
+                transaction_hash=orgs_transaction_data["transaction_hash"])
+            if transaction_receipt is not None:
+                status = OrganizationStatus.PUBLISHED.value if transaction_receipt.status == 1 else OrganizationStatus.FAILED.value
+                self.org_repo.update_organization_review_workflow_status(orgs_transaction_data["row_id"], status)
+

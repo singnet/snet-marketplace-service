@@ -64,7 +64,7 @@ class OrganizationRepository(BaseRepository):
         self.add_new_draft_groups_in_draft_org(organization.groups, current_draft, username)
 
     def delete_and_insert_organization_address(self, org_row_id, addresses):
-        self.session.query(OrganizationAddress).filter(OrganizationAddress.org_row_id == org_row_id)\
+        self.session.query(OrganizationAddress).filter(OrganizationAddress.org_row_id == org_row_id) \
             .delete(synchronize_session='fetch')
         self.add_organization_address(addresses=addresses, org_row_id=org_row_id)
 
@@ -177,8 +177,9 @@ class OrganizationRepository(BaseRepository):
 
     def get_latest_organization(self, username):
         organizations = self.session.query(Organization, OrganizationReviewWorkflow, func.row_number().over(
-                partition_by=Organization.org_uuid, order_by=OrganizationReviewWorkflow.updated_on).label("rn")
-        ).join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
+            partition_by=Organization.org_uuid, order_by=OrganizationReviewWorkflow.updated_on).label("rn")
+                                           ).join(OrganizationReviewWorkflow,
+                                                  Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
             .filter(Organization.owner == username).all()
         latest_orgs = []
         for org in organizations:
@@ -368,3 +369,14 @@ class OrganizationRepository(BaseRepository):
             .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
             .filter(Organization.org_uuid == org_uuid).all()
         return OrganizationFactory.parse_organization_details(organizations)
+
+    def get_all_organization_transaction_data(self):
+        org_transaction_data_list = self.session.query(OrganizationReviewWorkflow) \
+            .filter(OrganizationReviewWorkflow.status == OrganizationStatus.PUBLISH_IN_PROGRESS.value) \
+            .filter(OrganizationReviewWorkflow.transaction_hash != None).all()
+        return org_transaction_data_list
+
+    def update_organization_review_workflow_status(self, row_id, status):
+        self.session.query(OrganizationReviewWorkflow).filter(OrganizationReviewWorkflow.row_id == row_id) \
+            .update({OrganizationReviewWorkflow.status: status})
+        self.session.commit()

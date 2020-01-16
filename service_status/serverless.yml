@@ -74,7 +74,7 @@ functions:
           rate: rate(5 minutes)
           enabled: true
 
-  monitor-service--cert-expiry:
+  monitor-service-cert-expiry:
     warmup: true
     handler: service_status/lambda_handler.monitor_service_certificates_expiry_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
