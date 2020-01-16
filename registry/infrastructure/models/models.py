@@ -92,15 +92,17 @@ class GroupHistory(Base):
 
 class OrganizationMember(Base):
     __tablename__ = "org_member"
+
     row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
     org_uuid = Column("org_uuid", VARCHAR(128))
     role = Column("role", VARCHAR(128))
     username = Column("username", VARCHAR(128))
     address = Column("address", VARCHAR(128))
     status = Column("status", VARCHAR(128))
+    transaction_hash = Column("transaction_hash", VARCHAR(128))
     invite_code = Column("invite_code", VARCHAR(128))
-
-
+    created_on = Column("created_on", TIMESTAMP(timezone=False))
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False))
 
 
 class OrganizationAddress(Base):
@@ -135,5 +137,3 @@ class OrganizationAddressHistory(Base):
     country = Column("country", VARCHAR(64), nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False))
     updated_on = Column("updated_on", TIMESTAMP(timezone=False))
-
-

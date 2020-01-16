@@ -8,7 +8,7 @@ from registry.consumer.organization_event_consumer import OrganizationCreatedEve
     OrganizationModifiedEventConsumer
 from registry.domain.models.group import Group as DomainGroup
 from registry.domain.models.organization import Organization as DomainOrganization
-from registry.domain.services.organization_service import OrganizationService
+from registry.application.services.organization_publisher_service import OrganizationService
 from registry.infrastructure.models.models import Group, Organization, OrganizationHistory, OrganizationReviewWorkflow
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
 
@@ -18,7 +18,6 @@ ORIGIN = "PUBLISHER_PORTAL"
 class TestOrganizationService(unittest.TestCase):
 
     def setUp(self):
-        self.org_service = OrganizationService()
         self.org_repo = OrganizationRepository()
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))

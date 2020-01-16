@@ -2,10 +2,10 @@ from datetime import datetime
 
 from sqlalchemy import desc, func, or_
 
-from registry.constants import OrganizationStatus
+from registry.constants import OrganizationStatus, OrganizationMemberStatus, Role
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.models.models import Group, GroupHistory, Organization, OrganizationAddress, \
-    OrganizationAddressHistory, OrganizationHistory, OrganizationReviewWorkflow
+    OrganizationAddressHistory, OrganizationHistory, OrganizationMember, OrganizationReviewWorkflow
 from registry.infrastructure.repositories.base_repository import BaseRepository
 
 
@@ -369,6 +369,70 @@ class OrganizationRepository(BaseRepository):
             .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
             .filter(Organization.org_uuid == org_uuid).all()
         return OrganizationFactory.parse_organization_details(organizations)
+
+    def get_org_member_details_from_username(self, username, org_uuid):
+        org_member = self.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == org_uuid).filter(
+            OrganizationMember.username == username).all()
+        if len(org_member) == 0:
+            return None
+        return OrganizationFactory.org_member_from_db(org_member[0])
+
+    def persist_transaction_hash(self, org_member_list, transaction_hash):
+        member_username_list = [member.username for member in org_member_list]
+        org_members_db_items = self.session.query(OrganizationMember) \
+            .filter(OrganizationMember.username.in_(member_username_list))
+        for org_member in org_members_db_items:
+            org_member.status = OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value
+            org_member.transaction_hash = transaction_hash
+            org_member.updated_on = datetime.utcnow()
+        self.session.commit()
+
+    def add_member(self, org_member_list, status):
+        member_db_models = []
+        current_time = datetime.utcnow()
+        for member in org_member_list:
+            member_db_models.append(
+                OrganizationMember(
+                    org_uuid=member.org_uuid,
+                    role=Role.MEMBER.value,
+                    status=status,
+                    transaction_hash=member.transaction_hash,
+                    invite_code=member.invite_code,
+                    updated_on=current_time,
+                    created_on=current_time
+                )
+            )
+        self.add_all_items(member_db_models)
+
+    def org_member_verify(self, username, invite_code):
+        org_members = self.session.query(OrganizationMember) \
+            .filter(OrganizationMember.invite_code == invite_code) \
+            .filter(OrganizationMember.username == username) \
+            .filter(OrganizationMember.status == OrganizationMemberStatus.PENDING.value) \
+            .all()
+        if len(org_members) == 0:
+            return False
+        return True
+
+    def delete_members(self, org_member_list):
+        allowed_delete_member_status = [OrganizationMemberStatus.PENDING.value,
+                                        OrganizationMemberStatus.ACCEPTED.value]
+        member_username_list = [member.username for member in org_member_list]
+        self.session.query(OrganizationMember).filter(OrganizationMember.username.in_(member_username_list)) \
+            .filter(OrganizationMember.status.in_(allowed_delete_member_status)).delete(synchronize_session='fetch')
+
+    def update_member_wallet_address(self, org_uuid, username, wallet_address):
+        org_member = self.session.query(OrganizationMember) \
+            .filter(OrganizationMember.username == username) \
+            .filter(OrganizationMember.org_uuid == org_uuid) \
+            .filter(OrganizationMember.status == OrganizationMemberStatus.PENDING.value) \
+            .all()
+        if len(org_member) == 0:
+            raise Exception(f"No member found for org_uuid: {org_uuid} ")
+        org_member[0].address = wallet_address
+        org_member[0].status = OrganizationMemberStatus.ACCEPTED.value
+        org_member[0].updated_on = datetime.utcnow()
+        self.session.commit()
 
     def get_all_organization_transaction_data(self):
         org_transaction_data_list = self.session.query(OrganizationReviewWorkflow) \

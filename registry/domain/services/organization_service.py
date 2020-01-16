@@ -117,4 +117,3 @@ class OrganizationService:
             if transaction_receipt is not None:
                 status = OrganizationStatus.PUBLISHED.value if transaction_receipt.status == 1 else OrganizationStatus.FAILED.value
                 self.org_repo.update_organization_review_workflow_status(orgs_transaction_data["row_id"], status)
-
