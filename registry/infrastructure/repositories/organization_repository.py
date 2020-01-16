@@ -397,6 +397,7 @@ class OrganizationRepository(BaseRepository):
                     role=Role.MEMBER.value,
                     status=status,
                     transaction_hash=member.transaction_hash,
+                    username=member.username,
                     invite_code=member.invite_code,
                     updated_on=current_time,
                     created_on=current_time
