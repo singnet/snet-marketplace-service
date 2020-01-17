@@ -178,7 +178,7 @@ class OrganizationService(object):
 
     def register_member(self, wallet_address):
         if Web3.isAddress(wallet_address):
-            org_repo.update_member_wallet_address(self.org_uuid, self.username, wallet_address)
+            org_repo.update_org_member(self.org_uuid, self.username, wallet_address)
         else:
             raise Exception("Invalid wallet address")
         return "OK"
