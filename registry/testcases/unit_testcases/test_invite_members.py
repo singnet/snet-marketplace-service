@@ -269,7 +269,7 @@ class TestInviteMembers(TestCase):
                 org_uuid=test_org_id,
                 role=Role.MEMBER.value,
                 address="",
-                status=OrganizationMemberStatus.PENDING.value,
+                status=OrganizationMemberStatus.VERIFIED.value,
                 transaction_hash="0x123",
                 invite_code=member_invite_code
             )
