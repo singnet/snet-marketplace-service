@@ -221,5 +221,5 @@ class OrganizationMemberService:
     def compute_org_uuid_for_given_username_and_invite_code(username, invite_code):
         org_member_data = org_repo.get_org_member_details_from_username_and_invite_code(username, invite_code)
         if org_member_data is not None:
-            return org_member_data["org_uuid"]
+            return org_member_data.org_uuid
         raise Exception(f"Invite not found for member {username} with given invitation code")
