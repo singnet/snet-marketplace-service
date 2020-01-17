@@ -55,7 +55,7 @@ class OrganizationService(object):
         organization.add_owner(self.username)
         if not organization.is_valid_draft():
             raise Exception(f"Validation failed for the Organization {organization.to_dict()}")
-        if self.is_on_boarding_approved(organization.org_uuid):
+        if self.is_on_boarding_approved():
             org_repo.move_non_published_org_to_history(organization.org_uuid)
             org_repo.add_org_with_status(organization, OrganizationStatus.APPROVED.value, self.username)
         else:
@@ -68,7 +68,7 @@ class OrganizationService(object):
         organization.add_owner(self.username)
         if not organization.is_valid_draft():
             raise Exception(f"Validation failed for the Organization {organization.to_dict()}")
-        if self.is_on_boarding_approved(organization.org_uuid):
+        if self.is_on_boarding_approved():
             org_repo.move_non_published_org_to_history(organization.org_uuid)
             org_repo.add_org_with_status(organization, OrganizationStatus.APPROVED.value, self.username)
         else:
@@ -78,10 +78,10 @@ class OrganizationService(object):
                                        OrganizationStatus.APPROVAL_PENDING.value, self.username)
         return organization.to_dict()
 
-    def is_on_boarding_approved(self,org_uuid):
+    def is_on_boarding_approved(self):
 
         published_orgs = org_repo.get_published_org_for_user(self.username)
-        latest_orgs = org_repo.get_org_status(org_uuid)
+        latest_orgs = org_repo.get_org_status(self.org_uuid)
 
         if len(published_orgs) != 0:
             return False

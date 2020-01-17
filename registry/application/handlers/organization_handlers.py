@@ -23,7 +23,8 @@ def add_org(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     if not validate_dict(payload, required_keys):
         raise BadRequestException()
-    org_service = OrganizationService("", username)
+    org_uuid= payload.get("org_uuid", None)
+    org_service = OrganizationService(org_uuid, username)
     if action == PostOrganizationActions.DRAFT.value:
         response = org_service.add_organization_draft(payload)
     elif action == PostOrganizationActions.SUBMIT.value:
