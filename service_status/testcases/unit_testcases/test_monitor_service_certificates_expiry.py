@@ -52,8 +52,8 @@ class TestMonitorServiceCertificatesExpiry(TestCase):
 
     def test_is_valid_url(self):
         endpoint = "https://dummy.com:0000"
-        response = MonitorService()._valid_url(url=endpoint)
+        response = MonitorServiceCertificate(net_id=NETWORK_ID, repo=None)._valid_url(url=endpoint)
         assert (response == True)
         endpoint = "127.0.0.1:9999"
-        response = MonitorService()._valid_url(url=endpoint)
+        response = MonitorServiceCertificate(net_id=NETWORK_ID, repo=None)._valid_url(url=endpoint)
         assert (response == False)
