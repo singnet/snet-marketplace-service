@@ -5,7 +5,7 @@ from common.exceptions import BadRequestException
 from common.logger import get_logger
 from common.utils import generate_lambda_response, handle_exception_with_slack_notification, validate_dict, \
     validate_dict_list
-from registry.application.services.organization_publisher_service import OrganizationService
+from registry.application.services.organization_publisher_service import OrganizationService, OrganizationMemberService
 from registry.config import NETWORK_ID, SLACK_HOOK
 from registry.constants import PostOrganizationActions
 
@@ -208,8 +208,9 @@ def register_member(event, context):
         raise BadRequestException()
     invite_code = payload["invite_code"]
     wallet_address = payload["wallet_address"]
-    org_publisher_service = OrganizationService(None, username).compute_org_uuid_for_given_username_and_invite_code(invite_code)
-    response = org_publisher_service.register_member(wallet_address)
+    org_uuid = OrganizationMemberService.compute_org_uuid_for_given_username_and_invite_code(
+        username, invite_code)
+    response = OrganizationService(org_uuid, username).register_member(wallet_address)
     return generate_lambda_response(
         StatusCode.CREATED,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
