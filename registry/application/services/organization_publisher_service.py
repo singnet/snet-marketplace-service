@@ -1,14 +1,17 @@
+import json
 from web3 import Web3
 
 from common.boto_utils import BotoUtils
 from common.exceptions import OrganizationNotFound
 from registry.application.access import secured
-from registry.config import REGION_NAME
-from registry.constants import OrganizationStatus, Role, Action
+from common.logger import get_logger
+from registry.config import REGION_NAME, NOTIFICATION_ARN
+from registry.constants import OrganizationStatus, Role, Action, OrganizationMemberStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
 
 org_repo = OrganizationRepository()
+logger = get_logger(__name__)
 
 
 class OrganizationService(object):
@@ -132,8 +135,16 @@ class OrganizationService(object):
     def get_member(self, member_username):
         member = org_repo.get_org_member_details_from_username(member_username, self.org_uuid)
         if member is None:
-            raise Exception(f"No member {member_username} for the organization {self.org_uuid}")
+            logger.info(f"No member {member_username} for the organization {self.org_uuid}")
+            return []
         return [member.to_dict()]
+
+    def get_all_members(self, org_uuid, status, pagination_details):
+        offset = pagination_details.get("offset", None)
+        limit = pagination_details.get("limit", None)
+        sort = pagination_details.get("sort", None)
+        org_members_list = org_repo.get_members_for_given_org_and_status(org_uuid, status)
+        return [member.to_dict() for member in org_members_list]
 
     def publish_members(self, transaction_hash, org_members):
         org_member_list = OrganizationFactory.org_member_from_dict_list(org_members, self.org_uuid)
@@ -144,20 +155,25 @@ class OrganizationService(object):
         org_member_list = OrganizationFactory.org_member_from_dict_list(org_members, self.org_uuid)
         for org_member in org_member_list:
             org_member.generate_invite_code()
-        self._send_invitation(org_member_list)
-        org_repo.add_member(org_member_list, status=Role.MEMBER.value)
+        org_data = org_repo.get_latest_org_from_org_uuid(org_uuid=self.org_uuid)
+        if len(org_data) > 0:
+            org_name = org_data[0]["name"]
+        else:
+            # raise Exception("Unable to find organization.")
+            org_name = "Test"
+        self._send_invitation(org_member_list, org_name)
+        org_repo.add_member(org_member_list, status=OrganizationMemberStatus.PENDING.value)
 
-    def _send_invitation(self, org_member_list):
-        """
-        ToDo: add email flow for the invitation
-        """
-        pass
+    def _send_invitation(self, org_member_list, org_name):
+        self._send_email_notification_for_inviting_organization_member(org_member_list, org_name)
 
     def verify_invite(self, invite_code):
-        if org_repo.org_member_verify(self.username, invite_code):
-            return "OK"
-        else:
+        verification_data = org_repo.org_member_verify(self.username, invite_code)
+        if verification_data is None:
             return "NOT_FOUND"
+        org_repo.update_member_status(verification_data.org_uuid, self.username,
+                                      OrganizationMemberStatus.VERIFIED.value)
+        return "OK"
 
     def delete_members(self, org_members):
         org_member_list = OrganizationFactory.org_member_from_dict_list(org_members, self.org_uuid)
@@ -170,8 +186,34 @@ class OrganizationService(object):
             raise Exception("Invalid wallet address")
         return "OK"
 
-    def get_all_members(self, status, pagination_details):
-        offset = pagination_details.get("offset", None)
-        limit = pagination_details.get("limit", None)
-        sort = pagination_details.get("sort", None)
-        return ""
+    def _send_email_notification_for_inviting_organization_member(self, org_members_list, org_name):
+        for org_member in org_members_list:
+            recipient = org_member.username
+            org_member_notification_subject = self._get_org_member_notification_subject(org_name)
+            org_member_notification_message = self._get_org_member_notification_message(org_member.invite_code,
+                                                                                        org_name)
+            send_notification_payload = {"body": json.dumps({
+                "message": org_member_notification_message,
+                "subject": org_member_notification_subject,
+                "notification_type": "support",
+                "recipient": recipient})}
+            self.boto_utils.invoke_lambda(lambda_function_arn=NOTIFICATION_ARN, invocation_type="RequestResponse",
+                                          payload=json.dumps(send_notification_payload))
+            logger.info(f"Org Membership Invite sent to {recipient}")
+
+    @staticmethod
+    def _get_org_member_notification_message(invite_code, org_name):
+        return f"Organization {org_name} has sent you membership invite. Your invite code is {invite_code}."
+
+    @staticmethod
+    def _get_org_member_notification_subject(org_name):
+        return f"Membership Invitation from  Organization {org_name}"
+
+    def get_organizations_transaction_data(self):
+        orgs_transaction_data = self.org_repo.get_all_organization_transaction_data()
+        for org_transaction_data in orgs_transaction_data:
+            transaction_receipt = self.blockchain_utils.get_transaction_receipt_from_blockchain(
+                transaction_hash=orgs_transaction_data["transaction_hash"])
+            if transaction_receipt is not None:
+                status = OrganizationStatus.PUBLISHED.value if transaction_receipt.status == 1 else OrganizationStatus.FAILED.value
+                self.org_repo.update_organization_review_workflow_status(orgs_transaction_data["row_id"], status)

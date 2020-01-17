@@ -124,7 +124,7 @@ class Organization:
 
     def validate_publish(self):
         return self.validate_approval_state() and (
-            self.metadata_ipfs_hash is not None and len(self.metadata_ipfs_hash) != 0)
+                self.metadata_ipfs_hash is not None and len(self.metadata_ipfs_hash) != 0)
 
     def publish_assets(self):
         ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
@@ -193,6 +193,10 @@ class OrganizationMember(object):
         self.__address = address
         self.__invite_code = invite_code
         self.__transaction_hash = transaction_hash
+
+    @property
+    def org_uuid(self):
+        return self.__org_uuid
 
     @property
     def username(self):

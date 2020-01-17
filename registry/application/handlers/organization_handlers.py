@@ -129,10 +129,10 @@ def get_all_members(event, context):
         raise BadRequestException()
     org_uuid = path_parameters["org_uuid"]
     status = query_parameters["status"]
-    OrganizationService(org_uuid, username).get_all_members(status, query_parameters)
+    response = OrganizationService(org_uuid, username).get_all_members(org_uuid, status, query_parameters)
     return generate_lambda_response(
         StatusCode.OK,
-        {"status": "success", "data": "Not implemented", "error": {}}, cors_enabled=True
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
 
@@ -204,11 +204,11 @@ def delete_members(event, context):
 def register_member(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
-    query_string_parameters = event["queryStringParameters"]
-    if "org_uuid" not in path_parameters or "wallet_address" not in query_string_parameters:
+    payload = json.loads(event["body"])
+    if "org_uuid" not in path_parameters or "wallet_address" not in payload:
         raise BadRequestException()
     org_uuid = path_parameters["org_uuid"]
-    wallet_address = query_string_parameters["wallet_address"]
+    wallet_address = payload["wallet_address"]
     response = OrganizationService(org_uuid, username).register_member(wallet_address)
     return generate_lambda_response(
         StatusCode.CREATED,
