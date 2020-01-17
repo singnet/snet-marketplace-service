@@ -377,6 +377,14 @@ class OrganizationRepository(BaseRepository):
             return None
         return OrganizationFactory.org_member_from_db(org_member[0])
 
+    def get_members_for_given_org_and_status(self, org_uuid, status):
+        org_members_list = []
+        org_members = self.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == org_uuid).filter(
+            OrganizationMember.status == status).all()
+        for org_member in org_members:
+            org_members_list.append(OrganizationFactory.org_member_from_db(org_member))
+        return org_members_list
+
     def persist_transaction_hash(self, org_member_list, transaction_hash):
         member_username_list = [member.username for member in org_member_list]
         org_members_db_items = self.session.query(OrganizationMember) \
@@ -412,8 +420,8 @@ class OrganizationRepository(BaseRepository):
             .filter(OrganizationMember.status == OrganizationMemberStatus.PENDING.value) \
             .all()
         if len(org_members) == 0:
-            return False
-        return True
+            return None
+        return org_members[0]
 
     def delete_members(self, org_member_list):
         allowed_delete_member_status = [OrganizationMemberStatus.PENDING.value,
@@ -426,12 +434,24 @@ class OrganizationRepository(BaseRepository):
         org_member = self.session.query(OrganizationMember) \
             .filter(OrganizationMember.username == username) \
             .filter(OrganizationMember.org_uuid == org_uuid) \
-            .filter(OrganizationMember.status == OrganizationMemberStatus.PENDING.value) \
+            .filter(OrganizationMember.status == OrganizationMemberStatus.VERIFIED.value) \
             .all()
         if len(org_member) == 0:
             raise Exception(f"No member found for org_uuid: {org_uuid} ")
         org_member[0].address = wallet_address
         org_member[0].status = OrganizationMemberStatus.ACCEPTED.value
+        org_member[0].updated_on = datetime.utcnow()
+        self.session.commit()
+
+    def update_member_status(self, org_uuid, username, status):
+        org_member = self.session.query(OrganizationMember) \
+            .filter(OrganizationMember.username == username) \
+            .filter(OrganizationMember.org_uuid == org_uuid) \
+            .filter(OrganizationMember.status == OrganizationMemberStatus.PENDING.value) \
+            .all()
+        if len(org_member) == 0:
+            raise Exception(f"No member found for org_uuid: {org_uuid} ")
+        org_member[0].status = status
         org_member[0].updated_on = datetime.utcnow()
         self.session.commit()
 

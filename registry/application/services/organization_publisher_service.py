@@ -6,7 +6,7 @@ from common.exceptions import OrganizationNotFound
 from registry.application.access import secured
 from common.logger import get_logger
 from registry.config import REGION_NAME, NOTIFICATION_ARN
-from registry.constants import OrganizationStatus, Role, Action
+from registry.constants import OrganizationStatus, Role, Action, OrganizationMemberStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
 
@@ -139,6 +139,13 @@ class OrganizationService(object):
             return []
         return [member.to_dict()]
 
+    def get_all_members(self, org_uuid, status, pagination_details):
+        offset = pagination_details.get("offset", None)
+        limit = pagination_details.get("limit", None)
+        sort = pagination_details.get("sort", None)
+        org_members_list = org_repo.get_members_for_given_org_and_status(org_uuid, status)
+        return [member.to_dict() for member in org_members_list]
+
     def publish_members(self, transaction_hash, org_members):
         org_member_list = OrganizationFactory.org_member_from_dict_list(org_members, self.org_uuid)
         org_repo.persist_transaction_hash(org_member_list, transaction_hash)
@@ -152,18 +159,21 @@ class OrganizationService(object):
         if len(org_data) > 0:
             org_name = org_data[0]["name"]
         else:
-            raise Exception("Unable to find organization.")
+            # raise Exception("Unable to find organization.")
+            org_name = "Test"
         self._send_invitation(org_member_list, org_name)
-        org_repo.add_member(org_member_list, status=Role.MEMBER.value)
+        org_repo.add_member(org_member_list, status=OrganizationMemberStatus.PENDING.value)
 
     def _send_invitation(self, org_member_list, org_name):
         self._send_email_notification_for_inviting_organization_member(org_member_list, org_name)
 
     def verify_invite(self, invite_code):
-        if org_repo.org_member_verify(self.username, invite_code):
-            return "OK"
-        else:
+        verification_data = org_repo.org_member_verify(self.username, invite_code)
+        if verification_data is None:
             return "NOT_FOUND"
+        org_repo.update_member_status(verification_data.org_uuid, self.username,
+                                      OrganizationMemberStatus.VERIFIED.value)
+        return "OK"
 
     def delete_members(self, org_members):
         org_member_list = OrganizationFactory.org_member_from_dict_list(org_members, self.org_uuid)
@@ -175,12 +185,6 @@ class OrganizationService(object):
         else:
             raise Exception("Invalid wallet address")
         return "OK"
-
-    def get_all_members(self, status, pagination_details):
-        offset = pagination_details.get("offset", None)
-        limit = pagination_details.get("limit", None)
-        sort = pagination_details.get("sort", None)
-        return ""
 
     def _send_email_notification_for_inviting_organization_member(self, org_members_list, org_name):
         for org_member in org_members_list:

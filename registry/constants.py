@@ -21,6 +21,7 @@ class OrganizationMemberStatus(Enum):
     PENDING = "PENDING"
     PUBLISH_IN_PROGRESS = "PUBLISH_IN_PROGRESS"
     ACCEPTED = "ACCEPTED"
+    VERIFIED = "VERIFIED"
 
 
 class Role(Enum):
