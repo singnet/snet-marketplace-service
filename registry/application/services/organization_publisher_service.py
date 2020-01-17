@@ -157,10 +157,9 @@ class OrganizationService(object):
             org_member.generate_invite_code()
         org_data = org_repo.get_latest_org_from_org_uuid(org_uuid=self.org_uuid)
         if len(org_data) > 0:
-            org_name = org_data[0]["name"]
+            org_name = org_data[0].Organization.name
         else:
-            # raise Exception("Unable to find organization.")
-            org_name = "Test"
+            raise Exception("Unable to find organization.")
         self._send_invitation(org_member_list, org_name)
         org_repo.add_member(org_member_list, status=OrganizationMemberStatus.PENDING.value)
 
