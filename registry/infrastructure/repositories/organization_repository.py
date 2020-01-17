@@ -377,6 +377,13 @@ class OrganizationRepository(BaseRepository):
             return None
         return OrganizationFactory.org_member_from_db(org_member[0])
 
+    def get_org_member_details_from_username_and_invite_code(self, username, invite_code):
+        org_member = self.session.query(OrganizationMember).filter(
+            OrganizationMember.invite_code == invite_code).filter(OrganizationMember.username == username).all()
+        if len(org_member) == 0:
+            return None
+        return OrganizationFactory.org_member_from_db(org_member[0])
+
     def get_members_for_given_org_and_status(self, org_uuid, status):
         org_members_list = []
         org_members = self.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == org_uuid).filter(
@@ -420,8 +427,8 @@ class OrganizationRepository(BaseRepository):
             .filter(OrganizationMember.status == OrganizationMemberStatus.PENDING.value) \
             .all()
         if len(org_members) == 0:
-            return None
-        return org_members[0]
+            return False
+        return True
 
     def delete_members(self, org_member_list):
         allowed_delete_member_status = [OrganizationMemberStatus.PENDING.value,
@@ -434,7 +441,7 @@ class OrganizationRepository(BaseRepository):
         org_member = self.session.query(OrganizationMember) \
             .filter(OrganizationMember.username == username) \
             .filter(OrganizationMember.org_uuid == org_uuid) \
-            .filter(OrganizationMember.status == OrganizationMemberStatus.VERIFIED.value) \
+            .filter(OrganizationMember.status == OrganizationMemberStatus.PENDING.value) \
             .all()
         if len(org_member) == 0:
             raise Exception(f"No member found for org_uuid: {org_uuid} ")
