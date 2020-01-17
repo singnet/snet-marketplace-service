@@ -448,7 +448,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /org/{org_id}/member/register
+          path: /org/member/register
           private: true
           authorizer:
             name: user-authorizer

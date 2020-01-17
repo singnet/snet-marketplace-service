@@ -203,13 +203,13 @@ def delete_members(event, context):
 @handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def register_member(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
-    path_parameters = event["pathParameters"]
     payload = json.loads(event["body"])
-    if "org_id" not in path_parameters or "wallet_address" not in payload:
+    if "invite_code" not in payload and "wallet_address" not in payload:
         raise BadRequestException()
-    org_uuid = path_parameters["org_id"]
+    invite_code = payload["invite_code"]
     wallet_address = payload["wallet_address"]
-    response = OrganizationService(org_uuid, username).register_member(wallet_address)
+    org_publisher_service = OrganizationService(None, username).compute_org_uuid_for_given_username_and_invite_code(invite_code)
+    response = org_publisher_service.register_member(wallet_address)
     return generate_lambda_response(
         StatusCode.CREATED,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
