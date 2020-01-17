@@ -439,7 +439,7 @@ class OrganizationRepository(BaseRepository):
 
     def update_org_member(self, org_uuid, username, wallet_address):
         org_member = self.session.query(OrganizationMember) \
-            .filter(or_(OrganizationMember.username == username, OrganizationMember.wallet_address == wallet_address)) \
+            .filter(or_(OrganizationMember.username == username, OrganizationMember.address == wallet_address)) \
             .filter(OrganizationMember.org_uuid == org_uuid) \
             .filter(or_(OrganizationMember.status == OrganizationMemberStatus.PENDING.value,
                         OrganizationMember.status == OrganizationMemberStatus.PUBLISHED.value)) \
