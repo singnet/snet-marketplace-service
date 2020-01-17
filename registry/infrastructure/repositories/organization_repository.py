@@ -437,16 +437,21 @@ class OrganizationRepository(BaseRepository):
         self.session.query(OrganizationMember).filter(OrganizationMember.username.in_(member_username_list)) \
             .filter(OrganizationMember.status.in_(allowed_delete_member_status)).delete(synchronize_session='fetch')
 
-    def update_member_wallet_address(self, org_uuid, username, wallet_address):
+    def update_org_member(self, org_uuid, username, wallet_address):
         org_member = self.session.query(OrganizationMember) \
-            .filter(OrganizationMember.username == username) \
+            .filter(or_(OrganizationMember.username == username, OrganizationMember.address == wallet_address)) \
             .filter(OrganizationMember.org_uuid == org_uuid) \
-            .filter(OrganizationMember.status == OrganizationMemberStatus.PENDING.value) \
+            .filter(or_(OrganizationMember.status == OrganizationMemberStatus.PENDING.value,
+                        OrganizationMember.status == OrganizationMemberStatus.PUBLISHED.value)) \
             .all()
         if len(org_member) == 0:
             raise Exception(f"No member found for org_uuid: {org_uuid} ")
-        org_member[0].address = wallet_address
-        org_member[0].status = OrganizationMemberStatus.ACCEPTED.value
+
+        if org_member[0].status == OrganizationMemberStatus.PUBLISHED.value and org_member[0].address == wallet_address:
+            org_member[0].username = username
+        elif org_member[0].status == OrganizationMemberStatus.PENDING.value and org_member[0].username == username:
+            org_member[0].address = wallet_address
+            org_member[0].status = OrganizationMemberStatus.ACCEPTED.value
         org_member[0].updated_on = datetime.utcnow()
         self.session.commit()
 
