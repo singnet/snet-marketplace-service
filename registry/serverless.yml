@@ -309,9 +309,9 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-  get-member:
+  get-all-members:
     warmup: true
-    handler: registry.application.handlers.organization_handlers.get_member
+    handler: registry.application.handlers.organization_handlers.get_all_members
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -323,7 +323,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /org/{org_uuid}/member/{username}
+          path: /org/{org_uuid}/member
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -340,9 +340,10 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-  get-all-members:
+
+  get-member:
     warmup: true
-    handler: registry.application.handlers.organization_handlers.get_all_members
+    handler: registry.application.handlers.organization_handlers.get_member
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -354,7 +355,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /org/{org_uuid}/member
+          path: /org/{org_uuid}/member/{username}
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
