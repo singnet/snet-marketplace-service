@@ -323,7 +323,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /org/{org_uuid}/member
+          path: /org/{org_id}/member
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -355,7 +355,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /org/{org_uuid}/member/{username}
+          path: /org/{org_id}/member/{username}
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -386,7 +386,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /org/{org_uuid}/member/invite
+          path: /org/{org_id}/member/invite
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -448,7 +448,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /org/{org_uuid}/member/register
+          path: /org/{org_id}/member/register
           private: true
           authorizer:
             name: user-authorizer
@@ -480,7 +480,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /org/{org_uuid}/member/publish
+          path: /org/{org_id}/member/publish
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -511,7 +511,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /org/{org_uuid}/member/delete
+          path: /org/{org_id}/member/delete
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
