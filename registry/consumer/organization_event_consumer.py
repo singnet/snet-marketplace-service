@@ -80,7 +80,7 @@ class OrganizationEventConsumer(EventConsumer):
         if len(removed_member) > 0:
             self._organization_repository.delete_members(removed_member)
         if len(added_member) > 0:
-            self._organization_repository.add_member(added_member, OrganizationMemberStatus.PUBLISHED.value)
+            self._organization_repository.add_member(added_member)
 
         for member in updated_members:
             self._organization_repository.update_member_status_using_address(org_uuid, member.address,

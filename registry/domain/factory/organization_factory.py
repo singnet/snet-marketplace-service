@@ -240,6 +240,6 @@ class OrganizationFactory:
 
         org_members = []
         for member in members:
-            org_members.append(OrganizationMember(org_uuid, "", OrganizationMemberStatus.PUBLISHED, Role.MEMBER.value, member))
+            org_members.append(OrganizationMember(org_uuid, "", OrganizationMemberStatus.PUBLISHED.value, Role.MEMBER.value, member))
 
         return org_members
