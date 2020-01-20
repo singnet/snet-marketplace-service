@@ -342,7 +342,7 @@ functions:
 
   register-org-member:
     warmup: true
-    handler: orchestrator.publisher.handlers.organization_handlers.register_org_member
+    handler: orchestrator.publisher.application.handlers.organization_handlers.register_org_member
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
