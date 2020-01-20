@@ -408,15 +408,15 @@ class OrganizationRepository(BaseRepository):
             org_member.updated_on = datetime.utcnow()
         self.session.commit()
 
-    def add_member(self, org_member_list, status):
+    def add_member(self, org_member_list):
         member_db_models = []
         current_time = datetime.utcnow()
         for member in org_member_list:
             member_db_models.append(
                 OrganizationMember(
                     org_uuid=member.org_uuid,
-                    role=Role.MEMBER.value,
-                    status=status,
+                    role=member.role,
+                    status=member.status,
                     transaction_hash=member.transaction_hash,
                     username=member.username,
                     invite_code=member.invite_code,
