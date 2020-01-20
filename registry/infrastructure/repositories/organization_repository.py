@@ -178,7 +178,7 @@ class OrganizationRepository(BaseRepository):
 
     def get_latest_organization(self, username):
         organizations = self.session.query(Organization, OrganizationReviewWorkflow, func.row_number().over(
-            partition_by=Organization.org_uuid, order_by=OrganizationReviewWorkflow.updated_on).label("rn")
+            partition_by=Organization.org_uuid, order_by=OrganizationReviewWorkflow.updated_on.desc()).label("rn")
                                            ) \
             .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
             .join(OrganizationMember, Organization.org_uuid == OrganizationMember.org_uuid) \
@@ -198,7 +198,7 @@ class OrganizationRepository(BaseRepository):
             .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
             .filter(OrganizationReviewWorkflow == OrganizationStatus.PUBLISHED.value)
         self.session.commit()
-        return OrganizationFactory.parse_organization_data_model_list(organization)
+        return OrganizationFactory.parse_organization_data_model_list(organization, OrganizationStatus.PUBLISHED.value)
 
     def change_org_status(self, org_uuid, current_status, new_status, username):
         organizations = self.get_org_with_status(org_uuid, current_status)
