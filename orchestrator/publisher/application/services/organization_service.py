@@ -12,28 +12,19 @@ class OrganizationOrchestratorService:
     def __init__(self):
         self.boto_client = BotoUtils(REGION_NAME)
 
-    def register_org_member(self, username, org_uuid, payload):
-        full_name = payload["full_name"]
-        phone_number = payload["phone_number"]
+    def register_org_member(self, username, payload):
         wallet_address = payload["wallet_address"]
-
-        self.dapp_update_user_details(full_name, phone_number)
-        self.registry_register_org_member(org_uuid, username, wallet_address)
+        invite_code = payload["invite_code"]
+        self.registry_register_org_member(username, wallet_address, invite_code)
         self.register_wallet(username, wallet_address)
         return "OK"
 
-    def dapp_update_user_details(self, full_name, phone_number):
-        """
-        ToDo: Invoke update user lambda
-        """
-        pass
-
-    def registry_register_org_member(self, org_uuid, username, wallet_address):
+    def registry_register_org_member(self, username, wallet_address, invite_code):
         register_member_event = {
-            "path": f"/org/{org_uuid}/member/register",
-            "pathParameters": {"org_uuid": org_uuid},
-            "queryStringParameters": {"wallet_address": wallet_address},
-            "httpMethod": "GET",
+            "path": f"/org/member/register",
+            "body": json.dumps({"wallet_address": wallet_address,
+                                "invite_code": invite_code}),
+            "httpMethod": "POST",
             "requestContext": {
                 "authorizer": {
                     "claims": {
@@ -43,7 +34,7 @@ class OrganizationOrchestratorService:
             }
         }
 
-        logger.info(f"Requesting register user for org_uuid: {org_uuid} "
+        logger.info(f"Requesting register user for invite_code: {invite_code} "
                     f"username: {username} wallet_address:{wallet_address}")
 
         register_member_response = self.boto_client.invoke_lambda(
@@ -52,7 +43,7 @@ class OrganizationOrchestratorService:
             payload=json.dumps(register_member_event)
         )
         if register_member_response["statusCode"] != 201:
-            raise Exception(f"Failed to register user for org_uuid: {org_uuid} "
+            raise Exception(f"Failed to register user for invite_code: {invite_code} "
                             f"username: {username} wallet_address:{wallet_address}")
 
     def register_wallet(self, username, wallet_address, wallet_type="METAMASK"):
