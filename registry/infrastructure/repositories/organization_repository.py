@@ -169,7 +169,7 @@ class OrganizationRepository(BaseRepository):
         organizations = self.session.query(Organization) \
             .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
             .filter(OrganizationReviewWorkflow == OrganizationStatus.PUBLISHED.value) \
-            .filter(Organization.owner == username).all()
+            .filter(Organization.owner == username).filter(Organization).all()
         self.session.commit()
         return OrganizationFactory.parse_organization_details(organizations)
 
@@ -179,7 +179,9 @@ class OrganizationRepository(BaseRepository):
                                            ) \
             .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
             .join(OrganizationMember, Organization.org_uuid == OrganizationMember.org_uuid) \
-            .filter(OrganizationMember.username == username).all()
+            .filter(OrganizationMember.username == username)\
+            .filter(OrganizationMember.status.in_([OrganizationMemberStatus.PUBLISHED.status,
+                                                   OrganizationMemberStatus.ACCEPTED.status])).all()
         self.session.commit()
         latest_orgs = []
         for org in organizations:
