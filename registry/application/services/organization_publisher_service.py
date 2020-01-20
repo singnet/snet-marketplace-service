@@ -69,9 +69,12 @@ class OrganizationService(object):
             org_repo.update_org_draft(current_drafts[0], organization, self.username)
         else:
             org_repo.add_org_with_status(organization, OrganizationStatus.DRAFT.value, self.username)
+            org_owner = OrganizationMember(organization.org_uuid, self.username, "", Role.OWNER.value)
+            org_owner.generate_invite_code()
             org_repo.add_member(
-                [OrganizationMember(organization.org_uuid, self.username, "", Role.OWNER.value)],
-                OrganizationMemberStatus.ACCEPTED.value)
+                [org_owner],
+                OrganizationMemberStatus.ACCEPTED.value
+            )
 
     def submit_org_for_approval(self, payload):
         organization = OrganizationFactory.parse_raw_organization(payload)

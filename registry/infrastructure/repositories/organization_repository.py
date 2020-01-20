@@ -11,8 +11,6 @@ from registry.infrastructure.repositories.base_repository import BaseRepository
 
 class OrganizationRepository(BaseRepository):
 
-
-
     def add_org_with_status(self, organization, status, username, transaction_hash=None, wallet_address=None):
         current_time = datetime.utcnow()
         groups = organization.groups
@@ -178,9 +176,10 @@ class OrganizationRepository(BaseRepository):
     def get_latest_organization(self, username):
         organizations = self.session.query(Organization, OrganizationReviewWorkflow, func.row_number().over(
             partition_by=Organization.org_uuid, order_by=OrganizationReviewWorkflow.updated_on).label("rn")
-                                           ).join(OrganizationReviewWorkflow,
-                                                  Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
-            .filter(Organization.owner == username).all()
+                                           ) \
+            .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
+            .join(OrganizationMember, Organization.org_uuid == OrganizationMember.org_uuid) \
+            .filter(OrganizationMember.username == username).all()
         self.session.commit()
         latest_orgs = []
         for org in organizations:
