@@ -11,12 +11,7 @@ from registry.infrastructure.repositories.base_repository import BaseRepository
 
 class OrganizationRepository(BaseRepository):
 
-    def draft_update_org(self, organization, username):
-        current_drafts = self.get_org_with_status(organization.org_uuid, OrganizationStatus.DRAFT.value)
-        if len(current_drafts) > 0:
-            self.update_org_draft(current_drafts[0], organization, username)
-        else:
-            self.add_org_with_status(organization, OrganizationStatus.DRAFT.value, username)
+
 
     def add_org_with_status(self, organization, status, username, transaction_hash=None, wallet_address=None):
         current_time = datetime.utcnow()

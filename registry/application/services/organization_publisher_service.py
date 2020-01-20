@@ -3,11 +3,11 @@ from web3 import Web3
 
 from common.boto_utils import BotoUtils
 from common.exceptions import OrganizationNotFound
-from registry.application.access import secured
 from common.logger import get_logger
 from registry.config import REGION_NAME, NOTIFICATION_ARN
 from registry.constants import OrganizationStatus, Role, Action, OrganizationMemberStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
+from registry.domain.models.organization import OrganizationMember
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
 
 org_repo = OrganizationRepository()
@@ -59,9 +59,19 @@ class OrganizationService(object):
             org_repo.move_non_published_org_to_history(organization.org_uuid)
             org_repo.add_org_with_status(organization, OrganizationStatus.APPROVED.value, self.username)
         else:
-            org_repo.draft_update_org(organization, self.username)
+            self.update_org_draft(organization)
             org_repo.move_non_published_org_to_history(organization.org_uuid)
         return organization.to_dict()
+
+    def update_org_draft(self, organization):
+        current_drafts = org_repo.get_org_with_status(organization.org_uuid, OrganizationStatus.DRAFT.value)
+        if len(current_drafts) > 0:
+            org_repo.update_org_draft(current_drafts[0], organization, self.username)
+        else:
+            org_repo.add_org_with_status(organization, OrganizationStatus.DRAFT.value, self.username)
+            org_repo.add_member(
+                [OrganizationMember(organization.org_uuid, self.username, "", Role.OWNER.value)],
+                OrganizationMemberStatus.ACCEPTED.value)
 
     def submit_org_for_approval(self, payload):
         organization = OrganizationFactory.parse_raw_organization(payload)
@@ -72,7 +82,7 @@ class OrganizationService(object):
             org_repo.move_non_published_org_to_history(organization.org_uuid)
             org_repo.add_org_with_status(organization, OrganizationStatus.APPROVED.value, self.username)
         else:
-            org_repo.draft_update_org(organization, self.username)
+            self.update_org_draft(organization)
             org_repo.move_non_published_org_to_history(organization.org_uuid)
             org_repo.change_org_status(organization.org_uuid, OrganizationStatus.DRAFT.value,
                                        OrganizationStatus.APPROVAL_PENDING.value, self.username)
