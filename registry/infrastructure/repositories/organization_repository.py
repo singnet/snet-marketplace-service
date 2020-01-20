@@ -402,7 +402,7 @@ class OrganizationRepository(BaseRepository):
             return None
         return OrganizationFactory.org_member_from_db(org_member[0])
 
-    def get_members_for_given_org_and_status(self, org_uuid, status, role):
+    def get_members_for_given_org_and_status(self, org_uuid, status, role=None):
         org_members_list = []
         subquery = self.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == org_uuid)
         if role is not None:
