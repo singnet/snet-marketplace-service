@@ -257,3 +257,9 @@ class OrganizationMember(object):
 
     def generate_invite_code(self):
         self.__invite_code = uuid4().hex
+
+    def set_status(self, status):
+        self.__status = status
+
+    def set_role(self, role):
+        self.__role = role

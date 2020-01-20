@@ -3,11 +3,11 @@ from web3 import Web3
 
 from common.boto_utils import BotoUtils
 from common.exceptions import OrganizationNotFound
-from registry.application.access import secured
 from common.logger import get_logger
 from registry.config import REGION_NAME, NOTIFICATION_ARN
 from registry.constants import OrganizationStatus, Role, Action, OrganizationMemberStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
+from registry.domain.models.organization import OrganizationMember
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
 
 org_repo = OrganizationRepository()
@@ -59,9 +59,20 @@ class OrganizationService(object):
             org_repo.move_non_published_org_to_history(organization.org_uuid)
             org_repo.add_org_with_status(organization, OrganizationStatus.APPROVED.value, self.username)
         else:
-            org_repo.draft_update_org(organization, self.username)
+            self.update_org_draft(organization)
             org_repo.move_non_published_org_to_history(organization.org_uuid)
         return organization.to_dict()
+
+    def update_org_draft(self, organization):
+        current_drafts = org_repo.get_org_with_status(organization.org_uuid, OrganizationStatus.DRAFT.value)
+        if len(current_drafts) > 0:
+            org_repo.update_org_draft(current_drafts[0], organization, self.username)
+        else:
+            org_repo.add_org_with_status(organization, OrganizationStatus.DRAFT.value, self.username)
+            org_owner = OrganizationMember(organization.org_uuid, self.username,
+                                           OrganizationMemberStatus.ACCEPTED.value, Role.OWNER.value)
+            org_owner.generate_invite_code()
+            org_repo.add_member([org_owner])
 
     def submit_org_for_approval(self, payload):
         organization = OrganizationFactory.parse_raw_organization(payload)
@@ -72,7 +83,7 @@ class OrganizationService(object):
             org_repo.move_non_published_org_to_history(organization.org_uuid)
             org_repo.add_org_with_status(organization, OrganizationStatus.APPROVED.value, self.username)
         else:
-            org_repo.draft_update_org(organization, self.username)
+            self.update_org_draft(organization)
             org_repo.move_non_published_org_to_history(organization.org_uuid)
             org_repo.change_org_status(organization.org_uuid, OrganizationStatus.DRAFT.value,
                                        OrganizationStatus.APPROVAL_PENDING.value, self.username)
@@ -155,13 +166,15 @@ class OrganizationService(object):
         org_member_list = OrganizationFactory.org_member_from_dict_list(org_members, self.org_uuid)
         for org_member in org_member_list:
             org_member.generate_invite_code()
+            org_member.set_status(OrganizationMemberStatus.PENDING.value)
+            org_member.set_role(Role.MEMBER.value)
         org_data = org_repo.get_latest_org_from_org_uuid(org_uuid=self.org_uuid)
         if len(org_data) > 0:
             org_name = org_data[0].Organization.name
         else:
             raise Exception("Unable to find organization.")
         self._send_invitation(org_member_list, org_name)
-        org_repo.add_member(org_member_list, status=OrganizationMemberStatus.PENDING.value)
+        org_repo.add_member(org_member_list)
 
     def _send_invitation(self, org_member_list, org_name):
         self._send_email_notification_for_inviting_organization_member(org_member_list, org_name)
