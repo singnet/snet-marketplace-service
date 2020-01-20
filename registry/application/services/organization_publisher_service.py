@@ -151,11 +151,11 @@ class OrganizationService(object):
             return []
         return [member.to_dict()]
 
-    def get_all_members(self, org_uuid, status, pagination_details):
+    def get_all_members(self, org_uuid, status, role, pagination_details):
         offset = pagination_details.get("offset", None)
         limit = pagination_details.get("limit", None)
         sort = pagination_details.get("sort", None)
-        org_members_list = org_repo.get_members_for_given_org_and_status(org_uuid, status)
+        org_members_list = org_repo.get_members_for_given_org_and_status(org_uuid, status, role)
         return [member.to_dict() for member in org_members_list]
 
     def publish_members(self, transaction_hash, org_members):

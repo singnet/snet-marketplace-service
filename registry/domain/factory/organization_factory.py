@@ -128,10 +128,10 @@ class OrganizationFactory:
         return organization
 
     @staticmethod
-    def parse_organization_data_model_list(items):
+    def parse_organization_data_model_list(items, status):
         organizations = []
         for item in items:
-            organizations.append(OrganizationFactory.parse_organization_data_model(item))
+            organizations.append(OrganizationFactory.parse_organization_data_model(item, status))
         return organizations
 
     @staticmethod

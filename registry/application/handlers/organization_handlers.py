@@ -126,11 +126,12 @@ def get_all_members(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
     query_parameters = event["queryStringParameters"]
-    if "org_id" not in path_parameters or "status" not in query_parameters:
+    if "org_id" not in path_parameters:
         raise BadRequestException()
     org_uuid = path_parameters["org_id"]
-    status = query_parameters["status"]
-    response = OrganizationService(org_uuid, username).get_all_members(org_uuid, status, query_parameters)
+    status = query_parameters.get("status", None)
+    role = query_parameters.get("role", None)
+    response = OrganizationService(org_uuid, username).get_all_members(org_uuid, status, role, query_parameters)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
