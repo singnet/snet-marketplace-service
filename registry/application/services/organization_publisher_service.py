@@ -6,7 +6,7 @@ from common.boto_utils import BotoUtils
 from common.exceptions import OrganizationNotFound
 from common.logger import get_logger
 from registry.config import NOTIFICATION_ARN, REGION_NAME
-from registry.constants import OrganizationMemberStatus, OrganizationStatus
+from registry.constants import OrganizationMemberStatus, OrganizationStatus, Role
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import OrganizationMember
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
