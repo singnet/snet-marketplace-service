@@ -431,6 +431,7 @@ class OrganizationRepository(BaseRepository):
                     org_uuid=member.org_uuid,
                     role=Role.MEMBER.value,
                     status=status,
+                    address=member.address,
                     transaction_hash=member.transaction_hash,
                     username=member.username,
                     invite_code=member.invite_code,
