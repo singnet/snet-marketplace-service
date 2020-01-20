@@ -2,7 +2,8 @@ from datetime import datetime
 
 from sqlalchemy import desc, func, or_
 
-from registry.constants import OrganizationStatus, OrganizationMemberStatus, Role
+from registry.constants import OrganizationMemberStatus, OrganizationStatus, Role
+from registry.domain.exceptions import MemberNotFoundException
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.models.models import Group, GroupHistory, Organization, OrganizationAddress, \
     OrganizationAddressHistory, OrganizationHistory, OrganizationMember, OrganizationReviewWorkflow
@@ -370,6 +371,13 @@ class OrganizationRepository(BaseRepository):
             .filter(Organization.org_uuid == org_uuid).all()
         return OrganizationFactory.parse_organization_details(organizations)
 
+    def get_members_for_given_org(self, org_uuid):
+        org_members_list = []
+        org_members = self.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == org_uuid).all()
+        for org_member in org_members:
+            org_members_list.append(OrganizationFactory.org_member_from_db(org_member))
+        return org_members_list
+
     def get_org_member_details_from_username(self, username, org_uuid):
         org_member = self.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == org_uuid).filter(
             OrganizationMember.username == username).all()
@@ -377,7 +385,7 @@ class OrganizationRepository(BaseRepository):
             return None
         return OrganizationFactory.org_member_from_db(org_member[0])
 
-    def get_members_for_given_org_and_status(self, org_uuid, status):
+    def  get_members_for_given_org_and_status(self, org_uuid, status):
         org_members_list = []
         org_members = self.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == org_uuid).filter(
             OrganizationMember.status == status).all()
@@ -430,6 +438,12 @@ class OrganizationRepository(BaseRepository):
         self.session.query(OrganizationMember).filter(OrganizationMember.username.in_(member_username_list)) \
             .filter(OrganizationMember.status.in_(allowed_delete_member_status)).delete(synchronize_session='fetch')
 
+    def delete_members_using_address(self, org_member_list):
+        member_address_list = [member.address for member in org_member_list]
+        self.session.query(OrganizationMember).filter(OrganizationMember.address.in_(member_address_list) \
+                                                      .delete(synchronize_session='fetch'))
+
+
     def update_member_wallet_address(self, org_uuid, username, wallet_address):
         org_member = self.session.query(OrganizationMember) \
             .filter(OrganizationMember.username == username) \
@@ -451,6 +465,18 @@ class OrganizationRepository(BaseRepository):
             .all()
         if len(org_member) == 0:
             raise Exception(f"No member found for org_uuid: {org_uuid} ")
+        org_member[0].status = status
+        org_member[0].updated_on = datetime.utcnow()
+        self.session.commit()
+
+    def update_member_status_using_address(self, org_uuid, address, status):
+        org_member = self.session.query(OrganizationMember) \
+            .filter(OrganizationMember.address == address) \
+            .filter(OrganizationMember.org_uuid == org_uuid) \
+            .filter(OrganizationMember.status == OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value) \
+            .all()
+        if len(org_member) == 0:
+            raise MemberNotFoundException(f"No member found for org_uuid: {org_uuid} ")
         org_member[0].status = status
         org_member[0].updated_on = datetime.utcnow()
         self.session.commit()

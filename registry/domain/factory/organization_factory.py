@@ -4,7 +4,7 @@ from datetime import datetime
 import common.boto_utils as boto_utils
 from common.logger import get_logger
 from registry.config import ALLOWED_ORIGIN, ASSET_BUCKET, METADATA_FILE_PATH, REGION_NAME
-from registry.constants import OrganizationStatus
+from registry.constants import OrganizationMemberStatus, OrganizationStatus, Role
 from registry.domain.models.group import Group
 from registry.domain.models.organization import Organization, OrganizationMember
 from registry.domain.models.organization_address import OrganizationAddress
@@ -234,3 +234,12 @@ class OrganizationFactory:
         org_member = OrganizationMember(org_uuid, username, status, role, address, invite_code, transaction_hash)
 
         return org_member
+
+    @staticmethod
+    def parser_org_members_from_metadata(org_uuid,members):
+
+        org_members = []
+        for member in members:
+            org_members.append(OrganizationMember(org_uuid, "", OrganizationMemberStatus.PUBLISHED, Role.MEMBER.value, member))
+
+        return org_members
