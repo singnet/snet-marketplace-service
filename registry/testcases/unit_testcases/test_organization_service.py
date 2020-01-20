@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from common.utils import validate_dict
 from registry.application.services.organization_publisher_service import OrganizationService, org_repo
-from registry.constants import OrganizationStatus
+from registry.constants import OrganizationStatus, OrganizationMemberStatus, Role
 from registry.domain.models.group import Group as DomainGroup
 from registry.domain.models.organization import Organization as DomainOrganization
 from registry.infrastructure.models.models import Group, Organization, OrganizationAddress, OrganizationHistory, \
@@ -247,7 +247,9 @@ class TestOrganizationService(unittest.TestCase):
         test_org_id = response_org["org_uuid"]
         orgs = self.org_repo.get_organization_draft(test_org_id)
         groups = self.org_repo.session.query(Group).filter(Group.org_uuid == test_org_id).all()
-        if len(orgs) != 1 or len(groups) != 2:
+        org_member = self.org_repo.session.query(OrganizationMember).filter(OrganizationMember.username == username)\
+            .filter(OrganizationMember.role == Role.OWNER.value).all()
+        if len(orgs) != 1 or len(groups) != 2 or len(org_member) != 1:
             assert False
         else:
             self.assertEqual(orgs[0].org_uuid, test_org_id)

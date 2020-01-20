@@ -1,0 +1,2 @@
+class MemberNotFoundException(Exception):
+    pass

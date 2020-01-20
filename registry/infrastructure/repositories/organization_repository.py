@@ -3,6 +3,7 @@ from datetime import datetime
 from sqlalchemy import desc, func, or_
 
 from registry.constants import OrganizationStatus, OrganizationMemberStatus, Role
+from registry.domain.exceptions import MemberNotFoundException
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.models.models import Group, GroupHistory, Organization, OrganizationAddress, \
     OrganizationAddressHistory, OrganizationHistory, OrganizationMember, OrganizationReviewWorkflow
@@ -10,13 +11,6 @@ from registry.infrastructure.repositories.base_repository import BaseRepository
 
 
 class OrganizationRepository(BaseRepository):
-
-    def draft_update_org(self, organization, username):
-        current_drafts = self.get_org_with_status(organization.org_uuid, OrganizationStatus.DRAFT.value)
-        if len(current_drafts) > 0:
-            self.update_org_draft(current_drafts[0], organization, username)
-        else:
-            self.add_org_with_status(organization, OrganizationStatus.DRAFT.value, username)
 
     def add_org_with_status(self, organization, status, username, transaction_hash=None, wallet_address=None):
         current_time = datetime.utcnow()
@@ -175,17 +169,23 @@ class OrganizationRepository(BaseRepository):
     def get_published_org_for_user(self, username):
         organizations = self.session.query(Organization) \
             .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
+            .join(OrganizationMember, Organization.org_uuid == OrganizationMember.org_uuid) \
             .filter(OrganizationReviewWorkflow == OrganizationStatus.PUBLISHED.value) \
-            .filter(Organization.owner == username).all()
+            .filter(OrganizationMember.username == username) \
+            .filter(OrganizationMember.role == Role.OWNER.value).all()
         self.session.commit()
         return OrganizationFactory.parse_organization_details(organizations)
 
     def get_latest_organization(self, username):
         organizations = self.session.query(Organization, OrganizationReviewWorkflow, func.row_number().over(
             partition_by=Organization.org_uuid, order_by=OrganizationReviewWorkflow.updated_on).label("rn")
-                                           ).join(OrganizationReviewWorkflow,
-                                                  Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
-            .filter(Organization.owner == username).all()
+                                           ) \
+            .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
+            .join(OrganizationMember, Organization.org_uuid == OrganizationMember.org_uuid) \
+            .filter(OrganizationMember.username == username) \
+            .filter(OrganizationMember.status.in_([OrganizationMemberStatus.PUBLISHED.value,
+                                                   OrganizationMemberStatus.ACCEPTED.value,
+                                                   OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value])).all()
         self.session.commit()
         latest_orgs = []
         for org in organizations:
@@ -379,6 +379,13 @@ class OrganizationRepository(BaseRepository):
             .filter(Organization.org_uuid == org_uuid).all()
         return OrganizationFactory.parse_organization_details(organizations)
 
+    def get_members_for_given_org(self, org_uuid):
+        org_members_list = []
+        org_members = self.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == org_uuid).all()
+        for org_member in org_members:
+            org_members_list.append(OrganizationFactory.org_member_from_db(org_member))
+        return org_members_list
+
     def get_org_member_details_from_username(self, username, org_uuid):
         org_member = self.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == org_uuid).filter(
             OrganizationMember.username == username).all()
@@ -414,15 +421,16 @@ class OrganizationRepository(BaseRepository):
             org_member.updated_on = datetime.utcnow()
         self.session.commit()
 
-    def add_member(self, org_member_list, status):
+    def add_member(self, org_member_list):
         member_db_models = []
         current_time = datetime.utcnow()
         for member in org_member_list:
             member_db_models.append(
                 OrganizationMember(
                     org_uuid=member.org_uuid,
-                    role=Role.MEMBER.value,
-                    status=status,
+                    role=member.role,
+                    status=member.status,
+                    address=member.address,
                     transaction_hash=member.transaction_hash,
                     username=member.username,
                     invite_code=member.invite_code,
@@ -478,6 +486,18 @@ class OrganizationRepository(BaseRepository):
             .all()
         if len(org_member) == 0:
             raise Exception(f"No member found for org_uuid: {org_uuid} ")
+        org_member[0].status = status
+        org_member[0].updated_on = datetime.utcnow()
+        self.session.commit()
+
+    def update_member_status_using_address(self, org_uuid, address, status):
+        org_member = self.session.query(OrganizationMember) \
+            .filter(OrganizationMember.address == address) \
+            .filter(OrganizationMember.org_uuid == org_uuid) \
+            .filter(OrganizationMember.status == OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value) \
+            .all()
+        if len(org_member) == 0:
+            raise MemberNotFoundException(f"No member found for org_uuid: {org_uuid} ")
         org_member[0].status = status
         org_member[0].updated_on = datetime.utcnow()
         self.session.commit()
