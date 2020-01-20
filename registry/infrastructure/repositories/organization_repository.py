@@ -12,13 +12,6 @@ from registry.infrastructure.repositories.base_repository import BaseRepository
 
 class OrganizationRepository(BaseRepository):
 
-    def draft_update_org(self, organization, username):
-        current_drafts = self.get_org_with_status(organization.org_uuid, OrganizationStatus.DRAFT.value)
-        if len(current_drafts) > 0:
-            self.update_org_draft(current_drafts[0], organization, username)
-        else:
-            self.add_org_with_status(organization, OrganizationStatus.DRAFT.value, username)
-
     def add_org_with_status(self, organization, status, username, transaction_hash=None, wallet_address=None):
         current_time = datetime.utcnow()
         groups = organization.groups
@@ -184,9 +177,10 @@ class OrganizationRepository(BaseRepository):
     def get_latest_organization(self, username):
         organizations = self.session.query(Organization, OrganizationReviewWorkflow, func.row_number().over(
             partition_by=Organization.org_uuid, order_by=OrganizationReviewWorkflow.updated_on).label("rn")
-                                           ).join(OrganizationReviewWorkflow,
-                                                  Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
-            .filter(Organization.owner == username).all()
+                                           ) \
+            .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
+            .join(OrganizationMember, Organization.org_uuid == OrganizationMember.org_uuid) \
+            .filter(OrganizationMember.username == username).all()
         self.session.commit()
         latest_orgs = []
         for org in organizations:
@@ -422,15 +416,15 @@ class OrganizationRepository(BaseRepository):
             org_member.updated_on = datetime.utcnow()
         self.session.commit()
 
-    def add_member(self, org_member_list, status):
+    def add_member(self, org_member_list):
         member_db_models = []
         current_time = datetime.utcnow()
         for member in org_member_list:
             member_db_models.append(
                 OrganizationMember(
                     org_uuid=member.org_uuid,
-                    role=Role.MEMBER.value,
-                    status=status,
+                    role=member.role,
+                    status=member.status,
                     transaction_hash=member.transaction_hash,
                     username=member.username,
                     invite_code=member.invite_code,
