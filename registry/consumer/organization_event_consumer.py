@@ -136,7 +136,8 @@ class OrganizationCreatedEventConsumer(OrganizationEventConsumer):
                     existing_publish_in_progress_organization[0].org_uuid)
                 self._mark_existing_publish_in_progress_as_published(existing_publish_in_progress_organization[0])
 
-            recieved_members = OrganizationFactory.parser_org_members_from_metadata(org_uuid, recieved_members_list)
+            recieved_members = OrganizationFactory.parser_org_members_from_metadata(org_uuid, recieved_members_list,
+                                                                                    OrganizationMemberStatus.PUBLISHED.value)
 
             self._process_members(org_uuid, existing_members, recieved_members)
         except Exception as e:
@@ -242,6 +243,7 @@ class OrganizationModifiedEventConsumer(OrganizationEventConsumer):
         else:
             raise Exception(f"Unknown scneario for organization {org_id} ")
 
-        recieved_members = OrganizationFactory.parser_org_members_from_metadata(org_uuid, recieved_memeber_list)
+        recieved_members = OrganizationFactory.parser_org_members_from_metadata(org_uuid, recieved_memeber_list,
+                                                                                OrganizationMemberStatus.PUBLISHED.value)
         self._process_members(existing_publish_in_progress_organization[0].org_uuid, existing_members,
                               recieved_members)

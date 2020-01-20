@@ -236,10 +236,10 @@ class OrganizationFactory:
         return org_member
 
     @staticmethod
-    def parser_org_members_from_metadata(org_uuid,members):
+    def parser_org_members_from_metadata(org_uuid,members,status):
 
         org_members = []
         for member in members:
-            org_members.append(OrganizationMember(org_uuid, "", OrganizationMemberStatus.PUBLISHED.value, Role.MEMBER.value, member))
+            org_members.append(OrganizationMember(org_uuid, "", status, Role.MEMBER.value, member))
 
         return org_members
