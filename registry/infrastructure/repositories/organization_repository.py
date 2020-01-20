@@ -168,8 +168,10 @@ class OrganizationRepository(BaseRepository):
     def get_published_org_for_user(self, username):
         organizations = self.session.query(Organization) \
             .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
+            .join(OrganizationMember, Organization.org_uuid == OrganizationMember.org_uuid) \
             .filter(OrganizationReviewWorkflow == OrganizationStatus.PUBLISHED.value) \
-            .filter(Organization.owner == username).all()
+            .filter(OrganizationMember.username == username) \
+            .filter(OrganizationMember.role == Role.OWNER.value).all()
         self.session.commit()
         return OrganizationFactory.parse_organization_details(organizations)
 
@@ -179,7 +181,10 @@ class OrganizationRepository(BaseRepository):
                                            ) \
             .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
             .join(OrganizationMember, Organization.org_uuid == OrganizationMember.org_uuid) \
-            .filter(OrganizationMember.username == username).all()
+            .filter(OrganizationMember.username == username) \
+            .filter(OrganizationMember.status.in_([OrganizationMemberStatus.PUBLISHED.value,
+                                                   OrganizationMemberStatus.ACCEPTED.value,
+                                                   OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value])).all()
         self.session.commit()
         latest_orgs = []
         for org in organizations:
