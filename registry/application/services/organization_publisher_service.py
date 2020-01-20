@@ -5,7 +5,7 @@ from web3 import Web3
 from common.boto_utils import BotoUtils
 from common.exceptions import OrganizationNotFound
 from common.logger import get_logger
-from registry.config import NOTIFICATION_ARN, REGION_NAME
+from registry.config import NOTIFICATION_ARN, REGION_NAME, PUBLISHER_PORTAL_DAPP_URL
 from registry.constants import OrganizationMemberStatus, OrganizationStatus, Role
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import OrganizationMember
@@ -213,7 +213,8 @@ class OrganizationService(object):
 
     @staticmethod
     def _get_org_member_notification_message(invite_code, org_name):
-        return f"Organization {org_name} has sent you membership invite. Your invite code is {invite_code}."
+        return f"Organization {org_name} has sent you membership invite. Your invite code is {invite_code}.\n " \
+               f"Please click on the link below to accept the invitation.\n {PUBLISHER_PORTAL_DAPP_URL}"
 
     @staticmethod
     def _get_org_member_notification_subject(org_name):
