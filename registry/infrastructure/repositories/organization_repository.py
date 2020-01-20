@@ -406,7 +406,7 @@ class OrganizationRepository(BaseRepository):
         org_members_list = []
         subquery = self.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == org_uuid)
         if role is not None:
-            subquery = subquery.filter(OrganizationMember.role == role)
+            subquery = subquery.filter(OrganizationMember.role == role.upper())
         if status is not None:
             subquery = subquery.filter(OrganizationMember.status == status)
         org_members = subquery.all()
