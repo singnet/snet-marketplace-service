@@ -213,8 +213,12 @@ class OrganizationService(object):
 
     @staticmethod
     def _get_org_member_notification_message(invite_code, org_name):
-        return f"Organization {org_name} has sent you membership invite. Your invite code is {invite_code}.\n " \
-               f"Please click on the link below to accept the invitation.\n {PUBLISHER_PORTAL_DAPP_URL}"
+        return f"<html><head></head><body><div><p>Hello,</p><p>Organization {org_name} has sent you membership invite. " \
+               f"Your invite code is <strong>{invite_code}</strong>.</p><br/><p>Please click on the link below to " \
+               f"accept the invitation.</p><br/><p>{PUBLISHER_PORTAL_DAPP_URL}</p><br/><br/><p>" \
+               "<em>Please do not reply to the email for any enquiries for any queries please email at " \
+               "cs-marketplace@singularitynet.io.</em></p><p>Warmest regards, <br />SingularityNET Marketplace " \
+               "Team</p></div></body></html>"
 
     @staticmethod
     def _get_org_member_notification_subject(org_name):
