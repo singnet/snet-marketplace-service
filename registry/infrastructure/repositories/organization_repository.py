@@ -402,10 +402,14 @@ class OrganizationRepository(BaseRepository):
             return None
         return OrganizationFactory.org_member_from_db(org_member[0])
 
-    def get_members_for_given_org_and_status(self, org_uuid, status):
+    def get_members_for_given_org_and_status(self, org_uuid, status, role):
         org_members_list = []
-        org_members = self.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == org_uuid).filter(
-            OrganizationMember.status == status).all()
+        subquery = self.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == org_uuid)
+        if role is not None:
+            subquery = subquery.filter(OrganizationMember.role == role)
+        if status is not None:
+            subquery = subquery.filter(OrganizationMember.status == status)
+        org_members = subquery.all()
         self.session.commit()
         for org_member in org_members:
             org_members_list.append(OrganizationFactory.org_member_from_db(org_member))

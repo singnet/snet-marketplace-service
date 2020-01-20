@@ -54,6 +54,19 @@ class TestOrgMemberFlow(TestCase):
         org_repo.add_item(
             OrganizationMember(
                 org_uuid="test_org_uuid",
+                role="OWNER",
+                username="dummyuser@dummy.io",
+                address=None,
+                status=OrganizationMemberStatus.ACCEPTED.value,
+                transaction_hash="",
+                invite_code="asdfghjkl",
+                created_on=dt.utcnow(),
+                updated_on=dt.utcnow()
+            )
+        )
+        org_repo.add_item(
+            OrganizationMember(
+                org_uuid="test_org_uuid",
                 role="MEMBER",
                 username="dummy_user1@dummy.io",
                 address=None,
@@ -74,7 +87,7 @@ class TestOrgMemberFlow(TestCase):
             },
             "httpMethod": "GET",
             "pathParameters": {"org_id": "test_org_uuid"},
-            "queryStringParameters": {"status": OrganizationMemberStatus.PENDING.value}
+            "queryStringParameters": {"status": OrganizationMemberStatus.PENDING.value, "role": "MEMBER"}
 
         }
         response = get_all_members(event=event, context=None)
@@ -84,6 +97,30 @@ class TestOrgMemberFlow(TestCase):
         assert (response_body["data"][0]["username"] == "dummy_user1@dummy.io")
         assert (response_body["data"][0]["status"] == OrganizationMemberStatus.PENDING.value)
         assert (response_body["data"][0]["role"] == "MEMBER")
+
+        event = {
+            "requestContext": {
+                "authorizer": {
+                    "claims": {
+                        "email": "dummyuser@dummy.io"
+                    }
+                }
+            },
+            "httpMethod": "GET",
+            "pathParameters": {"org_id": "test_org_uuid"},
+            "queryStringParameters": {"role": "OWNER"}
+
+        }
+        response = get_all_members(event=event, context=None)
+        assert (response["statusCode"] == 200)
+        response_body = json.loads(response["body"])
+        assert (response_body["status"] == "success")
+        if len(response_body["data"]) == 1:
+            self.assertEqual(response_body["status"], "success")
+            self.assertEqual(response_body["data"][0]["username"], "dummyuser@dummy.io")
+            self.assertEqual(response_body["data"][0]["role"], "OWNER")
+        else:
+            assert False
 
     def test_get_member_status(self):
         self.tearDown()
