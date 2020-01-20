@@ -2,12 +2,14 @@ import unittest
 from _datetime import datetime as dt
 import json
 from unittest import TestCase
+from unittest.mock import patch
 from registry.application.handlers.organization_handlers import get_all_members, invite_members, get_member, \
     verify_code, publish_members, delete_members, register_member, get_all_org
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
 from registry.infrastructure.models.models import Organization, OrganizationAddress, OrganizationMember, \
     OrganizationReviewWorkflow
 from registry.constants import OrganizationStatus, OrganizationMemberStatus
+from common.boto_utils import BotoUtils
 
 org_repo = OrganizationRepository()
 
@@ -147,7 +149,9 @@ class TestOrgMemberFlow(TestCase):
         assert (response_body["data"][0]["role"] == "MEMBER")
         assert (response_body["data"][0]["status"] == OrganizationMemberStatus.ACCEPTED.value)
 
-    def test_invite_members(self):
+    @patch("common.boto_utils.BotoUtils.invoke_lambda")
+    def test_invite_members(self, mock_send_notification):
+        mock_send_notification.return_value = None
         self.tearDown()
         org_repo.add_item(
             Organization(
