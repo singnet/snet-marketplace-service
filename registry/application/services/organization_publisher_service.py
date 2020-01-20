@@ -157,10 +157,9 @@ class OrganizationService(object):
             org_member.generate_invite_code()
         org_data = org_repo.get_latest_org_from_org_uuid(org_uuid=self.org_uuid)
         if len(org_data) > 0:
-            org_name = org_data[0]["name"]
+            org_name = org_data[0].Organization.name
         else:
-            # raise Exception("Unable to find organization.")
-            org_name = "Test"
+            raise Exception("Unable to find organization.")
         self._send_invitation(org_member_list, org_name)
         org_repo.add_member(org_member_list, status=OrganizationMemberStatus.PENDING.value)
 
@@ -168,12 +167,9 @@ class OrganizationService(object):
         self._send_email_notification_for_inviting_organization_member(org_member_list, org_name)
 
     def verify_invite(self, invite_code):
-        verification_data = org_repo.org_member_verify(self.username, invite_code)
-        if verification_data is None:
-            return "NOT_FOUND"
-        org_repo.update_member_status(verification_data.org_uuid, self.username,
-                                      OrganizationMemberStatus.VERIFIED.value)
-        return "OK"
+        if org_repo.org_member_verify(self.username, invite_code):
+            return "OK"
+        return "NOT_FOUND"
 
     def delete_members(self, org_members):
         org_member_list = OrganizationFactory.org_member_from_dict_list(org_members, self.org_uuid)
@@ -181,7 +177,7 @@ class OrganizationService(object):
 
     def register_member(self, wallet_address):
         if Web3.isAddress(wallet_address):
-            org_repo.update_member_wallet_address(self.org_uuid, self.username, wallet_address)
+            org_repo.update_org_member(self.org_uuid, self.username, wallet_address)
         else:
             raise Exception("Invalid wallet address")
         return "OK"
@@ -217,3 +213,13 @@ class OrganizationService(object):
             if transaction_receipt is not None:
                 status = OrganizationStatus.PUBLISHED.value if transaction_receipt.status == 1 else OrganizationStatus.FAILED.value
                 self.org_repo.update_organization_review_workflow_status(orgs_transaction_data["row_id"], status)
+
+
+class OrganizationMemberService:
+
+    @staticmethod
+    def compute_org_uuid_for_given_username_and_invite_code(username, invite_code):
+        org_member_data = org_repo.get_org_member_details_from_username_and_invite_code(username, invite_code)
+        if org_member_data is not None:
+            return org_member_data.org_uuid
+        raise Exception(f"Invite not found for member {username} with given invitation code")

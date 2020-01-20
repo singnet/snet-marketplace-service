@@ -448,8 +448,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /org/{org_id}/member/register
-          private: true
+          path: /org/member/register
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS

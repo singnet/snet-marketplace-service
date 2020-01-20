@@ -4,7 +4,7 @@ from datetime import datetime as dt
 from datetime import timedelta
 from urllib.request import Request, urlopen, ssl, socket
 from common.utils import Utils
-from service_status.config import REGION_NAME, NOTIFICATION_ARN, SLACK_HOOK, NETWORKS, NETWORK_ID
+from service_status.config import REGION_NAME, NOTIFICATION_ARN, SLACK_HOOK, NETWORKS, NETWORK_ID, CERTIFICATION_EXPIRATION_THRESHOLD
 from common.boto_utils import BotoUtils
 from common.utils import Utils
 from common.logger import get_logger
@@ -25,15 +25,10 @@ CERT_EXP_SLACK_NOTIFICATION_MSG = \
     "```Alert!\n\nCertificates for service %s under organization %s for the %s network are about to expire in %s days.\n" \
     "Endpoint: %s \n\nFor any queries please email at cs-marketplace@singularitynet.io. \n\nWarmest regards, " \
     "\nSingularityNET Marketplace Team```"
-CERTIFICATION_EXPIRATION_THRESHOLD = 30
 NO_OF_ENDPOINT_TO_TEST_LIMIT = 5
 
 
 class MonitorService:
-    def __init__(self):
-        # regex helps to check url is localhost or external address.
-        self.rex_for_pb_ip = "^(http://)*(https://)*127.0.0.1|^(http://)*(https://)*localhost|^(http://)*" \
-                             "(https://)*192.|^(http://)*(https://)*172.|^(http://)*(https://)*10."
 
     def _get_service_endpoint_data(self, limit):
         query = "SELECT row_id, org_id, service_id, endpoint, is_available, failed_status_count FROM service_endpoint WHERE " \
@@ -97,6 +92,9 @@ class MonitorServiceCertificate(MonitorService):
         self.route = "/encoding"
         self.obj_util = Utils()
         self.net_id = net_id
+        # regex helps to check url is localhost or external address.
+        self.rex_for_pb_ip = "^(http://)*(https://)*127.0.0.1|^(http://)*(https://)*localhost|^(http://)*" \
+                             "(https://)*192.|^(http://)*(https://)*172.|^(http://)*(https://)*10."
 
     def notify_service_contributors_for_certificate_expiration(self):
         service_endpoint_data = self._get_service_endpoint_data(limit=None)
