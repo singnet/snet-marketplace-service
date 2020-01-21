@@ -148,15 +148,15 @@ class TestInviteMembers(TestCase):
         )
         members = OrganizationService(test_org_id, username).get_member(username)
         if isinstance(members, list) and len(members) == 1:
+            members[0].pop("invited_on")
+            members[0].pop("updated_on")
             self.assertDictEqual(
                 members[0],
                 {
                     'username': 'dummy@snet.io',
                     'address': owner_wallet_address,
                     'status': 'PUBLISHED',
-                    'role': 'OWNER',
-                    'invited_on': current_time.strftime("%Y-%m-%d %H:%M:%S"),
-                    "updated_on": current_time.strftime("%Y-%m-%d %H:%M:%S")
+                    'role': 'OWNER'
                 }
             )
         else:
