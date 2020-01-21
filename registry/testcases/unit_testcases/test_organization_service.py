@@ -537,38 +537,6 @@ class TestOrganizationService(unittest.TestCase):
             self.assertEqual(org_id, org.Organization.org_id)
             self.assertEqual(org_name, org.Organization.name)
 
-    def test_get_org_for_user(self):
-        # test_org_id = uuid4().hex
-        # owner_invite_code = uuid4().hex
-        # owner_wallet_address = "0x123"
-        # owner_username = "dummy@snet.io"
-        # organization = DomainOrganization(
-        #     "dummy_org", "org_id", test_org_id, "organization", owner_username,
-        #     "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "",
-        #     duns_no=12345678, origin=ORIGIN, groups=[], addresses=[], status=OrganizationStatus.APPROVAL_PENDING.value,
-        #     owner_name="Dummy Name")
-        # organization.add_group(DomainGroup(
-        #     name="my-group",
-        #     group_id="group_id",
-        #     payment_address="0x123",
-        #     payment_config={},
-        #     status=''
-        # ))
-        # org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISHED.value, owner_username)
-        # org_repo.add_item(
-        #     OrganizationMember(
-        #         username=owner_username,
-        #         org_uuid=test_org_id,
-        #         role=Role.OWNER.value,
-        #         address=owner_wallet_address,
-        #         status=OrganizationMemberStatus.PUBLISHED.value,
-        #         transaction_hash="0x123",
-        #         invite_code=owner_invite_code
-        #     )
-        # )
-        p = OrganizationService(None, "ichbinvivek@gmail.com").get_organizations_for_user()
-        x = 0
-
     def tearDown(self):
         self.org_repo.session.query(Organization).delete()
         self.org_repo.session.query(OrganizationReviewWorkflow).delete()
