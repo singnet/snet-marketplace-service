@@ -9,7 +9,7 @@ from registry.consumer.organization_event_consumer import OrganizationCreatedEve
 from registry.domain.models.group import Group as DomainGroup
 from registry.domain.models.organization import Organization as DomainOrganization
 from registry.infrastructure.models.models import Group, Organization, OrganizationHistory, OrganizationMember, \
-    OrganizationReviewWorkflow
+    OrganizationReviewWorkflow, OrganizationAddress, GroupHistory
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
 
 ORIGIN = "PUBLISHER_PORTAL"
@@ -39,7 +39,7 @@ class TestOrganizationService(unittest.TestCase):
                 payment_address="0x123",
                 payment_config={},
                 status="",
-            )],status=OrganizationStatus.APPROVAL_PENDING.value, owner_name="Dummy Name")
+            )], status=OrganizationStatus.APPROVAL_PENDING.value, owner_name="Dummy Name")
 
         self.org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISH_IN_PROGRESS.value, username)
         event = {"data": {'row_id': 2, 'block_no': 6243627, 'event': 'OrganizationCreated',
@@ -64,7 +64,8 @@ class TestOrganizationService(unittest.TestCase):
                 "short_description": "that is the short description",
                 "url": "dummy.com"
             },
-            "assets": {'hero_image': 'QmagaSbQAdEtFkwc9ZQUDdYgUtXz93MPByngbx1b4cPidj/484b38d1c1fe4717ad4acab99394ea82-hero_image-20200107083215.png'},
+            "assets": {
+                'hero_image': 'QmagaSbQAdEtFkwc9ZQUDdYgUtXz93MPByngbx1b4cPidj/484b38d1c1fe4717ad4acab99394ea82-hero_image-20200107083215.png'},
             "groups": [{
                 "name": "my-group",
                 "id": "group_id",
@@ -108,12 +109,13 @@ class TestOrganizationService(unittest.TestCase):
                 payment_address="0x123",
                 payment_config={},
                 status=""
-            )], status=OrganizationStatus.APPROVAL_PENDING.value,owner_name="Dummy Name")
+            )], status=OrganizationStatus.APPROVAL_PENDING.value, owner_name="Dummy Name")
 
         self.org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISHED.value, username)
         draft_organization = DomainOrganization(
             "dummy_org", "org_id", test_org_id, "organization", username,
-            "that is the dummy org for testcases", "that is the short description", "draft_dummy.com", [], {'hero_image': {
+            "that is the dummy org for testcases", "that is the short description", "draft_dummy.com", [],
+            {'hero_image': {
                 "ipfs_hash": 'QmagaSbQAdEtFkwc9ZQUDdYgUtXz93MPByngbx1b4cPidj/484b38d1c1fe4717ad4acab99394ea82-hero_image-20200107083215.png',
                 "url": ""}}, "Q3E12",
             "", ORIGIN, [], [DomainGroup(
@@ -122,7 +124,7 @@ class TestOrganizationService(unittest.TestCase):
                 payment_address="0x123",
                 payment_config={},
                 status=""
-            )], status=OrganizationStatus.APPROVAL_PENDING.value,owner_name="Dummy Name")
+            )], status=OrganizationStatus.APPROVAL_PENDING.value, owner_name="Dummy Name")
 
         self.org_repo.add_org_with_status(draft_organization, OrganizationStatus.PUBLISH_IN_PROGRESS.value, username)
 
@@ -148,7 +150,8 @@ class TestOrganizationService(unittest.TestCase):
                 "short_description": "that is the short description",
                 "url": "draft_dummy.com"
             },
-            "assets": {'hero_image': 'QmagaSbQAdEtFkwc9ZQUDdYgUtXz93MPByngbx1b4cPidj/484b38d1c1fe4717ad4acab99394ea82-hero_image-20200107083215.png'},
+            "assets": {
+                'hero_image': 'QmagaSbQAdEtFkwc9ZQUDdYgUtXz93MPByngbx1b4cPidj/484b38d1c1fe4717ad4acab99394ea82-hero_image-20200107083215.png'},
             "groups": [{
                 "name": "my-group",
                 "id": "group_id",
@@ -181,8 +184,9 @@ class TestOrganizationService(unittest.TestCase):
     @patch('common.ipfs_util.IPFSUtil.read_file_from_ipfs')
     @patch('common.ipfs_util.IPFSUtil.read_bytesio_from_ipfs')
     @patch('registry.consumer.organization_event_consumer.OrganizationEventConsumer._get_org_details_from_blockchain')
-    def test_organization_member_create_event(self,mock_get_org_details_from_blockchain, nock_read_bytesio_from_ipfs, mock_ipfs_read, mock_s3_push,
-                                       mock_ipfs_write):
+    def test_organization_member_create_event(self, mock_get_org_details_from_blockchain, nock_read_bytesio_from_ipfs,
+                                              mock_ipfs_read, mock_s3_push,
+                                              mock_ipfs_write):
         test_org_id = uuid4().hex
         username = "dummy@snet.io"
         organization = DomainOrganization(
@@ -197,7 +201,7 @@ class TestOrganizationService(unittest.TestCase):
                 payment_config={},
                 status="",
             )], status=OrganizationStatus.APPROVAL_PENDING.value, owner_name="Dummy Name")
-
+        current_time = datetime.utcnow()
         self.org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISH_IN_PROGRESS.value, username)
         self.org_repo.add_item(
             OrganizationMember(
@@ -207,7 +211,10 @@ class TestOrganizationService(unittest.TestCase):
                 address="member_wallet_address1",
                 status=OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value,
                 transaction_hash="0x123",
-                invite_code="owner_invite_code1"
+                invite_code="owner_invite_code1",
+                created_on=current_time,
+                invited_on=current_time,
+                updated_on=current_time
             )
         )
         self.org_repo.add_item(
@@ -218,7 +225,10 @@ class TestOrganizationService(unittest.TestCase):
                 address="member_wallet_address2",
                 status=OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value,
                 transaction_hash="0x123",
-                invite_code="owner_invite_code2"
+                invite_code="owner_invite_code2",
+                created_on=current_time,
+                invited_on=current_time,
+                updated_on=current_time
             )
         )
 
@@ -231,7 +241,7 @@ class TestOrganizationService(unittest.TestCase):
                           'row_created': datetime(2019, 10, 21, 9, 44, 9)}, "name": "OrganizationCreated"}
         nock_read_bytesio_from_ipfs.return_value = ""
         mock_s3_push.return_value = "http://test-s3-push"
-        ipfs_metadata={
+        ipfs_metadata = {
             "name": "dummy_org",
             "org_id": "org_id",
             "metadata_ipfs_hash": "Q3E12",
@@ -255,9 +265,10 @@ class TestOrganizationService(unittest.TestCase):
                 }
             }]
         }
-        mock_ipfs_read.return_value =ipfs_metadata
+        mock_ipfs_read.return_value = ipfs_metadata
 
-        mock_get_org_details_from_blockchain.return_value= "org_id",ipfs_metadata,["member_wallet_address1","member_wallet_address3"]
+        mock_get_org_details_from_blockchain.return_value = "org_id", ipfs_metadata, ["member_wallet_address1",
+                                                                                      "member_wallet_address3"]
 
         org_event_consumer = OrganizationCreatedEventConsumer("wss://ropsten.infura.io/ws",
                                                               "http://ipfs.singularitynet.io",
@@ -265,7 +276,7 @@ class TestOrganizationService(unittest.TestCase):
         org_event_consumer.on_event(event)
         self.org_repo.session.commit()
         published_org = self.org_repo.get_org_with_status(test_org_id, "PUBLISHED")
-        published_mebers=self.org_repo.get_members_for_given_org_and_status(test_org_id,"PUBLISHED")
+        published_members = self.org_repo.get_members_for_given_org(test_org_id, "PUBLISHED")
         assert len(published_org) == 1
         assert published_org[0].Organization.name == "dummy_org"
         assert published_org[0].Organization.org_id == "org_id"
@@ -274,16 +285,13 @@ class TestOrganizationService(unittest.TestCase):
         assert published_org[0].Organization.groups[0].id == "group_id"
         assert published_org[0].Organization.groups[0].name == "my-group"
         assert published_org[0].Organization.groups[0].payment_address == "0x123"
-        assert published_mebers[0].address == "member_wallet_address1"
-        assert published_mebers[0].status == "PUBLISHED"
-        assert published_mebers[1].address == "member_wallet_address3"
-        assert published_mebers[1].status == "PUBLISHED"
-
 
     def tearDown(self):
         self.org_repo.session.query(Organization).delete()
         self.org_repo.session.query(OrganizationReviewWorkflow).delete()
         self.org_repo.session.query(OrganizationHistory).delete()
+        self.org_repo.session.query(OrganizationAddress).delete()
         self.org_repo.session.query(Group).delete()
-
+        self.org_repo.session.query(GroupHistory).delete()
+        self.org_repo.session.query(OrganizationMember).delete()
         self.org_repo.session.commit()

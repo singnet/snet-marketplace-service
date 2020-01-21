@@ -228,7 +228,7 @@ class OrganizationModifiedEventConsumer(OrganizationEventConsumer):
 
         elif len(existing_draft_organization) > 0 and len(existing_published_organization) > 0:
             org_uuid = existing_draft_organization[0].org_uuid
-            existing_members = self._organization_repository.get_members_for_given_org_and_status(
+            existing_members = self._organization_repository.get_members_for_given_org(
                 org_uuid)
             self._draft_and_published_record_recieve_update_event(existing_draft_organization[0],
                                                                   existing_published_organization[0],

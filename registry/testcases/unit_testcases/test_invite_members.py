@@ -1,4 +1,6 @@
+from datetime import datetime
 from unittest import TestCase
+from unittest.mock import patch
 from uuid import uuid4
 
 from registry.application.services.organization_publisher_service import org_repo, OrganizationService
@@ -13,8 +15,9 @@ ORIGIN = "PUBLISHER_DAPP"
 
 class TestInviteMembers(TestCase):
 
-    def test_get_member(self):
-        """ adding new group without existing draft """
+    @patch("common.boto_utils.BotoUtils.invoke_lambda")
+    def test_invite_members(self, mock_invoke_lambda):
+        mock_invoke_lambda.return_value = None
         test_org_id = uuid4().hex
         owner_invite_code = uuid4().hex
         owner_wallet_address = "0x123"
@@ -43,6 +46,97 @@ class TestInviteMembers(TestCase):
                 invite_code=owner_invite_code
             )
         )
+        new_org_members = [
+            {
+                "username": "karl@dummy.io"
+            },
+            {
+                "username": "trax@dummy.io"
+            },
+            {
+                "username": "nyx@dummy.io"
+            }
+        ]
+        OrganizationService(test_org_id, username).invite_members(new_org_members)
+        invited_org_members = org_repo.get_members_for_given_org(test_org_id, OrganizationMemberStatus.PENDING.value)
+        if len(invited_org_members) == 3:
+            assert True
+        else:
+            assert False
+
+    @patch("common.boto_utils.BotoUtils.invoke_lambda")
+    def test_invite_members_two(self, mock_invoke_lambda):
+        """ invite same member twice """
+        mock_invoke_lambda.return_value = None
+        test_org_id = uuid4().hex
+        owner_invite_code = uuid4().hex
+        owner_wallet_address = "0x123"
+        username = "dummy@snet.io"
+        organization = DomainOrganization(
+            "dummy_org", "org_id", test_org_id, "organization", username,
+            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "",
+            duns_no=12345678, origin=ORIGIN, groups=[], addresses=[], status=OrganizationStatus.APPROVAL_PENDING.value,
+            owner_name="Dummy Name")
+        organization.add_group(DomainGroup(
+            name="my-group",
+            group_id="group_id",
+            payment_address="0x123",
+            payment_config={},
+            status=''
+        ))
+        org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISHED.value, username)
+        org_repo.add_item(
+            OrganizationMember(
+                username=username,
+                org_uuid=test_org_id,
+                role=Role.OWNER.value,
+                address=owner_wallet_address,
+                status=OrganizationMemberStatus.PUBLISHED.value,
+                transaction_hash="0x123",
+                invite_code=owner_invite_code
+            )
+        )
+        new_org_members = [
+            {
+                "username": "karl@dummy.io"
+            }
+        ]
+        OrganizationService(test_org_id, username).invite_members(new_org_members)
+        self.assertRaises(Exception, OrganizationService(test_org_id, username).invite_members, new_org_members)
+
+    def test_get_member(self):
+        """ adding new group without existing draft """
+        test_org_id = uuid4().hex
+        owner_invite_code = uuid4().hex
+        owner_wallet_address = "0x123"
+        username = "dummy@snet.io"
+        organization = DomainOrganization(
+            "dummy_org", "org_id", test_org_id, "organization", username,
+            "that is the dummy org for testcases", "that is the short description", "dummy.com", [], {}, "",
+            duns_no=12345678, origin=ORIGIN, groups=[], addresses=[], status=OrganizationStatus.APPROVAL_PENDING.value,
+            owner_name="Dummy Name")
+        organization.add_group(DomainGroup(
+            name="my-group",
+            group_id="group_id",
+            payment_address="0x123",
+            payment_config={},
+            status=''
+        ))
+        current_time = datetime.utcnow()
+        org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISHED.value, username)
+        org_repo.add_item(
+            OrganizationMember(
+                username=username,
+                org_uuid=test_org_id,
+                role=Role.OWNER.value,
+                address=owner_wallet_address,
+                status=OrganizationMemberStatus.PUBLISHED.value,
+                transaction_hash="0x123",
+                invite_code=owner_invite_code,
+                invited_on=current_time,
+                updated_on=current_time
+            )
+        )
         members = OrganizationService(test_org_id, username).get_member(username)
         if isinstance(members, list) and len(members) == 1:
             self.assertDictEqual(
@@ -51,7 +145,9 @@ class TestInviteMembers(TestCase):
                     'username': 'dummy@snet.io',
                     'address': owner_wallet_address,
                     'status': 'PUBLISHED',
-                    'role': 'OWNER'
+                    'role': 'OWNER',
+                    'invited_on': current_time.strftime("%Y-%m-%d %H:%M:%S"),
+                    "updated_on": current_time.strftime("%Y-%m-%d %H:%M:%S")
                 }
             )
         else:
@@ -83,7 +179,9 @@ class TestInviteMembers(TestCase):
                 address=owner_wallet_address,
                 status=OrganizationMemberStatus.PUBLISHED.value,
                 transaction_hash="0x123",
-                invite_code=owner_invite_code
+                invite_code=owner_invite_code,
+                invited_on=datetime.utcnow(),
+                updated_on=datetime.utcnow()
             )
         )
         new_org_members = [
@@ -109,7 +207,9 @@ class TestInviteMembers(TestCase):
                     address=member["address"],
                     status=OrganizationMemberStatus.ACCEPTED.value,
                     transaction_hash="0x123",
-                    invite_code=uuid4().hex
+                    invite_code=uuid4().hex,
+                    invited_on=datetime.utcnow(),
+                    updated_on=datetime.utcnow()
                 ) for member in new_org_members
             ]
         )
@@ -149,7 +249,9 @@ class TestInviteMembers(TestCase):
                 address=owner_wallet_address,
                 status=OrganizationMemberStatus.PUBLISHED.value,
                 transaction_hash="0x123",
-                invite_code=owner_invite_code
+                invite_code=owner_invite_code,
+                invited_on=datetime.utcnow(),
+                updated_on=datetime.utcnow()
             )
         )
         new_org_members = [
@@ -175,7 +277,9 @@ class TestInviteMembers(TestCase):
                     address=member["address"],
                     status=OrganizationMemberStatus.ACCEPTED.value,
                     transaction_hash="0x123",
-                    invite_code=uuid4().hex
+                    invite_code=uuid4().hex,
+                    invited_on=datetime.utcnow(),
+                    updated_on=datetime.utcnow()
                 ) for member in new_org_members
             ]
         )
@@ -213,7 +317,9 @@ class TestInviteMembers(TestCase):
                 address=owner_wallet_address,
                 status=OrganizationMemberStatus.PUBLISHED.value,
                 transaction_hash="0x123",
-                invite_code=owner_invite_code
+                invite_code=owner_invite_code,
+                invited_on=datetime.utcnow(),
+                updated_on=datetime.utcnow()
             )
         )
         member_username = "karl@dummy.io"
@@ -226,7 +332,9 @@ class TestInviteMembers(TestCase):
                 address="0x123",
                 status=OrganizationMemberStatus.PENDING.value,
                 transaction_hash="0x123",
-                invite_code=member_invite_code
+                invite_code=member_invite_code,
+                invited_on=datetime.utcnow(),
+                updated_on=datetime.utcnow()
             )
         )
         self.assertEqual(OrganizationService(None, member_username).verify_invite(member_invite_code), "OK")
@@ -258,7 +366,9 @@ class TestInviteMembers(TestCase):
                 address=owner_wallet_address,
                 status=OrganizationMemberStatus.PUBLISHED.value,
                 transaction_hash="0x123",
-                invite_code=owner_invite_code
+                invite_code=owner_invite_code,
+                invited_on=datetime.utcnow(),
+                updated_on=datetime.utcnow()
             )
         )
         member_username = "karl@dummy.io"
@@ -271,7 +381,9 @@ class TestInviteMembers(TestCase):
                 address="",
                 status=OrganizationMemberStatus.PENDING.value,
                 transaction_hash="0x123",
-                invite_code=member_invite_code
+                invite_code=member_invite_code,
+                invited_on=datetime.utcnow(),
+                updated_on=datetime.utcnow()
             )
         )
         member_wallet_address = "0x962FD47b5afBc8D03025cE52155890667E58dEBA"
