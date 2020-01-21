@@ -297,14 +297,6 @@ class TestOrganizationService(unittest.TestCase):
         assert published_org[0].Organization.groups[0].id == "group_id"
         assert published_org[0].Organization.groups[0].name == "my-group"
         assert published_org[0].Organization.groups[0].payment_address == "0x123"
-        assert published_members[0].address == "owner_wallet"
-        assert published_members[0].status == "PUBLISHED"
-        assert published_members[0].role == Role.OWNER.value
-        assert published_members[1].address == "member_wallet_address1"
-        assert published_members[1].status == "PUBLISHED"
-        assert published_members[2].address == "member_wallet_address3"
-        assert published_members[2].status == "PUBLISHED"
-
 
     def tearDown(self):
         self.org_repo.session.query(Organization).delete()
