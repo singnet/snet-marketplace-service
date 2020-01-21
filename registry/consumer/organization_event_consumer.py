@@ -7,7 +7,7 @@ from common.blockchain_util import BlockChainUtil
 from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
 from registry.config import NETWORK_ID
-from registry.constants import OrganizationMemberStatus, OrganizationStatus
+from registry.constants import OrganizationMemberStatus, OrganizationStatus, Role
 from registry.consumer.event_consumer import EventConsumer
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
@@ -63,7 +63,11 @@ class OrganizationEventConsumer(EventConsumer):
         for recieved_member in recieved_members:
             recieved_members_map[recieved_member.address] = recieved_member
         for existing_member in existing_members:
-            existing_members_map[existing_member.address] = existing_member
+            if existing_member.role == Role.OWNER.value:
+                self._organization_repository.update_member_status_using_address(org_uuid, existing_member.address,
+                                                                                 OrganizationMemberStatus.PUBLISHED.value)
+            else:
+                existing_members_map[existing_member.address] = existing_member
 
         for recieved_member in recieved_members:
             if recieved_member.address in existing_members_map:
@@ -72,6 +76,7 @@ class OrganizationEventConsumer(EventConsumer):
                 added_member.append(recieved_member)
 
         for existing_member in existing_members:
+
             if existing_member.address in recieved_members_map:
                 # already existing
                 pass
