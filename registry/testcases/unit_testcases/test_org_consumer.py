@@ -109,13 +109,12 @@ class TestOrganizationService(unittest.TestCase):
                 payment_address="0x123",
                 payment_config={},
                 status=""
-            )], status=OrganizationStatus.APPROVAL_PENDING.value, owner_name="Dummy Name")
+            )], status=OrganizationStatus.APPROVAL_PENDING.value,owner_name="Dummy Name")
 
         self.org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISHED.value, username)
         draft_organization = DomainOrganization(
             "dummy_org", "org_id", test_org_id, "organization", username,
-            "that is the dummy org for testcases", "that is the short description", "draft_dummy.com", [],
-            {'hero_image': {
+            "that is the dummy org for testcases", "that is the short description", "draft_dummy.com", [], {'hero_image': {
                 "ipfs_hash": 'QmagaSbQAdEtFkwc9ZQUDdYgUtXz93MPByngbx1b4cPidj/484b38d1c1fe4717ad4acab99394ea82-hero_image-20200107083215.png',
                 "url": ""}}, "Q3E12",
             "", ORIGIN, [], [DomainGroup(
@@ -124,7 +123,7 @@ class TestOrganizationService(unittest.TestCase):
                 payment_address="0x123",
                 payment_config={},
                 status=""
-            )], status=OrganizationStatus.APPROVAL_PENDING.value, owner_name="Dummy Name")
+            )], status=OrganizationStatus.APPROVAL_PENDING.value,owner_name="Dummy Name")
 
         self.org_repo.add_org_with_status(draft_organization, OrganizationStatus.PUBLISH_IN_PROGRESS.value, username)
 
@@ -150,8 +149,7 @@ class TestOrganizationService(unittest.TestCase):
                 "short_description": "that is the short description",
                 "url": "draft_dummy.com"
             },
-            "assets": {
-                'hero_image': 'QmagaSbQAdEtFkwc9ZQUDdYgUtXz93MPByngbx1b4cPidj/484b38d1c1fe4717ad4acab99394ea82-hero_image-20200107083215.png'},
+            "assets": {'hero_image': 'QmagaSbQAdEtFkwc9ZQUDdYgUtXz93MPByngbx1b4cPidj/484b38d1c1fe4717ad4acab99394ea82-hero_image-20200107083215.png'},
             "groups": [{
                 "name": "my-group",
                 "id": "group_id",
@@ -203,6 +201,20 @@ class TestOrganizationService(unittest.TestCase):
             )], status=OrganizationStatus.APPROVAL_PENDING.value, owner_name="Dummy Name")
         current_time = datetime.utcnow()
         self.org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISH_IN_PROGRESS.value, username)
+        self.org_repo.add_item(
+            OrganizationMember(
+                username="owner",
+                org_uuid=test_org_id,
+                role=Role.OWNER.value,
+                address="owner_wallet",
+                status=OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value,
+                transaction_hash="0x123",
+                invite_code="owner_invite_code1",
+                created_on=current_time,
+                invited_on=current_time,
+                updated_on=current_time
+            )
+        )
         self.org_repo.add_item(
             OrganizationMember(
                 username="user1",
@@ -285,6 +297,14 @@ class TestOrganizationService(unittest.TestCase):
         assert published_org[0].Organization.groups[0].id == "group_id"
         assert published_org[0].Organization.groups[0].name == "my-group"
         assert published_org[0].Organization.groups[0].payment_address == "0x123"
+        assert published_members[0].address == "owner_wallet"
+        assert published_members[0].status == "PUBLISHED"
+        assert published_members[0].role == Role.OWNER.value
+        assert published_members[1].address == "member_wallet_address1"
+        assert published_members[1].status == "PUBLISHED"
+        assert published_members[2].address == "member_wallet_address3"
+        assert published_members[2].status == "PUBLISHED"
+
 
     def tearDown(self):
         self.org_repo.session.query(Organization).delete()
