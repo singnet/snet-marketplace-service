@@ -201,6 +201,17 @@ class TestOrganizationService(unittest.TestCase):
         self.org_repo.add_org_with_status(organization, OrganizationStatus.PUBLISH_IN_PROGRESS.value, username)
         self.org_repo.add_item(
             OrganizationMember(
+                username="owner",
+                org_uuid=test_org_id,
+                role=Role.OWNER.value,
+                address="owner_wallet",
+                status=OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value,
+                transaction_hash="0x123",
+                invite_code="owner_invite_code1"
+            )
+        )
+        self.org_repo.add_item(
+            OrganizationMember(
                 username="user1",
                 org_uuid=test_org_id,
                 role=Role.MEMBER.value,
@@ -274,10 +285,13 @@ class TestOrganizationService(unittest.TestCase):
         assert published_org[0].Organization.groups[0].id == "group_id"
         assert published_org[0].Organization.groups[0].name == "my-group"
         assert published_org[0].Organization.groups[0].payment_address == "0x123"
-        assert published_mebers[0].address == "member_wallet_address1"
+        assert published_mebers[0].address == "owner_wallet"
         assert published_mebers[0].status == "PUBLISHED"
-        assert published_mebers[1].address == "member_wallet_address3"
+        assert published_mebers[0].role == Role.OWNER.value
+        assert published_mebers[1].address == "member_wallet_address1"
         assert published_mebers[1].status == "PUBLISHED"
+        assert published_mebers[2].address == "member_wallet_address3"
+        assert published_mebers[2].status == "PUBLISHED"
 
 
     def tearDown(self):
