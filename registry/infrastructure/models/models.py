@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, VARCHAR
+from sqlalchemy import Column, ForeignKey, Integer, VARCHAR, UniqueConstraint
 from sqlalchemy.dialects.mysql import JSON, TIMESTAMP
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -92,7 +92,6 @@ class GroupHistory(Base):
 
 class OrganizationMember(Base):
     __tablename__ = "org_member"
-
     row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
     org_uuid = Column("org_uuid", VARCHAR(128))
     role = Column("role", VARCHAR(128))
@@ -101,8 +100,10 @@ class OrganizationMember(Base):
     status = Column("status", VARCHAR(128))
     transaction_hash = Column("transaction_hash", VARCHAR(128))
     invite_code = Column("invite_code", VARCHAR(128))
+    invited_on = Column("invited_on", TIMESTAMP(timezone=False))
     created_on = Column("created_on", TIMESTAMP(timezone=False))
     updated_on = Column("updated_on", TIMESTAMP(timezone=False))
+    UniqueConstraint(org_uuid, username, name="uk_user_org")
 
 
 class OrganizationAddress(Base):
