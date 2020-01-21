@@ -166,8 +166,14 @@ class OrganizationService(object):
 
     def invite_members(self, org_members):
         current_time = datetime.utcnow()
-        org_member_list = OrganizationFactory.org_member_from_dict_list(org_members, self.org_uuid)
-        for org_member in org_member_list:
+        requested_invite_member_list = OrganizationFactory.org_member_from_dict_list(org_members, self.org_uuid)
+        current_org_member = org_repo.get_members_for_given_org(self.org_uuid)
+        current_org_member_username_list = [member.username for member in current_org_member]
+
+        eligible_invite_member_list = [member for member in requested_invite_member_list
+                                       if member.username not in current_org_member_username_list]
+
+        for org_member in eligible_invite_member_list:
             org_member.generate_invite_code()
             org_member.set_status(OrganizationMemberStatus.PENDING.value)
             org_member.set_role(Role.MEMBER.value)
@@ -178,8 +184,10 @@ class OrganizationService(object):
             org_name = org_data[0].Organization.name
         else:
             raise Exception("Unable to find organization.")
-        self._send_invitation(org_member_list, org_name)
-        org_repo.add_member(org_member_list)
+        self._send_invitation(eligible_invite_member_list, org_name)
+        org_repo.add_member(eligible_invite_member_list)
+        return {"failed_invitation": [member.username for member in requested_invite_member_list
+                                      if member.username in current_org_member_username_list]}
 
     def _send_invitation(self, org_member_list, org_name):
         self._send_email_notification_for_inviting_organization_member(org_member_list, org_name)

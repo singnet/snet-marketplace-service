@@ -102,7 +102,16 @@ class TestInviteMembers(TestCase):
             }
         ]
         OrganizationService(test_org_id, username).invite_members(new_org_members)
-        self.assertRaises(Exception, OrganizationService(test_org_id, username).invite_members, new_org_members)
+        response = OrganizationService(test_org_id, username).invite_members(new_org_members)
+        invited_org_members = org_repo.get_members_for_given_org(test_org_id, OrganizationMemberStatus.PENDING.value)
+        if len(invited_org_members) == 1:
+            assert True
+        else:
+            assert False
+        if len(response["failed_invitation"]) == 1:
+            self.assertEqual(response["failed_invitation"][0], "karl@dummy.io")
+        else:
+            assert False
 
     def test_get_member(self):
         """ adding new group without existing draft """
