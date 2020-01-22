@@ -24,7 +24,8 @@ class TestOrganizationService(unittest.TestCase):
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
     @patch('common.ipfs_util.IPFSUtil.read_file_from_ipfs')
     @patch('common.ipfs_util.IPFSUtil.read_bytesio_from_ipfs')
-    def test_organization_create_event(self, nock_read_bytesio_from_ipfs, mock_ipfs_read, mock_s3_push,
+    @patch('registry.consumer.organization_event_consumer.OrganizationEventConsumer._get_org_details_from_blockchain')
+    def test_organization_create_event(self, mock_get_org_details_from_blockchain,nock_read_bytesio_from_ipfs, mock_ipfs_read, mock_s3_push,
                                        mock_ipfs_write):
         test_org_id = uuid4().hex
         username = "dummy@snet.io"
@@ -51,7 +52,7 @@ class TestOrganizationService(unittest.TestCase):
                           'row_created': datetime(2019, 10, 21, 9, 44, 9)}, "name": "OrganizationCreated"}
         nock_read_bytesio_from_ipfs.return_value = ""
         mock_s3_push.return_value = "http://test-s3-push"
-        mock_ipfs_read.return_value = {
+        ipfs_mock_value = {
             "name": "dummy_org",
             "org_id": "org_id",
             "metadata_ipfs_hash": "Q3E12",
@@ -74,7 +75,8 @@ class TestOrganizationService(unittest.TestCase):
                 }
             }]
         }
-
+        mock_ipfs_read.return_value=ipfs_mock_value
+        mock_get_org_details_from_blockchain.return_value = "org_id", ipfs_mock_value, []
         org_event_consumer = OrganizationCreatedEventConsumer("wss://ropsten.infura.io/ws",
                                                               "http://ipfs.singularitynet.io",
                                                               80)
@@ -94,7 +96,8 @@ class TestOrganizationService(unittest.TestCase):
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
     @patch('common.ipfs_util.IPFSUtil.read_file_from_ipfs')
     @patch('common.ipfs_util.IPFSUtil.read_bytesio_from_ipfs')
-    def test_organization_modify_event(self, nock_read_bytesio_from_ipfs, mock_ipfs_read, mock_s3_push,
+    @patch('registry.consumer.organization_event_consumer.OrganizationEventConsumer._get_org_details_from_blockchain')
+    def test_organization_modify_event(self,mock_get_org_details_from_blockchain, nock_read_bytesio_from_ipfs, mock_ipfs_read, mock_s3_push,
                                        mock_ipfs_write):
         test_org_id = uuid4().hex
         username = "dummy@snet.io"
@@ -135,7 +138,7 @@ class TestOrganizationService(unittest.TestCase):
                           'row_created': datetime(2019, 10, 21, 9, 44, 9)}, "name": "OrganizationCreated"}
         nock_read_bytesio_from_ipfs.return_value = ""
         mock_s3_push.return_value = "http://test-s3-push"
-        mock_ipfs_read.return_value = {
+        ipfs_mock_value = {
             "name": "dummy_org",
             "org_id": "org_id",
             "metadata_ipfs_hash": "Q3E12",
@@ -158,6 +161,8 @@ class TestOrganizationService(unittest.TestCase):
                 }
             }]
         }
+        mock_ipfs_read.return_value=ipfs_mock_value
+        mock_get_org_details_from_blockchain.return_value="org_id",ipfs_mock_value,[]
 
         org_event_consumer = OrganizationModifiedEventConsumer("wss://ropsten.infura.io/ws",
                                                                "http://ipfs.singularitynet.io",
