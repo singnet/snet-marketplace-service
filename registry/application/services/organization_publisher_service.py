@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 from web3 import Web3
 
@@ -155,7 +156,7 @@ class OrganizationService(object):
         offset = pagination_details.get("offset", None)
         limit = pagination_details.get("limit", None)
         sort = pagination_details.get("sort", None)
-        org_members_list = org_repo.get_members_for_given_org_and_status(org_uuid, status, role)
+        org_members_list = org_repo.get_members_for_given_org(org_uuid, status, role)
         return [member.to_dict() for member in org_members_list]
 
     def publish_members(self, transaction_hash, org_members):
@@ -164,18 +165,29 @@ class OrganizationService(object):
         return "OK"
 
     def invite_members(self, org_members):
-        org_member_list = OrganizationFactory.org_member_from_dict_list(org_members, self.org_uuid)
-        for org_member in org_member_list:
+        current_time = datetime.utcnow()
+        requested_invite_member_list = OrganizationFactory.org_member_from_dict_list(org_members, self.org_uuid)
+        current_org_member = org_repo.get_members_for_given_org(self.org_uuid)
+        current_org_member_username_list = [member.username for member in current_org_member]
+
+        eligible_invite_member_list = [member for member in requested_invite_member_list
+                                       if member.username not in current_org_member_username_list]
+
+        for org_member in eligible_invite_member_list:
             org_member.generate_invite_code()
             org_member.set_status(OrganizationMemberStatus.PENDING.value)
             org_member.set_role(Role.MEMBER.value)
+            org_member.set_invited_on(current_time)
+            org_member.set_updated_on(current_time)
         org_data = org_repo.get_latest_org_from_org_uuid(org_uuid=self.org_uuid)
         if len(org_data) > 0:
             org_name = org_data[0].Organization.name
         else:
             raise Exception("Unable to find organization.")
-        self._send_invitation(org_member_list, org_name)
-        org_repo.add_member(org_member_list)
+        self._send_invitation(eligible_invite_member_list, org_name)
+        org_repo.add_member(eligible_invite_member_list)
+        return {"failed_invitation": [member.username for member in requested_invite_member_list
+                                      if member.username in current_org_member_username_list]}
 
     def _send_invitation(self, org_member_list, org_name):
         self._send_email_notification_for_inviting_organization_member(org_member_list, org_name)
