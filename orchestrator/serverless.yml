@@ -342,7 +342,7 @@ functions:
 
   register-org-member:
     warmup: true
-    handler: orchestrator.application.handlers.organization_handlers.register_org_member
+    handler: orchestrator.publisher.application.handlers.organization_handlers.register_org_member
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -354,7 +354,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /org/{org_uuid}/member/register
+          path: /org/member/register
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
