@@ -230,8 +230,11 @@ class OrganizationFactory:
         address = org_member_item.address
         status = org_member_item.status
         invite_code = org_member_item.invite_code
+        invited_on = org_member_item.invited_on
+        updated_on = org_member_item.updated_on
         transaction_hash = org_member_item.transaction_hash
-        org_member = OrganizationMember(org_uuid, username, status, role, address, invite_code, transaction_hash)
+        org_member = OrganizationMember(org_uuid, username, status, role, address,
+                                        invite_code, transaction_hash, invited_on, updated_on)
 
         return org_member
 
