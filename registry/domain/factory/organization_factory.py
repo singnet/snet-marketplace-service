@@ -3,10 +3,10 @@ from datetime import datetime
 
 import common.boto_utils as boto_utils
 from common.logger import get_logger
-from registry.config import ASSET_BUCKET, METADATA_FILE_PATH, REGION_NAME, ALLOWED_ORIGIN
-from registry.constants import OrganizationStatus
+from registry.config import ALLOWED_ORIGIN, ASSET_BUCKET, METADATA_FILE_PATH, REGION_NAME
+from registry.constants import OrganizationMemberStatus, OrganizationStatus, Role
 from registry.domain.models.group import Group
-from registry.domain.models.organization import Organization
+from registry.domain.models.organization import Organization, OrganizationMember
 from registry.domain.models.organization_address import OrganizationAddress
 
 logger = get_logger(__name__)
@@ -100,6 +100,24 @@ class OrganizationFactory:
         return address
 
     @staticmethod
+    def org_member_from_dict(org_member, org_uuid):
+        username = org_member.get("username", "")
+        status = org_member.get("status", "")
+        role = org_member.get("role", "")
+        address = org_member.get("address", "")
+        invite_code = org_member.get("invite_code", "")
+        transaction_hash = org_member.get("transaction_hash", "")
+        org_member = OrganizationMember(org_uuid, username, status, role, address, invite_code, transaction_hash)
+        return org_member
+
+    @staticmethod
+    def org_member_from_dict_list(org_member_dict_list, org_uuid):
+        org_member_list = []
+        for org_member in org_member_dict_list:
+            org_member_list.append(OrganizationFactory.org_member_from_dict(org_member, org_uuid))
+        return org_member_list
+
+    @staticmethod
     def parse_organization_data_model(item, status):
         organization = Organization(
             item.name, item.org_id, item.org_uuid, item.type, item.owner, item.description,
@@ -110,10 +128,10 @@ class OrganizationFactory:
         return organization
 
     @staticmethod
-    def parse_organization_data_model_list(items):
+    def parse_organization_data_model_list(items, status):
         organizations = []
         for item in items:
-            organizations.append(OrganizationFactory.parse_organization_data_model(item))
+            organizations.append(OrganizationFactory.parse_organization_data_model(item, status))
         return organizations
 
     @staticmethod
@@ -195,3 +213,36 @@ class OrganizationFactory:
                                     OrganizationStatus.PUBLISHED.value)
 
         return organization
+
+    @staticmethod
+    def org_member_list_from_db(org_member_items):
+        members = []
+        for member_item in org_member_items:
+            members.append(OrganizationFactory.org_member_from_db(member_item))
+        return members
+
+    @staticmethod
+    def org_member_from_db(org_member_item):
+
+        username = org_member_item.username
+        role = org_member_item.role
+        org_uuid = org_member_item.org_uuid
+        address = org_member_item.address
+        status = org_member_item.status
+        invite_code = org_member_item.invite_code
+        invited_on = org_member_item.invited_on
+        updated_on = org_member_item.updated_on
+        transaction_hash = org_member_item.transaction_hash
+        org_member = OrganizationMember(org_uuid, username, status, role, address,
+                                        invite_code, transaction_hash, invited_on, updated_on)
+
+        return org_member
+
+    @staticmethod
+    def parser_org_members_from_metadata(org_uuid,members,status):
+
+        org_members = []
+        for member in members:
+            org_members.append(OrganizationMember(org_uuid, "", status, Role.MEMBER.value, member))
+
+        return org_members

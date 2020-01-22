@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, VARCHAR
+from sqlalchemy import Column, ForeignKey, Integer, VARCHAR, UniqueConstraint
 from sqlalchemy.dialects.mysql import JSON, TIMESTAMP
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -98,9 +98,12 @@ class OrganizationMember(Base):
     username = Column("username", VARCHAR(128))
     address = Column("address", VARCHAR(128))
     status = Column("status", VARCHAR(128))
+    transaction_hash = Column("transaction_hash", VARCHAR(128))
     invite_code = Column("invite_code", VARCHAR(128))
-
-
+    invited_on = Column("invited_on", TIMESTAMP(timezone=False))
+    created_on = Column("created_on", TIMESTAMP(timezone=False))
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False))
+    UniqueConstraint(org_uuid, username, name="uk_user_org")
 
 
 class OrganizationAddress(Base):
@@ -135,5 +138,3 @@ class OrganizationAddressHistory(Base):
     country = Column("country", VARCHAR(64), nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False))
     updated_on = Column("updated_on", TIMESTAMP(timezone=False))
-
-

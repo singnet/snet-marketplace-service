@@ -1,12 +1,13 @@
 import datetime
 import decimal
 import json
-import os
 import sys
 import traceback
+
 import requests
 import web3
 from web3 import Web3
+
 from common.constant import COGS_TO_AGI, StatusCode
 from common.exceptions import OrganizationNotFound
 
@@ -171,7 +172,8 @@ def handle_exception_with_slack_notification(*decorator_args, **decorator_kwargs
                 logger.exception(f"Organization no found {repr(e)}")
                 return generate_lambda_response(
                     StatusCode.INTERNAL_SERVER_ERROR,
-                    {"status": "success", "data": "", "error": {"code": "", "message": "ORG_NOT_FOUND"}}, cors_enabled=True
+                    {"status": "success", "data": "", "error": {"code": "", "message": "ORG_NOT_FOUND"}},
+                    cors_enabled=True
                 )
             except Exception as e:
                 exc_type, exc_obj, exc_tb = sys.exc_info()

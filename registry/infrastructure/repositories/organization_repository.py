@@ -2,21 +2,15 @@ from datetime import datetime
 
 from sqlalchemy import desc, func, or_
 
-from registry.constants import OrganizationStatus
+from registry.constants import OrganizationStatus, OrganizationMemberStatus, Role
+from registry.domain.exceptions import MemberNotFoundException
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.models.models import Group, GroupHistory, Organization, OrganizationAddress, \
-    OrganizationAddressHistory, OrganizationHistory, OrganizationReviewWorkflow
+    OrganizationAddressHistory, OrganizationHistory, OrganizationMember, OrganizationReviewWorkflow
 from registry.infrastructure.repositories.base_repository import BaseRepository
 
 
 class OrganizationRepository(BaseRepository):
-
-    def draft_update_org(self, organization, username):
-        current_drafts = self.get_org_with_status(organization.org_uuid, OrganizationStatus.DRAFT.value)
-        if len(current_drafts) > 0:
-            self.update_org_draft(current_drafts[0], organization, username)
-        else:
-            self.add_org_with_status(organization, OrganizationStatus.DRAFT.value, username)
 
     def add_org_with_status(self, organization, status, username, transaction_hash=None, wallet_address=None):
         current_time = datetime.utcnow()
@@ -64,7 +58,7 @@ class OrganizationRepository(BaseRepository):
         self.add_new_draft_groups_in_draft_org(organization.groups, current_draft, username)
 
     def delete_and_insert_organization_address(self, org_row_id, addresses):
-        self.session.query(OrganizationAddress).filter(OrganizationAddress.org_row_id == org_row_id)\
+        self.session.query(OrganizationAddress).filter(OrganizationAddress.org_row_id == org_row_id) \
             .delete(synchronize_session='fetch')
         self.add_organization_address(addresses=addresses, org_row_id=org_row_id)
 
@@ -108,12 +102,14 @@ class OrganizationRepository(BaseRepository):
             .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
             .filter(Organization.org_uuid == org_uuid) \
             .filter(OrganizationReviewWorkflow.status == status).all()
+        self.session.commit()
         return organizations
 
     def get_org_for_uuid(self, org_uuid):
         organizations = self.session.query(Organization, OrganizationReviewWorkflow) \
             .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
             .filter(Organization.org_uuid == org_uuid).all()
+        self.session.commit()
         return organizations
 
     def move_non_published_org_to_history(self, org_uuid):
@@ -122,6 +118,7 @@ class OrganizationRepository(BaseRepository):
             .filter(Organization.org_uuid == org_uuid) \
             .filter(or_(OrganizationReviewWorkflow.status == OrganizationStatus.APPROVAL_PENDING.value,
                         OrganizationReviewWorkflow.status == OrganizationStatus.APPROVED.value)).all()
+        self.session.commit()
         self.move_organizations_to_history(orgs_with_status)
 
     def get_org_status(self, org_uuid):
@@ -166,20 +163,30 @@ class OrganizationRepository(BaseRepository):
             .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
             .filter(Organization.org_uuid == org_uuid) \
             .filter(OrganizationReviewWorkflow.status == status).all()
+        self.session.commit()
         self.move_organizations_to_history(orgs_with_status)
 
     def get_published_org_for_user(self, username):
         organizations = self.session.query(Organization) \
             .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
+            .join(OrganizationMember, Organization.org_uuid == OrganizationMember.org_uuid) \
             .filter(OrganizationReviewWorkflow == OrganizationStatus.PUBLISHED.value) \
-            .filter(Organization.owner == username).all()
+            .filter(OrganizationMember.username == username) \
+            .filter(OrganizationMember.role == Role.OWNER.value).all()
+        self.session.commit()
         return OrganizationFactory.parse_organization_details(organizations)
 
     def get_latest_organization(self, username):
         organizations = self.session.query(Organization, OrganizationReviewWorkflow, func.row_number().over(
-                partition_by=Organization.org_uuid, order_by=OrganizationReviewWorkflow.updated_on).label("rn")
-        ).join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
-            .filter(Organization.owner == username).all()
+            partition_by=Organization.org_uuid, order_by=OrganizationReviewWorkflow.updated_on.desc()).label("rn")
+                                           ) \
+            .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
+            .join(OrganizationMember, Organization.org_uuid == OrganizationMember.org_uuid) \
+            .filter(OrganizationMember.username == username) \
+            .filter(OrganizationMember.status.in_([OrganizationMemberStatus.PUBLISHED.value,
+                                                   OrganizationMemberStatus.ACCEPTED.value,
+                                                   OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value])).all()
+        self.session.commit()
         latest_orgs = []
         for org in organizations:
             if org.rn == 1:
@@ -190,7 +197,8 @@ class OrganizationRepository(BaseRepository):
         organization = self.session.query(Organization) \
             .join(OrganizationReviewWorkflow, Organization.row_id == OrganizationReviewWorkflow.org_row_id) \
             .filter(OrganizationReviewWorkflow == OrganizationStatus.PUBLISHED.value)
-        return OrganizationFactory.parse_organization_data_model_list(organization)
+        self.session.commit()
+        return OrganizationFactory.parse_organization_data_model_list(organization, OrganizationStatus.PUBLISHED.value)
 
     def change_org_status(self, org_uuid, current_status, new_status, username):
         organizations = self.get_org_with_status(org_uuid, current_status)
@@ -227,6 +235,7 @@ class OrganizationRepository(BaseRepository):
             .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
             .filter(Organization.org_uuid == org_uuid) \
             .order_by(desc(OrganizationReviewWorkflow.updated_on)).all()
+        self.session.commit()
         if len(organizations) == 0:
             return []
         return [organizations[0]]
@@ -361,6 +370,7 @@ class OrganizationRepository(BaseRepository):
             .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
             .filter(Organization.org_id == org_id) \
             .filter(OrganizationReviewWorkflow.status == status).all()
+        self.session.commit()
         return OrganizationFactory.parse_organization_details(organizations)
 
     def get_org_using_org_id(self, org_uuid):
@@ -368,3 +378,133 @@ class OrganizationRepository(BaseRepository):
             .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
             .filter(Organization.org_uuid == org_uuid).all()
         return OrganizationFactory.parse_organization_details(organizations)
+
+    def get_org_member_details_from_username(self, username, org_uuid):
+        org_member = self.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == org_uuid).filter(
+            OrganizationMember.username == username).all()
+        self.session.commit()
+        if len(org_member) == 0:
+            return None
+        return OrganizationFactory.org_member_from_db(org_member[0])
+
+    def get_org_member_details_from_username_and_invite_code(self, username, invite_code):
+        org_member = self.session.query(OrganizationMember).filter(
+            OrganizationMember.invite_code == invite_code).filter(OrganizationMember.username == username).all()
+        self.session.commit()
+        if len(org_member) == 0:
+            return None
+        return OrganizationFactory.org_member_from_db(org_member[0])
+
+    def get_members_for_given_org(self, org_uuid, status=None, role=None):
+        subquery = self.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == org_uuid)
+        if role is not None:
+            subquery = subquery.filter(OrganizationMember.role == role.upper())
+        if status is not None:
+            subquery = subquery.filter(OrganizationMember.status == status)
+        org_members = subquery.all()
+        self.session.commit()
+        return OrganizationFactory.org_member_list_from_db(org_members)
+
+    def persist_transaction_hash(self, org_member_list, transaction_hash):
+        member_username_list = [member.username for member in org_member_list]
+        org_members_db_items = self.session.query(OrganizationMember) \
+            .filter(OrganizationMember.username.in_(member_username_list))
+        for org_member in org_members_db_items:
+            org_member.status = OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value
+            org_member.transaction_hash = transaction_hash
+            org_member.updated_on = datetime.utcnow()
+        self.session.commit()
+
+    def add_member(self, org_member_list):
+        member_db_models = []
+        current_time = datetime.utcnow()
+        for member in org_member_list:
+            member_db_models.append(
+                OrganizationMember(
+                    org_uuid=member.org_uuid,
+                    role=member.role,
+                    status=member.status,
+                    address=member.address,
+                    transaction_hash=member.transaction_hash,
+                    username=member.username,
+                    invite_code=member.invite_code,
+                    updated_on=member.updated_on,
+                    invited_on=member.invited_on,
+                    created_on=current_time
+                )
+            )
+        self.add_all_items(member_db_models)
+
+    def org_member_verify(self, username, invite_code):
+        org_members = self.session.query(OrganizationMember) \
+            .filter(OrganizationMember.invite_code == invite_code) \
+            .filter(OrganizationMember.username == username) \
+            .filter(OrganizationMember.status == OrganizationMemberStatus.PENDING.value) \
+            .all()
+        self.session.commit()
+        if len(org_members) == 0:
+            return False
+        return True
+
+    def delete_members(self, org_member_list):
+        allowed_delete_member_status = [OrganizationMemberStatus.PENDING.value,
+                                        OrganizationMemberStatus.ACCEPTED.value]
+        member_username_list = [member.username for member in org_member_list]
+        self.session.query(OrganizationMember).filter(OrganizationMember.username.in_(member_username_list)) \
+            .filter(OrganizationMember.status.in_(allowed_delete_member_status)).delete(synchronize_session='fetch')
+        self.session.commit()
+
+    def update_org_member(self, org_uuid, username, wallet_address):
+        org_member = self.session.query(OrganizationMember) \
+            .filter(or_(OrganizationMember.username == username, OrganizationMember.address == wallet_address)) \
+            .filter(OrganizationMember.org_uuid == org_uuid) \
+            .filter(or_(OrganizationMember.status == OrganizationMemberStatus.PENDING.value,
+                        OrganizationMember.status == OrganizationMemberStatus.PUBLISHED.value)) \
+            .all()
+        self.session.commit()
+        if len(org_member) == 0:
+            raise Exception(f"No member found for org_uuid: {org_uuid} ")
+
+        if org_member[0].status == OrganizationMemberStatus.PUBLISHED.value and org_member[0].address == wallet_address:
+            org_member[0].username = username
+        elif org_member[0].status == OrganizationMemberStatus.PENDING.value and org_member[0].username == username:
+            org_member[0].address = wallet_address
+            org_member[0].status = OrganizationMemberStatus.ACCEPTED.value
+        org_member[0].updated_on = datetime.utcnow()
+        self.session.commit()
+
+    def update_member_status(self, org_uuid, username, status):
+        org_member = self.session.query(OrganizationMember) \
+            .filter(OrganizationMember.username == username) \
+            .filter(OrganizationMember.org_uuid == org_uuid) \
+            .filter(OrganizationMember.status == OrganizationMemberStatus.PENDING.value) \
+            .all()
+        if len(org_member) == 0:
+            raise Exception(f"No member found for org_uuid: {org_uuid} ")
+        org_member[0].status = status
+        org_member[0].updated_on = datetime.utcnow()
+        self.session.commit()
+
+    def update_member_status_using_address(self, org_uuid, address, status):
+        org_member = self.session.query(OrganizationMember) \
+            .filter(OrganizationMember.address == address) \
+            .filter(OrganizationMember.org_uuid == org_uuid) \
+            .filter(OrganizationMember.status == OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value) \
+            .all()
+        if len(org_member) == 0:
+            raise MemberNotFoundException(f"No member found for org_uuid: {org_uuid} ")
+        org_member[0].status = status
+        org_member[0].updated_on = datetime.utcnow()
+        self.session.commit()
+
+    def get_all_organization_transaction_data(self):
+        org_transaction_data_list = self.session.query(OrganizationReviewWorkflow) \
+            .filter(OrganizationReviewWorkflow.status == OrganizationStatus.PUBLISH_IN_PROGRESS.value) \
+            .filter(OrganizationReviewWorkflow.transaction_hash != None).all()
+        self.session.commit()
+        return org_transaction_data_list
+
+    def update_organization_review_workflow_status(self, row_id, status):
+        self.session.query(OrganizationReviewWorkflow).filter(OrganizationReviewWorkflow.row_id == row_id) \
+            .update({OrganizationReviewWorkflow.status: status})
+        self.session.commit()
