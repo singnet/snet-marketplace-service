@@ -379,13 +379,6 @@ class OrganizationRepository(BaseRepository):
             .filter(Organization.org_uuid == org_uuid).all()
         return OrganizationFactory.parse_organization_details(organizations)
 
-    def get_members_for_given_org(self, org_uuid):
-        org_members_list = []
-        org_members = self.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == org_uuid).all()
-        for org_member in org_members:
-            org_members_list.append(OrganizationFactory.org_member_from_db(org_member))
-        return org_members_list
-
     def get_org_member_details_from_username(self, username, org_uuid):
         org_member = self.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == org_uuid).filter(
             OrganizationMember.username == username).all()
@@ -402,8 +395,7 @@ class OrganizationRepository(BaseRepository):
             return None
         return OrganizationFactory.org_member_from_db(org_member[0])
 
-    def get_members_for_given_org_and_status(self, org_uuid, status, role=None):
-        org_members_list = []
+    def get_members_for_given_org(self, org_uuid, status=None, role=None):
         subquery = self.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == org_uuid)
         if role is not None:
             subquery = subquery.filter(OrganizationMember.role == role.upper())
@@ -411,9 +403,7 @@ class OrganizationRepository(BaseRepository):
             subquery = subquery.filter(OrganizationMember.status == status)
         org_members = subquery.all()
         self.session.commit()
-        for org_member in org_members:
-            org_members_list.append(OrganizationFactory.org_member_from_db(org_member))
-        return org_members_list
+        return OrganizationFactory.org_member_list_from_db(org_members)
 
     def persist_transaction_hash(self, org_member_list, transaction_hash):
         member_username_list = [member.username for member in org_member_list]
@@ -438,7 +428,8 @@ class OrganizationRepository(BaseRepository):
                     transaction_hash=member.transaction_hash,
                     username=member.username,
                     invite_code=member.invite_code,
-                    updated_on=current_time,
+                    updated_on=member.updated_on,
+                    invited_on=member.invited_on,
                     created_on=current_time
                 )
             )

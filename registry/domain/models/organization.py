@@ -185,7 +185,8 @@ class Organization:
 
 
 class OrganizationMember(object):
-    def __init__(self, org_uuid, username, status, role, address=None, invite_code=None, transaction_hash=None):
+    def __init__(self, org_uuid, username, status, role, address=None,
+                 invite_code=None, transaction_hash=None, invited_on=None, updated_on=None):
         self.__role = role
         self.__org_uuid = org_uuid
         self.__username = username
@@ -193,6 +194,8 @@ class OrganizationMember(object):
         self.__address = address
         self.__invite_code = invite_code
         self.__transaction_hash = transaction_hash
+        self.__invited_on = invited_on
+        self.__updated_on = updated_on
 
     @property
     def org_uuid(self):
@@ -222,6 +225,14 @@ class OrganizationMember(object):
     def transaction_hash(self):
         return self.__transaction_hash
 
+    @property
+    def invited_on(self):
+        return self.__invited_on
+
+    @property
+    def updated_on(self):
+        return self.__updated_on
+
     def set_transaction_hash(self, transaction_hash):
         self.__transaction_hash = transaction_hash
 
@@ -240,26 +251,32 @@ class OrganizationMember(object):
     def __hash__(self):
         return hash(self.__repr__())
 
-    def role_response(self):
-        return {
-            "username": self.username,
-            "address": self.address,
-            "role": self.role
-        }
-
     def to_dict(self):
-        return {
+        member_dict = {
             "username": self.username,
             "address": self.address,
             "status": self.status,
-            "role": self.role
+            "role": self.role,
+            "invited_on": "",
+            "updated_on": ""
         }
+        if self.invited_on is not None:
+            member_dict["invited_on"] = self.invited_on.strftime("%Y-%m-%d %H:%M:%S")
+        if self.updated_on is not None:
+            member_dict["updated_on"] = self.updated_on.strftime("%Y-%m-%d %H:%M:%S")
+        return member_dict
 
     def generate_invite_code(self):
         self.__invite_code = uuid4().hex
 
     def set_status(self, status):
         self.__status = status
+
+    def set_invited_on(self, invited_on):
+        self.__invited_on = invited_on
+
+    def set_updated_on(self, updated_on):
+        self.__updated_on = updated_on
 
     def set_role(self, role):
         self.__role = role
