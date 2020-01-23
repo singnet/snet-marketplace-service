@@ -241,6 +241,66 @@ class TestOrgMemberFlow(TestCase):
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
 
+    @patch("common.boto_utils.BotoUtils.invoke_lambda")
+    @patch("common.utils.Utils.report_slack")
+    def test_invite_members_two(self, mock_slack, mock_send_notification):
+        mock_slack.return_value = None
+        mock_send_notification.return_value = None
+        self.tearDown()
+        org_repo.add_item(
+            Organization(
+                row_id=1000,
+                name="test_org",
+                org_id="test_org_id",
+                org_uuid="test_org_uuid",
+                type="organization",
+                owner="dummyuser@dummy.io",
+                owner_name="Test Owner",
+                description="that is the dummy org for testcases",
+                short_description="that is the short description",
+                url="https://dummy.url",
+                contacts=[],
+                assets={},
+                duns_no=12345678,
+                origin="PUBLISHER_DAPP",
+                groups=[],
+                address=[],
+                metadata_ipfs_hash="#dummyhashdummyhash"
+            )
+        )
+        org_repo.add_item(
+            OrganizationReviewWorkflow(
+                org_row_id=1000,
+                status=OrganizationStatus.APPROVAL_PENDING.value,
+                transaction_hash="",
+                wallet_address="",
+                created_by="",
+                updated_by="",
+                approved_by="",
+                created_on=dt.utcnow(),
+                updated_on=dt.utcnow()
+            ))
+        event = {
+            "requestContext": {
+                "authorizer": {
+                    "claims": {
+                        "email": "dummyuser@dummy.io"
+                    }
+                }
+            },
+            "httpMethod": "POST",
+            "pathParameters": {"org_id": "test_org_uuid"},
+            "body": json.dumps({"members": [{"username": "dummy_user3@dummy.io"},
+                                            {"username": "dummy_user4@dummy.io"}]})
+        }
+
+        invite_members(event=event, context=None)
+        response = invite_members(event=event, context=None)
+        assert (response["statusCode"] == 500)
+        response_body = json.loads(response["body"])
+        assert (response_body["status"] == "failed")
+        self.assertEqual(len(response_body["error"]["details"]["failed_to_invite_members"]), 2)
+
     def test_verify_invite_code(self):
         self.tearDown()
         org_repo.add_item(
