@@ -101,25 +101,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: GET
-          path: /org/{org_id}/service/{service_id}/health
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
 
   manage-monitor-service-health:
     warmup: true
@@ -137,9 +118,9 @@ functions:
           rate: rate(30 minutes)
           enabled: false
 
-  reset-service-health-failed-status-count:
+  reset-service-health-next-check-time:
     warmup: true
-    handler: service_status/handlers/monitor_service_handlers.reset_service_health_failed_status_count
+    handler: service_status/handlers/monitor_service_handlers.reset_service_health_next_check_time
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -152,11 +133,6 @@ functions:
       - http:
           method: GET
           path: /org/{org_id}/service/{service_id}/health/failed_status_count/reset
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
