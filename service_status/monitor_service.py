@@ -4,7 +4,8 @@ from datetime import datetime as dt
 from datetime import timedelta
 from urllib.request import Request, urlopen, ssl, socket
 from common.utils import Utils
-from service_status.config import REGION_NAME, NOTIFICATION_ARN, SLACK_HOOK, NETWORKS, NETWORK_ID, CERTIFICATION_EXPIRATION_THRESHOLD
+from service_status.config import REGION_NAME, NOTIFICATION_ARN, SLACK_HOOK, NETWORKS, NETWORK_ID, \
+    CERTIFICATION_EXPIRATION_THRESHOLD
 from common.boto_utils import BotoUtils
 from common.utils import Utils
 from common.logger import get_logger
@@ -85,13 +86,21 @@ class MonitorService:
                 emails.append(email_id)
         return emails
 
+    def _update_next_service_health_check_timestamp(self, next_check_timestamp, org_id, service_id):
+        query_response = self.repo.execute(
+            "UPDATE service_endpoint SET next_check_timestamp = %s WHERE org_id = %s AND service_id = %s",
+            [next_check_timestamp, org_id, service_id])
+        if query_response[0] > 0:
+            return f"Reset is successful. Your service {service_id} under organization {org_id} will be check for " \
+                   f"health status on priority."
+        return "Unable to reset next health check time."
+
 
 class MonitorServiceCertificate(MonitorService):
-    def __init__(self, repo, net_id):
+    def __init__(self, repo):
         self.repo = repo
         self.route = "/encoding"
         self.obj_util = Utils()
-        self.net_id = net_id
         # regex helps to check url is localhost or external address.
         self.rex_for_pb_ip = "^(http://)*(https://)*127.0.0.1|^(http://)*(https://)*localhost|^(http://)*" \
                              "(https://)*192.|^(http://)*(https://)*172.|^(http://)*(https://)*10."
@@ -156,5 +165,9 @@ class MonitorServiceCertificate(MonitorService):
 
 
 class MonitorServiceHealth(MonitorService):
-    def __init__(self):
-        pass
+    def __init__(self, repo):
+        self.repo = repo
+
+    def reset_next_service_health_check_timestamp(self, org_id, service_id):
+        response = self._update_next_service_health_check_timestamp(dt.utcnow(), org_id, service_id)
+        return response
