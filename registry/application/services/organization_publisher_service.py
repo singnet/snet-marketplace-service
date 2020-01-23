@@ -193,10 +193,8 @@ class OrganizationService(object):
         failed_invitation = [member.username for member in requested_invite_member_list
                              if member.username in current_org_member_username_list]
 
-        response = {"members": [member.to_dict() for member in eligible_invite_member_list]}
-        if len(failed_invitation) > 0:
-            raise MemberAlreadyExists(self.org_uuid, failed_invitation)
-        return response
+        return {"member": [member.to_dict() for member in eligible_invite_member_list],
+                "failed_invitation": failed_invitation}
 
     def _send_invitation(self, org_member_list, org_name):
         self._send_email_notification_for_inviting_organization_member(org_member_list, org_name)
