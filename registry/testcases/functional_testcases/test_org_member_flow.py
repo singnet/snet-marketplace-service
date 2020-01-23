@@ -296,10 +296,10 @@ class TestOrgMemberFlow(TestCase):
 
         invite_members(event=event, context=None)
         response = invite_members(event=event, context=None)
-        assert (response["statusCode"] == 500)
+        assert (response["statusCode"] == 201)
         response_body = json.loads(response["body"])
-        assert (response_body["status"] == "failed")
-        self.assertEqual(len(response_body["error"]["details"]["failed_to_invite_members"]), 2)
+        assert (response_body["status"] == "success")
+        self.assertEqual(len(response_body["data"]["failed_invitation"]), 2)
 
     def test_verify_invite_code(self):
         self.tearDown()
