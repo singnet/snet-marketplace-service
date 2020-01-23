@@ -1,30 +1,27 @@
-class CustomException(Exception):
-    def __init__(self, response, error_details):
-        self.RESPONSE = response
-        self.ERROR_DETAILS = error_details
+from common.exceptions import CustomException
 
 
 class OrganizationNotFoundException(CustomException):
-    ERROR_MESSAGE = "ORG_NOT_FOUND"
-    ERROR_CODE = 0
+    error_message = "ORG_NOT_FOUND"
+    error_code = 0
 
-    def __init__(self, response, org_uuid):
+    def __init__(self, org_uuid):
         error_details = {
             "org_uuid": org_uuid
         }
-        super().__init__(response, error_details)
+        super().__init__(error_details)
 
 
 class MemberAlreadyExists(CustomException):
-    ERROR_MESSAGE = "MEMBER_ALREADY_EXISTS"
-    ERROR_CODE = 0
+    error_message = "MEMBER_ALREADY_EXISTS"
+    error_code = 0
 
-    def __init__(self, response, org_uuid, failed_member_list):
+    def __init__(self, org_uuid, failed_member_list):
         error_details = {
             "org_uuid": org_uuid,
             "failed_to_invite_members": failed_member_list
         }
-        super().__init__(response, error_details)
+        super().__init__(error_details)
 
 
 EXCEPTIONS = (OrganizationNotFoundException, MemberAlreadyExists)

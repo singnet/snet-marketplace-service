@@ -185,7 +185,7 @@ class OrganizationService(object):
         if len(org_data) > 0:
             org_name = org_data[0].Organization.name
         else:
-            raise OrganizationNotFoundException("", self.org_uuid)
+            raise OrganizationNotFoundException(self.org_uuid)
 
         self._send_invitation(eligible_invite_member_list, org_name)
         org_repo.add_member(eligible_invite_member_list)
@@ -195,7 +195,7 @@ class OrganizationService(object):
 
         response = {"members": [member.to_dict() for member in eligible_invite_member_list]}
         if len(failed_invitation) > 0:
-            raise MemberAlreadyExists(response, self.org_uuid, failed_invitation)
+            raise MemberAlreadyExists(self.org_uuid, failed_invitation)
         return response
 
     def _send_invitation(self, org_member_list, org_name):

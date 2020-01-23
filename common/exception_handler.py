@@ -47,10 +47,10 @@ def exception_handler(*decorator_args, **decorator_kwargs):
                     StatusCode.INTERNAL_SERVER_ERROR,
                     {
                         "status": "failed",
-                        "data": e.RESPONSE,
+                        "data": "",
                         "error": {
-                            "code": e.ERROR_CODE,
-                            "message": e.ERROR_MESSAGE,
+                            "code": e.error_code,
+                            "message": e.error_message,
                             "details": e.ERROR_DETAILS
                         }
                     },
