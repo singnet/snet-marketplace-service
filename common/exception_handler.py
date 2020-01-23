@@ -56,30 +56,30 @@ def exception_handler(*decorator_args, **decorator_kwargs):
                     },
                     cors_enabled=True
                 )
-            # except Exception as e:
-            #     exc_type, exc_obj, exc_tb = sys.exc_info()
-            #     exc_tb_lines = traceback.format_tb(exc_tb)
-            #     logger.exception(error_message)
-            #
-            #     slack_message = error_message
-            #     for exc_lines in exc_tb_lines:
-            #         slack_message = slack_message + exc_lines
-            #     slack_message = f"```{slack_message}```"
-            #     Utils().report_slack(type=0, slack_msg=slack_message, SLACK_HOOK=SLACK_HOOK)
-            #
-            #     return generate_lambda_response(
-            #         StatusCode.INTERNAL_SERVER_ERROR,
-            #         {
-            #             "status": "failed",
-            #             "data": "",
-            #             "error": {
-            #                 "code": 0,
-            #                 "message": repr(e),
-            #                 "details": {}
-            #             }
-            #         },
-            #         cors_enabled=True
-            #     )
+            except Exception as e:
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                exc_tb_lines = traceback.format_tb(exc_tb)
+                logger.exception(error_message)
+
+                slack_message = error_message
+                for exc_lines in exc_tb_lines:
+                    slack_message = slack_message + exc_lines
+                slack_message = f"```{slack_message}```"
+                Utils().report_slack(type=0, slack_msg=slack_message, SLACK_HOOK=SLACK_HOOK)
+
+                return generate_lambda_response(
+                    StatusCode.INTERNAL_SERVER_ERROR,
+                    {
+                        "status": "failed",
+                        "data": "",
+                        "error": {
+                            "code": 0,
+                            "message": repr(e),
+                            "details": {}
+                        }
+                    },
+                    cors_enabled=True
+                )
 
         return wrapper
 
