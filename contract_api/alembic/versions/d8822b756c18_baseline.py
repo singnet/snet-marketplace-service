@@ -143,21 +143,23 @@ def upgrade():
        """)
 
     conn.execute("""
-            CREATE TABLE `service_endpoint` (
-              `row_id` int(11) NOT NULL AUTO_INCREMENT,
-              `service_row_id` int(11) NOT NULL,
-              `org_id` varchar(128) NOT NULL,
-              `service_id` varchar(128) NOT NULL,
-              `group_id` varchar(256) NOT NULL,
-              `endpoint` varchar(256) DEFAULT NULL,
-              `is_available` bit(1) DEFAULT b'1',
-              `last_check_timestamp` timestamp NULL DEFAULT NULL,
-              `row_created` timestamp NULL DEFAULT NULL,
-              `row_updated` timestamp NULL DEFAULT NULL,
-              PRIMARY KEY (`row_id`),
-              KEY `ServiceFK_idx` (`service_row_id`),
-              CONSTRAINT `ServiceEndpt` FOREIGN KEY (`service_row_id`) REFERENCES `service` (`row_id`) ON DELETE CASCADE
-            ) ;
+        CREATE TABLE `service_endpoint` (
+          `row_id` int(11) NOT NULL AUTO_INCREMENT,
+          `service_row_id` int(11) NOT NULL,
+          `org_id` varchar(128) NOT NULL,
+          `service_id` varchar(128) NOT NULL,
+          `group_id` varchar(256) NOT NULL,
+          `endpoint` varchar(256) DEFAULT NULL,
+          `is_available` bit(1) DEFAULT NULL,
+          `last_check_timestamp` timestamp NULL DEFAULT NULL,
+          `next_check_timestamp` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+          `failed_status_count` int(2) DEFAULT '1',
+          `row_created` timestamp NULL DEFAULT NULL,
+          `row_updated` timestamp NULL DEFAULT NULL,
+          PRIMARY KEY (`row_id`),
+          KEY `ServiceFK_idx` (`service_row_id`),
+          CONSTRAINT `ServiceEndpt` FOREIGN KEY (`service_row_id`) REFERENCES `service` (`row_id`) ON DELETE CASCADE
+        );
     """)
     conn.execute("""
             CREATE TABLE `service_tags` (
