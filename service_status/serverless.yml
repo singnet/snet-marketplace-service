@@ -60,7 +60,7 @@ package:
 functions:
   service-status:
     warmup: true
-    handler: service_status/lambda_handler.request_handler
+    handler: service_status/handlers/monitor_service_handlers.request_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -76,7 +76,7 @@ functions:
 
   monitor-service-cert-expiry:
     warmup: true
-    handler: service_status/lambda_handler.monitor_service_certificates_expiry_handler
+    handler: service_status/handlers/monitor_service_handlers.monitor_service_certificates_expiry_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -89,3 +89,81 @@ functions:
       - schedule:
           rate: rate(3 days)
           enabled: true
+
+  monitor-service-health:
+    warmup: true
+    handler: service_status/handlers/monitor_service_handlers.monitor_service_health
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /org/{org_id}/service/{service_id}/health
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
+  manage-monitor-service-health:
+    warmup: true
+    handler: service_status/handlers/monitor_service_handlers.manage_monitor_service_health
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - schedule:
+          rate: rate(30 minutes)
+          enabled: false
+
+  reset-service-health-failed-status-count:
+    warmup: true
+    handler: service_status/handlers/monitor_service_handlers.reset_service_health_failed_status_count
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /org/{org_id}/service/{service_id}/health/failed_status_count/reset
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
