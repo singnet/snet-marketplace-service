@@ -1,6 +1,7 @@
 import json
 
 from common.constant import StatusCode
+from common.exception_handler import exception_handler
 from common.exceptions import BadRequestException
 from common.logger import get_logger
 from common.utils import generate_lambda_response, handle_exception_with_slack_notification, validate_dict, \
@@ -8,6 +9,7 @@ from common.utils import generate_lambda_response, handle_exception_with_slack_n
 from registry.application.services.organization_publisher_service import OrganizationService, OrganizationMemberService
 from registry.config import NETWORK_ID, SLACK_HOOK
 from registry.constants import PostOrganizationActions
+from registry.exceptions import EXCEPTIONS
 
 logger = get_logger(__name__)
 
@@ -138,7 +140,7 @@ def get_all_members(event, context):
     )
 
 
-@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def invite_members(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     payload = json.loads(event["body"])
