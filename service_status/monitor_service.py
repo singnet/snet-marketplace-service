@@ -91,8 +91,7 @@ class MonitorService:
             "UPDATE service_endpoint SET next_check_timestamp = %s WHERE org_id = %s AND service_id = %s",
             [next_check_timestamp, org_id, service_id])
         if query_response[0] > 0:
-            return f"Reset is successful. Your service {service_id} under organization {org_id} will be check for " \
-                   f"health status on priority."
+            return "We will trigger a health check immediately."
         return "Unable to reset next health check time."
 
 

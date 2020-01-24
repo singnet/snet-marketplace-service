@@ -67,9 +67,7 @@ class TestMonitorService(TestCase):
         assert ((date_diff.microseconds / 1000000) <= 2)
         assert (response["statusCode"] == 200)
         response_body = json.loads(response["body"])
-        assert (
-                response_body[
-                    "data"] == "Reset is successful. Your service test_service_id under organization test_org_id will be check for health status on priority.")
+        assert (response_body["data"] == "We will trigger a health check immediately.")
 
     def tearDown(self):
         self.repo.execute("DELETE FROM service")
