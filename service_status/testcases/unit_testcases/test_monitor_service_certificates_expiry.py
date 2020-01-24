@@ -13,7 +13,7 @@ NETWORK_NAME = NETWORKS[NETWORK_ID]["name"]
 class TestMonitorServiceCertificatesExpiry(TestCase):
     def setUp(self):
         self.monitor_service_certificate = MonitorServiceCertificate(
-            repo=Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS), net_id=NETWORK_ID)
+            repo=Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS))
 
     def test_get_certificate_expiration_slack_notification_message(self):
         org_id = "test_org_id"
@@ -52,8 +52,8 @@ class TestMonitorServiceCertificatesExpiry(TestCase):
 
     def test_is_valid_url(self):
         endpoint = "https://dummy.com:0000"
-        response = MonitorServiceCertificate(net_id=NETWORK_ID, repo=None)._valid_url(url=endpoint)
+        response = MonitorServiceCertificate(repo=None)._valid_url(url=endpoint)
         assert (response == True)
         endpoint = "127.0.0.1:9999"
-        response = MonitorServiceCertificate(net_id=NETWORK_ID, repo=None)._valid_url(url=endpoint)
+        response = MonitorServiceCertificate(repo=None)._valid_url(url=endpoint)
         assert (response == False)
