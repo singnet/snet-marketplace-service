@@ -10,6 +10,7 @@ from registry.config import NOTIFICATION_ARN, REGION_NAME, PUBLISHER_PORTAL_DAPP
 from registry.constants import OrganizationMemberStatus, OrganizationStatus, Role
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import OrganizationMember
+from registry.exceptions import OrganizationNotFoundException, MemberAlreadyExists
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
 
 org_repo = OrganizationRepository()
@@ -179,15 +180,21 @@ class OrganizationService(object):
             org_member.set_role(Role.MEMBER.value)
             org_member.set_invited_on(current_time)
             org_member.set_updated_on(current_time)
+
         org_data = org_repo.get_latest_org_from_org_uuid(org_uuid=self.org_uuid)
         if len(org_data) > 0:
             org_name = org_data[0].Organization.name
         else:
-            raise Exception("Unable to find organization.")
+            raise OrganizationNotFoundException(self.org_uuid)
+
         self._send_invitation(eligible_invite_member_list, org_name)
         org_repo.add_member(eligible_invite_member_list)
-        return {"failed_invitation": [member.username for member in requested_invite_member_list
-                                      if member.username in current_org_member_username_list]}
+
+        failed_invitation = [member.username for member in requested_invite_member_list
+                             if member.username in current_org_member_username_list]
+
+        return {"member": [member.to_dict() for member in eligible_invite_member_list],
+                "failed_invitation": failed_invitation}
 
     def _send_invitation(self, org_member_list, org_name):
         self._send_email_notification_for_inviting_organization_member(org_member_list, org_name)
