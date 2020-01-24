@@ -3,7 +3,8 @@ import json
 from datetime import datetime as dt
 from datetime import timedelta
 from common.utils import Utils
-from service_status.config import REGION_NAME, NOTIFICATION_ARN, SLACK_HOOK, NETWORKS, NETWORK_ID, MAXIMUM_INTERVAL_IN_HOUR, MINIMUM_INTERVAL_IN_HOUR
+from service_status.config import REGION_NAME, NOTIFICATION_ARN, SLACK_HOOK, NETWORKS, NETWORK_ID, \
+    MAXIMUM_INTERVAL_IN_HOUR, MINIMUM_INTERVAL_IN_HOUR
 from common.boto_utils import BotoUtils
 from common.utils import Utils
 from common.logger import get_logger
@@ -124,16 +125,6 @@ class ServiceStatus:
                 else:
                     logger.info(f"Invalid email_id: {recipient}")
 
-    def _get_email_notification_payload(self, org_id, service_id, recipient):
-        send_notification_payload = {
-            "message": f"<html><head></head><body><div><p>Hello,</p><p>Your service {service_id} under organization "
-                       f"{org_id} is down.</p><br /> <br /><p><em>Please do not reply to the email for any enquiries "
-                       f"for any queries please email at cs-marketplace@singularitynet.io.</em></p><p>Warmest regards,"
-                       f"<br />SingularityNET Marketplace Team</p></div></body></html>",
-            "subject": f"Your service {service_id} is down.",
-            "notification_type": "support",
-            "recipient": recipient}
-
     def _get_slack_message(self, org_id, service_id, endpoint):
         slack_message = f"```Alert!\n\nService {service_id} under organization {org_id} is down for {NETWORK_NAME} " \
                         f"network.\nEndpoint: {endpoint} \n\nFor any queries please email at " \
@@ -143,10 +134,12 @@ class ServiceStatus:
     def _send_email_notification(self, org_id, service_id, recipient, endpoint):
         send_notification_payload = {"body": json.dumps({
             "message": f"<html><head></head><body><div><p>Hello,</p><p>Your service {service_id} under organization "
-                       f"{org_id} is down for {NETWORK_NAME} network.</p><p>Endpoint: {endpoint}</p><br /> <br /><p>"
-                       f"<em>Please do not reply to the email for any enquiries for any queries please email at "
-                       f"cs-marketplace@singularitynet.io.</em></p><p>Warmest regards, <br />SingularityNET Marketplace "
-                       f"Team</p></div></body></html>",
+                       f"{org_id} is down.</p><p>Please click the below URL to update service status on priority. <br/> "
+                       f"<a href='https://ropsten-marketplace.singularitynet.io/service-status/org/{org_id}/service/{service_id}/health/reset'>"
+                       f"https://ropsten-marketplace.singularitynet.io/service-status/org/{org_id}/service/{service_id}/health/reset"
+                       f"</a></p><br /><p><em>Please do not reply to the email for any enquiries for any queries please "
+                       f"email at cs-marketplace@singularitynet.io. </em></p><p>Warmest regards, <br />"
+                       f"SingularityNET Marketplace Team</p></div></body></html>",
             "subject": f"Your service {service_id} is down for {NETWORK_NAME} network.",
             "notification_type": "support",
             "recipient": recipient})}
