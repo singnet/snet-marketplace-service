@@ -186,12 +186,14 @@ class OrganizationRepository(BaseRepository):
             .filter(OrganizationMember.status.in_([OrganizationMemberStatus.PUBLISHED.value,
                                                    OrganizationMemberStatus.ACCEPTED.value,
                                                    OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value])).all()
-        self.session.commit()
+
         latest_orgs = []
         for org in organizations:
             if org.rn == 1:
                 latest_orgs.append(org)
-        return OrganizationFactory.parse_organization_details(latest_orgs)
+        org_domain_models = OrganizationFactory.parse_organization_details(latest_orgs)
+        self.session.commit()
+        return org_domain_models
 
     def get_published_organization(self):
         organization = self.session.query(Organization) \
