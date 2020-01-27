@@ -132,7 +132,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /org/{org_id}/service/{service_id}/health/check/reset
+          path: /org/{org_id}/service/{service_id}/health/reset
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
