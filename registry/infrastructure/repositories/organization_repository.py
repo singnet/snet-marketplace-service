@@ -390,12 +390,16 @@ class OrganizationRepository(BaseRepository):
         self.session.commit()
         return org_domain
 
-    def get_org_member_details_from_username(self, username, org_uuid):
-        org_member = self.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == org_uuid).filter(
-            OrganizationMember.username == username).all()
+    def get_org_member(self, username, org_uuid):
+        org_member_query = self.session.query(OrganizationMember)
+        if org_uuid is not None:
+            org_member_query = org_member_query.filter(OrganizationMember.org_uuid == org_uuid)
+        if username is not None:
+            org_member_query = org_member_query.filter(OrganizationMember.username == username)
+        org_member = org_member_query.all()
         org_member_domain = None
         if len(org_member) > 0:
-            OrganizationFactory.org_member_from_db(org_member[0])
+            org_member_domain = OrganizationFactory.org_member_from_db(org_member[0])
         self.session.commit()
         return org_member_domain
 

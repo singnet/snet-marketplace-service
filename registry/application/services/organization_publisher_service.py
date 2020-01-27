@@ -147,7 +147,7 @@ class OrganizationService(object):
         return "OK"
 
     def get_member(self, member_username):
-        member = org_repo.get_org_member_details_from_username(member_username, self.org_uuid)
+        member = org_repo.get_org_member(username=member_username, org_uuid=self.org_uuid)
         if member is None:
             logger.info(f"No member {member_username} for the organization {self.org_uuid}")
             return []
