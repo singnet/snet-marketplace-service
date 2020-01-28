@@ -133,9 +133,13 @@ class OrganizationService(object):
             response.append(org_data.to_dict())
         return response
 
-    def get_organization(self):
-        organizations = org_repo.get_published_organization()
-        return organizations
+    def get_organizations(self, filter_params):
+        status = filter_params.get("status", None)
+        organizations = org_repo.get_org(status=status)
+        response = []
+        for org_data in organizations:
+            response.append(org_data.to_dict())
+        return response
 
     def add_group(self, payload):
         groups = OrganizationFactory().parse_raw_list_groups(payload)

@@ -25,7 +25,7 @@ def add_org(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     if not validate_dict(payload, required_keys):
         raise BadRequestException()
-    org_uuid= payload.get("org_uuid", None)
+    org_uuid = payload.get("org_uuid", None)
     org_service = OrganizationService(org_uuid, username)
     if action == PostOrganizationActions.DRAFT.value:
         response = org_service.add_organization_draft(payload)
@@ -74,6 +74,18 @@ def save_transaction_hash_for_publish_org(event, context):
 
 @handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def get_all_org(event, context):
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    filter_params = event["queryStringParameters"]
+    response = OrganizationService("", username).get_organizations(filter_params)
+
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def get_all_org_for_user(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     response = OrganizationService("", username).get_organizations_for_user()
 

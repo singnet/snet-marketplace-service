@@ -4,7 +4,7 @@ import json
 from unittest import TestCase
 from unittest.mock import patch
 from registry.application.handlers.organization_handlers import get_all_members, invite_members, get_member, \
-    verify_code, publish_members, delete_members, register_member, get_all_org
+    verify_code, publish_members, delete_members, register_member, get_all_org_for_user
 from registry.infrastructure.repositories.organization_repository import OrganizationRepository
 from registry.infrastructure.models.models import Organization, OrganizationAddress, OrganizationMember, \
     OrganizationReviewWorkflow

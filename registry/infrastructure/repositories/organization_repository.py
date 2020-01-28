@@ -382,10 +382,14 @@ class OrganizationRepository(BaseRepository):
         self.session.commit()
         return org_domain
 
-    def get_org_using_org_id(self, org_uuid):
-        organizations = self.session.query(Organization, OrganizationReviewWorkflow) \
-            .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id) \
-            .filter(Organization.org_uuid == org_uuid).all()
+    def get_org(self, org_uuid=None, status=None):
+        org_query = self.session.query(Organization, OrganizationReviewWorkflow) \
+            .join(OrganizationReviewWorkflow, OrganizationReviewWorkflow.org_row_id == Organization.row_id)
+        if org_uuid is not None:
+            org_query = org_query.filter(Organization.org_uuid == org_uuid)
+        if status is not None:
+            org_query = org_query.filter(OrganizationReviewWorkflow.status == status)
+        organizations = org_query.all()
         org_domain = OrganizationFactory.parse_organization_details(organizations)
         self.session.commit()
         return org_domain
