@@ -111,7 +111,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /user/org
+          path: /org
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
