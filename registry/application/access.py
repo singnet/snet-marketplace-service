@@ -8,7 +8,7 @@ org_repo = OrganizationRepository()
 
 
 def is_access_allowed(username, action, org_uuid):
-    org_member_details = org_repo.get_org_member_details_from_username(username, org_uuid)
+    org_member_details = org_repo.get_org_member(username=username, org_uuid=org_uuid)
 
     if not org_member_details:
         return False
