@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, VARCHAR, UniqueConstraint
+from sqlalchemy import Column, ForeignKey, Integer, VARCHAR, UniqueConstraint, BOOLEAN
 from sqlalchemy.dialects.mysql import JSON, TIMESTAMP
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -138,3 +138,81 @@ class OrganizationAddressHistory(Base):
     country = Column("country", VARCHAR(64), nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False))
     updated_on = Column("updated_on", TIMESTAMP(timezone=False))
+
+
+# DB Model Class for Service
+
+class Service(Base):
+    __tablename__ = "service"
+    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
+    uuid = Column("uuid", VARCHAR(128))
+    display_name = Column("display_name", VARCHAR(128), nullable=False)
+    service_id = Column("service_id", VARCHAR(128), nullable=False)
+    metadata_ipfs_hash = Column("metadata_ipfs_hash", VARCHAR(255))
+    proto = Column("proto", JSON, nullable=False)
+    short_description = Column("short_description", VARCHAR(1024), nullable=False)
+    description = Column("description", VARCHAR(1024), nullable=False)
+    git_url = Column("git_url", VARCHAR(512), nullable=False)
+    assets_hash = Column("assets_hash", JSON, nullable=False)
+    assets_url = Column("assets_url", JSON, nullable=False)
+    rating = Column("ratings", JSON, nullable=False)
+    contributors = Column("contributors", JSON, nullable=False)
+    created_on = Column("created_on", TIMESTAMP(timezone=False))
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False))
+
+
+class ServiceReviewWorkflow(Base):
+    __tablename__ = "service_review_workflow"
+    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
+    service_uuid = Column("service_uuid", Integer,
+                          ForeignKey("service.uuid", ondelete="CASCADE", onupdate="CASCADE"),
+                          nullable=False)
+    status = Column("status", VARCHAR(128), nullable=False)
+    transaction_hash = Column("transaction_hash", VARCHAR(128))
+    created_by = Column("created_by", VARCHAR(128), nullable=False)
+    updated_by = Column("updated_by", VARCHAR(128), nullable=False)
+    approved_by = Column("approved_by", VARCHAR(128))
+    created_on = Column("created_on", TIMESTAMP(timezone=False))
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False))
+
+
+class ServiceGroup(Base):
+    __tablename__ = "service_group"
+    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
+    service_uuid = Column("service_uuid", Integer,
+                          ForeignKey("service.uuid", ondelete="CASCADE", onupdate="CASCADE"),
+                          nullable=False)
+    group_id = Column("group_id", VARCHAR(128), nullable=False)
+    name = Column("name", VARCHAR(128), nullable=False)
+    pricing = Column("pricing", JSON, nullable=False)
+    endpoints = Column("endpoints", JSON, nullable=False)
+    created_on = Column("created_on", TIMESTAMP(timezone=False))
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False))
+
+
+# DB Model Class for Approval History
+class ServiceApprovalHistory(Base):
+    __tablename__ = "service_approval_history"
+    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
+    service_uuid = Column("service_uuid", Integer, nullable=False)
+    reviewed_service_data = Column("reviewed_service_data", JSON, nullable=False)
+    status = Column("status", VARCHAR(64), nullable=False)
+    reviewed_by = Column("reviewed_by", VARCHAR(128), nullable=False)
+    reviewed_on = Column("reviewed_on", TIMESTAMP(timezone=False))
+    created_on = Column("created_on", TIMESTAMP(timezone=False))
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False))
+
+# do not delete below commented schema
+# class ServiceEndpoint(Base):
+#     __tablename__ = "service_endpoint"
+#     row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
+#     service_group_row_id = Column("service_group_row_id", Integer,
+#                                   ForeignKey("service_group.row_id", ondelete="CASCADE", onupdate="CASCADE"),
+#                                   nullable=False)
+#     endpoint = Column("endpoint", VARCHAR(256), nullable=False)
+#     is_available = Column("is_available", BOOLEAN, nullable=False)
+#     last_check_timestamp = Column("last_check_timestamp", TIMESTAMP(timezone=False))
+#     next_check_timestamp = Column("next_check_timestamp", TIMESTAMP(timezone=False))
+#     failed_status_count = Column("failed_status_count", Integer, default=1)
+#     created_on = Column("created_on", TIMESTAMP(timezone=False))
+#     updated_on = Column("updated_on", TIMESTAMP(timezone=False))
