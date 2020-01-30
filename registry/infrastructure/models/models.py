@@ -146,7 +146,7 @@ class Service(Base):
     __tablename__ = "service"
     row_id = Column("row_id", Integer, unique=True, autoincrement=True)
     org_uuid = Column("org_uuid", VARCHAR(128),
-                      ForeignKey("organization.uuid", ondelete="CASCADE", onupdate="CASCADE"),
+                      ForeignKey("organization.org_uuid", ondelete="CASCADE", onupdate="CASCADE"),
                       nullable=False)
     uuid = Column("uuid", VARCHAR(128), primary_key=True, nullable=False)
     display_name = Column("display_name", VARCHAR(128), nullable=False)

@@ -52,7 +52,7 @@ def create_service(event, context):
     if "org_uuid" not in path_parameters:
         raise BadRequestException()
     org_uuid = path_parameters["org_uuid"]
-    response = ServicePublisherService().save_service(org_uuid)
+    response = ServicePublisherService().create_service(org_uuid)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
@@ -67,7 +67,7 @@ def get_services_for_organization(event, context):
     if "org_uuid" not in path_parameters:
         raise BadRequestException()
     org_uuid = path_parameters["org_uuid"]
-    response = ServicePublisherService().save_service(org_uuid)
+    response = ServicePublisherService().get_services_for_organization(org_uuid)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
