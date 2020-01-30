@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, VARCHAR, UniqueConstraint, BOOLEAN
+from sqlalchemy import Column, ForeignKey, Integer, VARCHAR, UniqueConstraint, BOOLEAN, PrimaryKeyConstraint
 from sqlalchemy.dialects.mysql import JSON, TIMESTAMP
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -166,7 +166,7 @@ class Service(Base):
 
 class ServiceReviewWorkflow(Base):
     __tablename__ = "service_review_workflow"
-    row_id = Column("row_id", Integer, unique=True, autoincrement=True)
+    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
     org_uuid = Column("org_uuid", VARCHAR(128), nullable=False)
     service_uuid = Column("service_uuid", Integer,
                           ForeignKey("service.uuid", ondelete="CASCADE", onupdate="CASCADE"),
@@ -178,26 +178,28 @@ class ServiceReviewWorkflow(Base):
     approved_by = Column("approved_by", VARCHAR(128))
     created_on = Column("created_on", TIMESTAMP(timezone=False))
     updated_on = Column("updated_on", TIMESTAMP(timezone=False))
+    UniqueConstraint(org_uuid, service_uuid, name="uq_org_srvc")
 
 
 class ServiceGroup(Base):
     __tablename__ = "service_group"
-    row_id = Column("row_id", Integer, unique=True, autoincrement=True)
+    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
     org_uuid = Column("org_uuid", VARCHAR(128), nullable=False)
     service_uuid = Column("service_uuid", Integer,
                           ForeignKey("service.uuid", ondelete="CASCADE", onupdate="CASCADE"),
                           nullable=False)
-    group_id = Column("group_id", VARCHAR(128), primary_key=True, nullable=False)
+    group_id = Column("group_id", VARCHAR(128), unique=True, nullable=False)
     pricing = Column("pricing", JSON, nullable=False)
     endpoints = Column("endpoints", JSON, nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False))
     updated_on = Column("updated_on", TIMESTAMP(timezone=False))
+    UniqueConstraint(org_uuid, service_uuid, group_id, name="uq_org_srvc_grp")
 
 
 # DB Model Class for Service Review History
 class ServiceReviewHistory(Base):
     __tablename__ = "service_review_history"
-    row_id = Column("row_id", Integer, autoincrement=True)
+    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
     org_uuid = Column("org_uuid", VARCHAR(128), nullable=False)
     service_uuid = Column("service_uuid", VARCHAR(128), nullable=False)
     reviewed_service_data = Column("reviewed_service_data", JSON, nullable=False)
