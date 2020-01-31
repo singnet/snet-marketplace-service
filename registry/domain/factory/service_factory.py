@@ -11,6 +11,7 @@ class ServiceFactory:
             uuid=service.Service.uuid,
             service_id=service.Service.service_id,
             display_name=service.Service.display_name,
+            state=service.ServiceReviewWorkflow.state,
             short_description=service.Service.short_description,
             description=service.Service.description,
             project_url=service.Service.project_url,
