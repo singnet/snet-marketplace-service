@@ -142,7 +142,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /org/{org_id}/ipfs_publish
+          path: /org/{org_uuid}/ipfs_publish
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -173,7 +173,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /org/{org_id}/transaction
+          path: /org/{org_uuid}/transaction
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -204,7 +204,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /org/{org_id}
+          path: /org/{org_uuid}
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -230,7 +230,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /org/{org_id}/group
+          path: /org/{org_uuid}/group
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -261,7 +261,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /org/{org_id}/group
+          path: /org/{org_uuid}/group
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -292,7 +292,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /org/{org_id}/group/{group_id}
+          path: /org/{org_uuid}/group/{group_id}
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -323,7 +323,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /org/{org_id}/member
+          path: /org/{org_uuid}/member
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -355,7 +355,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /org/{org_id}/member/{username}
+          path: /org/{org_uuid}/member/{username}
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -386,7 +386,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /org/{org_id}/member/invite
+          path: /org/{org_uuid}/member/invite
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -479,7 +479,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /org/{org_id}/member/publish
+          path: /org/{org_uuid}/member/publish
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -510,7 +510,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /org/{org_id}/member/delete
+          path: /org/{org_uuid}/member/delete
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS

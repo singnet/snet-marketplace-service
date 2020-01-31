@@ -2,7 +2,6 @@ from sqlalchemy import Column, ForeignKey, Integer, VARCHAR, UniqueConstraint, B
 from sqlalchemy.dialects.mysql import JSON, TIMESTAMP
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-
 Base = declarative_base()
 
 
@@ -106,6 +105,7 @@ class Service(Base):
     contributors = Column("contributors", JSON, nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False))
     updated_on = Column("updated_on", TIMESTAMP(timezone=False))
+    groups = relationship("ServiceGroup", uselist=True)
 
 
 class ServiceReviewWorkflow(Base):
