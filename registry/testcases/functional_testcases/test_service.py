@@ -88,7 +88,7 @@ class TestService(TestCase):
                 assets={},
                 rating={},
                 ranking=1,
-                contributors={},
+                contributors=[],
                 created_on=dt.utcnow(),
                 updated_on=dt.utcnow()
             )

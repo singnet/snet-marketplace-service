@@ -1,6 +1,6 @@
 class Service:
     def __init__(self, org_uuid, uuid, service_id, display_name, short_description, description, project_url, proto,
-                 assets, ranking, rating, contributors, metadata_ipfs_hash, groups):
+                 assets, ranking, rating, contributors, metadata_ipfs_hash, groups, state):
         self.org_uuid = org_uuid
         self.uuid = uuid
         self.service_id = service_id
@@ -14,6 +14,7 @@ class Service:
         self.rating = rating
         self.contributors = contributors
         self.metadata_ipfs_hash = metadata_ipfs_hash
+        self.state = state
         self.groups = groups
 
     def to_dict(self):
@@ -21,6 +22,7 @@ class Service:
             "org_uuid": self.org_uuid,
             "service_uuid": self.uuid,
             "display_name": self.display_name,
+            "state": self.state,
             "short_description": self.short_description,
             "description": self.description,
             "project_url": self.project_url,
