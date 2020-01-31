@@ -22,7 +22,7 @@ def verify_service_id(event, context):
         raise BadRequestException()
     org_uuid = path_parameters["org_uuid"]
     service_id = query_parameters["service_id"]
-    response = ServicePublisherService().verify_service_id(org_uuid, service_id)
+    response = ServicePublisherService(username, org_uuid, None).verify_service_id(service_id)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
@@ -34,10 +34,11 @@ def save_service(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
     payload = json.loads(event["body"])
-    if "org_uuid" not in path_parameters:
+    if "org_uuid" not in path_parameters and "service_uuid" not in path_parameters:
         raise BadRequestException()
     org_uuid = path_parameters["org_uuid"]
-    response = ServicePublisherService().save_service(org_uuid)
+    service_uuid = path_parameters["service_uuid"]
+    response = ServicePublisherService(username, org_uuid, service_uuid).save_service(payload)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
@@ -52,7 +53,7 @@ def create_service(event, context):
     if "org_uuid" not in path_parameters:
         raise BadRequestException()
     org_uuid = path_parameters["org_uuid"]
-    response = ServicePublisherService().create_service(org_uuid)
+    response = ServicePublisherService(username, org_uuid, None).create_service(payload)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
@@ -67,7 +68,7 @@ def get_services_for_organization(event, context):
     if "org_uuid" not in path_parameters:
         raise BadRequestException()
     org_uuid = path_parameters["org_uuid"]
-    response = ServicePublisherService().get_services_for_organization(org_uuid)
+    response = ServicePublisherService(username, org_uuid, None).get_services_for_organization(payload)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
