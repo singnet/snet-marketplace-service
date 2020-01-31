@@ -15,4 +15,5 @@ class ServiceRepository(BaseRepository):
         services = []
         for service in raw_services_data:
             services.append(ServiceFactory().convert_service_db_model_to_entity_model(service).to_dict())
+        self.session.commit()
         return services
