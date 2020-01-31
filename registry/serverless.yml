@@ -645,8 +645,8 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - http:
-          method: GET
-          path: /org/{org_uuid}/service
+          method: POST
+          path: /org/{org_uuid}/services
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
