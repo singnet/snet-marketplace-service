@@ -143,7 +143,10 @@ class TestService(TestCase):
         assert (response["statusCode"] == 200)
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
-        assert (len(response_body["data"]) == 1)
+        assert (response_body["data"]["total_count"] == 1)
+        assert (response_body["data"]["offset"] == 0)
+        assert (response_body["data"]["limit"] == 10)
+        assert (len(response_body["data"]["result"]) == 1)
 
     def test_save_service(self):
         event = {

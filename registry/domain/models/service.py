@@ -36,4 +36,15 @@ class Service:
         }
 
     def to_meta_data(self):
-        return {"service_id", self.service_id}
+        return {
+            "version": 1,
+            "display_name": self.display_name,
+            "encoding": self.proto.get("encoding", ""),
+            "service_type": self.proto.get("service_type", ""),
+            "model_ipfs_hash": self.proto.get("model_ipfs_hash", ""),
+            "mpe_address": "",
+            "groups": [group.to_dict() for group in self.groups],
+            "assets": self.assets,
+            "service_description": self.description,
+            "contributors": self.contributors
+        }

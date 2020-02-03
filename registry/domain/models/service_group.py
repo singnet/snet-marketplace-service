@@ -12,3 +12,13 @@ class ServiceGroup:
             "endpoints": self.endpoints,
             "pricing": self.pricing
         }
+
+    def to_metadata(self):
+        return {
+            "free_calls": 0,
+            "free_call_signer_address": "",
+            "daemon_address ": [],
+            "pricing": self.pricing,
+            "endpoints": self.endpoints,
+            "group_id": self.group_id
+        }
