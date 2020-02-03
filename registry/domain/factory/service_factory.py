@@ -2,6 +2,7 @@ from datetime import datetime as dt
 from registry.domain.models.service import Service
 from registry.infrastructure.models.models import Service as ServiceDBModel
 from registry.domain.models.service_group import ServiceGroup
+from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus
 
 
 class ServiceFactory:
@@ -47,3 +48,12 @@ class ServiceFactory:
             updated_on=dt.utcnow(),
             groups=service.groups
         )
+
+    @staticmethod
+    def create_service_entity_model(org_uuid, service_uuid, payload):
+        return Service(
+            org_uuid, service_uuid, payload.get("service_id", ""), payload.get("display_name", ""),
+            payload.get("short_description", ""), payload.get("description", ""), payload.get("project_url", ""),
+            payload.get("proto", {}), payload.get("assets", {}), payload.get("ranking", DEFAULT_SERVICE_RANKING),
+            payload.get("rating", {}), payload.get("contributors", []), payload.get("metadata_ipfs_hash", ""),
+            payload.get("groups", []), ServiceStatus.DRAFT.value)
