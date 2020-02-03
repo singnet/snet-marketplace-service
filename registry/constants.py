@@ -35,3 +35,7 @@ class Action(Enum):
     UPDATE = "UPDATE"
     READ = "READ"
 
+
+class ServiceAvailabilityStatus(Enum):
+    AVAILABLE = "AVAILABLE"
+    UNAVAILABLE = "UNAVAILABLE"

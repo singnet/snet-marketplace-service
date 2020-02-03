@@ -60,16 +60,14 @@ def publish_org_on_ipfs(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-def save_transaction_hash(event, context):
+def save_transaction_hash_for_publish_org(event, context):
     payload = json.loads(event["body"])
     path_parameters = event["pathParameters"]
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     if "org_id" not in path_parameters:
         raise BadRequestException()
     org_uuid = path_parameters["org_id"]
-    response = OrganizationPublisherService(org_uuid, username).save_transaction_hash_for_publish_org(
-        payload['transaction_hash'],
-        payload['wallet_address'])
+    response = OrganizationPublisherService(org_uuid, username).save_transaction_hash_for_publish_org(payload)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True

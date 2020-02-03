@@ -411,9 +411,6 @@ class TestOrganizationPublisherService(unittest.TestCase):
             status="PUBLISHED", transaction_hash="", invited_on=current_time,
             created_on=current_time, updated_on=current_time))
 
-        x = 0
-        response = OrganizationPublisherService("", username=username).get_all_org_for_user()
-
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     def test_org_publish_to_ipfs(self, mock_ipfs_utils):
         test_org_id = uuid4().hex
