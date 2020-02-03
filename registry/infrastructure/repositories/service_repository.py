@@ -1,6 +1,7 @@
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.infrastructure.models.models import Service, ServiceGroup, ServiceReviewWorkflow, ServiceReviewHistory
 from registry.infrastructure.repositories.base_repository import BaseRepository
+from sqlalchemy import func
 
 
 class ServiceRepository(BaseRepository):
@@ -19,9 +20,9 @@ class ServiceRepository(BaseRepository):
         return services
 
     def get_total_count_of_services_for_organization(self, org_uuid, payload):
-        raw_services_data = self.session.query(Service, ServiceReviewWorkflow). \
+        total_count_of_services = self.session.query(func.count(Service.uuid)). \
             join(ServiceReviewWorkflow, ServiceReviewWorkflow.service_uuid == Service.uuid). \
             filter(getattr(Service, payload["search_attribute"]).like("%" + payload["search_string"] + "%")). \
-            filter(Service.org_uuid == org_uuid).all()
+            filter(Service.org_uuid == org_uuid).all()[0][0]
         self.session.commit()
-        return len(raw_services_data)
+        return total_count_of_services

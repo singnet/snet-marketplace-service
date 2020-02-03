@@ -40,5 +40,6 @@ class ServicePublisherService:
             "sort_by": sort_by if sort_by in ALLOWED_ATTRIBUTES_FOR_SERVICE_SORT_BY else DEFAULT_ATTRIBUTES_FOR_SERVICE_SORT_BY,
             "order_by": order_by if order_by in ALLOWED_ATTRIBUTES_FOR_SERVICE_SORT_BY else DEFAULT_ATTRIBUTES_FOR_SERVICE_ORDER_BY
         }
-        response = ServiceRepository().get_services_for_organization(self.org_uuid, filter_parameters)
-        return response
+        search_result = ServiceRepository().get_services_for_organization(self.org_uuid, filter_parameters)
+        search_count = ServiceRepository().get_total_count_of_services_for_organization(self.org_uuid, filter_parameters)
+        return {"total_count": search_count,  "offset": offset, "limit": limit, "result": search_result}
