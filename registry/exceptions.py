@@ -8,4 +8,11 @@ class BadRequestException(CustomException):
         super().__init__({})
 
 
-EXCEPTIONS = (BadRequestException)
+class OrganizationNotFoundException(CustomException):
+    error_message = "ORGANIZATION_NOT_FOUND"
+
+    def __init__(self):
+        super().__init__({})
+
+
+EXCEPTIONS = (BadRequestException, OrganizationNotFoundException)

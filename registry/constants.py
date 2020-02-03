@@ -11,7 +11,7 @@ class OrganizationStatus(Enum):
     PUBLISHED_UNAPPROVED = "PUBLISHED_UNAPPROVED"
 
 
-class PostOrganizationActions(Enum):
+class AddOrganizationActions(Enum):
     DRAFT = "DRAFT"
     SUBMIT = "SUBMIT"
 

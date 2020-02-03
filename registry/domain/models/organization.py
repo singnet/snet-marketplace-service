@@ -1,3 +1,11 @@
+from urllib.parse import urlparse
+from uuid import uuid4
+
+import requests
+
+from common import ipfs_util
+from common.utils import json_to_file
+from registry.config import IPFS_URL, ASSET_DIR, METADATA_FILE_PATH
 
 
 class Organization:
@@ -61,28 +69,112 @@ class Organization:
         return org_dict
 
     @property
-    def duns_no(self):
-        return self.__duns_no
+    def name(self):
+        return self.__name
 
     @property
-    def addresses(self):
-        return self.__addresses
+    def id(self):
+        return self.__id
+
+    @property
+    def uuid(self):
+        return self.__uuid
+
+    @property
+    def org_type(self):
+        return self.__org_type
+
+    @property
+    def description(self):
+        return self.__description
+
+    @property
+    def short_description(self):
+        return self.__short_description
+
+    @property
+    def url(self):
+        return self.__url
+
+    @property
+    def duns_no(self):
+        return self.__duns_no
 
     @property
     def origin(self):
         return self.__origin
 
     @property
+    def contacts(self):
+        return self.__contacts
+
+    @property
+    def addresses(self):
+        return self.__addresses
+
+    @property
+    def assets(self):
+        return self.__assets
+
+    @property
+    def metadata_ipfs_hash(self):
+        return self.__metadata_ipfs_hash
+
+    @property
+    def groups(self):
+        return self.__groups
+
+    @property
     def members(self):
         return self.__members
 
+    def set_assets(self, assets):
+        self.__assets = assets
+
+    def set_state(self, state):
+        self.__state = state
+
+    def publish_assets(self):
+        ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
+        for asset_type in self.__assets:
+            if "url" in self.__assets[asset_type]:
+                url = self.__assets[asset_type]["url"]
+                filename = urlparse(url).path.split("/")[-1]
+                response = requests.get(url)
+                filepath = f"{ASSET_DIR}/{filename}"
+                with open(filepath, 'wb') as asset_file:
+                    asset_file.write(response.content)
+                asset_ipfs_hash = ipfs_utils.write_file_in_ipfs(filepath)
+                self.__assets[asset_type]["ipfs_hash"] = asset_ipfs_hash
+
+    def publish_to_ipfs(self):
+        self.publish_assets()
+        ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
+        metadata = self.to_metadata()
+        filename = f"{METADATA_FILE_PATH}/{self.__uuid}_org_metadata.json"
+        json_to_file(metadata, filename)
+        self.__metadata_ipfs_hash = ipfs_utils.write_file_in_ipfs(filename, wrap_with_directory=False)
+
+    def setup_id(self):
+        if self.is_org_uuid_set():
+            self.__uuid = uuid4().hex
+        if self.org_type == "individual" and self.is_org_id_set():
+            self.__id = self.__uuid
+
+    def is_org_id_set(self):
+        return self.__id is None or len(self.__id) == 0
+
+    def is_org_uuid_set(self):
+        return self.__uuid is None or len(self.__uuid) == 0
+
 
 class OrganizationState:
-    def __init__(self, state, transaction_hash, wallet_address,
+    def __init__(self, state, transaction_hash, wallet_address, created_by,
                  created_on, updated_on, updated_by, reviewed_by, reviewed_on):
         self.__state = state
         self.__transaction_hash = transaction_hash
         self.__wallet_address = wallet_address
+        self.__created_by = created_by
         self.__created_on = created_on
         self.__updated_on = updated_on
         self.__updated_by = updated_by
@@ -95,7 +187,7 @@ class OrganizationState:
             "updated_on": "",
             "updated_by": self.__updated_by,
             "reviewed_by": self.__reviewed_by,
-            "reviewed_on": ""
+            "reviewed_on": self.__reviewed_on,
         }
 
         if self.__updated_on is not None:
@@ -103,3 +195,39 @@ class OrganizationState:
         if self.__reviewed_on is not None:
             state_dict["reviewed_on"] = self.__reviewed_on.strftime("%Y-%m-%d %H:%M:%S")
         return state_dict
+
+    @property
+    def state(self):
+        return self.__state
+
+    @property
+    def transaction_hash(self):
+        return self.__transaction_hash
+
+    @property
+    def wallet_address(self):
+        return self.__wallet_address
+
+    @property
+    def created_by(self):
+        return self.__created_by
+
+    @property
+    def created_on(self):
+        return self.__created_on
+
+    @property
+    def updated_on(self):
+        return self.__updated_on
+
+    @property
+    def updated_by(self):
+        return self.__updated_by
+
+    @property
+    def reviewed_by(self):
+        return self.__reviewed_by
+
+    @property
+    def reviewed_on(self):
+        return self.__reviewed_on
