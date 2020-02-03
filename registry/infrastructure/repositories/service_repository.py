@@ -26,3 +26,8 @@ class ServiceRepository(BaseRepository):
             filter(Service.org_uuid == org_uuid).all()[0][0]
         self.session.commit()
         return total_count_of_services
+
+    def check_service_id_within_organization(self, org_uuid, service_id):
+        record_exist = self.session.query(func.count(Service.uuid)).filter(Service.org_uuid == org_uuid) \
+            .filter(Service.service_id == service_id).all()[0][0]
+        return record_exist

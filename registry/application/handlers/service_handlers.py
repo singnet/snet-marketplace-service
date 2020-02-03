@@ -22,7 +22,7 @@ def verify_service_id(event, context):
         raise BadRequestException()
     org_uuid = path_parameters["org_uuid"]
     service_id = query_parameters["service_id"]
-    response = ServicePublisherService(username, org_uuid, None).verify_service_id(service_id)
+    response = ServicePublisherService(username, org_uuid, None).get_service_id_availability_status(service_id)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
