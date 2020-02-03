@@ -1,4 +1,6 @@
+from datetime import datetime as dt
 from registry.domain.models.service import Service
+from registry.infrastructure.models.models import Service as ServiceDBModel
 from registry.domain.models.service_group import ServiceGroup
 
 
@@ -23,4 +25,25 @@ class ServiceFactory:
             contributors=service.Service.contributors,
             groups=[ServiceGroup(org_uuid=group.org_uuid, service_uuid=group.service_uuid, group_id=group.group_id,
                                  endpoints=group.endpoints, pricing=group.pricing) for group in service.Service.groups]
+        )
+
+    @staticmethod
+    def convert_entity_model_to_service_db_model(service):
+        return ServiceDBModel(
+            org_uuid=service.org_uuid,
+            uuid=service.uuid,
+            display_name=service.display_name,
+            service_id=service.service_id,
+            metadata_ipfs_hash=service.metadata_ipfs_hash,
+            proto=service.proto,
+            short_description=service.short_description,
+            description=service.description,
+            project_url=service.project_url,
+            assets=service.assets,
+            rating=service.rating,
+            ranking=service.ranking,
+            contributors=service.contributors,
+            created_on=dt.utcnow(),
+            updated_on=dt.utcnow(),
+            groups=service.groups
         )
