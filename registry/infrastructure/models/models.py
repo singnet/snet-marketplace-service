@@ -87,7 +87,6 @@ class Group(Base):
 
 class Service(Base):
     __tablename__ = "service"
-    row_id = Column("row_id", Integer, unique=True, autoincrement=True)
     org_uuid = Column("org_uuid", VARCHAR(128),
                       ForeignKey("organization.uuid", ondelete="CASCADE", onupdate="CASCADE"),
                       nullable=False)
