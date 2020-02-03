@@ -2,6 +2,9 @@ from registry.domain.factory.service_factory import ServiceFactory
 from registry.infrastructure.models.models import Service, ServiceGroup, ServiceReviewWorkflow, ServiceReviewHistory
 from registry.infrastructure.repositories.base_repository import BaseRepository
 from sqlalchemy import func
+from datetime import datetime as dt
+
+DEFAULT_SERVICE_RANKING = 1
 
 
 class ServiceRepository(BaseRepository):
@@ -31,3 +34,25 @@ class ServiceRepository(BaseRepository):
         record_exist = self.session.query(func.count(Service.uuid)).filter(Service.org_uuid == org_uuid) \
             .filter(Service.service_id == service_id).all()[0][0]
         return record_exist
+
+    def add_service(self, org_uuid, uuid, payload):
+        query_response = self.add_item(
+            Service(
+                org_uuid=org_uuid,
+                uuid=uuid,
+                display_name=payload.get("display_name", ""),
+                service_id=payload.get("service_id", uuid),
+                metadata_ipfs_hash=payload.get("metadata_ipfs_hash", ""),
+                proto=payload.get("proto", {}),
+                short_description=payload.get("short_description", ""),
+                description=payload.get("description", ""),
+                project_url=payload.get("project_url", ""),
+                assets=payload.get("assets", {}),
+                rating=payload.get("rating", {}),
+                ranking=payload.get("ranking", DEFAULT_SERVICE_RANKING),
+                contributors=payload.get("contributors", []),
+                created_on=payload.get("created_on", dt.utcnow()),
+                updated_on=payload.get("updated_on", dt.utcnow()),
+                groups=payload.get("groups", [])
+            ))
+        return query_response

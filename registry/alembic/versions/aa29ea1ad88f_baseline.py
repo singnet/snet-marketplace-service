@@ -1,8 +1,8 @@
 """baseline
 
-Revision ID: 72271c43adfb
+Revision ID: aa29ea1ad88f
 Revises: 
-Create Date: 2020-01-31 15:13:04.507222
+Create Date: 2020-02-03 17:49:13.221311
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = '72271c43adfb'
+revision = 'aa29ea1ad88f'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -102,7 +102,6 @@ def upgrade():
     sa.PrimaryKeyConstraint('row_id')
     )
     op.create_table('service',
-    sa.Column('row_id', sa.Integer(), autoincrement=True, nullable=True),
     sa.Column('org_uuid', sa.VARCHAR(length=128), nullable=False),
     sa.Column('uuid', sa.VARCHAR(length=128), nullable=False),
     sa.Column('display_name', sa.VARCHAR(length=128), nullable=False),
@@ -119,8 +118,7 @@ def upgrade():
     sa.Column('created_on', mysql.TIMESTAMP(), nullable=True),
     sa.Column('updated_on', mysql.TIMESTAMP(), nullable=True),
     sa.ForeignKeyConstraint(['org_uuid'], ['organization.uuid'], onupdate='CASCADE', ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('uuid'),
-    sa.UniqueConstraint('row_id')
+    sa.PrimaryKeyConstraint('uuid')
     )
     op.create_table('service_group',
     sa.Column('row_id', sa.Integer(), autoincrement=True, nullable=False),

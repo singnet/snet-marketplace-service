@@ -1,5 +1,6 @@
 from registry.infrastructure.repositories.service_repository import ServiceRepository
 from registry.constants import ServiceAvailabilityStatus
+from uuid import uuid4
 
 ALLOWED_ATTRIBUTES_FOR_SERVICE_SEARCH = ["display_name"]
 DEFAULT_ATTRIBUTE_FOR_SERVICE_SEARCH = "display_name"
@@ -27,7 +28,9 @@ class ServicePublisherService:
         pass
 
     def create_service(self, payload):
-        pass
+        service_uuid = uuid4().hex
+        ServiceRepository().add_service(self.org_uuid, service_uuid, payload)
+        return {"org_uuid": self.org_uuid, "service_uuid": service_uuid}
 
     def get_services_for_organization(self, payload):
         offset = payload.get("offset", DEFAULT_OFFSET)
