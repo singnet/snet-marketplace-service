@@ -35,7 +35,7 @@ class Service:
             "groups": [group.to_dict() for group in self.groups]
         }
 
-    def to_meta_data(self):
+    def to_metadata(self):
         return {
             "version": 1,
             "display_name": self.display_name,
