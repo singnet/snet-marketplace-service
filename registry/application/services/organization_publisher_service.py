@@ -71,6 +71,13 @@ class OrganizationPublisherService:
         org_members_list = org_repo.get_org_member(org_uuid=self.org_uuid, status=status, role=role)
         return [member.to_dict() for member in org_members_list]
 
+    def get_member(self, member_username):
+        member = org_repo.get_org_member(username=member_username, org_uuid=self.org_uuid)
+        if member is None:
+            logger.info(f"No member {member_username} for the organization {self.org_uuid}")
+            return []
+        return [member.to_dict()]
+
     def verify_invite(self, invite_code):
         logger.info(f"verify member invite_code: {invite_code} username: {self.username}")
         if org_repo.org_member_verify(self.username, invite_code):

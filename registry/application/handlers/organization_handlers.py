@@ -35,6 +35,7 @@ def get_group_for_org(event, context):
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
+
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def add_org(event, context):
     payload = json.loads(event["body"])
@@ -88,7 +89,7 @@ def save_transaction_hash_for_publish_org(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-def get_all_member(event, context):
+def get_all_members(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
     query_parameters = event["queryStringParameters"]
@@ -98,6 +99,19 @@ def get_all_member(event, context):
     status = query_parameters.get("status", None)
     role = query_parameters.get("role", None)
     response = OrganizationPublisherService(org_uuid, username).get_all_member(status, role, query_parameters)
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+def get_member(event, context):
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    path_parameters = event["pathParameters"]
+    org_uuid = path_parameters["org_id"]
+    member_username = path_parameters["username"]
+    response = OrganizationPublisherService(org_uuid, username).get_member(member_username)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
