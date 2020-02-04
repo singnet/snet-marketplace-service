@@ -27,11 +27,15 @@ class ServicePublisherService:
         return ServiceAvailabilityStatus.AVAILABLE.value
 
     def save_service(self, payload):
-        pass
+        service = ServiceFactory().create_service_entity_model(self.org_uuid, self.service_uuid, payload,
+                                                               ServiceStatus.DRAFT.value)
+        service = ServiceRepository().save_service(self.username, service)
+        return service.to_dict()
 
     def create_service(self, payload):
         service_uuid = uuid4().hex
-        service = ServiceFactory().create_service_entity_model(self.org_uuid, service_uuid, payload)
+        service = ServiceFactory().create_service_entity_model(self.org_uuid, service_uuid, payload,
+                                                               ServiceStatus.DRAFT.value)
         ServiceRepository().add_service(service)
         return {"org_uuid": self.org_uuid, "service_uuid": service_uuid}
 
