@@ -1,6 +1,8 @@
 from datetime import datetime
 from uuid import uuid4
 
+from sqlalchemy import or_, and_
+
 from registry.constants import Role, OrganizationMemberStatus, OrganizationStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.exceptions import OrganizationNotFoundException
@@ -26,6 +28,12 @@ class OrganizationPublisherRepository(BaseRepository):
         organizations_domain_entity = OrganizationFactory.org_domain_entity_from_repo_model_list(organizations)
         self.session.commit()
         return organizations_domain_entity
+
+    def get_groups_for_org(self, org_uuid):
+        groups = self.session.query(Group).filter(Group.org_uuid == org_uuid).all()
+        groups_domain_entity = OrganizationFactory.parse_group_data_model(groups)
+        self.session.commit()
+        return groups_domain_entity
 
     def store_ipfs_hash(self, organization, username):
         organization_db_model = self.session.query(Organization).filter(Organization.uuid == organization.uuid).first()
@@ -130,3 +138,92 @@ class OrganizationPublisherRepository(BaseRepository):
 
         self.add_all_items(addresses)
         self.add_all_items(groups)
+
+    def get_org_member(self, username=None, org_uuid=None, role=None, status=None, invite_code=None):
+        org_member_query = self.session.query(OrganizationMember)
+        if org_uuid is not None:
+            org_member_query = org_member_query.filter(OrganizationMember.org_uuid == org_uuid)
+        if invite_code is not None:
+            org_member_query = org_member_query.filter(OrganizationMember.invite_code == invite_code)
+        if username is not None:
+            org_member_query = org_member_query.filter(OrganizationMember.username == username)
+        if role is not None:
+            org_member_query = org_member_query.filter(OrganizationMember.role == role)
+        if status is not None:
+            org_member_query = org_member_query.filter(OrganizationMember.status == status)
+
+        org_member = org_member_query.all()
+        org_member_domain_entity = []
+        if len(org_member) > 0:
+            org_member_domain_entity = OrganizationFactory.org_member_domain_from_repo_model_list(org_member[0])
+        self.session.commit()
+        return org_member_domain_entity
+
+    def add_member(self, org_member):
+        member_db_models = []
+        current_time = datetime.utcnow()
+        for member in org_member:
+            member_db_models.append(
+                OrganizationMember(
+                    org_uuid=member.org_uuid,
+                    role=member.role,
+                    status=member.status,
+                    address=member.address,
+                    transaction_hash=member.transaction_hash,
+                    username=member.username,
+                    invite_code=member.invite_code,
+                    updated_on=member.updated_on,
+                    invited_on=member.invited_on,
+                    created_on=current_time
+                )
+            )
+        self.add_all_items(member_db_models)
+
+    def org_member_verify(self, username, invite_code):
+        org_members = self.session.query(OrganizationMember) \
+            .filter(OrganizationMember.invite_code == invite_code) \
+            .filter(OrganizationMember.username == username) \
+            .filter(OrganizationMember.status == OrganizationMemberStatus.PENDING.value) \
+            .all()
+        if len(org_members) == 0:
+            self.session.commit()
+            return False
+        self.session.commit()
+        return True
+
+    def delete_members(self, org_member_list):
+        allowed_delete_member_status = [OrganizationMemberStatus.PENDING.value,
+                                        OrganizationMemberStatus.ACCEPTED.value]
+        member_username_list = [member.username for member in org_member_list]
+        self.session.query(OrganizationMember).filter(OrganizationMember.username.in_(member_username_list)) \
+            .filter(OrganizationMember.status.in_(allowed_delete_member_status)).delete(synchronize_session='fetch')
+        self.session.commit()
+
+    def persist_publish_org_member_transaction_hash(self, org_member, transaction_hash, org_uuid):
+        member_username_list = [member.username for member in org_member]
+        org_members_db_items = self.session.query(OrganizationMember) \
+            .filter(OrganizationMember.username.in_(member_username_list))\
+            .filter(OrganizationMember.status == OrganizationMemberStatus.ACCEPTED.value)\
+            .filter(OrganizationMember.org_uuid == org_uuid)
+        for org_member in org_members_db_items:
+            org_member.status = OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value
+            org_member.transaction_hash = transaction_hash
+            org_member.updated_on = datetime.utcnow()
+        self.session.commit()
+
+    def update_org_member(self, username, wallet_address, invite_code):
+        org_member = self.session.query(OrganizationMember)\
+            .filter(OrganizationMember.invite_code == invite_code) \
+            .filter(OrganizationMember.username == username) \
+            .filter(OrganizationMember.status == OrganizationMemberStatus.PENDING.value) \
+            .first()
+        if org_member is None:
+            raise Exception(f"No member found")
+        
+        if org_member.status == OrganizationMemberStatus.PUBLISHED.value and org_member.address == wallet_address:
+            org_member.username = username
+        elif org_member.status == OrganizationMemberStatus.PENDING.value and org_member.username == username:
+            org_member.address = wallet_address
+            org_member.status = OrganizationMemberStatus.ACCEPTED.value
+        org_member.updated_on = datetime.utcnow()
+        self.session.commit()

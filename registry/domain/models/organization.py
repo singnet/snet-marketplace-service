@@ -48,7 +48,7 @@ class Organization:
 
     def to_dict(self):
         org_dict = {
-            "name": self.__name,
+            "org_name": self.__name,
             "org_id": self.__id,
             "org_uuid": self.__uuid,
             "org_type": self.__org_type,

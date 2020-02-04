@@ -23,6 +23,19 @@ def get_all_org(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+def get_group_for_org(event, context):
+    path_parameters = event["pathParameters"]
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    if "org_id" not in path_parameters:
+        raise BadRequestException()
+    org_uuid = path_parameters["org_uuid"]
+    response = OrganizationPublisherService(org_uuid, username).get_groups_for_org()
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def add_org(event, context):
     payload = json.loads(event["body"])
     required_keys = []
@@ -70,5 +83,101 @@ def save_transaction_hash_for_publish_org(event, context):
     response = OrganizationPublisherService(org_uuid, username).save_transaction_hash_for_publish_org(payload)
     return generate_lambda_response(
         StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+def get_all_member(event, context):
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    path_parameters = event["pathParameters"]
+    query_parameters = event["queryStringParameters"]
+    if "org_id" not in path_parameters:
+        raise BadRequestException()
+    org_uuid = path_parameters["org_id"]
+    status = query_parameters.get("status", None)
+    role = query_parameters.get("role", None)
+    response = OrganizationPublisherService(org_uuid, username).get_all_member(status, role, query_parameters)
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+def invite_members(event, context):
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    payload = json.loads(event["body"])
+    path_parameters = event["pathParameters"]
+    if "org_id" not in path_parameters or "members" not in payload:
+        raise BadRequestException()
+    org_uuid = path_parameters["org_id"]
+    org_members = payload["members"]
+    response = OrganizationPublisherService(org_uuid, username).invite_members(org_members)
+    return generate_lambda_response(
+        StatusCode.CREATED,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+def verify_code(event, context):
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    query_string_parameters = event["queryStringParameters"]
+    if "invite_code" not in query_string_parameters:
+        raise BadRequestException()
+    invite_code = query_string_parameters["invite_code"]
+    response = OrganizationPublisherService(None, username).verify_invite(invite_code)
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+def publish_members(event, context):
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    payload = json.loads(event["body"])
+    path_parameters = event["pathParameters"]
+
+    if "org_id" not in path_parameters or not validate_dict(payload, ["transaction_hash", "members"]):
+        raise BadRequestException()
+    org_uuid = path_parameters["org_id"]
+    transaction_hash = payload["transaction_hash"]
+    org_members = payload["members"]
+    response = OrganizationPublisherService(org_uuid, username).publish_members(transaction_hash, org_members)
+    return generate_lambda_response(
+        StatusCode.CREATED,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+def delete_members(event, context):
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    payload = json.loads(event["body"])
+    path_parameters = event["pathParameters"]
+    if "org_id" not in path_parameters or "members" not in payload:
+        raise BadRequestException()
+    org_uuid = path_parameters["org_id"]
+    org_members = payload["members"]
+    response = OrganizationPublisherService(org_uuid, username).delete_members(org_members)
+    return generate_lambda_response(
+        StatusCode.CREATED,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+def register_member(event, context):
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    payload = json.loads(event["body"])
+    if "invite_code" not in payload and "wallet_address" not in payload:
+        raise BadRequestException()
+    invite_code = payload["invite_code"]
+    wallet_address = payload["wallet_address"]
+    response = OrganizationPublisherService(None, username).register_member(invite_code, wallet_address)
+    return generate_lambda_response(
+        StatusCode.CREATED,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )

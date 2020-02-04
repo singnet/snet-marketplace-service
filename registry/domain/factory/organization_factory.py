@@ -5,6 +5,7 @@ from common import boto_utils
 from registry.config import REGION_NAME, METADATA_FILE_PATH, ASSET_BUCKET, ALLOWED_ORIGIN
 from registry.domain.models.group import Group
 from registry.domain.models.organization import Organization, OrganizationState
+from registry.domain.models.organization_member import OrganizationMember
 from registry.domain.models.organization_address import OrganizationAddress
 
 
@@ -151,3 +152,37 @@ class OrganizationFactory:
             organization_domain_entity.append(
                 OrganizationFactory.org_domain_entity_from_repo_model(organization_repo_model))
         return organization_domain_entity
+
+    @staticmethod
+    def org_member_domain_from_repo_model_list(org_member_repo_model_list):
+        org_member_domain_entity = []
+        for org_member_repo_model in org_member_repo_model_list:
+            org_member_domain_entity.append(
+                OrganizationFactory.org_member_domain_entity_from_repo_model(org_member_repo_model))
+        return org_member_domain_entity
+
+    @staticmethod
+    def org_member_domain_entity_from_repo_model(org_member_repo_model):
+        org_member = OrganizationMember(
+            org_member_repo_model.org_uuid, org_member_repo_model.username, org_member_repo_model.status,
+            org_member_repo_model.role, org_member_repo_model.address, org_member_repo_model.invite_code,
+            org_member_repo_model.transaction_hash, org_member_repo_model.invited_on, org_member_repo_model.updated_on)
+        return org_member
+
+    @staticmethod
+    def org_member_domain_entity_from_payload_list(payload, org_uuid):
+        org_member_list = []
+        for org_member in payload:
+            org_member_list.append(OrganizationFactory.org_member_domain_entity_from_payload(org_member, org_uuid))
+        return org_member_list
+
+    @staticmethod
+    def org_member_domain_entity_from_payload(payload, org_uuid):
+        username = payload.get("username", "")
+        status = payload.get("status", "")
+        role = payload.get("role", "")
+        address = payload.get("address", "")
+        invite_code = payload.get("invite_code", "")
+        transaction_hash = payload.get("transaction_hash", "")
+        org_member = OrganizationMember(org_uuid, username, status, role, address, invite_code, transaction_hash)
+        return org_member
