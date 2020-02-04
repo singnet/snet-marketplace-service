@@ -1,8 +1,8 @@
 """baseline
 
-Revision ID: a5580991af49
+Revision ID: 3b31226f75ae
 Revises: 
-Create Date: 2020-02-03 16:46:32.626295
+Create Date: 2020-02-04 17:34:54.098862
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = 'a5580991af49'
+revision = '3b31226f75ae'
 down_revision = None
 branch_labels = None
 depends_on = None
