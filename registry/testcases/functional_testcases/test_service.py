@@ -8,6 +8,7 @@ from registry.infrastructure.repositories.organization_repository import Organiz
 from registry.infrastructure.models import Organization, Service, ServiceReviewWorkflow, ServiceGroup, \
     ServiceReviewHistory
 from registry.constants import ServiceAvailabilityStatus
+from uuid import uuid4
 
 org_repo = OrganizationPublisherRepository()
 service_repo = ServiceRepository()
@@ -39,7 +40,6 @@ class TestService(TestCase):
         )
         service_repo.add_item(
             Service(
-                row_id=1000,
                 org_uuid="test_org_uuid",
                 uuid="test_service_uuid",
                 display_name="test_display_name",
@@ -93,6 +93,25 @@ class TestService(TestCase):
         assert (response_body["data"] == ServiceAvailabilityStatus.AVAILABLE.value)
 
     def test_create_service(self):
+        self.tearDown()
+        org_repo.add_item(
+            Organization(
+                name="test_org",
+                org_id="test_org_id",
+                uuid="test_org_uuid",
+                org_type="organization",
+                description="that is the dummy org for testcases",
+                short_description="that is the short description",
+                url="https://dummy.url",
+                contacts=[],
+                assets={},
+                duns_no=12345678,
+                origin="PUBLISHER_DAPP",
+                groups=[],
+                addresses=[],
+                metadata_ipfs_hash="#dummyhashdummyhash"
+            )
+        )
         event = {
             "requestContext": {
                 "authorizer": {
@@ -103,12 +122,13 @@ class TestService(TestCase):
             },
             "httpMethod": "POST",
             "pathParameters": {"org_uuid": "test_org_uuid"},
-            "body": "{}"
+            "body": json.dumps({"display_name": "test_display_name"})
         }
         response = create_service(event=event, context=None)
         assert (response["statusCode"] == 200)
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
+        assert (response_body["data"]["org_uuid"] == "test_org_uuid")
 
     def test_get_services_for_organization(self):
         self.tearDown()
@@ -132,7 +152,6 @@ class TestService(TestCase):
         )
         service_repo.add_item(
             Service(
-                row_id=1000,
                 org_uuid="test_org_uuid",
                 uuid="test_service_uuid",
                 display_name="test_display_name",

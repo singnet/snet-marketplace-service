@@ -31,3 +31,7 @@ class ServiceRepository(BaseRepository):
         record_exist = self.session.query(func.count(Service.uuid)).filter(Service.org_uuid == org_uuid) \
             .filter(Service.service_id == service_id).all()[0][0]
         return record_exist
+
+    def add_service(self, service):
+        service_db_model = ServiceFactory().convert_entity_model_to_service_db_model(service)
+        self.add_item(service_db_model)

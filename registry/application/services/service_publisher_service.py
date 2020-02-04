@@ -1,5 +1,8 @@
 from registry.infrastructure.repositories.service_repository import ServiceRepository
-from registry.constants import ServiceAvailabilityStatus
+from registry.constants import ServiceAvailabilityStatus, ServiceStatus, DEFAULT_SERVICE_RANKING
+from uuid import uuid4
+from registry.domain.models.service import Service
+from registry.domain.factory.service_factory import ServiceFactory
 
 ALLOWED_ATTRIBUTES_FOR_SERVICE_SEARCH = ["display_name"]
 DEFAULT_ATTRIBUTE_FOR_SERVICE_SEARCH = "display_name"
@@ -27,7 +30,10 @@ class ServicePublisherService:
         pass
 
     def create_service(self, payload):
-        pass
+        service_uuid = uuid4().hex
+        service = ServiceFactory().create_service_entity_model(self.org_uuid, service_uuid, payload)
+        ServiceRepository().add_service(service)
+        return {"org_uuid": self.org_uuid, "service_uuid": service_uuid}
 
     def get_services_for_organization(self, payload):
         offset = payload.get("offset", DEFAULT_OFFSET)
