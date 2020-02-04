@@ -1,5 +1,7 @@
 from uuid import uuid4
 
+from common.utils import datetime_to_string
+
 
 class OrganizationMember(object):
     def __init__(self, org_uuid, username, status, role, address=None,
@@ -78,9 +80,9 @@ class OrganizationMember(object):
             "updated_on": ""
         }
         if self.invited_on is not None:
-            member_dict["invited_on"] = self.invited_on.strftime("%Y-%m-%d %H:%M:%S")
+            member_dict["invited_on"] = datetime_to_string(self.invited_on)
         if self.updated_on is not None:
-            member_dict["updated_on"] = self.updated_on.strftime("%Y-%m-%d %H:%M:%S")
+            member_dict["updated_on"] = datetime_to_string(self.updated_on)
         return member_dict
 
     def generate_invite_code(self):

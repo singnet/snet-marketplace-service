@@ -4,7 +4,7 @@ from uuid import uuid4
 import requests
 
 from common import ipfs_util
-from common.utils import json_to_file
+from common.utils import json_to_file, datetime_to_string
 from registry.config import IPFS_URL, ASSET_DIR, METADATA_FILE_PATH
 
 
@@ -191,9 +191,9 @@ class OrganizationState:
         }
 
         if self.__updated_on is not None:
-            state_dict["updated_on"] = self.__updated_on.strftime("%Y-%m-%d %H:%M:%S")
+            state_dict["updated_on"] = datetime_to_string(self.__updated_on)
         if self.__reviewed_on is not None:
-            state_dict["reviewed_on"] = self.__reviewed_on.strftime("%Y-%m-%d %H:%M:%S")
+            state_dict["reviewed_on"] = datetime_to_string(self.__reviewed_on)
         return state_dict
 
     @property
