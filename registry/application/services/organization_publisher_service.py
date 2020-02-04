@@ -24,10 +24,12 @@ class OrganizationPublisherService:
         self.boto_utils = BotoUtils(region_name=REGION_NAME)
 
     def get_all_org_for_user(self):
+        logger.info(f"get organization for user: {self.username}")
         organizations = org_repo.get_org_for_user(username=self.username)
         return [org.to_dict() for org in organizations]
 
     def get_groups_for_org(self):
+        logger.info(f"get groups for org_uuid: {self.org_uuid}")
         groups = org_repo.get_groups_for_org(self.org_uuid)
         return {
             "org_uuid": self.org_uuid,
@@ -35,16 +37,20 @@ class OrganizationPublisherService:
         }
 
     def add_organization_draft(self, payload):
+        logger.info(f"add organization draft for user: {self.username}")
         organization = OrganizationFactory.org_domain_entity_from_payload(payload)
+        logger.info(f"assigned org_uuid : {self.org_uuid}")
         org_repo.store_organization(organization, self.username, OrganizationStatus.DRAFT.value)
         return "OK"
 
     def submit_org_for_approval(self, payload):
+        logger.info(f"submit for approval organization org_uuid: {self.org_uuid}")
         organization = OrganizationFactory.org_domain_entity_from_payload(payload)
         org_repo.store_organization(organization, self.username, OrganizationStatus.APPROVAL_PENDING.value)
         return "OK"
 
     def publish_org_to_ipfs(self):
+        logger.info(f"publish organization to ipfs org_uuid: {self.org_uuid}")
         organization = org_repo.get_org(self.org_uuid)
         organization.publish_to_ipfs()
         org_repo.store_ipfs_hash(organization, self.username)
@@ -53,6 +59,8 @@ class OrganizationPublisherService:
     def save_transaction_hash_for_publish_org(self, payload):
         transaction_hash = payload["transaction_hash"]
         user_address = payload["user_address"]
+        logger.info(f"save transaction hash for publish organization org_uuid: {self.org_uuid} "
+                    f"transaction_hash: {transaction_hash} user_address: {user_address}")
         org_repo.persist_publish_org_transaction_hash(self.org_uuid, transaction_hash, user_address, self.username)
         return "OK"
 
@@ -64,20 +72,24 @@ class OrganizationPublisherService:
         return [member.to_dict() for member in org_members_list]
 
     def verify_invite(self, invite_code):
+        logger.info(f"verify member invite_code: {invite_code} username: {self.username}")
         if org_repo.org_member_verify(self.username, invite_code):
             return "OK"
         return "NOT_FOUND"
 
     def delete_members(self, org_members):
+        logger.info(f"user: {self.username} requested to delete members: {org_members} of org_uuid: {self.org_uuid}")
         org_member_list = OrganizationFactory.org_member_domain_entity_from_payload_list(org_members, self.org_uuid)
         org_repo.delete_members(org_member_list)
         return "OK"
 
     def publish_members(self, transaction_hash, org_members):
+        logger.info(f"user: {self.username} published members: {org_members} with transaction_hash: {transaction_hash}")
         org_member = OrganizationFactory.org_member_domain_entity_from_payload_list(org_members, self.org_uuid)
         org_repo.persist_publish_org_member_transaction_hash(org_member, transaction_hash, self.org_uuid)
 
     def register_member(self, invite_code, wallet_address):
+        logger.info(f"register user: {self.username} with invite_code: {invite_code}")
         if Web3.isAddress(wallet_address):
             org_repo.update_org_member(self.username, wallet_address, invite_code)
         else:
