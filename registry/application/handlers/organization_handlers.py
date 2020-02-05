@@ -14,6 +14,7 @@ logger = get_logger(__name__)
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def get_all_org(event, context):
+    logger.info(event)
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     response = OrganizationPublisherService(None, username).get_all_org_for_user()
     return generate_lambda_response(
