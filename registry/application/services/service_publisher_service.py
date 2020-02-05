@@ -58,3 +58,7 @@ class ServicePublisherService:
         search_count = ServiceRepository().get_total_count_of_services_for_organization(self.org_uuid,
                                                                                         filter_parameters)
         return {"total_count": search_count, "offset": offset, "limit": limit, "result": search_result}
+
+    def get_service_for_given_service_uuid(self):
+        service = ServiceRepository().get_service_for_given_service_uuid(self.org_uuid, self.service_uuid)
+        return service.to_dict()
