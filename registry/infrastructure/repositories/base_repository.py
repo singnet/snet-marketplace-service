@@ -3,10 +3,12 @@ from sqlalchemy.orm import sessionmaker
 
 from registry.config import NETWORKS, NETWORK_ID
 
-engine = create_engine(f"mysql+pymysql://{NETWORKS[NETWORK_ID]['db']['DB_USER']}:"
-                       f"{NETWORKS[NETWORK_ID]['db']['DB_PASSWORD']}"
-                       f"@{NETWORKS[NETWORK_ID]['db']['DB_HOST']}:"
-                       f"{NETWORKS[NETWORK_ID]['db']['DB_PORT']}/{NETWORKS[NETWORK_ID]['db']['DB_NAME']}", echo=False)
+engine = create_engine(
+    f"{NETWORKS[NETWORK_ID]['db']['DB_DRIVER']}://{NETWORKS[NETWORK_ID]['db']['DB_USER']}:"
+    f"{NETWORKS[NETWORK_ID]['db']['DB_PASSWORD']}"
+    f"@{NETWORKS[NETWORK_ID]['db']['DB_HOST']}:"
+    f"{NETWORKS[NETWORK_ID]['db']['DB_PORT']}/{NETWORKS[NETWORK_ID]['db']['DB_NAME']}", echo=False)
+
 Session = sessionmaker(bind=engine)
 default_session = Session()
 

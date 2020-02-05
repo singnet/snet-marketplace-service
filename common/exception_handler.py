@@ -34,7 +34,7 @@ def exception_handler(*decorator_args, **decorator_kwargs):
             except EXCEPTIONS as e:
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 exc_tb_lines = traceback.format_tb(exc_tb)
-                error_message = error_message + e.ERROR_MESSAGE + "\n"
+                error_message = error_message + e.error_message + "\n"
                 logger.exception(error_message)
 
                 slack_message = error_message
@@ -49,9 +49,8 @@ def exception_handler(*decorator_args, **decorator_kwargs):
                         "status": "failed",
                         "data": "",
                         "error": {
-                            "code": e.error_code,
                             "message": e.error_message,
-                            "details": e.ERROR_DETAILS
+                            "details": e.error_details
                         }
                     },
                     cors_enabled=True

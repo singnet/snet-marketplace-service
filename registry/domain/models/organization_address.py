@@ -16,3 +16,31 @@ class OrganizationAddress:
                 "pincode": self.__pincode,
                 "state": self.__state,
                 "country": self.__country}
+
+    @property
+    def address_type(self):
+        return self.__address_type
+
+    @property
+    def street_address(self):
+        return self.__street_address
+
+    @property
+    def apartment(self):
+        return self.__apartment
+
+    @property
+    def pincode(self):
+        return self.__pincode
+
+    @property
+    def city(self):
+        return self.__city
+
+    @property
+    def country(self):
+        return self.__country
+
+    @property
+    def state(self):
+        return self.__state

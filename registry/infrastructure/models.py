@@ -1,9 +1,11 @@
 from datetime import datetime as dt
-from sqlalchemy import Column, ForeignKey, Integer, VARCHAR, UniqueConstraint, BOOLEAN, PrimaryKeyConstraint
-from sqlalchemy.dialects.mysql import JSON, TIMESTAMP
+from sqlalchemy import Column, Integer, ForeignKey, UniqueConstraint
+from sqlalchemy.dialects.mysql import JSON, TIMESTAMP, VARCHAR
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import func
+
+
 Base = declarative_base()
 
 
@@ -156,18 +158,3 @@ class ServiceReviewHistory(Base):
     reviewed_on = Column("reviewed_on", TIMESTAMP(timezone=False), nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
     updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=func.utc_timestamp())
-
-# do not delete below commented schema
-# class ServiceEndpoint(Base):
-#     __tablename__ = "service_endpoint"
-#     row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
-#     service_group_row_id = Column("service_group_row_id", Integer,
-#                                   ForeignKey("service_group.row_id", ondelete="CASCADE", onupdate="CASCADE"),
-#                                   nullable=False)
-#     endpoint = Column("endpoint", VARCHAR(256), nullable=False)
-#     is_available = Column("is_available", BOOLEAN, nullable=False)
-#     last_check_timestamp = Column("last_check_timestamp", TIMESTAMP(timezone=False))
-#     next_check_timestamp = Column("next_check_timestamp", TIMESTAMP(timezone=False))
-#     failed_status_count = Column("failed_status_count", Integer, default=1)
-#     created_on = Column("created_on", TIMESTAMP(timezone=False))
-#     updated_on = Column("updated_on", TIMESTAMP(timezone=False))

@@ -1,6 +1,6 @@
 from datetime import datetime as dt
 from registry.domain.factory.service_factory import ServiceFactory
-from registry.infrastructure.models.models import Service, ServiceGroup, ServiceState, ServiceReviewHistory
+from registry.infrastructure.models import Service,ServiceGroup, ServiceState, ServiceReviewHistory
 from registry.infrastructure.repositories.base_repository import BaseRepository
 from sqlalchemy import func
 
