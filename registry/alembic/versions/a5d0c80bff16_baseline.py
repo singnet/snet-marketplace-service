@@ -1,8 +1,8 @@
 """baseline
 
-Revision ID: 3b31226f75ae
+Revision ID: a5d0c80bff16
 Revises: 
-Create Date: 2020-02-04 17:34:54.098862
+Create Date: 2020-02-05 11:58:36.091493
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = '3b31226f75ae'
+revision = 'a5d0c80bff16'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -40,9 +40,9 @@ def upgrade():
     sa.Column('reviewed_service_data', mysql.JSON(), nullable=False),
     sa.Column('state', mysql.VARCHAR(length=64), nullable=False),
     sa.Column('reviewed_by', mysql.VARCHAR(length=128), nullable=False),
-    sa.Column('reviewed_on', mysql.TIMESTAMP(), nullable=True),
-    sa.Column('created_on', mysql.TIMESTAMP(), nullable=True),
-    sa.Column('updated_on', mysql.TIMESTAMP(), nullable=True),
+    sa.Column('reviewed_on', mysql.TIMESTAMP(), nullable=False),
+    sa.Column('created_on', mysql.TIMESTAMP(), nullable=False),
+    sa.Column('updated_on', mysql.TIMESTAMP(), nullable=False),
     sa.PrimaryKeyConstraint('row_id')
     )
     op.create_table('group',
@@ -102,25 +102,23 @@ def upgrade():
     sa.PrimaryKeyConstraint('row_id')
     )
     op.create_table('service',
-    sa.Column('row_id', sa.Integer(), autoincrement=True, nullable=True),
     sa.Column('org_uuid', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('uuid', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('display_name', mysql.VARCHAR(length=128), nullable=False),
-    sa.Column('service_id', mysql.VARCHAR(length=128), nullable=False),
+    sa.Column('service_id', mysql.VARCHAR(length=128), nullable=True),
     sa.Column('metadata_ipfs_hash', mysql.VARCHAR(length=255), nullable=True),
     sa.Column('proto', mysql.JSON(), nullable=False),
     sa.Column('short_description', mysql.VARCHAR(length=1024), nullable=False),
     sa.Column('description', mysql.VARCHAR(length=1024), nullable=False),
-    sa.Column('git_url', mysql.VARCHAR(length=512), nullable=False),
+    sa.Column('git_url', mysql.VARCHAR(length=512), nullable=True),
     sa.Column('assets', mysql.JSON(), nullable=False),
     sa.Column('ratings', mysql.JSON(), nullable=False),
     sa.Column('ranking', sa.Integer(), nullable=False),
     sa.Column('contributors', mysql.JSON(), nullable=False),
-    sa.Column('created_on', mysql.TIMESTAMP(), nullable=True),
-    sa.Column('updated_on', mysql.TIMESTAMP(), nullable=True),
+    sa.Column('created_on', mysql.TIMESTAMP(), nullable=False),
+    sa.Column('updated_on', mysql.TIMESTAMP(), nullable=False),
     sa.ForeignKeyConstraint(['org_uuid'], ['organization.uuid'], onupdate='CASCADE', ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('uuid'),
-    sa.UniqueConstraint('row_id')
+    sa.PrimaryKeyConstraint('uuid')
     )
     op.create_table('service_group',
     sa.Column('row_id', sa.Integer(), autoincrement=True, nullable=False),
@@ -129,14 +127,17 @@ def upgrade():
     sa.Column('group_id', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('pricing', mysql.JSON(), nullable=False),
     sa.Column('endpoints', mysql.JSON(), nullable=False),
-    sa.Column('created_on', mysql.TIMESTAMP(), nullable=True),
-    sa.Column('updated_on', mysql.TIMESTAMP(), nullable=True),
+    sa.Column('daemon_address', mysql.JSON(), nullable=False),
+    sa.Column('free_calls', sa.Integer(), nullable=False),
+    sa.Column('free_call_signer_address', mysql.VARCHAR(length=128), nullable=True),
+    sa.Column('created_on', mysql.TIMESTAMP(), nullable=False),
+    sa.Column('updated_on', mysql.TIMESTAMP(), nullable=False),
     sa.ForeignKeyConstraint(['service_uuid'], ['service.uuid'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('row_id'),
     sa.UniqueConstraint('group_id'),
     sa.UniqueConstraint('org_uuid', 'service_uuid', 'group_id', name='uq_org_srvc_grp')
     )
-    op.create_table('service_review_workflow',
+    op.create_table('service_state',
     sa.Column('row_id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('org_uuid', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('service_uuid', mysql.VARCHAR(length=128), nullable=False),
@@ -145,8 +146,8 @@ def upgrade():
     sa.Column('created_by', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('updated_by', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('approved_by', mysql.VARCHAR(length=128), nullable=True),
-    sa.Column('created_on', mysql.TIMESTAMP(), nullable=True),
-    sa.Column('updated_on', mysql.TIMESTAMP(), nullable=True),
+    sa.Column('created_on', mysql.TIMESTAMP(), nullable=False),
+    sa.Column('updated_on', mysql.TIMESTAMP(), nullable=False),
     sa.ForeignKeyConstraint(['service_uuid'], ['service.uuid'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('row_id'),
     sa.UniqueConstraint('org_uuid', 'service_uuid', name='uq_org_srvc'),
@@ -157,7 +158,7 @@ def upgrade():
 
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
-    op.drop_table('service_review_workflow')
+    op.drop_table('service_state')
     op.drop_table('service_group')
     op.drop_table('service')
     op.drop_table('organization_state')
