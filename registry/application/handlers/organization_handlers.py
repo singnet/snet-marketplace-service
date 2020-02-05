@@ -14,6 +14,7 @@ logger = get_logger(__name__)
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def get_all_org(event, context):
+    logger.info(event)
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     response = OrganizationPublisherService(None, username).get_all_org_for_user()
     return generate_lambda_response(
@@ -26,7 +27,7 @@ def get_all_org(event, context):
 def get_group_for_org(event, context):
     path_parameters = event["pathParameters"]
     username = event["requestContext"]["authorizer"]["claims"]["email"]
-    if "org_id" not in path_parameters:
+    if "org_uuid" not in path_parameters:
         raise BadRequestException()
     org_uuid = path_parameters["org_uuid"]
     response = OrganizationPublisherService(org_uuid, username).get_groups_for_org()
@@ -62,9 +63,9 @@ def add_org(event, context):
 def publish_org_on_ipfs(event, context):
     path_parameters = event["pathParameters"]
     username = event["requestContext"]["authorizer"]["claims"]["email"]
-    if "org_id" not in path_parameters:
+    if "org_uuid" not in path_parameters:
         raise BadRequestException()
-    org_uuid = path_parameters["org_id"]
+    org_uuid = path_parameters["org_uuid"]
     response = OrganizationPublisherService(org_uuid, username).publish_org_to_ipfs()
 
     return generate_lambda_response(
@@ -78,9 +79,9 @@ def save_transaction_hash_for_publish_org(event, context):
     payload = json.loads(event["body"])
     path_parameters = event["pathParameters"]
     username = event["requestContext"]["authorizer"]["claims"]["email"]
-    if "org_id" not in path_parameters:
+    if "org_uuid" not in path_parameters:
         raise BadRequestException()
-    org_uuid = path_parameters["org_id"]
+    org_uuid = path_parameters["org_uuid"]
     response = OrganizationPublisherService(org_uuid, username).save_transaction_hash_for_publish_org(payload)
     return generate_lambda_response(
         StatusCode.OK,
@@ -93,9 +94,9 @@ def get_all_members(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
     query_parameters = event["queryStringParameters"]
-    if "org_id" not in path_parameters:
+    if "org_uuid" not in path_parameters:
         raise BadRequestException()
-    org_uuid = path_parameters["org_id"]
+    org_uuid = path_parameters["org_uuid"]
     status = query_parameters.get("status", None)
     role = query_parameters.get("role", None)
     response = OrganizationPublisherService(org_uuid, username).get_all_member(status, role, query_parameters)
@@ -109,7 +110,7 @@ def get_all_members(event, context):
 def get_member(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
-    org_uuid = path_parameters["org_id"]
+    org_uuid = path_parameters["org_uuid"]
     member_username = path_parameters["username"]
     response = OrganizationPublisherService(org_uuid, username).get_member(member_username)
     return generate_lambda_response(
@@ -123,9 +124,9 @@ def invite_members(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     payload = json.loads(event["body"])
     path_parameters = event["pathParameters"]
-    if "org_id" not in path_parameters or "members" not in payload:
+    if "org_uuid" not in path_parameters or "members" not in payload:
         raise BadRequestException()
-    org_uuid = path_parameters["org_id"]
+    org_uuid = path_parameters["org_uuid"]
     org_members = payload["members"]
     response = OrganizationPublisherService(org_uuid, username).invite_members(org_members)
     return generate_lambda_response(
@@ -154,9 +155,9 @@ def publish_members(event, context):
     payload = json.loads(event["body"])
     path_parameters = event["pathParameters"]
 
-    if "org_id" not in path_parameters or not validate_dict(payload, ["transaction_hash", "members"]):
+    if "org_uuid" not in path_parameters or not validate_dict(payload, ["transaction_hash", "members"]):
         raise BadRequestException()
-    org_uuid = path_parameters["org_id"]
+    org_uuid = path_parameters["org_uuid"]
     transaction_hash = payload["transaction_hash"]
     org_members = payload["members"]
     response = OrganizationPublisherService(org_uuid, username).publish_members(transaction_hash, org_members)
@@ -171,9 +172,9 @@ def delete_members(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     payload = json.loads(event["body"])
     path_parameters = event["pathParameters"]
-    if "org_id" not in path_parameters or "members" not in payload:
+    if "org_uuid" not in path_parameters or "members" not in payload:
         raise BadRequestException()
-    org_uuid = path_parameters["org_id"]
+    org_uuid = path_parameters["org_uuid"]
     org_members = payload["members"]
     response = OrganizationPublisherService(org_uuid, username).delete_members(org_members)
     return generate_lambda_response(
