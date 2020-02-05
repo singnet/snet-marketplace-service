@@ -97,6 +97,37 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
+  get_groups_for_org:
+    warmup: true
+    handler: registry.application.handlers.organization_handlers.get_group_for_org
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /org/{org_uuid}/group
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-wit
+
   add_org:
     warmup: true
     handler: registry.application.handlers.organization_handlers.add_org
@@ -130,7 +161,7 @@ functions:
 
   publish_org_ipfs:
     warmup: true
-    handler: registry.application.handlers.organization_handlers.publish_org
+    handler: registry.application.handlers.organization_handlers.publish_org_on_ipfs
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -190,9 +221,9 @@ functions:
               - X-Amz-User-Agent
               - x-requested-wit
 
-  get_org:
+  get-member:
     warmup: true
-    handler: registry.application.handlers.organization_handlers.get_org
+    handler: registry.application.handlers.organization_handlers.get_member
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -204,100 +235,16 @@ functions:
     events:
       - http:
           method: GET
-          path: /org/{org_uuid}
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-
-  get_all_groups_for_org:
-    warmup: true
-    handler: registry.application.handlers.organization_handlers.get_all_groups_for_org
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: GET
-          path: /org/{org_uuid}/group
+          path: /org/{org_uuid}/member/{username}
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-
-  add_group_for_org:
-    warmup: true
-    handler: registry.application.handlers.organization_handlers.add_group_draft_for_org
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: POST
-          path: /org/{org_uuid}/group
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-
-  get_group_for_org:
-    warmup: true
-    handler: registry.application.handlers.organization_handlers.get_group_for_org
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: GET
-          path: /org/{org_uuid}/group/{group_id}
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
+          request:
+            parameters:
+              paths:
+                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -329,38 +276,10 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-
-
-  get-member:
-    warmup: true
-    handler: registry.application.handlers.organization_handlers.get_member
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: GET
-          path: /org/{org_uuid}/member/{username}
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
+          request:
+            parameters:
+              paths:
+                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -385,13 +304,17 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - http:
-          method: POST
+          method: GET
           path: /org/{org_uuid}/member/invite
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
+          request:
+            parameters:
+              paths:
+                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -417,12 +340,16 @@ functions:
     events:
       - http:
           method: GET
-          path: /org/member/verify
+          path: /org/{org_uuid}/member/verify
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
+          request:
+            parameters:
+              paths:
+                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -478,13 +405,17 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - http:
-          method: POST
+          method: GET
           path: /org/{org_uuid}/member/publish
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
+          request:
+            parameters:
+              paths:
+                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -509,13 +440,17 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - http:
-          method: POST
+          method: GET
           path: /org/{org_uuid}/member/delete
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
+          request:
+            parameters:
+              paths:
+                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -526,6 +461,7 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+
 
   organization_event_consumer_handler:
     warmup: true

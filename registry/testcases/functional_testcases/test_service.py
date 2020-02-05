@@ -4,14 +4,14 @@ from datetime import datetime as dt
 from unittest.mock import patch
 from registry.application.handlers.service_handlers import verify_service_id, save_service, create_service, \
     get_services_for_organization, get_service_for_service_uuid
-from registry.infrastructure.repositories.organization_repository import OrganizationRepository
+from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_repository import ServiceRepository
-from registry.infrastructure.models.models import Organization, Service, ServiceState, ServiceGroup, \
+from registry.infrastructure.models import Organization, Service, ServiceState, ServiceGroup, \
     ServiceReviewHistory
 from registry.constants import ServiceAvailabilityStatus, ServiceStatus
 from uuid import uuid4
 
-org_repo = OrganizationRepository()
+org_repo = OrganizationPublisherRepository()
 service_repo = ServiceRepository()
 
 
