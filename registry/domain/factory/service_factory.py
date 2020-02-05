@@ -1,6 +1,7 @@
 from datetime import datetime as dt
 from registry.domain.models.service import Service
-from registry.infrastructure.models import Service as ServiceDBModel, ServiceGroup as ServiceGroupDBModel
+from registry.infrastructure.models import Service as ServiceDBModel, ServiceGroup as ServiceGroupDBModel, \
+    ServiceState as ServiceStateDBModel
 from registry.domain.models.service_group import ServiceGroup
 from registry.domain.models.service_state import ServiceState
 from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus, ServiceAvailabilityStatus
@@ -25,7 +26,7 @@ class ServiceFactory:
             ranking=service.ranking,
             contributors=service.contributors,
             service_state=ServiceState(service.service_state.org_uuid, service.service_state.service_uuid,
-                               service.service_state.state, service.service_state.transaction_hash),
+                                       service.service_state.state, service.service_state.transaction_hash),
             groups=[ServiceGroup(org_uuid=group.org_uuid, service_uuid=group.service_uuid, group_id=group.group_id,
                                  endpoints=group.endpoints, pricing=group.pricing, free_calls=group.free_calls,
                                  daemon_address=group.daemon_address,
@@ -34,7 +35,7 @@ class ServiceFactory:
         )
 
     @staticmethod
-    def convert_service_entity_model_to_db_model(service):
+    def convert_service_entity_model_to_db_model(username, service):
         return ServiceDBModel(
             org_uuid=service.org_uuid,
             uuid=service.uuid,
@@ -50,12 +51,13 @@ class ServiceFactory:
             ranking=service.ranking,
             contributors=service.contributors,
             created_on=dt.utcnow(),
-            groups=service.groups
+            groups=[ServiceFactory.convert_service_group_entity_model_to_db_model(group) for group in service.groups],
+            service_state=ServiceFactory.convert_service_state_entity_model_to_db_model(username, service.service_state)
         )
 
     @staticmethod
-    def convert_entity_model_to_service_group_db_model(service_group):
-        ServiceGroupDBModel(
+    def convert_service_group_entity_model_to_db_model(service_group):
+        return ServiceGroupDBModel(
             org_uuid=service_group.org_uuid,
             service_uuid=service_group.service_uuid,
             group_id=service_group.group_id,
@@ -65,6 +67,20 @@ class ServiceFactory:
             free_calls=service_group.free_calls,
             created_on=dt.utcnow(),
             updated_on=dt.utcnow()
+        )
+
+    @staticmethod
+    def convert_service_state_entity_model_to_db_model(username, service_state):
+        return ServiceStateDBModel(
+            org_uuid=service_state.org_uuid,
+            service_uuid=service_state.service_uuid,
+            state=service_state.state,
+            transaction_hash=service_state.transaction_hash,
+            created_by=username,
+            updated_by=username,
+            approved_by="",
+            created_on=dt.utcnow()
+
         )
 
     @staticmethod
