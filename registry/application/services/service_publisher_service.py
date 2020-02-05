@@ -36,7 +36,7 @@ class ServicePublisherService:
         service_uuid = uuid4().hex
         service = ServiceFactory().create_service_entity_model(self.org_uuid, service_uuid, payload,
                                                                ServiceStatus.DRAFT.value)
-        ServiceRepository().add_service(service)
+        ServiceRepository().add_service(service, self.username)
         return {"org_uuid": self.org_uuid, "service_uuid": service_uuid}
 
     def get_services_for_organization(self, payload):

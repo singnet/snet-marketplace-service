@@ -20,3 +20,11 @@ class ServiceState:
     @property
     def transaction_hash(self):
         return self._transaction_hash
+
+    @property
+    def org_uuid(self):
+        return self._org_uuid
+
+    @property
+    def service_uuid(self):
+        return self._service_uuid
