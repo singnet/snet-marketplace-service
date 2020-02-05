@@ -1,7 +1,10 @@
+from datetime import datetime as dt
 from sqlalchemy import Column, Integer, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.mysql import JSON, TIMESTAMP, VARCHAR
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+from sqlalchemy import func
+
 
 Base = declarative_base()
 
@@ -85,6 +88,7 @@ class Group(Base):
     payment_config = Column("payment_config", JSON, nullable=False)
     status = Column("status", VARCHAR(128))
 
+
 class Service(Base):
     __tablename__ = "service"
     org_uuid = Column("org_uuid", VARCHAR(128),
@@ -92,23 +96,24 @@ class Service(Base):
                       nullable=False)
     uuid = Column("uuid", VARCHAR(128), primary_key=True, nullable=False)
     display_name = Column("display_name", VARCHAR(128), nullable=False)
-    service_id = Column("service_id", VARCHAR(128), nullable=False)
+    service_id = Column("service_id", VARCHAR(128))
     metadata_ipfs_hash = Column("metadata_ipfs_hash", VARCHAR(255))
-    proto = Column("proto", JSON, nullable=False)
-    short_description = Column("short_description", VARCHAR(1024), nullable=False)
-    description = Column("description", VARCHAR(1024), nullable=False)
-    project_url = Column("git_url", VARCHAR(512), nullable=False)
-    assets = Column("assets", JSON, nullable=False)
-    rating = Column("ratings", JSON, nullable=False)
+    proto = Column("proto", JSON, nullable=False, default={})
+    short_description = Column("short_description", VARCHAR(1024), nullable=False, default="")
+    description = Column("description", VARCHAR(1024), nullable=False, default="")
+    project_url = Column("git_url", VARCHAR(512))
+    assets = Column("assets", JSON, nullable=False, default={})
+    rating = Column("ratings", JSON, nullable=False, default={})
     ranking = Column("ranking", Integer, nullable=False, default=1)
-    contributors = Column("contributors", JSON, nullable=False)
-    created_on = Column("created_on", TIMESTAMP(timezone=False))
-    updated_on = Column("updated_on", TIMESTAMP(timezone=False))
+    contributors = Column("contributors", JSON, nullable=False, default=[])
+    created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=func.utc_timestamp())
     groups = relationship("ServiceGroup", uselist=True)
+    service_state = relationship("ServiceState", uselist=False)
 
 
-class ServiceReviewWorkflow(Base):
-    __tablename__ = "service_review_workflow"
+class ServiceState(Base):
+    __tablename__ = "service_state"
     row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
     org_uuid = Column("org_uuid", VARCHAR(128), nullable=False)
     service_uuid = Column("service_uuid", VARCHAR(128),
@@ -119,8 +124,8 @@ class ServiceReviewWorkflow(Base):
     created_by = Column("created_by", VARCHAR(128), nullable=False)
     updated_by = Column("updated_by", VARCHAR(128), nullable=False)
     approved_by = Column("approved_by", VARCHAR(128))
-    created_on = Column("created_on", TIMESTAMP(timezone=False))
-    updated_on = Column("updated_on", TIMESTAMP(timezone=False))
+    created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=func.utc_timestamp())
     UniqueConstraint(org_uuid, service_uuid, name="uq_org_srvc")
 
 
@@ -132,10 +137,13 @@ class ServiceGroup(Base):
                           ForeignKey("service.uuid", ondelete="CASCADE", onupdate="CASCADE"),
                           nullable=False)
     group_id = Column("group_id", VARCHAR(128), unique=True, nullable=False)
-    pricing = Column("pricing", JSON, nullable=False)
-    endpoints = Column("endpoints", JSON, nullable=False)
-    created_on = Column("created_on", TIMESTAMP(timezone=False))
-    updated_on = Column("updated_on", TIMESTAMP(timezone=False))
+    pricing = Column("pricing", JSON, nullable=False, default=[])
+    endpoints = Column("endpoints", JSON, nullable=False, default=[])
+    daemon_address = Column("daemon_address", JSON, nullable=False, default=[])
+    free_calls = Column("free_calls", Integer, nullable=False, default=0)
+    free_call_signer_address = Column("free_call_signer_address", VARCHAR(128))
+    created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=func.utc_timestamp())
     UniqueConstraint(org_uuid, service_uuid, group_id, name="uq_org_srvc_grp")
 
 
@@ -147,6 +155,6 @@ class ServiceReviewHistory(Base):
     reviewed_service_data = Column("reviewed_service_data", JSON, nullable=False)
     state = Column("state", VARCHAR(64), nullable=False)
     reviewed_by = Column("reviewed_by", VARCHAR(128), nullable=False)
-    reviewed_on = Column("reviewed_on", TIMESTAMP(timezone=False))
-    created_on = Column("created_on", TIMESTAMP(timezone=False))
-    updated_on = Column("updated_on", TIMESTAMP(timezone=False))
+    reviewed_on = Column("reviewed_on", TIMESTAMP(timezone=False), nullable=False)
+    created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=func.utc_timestamp())
