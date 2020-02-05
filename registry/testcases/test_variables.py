@@ -21,6 +21,7 @@ ORG_ADDRESS = [
         "country": "TestCountry"
     }
 ]
+ORIGIN = "PUBLISHER_DAPP"
 ORG_CONTACTS = [
     {
         "contact_type": "support",

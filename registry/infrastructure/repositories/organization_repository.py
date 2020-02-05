@@ -155,7 +155,7 @@ class OrganizationPublisherRepository(BaseRepository):
         org_member = org_member_query.all()
         org_member_domain_entity = []
         if len(org_member) > 0:
-            org_member_domain_entity = OrganizationFactory.org_member_domain_from_repo_model_list(org_member[0])
+            org_member_domain_entity = OrganizationFactory.org_member_domain_from_repo_model_list(org_member)
         self.session.commit()
         return org_member_domain_entity
 
