@@ -64,8 +64,8 @@ class ServiceRepository(BaseRepository):
         return service_entity_model
 
     def get_service_for_given_service_uuid(self, org_uuid, service_uuid):
-        service = self.session.query(Service).filter(Service.org_uuid == org_uuid).filter(
+        service_db = self.session.query(Service).filter(Service.org_uuid == org_uuid).filter(
             Service.uuid == service_uuid).first()
-        service_entity_model = ServiceFactory().convert_service_db_model_to_entity_model(service)
-        return service_entity_model
+        service = ServiceFactory().convert_service_db_model_to_entity_model(service_db)
+        return service
 
