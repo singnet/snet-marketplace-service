@@ -29,10 +29,11 @@ class ServiceRepository(BaseRepository):
     def check_service_id_within_organization(self, org_uuid, service_id):
         record_exist = self.session.query(func.count(Service.uuid)).filter(Service.org_uuid == org_uuid) \
             .filter(Service.service_id == service_id).all()[0][0]
+        self.session.commit()
         return record_exist
 
-    def add_service(self, service):
-        service_db_model = ServiceFactory().convert_service_entity_model_to_db_model(service)
+    def add_service(self, service, username):
+        service_db_model = ServiceFactory().convert_service_entity_model_to_db_model(username, service)
         self.add_item(service_db_model)
 
     def save_service(self, username, service):
@@ -40,7 +41,7 @@ class ServiceRepository(BaseRepository):
             Service.uuid == service.uuid).first()
         self.session.query(ServiceGroup).filter(ServiceGroup.org_uuid == service.org_uuid).filter(
             ServiceGroup.service_uuid == service.uuid).delete()
-        service_group_db_model = [ServiceFactory().convert_entity_model_to_service_group_db_model(group) for group in
+        service_group_db_model = [ServiceFactory().convert_service_group_entity_model_to_db_model(group) for group in
                                   service.groups]
         service_record.display_name = service.display_name
         service_record.service_id = service.service_id
