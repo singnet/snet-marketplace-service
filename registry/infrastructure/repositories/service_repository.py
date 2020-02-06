@@ -36,7 +36,7 @@ class ServiceRepository(BaseRepository):
         service_db_model = ServiceFactory().convert_service_entity_model_to_db_model(username, service)
         self.add_item(service_db_model)
 
-    def save_service(self, username, service):
+    def save_service(self, username, service, state):
         service_record = self.session.query(Service).filter(Service.org_uuid == service.org_uuid).filter(
             Service.uuid == service.uuid).first()
         self.session.query(ServiceGroup).filter(ServiceGroup.org_uuid == service.org_uuid).filter(
@@ -56,7 +56,7 @@ class ServiceRepository(BaseRepository):
         service_record.contributors = service.contributors
         service_record.updated_on = dt.utcnow()
         service_record.groups = service_group_db_model
-        service_record.service_state.state = service.service_state.state
+        service_record.service_state.state = state
         service_record.service_state.transaction_hash = service.service_state.transaction_hash
         service_record.service_state.updated_by = username
         service_record.service_state.updated_on = dt.utcnow()

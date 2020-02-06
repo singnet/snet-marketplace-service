@@ -25,6 +25,8 @@ class ServiceFactory:
             rating=service.rating,
             ranking=service.ranking,
             contributors=service.contributors,
+            tags=service.tags,
+            mpe_address=service.mpe_address,
             service_state=ServiceState(service.service_state.org_uuid, service.service_state.service_uuid,
                                        service.service_state.state, service.service_state.transaction_hash),
             groups=[ServiceGroup(org_uuid=group.org_uuid, service_uuid=group.service_uuid, group_id=group.group_id,
@@ -50,6 +52,8 @@ class ServiceFactory:
             rating=service.rating,
             ranking=service.ranking,
             contributors=service.contributors,
+            tags=service.tags,
+            mpe_address=service.mpe_address,
             created_on=dt.utcnow(),
             groups=[ServiceFactory.convert_service_group_entity_model_to_db_model(group) for group in service.groups],
             service_state=ServiceFactory.convert_service_state_entity_model_to_db_model(username, service.service_state)
@@ -95,8 +99,9 @@ class ServiceFactory:
             org_uuid, service_uuid, payload.get("service_id", ""), payload.get("display_name", ""),
             payload.get("short_description", ""), payload.get("description", ""), payload.get("project_url", ""),
             payload.get("proto", {}), payload.get("assets", {}), payload.get("ranking", DEFAULT_SERVICE_RANKING),
-            payload.get("rating", {}), payload.get("contributors", []), payload.get("metadata_ipfs_hash", ""),
-            service_group_entity_model_list, service_state_entity_model)
+            payload.get("rating", {}), payload.get("contributors", []), payload.get("tags", []),
+            payload.get("mpe_address", ""), payload.get("metadata_ipfs_hash", ""), service_group_entity_model_list,
+            service_state_entity_model)
 
     @staticmethod
     def create_service_state_entity_model(org_uuid, service_uuid, state, transaction_hash=None):

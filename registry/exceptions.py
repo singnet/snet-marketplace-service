@@ -15,4 +15,11 @@ class OrganizationNotFoundException(CustomException):
         super().__init__({})
 
 
+class InvalidServiceState(CustomException):
+    error_message = "INVALID_SERVICE_STATE"
+
+    def __init__(self):
+        super().__init__({})
+
+
 EXCEPTIONS = (BadRequestException, OrganizationNotFoundException)
