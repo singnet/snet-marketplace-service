@@ -125,7 +125,6 @@ class TestOrganizationPublisherService(unittest.TestCase):
         group_response = OrganizationPublisherService(test_org_uuid, username).get_groups_for_org()
         self.assertDictEqual(group_response, {"org_uuid": test_org_uuid, "groups": json.loads(ORG_GROUPS)})
 
-
     def tearDown(self):
         org_repo.session.query(Group).delete()
         org_repo.session.query(OrganizationMember).delete()

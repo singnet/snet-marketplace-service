@@ -72,11 +72,11 @@ class OrganizationPublisherService:
         return [member.to_dict() for member in org_members_list]
 
     def get_member(self, member_username):
-        member = org_repo.get_org_member(username=member_username, org_uuid=self.org_uuid)
-        if member is None:
+        members = org_repo.get_org_member(username=member_username, org_uuid=self.org_uuid)
+        if len(members) == 0:
             logger.info(f"No member {member_username} for the organization {self.org_uuid}")
             return []
-        return [member.to_dict()]
+        return [member.to_dict() for member in members]
 
     def verify_invite(self, invite_code):
         logger.info(f"verify member invite_code: {invite_code} username: {self.username}")
@@ -155,10 +155,3 @@ class OrganizationPublisherService:
     @staticmethod
     def _get_org_member_notification_subject(org_name):
         return f"Membership Invitation from  Organization {org_name}"
-
-    @staticmethod
-    def get_org_member_from_invite_code(username, invite_code):
-        org_member_data = org_repo.get_org_member(invite_code=invite_code)
-        if len(org_member_data) == 0:
-            raise Exception(f"Invite not found for member {username} with given invitation code")
-        return org_member_data[0].org_uuid
