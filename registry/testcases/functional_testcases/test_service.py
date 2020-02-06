@@ -363,7 +363,9 @@ class TestService(TestCase):
         assert (response_body["data"]["service_uuid"] == "test_service_uuid")
         assert (response_body["data"]["service_state"]["state"] == ServiceStatus.DRAFT.value)
 
-    def test_get_service_metadata_ipfs_hash(self):
+    @patch("registry.application.services.service_publisher_service.ServicePublisherService.publish_to_ipfs")
+    def test_get_service_metadata_ipfs_hash(self, mock_ipfs):
+        mock_ipfs.return_value = "QmeoVWV99BJoa9czuxg6AiSyFiyVNNFpcaSMYTQUft785u"
         self.tearDown()
         org_repo.add_item(
             Organization(
