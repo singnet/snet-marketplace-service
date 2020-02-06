@@ -47,7 +47,8 @@ class OrganizationFactory:
         assets = {}
         metadata_ipfs_hash = payload["metadata_ipfs_hash"]
         groups = OrganizationFactory.group_domain_entity_from_group_list_payload(payload["groups"])
-        addresses = OrganizationFactory.domain_address_entity_from_address_list_payload(payload.get("addresses", []))
+        addresses = OrganizationFactory\
+            .domain_address_entity_from_address_list_payload(payload["org_address"]["addresses"])
         organization = Organization(
             org_uuid, org_id, org_name, org_type, origin, description, short_description, url, contacts,
             assets, metadata_ipfs_hash, duns_no, groups, addresses, [], [])

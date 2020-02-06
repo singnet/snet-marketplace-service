@@ -94,6 +94,7 @@ class OrganizationPublisherService:
         logger.info(f"user: {self.username} published members: {org_members} with transaction_hash: {transaction_hash}")
         org_member = OrganizationFactory.org_member_domain_entity_from_payload_list(org_members, self.org_uuid)
         org_repo.persist_publish_org_member_transaction_hash(org_member, transaction_hash, self.org_uuid)
+        return "OK"
 
     def register_member(self, invite_code, wallet_address):
         logger.info(f"register user: {self.username} with invite_code: {invite_code}")
