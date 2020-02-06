@@ -201,14 +201,13 @@ class OrganizationState:
             "updated_on": "",
             "updated_by": self.__updated_by,
             "reviewed_by": self.__reviewed_by,
-            "reviewed_on": self.__reviewed_on,
+            "reviewed_on": "",
         }
 
         if self.__updated_on is not None:
             state_dict["updated_on"] = datetime_to_string(self.__updated_on)
         if self.__reviewed_on is not None:
             state_dict["reviewed_on"] = datetime_to_string(self.__reviewed_on)
-        return state_dict
 
     @property
     def state(self):
