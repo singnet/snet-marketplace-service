@@ -6,6 +6,7 @@ import requests
 from common import ipfs_util
 from common.utils import json_to_file, datetime_to_string
 from registry.config import IPFS_URL, ASSET_DIR, METADATA_FILE_PATH
+from registry.constants import OrganizationAddressType
 
 
 class Organization:
@@ -47,6 +48,16 @@ class Organization:
         }
 
     def to_dict(self):
+        head_quarter_address = None
+        mail_address = None
+        mail_address_same_hq_address = False
+        for address in self.addresses:
+            if address.address_type == OrganizationAddressType.MAIL_ADDRESS:
+                mail_address = address
+            if address.address_type == OrganizationAddressType.HEAD_QUARTER_ADDRESS:
+                head_quarter_address = address
+        if mail_address is not None and head_quarter_address is not None and mail_address == head_quarter_address:
+            mail_address_same_hq_address = True
         org_dict = {
             "org_name": self.__name,
             "org_id": self.__id,
@@ -61,7 +72,10 @@ class Organization:
             "assets": self.__assets,
             "metadata_ipfs_hash": self.__metadata_ipfs_hash,
             "groups": [group.to_dict() for group in self.__groups],
-            "addresses": [address.to_dict() for address in self.__addresses],
+            "org_address": {
+                "mail_address_same_hq_address": mail_address_same_hq_address,
+                "addresses": [address.to_dict() for address in self.__addresses]
+            },
             "state": {}
         }
         if self.__state is not None and isinstance(self.__state, OrganizationState):

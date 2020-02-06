@@ -52,4 +52,9 @@ class ServiceStatus(Enum):
     PUBLISHED_UNAPPROVED = "PUBLISHED_UNAPPROVED"
 
 
+class OrganizationAddressType(Enum):
+    MAIL_ADDRESS = "mailing_address"
+    HEAD_QUARTER_ADDRESS = "headquarter_address"
+
+
 DEFAULT_SERVICE_RANKING = 1
