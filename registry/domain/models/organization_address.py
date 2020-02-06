@@ -44,3 +44,10 @@ class OrganizationAddress:
     @property
     def state(self):
         return self.__state
+
+    def __eq__(self, other):
+        if not isinstance(other, OrganizationAddress):
+            return NotImplemented
+        return self.apartment == other.apartment and self.street_address == other.street_address \
+               and self.city == other.city and self.state == other.state and self.pincode == other.pincode \
+               and self.country == other.country

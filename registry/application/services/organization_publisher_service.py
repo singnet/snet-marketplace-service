@@ -72,11 +72,11 @@ class OrganizationPublisherService:
         return [member.to_dict() for member in org_members_list]
 
     def get_member(self, member_username):
-        member = org_repo.get_org_member(username=member_username, org_uuid=self.org_uuid)
-        if member is None:
+        members = org_repo.get_org_member(username=member_username, org_uuid=self.org_uuid)
+        if len(members) == 0:
             logger.info(f"No member {member_username} for the organization {self.org_uuid}")
             return []
-        return [member.to_dict()]
+        return [member.to_dict() for member in members]
 
     def verify_invite(self, invite_code):
         logger.info(f"verify member invite_code: {invite_code} username: {self.username}")
@@ -94,6 +94,7 @@ class OrganizationPublisherService:
         logger.info(f"user: {self.username} published members: {org_members} with transaction_hash: {transaction_hash}")
         org_member = OrganizationFactory.org_member_domain_entity_from_payload_list(org_members, self.org_uuid)
         org_repo.persist_publish_org_member_transaction_hash(org_member, transaction_hash, self.org_uuid)
+        return "OK"
 
     def register_member(self, invite_code, wallet_address):
         logger.info(f"register user: {self.username} with invite_code: {invite_code}")
@@ -155,10 +156,3 @@ class OrganizationPublisherService:
     @staticmethod
     def _get_org_member_notification_subject(org_name):
         return f"Membership Invitation from  Organization {org_name}"
-
-    @staticmethod
-    def get_org_member_from_invite_code(username, invite_code):
-        org_member_data = org_repo.get_org_member(invite_code=invite_code)
-        if len(org_member_data) == 0:
-            raise Exception(f"Invite not found for member {username} with given invitation code")
-        return org_member_data[0].org_uuid
