@@ -70,5 +70,6 @@ class ServiceRepository(BaseRepository):
         service_db = self.session.query(Service).filter(Service.org_uuid == org_uuid).filter(
             Service.uuid == service_uuid).first()
         service = ServiceFactory().convert_service_db_model_to_entity_model(service_db)
+        self.session.commit()
         return service
 
