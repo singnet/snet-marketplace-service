@@ -54,6 +54,8 @@ class ServiceRepository(BaseRepository):
         service_record.rating = service.assets
         service_record.ranking = service.ranking
         service_record.contributors = service.contributors
+        service_record.tags = service.tags
+        service_record.mpe_address = service.mpe_address
         service_record.updated_on = dt.utcnow()
         service_record.groups = service_group_db_model
         service_record.service_state.state = state
