@@ -88,3 +88,18 @@ def get_service_for_service_uuid(event, context):
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
+
+
+@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def publish_service_metadata_to_ipfs(event, context):
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    path_parameters = event["pathParameters"]
+    if "org_uuid" not in path_parameters and "service_uuid" not in path_parameters:
+        raise BadRequestException()
+    org_uuid = path_parameters["org_uuid"]
+    service_uuid = path_parameters["service_uuid"]
+    response = ServicePublisherService(username, org_uuid, service_uuid).publish_service_data_to_ipfs()
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )

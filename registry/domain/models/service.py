@@ -1,6 +1,6 @@
 class Service:
     def __init__(self, org_uuid, uuid, service_id, display_name, short_description, description, project_url, proto,
-                 assets, ranking, rating, contributors, metadata_ipfs_hash, groups, service_state):
+                 assets, ranking, rating, contributors, tags, mpe_address, metadata_ipfs_hash, groups, service_state):
         self._org_uuid = org_uuid
         self._uuid = uuid
         self._service_id = service_id
@@ -13,6 +13,8 @@ class Service:
         self._ranking = ranking
         self._rating = rating
         self._contributors = contributors
+        self._tags = tags
+        self._mpe_address = mpe_address
         self._metadata_ipfs_hash = metadata_ipfs_hash
         self._groups = groups
         self._service_state = service_state
@@ -21,6 +23,7 @@ class Service:
         return {
             "org_uuid": self._org_uuid,
             "service_uuid": self._uuid,
+            "service_id": self._service_id,
             "display_name": self._display_name,
             "short_description": self._short_description,
             "description": self._description,
@@ -30,6 +33,8 @@ class Service:
             "ranking": self._ranking,
             "rating": self._rating,
             "contributors": self._contributors,
+            "tags": self._tags,
+            "mpe_address": self._mpe_address,
             "metadata_ipfs_hash": self._metadata_ipfs_hash,
             "groups": [group.to_dict() for group in self._groups],
             "service_state": self._service_state.to_dict()
@@ -42,10 +47,14 @@ class Service:
             "encoding": self.proto.get("encoding", ""),
             "service_type": self.proto.get("service_type", ""),
             "model_ipfs_hash": self.proto.get("model_ipfs_hash", ""),
-            "mpe_address": "",
+            "mpe_address": self._mpe_address,
             "groups": [group.to_dict() for group in self._groups],
+            "service_description": {
+                "url": self._project_url,
+                "short_description": self.short_description,
+                "description": self._description
+            },
             "assets": self._assets,
-            "service_description": self._description,
             "contributors": self._contributors
         }
 
@@ -101,6 +110,10 @@ class Service:
     def metadata_ipfs_hash(self):
         return self._metadata_ipfs_hash
 
+    @metadata_ipfs_hash.setter
+    def metadata_ipfs_hash(self, metadata_ipfs_hash):
+        self._metadata_ipfs_hash = metadata_ipfs_hash
+
     @property
     def groups(self):
         return [group for group in self._groups]
@@ -108,3 +121,11 @@ class Service:
     @property
     def service_state(self):
         return self._service_state
+
+    @property
+    def tags(self):
+        return self._tags
+
+    @property
+    def mpe_address(self):
+        return self._mpe_address
