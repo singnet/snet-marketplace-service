@@ -122,6 +122,10 @@ class Service:
     def service_state(self):
         return self._service_state
 
+    @service_state.setter
+    def service_state(self, service_state):
+        self._service_state = service_state
+
     @property
     def tags(self):
         return self._tags
