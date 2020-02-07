@@ -1,8 +1,13 @@
+import json
 from registry.infrastructure.repositories.service_repository import ServiceRepository
 from registry.constants import ServiceAvailabilityStatus, ServiceStatus, DEFAULT_SERVICE_RANKING
+from registry.config import IPFS_URL
 from uuid import uuid4
-from registry.domain.models.service import Service
+from registry.exceptions import InvalidServiceState
 from registry.domain.factory.service_factory import ServiceFactory
+from common.ipfs_util import IPFSUtil
+from common.utils import json_to_file
+from common.logger import get_logger
 
 ALLOWED_ATTRIBUTES_FOR_SERVICE_SEARCH = ["display_name"]
 DEFAULT_ATTRIBUTE_FOR_SERVICE_SEARCH = "display_name"
@@ -12,6 +17,8 @@ ALLOWED_ATTRIBUTES_FOR_SERVICE_ORDER_BY = ["asc", "desc"]
 DEFAULT_ATTRIBUTES_FOR_SERVICE_ORDER_BY = "desc"
 DEFAULT_OFFSET = 0
 DEFAULT_LIMIT = 0
+
+logger = get_logger(__name__)
 
 
 class ServicePublisherService:
@@ -29,7 +36,7 @@ class ServicePublisherService:
     def save_service(self, payload):
         service = ServiceFactory().create_service_entity_model(self.org_uuid, self.service_uuid, payload,
                                                                ServiceStatus.DRAFT.value)
-        service = ServiceRepository().save_service(self.username, service)
+        service = ServiceRepository().save_service(self.username, service, ServiceStatus.DRAFT.value)
         return service.to_dict()
 
     def create_service(self, payload):
@@ -62,3 +69,20 @@ class ServicePublisherService:
     def get_service_for_given_service_uuid(self):
         service = ServiceRepository().get_service_for_given_service_uuid(self.org_uuid, self.service_uuid)
         return service.to_dict()
+
+    def publish_service_data_to_ipfs(self):
+        service = ServiceRepository().get_service_for_given_service_uuid(self.org_uuid, self.service_uuid)
+        if service.service_state.state == ServiceStatus.APPROVED.value:
+            service_metadata = service.to_metadata()
+            filename = f"{service.uuid}_service_metadata.json"
+            service.metadata_ipfs_hash = ServicePublisherService.publish_to_ipfs(filename, service_metadata)
+            return {"service_metadata": service.to_metadata(), "metadata_ipfs_hash": service.metadata_ipfs_hash}
+        logger.info(f"Service status needs to be {ServiceStatus.APPROVED.value} to be eligible for publishing.")
+        raise InvalidServiceState()
+
+    @staticmethod
+    def publish_to_ipfs(filename, data):
+        json_to_file(data, filename)
+        service_metadata_ipfs_hash = IPFSUtil(
+            IPFS_URL['url'], IPFS_URL['port']).write_file_in_ipfs(filename, wrap_with_directory=False)
+        return service_metadata_ipfs_hash

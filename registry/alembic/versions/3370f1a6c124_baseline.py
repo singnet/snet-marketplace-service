@@ -1,8 +1,8 @@
 """baseline
 
-Revision ID: a5d0c80bff16
+Revision ID: 3370f1a6c124
 Revises: 
-Create Date: 2020-02-05 11:58:36.091493
+Create Date: 2020-02-06 16:27:25.803998
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = 'a5d0c80bff16'
+revision = '3370f1a6c124'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -110,11 +110,13 @@ def upgrade():
     sa.Column('proto', mysql.JSON(), nullable=False),
     sa.Column('short_description', mysql.VARCHAR(length=1024), nullable=False),
     sa.Column('description', mysql.VARCHAR(length=1024), nullable=False),
-    sa.Column('git_url', mysql.VARCHAR(length=512), nullable=True),
+    sa.Column('project_url', mysql.VARCHAR(length=512), nullable=True),
     sa.Column('assets', mysql.JSON(), nullable=False),
     sa.Column('ratings', mysql.JSON(), nullable=False),
     sa.Column('ranking', sa.Integer(), nullable=False),
     sa.Column('contributors', mysql.JSON(), nullable=False),
+    sa.Column('tags', mysql.JSON(), nullable=False),
+    sa.Column('mpe_address', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('created_on', mysql.TIMESTAMP(), nullable=False),
     sa.Column('updated_on', mysql.TIMESTAMP(), nullable=False),
     sa.ForeignKeyConstraint(['org_uuid'], ['organization.uuid'], onupdate='CASCADE', ondelete='CASCADE'),

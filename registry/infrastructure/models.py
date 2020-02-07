@@ -5,7 +5,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import func
 
-
 Base = declarative_base()
 
 
@@ -101,11 +100,13 @@ class Service(Base):
     proto = Column("proto", JSON, nullable=False, default={})
     short_description = Column("short_description", VARCHAR(1024), nullable=False, default="")
     description = Column("description", VARCHAR(1024), nullable=False, default="")
-    project_url = Column("git_url", VARCHAR(512))
+    project_url = Column("project_url", VARCHAR(512))
     assets = Column("assets", JSON, nullable=False, default={})
     rating = Column("ratings", JSON, nullable=False, default={})
     ranking = Column("ranking", Integer, nullable=False, default=1)
     contributors = Column("contributors", JSON, nullable=False, default=[])
+    tags = Column("tags", JSON, nullable=False, default=[])
+    mpe_address = Column("mpe_address", VARCHAR(128), nullable=False, default="")
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
     updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullabe=False, default=func.utc_timestamp())
     groups = relationship("ServiceGroup", uselist=True)
