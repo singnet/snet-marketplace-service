@@ -1,7 +1,7 @@
 import json
 from registry.infrastructure.repositories.service_repository import ServiceRepository
 from registry.constants import ServiceAvailabilityStatus, ServiceStatus, DEFAULT_SERVICE_RANKING
-from registry.config import IPFS_URL
+from registry.config import IPFS_URL, METADATA_FILE_PATH
 from uuid import uuid4
 from registry.exceptions import InvalidServiceState
 from registry.domain.factory.service_factory import ServiceFactory
@@ -80,7 +80,7 @@ class ServicePublisherService:
         service = ServiceRepository().get_service_for_given_service_uuid(self.org_uuid, self.service_uuid)
         if service.service_state.state == ServiceStatus.APPROVED.value:
             service_metadata = service.to_metadata()
-            filename = f"{service.uuid}_service_metadata.json"
+            filename = f"{METADATA_FILE_PATH}/{service.uuid}_service_metadata.json"
             service.metadata_ipfs_hash = ServicePublisherService.publish_to_ipfs(filename, service_metadata)
             return {"service_metadata": service.to_metadata(), "metadata_ipfs_hash": service.metadata_ipfs_hash}
         logger.info(f"Service status needs to be {ServiceStatus.APPROVED.value} to be eligible for publishing.")
