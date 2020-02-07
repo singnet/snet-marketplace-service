@@ -39,6 +39,12 @@ class ServicePublisherService:
         service = ServiceRepository().save_service(self.username, service, ServiceStatus.DRAFT.value)
         return service.to_dict()
 
+    def submit_service_for_approval(self, payload):
+        service = ServiceFactory().create_service_entity_model(self.org_uuid, self.service_uuid, payload,
+                                                               ServiceStatus.APPROVAL_PENDING.value)
+        service = ServiceRepository().save_service(self.username, service, ServiceStatus.APPROVAL_PENDING.value)
+        return service.to_dict()
+
     def create_service(self, payload):
         service_uuid = uuid4().hex
         service = ServiceFactory().create_service_entity_model(self.org_uuid, service_uuid, payload,
