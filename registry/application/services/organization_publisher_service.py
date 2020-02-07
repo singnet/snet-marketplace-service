@@ -58,7 +58,7 @@ class OrganizationPublisherService:
 
     def save_transaction_hash_for_publish_org(self, payload):
         transaction_hash = payload["transaction_hash"]
-        user_address = payload["user_address"]
+        user_address = payload["wallet_address"]
         logger.info(f"save transaction hash for publish organization org_uuid: {self.org_uuid} "
                     f"transaction_hash: {transaction_hash} user_address: {user_address}")
         org_repo.persist_publish_org_transaction_hash(self.org_uuid, transaction_hash, user_address, self.username)
