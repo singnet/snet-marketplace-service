@@ -33,13 +33,13 @@ class OrganizationAddress(Base):
     org_uuid = Column("org_uuid", VARCHAR(128),
                       ForeignKey("organization.uuid", ondelete="CASCADE", onupdate="CASCADE"),
                       nullable=False)
-    address_type = Column("address_type", VARCHAR(64), nullable=False)
-    street_address = Column("street_address", VARCHAR(256), nullable=False)
-    apartment = Column("apartment", VARCHAR(256), nullable=False)
-    city = Column("city", VARCHAR(64), nullable=False)
-    pincode = Column("pincode", VARCHAR(64), nullable=False)
-    state = Column("state", VARCHAR(64), nullable=True)
-    country = Column("country", VARCHAR(64), nullable=False)
+    address_type = Column("address_type", VARCHAR(64))
+    street_address = Column("street_address", VARCHAR(256))
+    apartment = Column("apartment", VARCHAR(256))
+    city = Column("city", VARCHAR(64))
+    pincode = Column("pincode", VARCHAR(64))
+    state = Column("state", VARCHAR(64))
+    country = Column("country", VARCHAR(64))
     created_on = Column("created_on", TIMESTAMP(timezone=False))
     updated_on = Column("updated_on", TIMESTAMP(timezone=False))
 
@@ -83,7 +83,7 @@ class Group(Base):
     id = Column("id", VARCHAR(128), nullable=False)
     org_uuid = Column("org_uuid", VARCHAR(128),
                       ForeignKey("organization.uuid", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-    payment_address = Column("payment_address", VARCHAR(128), nullable=False)
+    payment_address = Column("payment_address", VARCHAR(128))
     payment_config = Column("payment_config", JSON, nullable=False)
     status = Column("status", VARCHAR(128))
 
