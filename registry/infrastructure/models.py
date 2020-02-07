@@ -108,7 +108,7 @@ class Service(Base):
     tags = Column("tags", JSON, nullable=False, default=[])
     mpe_address = Column("mpe_address", VARCHAR(128), nullable=False, default="")
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
-    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False)
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=func.utc_timestamp())
     groups = relationship("ServiceGroup", uselist=True)
     service_state = relationship("ServiceState", uselist=False)
 
