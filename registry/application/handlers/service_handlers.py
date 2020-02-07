@@ -30,6 +30,22 @@ def verify_service_id(event, context):
 
 
 @handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def save_transaction_hash_for_published_service(event, context):
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    path_parameters = event["pathParameters"]
+    payload = json.loads(event["body"])
+    if "org_uuid" not in path_parameters and "service_uuid" not in path_parameters:
+        raise BadRequestException()
+    org_uuid = path_parameters["org_uuid"]
+    service_uuid = path_parameters["service_uuid"]
+    response = ServicePublisherService(username, org_uuid, service_uuid).save_transaction_hash_for_published_service(payload)
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def submit_service_for_approval(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
