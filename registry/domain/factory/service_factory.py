@@ -30,8 +30,8 @@ class ServiceFactory:
             service_state=ServiceState(service.service_state.org_uuid, service.service_state.service_uuid,
                                        service.service_state.state, service.service_state.transaction_hash),
             groups=[ServiceGroup(org_uuid=group.org_uuid, service_uuid=group.service_uuid, group_id=group.group_id,
-                                 endpoints=group.endpoints, pricing=group.pricing, free_calls=group.free_calls,
-                                 daemon_address=group.daemon_address,
+                                 group_name=group.group_name, endpoints=group.endpoints, pricing=group.pricing,
+                                 free_calls=group.free_calls, daemon_address=group.daemon_address,
                                  free_call_signer_address=group.free_call_signer_address)
                     for group in service.groups]
         )
@@ -65,6 +65,7 @@ class ServiceFactory:
             org_uuid=service_group.org_uuid,
             service_uuid=service_group.service_uuid,
             group_id=service_group.group_id,
+            group_name=service_group.group_name,
             pricing=service_group.pricing,
             endpoints=service_group.endpoints,
             daemon_address=service_group.daemon_address,
@@ -118,6 +119,7 @@ class ServiceFactory:
             org_uuid=org_uuid,
             service_uuid=service_uuid,
             group_id=group["group_id"],
+            group_name=group.get("group_name", ""),
             pricing=group.get("pricing", []),
             endpoints=group.get("endpoints", []),
             daemon_address=group.get("daemon_address", []),

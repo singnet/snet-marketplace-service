@@ -1,8 +1,8 @@
 """baseline
 
-Revision ID: 3370f1a6c124
+Revision ID: bf34241d8fd0
 Revises: 
-Create Date: 2020-02-06 16:27:25.803998
+Create Date: 2020-02-07 12:07:46.239836
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = '3370f1a6c124'
+revision = 'bf34241d8fd0'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -127,6 +127,7 @@ def upgrade():
     sa.Column('org_uuid', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('service_uuid', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('group_id', mysql.VARCHAR(length=128), nullable=False),
+    sa.Column('group_name', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('pricing', mysql.JSON(), nullable=False),
     sa.Column('endpoints', mysql.JSON(), nullable=False),
     sa.Column('daemon_address', mysql.JSON(), nullable=False),
