@@ -1,8 +1,8 @@
 """baseline
 
-Revision ID: bf34241d8fd0
+Revision ID: ff9ddec46944
 Revises: 
-Create Date: 2020-02-07 12:07:46.239836
+Create Date: 2020-02-07 11:50:24.151771
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = 'bf34241d8fd0'
+revision = 'ff9ddec46944'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -50,7 +50,7 @@ def upgrade():
     sa.Column('name', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('id', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('org_uuid', mysql.VARCHAR(length=128), nullable=False),
-    sa.Column('payment_address', mysql.VARCHAR(length=128), nullable=False),
+    sa.Column('payment_address', mysql.VARCHAR(length=128), nullable=True),
     sa.Column('payment_config', mysql.JSON(), nullable=False),
     sa.Column('status', mysql.VARCHAR(length=128), nullable=True),
     sa.ForeignKeyConstraint(['org_uuid'], ['organization.uuid'], onupdate='CASCADE', ondelete='CASCADE'),
@@ -74,13 +74,13 @@ def upgrade():
     op.create_table('organization_address',
     sa.Column('row_id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('org_uuid', mysql.VARCHAR(length=128), nullable=False),
-    sa.Column('address_type', mysql.VARCHAR(length=64), nullable=False),
-    sa.Column('street_address', mysql.VARCHAR(length=256), nullable=False),
-    sa.Column('apartment', mysql.VARCHAR(length=256), nullable=False),
-    sa.Column('city', mysql.VARCHAR(length=64), nullable=False),
-    sa.Column('pincode', mysql.VARCHAR(length=64), nullable=False),
+    sa.Column('address_type', mysql.VARCHAR(length=64), nullable=True),
+    sa.Column('street_address', mysql.VARCHAR(length=256), nullable=True),
+    sa.Column('apartment', mysql.VARCHAR(length=256), nullable=True),
+    sa.Column('city', mysql.VARCHAR(length=64), nullable=True),
+    sa.Column('pincode', mysql.VARCHAR(length=64), nullable=True),
     sa.Column('state', mysql.VARCHAR(length=64), nullable=True),
-    sa.Column('country', mysql.VARCHAR(length=64), nullable=False),
+    sa.Column('country', mysql.VARCHAR(length=64), nullable=True),
     sa.Column('created_on', mysql.TIMESTAMP(), nullable=True),
     sa.Column('updated_on', mysql.TIMESTAMP(), nullable=True),
     sa.ForeignKeyConstraint(['org_uuid'], ['organization.uuid'], onupdate='CASCADE', ondelete='CASCADE'),
@@ -127,7 +127,6 @@ def upgrade():
     sa.Column('org_uuid', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('service_uuid', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('group_id', mysql.VARCHAR(length=128), nullable=False),
-    sa.Column('group_name', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('pricing', mysql.JSON(), nullable=False),
     sa.Column('endpoints', mysql.JSON(), nullable=False),
     sa.Column('daemon_address', mysql.JSON(), nullable=False),
