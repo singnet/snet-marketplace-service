@@ -34,13 +34,13 @@ class OrganizationAddress(Base):
     org_uuid = Column("org_uuid", VARCHAR(128),
                       ForeignKey("organization.uuid", ondelete="CASCADE", onupdate="CASCADE"),
                       nullable=False)
-    address_type = Column("address_type", VARCHAR(64), nullable=False)
-    street_address = Column("street_address", VARCHAR(256), nullable=False)
-    apartment = Column("apartment", VARCHAR(256), nullable=False)
-    city = Column("city", VARCHAR(64), nullable=False)
-    pincode = Column("pincode", VARCHAR(64), nullable=False)
-    state = Column("state", VARCHAR(64), nullable=True)
-    country = Column("country", VARCHAR(64), nullable=False)
+    address_type = Column("address_type", VARCHAR(64))
+    street_address = Column("street_address", VARCHAR(256))
+    apartment = Column("apartment", VARCHAR(256))
+    city = Column("city", VARCHAR(64))
+    pincode = Column("pincode", VARCHAR(64))
+    state = Column("state", VARCHAR(64))
+    country = Column("country", VARCHAR(64))
     created_on = Column("created_on", TIMESTAMP(timezone=False))
     updated_on = Column("updated_on", TIMESTAMP(timezone=False))
 
@@ -80,12 +80,12 @@ class OrganizationMember(Base):
 class Group(Base):
     __tablename__ = "group"
     row_id = Column("row_id", Integer, autoincrement=True, primary_key=True)
-    name = Column("name", VARCHAR(128), nullable=False)
-    id = Column("id", VARCHAR(128), nullable=False)
+    name = Column("name", VARCHAR(128))
+    id = Column("id", VARCHAR(128))
     org_uuid = Column("org_uuid", VARCHAR(128),
-                      ForeignKey("organization.uuid", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-    payment_address = Column("payment_address", VARCHAR(128), nullable=False)
-    payment_config = Column("payment_config", JSON, nullable=False)
+                      ForeignKey("organization.uuid", ondelete="CASCADE", onupdate="CASCADE"))
+    payment_address = Column("payment_address", VARCHAR(128))
+    payment_config = Column("payment_config", JSON)
     status = Column("status", VARCHAR(128))
 
 
@@ -107,7 +107,7 @@ class Service(Base):
     ranking = Column("ranking", Integer, nullable=False, default=1)
     contributors = Column("contributors", JSON, nullable=False, default=[])
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
-    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=func.utc_timestamp())
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullabe=False, default=func.utc_timestamp())
     groups = relationship("ServiceGroup", uselist=True)
     service_state = relationship("ServiceState", uselist=False)
 
