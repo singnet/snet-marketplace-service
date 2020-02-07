@@ -138,6 +138,7 @@ class ServiceGroup(Base):
                           ForeignKey("service.uuid", ondelete="CASCADE", onupdate="CASCADE"),
                           nullable=False)
     group_id = Column("group_id", VARCHAR(128), unique=True, nullable=False)
+    group_name = Column("group_name", VARCHAR(128), nullable=False, default="")
     pricing = Column("pricing", JSON, nullable=False, default=[])
     endpoints = Column("endpoints", JSON, nullable=False, default=[])
     daemon_address = Column("daemon_address", JSON, nullable=False, default=[])
