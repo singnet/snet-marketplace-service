@@ -48,7 +48,7 @@ class Service:
             "service_type": self.proto.get("service_type", ""),
             "model_ipfs_hash": self.proto.get("model_ipfs_hash", ""),
             "mpe_address": self._mpe_address,
-            "groups": [group.to_dict() for group in self._groups],
+            "groups": [group.to_metadata() for group in self._groups],
             "service_description": {
                 "url": self._project_url,
                 "short_description": self.short_description,
