@@ -29,7 +29,8 @@ class ServiceGroup:
             "daemon_address ": self._daemon_address,
             "pricing": self._pricing,
             "endpoints": self._endpoints,
-            "group_id": self._group_id
+            "group_id": self._group_id,
+            "group_name": self._group_name
         }
 
     @property
