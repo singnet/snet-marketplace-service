@@ -79,12 +79,12 @@ class OrganizationMember(Base):
 class Group(Base):
     __tablename__ = "group"
     row_id = Column("row_id", Integer, autoincrement=True, primary_key=True)
-    name = Column("name", VARCHAR(128))
-    id = Column("id", VARCHAR(128))
+    name = Column("name", VARCHAR(128), nullable=False)
+    id = Column("id", VARCHAR(128), nullable=False)
     org_uuid = Column("org_uuid", VARCHAR(128),
-                      ForeignKey("organization.uuid", ondelete="CASCADE", onupdate="CASCADE"))
+                      ForeignKey("organization.uuid", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     payment_address = Column("payment_address", VARCHAR(128))
-    payment_config = Column("payment_config", JSON)
+    payment_config = Column("payment_config", JSON, nullable=False)
     status = Column("status", VARCHAR(128))
 
 
@@ -108,7 +108,7 @@ class Service(Base):
     tags = Column("tags", JSON, nullable=False, default=[])
     mpe_address = Column("mpe_address", VARCHAR(128), nullable=False, default="")
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
-    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullabe=False, default=func.utc_timestamp())
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False)
     groups = relationship("ServiceGroup", uselist=True)
     service_state = relationship("ServiceState", uselist=False)
 
