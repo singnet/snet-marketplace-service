@@ -1,4 +1,60 @@
+from common.boto_utils import BotoUtils
+from common.utils import date_time_for_filename
+from upload_utility.config import REGION_NAME
+from upload_utility.constants import UPLOAD_TYPE_DETAILS, UploadType
+
 
 class UploadService:
-    def validate_and_store_file(self):
-        pass
+    def __init__(self):
+        self.boto_utils = BotoUtils(region_name=REGION_NAME)
+
+    def store_file(self, upload_type, file_data, request_params, username):
+        """
+            TODO: persist user history of the storage request
+        """
+        if upload_type == UploadType.ORG_ASSETS.value:
+            org_id = request_params["org_id"]
+            bucket = UPLOAD_TYPE_DETAILS[upload_type]["bucket"]
+            dest_file_path = UPLOAD_TYPE_DETAILS[upload_type]["bucket_path"].format(
+                org_id, date_time_for_filename(), file_data["file_extension"])
+
+            self.boto_utils.s3_upload_file(file_data["file_path"], bucket, dest_file_path)
+
+            file_url = f"https://{bucket}.s3.amazonaws.com/{dest_file_path}"
+            return file_url
+
+        elif upload_type == UploadType.SERVICE_ASSETS.value:
+            org_id = request_params["org_id"]
+            service_id = request_params["service_id"]
+            bucket = UPLOAD_TYPE_DETAILS[upload_type]["bucket"]
+            dest_file_path = UPLOAD_TYPE_DETAILS[upload_type]["bucket_path"].format(
+                org_id, service_id, date_time_for_filename(), file_data["file_extension"])
+
+            self.boto_utils.s3_upload_file(file_data["file_path"], bucket, dest_file_path)
+
+            file_url = f"https://{bucket}.s3.amazonaws.com/{dest_file_path}"
+            return file_url
+
+        elif upload_type == UploadType.SERVICE_COMPONENTS.value:
+            org_id = request_params["org_id"]
+            service_id = request_params["service_id"]
+            bucket = UPLOAD_TYPE_DETAILS[upload_type]["bucket"]
+            dest_file_path = UPLOAD_TYPE_DETAILS[upload_type]["bucket_path"].format(
+                org_id, service_id, date_time_for_filename(), file_data["file_extension"])
+
+            self.boto_utils.s3_upload_file(file_data["file_path"], bucket, dest_file_path)
+
+            file_url = f"https://{bucket}.s3.amazonaws.com/{dest_file_path}"
+            return file_url
+
+        elif upload_type == UploadType.SERVICE_IMAGES.value:
+            org_id = request_params["org_id"]
+            service_id = request_params["service_id"]
+            bucket = UPLOAD_TYPE_DETAILS[upload_type]["bucket"]
+            dest_file_path = UPLOAD_TYPE_DETAILS[upload_type]["bucket_path"].format(
+                org_id, service_id, date_time_for_filename(), file_data["file_extension"])
+
+            self.boto_utils.s3_upload_file(file_data["file_path"], bucket, dest_file_path)
+
+            file_url = f"https://{bucket}.s3.amazonaws.com/{dest_file_path}"
+            return file_url

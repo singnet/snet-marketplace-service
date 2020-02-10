@@ -23,4 +23,5 @@ SLACK_HOOK = {
         'Content-Type': 'application/json'
     }
 }
-ALLOWED_CONTENT_TYPE = ["application/zip", "image/jpg"]
+REGION_NAME = ""
+ORG_BUCKET = ""

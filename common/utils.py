@@ -83,10 +83,14 @@ def make_response(status_code, body, header=None):
     }
 
 
-def validate_dict(data_dict, required_keys):
+def validate_dict(data_dict, required_keys, strict=False):
     for key in required_keys:
         if key not in data_dict:
             return False
+
+    if strict:
+        return validate_dict(required_keys, data_dict.keys())
+
     return True
 
 
@@ -207,3 +211,7 @@ def json_to_file(payload, filename):
 
 def datetime_to_string(given_time):
     return given_time.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def date_time_for_filename():
+    return datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
