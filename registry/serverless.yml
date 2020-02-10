@@ -694,7 +694,7 @@ functions:
 
   save_service_transaction:
     warmup: true
-    handler: registry.application.handlers.organization_handlers.save_transaction_hash_for_published_service
+    handler: registry.application.handlers.service_handlers.save_transaction_hash_for_published_service
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
