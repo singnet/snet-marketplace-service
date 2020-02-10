@@ -1,12 +1,14 @@
 import json
 from registry.infrastructure.repositories.service_repository import ServiceRepository
 from registry.constants import ServiceAvailabilityStatus, ServiceStatus, DEFAULT_SERVICE_RANKING
-from registry.config import IPFS_URL
+from registry.config import IPFS_URL, METADATA_FILE_PATH
 from uuid import uuid4
 from registry.exceptions import InvalidServiceState
 from registry.domain.factory.service_factory import ServiceFactory
+from registry.domain.models.service_state import ServiceState
 from common.ipfs_util import IPFSUtil
 from common.utils import json_to_file
+from common.constant import StatusCode
 from common.logger import get_logger
 
 ALLOWED_ATTRIBUTES_FOR_SERVICE_SEARCH = ["display_name"]
@@ -37,6 +39,22 @@ class ServicePublisherService:
         service = ServiceFactory().create_service_entity_model(self.org_uuid, self.service_uuid, payload,
                                                                ServiceStatus.DRAFT.value)
         service = ServiceRepository().save_service(self.username, service, ServiceStatus.DRAFT.value)
+        return service.to_dict()
+
+    def save_transaction_hash_for_published_service(self, payload):
+        service = ServiceRepository().get_service_for_given_service_uuid(self.org_uuid, self.service_uuid)
+        if service.service_state.state == ServiceStatus.APPROVED.value:
+            service.service_state = \
+                ServiceFactory().create_service_state_entity_model(
+                    self.org_uuid, self.service_uuid, ServiceStatus.PUBLISH_IN_PROGRESS.value,
+                    payload.get("transaction_hash", ""))
+            ServiceRepository().save_service(self.username, service, ServiceStatus.PUBLISH_IN_PROGRESS.value)
+        return StatusCode.OK
+
+    def submit_service_for_approval(self, payload):
+        service = ServiceFactory().create_service_entity_model(self.org_uuid, self.service_uuid, payload,
+                                                               ServiceStatus.APPROVAL_PENDING.value)
+        service = ServiceRepository().save_service(self.username, service, ServiceStatus.APPROVAL_PENDING.value)
         return service.to_dict()
 
     def create_service(self, payload):
@@ -74,7 +92,7 @@ class ServicePublisherService:
         service = ServiceRepository().get_service_for_given_service_uuid(self.org_uuid, self.service_uuid)
         if service.service_state.state == ServiceStatus.APPROVED.value:
             service_metadata = service.to_metadata()
-            filename = f"{service.uuid}_service_metadata.json"
+            filename = f"{METADATA_FILE_PATH}/{service.uuid}_service_metadata.json"
             service.metadata_ipfs_hash = ServicePublisherService.publish_to_ipfs(filename, service_metadata)
             return {"service_metadata": service.to_metadata(), "metadata_ipfs_hash": service.metadata_ipfs_hash}
         logger.info(f"Service status needs to be {ServiceStatus.APPROVED.value} to be eligible for publishing.")
