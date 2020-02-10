@@ -34,6 +34,14 @@ class ServiceGroup:
         }
 
     @property
+    def org_uuid(self):
+        return self._org_uuid
+
+    @property
+    def service_uuid(self):
+        return self._service_uuid
+
+    @property
     def group_id(self):
         self._group_id
 
