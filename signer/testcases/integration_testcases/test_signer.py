@@ -148,9 +148,7 @@ class TestSignUPAPI(unittest.TestCase):
         response_body = json.loads(response["body"])
         assert response_body["status"] == "success"
         assert response_body["data"]["free_call_signer_address"] == "0xBBE343b9BEf87Fb687cA83A014324d5E52cc3754"
+
     def test_token_for_free_call(self):
         pass
 
-
-if __name__ == "__main__":
-    unittest.main()
