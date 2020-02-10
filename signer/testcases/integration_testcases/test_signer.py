@@ -125,6 +125,9 @@ class TestSignUPAPI(unittest.TestCase):
         assert response_body["data"]["v"] == 27
         assert response_body["data"]["signature"] == "0x6057e2706d63351e774eaf56616afa7c138129b27b0dfd121457761d4267c3b82f2b98ae088f6e5d4737fae8beba95c7203d33c07baaeccbb8eea5a6c361ae841b"
 
+    def test_token_for_free_call(self):
+        pass
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,6 +1,8 @@
 import json
+from urllib.parse import urlparse
 
 import boto3
+import grpc
 import web3
 from eth_account.messages import defunct_hash_message
 from web3 import Web3
@@ -8,15 +10,14 @@ from web3 import Web3
 from common.blockchain_util import BlockChainUtil
 from common.logger import get_logger
 from common.utils import Utils
-from signer.config import METERING_ARN, GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_ARN
-from signer.config import NETWORKS
-from signer.config import PREFIX_FREE_CALL
-from signer.config import REGION_NAME
-from signer.config import SIGNER_KEY, SIGNER_ADDRESS
+from signer.config import GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_ARN, METERING_ARN, NETWORKS, \
+    PREFIX_FREE_CALL, REGION_NAME, SIGNER_ADDRESS, SIGNER_KEY
 from signer.constant import MPE_ADDR_PATH
+from signer.stubs import state_service_pb2, state_service_pb2_grpc
 
 logger = get_logger(__name__)
 
+FREE_CALL_EXPIRY=1000
 
 class Signer:
     def __init__(self, net_id):
@@ -95,7 +96,7 @@ class Signer:
         try:
             username = user_data["authorizer"]["claims"]["email"]
             if self._free_calls_allowed(
-                    username=username, org_id=org_id, service_id=service_id, group_id=group_id):
+                username=username, org_id=org_id, service_id=service_id, group_id=group_id):
                 current_block_no = self.obj_utils.get_current_block_no(
                     ws_provider=NETWORKS[self.net_id]["ws_provider"])
                 provider = Web3.HTTPProvider(
@@ -195,3 +196,85 @@ class Signer:
                                                                  signer_key=sender_private_key)
         v, r, s = Web3.toInt(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
         return {"r": r, "s": s, "v": v, "signature": signature}
+
+    def _is_free_call_available(self, email, token_for_free_call, token_issue_date_block, signature,
+                               current_block_number,daemon_endpoint):
+
+        request = state_service_pb2.FreeCallStateRequest()
+        request.user_id = email
+        request.token_for_free_call = token_for_free_call
+        request.token_issue_date_block = token_issue_date_block
+        request.signature = signature
+        request.current_block = current_block_number
+
+        endpoint_object = urlparse(daemon_endpoint)
+        if endpoint_object.port is not None:
+            channel_endpoint = endpoint_object.hostname + ":" + str(endpoint_object.port)
+        else:
+            channel_endpoint = endpoint_object.hostname
+
+        if endpoint_object.scheme == "http":
+            channel = grpc.insecure_channel(channel_endpoint)
+        elif endpoint_object.scheme == "https":
+            channel = grpc.secure_channel(channel_endpoint, grpc.ssl_channel_credentials())
+        else:
+            raise ValueError('Unsupported scheme in service metadata ("{}")'.format(endpoint_object.scheme))
+
+        stub = state_service_pb2_grpc.FreeCallStateServiceStub(channel)
+        response = stub.GetFreeCallsAvailable(request)
+        if response.free_calls_available >0:
+            return True
+        return False
+
+
+    def _get_daemon_endpoint_for_group(self,org_id,service_id,group_id):
+        lambda_payload = {
+            "httpMethod": "GET",
+            "pathParameters": {
+                "orgId": org_id,
+                "serviceId": service_id
+            },
+        }
+        response = self.lambda_client.invoke(
+            FunctionName=GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_ARN,
+            InvocationType="RequestResponse",
+            Payload=json.dumps(lambda_payload),
+        )
+        response_body_raw = json.loads(response.get("Payload").read())["body"]
+        get_service_response = json.loads(response_body_raw)
+        if get_service_response["status"] == "success":
+            groups_data = get_service_response["data"].get("groups", [])
+            for group_data in groups_data:
+                if group_data["group_id"] == group_id:
+                    return group_data["endpoints"][0]["endpoint"]
+        raise Exception("Unable to fetch daemon Endpoint information for service %s under organization %s for %s group.",
+                        service_id, org_id, group_id)
+
+    def token_for_free_call(self, email, org_id, service_id, group_id):
+        public_key_checksum = Web3.toChecksumAddress(SIGNER_ADDRESS)
+        current_block_number = self.obj_blockchain_utils.get_current_block_no()
+        token_for_free_call = self.obj_blockchain_utils.generate_signature_bytes(["string", "address", "uint256"],
+                                                                                 [email, public_key_checksum,
+                                                                                  current_block_number],
+                                                                                 SIGNER_KEY)
+
+        token_issue_date_block = current_block_number
+        signature = self.obj_blockchain_utils.generate_signature_bytes(
+            ["string", "string", "string", "string", "string", "uint256", "bytes32"],
+            ["__prefix_free_trial", email, org_id, service_id, group_id,
+             current_block_number, token_for_free_call],
+            SIGNER_KEY)
+
+        token_with_expiry_for_free_call = ""
+        daemon_endpoint = self._get_daemon_endpoint_for_group(org_id, service_id, group_id)
+
+        if self._is_free_call_available(email, token_for_free_call, token_issue_date_block, signature,
+                                        current_block_number, daemon_endpoint):
+            token_with_expiry_for_free_call = self.obj_blockchain_utils.generate_signature_bytes(
+                ["string", "address", "uint256"],
+                [email, public_key_checksum,
+                 current_block_number + FREE_CALL_EXPIRY],
+                SIGNER_KEY)
+
+        return {"token_with_expiry_for_free_call": token_with_expiry_for_free_call,
+                "token_issue_date_block": token_issue_date_block}
