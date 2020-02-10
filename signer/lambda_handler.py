@@ -5,9 +5,13 @@ import traceback
 from aws_xray_sdk.core import patch_all
 
 from common.logger import get_logger
-from common.utils import Utils, generate_lambda_response, handle_exception_with_slack_notification
-from signer.config import NETWORK_ID, NET_ID, SLACK_HOOK
 from signer.signers import Signer
+from common.utils import Utils, handle_exception_with_slack_notification
+from common.utils import generate_lambda_response
+from signer.config import NET_ID, SLACK_HOOK, SIGNER_ADDRESS, NETWORK_ID
+from common.constant import StatusCode
+from common.exceptions import BadRequestException
+
 
 patch_all()
 
@@ -64,7 +68,8 @@ def request_handler(event, context):
                 recipient=payload_dict["recipient"], group_id=payload_dict['group_id'],
                 amount_in_cogs=payload_dict["amount_in_cogs"], expiration=payload_dict["expiration"],
                 message_nonce=payload_dict["message_nonce"],
-                sender_private_key=payload_dict["signer_key"], executor_wallet_address=payload_dict["executor_wallet_address"])
+                sender_private_key=payload_dict["signer_key"],
+                executor_wallet_address=payload_dict["executor_wallet_address"])
         else:
             return generate_lambda_response(404, "Not Found", cors_enabled=True)
         logger.info("Signer::response_data: ", response_data)
@@ -111,3 +116,16 @@ def free_call_token_handler(event, context):
         "status": "success",
         "data": token_data
     }, cors_enabled=True)
+
+
+@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def get_free_call_signer_address(event, context):
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    query_string_parameters = event["queryStringParameters"]
+    if "org_id" not in query_string_parameters and "service_id" not in query_string_parameters and "group_id" not in query_string_parameters:
+        raise BadRequestException()
+    response = {"free_call_signer_address": SIGNER_ADDRESS}
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )

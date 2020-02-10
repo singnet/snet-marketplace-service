@@ -203,3 +203,7 @@ def handle_exception_with_slack_notification(*decorator_args, **decorator_kwargs
 def json_to_file(payload, filename):
     with open(filename, 'w') as f:
         f.write(json.dumps(payload, indent=4))
+
+
+def datetime_to_string(given_time):
+    return given_time.strftime("%Y-%m-%d %H:%M:%S")
