@@ -13,7 +13,7 @@ class UploadService:
             TODO: persist user history of the storage request
         """
         if upload_type == UploadType.ORG_ASSETS.value:
-            org_id = request_params["org_id"]
+            org_id = request_params["org_uuid"]
             bucket = UPLOAD_TYPE_DETAILS[upload_type]["bucket"]
             dest_file_path = UPLOAD_TYPE_DETAILS[upload_type]["bucket_path"].format(
                 org_id, date_time_for_filename(), file_data["file_extension"])
@@ -23,33 +23,10 @@ class UploadService:
             file_url = f"https://{bucket}.s3.amazonaws.com/{dest_file_path}"
             return file_url
 
-        elif upload_type == UploadType.SERVICE_ASSETS.value:
-            org_id = request_params["org_id"]
-            service_id = request_params["service_id"]
-            bucket = UPLOAD_TYPE_DETAILS[upload_type]["bucket"]
-            dest_file_path = UPLOAD_TYPE_DETAILS[upload_type]["bucket_path"].format(
-                org_id, service_id, date_time_for_filename(), file_data["file_extension"])
-
-            self.boto_utils.s3_upload_file(file_data["file_path"], bucket, dest_file_path)
-
-            file_url = f"https://{bucket}.s3.amazonaws.com/{dest_file_path}"
-            return file_url
-
-        elif upload_type == UploadType.SERVICE_COMPONENTS.value:
-            org_id = request_params["org_id"]
-            service_id = request_params["service_id"]
-            bucket = UPLOAD_TYPE_DETAILS[upload_type]["bucket"]
-            dest_file_path = UPLOAD_TYPE_DETAILS[upload_type]["bucket_path"].format(
-                org_id, service_id, date_time_for_filename(), file_data["file_extension"])
-
-            self.boto_utils.s3_upload_file(file_data["file_path"], bucket, dest_file_path)
-
-            file_url = f"https://{bucket}.s3.amazonaws.com/{dest_file_path}"
-            return file_url
-
-        elif upload_type == UploadType.SERVICE_IMAGES.value:
-            org_id = request_params["org_id"]
-            service_id = request_params["service_id"]
+        elif upload_type == [UploadType.SERVICE_ASSETS.value, UploadType.SERVICE_GALLERY_IMAGES.value,
+                             UploadType.SERVICE_PAGE_COMPONENTS.value, UploadType.SERVICE_PROTO_FILES.value]:
+            org_id = request_params["org_uuid"]
+            service_id = request_params["service_uuid"]
             bucket = UPLOAD_TYPE_DETAILS[upload_type]["bucket"]
             dest_file_path = UPLOAD_TYPE_DETAILS[upload_type]["bucket_path"].format(
                 org_id, service_id, date_time_for_filename(), file_data["file_extension"])
