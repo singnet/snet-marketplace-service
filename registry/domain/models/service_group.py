@@ -43,24 +43,24 @@ class ServiceGroup:
 
     @property
     def group_id(self):
-        self._group_id
+        return self._group_id
 
     @property
     def group_name(self):
-        self._group_name
+        return self._group_name
 
     @property
     def endpoints(self):
-        self._endpoints
+        return self._endpoints
 
     @property
     def pricing(self):
-        self._pricing
+        return self._pricing
 
     @property
     def daemon_address(self):
-        self._daemon_address
+        return self._daemon_address
 
     @property
     def free_calls(self):
-        self._free_calls
+        return self._free_calls

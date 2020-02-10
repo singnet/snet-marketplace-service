@@ -1,6 +1,6 @@
 from datetime import datetime as dt
 from registry.domain.factory.service_factory import ServiceFactory
-from registry.infrastructure.models import Service,ServiceGroup, ServiceState, ServiceReviewHistory
+from registry.infrastructure.models import Service, ServiceGroup, ServiceState, ServiceReviewHistory
 from registry.infrastructure.repositories.base_repository import BaseRepository
 from sqlalchemy import func
 
@@ -63,7 +63,11 @@ class ServiceRepository(BaseRepository):
         service_record.service_state.updated_by = username
         service_record.service_state.updated_on = dt.utcnow()
         service_entity_model = ServiceFactory().convert_service_db_model_to_entity_model(service_record)
-        self.session.commit()
+        try:
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            raise e
         return service_entity_model
 
     def get_service_for_given_service_uuid(self, org_uuid, service_uuid):
@@ -72,4 +76,3 @@ class ServiceRepository(BaseRepository):
         self.session.commit()
         service = ServiceFactory().convert_service_db_model_to_entity_model(service_db)
         return service
-
