@@ -22,7 +22,7 @@ UPLOAD_TYPE_DETAILS = {
         "bucket": ORG_BUCKET,
         "bucket_path": "{}/services/{}/assets/{}_asset.{}",
     },
-    UploadType.SERVICE_COMPONENTS.value: {
+    UploadType.SERVICE_PAGE_COMPONENTS.value: {
         "required_query_params": ["org_uuid", "service_uuid"],
         "bucket": ORG_BUCKET,
         "bucket_path": "{}/services/{}/component/{}_component.{}",
