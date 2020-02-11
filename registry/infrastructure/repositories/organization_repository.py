@@ -1,8 +1,6 @@
 from datetime import datetime
 from uuid import uuid4
 
-from sqlalchemy import or_, and_
-
 from registry.constants import Role, OrganizationMemberStatus, OrganizationStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.exceptions import OrganizationNotFoundException
@@ -52,6 +50,7 @@ class OrganizationPublisherRepository(BaseRepository):
         organization_db_model.org_state[0].state = OrganizationStatus.PUBLISH_IN_PROGRESS.value
         organization_db_model.org_state[0].updated_on = datetime.utcnow()
         organization_db_model.org_state[0].updated_by = username
+        self.session.commit()
 
     def store_organization(self, organization, username, state):
         organization_db_model = self.session.query(Organization).filter(
