@@ -40,7 +40,7 @@ class ServiceRepository(BaseRepository):
         service_record = self.session.query(Service).filter(Service.org_uuid == service.org_uuid).filter(
             Service.uuid == service.uuid).first()
         self.session.query(ServiceGroup).filter(ServiceGroup.org_uuid == service.org_uuid).filter(
-            ServiceGroup.service_uuid == service.uuid).delete()
+            ServiceGroup.service_uuid == service.uuid).delete(synchronize_session='fetch')
         service_group_db_model = [ServiceFactory().convert_service_group_entity_model_to_db_model(group) for group in
                                   service.groups]
         service_record.display_name = service.display_name

@@ -291,7 +291,62 @@ class TestService(TestCase):
             },
             "httpMethod": "PUT",
             "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"},
-            "body": json.dumps({"description": "test description updated"})
+            "body": json.dumps({
+                "description": "test description updated 1",
+                "groups": [
+                    {
+                        "group_name": "defaultGroup",
+                        "group_id": "l/hp6f1RXFPANeLWFZYwTB93Xi42S8NpZHfnceS6eUw=",
+                        "free_calls": 10,
+                        "free_call_signer_address": "0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F",
+                        "pricing": [
+                            {
+                                "default": True,
+                                "price_model": "fixed_price",
+                                "price_in_cogs": 1
+                            }
+                        ],
+                        "endpoints": []
+                    }
+                ]
+            })
+        }
+        response = save_service(event=event, context=None)
+        assert (response["statusCode"] == 200)
+        response_body = json.loads(response["body"])
+        assert (response_body["status"] == "success")
+        assert (response_body["data"]["service_uuid"] == "test_service_uuid")
+        assert (response_body["data"]["service_state"]["state"] == ServiceStatus.DRAFT.value)
+        event = {
+            "path": "/org/test_org_uuid/service",
+            "requestContext": {
+                "authorizer": {
+                    "claims": {
+                        "email": "dummy_user1@dummy.io"
+                    }
+                }
+            },
+            "httpMethod": "PUT",
+            "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"},
+            "body": json.dumps({
+                "description": "test description updated 2",
+                "groups": [
+                    {
+                        "group_name": "defaultGroup",
+                        "group_id": "l/hp6f1RXFPANeLWFZYwTB93Xi42S8NpZHfnceS6eUw=",
+                        "free_calls": 20,
+                        "free_call_signer_address": "0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F",
+                        "pricing": [
+                            {
+                                "default": True,
+                                "price_model": "fixed_price",
+                                "price_in_cogs": 2
+                            }
+                        ],
+                        "endpoints": []
+                    }
+                ]
+            })
         }
         response = save_service(event=event, context=None)
         assert (response["statusCode"] == 200)
