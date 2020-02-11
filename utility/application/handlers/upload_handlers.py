@@ -15,25 +15,34 @@ logger = get_logger(__name__)
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def upload_file(event, context):
-    content_type = event["headers"]["Content-Type"]
+    headers = event["headers"]
+    if "content-type" not in headers:
+        if "Content-Type" not in headers:
+            logger.error(f"Content type not found content type")
+            raise InvalidContentType()
+        else:
+            content_type = headers["Content-Type"]
+    else:
+        content_type = headers["content-type"]
+
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     query_string_parameter = event["queryStringParameters"]
 
     if content_type not in ALLOWED_CONTENT_TYPE:
-        logger.error("")
-        InvalidContentType()
+        logger.error(f"Invalid Content type {content_type}")
+        raise InvalidContentType()
 
     if not ("type" in query_string_parameter and
             query_string_parameter["type"] in UPLOAD_TYPE_DETAILS) or len(event["body"]) == 0:
         logger.error(f"Invalid request for content_type: {content_type} query_params: {query_string_parameter}")
-        BadRequestException()
+        raise BadRequestException()
 
     upload_request_type = query_string_parameter["type"]
     query_string_parameter.pop("type")
     if not validate_dict(query_string_parameter, UPLOAD_TYPE_DETAILS[upload_request_type]):
         logger.error(f"Failed to get required query params content_type: {content_type} "
                      f"upload_type: {upload_request_type} params: {query_string_parameter}")
-        BadRequestException()
+        raise BadRequestException()
 
     file_extension = FILE_EXTENSION[content_type]
     temp_file_path = f"{TEMP_FILE_DIR}/{uuid4().hex}_upload.{file_extension}"
