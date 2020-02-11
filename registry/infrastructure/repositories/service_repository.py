@@ -37,33 +37,38 @@ class ServiceRepository(BaseRepository):
         self.add_item(service_db_model)
 
     def save_service(self, username, service, state):
-        service_record = self.session.query(Service).filter(Service.org_uuid == service.org_uuid).filter(
-            Service.uuid == service.uuid).first()
-        self.session.query(ServiceGroup).filter(ServiceGroup.org_uuid == service.org_uuid).filter(
-            ServiceGroup.service_uuid == service.uuid).delete(synchronize_session='fetch')
         service_group_db_model = [ServiceFactory().convert_service_group_entity_model_to_db_model(group) for group in
                                   service.groups]
-        service_record.display_name = service.display_name
-        service_record.service_id = service.service_id
-        service_record.metadata_ipfs_hash = service.metadata_ipfs_hash
-        service_record.proto = service.proto
-        service_record.short_description = service.project_url
-        service_record.description = service.description
-        service_record.project_url = service.project_url
-        service_record.assets = service.assets
-        service_record.rating = service.assets
-        service_record.ranking = service.ranking
-        service_record.contributors = service.contributors
-        service_record.tags = service.tags
-        service_record.mpe_address = service.mpe_address
-        service_record.updated_on = dt.utcnow()
-        service_record.groups = service_group_db_model
-        service_record.service_state.state = state
-        service_record.service_state.transaction_hash = service.service_state.transaction_hash
-        service_record.service_state.updated_by = username
-        service_record.service_state.updated_on = dt.utcnow()
-        service_entity_model = ServiceFactory().convert_service_db_model_to_entity_model(service_record)
         try:
+            self.session.query(ServiceGroup).filter(ServiceGroup.org_uuid == service.org_uuid).filter(
+                ServiceGroup.service_uuid == service.uuid).delete(synchronize_session='fetch')
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            raise e
+        try:
+            service_record = self.session.query(Service).filter(Service.org_uuid == service.org_uuid).filter(
+                Service.uuid == service.uuid).first()
+            service_record.display_name = service.display_name
+            service_record.service_id = service.service_id
+            service_record.metadata_ipfs_hash = service.metadata_ipfs_hash
+            service_record.proto = service.proto
+            service_record.short_description = service.project_url
+            service_record.description = service.description
+            service_record.project_url = service.project_url
+            service_record.assets = service.assets
+            service_record.rating = service.assets
+            service_record.ranking = service.ranking
+            service_record.contributors = service.contributors
+            service_record.tags = service.tags
+            service_record.mpe_address = service.mpe_address
+            service_record.updated_on = dt.utcnow()
+            service_record.groups = service_group_db_model
+            service_record.service_state.state = state
+            service_record.service_state.transaction_hash = service.service_state.transaction_hash
+            service_record.service_state.updated_by = username
+            service_record.service_state.updated_on = dt.utcnow()
+            service_entity_model = ServiceFactory().convert_service_db_model_to_entity_model(service_record)
             self.session.commit()
         except Exception as e:
             self.session.rollback()
