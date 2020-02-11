@@ -36,7 +36,7 @@ custom:
 
 functions:
   upload:
-    handler: handlers.upload_handlers.upload_file
+    handler: common_utility.application.handlers.upload_handlers.upload_file
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
