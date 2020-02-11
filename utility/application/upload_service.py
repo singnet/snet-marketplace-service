@@ -1,9 +1,9 @@
 from common.boto_utils import BotoUtils
-from common.exceptions import BadRequestException
 from common.logger import get_logger
 from common.utils import date_time_for_filename
 from utility.config import REGION_NAME
 from utility.constants import UPLOAD_TYPE_DETAILS, UploadType
+from utility.exceptions import BadRequestException
 
 logger = get_logger(__name__)
 
