@@ -25,5 +25,5 @@ SLACK_HOOK = {
 }
 REGION_NAME = ""
 ORG_BUCKET = ""
-ALLOWED_CONTENT_TYPE = ["application/zip", "image/jpg", "image/jpeg", "image/png"]
-FILE_EXTENSION = {"application/zip": 'zip', "image/jpg": "jpg", "image/jpeg": "jpeg", "image/png": "png"}
+ALLOWED_CONTENT_TYPE = []
+FILE_EXTENSION = {}
