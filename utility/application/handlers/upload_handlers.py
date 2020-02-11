@@ -15,6 +15,7 @@ logger = get_logger(__name__)
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def upload_file(event, context):
+    logger.info(event["headers"])
     content_type = event["headers"]["Content-Type"]
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     query_string_parameter = event["queryStringParameters"]
