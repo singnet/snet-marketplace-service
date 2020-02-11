@@ -1,7 +1,11 @@
 from common.boto_utils import BotoUtils
+from common.exceptions import BadRequestException
+from common.logger import get_logger
 from common.utils import date_time_for_filename
-from upload_utility.config import REGION_NAME
-from upload_utility.constants import UPLOAD_TYPE_DETAILS, UploadType
+from common_utility.config import REGION_NAME
+from common_utility.constants import UPLOAD_TYPE_DETAILS, UploadType
+
+logger = get_logger(__name__)
 
 
 class UploadService:
@@ -35,3 +39,7 @@ class UploadService:
 
             file_url = f"https://{bucket}.s3.amazonaws.com/{dest_file_path}"
             return file_url
+
+        else:
+            logger.error(f"Invalid upload request type {upload_type} params: {request_params}")
+            BadRequestException()
