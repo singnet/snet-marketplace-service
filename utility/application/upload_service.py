@@ -27,7 +27,7 @@ class UploadService:
             file_url = f"https://{bucket}.s3.amazonaws.com/{dest_file_path}"
             return file_url
 
-        elif upload_type == [UploadType.SERVICE_ASSETS.value, UploadType.SERVICE_GALLERY_IMAGES.value,
+        elif upload_type in [UploadType.SERVICE_ASSETS.value, UploadType.SERVICE_GALLERY_IMAGES.value,
                              UploadType.SERVICE_PAGE_COMPONENTS.value, UploadType.SERVICE_PROTO_FILES.value]:
             org_id = request_params["org_uuid"]
             service_id = request_params["service_uuid"]
