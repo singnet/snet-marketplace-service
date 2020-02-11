@@ -1,3 +1,39 @@
+plugins:
+  - serverless-offline
+  - serverless-python-requirements
+  - serverless-plugin-tracing
+  - serverless-prune-plugin
+
+service: utility-service
+provider:
+  name: aws
+  runtime: python3.6
+  description: utility oeprations for snet
+  memorySize: 512
+  timeout: 30
+  region: ${file(./config.${self:provider.stage}.json):REGION}
+  stage: ${opt:stage,'dev'}
+  deploymentBucket:
+    name: snet-serverless-artifacts
+    serverSideEncryption: AES256
+    tags:
+      key1: registry
+    deploymentPrefix: serverless
+    tracing: true
+
+custom:
+  pythonRequirements:
+    fileName: common_utility/requirements.txt
+    dockerizePip: true
+    useDownloadCache: true
+    useStaticCache: true
+    cacheLocation: "/var/cache/serverless"
+  prune:
+    automatic: true
+    includeLayers: true
+    number: 5
+
+
 functions:
   upload:
     handler: handlers.upload_handlers.upload_file
