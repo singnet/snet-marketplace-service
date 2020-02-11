@@ -8,7 +8,7 @@ service: common-utility
 provider:
   name: aws
   runtime: python3.6
-  description: utility oeprations for snet
+  description: utility operations for snet
   memorySize: 512
   timeout: 30
   region: ${file(./config.${self:provider.stage}.json):REGION}
