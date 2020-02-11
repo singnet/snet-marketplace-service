@@ -1,6 +1,6 @@
 from enum import Enum
 
-from common_utility.config import ORG_BUCKET
+from utility.config import ORG_BUCKET
 
 
 class UploadType(Enum):
