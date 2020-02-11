@@ -39,6 +39,4 @@ UPLOAD_TYPE_DETAILS = {
     }
 }
 
-ALLOWED_CONTENT_TYPE = ["application/zip", "image/jpg"]
-FILE_EXTENSION = {"application/zip": 'zip', "image/jpg": "jpg"}
 TEMP_FILE_DIR = "/tmp"

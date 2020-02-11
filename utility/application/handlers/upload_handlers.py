@@ -6,8 +6,8 @@ from common.exception_handler import exception_handler
 from common.logger import get_logger
 from common.utils import generate_lambda_response, validate_dict
 from utility.application.upload_service import UploadService
-from utility.config import SLACK_HOOK, NETWORK_ID
-from utility.constants import UPLOAD_TYPE_DETAILS, ALLOWED_CONTENT_TYPE, FILE_EXTENSION, TEMP_FILE_DIR
+from utility.config import SLACK_HOOK, NETWORK_ID, ALLOWED_CONTENT_TYPE, FILE_EXTENSION
+from utility.constants import UPLOAD_TYPE_DETAILS, TEMP_FILE_DIR
 from utility.exceptions import EXCEPTIONS, InvalidContentType, BadRequestException
 
 logger = get_logger(__name__)
