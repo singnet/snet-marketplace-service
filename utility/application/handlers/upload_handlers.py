@@ -39,7 +39,7 @@ def upload_file(event, context):
 
     upload_request_type = query_string_parameter["type"]
     query_string_parameter.pop("type")
-    if not validate_dict(query_string_parameter, UPLOAD_TYPE_DETAILS[upload_request_type]):
+    if not validate_dict(query_string_parameter, UPLOAD_TYPE_DETAILS[upload_request_type]["required_query_params"]):
         logger.error(f"Failed to get required query params content_type: {content_type} "
                      f"upload_type: {upload_request_type} params: {query_string_parameter}")
         raise BadRequestException()
