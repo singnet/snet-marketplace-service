@@ -23,7 +23,7 @@ provider:
 
 custom:
   pythonRequirements:
-    fileName: common_utility/requirements.txt
+    fileName: utility/requirements.txt
     dockerizePip: true
     useDownloadCache: true
     useStaticCache: true
@@ -36,7 +36,7 @@ custom:
 
 functions:
   upload:
-    handler: common_utility.application.handlers.upload_handlers.upload_file
+    handler: utility.application.handlers.upload_handlers.upload_file
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
