@@ -7,29 +7,41 @@ from sqlalchemy import func
 
 class ServiceRepository(BaseRepository):
     def get_services_for_organization(self, org_uuid, payload):
-        raw_services_data = self.session.query(Service). \
-            filter(getattr(Service, payload["search_attribute"]).like("%" + payload["search_string"] + "%")). \
-            filter(Service.org_uuid == org_uuid). \
-            order_by(getattr(getattr(Service, payload["sort_by"]), payload["order_by"])()). \
-            slice(payload["offset"], payload["limit"]).all()
+        try:
+            raw_services_data = self.session.query(Service). \
+                filter(getattr(Service, payload["search_attribute"]).like("%" + payload["search_string"] + "%")). \
+                filter(Service.org_uuid == org_uuid). \
+                order_by(getattr(getattr(Service, payload["sort_by"]), payload["order_by"])()). \
+                slice(payload["offset"], payload["limit"]).all()
 
-        services = []
-        for service in raw_services_data:
-            services.append(ServiceFactory().convert_service_db_model_to_entity_model(service).to_dict())
-        self.session.commit()
+            services = []
+            for service in raw_services_data:
+                services.append(ServiceFactory().convert_service_db_model_to_entity_model(service).to_dict())
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            raise e
         return services
 
     def get_total_count_of_services_for_organization(self, org_uuid, payload):
-        total_count_of_services = self.session.query(func.count(Service.uuid)). \
-            filter(getattr(Service, payload["search_attribute"]).like("%" + payload["search_string"] + "%")). \
-            filter(Service.org_uuid == org_uuid).all()[0][0]
-        self.session.commit()
+        try:
+            total_count_of_services = self.session.query(func.count(Service.uuid)). \
+                filter(getattr(Service, payload["search_attribute"]).like("%" + payload["search_string"] + "%")). \
+                filter(Service.org_uuid == org_uuid).all()[0][0]
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            raise e
         return total_count_of_services
 
     def check_service_id_within_organization(self, org_uuid, service_id):
-        record_exist = self.session.query(func.count(Service.uuid)).filter(Service.org_uuid == org_uuid) \
-            .filter(Service.service_id == service_id).all()[0][0]
-        self.session.commit()
+        try:
+            record_exist = self.session.query(func.count(Service.uuid)).filter(Service.org_uuid == org_uuid) \
+                .filter(Service.service_id == service_id).all()[0][0]
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            raise e
         return record_exist
 
     def add_service(self, service, username):
@@ -76,8 +88,12 @@ class ServiceRepository(BaseRepository):
         return service_entity_model
 
     def get_service_for_given_service_uuid(self, org_uuid, service_uuid):
-        service_db = self.session.query(Service).filter(Service.org_uuid == org_uuid).filter(
-            Service.uuid == service_uuid).first()
-        service = ServiceFactory().convert_service_db_model_to_entity_model(service_db)
-        self.session.commit()
+        try:
+            service_db = self.session.query(Service).filter(Service.org_uuid == org_uuid).filter(
+                Service.uuid == service_uuid).first()
+            service = ServiceFactory().convert_service_db_model_to_entity_model(service_db)
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            raise e
         return service
