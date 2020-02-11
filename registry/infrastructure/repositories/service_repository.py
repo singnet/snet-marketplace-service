@@ -65,7 +65,7 @@ class ServiceRepository(BaseRepository):
             service_record.service_id = service.service_id
             service_record.metadata_ipfs_hash = service.metadata_ipfs_hash
             service_record.proto = service.proto
-            service_record.short_description = service.project_url
+            service_record.short_description = service.short_description
             service_record.description = service.description
             service_record.project_url = service.project_url
             service_record.assets = service.assets

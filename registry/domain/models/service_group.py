@@ -64,3 +64,7 @@ class ServiceGroup:
     @property
     def free_calls(self):
         return self._free_calls
+
+    @property
+    def free_call_signer_address(self):
+        return self._free_call_signer_address
