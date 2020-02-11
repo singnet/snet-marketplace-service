@@ -42,4 +42,4 @@ class UploadService:
 
         else:
             logger.error(f"Invalid upload request type {upload_type} params: {request_params}")
-            BadRequestException()
+            raise BadRequestException()
