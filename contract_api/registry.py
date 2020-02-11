@@ -109,9 +109,11 @@ class Registry:
             if filter_query != "":
                 filter_query = " AND " + filter_query
             srch_qry = "SELECT * FROM service A, (SELECT M.org_id, M.service_id, group_concat(T.tag_name) AS tags FROM " \
-                       "service_metadata M LEFT JOIN service_tags T ON M.service_row_id = T.service_row_id WHERE (" \
-                       + sub_qry.replace('%', '%%') + ")" + filter_query + " GROUP BY M.org_id, M.service_id ORDER BY " + sort_by + " " + order_by + " ) B WHERE " \
-                                                      "A.service_id = B.service_id AND A.org_id=B.org_id AND A.is_curated= 1 LIMIT %s , %s"
+                       "service_metadata M LEFT JOIN service_tags T ON M.service_row_id = T.service_row_id " \
+                       "LEFT JOIN service_endpoint E ON M.service_row_id = E.service_row_id WHERE (" \
+                       + sub_qry.replace('%', '%%') + ")" + filter_query + \
+                       " GROUP BY M.org_id, M.service_id ORDER BY E.is_available DESC, " + sort_by + " " + order_by + \
+                       " ) B WHERE A.service_id = B.service_id AND A.org_id=B.org_id AND A.is_curated= 1 LIMIT %s , %s"
 
             qry_dta = self.repo.execute(
                 srch_qry, values + [int(offset), int(limit)])
@@ -131,8 +133,10 @@ class Registry:
                 str(org_srvc_tuple).replace(',)', ')')
             print("qry_part::", qry_part)
             sort_by = sort_by.replace("org_id", "M.org_id")
-            services = self.repo.execute("SELECT M.*,O.organization_name,O.org_assets_url FROM service_metadata M, service S , organization O WHERE O.org_id = S.org_id and "
-                                         "S.row_id = M.service_row_id " + qry_part + "ORDER BY " + sort_by + " " + order_by)
+            services = self.repo.execute(
+                "SELECT M.*,O.organization_name,O.org_assets_url FROM service_endpoint E, service_metadata M, service S "
+                ", organization O WHERE O.org_id = S.org_id AND S.row_id = M.service_row_id AND "
+                "S.row_id = E.service_row_id " + qry_part + "ORDER BY E.is_available DESC, " + sort_by + " " + order_by)
             obj_utils = Utils()
             obj_utils.clean(services)
             available_service = self._get_is_available_service()
