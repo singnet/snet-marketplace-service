@@ -454,6 +454,12 @@ class TestService(TestCase):
                 project_url="https://test_project_url.com",
                 proto={"encoding": "proto", "service_type": "grpc", "model_ipfs_hash": "test_model_ipfs_hash"},
                 ranking=1,
+                assets={
+                    # "hero_image": {
+                    # "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/36b0d7613176441ebd875284eb964ca2/services/68a4b9b0d7ec49b4b0f6663aeb0e96f3/assets/20200212053715_asset.png"},
+                    "proto_files": {
+                        "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/0575333ceca048a399e300af7013578c/services/9f01bb27f1414e74965a9e787d13c716/assets/20200212064408_proto_files.zip",
+                        "ipfs_hash": ""}},
                 created_on=dt.utcnow()
             )
         )
