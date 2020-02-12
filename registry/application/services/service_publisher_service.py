@@ -1,9 +1,11 @@
 import json
+import requests
+from urllib.parse import urlparse
 from registry.infrastructure.repositories.service_repository import ServiceRepository
 from registry.constants import ServiceAvailabilityStatus, ServiceStatus, DEFAULT_SERVICE_RANKING
-from registry.config import IPFS_URL, METADATA_FILE_PATH
+from registry.config import IPFS_URL, METADATA_FILE_PATH, ASSET_DIR
 from uuid import uuid4
-from registry.exceptions import InvalidServiceState
+from registry.exceptions import InvalidServiceState, ServiceProtoNotFoundException
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.models.service_state import ServiceState
 from common.ipfs_util import IPFSUtil
@@ -91,12 +93,32 @@ class ServicePublisherService:
     def publish_service_data_to_ipfs(self):
         service = ServiceRepository().get_service_for_given_service_uuid(self.org_uuid, self.service_uuid)
         if service.service_state.state == ServiceStatus.APPROVED.value:
+            service = self.publish_proto_files_to_ipfs(service)
             service_metadata = service.to_metadata()
             filename = f"{METADATA_FILE_PATH}/{service.uuid}_service_metadata.json"
             service.metadata_ipfs_hash = ServicePublisherService.publish_to_ipfs(filename, service_metadata)
             return {"service_metadata": service.to_metadata(), "metadata_ipfs_hash": service.metadata_ipfs_hash}
         logger.info(f"Service status needs to be {ServiceStatus.APPROVED.value} to be eligible for publishing.")
         raise InvalidServiceState()
+
+    def publish_proto_files_to_ipfs(self, service):
+        proto_url = service.assets.get("proto_files", {}).get("url", None)
+        if proto_url is None:
+            raise ServiceProtoNotFoundException
+        filename = urlparse(proto_url).path.split("/")[-1]
+        response = requests.get(proto_url)
+        file_path = f"{ASSET_DIR}/{filename}"
+        with open(file_path, 'wb') as asset_file:
+            asset_file.write(response.content)
+        asset_ipfs_hash = IPFSUtil(IPFS_URL['url'], IPFS_URL['port']).write_file_in_ipfs(file_path)
+        service.assets["proto_files"]["ipfs_hash"] = asset_ipfs_hash
+        service.proto = {
+            "model_ipfs_hash": asset_ipfs_hash,
+            "encoding": "proto",
+            "service_type": "grpc"
+        }
+        service = ServiceRepository().save_service(self.username, service, service.service_state.state)
+        return service
 
     @staticmethod
     def publish_to_ipfs(filename, data):

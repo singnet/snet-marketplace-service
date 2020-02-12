@@ -22,4 +22,11 @@ class InvalidServiceState(CustomException):
         super().__init__({})
 
 
+class ServiceProtoNotFoundException(CustomException):
+    error_message = "SERVICE_PROTO_NOT_FOUND"
+
+    def __init__(self):
+        super().__init__({})
+
+
 EXCEPTIONS = (BadRequestException, OrganizationNotFoundException)
