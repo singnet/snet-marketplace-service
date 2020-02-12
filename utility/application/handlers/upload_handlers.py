@@ -16,7 +16,6 @@ logger = get_logger(__name__)
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def upload_file(event, context):
     headers = event["headers"]
-    logger.info(event["body"])
     if "content-type" not in headers:
         if "Content-Type" not in headers:
             logger.error(f"Content type not found content type")
