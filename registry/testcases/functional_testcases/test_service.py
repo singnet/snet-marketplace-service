@@ -420,77 +420,72 @@ class TestService(TestCase):
         assert (response_body["data"]["service_uuid"] == "test_service_uuid")
         assert (response_body["data"]["service_state"]["state"] == ServiceStatus.DRAFT.value)
 
-    @patch("registry.application.services.service_publisher_service.ServicePublisherService.publish_to_ipfs")
-    def test_get_service_metadata_ipfs_hash(self, mock_ipfs):
-        mock_ipfs.return_value = "QmeoVWV99BJoa9czuxg6AiSyFiyVNNFpcaSMYTQUft785u"
-        self.tearDown()
-        org_repo.add_item(
-            Organization(
-                name="test_org",
-                org_id="test_org_id",
-                uuid="test_org_uuid",
-                org_type="organization",
-                description="that is the dummy org for testcases",
-                short_description="that is the short description",
-                url="https://dummy.url",
-                contacts=[],
-                assets={},
-                duns_no=12345678,
-                origin="PUBLISHER_DAPP",
-                groups=[],
-                addresses=[],
-                metadata_ipfs_hash="#dummyhashdummyhash"
-            )
-        )
-        service_repo.add_item(
-            Service(
-                org_uuid="test_org_uuid",
-                uuid="test_service_uuid",
-                display_name="test_display_name",
-                service_id="test_service_id",
-                metadata_ipfs_hash="Qasdfghjklqwertyuiopzxcvbnm",
-                short_description="test_short_description",
-                description="test_long_description",
-                project_url="https://test_project_url.com",
-                proto={"encoding": "proto", "service_type": "grpc", "model_ipfs_hash": "test_model_ipfs_hash"},
-                ranking=1,
-                assets={
-                    # "hero_image": {
-                    # "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/36b0d7613176441ebd875284eb964ca2/services/68a4b9b0d7ec49b4b0f6663aeb0e96f3/assets/20200212053715_asset.png"},
-                    "proto_files": {
-                        "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/0575333ceca048a399e300af7013578c/services/9f01bb27f1414e74965a9e787d13c716/assets/20200212064408_proto_files.zip",
-                        "ipfs_hash": ""}},
-                created_on=dt.utcnow()
-            )
-        )
-        service_repo.add_item(
-            ServiceState(
-                row_id=1000,
-                org_uuid="test_org_uuid",
-                service_uuid="test_service_uuid",
-                state=ServiceStatus.APPROVED.value,
-                created_by="dummy_user",
-                updated_by="dummy_user",
-                created_on=dt.utcnow()
-            )
-        )
-        event = {
-            "path": "/org/test_org_uuid/service/test_service_uuid/ipfs_publish",
-            "requestContext": {
-                "authorizer": {
-                    "claims": {
-                        "email": "dummy_user1@dummy.io"
-                    }
-                }
-            },
-            "httpMethod": "POST",
-            "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"}
-        }
-        response = publish_service_metadata_to_ipfs(event=event, context=None)
-        assert (response["statusCode"] == 200)
-        response_body = json.loads(response["body"])
-        assert (response_body["status"] == "success")
-        assert (response_body["data"]["metadata_ipfs_hash"] == "QmeoVWV99BJoa9czuxg6AiSyFiyVNNFpcaSMYTQUft785u")
+    # @patch("registry.application.services.service_publisher_service.ServicePublisherService.publish_to_ipfs")
+    # def test_get_service_metadata_ipfs_hash(self, mock_ipfs):
+    #     mock_ipfs.return_value = "QmeoVWV99BJoa9czuxg6AiSyFiyVNNFpcaSMYTQUft785u"
+    #     self.tearDown()
+    #     org_repo.add_item(
+    #         Organization(
+    #             name="test_org",
+    #             org_id="test_org_id",
+    #             uuid="test_org_uuid",
+    #             org_type="organization",
+    #             description="that is the dummy org for testcases",
+    #             short_description="that is the short description",
+    #             url="https://dummy.url",
+    #             contacts=[],
+    #             assets={},
+    #             duns_no=12345678,
+    #             origin="PUBLISHER_DAPP",
+    #             groups=[],
+    #             addresses=[],
+    #             metadata_ipfs_hash="#dummyhashdummyhash"
+    #         )
+    #     )
+    #     service_repo.add_item(
+    #         Service(
+    #             org_uuid="test_org_uuid",
+    #             uuid="test_service_uuid",
+    #             display_name="test_display_name",
+    #             service_id="test_service_id",
+    #             metadata_ipfs_hash="Qasdfghjklqwertyuiopzxcvbnm",
+    #             short_description="test_short_description",
+    #             description="test_long_description",
+    #             project_url="https://test_project_url.com",
+    #             proto={"encoding": "proto", "service_type": "grpc", "model_ipfs_hash": "test_model_ipfs_hash"},
+    #             ranking=1,
+    #             assets={},
+    #             created_on=dt.utcnow()
+    #         )
+    #     )
+    #     service_repo.add_item(
+    #         ServiceState(
+    #             row_id=1000,
+    #             org_uuid="test_org_uuid",
+    #             service_uuid="test_service_uuid",
+    #             state=ServiceStatus.APPROVED.value,
+    #             created_by="dummy_user",
+    #             updated_by="dummy_user",
+    #             created_on=dt.utcnow()
+    #         )
+    #     )
+    #     event = {
+    #         "path": "/org/test_org_uuid/service/test_service_uuid/ipfs_publish",
+    #         "requestContext": {
+    #             "authorizer": {
+    #                 "claims": {
+    #                     "email": "dummy_user1@dummy.io"
+    #                 }
+    #             }
+    #         },
+    #         "httpMethod": "POST",
+    #         "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"}
+    #     }
+    #     response = publish_service_metadata_to_ipfs(event=event, context=None)
+    #     assert (response["statusCode"] == 200)
+    #     response_body = json.loads(response["body"])
+    #     assert (response_body["status"] == "success")
+    #     assert (response_body["data"]["metadata_ipfs_hash"] == "QmeoVWV99BJoa9czuxg6AiSyFiyVNNFpcaSMYTQUft785u")
 
     def test_submit_service_for_approval(self):
         self.tearDown()
