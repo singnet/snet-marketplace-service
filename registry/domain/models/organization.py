@@ -34,7 +34,7 @@ class Organization:
         for key in self.__assets:
             assets[key] = self.__assets[key]["ipfs_hash"]
         return {
-            "name": self.__name,
+            "org_name": self.__name,
             "org_id": self.__id,
             "org_type": self.__org_type,
             "description": {
