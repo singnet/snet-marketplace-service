@@ -14,7 +14,7 @@ from registry.exceptions import InvalidServiceState, ServiceProtoNotFoundExcepti
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.models.service_state import ServiceState
 from common.ipfs_util import IPFSUtil
-from common.utils import json_to_file
+from common.utils import json_to_file, hash_to_bytesuri
 from common.constant import StatusCode
 from common.logger import get_logger
 
@@ -102,7 +102,8 @@ class ServicePublisherService:
             service_metadata = service.to_metadata()
             filename = f"{METADATA_FILE_PATH}/{service.uuid}_service_metadata.json"
             service.metadata_ipfs_hash = ServicePublisherService.publish_to_ipfs(filename, service_metadata)
-            return {"service_metadata": service.to_metadata(), "metadata_ipfs_hash": service.metadata_ipfs_hash}
+            return {"service_metadata": service.to_metadata(),
+                    "metadata_ipfs_hash": hash_to_bytesuri(service.metadata_ipfs_hash)}
         logger.info(f"Service status needs to be {ServiceStatus.APPROVED.value} to be eligible for publishing.")
         raise InvalidServiceState()
 
@@ -111,7 +112,8 @@ class ServicePublisherService:
         if proto_url is None:
             raise ServiceProtoNotFoundException
         ipfs_client = IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
-        asset_ipfs_hash = self.publish_proto_in_ipfs(ipfs_client, proto_url, f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}")
+        asset_ipfs_hash = self.publish_proto_in_ipfs(ipfs_client, proto_url,
+                                                     f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}")
         service.assets["proto_files"]["ipfs_hash"] = asset_ipfs_hash
         service.proto = {
             "model_ipfs_hash": asset_ipfs_hash,
