@@ -215,3 +215,12 @@ def datetime_to_string(given_time):
 
 def date_time_for_filename():
     return datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
+
+
+def hash_to_bytesuri(s):
+    """
+    Convert in and from bytes uri format used in Registry contract
+    """
+    # TODO: we should pad string with zeros till closest 32 bytes word because of a bug in processReceipt (in snet_cli.contract.process_receipt)
+    s = "ipfs://" + s
+    return s.encode("ascii").ljust(32 * (len(s)//32 + 1), b"\0")
