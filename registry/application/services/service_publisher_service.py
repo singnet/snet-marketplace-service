@@ -103,7 +103,7 @@ class ServicePublisherService:
             filename = f"{METADATA_FILE_PATH}/{service.uuid}_service_metadata.json"
             service.metadata_ipfs_hash = ServicePublisherService.publish_to_ipfs(filename, service_metadata)
             return {"service_metadata": service.to_metadata(),
-                    "metadata_ipfs_hash": hash_to_bytesuri(service.metadata_ipfs_hash)}
+                    "metadata_ipfs_hash": "ipfs://"+service.metadata_ipfs_hash}
         logger.info(f"Service status needs to be {ServiceStatus.APPROVED.value} to be eligible for publishing.")
         raise InvalidServiceState()
 
