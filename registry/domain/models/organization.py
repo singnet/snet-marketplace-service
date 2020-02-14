@@ -70,7 +70,7 @@ class Organization:
             "origin": self.__origin,
             "contacts": self.__contacts,
             "assets": self.__assets,
-            "metadata_ipfs_hash": self.__metadata_ipfs_hash,
+            "metadata_ipfs_hash": "ipfs://"+self.__metadata_ipfs_hash,
             "groups": [group.to_dict() for group in self.__groups],
             "org_address": {
                 "mail_address_same_hq_address": mail_address_same_hq_address,
