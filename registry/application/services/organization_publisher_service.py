@@ -8,8 +8,6 @@ from common.logger import get_logger
 from registry.config import NOTIFICATION_ARN, PUBLISHER_PORTAL_DAPP_URL, REGION_NAME
 from registry.constants import OrganizationStatus, OrganizationMemberStatus, Role
 from registry.domain.factory.organization_factory import OrganizationFactory
-from registry.domain.models.organization import OrganizationState
-from registry.exceptions import OrganizationNotFoundException
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 
 org_repo = OrganizationPublisherRepository()

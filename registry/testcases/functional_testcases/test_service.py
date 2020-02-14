@@ -1,17 +1,16 @@
 import json
-from unittest import TestCase
 from datetime import datetime as dt
-from unittest.mock import patch
+from unittest import TestCase
+
+from common.constant import StatusCode
 from registry.application.handlers.service_handlers import verify_service_id, save_service, create_service, \
-    get_services_for_organization, get_service_for_service_uuid, publish_service_metadata_to_ipfs, \
-    submit_service_for_approval, save_transaction_hash_for_published_service
-from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
-from registry.infrastructure.repositories.service_repository import ServiceRepository
+    get_services_for_organization, get_service_for_service_uuid, submit_service_for_approval, \
+    save_transaction_hash_for_published_service
+from registry.constants import ServiceAvailabilityStatus, ServiceStatus
 from registry.infrastructure.models import Organization, Service, ServiceState, ServiceGroup, \
     ServiceReviewHistory
-from registry.constants import ServiceAvailabilityStatus, ServiceStatus
-from common.constant import StatusCode
-from uuid import uuid4
+from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
+from registry.infrastructure.repositories.service_repository import ServiceRepository
 
 org_repo = OrganizationPublisherRepository()
 service_repo = ServiceRepository()
@@ -38,7 +37,7 @@ class TestService(TestCase):
                 origin="PUBLISHER_DAPP",
                 groups=[],
                 addresses=[],
-                metadata_ipfs_hash="#dummyhashdummyhash"
+                metadata_ipfs_uri="#dummyhashdummyhash"
             )
         )
         service_repo.add_item(
@@ -112,7 +111,7 @@ class TestService(TestCase):
                 origin="PUBLISHER_DAPP",
                 groups=[],
                 addresses=[],
-                metadata_ipfs_hash="#dummyhashdummyhash"
+                metadata_ipfs_uri="#dummyhashdummyhash"
             )
         )
         event = {
@@ -150,7 +149,7 @@ class TestService(TestCase):
                 origin="PUBLISHER_DAPP",
                 groups=[],
                 addresses=[],
-                metadata_ipfs_hash="#dummyhashdummyhash"
+                metadata_ipfs_uri="#dummyhashdummyhash"
             )
         )
         service_repo.add_item(
@@ -239,7 +238,7 @@ class TestService(TestCase):
                 origin="PUBLISHER_DAPP",
                 groups=[],
                 addresses=[],
-                metadata_ipfs_hash="#dummyhashdummyhash"
+                metadata_ipfs_uri="#dummyhashdummyhash"
             )
         )
         service_repo.add_item(
@@ -372,7 +371,7 @@ class TestService(TestCase):
                 origin="PUBLISHER_DAPP",
                 groups=[],
                 addresses=[],
-                metadata_ipfs_hash="#dummyhashdummyhash"
+                metadata_ipfs_uri="#dummyhashdummyhash"
             )
         )
         service_repo.add_item(
@@ -504,7 +503,7 @@ class TestService(TestCase):
                 origin="PUBLISHER_DAPP",
                 groups=[],
                 addresses=[],
-                metadata_ipfs_hash="#dummyhashdummyhash"
+                metadata_ipfs_uri="#dummyhashdummyhash"
             )
         )
         service_repo.add_item(
@@ -582,7 +581,7 @@ class TestService(TestCase):
                 origin="PUBLISHER_DAPP",
                 groups=[],
                 addresses=[],
-                metadata_ipfs_hash="#dummyhashdummyhash"
+                metadata_ipfs_uri="#dummyhashdummyhash"
             )
         )
         service_repo.add_item(

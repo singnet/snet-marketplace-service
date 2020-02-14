@@ -1,9 +1,8 @@
-from datetime import datetime as dt
 from sqlalchemy import Column, Integer, ForeignKey, UniqueConstraint
+from sqlalchemy import func
 from sqlalchemy.dialects.mysql import JSON, TIMESTAMP, VARCHAR
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from sqlalchemy import func
 
 Base = declarative_base()
 
@@ -21,7 +20,7 @@ class Organization(Base):
     duns_no = Column("duns_no", VARCHAR(36))
     contacts = Column("contacts", JSON, nullable=False)
     assets = Column("assets", JSON, nullable=False)
-    metadata_ipfs_hash = Column("metadata_ipfs_hash", VARCHAR(255))
+    metadata_ipfs_uri = Column("metadata_ipfs_uri", VARCHAR(255))
     org_state = relationship("OrganizationState", backref='organization', lazy='joined')
     groups = relationship("Group", backref='organization', lazy='joined')
     addresses = relationship("OrganizationAddress", backref='organization', lazy='joined')
