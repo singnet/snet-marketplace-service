@@ -2,11 +2,12 @@ import base64
 from datetime import datetime
 
 from common import boto_utils
-from registry.config import REGION_NAME, METADATA_FILE_PATH, ASSET_BUCKET
+from registry.config import REGION_NAME, METADATA_FILE_PATH, ASSET_BUCKET, ALLOWED_ORIGIN
 from registry.domain.models.group import Group
 from registry.domain.models.organization import Organization, OrganizationState
 from registry.domain.models.organization_address import OrganizationAddress
 from registry.domain.models.organization_member import OrganizationMember
+from registry.exceptions import InvalidOrigin
 
 
 class OrganizationFactory:
@@ -43,6 +44,8 @@ class OrganizationFactory:
         url = payload["url"]
         duns_no = payload["duns_no"]
         origin = payload["origin"]
+        if origin not in ALLOWED_ORIGIN:
+            raise InvalidOrigin()
         contacts = payload["contacts"]
         assets = {}
         metadata_ipfs_uri = payload["metadata_ipfs_uri"]
