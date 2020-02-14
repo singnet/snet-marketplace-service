@@ -13,7 +13,7 @@ from registry.testcases.test_variables import RAW_IMAGE_FILE, ORG_GROUPS, ORG_PA
     ORG_RESPONSE_MODEL
 
 ORIGIN = "PUBLISHER_DAPP"
-ORG_PAYLOAD_REQUIRED_KEYS = ["org_id", "org_uuid", "org_name", "origin", "org_type", "metadata_ipfs_hash",
+ORG_PAYLOAD_REQUIRED_KEYS = ["org_id", "org_uuid", "org_name", "origin", "org_type", "metadata_ipfs_uri",
                              "description", "short_description", "url", "contacts", "assets",
                              "mail_address_same_hq_address", "addresses", "duns_no"]
 
@@ -108,7 +108,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
                                "", [], {}, "", "", [], [], [], []),
             username, OrganizationStatus.APPROVED.value)
         response = OrganizationPublisherService(test_org_id, username).publish_org_to_ipfs()
-        self.assertEqual(response["metadata_ipfs_hash"], "ipfs://Q12PWP")
+        self.assertEqual(response["metadata_ipfs_uri"], "ipfs://Q12PWP")
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))

@@ -2,11 +2,11 @@ import base64
 from datetime import datetime
 
 from common import boto_utils
-from registry.config import REGION_NAME, METADATA_FILE_PATH, ASSET_BUCKET, ALLOWED_ORIGIN
+from registry.config import REGION_NAME, METADATA_FILE_PATH, ASSET_BUCKET
 from registry.domain.models.group import Group
 from registry.domain.models.organization import Organization, OrganizationState
-from registry.domain.models.organization_member import OrganizationMember
 from registry.domain.models.organization_address import OrganizationAddress
+from registry.domain.models.organization_member import OrganizationMember
 
 
 class OrganizationFactory:
@@ -45,13 +45,13 @@ class OrganizationFactory:
         origin = payload["origin"]
         contacts = payload["contacts"]
         assets = {}
-        metadata_ipfs_hash = payload["metadata_ipfs_hash"]
+        metadata_ipfs_uri = payload["metadata_ipfs_uri"]
         groups = OrganizationFactory.group_domain_entity_from_group_list_payload(payload["groups"])
         addresses = OrganizationFactory\
             .domain_address_entity_from_address_list_payload(payload["org_address"]["addresses"])
         organization = Organization(
             org_uuid, org_id, org_name, org_type, origin, description, short_description, url, contacts,
-            assets, metadata_ipfs_hash, duns_no, groups, addresses, [], [])
+            assets, metadata_ipfs_uri, duns_no, groups, addresses, [], [])
         organization.setup_id()
         organization.set_assets(extract_and_upload_assets(organization.uuid, payload.get("assets", {})))
         return organization
@@ -106,7 +106,7 @@ class OrganizationFactory:
             url=organization_repo_model.url,
             contacts=organization_repo_model.contacts,
             assets=organization_repo_model.assets,
-            metadata_ipfs_hash=organization_repo_model.metadata_ipfs_hash,
+            metadata_ipfs_uri=organization_repo_model.metadata_ipfs_uri,
             duns_no=organization_repo_model.duns_no,
             groups=OrganizationFactory.parse_group_data_model(organization_repo_model.groups),
             addresses=OrganizationFactory.parse_organization_address_data_model(organization_repo_model.addresses),

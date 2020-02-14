@@ -36,7 +36,7 @@ class OrganizationPublisherRepository(BaseRepository):
     def store_ipfs_hash(self, organization, username):
         organization_db_model = self.session.query(Organization).filter(Organization.uuid == organization.uuid).first()
         organization_db_model.assets = organization.assets
-        organization_db_model.metadata_ipfs_hash = organization.metadata_ipfs_hash
+        organization_db_model.metadata_ipfs_uri = organization.metadata_ipfs_uri
         organization_db_model.org_state[0].updated_on = datetime.utcnow()
         organization_db_model.org_state[0].updated_by = username
         self.session.commit()
@@ -90,7 +90,7 @@ class OrganizationPublisherRepository(BaseRepository):
             org_type=organization.org_type, origin=organization.origin, description=organization.description,
             short_description=organization.short_description, url=organization.url,
             duns_no=organization.duns_no, contacts=organization.contacts, assets=organization.assets,
-            metadata_ipfs_hash=organization.metadata_ipfs_hash, org_state=org_state, groups=groups, addresses=addresses
+            metadata_ipfs_uri=organization.metadata_ipfs_uri, org_state=org_state, groups=groups, addresses=addresses
         ))
 
         self.add_item(OrganizationMember(
@@ -110,7 +110,7 @@ class OrganizationPublisherRepository(BaseRepository):
         organization_db_model.duns_no = organization.duns_no
         organization_db_model.contacts = organization.contacts
         organization_db_model.assets = organization.assets
-        organization_db_model.metadata_ipfs_hash = organization.metadata_ipfs_hash
+        organization_db_model.metadata_ipfs_uri = organization.metadata_ipfs_uri
         organization_db_model.org_state[0].state = state
         organization_db_model.org_state[0].updated_on = current_time
         organization_db_model.org_state[0].updated_by = username
