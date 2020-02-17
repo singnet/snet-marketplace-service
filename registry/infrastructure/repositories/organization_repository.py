@@ -11,7 +11,18 @@ from registry.infrastructure.repositories.base_repository import BaseRepository
 
 class OrganizationPublisherRepository(BaseRepository):
 
-    def get_org(self, org_uuid):
+    def get_org(self, status):
+        organization_query = self.session.query(Organization)
+        if status is not None:
+            organization_query = organization_query\
+                .join(OrganizationState, Organization.uuid == OrganizationState.org_uuid)\
+                .filter(OrganizationState.state == status)
+        organizations = organization_query.all()
+        organization_domain_entity = OrganizationFactory.org_domain_entity_from_repo_model_list(organizations)
+        self.session.commit()
+        return organization_domain_entity
+
+    def get_org_for_org_uuid(self, org_uuid):
         organization = self.session.query(Organization).filter(Organization.uuid == org_uuid).first()
         if organization is None:
             raise OrganizationNotFoundException()
