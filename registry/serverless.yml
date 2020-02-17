@@ -331,7 +331,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - http:
-          method: GET
+          method: POST
           path: /org/{org_uuid}/member/invite
           authorizer:
             name: user-authorizer
@@ -432,7 +432,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - http:
-          method: GET
+          method: POST
           path: /org/{org_uuid}/member/publish
           authorizer:
             name: user-authorizer
@@ -467,7 +467,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - http:
-          method: GET
+          method: POST
           path: /org/{org_uuid}/member/delete
           authorizer:
             name: user-authorizer
