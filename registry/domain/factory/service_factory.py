@@ -70,6 +70,7 @@ class ServiceFactory:
             endpoints=service_group.endpoints,
             daemon_address=service_group.daemon_address,
             free_calls=service_group.free_calls,
+            free_call_signer_address=service_group.free_call_signer_address,
             created_on=dt.utcnow(),
             updated_on=dt.utcnow()
         )

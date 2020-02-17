@@ -24,7 +24,7 @@ ORG_ADDRESS = {
         }
     ]
 }
-ORIGIN = "PUBLISHER_DAPP"
+ORIGIN = "PUBLISHER"
 ORG_CONTACTS = [
     {
         "contact_type": "support",
@@ -71,9 +71,9 @@ ORG_PAYLOAD_MODEL = json.dumps({
     "org_uuid": "",
     "org_name": "test_org",
     "org_type": "individual",
-    "metadata_ipfs_hash": "Q12PWP",
+    "metadata_ipfs_uri": "ipfs://Q12PWP",
     "duns_no": "123456789",
-    "origin": "PUBLISHER_DAPP",
+    "origin": ORIGIN,
     "description": "this is the dummy org for testcases",
     "short_description": "this is the short description",
     "url": "https://dummy.dummy",
@@ -102,7 +102,7 @@ ORG_RESPONSE_MODEL = json.dumps({
     "short_description": "this is the short description",
     "url": "https://dummy.dummy",
     "duns_no": "123456789",
-    "origin": "PUBLISHER_DAPP",
+    "origin": ORIGIN,
     "contacts": [
         {
             "phone": "1234567890",
@@ -120,7 +120,7 @@ ORG_RESPONSE_MODEL = json.dumps({
             "url": ""
         }
     },
-    "metadata_ipfs_hash": "Q12PWP",
+    "metadata_ipfs_uri": "ipfs://Q12PWP",
     "groups": json.loads(ORG_GROUPS),
     "org_address": {
         "mail_address_same_hq_address": False,

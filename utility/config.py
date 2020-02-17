@@ -23,16 +23,7 @@ SLACK_HOOK = {
         'Content-Type': 'application/json'
     }
 }
-IPFS_URL = {
-    'url': '',
-    'port': '80',
-
-}
-ALLOWED_ORIGIN = ["PUBLISHER"]
-METADATA_FILE_PATH = "/tmp"
-REGION_NAME = "us-east-1"
-ASSET_BUCKET = ""
-ASSET_DIR = "/tmp"
-NOTIFICATION_ARN = ""
-PUBLISHER_PORTAL_DAPP_URL = ""
-
+REGION_NAME = ""
+ORG_BUCKET = ""
+ALLOWED_CONTENT_TYPE = []
+FILE_EXTENSION = {}

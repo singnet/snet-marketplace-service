@@ -11,7 +11,7 @@ from registry.constants import OrganizationAddressType
 
 class Organization:
     def __init__(self, uuid, org_id, name, org_type, origin, description, short_description, url,
-                 contacts, assets, metadata_ipfs_hash, duns_no, groups, addresses, org_state, members):
+                 contacts, assets, metadata_ipfs_uri, duns_no, groups, addresses, org_state, members):
         self.__name = name
         self.__id = org_id
         self.__uuid = uuid
@@ -23,7 +23,7 @@ class Organization:
         self.__origin = origin
         self.__contacts = contacts
         self.__assets = assets
-        self.__metadata_ipfs_hash = metadata_ipfs_hash
+        self.__metadata_ipfs_uri = metadata_ipfs_uri
         self.__groups = groups
         self.__addresses = addresses
         self.__state = org_state
@@ -32,9 +32,9 @@ class Organization:
     def to_metadata(self):
         assets = {}
         for key in self.__assets:
-            assets[key] = self.__assets[key]["ipfs_hash"]
+            assets[key] = self.__assets[key]["ipfs_uri"]
         return {
-            "name": self.__name,
+            "org_name": self.__name,
             "org_id": self.__id,
             "org_type": self.__org_type,
             "description": {
@@ -70,7 +70,7 @@ class Organization:
             "origin": self.__origin,
             "contacts": self.__contacts,
             "assets": self.__assets,
-            "metadata_ipfs_hash": self.__metadata_ipfs_hash,
+            "metadata_ipfs_uri": self.__metadata_ipfs_uri,
             "groups": [group.to_dict() for group in self.__groups],
             "org_address": {
                 "mail_address_same_hq_address": mail_address_same_hq_address,
@@ -131,8 +131,8 @@ class Organization:
         return self.__assets
 
     @property
-    def metadata_ipfs_hash(self):
-        return self.__metadata_ipfs_hash
+    def metadata_ipfs_uri(self):
+        return self.__metadata_ipfs_uri
 
     @property
     def groups(self):
@@ -159,7 +159,7 @@ class Organization:
                 with open(filepath, 'wb') as asset_file:
                     asset_file.write(response.content)
                 asset_ipfs_hash = ipfs_utils.write_file_in_ipfs(filepath)
-                self.__assets[asset_type]["ipfs_hash"] = asset_ipfs_hash
+                self.__assets[asset_type]["ipfs_uri"] = f"ipfs://{asset_ipfs_hash}"
 
     def publish_to_ipfs(self):
         self.publish_assets()
@@ -167,7 +167,8 @@ class Organization:
         metadata = self.to_metadata()
         filename = f"{METADATA_FILE_PATH}/{self.__uuid}_org_metadata.json"
         json_to_file(metadata, filename)
-        self.__metadata_ipfs_hash = ipfs_utils.write_file_in_ipfs(filename, wrap_with_directory=False)
+        ipfs_hash = ipfs_utils.write_file_in_ipfs(filename, wrap_with_directory=False)
+        self.__metadata_ipfs_uri = f"ipfs://{ipfs_hash}"
 
     def setup_id(self):
         if self.is_org_uuid_set():

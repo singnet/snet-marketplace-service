@@ -2,22 +2,37 @@ import json
 import unittest
 from unittest.mock import Mock, patch
 from uuid import uuid4
+
 from registry.application.services.organization_publisher_service import OrganizationPublisherService, org_repo
-from registry.constants import OrganizationStatus, Role
-from registry.domain.models.organization import Organization as DomainOrganization
+from registry.constants import OrganizationStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
+from registry.domain.models.organization import Organization as DomainOrganization
 from registry.infrastructure.models import Organization, OrganizationMember, OrganizationState, Group, \
     OrganizationAddress
-from registry.testcases.test_variables import RAW_IMAGE_FILE, ORG_ADDRESS, ORG_GROUPS, ORG_PAYLOAD_MODEL, \
+from registry.testcases.test_variables import RAW_IMAGE_FILE, ORG_GROUPS, ORG_PAYLOAD_MODEL, \
     ORG_RESPONSE_MODEL
 
 ORIGIN = "PUBLISHER_DAPP"
-ORG_PAYLOAD_REQUIRED_KEYS = ["org_id", "org_uuid", "org_name", "origin", "org_type", "metadata_ipfs_hash",
+ORG_PAYLOAD_REQUIRED_KEYS = ["org_id", "org_uuid", "org_name", "origin", "org_type", "metadata_ipfs_uri",
                              "description", "short_description", "url", "contacts", "assets",
                              "mail_address_same_hq_address", "addresses", "duns_no"]
 
 
 class TestOrganizationPublisherService(unittest.TestCase):
+
+    @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
+    @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
+    def test_get_org_for_admin(self, mock_boto, mock_ipfs):
+        test_org_uuid = uuid4().hex
+        username = "dummy@snet.io"
+        org_repo.add_organization(
+            DomainOrganization(test_org_uuid, "org_id", "org_dummy", "ORGANIZATION", ORIGIN, "", "",
+                               "", [], {}, "", "", [], [], [], []),
+            username, OrganizationStatus.APPROVED.value)
+        org = OrganizationPublisherService(None, None).get_for_admin({"status": OrganizationStatus.APPROVED.value})
+        if len(org) != 1:
+            assert False
+        assert True
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
@@ -98,7 +113,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         expected_organization["state"]["state"] = OrganizationStatus.APPROVAL_PENDING.value
         self.assertDictEqual(expected_organization, org_dict)
 
-    @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
+    @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q12PWP")))
     def test_org_publish_to_ipfs(self, mock_ipfs_utils):
         test_org_id = uuid4().hex
         username = "dummy@snet.io"
@@ -107,7 +122,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
                                "", [], {}, "", "", [], [], [], []),
             username, OrganizationStatus.APPROVED.value)
         response = OrganizationPublisherService(test_org_id, username).publish_org_to_ipfs()
-        self.assertEqual(response["metadata_ipfs_hash"], "Q3E12")
+        self.assertEqual(response["metadata_ipfs_uri"], "ipfs://Q12PWP")
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))

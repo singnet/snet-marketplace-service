@@ -90,9 +90,17 @@ class Service:
     def proto(self):
         return self._proto
 
+    @proto.setter
+    def proto(self, proto):
+        self._proto = proto
+
     @property
     def assets(self):
         return self._assets
+
+    @assets.setter
+    def assets(self, assets):
+        self._assets = assets
 
     @property
     def ranking(self):
