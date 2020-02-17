@@ -8,7 +8,7 @@ service: common-utility
 provider:
   name: aws
   runtime: python3.6
-  description: utility oeprations for snet
+  description: utility operations for snet
   memorySize: 512
   timeout: 30
   region: ${file(./config.${self:provider.stage}.json):REGION}
@@ -23,7 +23,7 @@ provider:
 
 custom:
   pythonRequirements:
-    fileName: common_utility/requirements.txt
+    fileName: utility/requirements.txt
     dockerizePip: true
     useDownloadCache: true
     useStaticCache: true
@@ -36,7 +36,7 @@ custom:
 
 functions:
   upload:
-    handler: handlers.upload_handlers.upload_file
+    handler: utility.application.handlers.upload_handlers.upload_file
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -49,6 +49,11 @@ functions:
       - http:
           method: POST
           path: /upload
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:

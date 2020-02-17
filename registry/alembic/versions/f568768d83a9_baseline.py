@@ -1,16 +1,16 @@
 """baseline
 
-Revision ID: 54f83513e8f6
+Revision ID: f568768d83a9
 Revises: 
-Create Date: 2020-02-07 13:24:51.697860
+Create Date: 2020-02-14 12:48:07.663775
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = '54f83513e8f6'
+revision = 'f568768d83a9'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -30,7 +30,7 @@ def upgrade():
     sa.Column('duns_no', mysql.VARCHAR(length=36), nullable=True),
     sa.Column('contacts', mysql.JSON(), nullable=False),
     sa.Column('assets', mysql.JSON(), nullable=False),
-    sa.Column('metadata_ipfs_hash', mysql.VARCHAR(length=255), nullable=True),
+    sa.Column('metadata_ipfs_uri', mysql.VARCHAR(length=255), nullable=True),
     sa.PrimaryKeyConstraint('uuid')
     )
     op.create_table('service_review_history',
@@ -137,7 +137,6 @@ def upgrade():
     sa.Column('updated_on', mysql.TIMESTAMP(), nullable=False),
     sa.ForeignKeyConstraint(['service_uuid'], ['service.uuid'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('row_id'),
-    sa.UniqueConstraint('group_id'),
     sa.UniqueConstraint('org_uuid', 'service_uuid', 'group_id', name='uq_org_srvc_grp')
     )
     op.create_table('service_state',
