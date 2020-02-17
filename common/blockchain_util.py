@@ -57,6 +57,12 @@ class BlockChainUtil(object):
         signature = self.web3_object.eth.account.signHash(defunct_hash_message(message), signer_key)
         return signature.signature.hex()
 
+    def generate_signature_bytes(self, data_types, values, signer_key):
+        signer_key = "0x" + signer_key if not signer_key.startswith("0x") else signer_key
+        message = web3.Web3.soliditySha3(data_types, values)
+        signature = self.web3_object.eth.account.signHash(defunct_hash_message(message), signer_key)
+        return bytes(signature.signature)
+
     def get_nonce(self, address):
         """ transaction count includes pending transaction also. """
         nonce = self.web3_object.eth.getTransactionCount(address)
