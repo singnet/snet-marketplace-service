@@ -110,7 +110,8 @@ def free_call_token_handler(event, context):
     org_id = payload_dict["org_id"],
     service_id = payload_dict["service_id"],
     group_id = payload_dict["group_id"]
-    token_data = signer.token_for_free_call(email, org_id, service_id, group_id)
+    public_key = payload_dict["public_key"]
+    token_data = signer.token_for_free_call(email, org_id, service_id, group_id,public_key)
 
     return generate_lambda_response(200, {
         "status": "success",

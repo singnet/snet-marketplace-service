@@ -17,7 +17,7 @@ from signer.stubs import state_service_pb2, state_service_pb2_grpc
 
 logger = get_logger(__name__)
 
-FREE_CALL_EXPIRY=1000
+FREE_CALL_EXPIRY=172800
 
 class Signer:
     def __init__(self, net_id):
@@ -123,6 +123,8 @@ class Signer:
                     "snet-payment-channel-signature-bin": signature,
                     "snet-current-block-number": current_block_no,
                     "snet-payment-type": "free-call",
+                    "snet-free-call-auth-token-bin":"",
+                    "snet-free-call-token-expiry-block":0
                 }
             else:
                 raise Exception("Free calls expired for username %s.",
@@ -250,11 +252,11 @@ class Signer:
         raise Exception("Unable to fetch daemon Endpoint information for service %s under organization %s for %s group.",
                         service_id, org_id, group_id)
 
-    def token_for_free_call(self, email, org_id, service_id, group_id):
-        public_key_checksum = Web3.toChecksumAddress(SIGNER_ADDRESS)
+    def token_for_free_call(self, email, org_id, service_id, group_id,user_public_key):
+        signer_public_key_checksum = Web3.toChecksumAddress(SIGNER_ADDRESS)
         current_block_number = self.obj_blockchain_utils.get_current_block_no()
         token_for_free_call = self.obj_blockchain_utils.generate_signature_bytes(["string", "address", "uint256"],
-                                                                                 [email, public_key_checksum,
+                                                                                 [email, signer_public_key_checksum,
                                                                                   current_block_number],
                                                                                  SIGNER_KEY)
 
@@ -270,11 +272,12 @@ class Signer:
 
         if self._is_free_call_available(email, token_for_free_call, token_issue_date_block, signature,
                                         current_block_number, daemon_endpoint):
+            expiry_date_block = current_block_number + FREE_CALL_EXPIRY
             token_with_expiry_for_free_call = self.obj_blockchain_utils.generate_signature_bytes(
                 ["string", "address", "uint256"],
-                [email, public_key_checksum,
-                 current_block_number + FREE_CALL_EXPIRY],
+                [email, Web3.toChecksumAddress(user_public_key),
+                 expiry_date_block],
                 SIGNER_KEY)
 
         return {"token_with_expiry_for_free_call": token_with_expiry_for_free_call,
-                "token_issue_date_block": token_issue_date_block}
+                "token_issue_date_block": expiry_date_block}
