@@ -32,7 +32,7 @@ class Organization:
     def to_metadata(self):
         assets = {}
         for key in self.__assets:
-            assets[key] = self.__assets[key]["ipfs_hash"]
+            assets[key] = self.__assets[key]["ipfs_uri"]
         return {
             "org_name": self.__name,
             "org_id": self.__id,
@@ -159,7 +159,7 @@ class Organization:
                 with open(filepath, 'wb') as asset_file:
                     asset_file.write(response.content)
                 asset_ipfs_hash = ipfs_utils.write_file_in_ipfs(filepath)
-                self.__assets[asset_type]["ipfs_hash"] = asset_ipfs_hash
+                self.__assets[asset_type]["ipfs_uri"] = f"ipfs://{asset_ipfs_hash}"
 
     def publish_to_ipfs(self):
         self.publish_assets()

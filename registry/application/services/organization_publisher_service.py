@@ -21,6 +21,11 @@ class OrganizationPublisherService:
         self.username = username
         self.boto_utils = BotoUtils(region_name=REGION_NAME)
 
+    def get_for_admin(self, params):
+        status = params.get("status", None)
+        organizations = org_repo.get_org(status)
+        return [org.to_dict() for org in organizations]
+
     def get_all_org_for_user(self):
         logger.info(f"get organization for user: {self.username}")
         organizations = org_repo.get_org_for_user(username=self.username)
@@ -49,7 +54,7 @@ class OrganizationPublisherService:
 
     def publish_org_to_ipfs(self):
         logger.info(f"publish organization to ipfs org_uuid: {self.org_uuid}")
-        organization = org_repo.get_org(self.org_uuid)
+        organization = org_repo.get_org_for_org_uuid(self.org_uuid)
         organization.publish_to_ipfs()
         org_repo.store_ipfs_hash(organization, self.username)
         return organization.to_dict()
@@ -117,7 +122,7 @@ class OrganizationPublisherService:
             org_member.set_invited_on(current_time)
             org_member.set_updated_on(current_time)
 
-        organization = org_repo.get_org(self.org_uuid)
+        organization = org_repo.get_org_for_org_uuid(self.org_uuid)
         org_name = organization.name
         self._send_email_notification_for_inviting_organization_member(eligible_invite_member_list, org_name)
         org_repo.add_member(eligible_invite_member_list)

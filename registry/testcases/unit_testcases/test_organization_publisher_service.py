@@ -22,6 +22,20 @@ class TestOrganizationPublisherService(unittest.TestCase):
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
+    def test_get_org_for_admin(self, mock_boto, mock_ipfs):
+        test_org_uuid = uuid4().hex
+        username = "dummy@snet.io"
+        org_repo.add_organization(
+            DomainOrganization(test_org_uuid, "org_id", "org_dummy", "ORGANIZATION", ORIGIN, "", "",
+                               "", [], {}, "", "", [], [], [], []),
+            username, OrganizationStatus.APPROVED.value)
+        org = OrganizationPublisherService(None, None).get_for_admin({"status": OrganizationStatus.APPROVED.value})
+        if len(org) != 1:
+            assert False
+        assert True
+
+    @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
+    @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
     def test_add_organization_draft(self, mock_boto, mock_ipfs):
         username = "dummy@dummy.com"
         payload = json.loads(ORG_PAYLOAD_MODEL)
