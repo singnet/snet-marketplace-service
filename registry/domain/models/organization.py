@@ -148,6 +148,9 @@ class Organization:
     def set_state(self, state):
         self.__state = state
 
+    def get_status(self):
+        return self.__state.state
+
     def publish_assets(self):
         ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
         for asset_type in self.__assets:

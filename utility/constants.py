@@ -35,7 +35,7 @@ UPLOAD_TYPE_DETAILS = {
     UploadType.SERVICE_PROTO_FILES.value: {
         "required_query_params": ["org_uuid", "service_uuid"],
         "bucket": ORG_BUCKET,
-        "bucket_path": "{}/services/{}/assets/{}_proto_files.{}",
+        "bucket_path": "{}/services/{}/proto/{}_proto_files.{}",
     }
 }
 
