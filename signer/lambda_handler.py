@@ -103,6 +103,7 @@ def request_handler(event, context):
 
 @handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def free_call_token_handler(event, context):
+    logger.info(f"Request for freecall token event {event}")
     signer = Signer(net_id=NET_ID)
     payload_dict = event.get("queryStringParameters")
     email = event["requestContext"]["authorizer"]["claims"]["email"]
@@ -111,9 +112,9 @@ def free_call_token_handler(event, context):
     group_id = unquote(payload_dict["group_id"])
     public_key = payload_dict["public_key"]
     logger.info(
-        f"Free call token generation for email:{email} org_id:{org_id} group_id:{group_id} public_key:{public_key}")
+        f"Free call token generation for email:{email} org_id:{org_id} service_id:{service_id} group_id:{group_id} public_key:{public_key}")
 
-    token_data = signer.token_for_free_call(email, org_id, service_id, group_id,public_key)
+    token_data = signer.token_for_free_call(email, org_id, service_id, group_id, public_key)
 
     return generate_lambda_response(200, {
         "status": "success",
