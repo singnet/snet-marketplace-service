@@ -107,8 +107,8 @@ def free_call_token_handler(event, context):
     signer = Signer(net_id=NET_ID)
     payload_dict = event.get("queryStringParameters")
     email = event["requestContext"]["authorizer"]["claims"]["email"]
-    org_id = payload_dict["org_id"],
-    service_id = payload_dict["service_id"],
+    org_id = payload_dict["org_id"]
+    service_id = payload_dict["service_id"]
     group_id = unquote(payload_dict["group_id"])
     public_key = payload_dict["public_key"]
     logger.info(
