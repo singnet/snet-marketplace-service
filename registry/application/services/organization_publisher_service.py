@@ -43,13 +43,28 @@ class OrganizationPublisherService:
         logger.info(f"add organization draft for user: {self.username}")
         organization = OrganizationFactory.org_domain_entity_from_payload(payload)
         logger.info(f"assigned org_uuid : {self.org_uuid}")
-        org_repo.store_organization(organization, self.username, OrganizationStatus.DRAFT.value)
+        if self._is_onboarding_approved():
+            org_state = OrganizationStatus.APPROVED.value
+        else:
+            org_state = OrganizationStatus.DRAFT.value
+        org_repo.store_organization(organization, self.username, org_state)
         return "OK"
+
+    def _is_onboarding_approved(self):
+        organization = org_repo.get_org_for_user(self.username)
+        if len(organization) == 1:
+            if organization[0].get_status() == OrganizationStatus.APPROVED.value:
+                return True
+        return False
 
     def submit_org_for_approval(self, payload):
         logger.info(f"submit for approval organization org_uuid: {self.org_uuid}")
         organization = OrganizationFactory.org_domain_entity_from_payload(payload)
-        org_repo.store_organization(organization, self.username, OrganizationStatus.APPROVAL_PENDING.value)
+        if self._is_onboarding_approved():
+            org_state = OrganizationStatus.APPROVED.value
+        else:
+            org_state = OrganizationStatus.APPROVAL_PENDING.value
+        org_repo.store_organization(organization, self.username, org_state)
         return "OK"
 
     def publish_org_to_ipfs(self):
