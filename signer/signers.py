@@ -255,9 +255,10 @@ class Signer:
     def token_for_free_call(self, email, org_id, service_id, group_id,user_public_key):
         signer_public_key_checksum = Web3.toChecksumAddress(SIGNER_ADDRESS)
         current_block_number = self.obj_blockchain_utils.get_current_block_no()
+        expiry_date_block = current_block_number + FREE_CALL_EXPIRY
         token_for_free_call = self.obj_blockchain_utils.generate_signature_bytes(["string", "address", "uint256"],
                                                                                  [email, signer_public_key_checksum,
-                                                                                  current_block_number],
+                                                                                  expiry_date_block],
                                                                                  SIGNER_KEY)
 
         signature = self.obj_blockchain_utils.generate_signature_bytes(
@@ -269,7 +270,6 @@ class Signer:
         token_with_expiry_for_free_call = ""
         daemon_endpoint = self._get_daemon_endpoint_for_group(org_id, service_id, group_id)
         logger.info(f"Got daemon endpoint {daemon_endpoint} for org {org_id} service {service_id} group {group_id}")
-        expiry_date_block = current_block_number + FREE_CALL_EXPIRY
 
         if self._is_free_call_available(email, token_for_free_call, expiry_date_block, signature,
                                         current_block_number, daemon_endpoint):
