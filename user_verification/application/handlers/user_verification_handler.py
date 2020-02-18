@@ -4,7 +4,7 @@ from common.constant import StatusCode, ResponseStatus
 from common.exceptions import BadRequestException
 from aws_xray_sdk.core import patch_all
 from user_verification.config import SLACK_HOOK, NETWORK_ID
-from user_verification.services.user_verification_service import UserVerificationService
+from user_verification.application.services.user_verification_service import UserVerificationService
 
 patch_all()
 logger = get_logger(__name__)
