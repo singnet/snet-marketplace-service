@@ -25,3 +25,7 @@ class UserVerificationService:
             raise Exception(response)
 
         return response
+
+    def callback(self, payload):
+        # save the value from payload to DB
+        pass

@@ -15,9 +15,22 @@ user_verification_service = UserVerificationService()
 @handle_exception_with_slack_notification(logger, SLACK_HOOK, NETWORK_ID)
 def initiate(event, context):
     required_keys = ["customerInternalReference", "userReference", "successUrl"]
-    if not validate_dict(event["body"], required_keys):
-        raise BadRequestException()
-
     payload = event["body"]
+    if not validate_dict(payload, required_keys):
+        raise BadRequestException()
     response = user_verification_service.initiate(payload)
     return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response})
+
+
+@handle_exception_with_slack_notification(logger, SLACK_HOOK, NETWORK_ID)
+def callback(event, context):
+    required_keys = ["callBackType", "jumioIdScanReference", "verificationStatus", "idScanStatus", "idScanSource",
+                     "idCheckDataPositions", "idCheckDocumentValidation", "idCheckHologram", "idCheckMRZcode",
+                     "idCheckMicroprint", "idCheckSecurityFeatures", "idCheckSignature", "transactionDate",
+                     "callbackDate"]
+    payload = event["body"]
+    if not validate_dict(payload, required_keys):
+        raise BadRequestException()
+    response = user_verification_service.callback(payload)
+    return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response})
+

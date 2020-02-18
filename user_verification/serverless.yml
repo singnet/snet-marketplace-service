@@ -90,3 +90,35 @@ functions:
                 - X-Api-Key
                 - X-Amz-Security-Token
                 - X-Amz-User-Agent
+
+  callback-user-verification:
+    warmup: true
+    handler: user_verification/handlers.user_verification_handler.callback
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+      tags:
+        Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      events:
+        - http:
+            method: POST
+            path: /user_verification/callback
+            authorizer:
+              name: user-authorizer
+              type: COGNITO_USER_POOLS
+              arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+              identitySource: method.request.header.Authorization
+            cors:
+              origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+              header:
+                - Content-Type
+                - X-Amz-Date
+                - Authorization
+                - X-Api-Key
+                - X-Amz-Security-Token
+                - X-Amz-User-Agent
