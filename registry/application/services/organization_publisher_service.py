@@ -63,7 +63,7 @@ class OrganizationPublisherService:
         if self._is_onboarding_approved():
             org_state = OrganizationStatus.APPROVED.value
         else:
-            org_state = OrganizationStatus.DRAFT.value
+            org_state = OrganizationStatus.APPROVAL_PENDING.value
         org_repo.store_organization(organization, self.username, org_state)
         return "OK"
 
