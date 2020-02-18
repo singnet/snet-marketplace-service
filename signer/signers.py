@@ -280,5 +280,5 @@ class Signer:
                  expiry_date_block],
                 SIGNER_KEY)
 
-        return {"token_with_expiry_for_free_call": token_with_expiry_for_free_call,
+        return {"token_for_free_call": str(token_with_expiry_for_free_call),
                 "token_issue_date_block": expiry_date_block}
