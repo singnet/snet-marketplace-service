@@ -1,17 +1,16 @@
 import json
 import re
 import traceback
+from urllib.parse import unquote
 
 from aws_xray_sdk.core import patch_all
 
-from common.logger import get_logger
-from signer.signers import Signer
-from common.utils import Utils, handle_exception_with_slack_notification
-from common.utils import generate_lambda_response
-from signer.config import NET_ID, SLACK_HOOK, SIGNER_ADDRESS, NETWORK_ID
 from common.constant import StatusCode
 from common.exceptions import BadRequestException
-
+from common.logger import get_logger
+from common.utils import Utils, generate_lambda_response, handle_exception_with_slack_notification
+from signer.config import NETWORK_ID, NET_ID, SIGNER_ADDRESS, SLACK_HOOK
+from signer.signers import Signer
 
 patch_all()
 
@@ -109,8 +108,11 @@ def free_call_token_handler(event, context):
     email = event["requestContext"]["authorizer"]["claims"]["email"]
     org_id = payload_dict["org_id"],
     service_id = payload_dict["service_id"],
-    group_id = payload_dict["group_id"]
+    group_id = unquote(payload_dict["group_id"])
     public_key = payload_dict["public_key"]
+    logger.info(
+        f"Free call token generation for email:{email} org_id:{org_id} group_id:{group_id} public_key:{public_key}")
+
     token_data = signer.token_for_free_call(email, org_id, service_id, group_id,public_key)
 
     return generate_lambda_response(200, {
