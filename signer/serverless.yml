@@ -170,7 +170,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - http:
-          method: POST
+          method: GET
           path: /free-call/token
           authorizer:
             name: user-authorizer
