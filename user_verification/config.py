@@ -19,3 +19,6 @@ SLACK_HOOK = {}
 JUMIO_API_KEY = "abcde1234!@#$"
 JUMIO_BASE_URL = "https://netverify.com/api/v4/"
 
+SUCCESS_REDIRECTION_DAPP_URL = ""
+USER_REFERENCE_ID_NAMESPACE = "singularitynet"
+

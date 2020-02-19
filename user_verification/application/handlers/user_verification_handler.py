@@ -13,17 +13,22 @@ user_verification_service = UserVerificationService()
 
 
 @exception_handler(logger, SLACK_HOOK, NETWORK_ID, BadRequestException)
-def initiate(event, context):
-    required_keys = ["customerInternalReference", "userReference", "successUrl"]
-    payload = event["body"]
-    if not validate_dict(payload, required_keys):
-        raise BadRequestException()
-    response = user_verification_service.initiate(payload)
+def initiate(event):
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    response = user_verification_service.initiate(username)
     return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response})
 
+@exception_handler(logger, SLACK_HOOK, NETWORK_ID, BadRequestException)
+def submit(event):
+    query_params = event["queryStringParameters"]
+    transaction_id = query_params.get("customerInternalReference", None)
+    jumio_reference = query_params.get("transactionReference", None)
+    error_code = query_params.get("errorCode", None)
+    response = user_verification_service.submit(transaction_id, jumio_reference, error_code)
+    return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response})
 
 @exception_handler(logger, SLACK_HOOK, NETWORK_ID, BadRequestException)
-def callback(event, context):
+def complete(event):
     required_keys = ["callBackType", "jumioIdScanReference", "verificationStatus", "idScanStatus", "idScanSource",
                      "idCheckDataPositions", "idCheckDocumentValidation", "idCheckHologram", "idCheckMRZcode",
                      "idCheckMicroprint", "idCheckSecurityFeatures", "idCheckSignature", "transactionDate",
@@ -31,6 +36,6 @@ def callback(event, context):
     payload = event["body"]
     if not validate_dict(payload, required_keys):
         raise BadRequestException()
-    response = user_verification_service.callback(payload)
+    response = user_verification_service.complete(payload)
     return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response})
 

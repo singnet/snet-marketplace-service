@@ -93,7 +93,7 @@ functions:
 
   callback-user-verification:
     warmup: true
-    handler: user_verification/handlers.user_verification_handler.callback
+    handler: user_verification/handlers.user_verification_handler.complete
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -107,7 +107,7 @@ functions:
       events:
         - http:
             method: POST
-            path: /user_verification/callback
+            path: /user_verification/complete
             authorizer:
               name: user-authorizer
               type: COGNITO_USER_POOLS
