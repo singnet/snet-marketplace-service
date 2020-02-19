@@ -70,7 +70,14 @@ class OrganizationPublisherRepository(BaseRepository):
             if organization_db_model is None:
                 self.add_organization(organization, username, state)
             else:
-                self.update_organization(organization_db_model, organization, username, state)
+                self._update_organization(organization_db_model, organization, username, state)
+
+    def update_organization(self, organization, username, state):
+        organization_db_model = self.session.query(Organization).filter(
+            Organization.uuid == organization.uuid).first()
+        if organization_db_model is None:
+            raise OrganizationNotFoundException()
+        self._update_organization(organization_db_model, organization, username, state)
 
     def add_organization(self, organization, username, state):
         current_time = datetime.utcnow()
@@ -109,7 +116,7 @@ class OrganizationPublisherRepository(BaseRepository):
             status=OrganizationMemberStatus.ACCEPTED.value, transaction_hash="", invited_on=current_time,
             created_on=current_time, updated_on=current_time))
 
-    def update_organization(self, organization_db_model, organization, username, state):
+    def _update_organization(self, organization_db_model, organization, username, state):
         current_time = datetime.utcnow()
         organization_db_model.name = organization.name
         organization_db_model.id = organization.id
