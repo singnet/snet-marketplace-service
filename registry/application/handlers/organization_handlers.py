@@ -73,7 +73,7 @@ def update_org(event, context):
     org_uuid = payload.get("org_uuid", None)
     org_service = OrganizationPublisherService(org_uuid, username)
     if action == AddOrganizationActions.DRAFT.value:
-        response = org_service.edit_organization(payload)
+        response = org_service.save_organization_draft(payload)
     elif action == AddOrganizationActions.SUBMIT.value:
         response = org_service.submit_organization_for_approval(payload)
     else:

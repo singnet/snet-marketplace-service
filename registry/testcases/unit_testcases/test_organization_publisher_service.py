@@ -53,7 +53,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
             username, OrganizationStatus.DRAFT.value)
         payload = json.loads(ORG_PAYLOAD_MODEL)
         payload["org_uuid"] = test_org_uuid
-        OrganizationPublisherService(test_org_uuid, username).edit_organization(payload)
+        OrganizationPublisherService(test_org_uuid, username).save_organization_draft(payload)
         org_db_model = org_repo.session.query(Organization).first()
         if org_db_model is None:
             assert False

@@ -48,7 +48,7 @@ class OrganizationPublisherService:
         org_repo.add_organization(organization, self.username, OrganizationStatus.ONBOARDING.value)
         return "OK"
 
-    def edit_organization(self, payload):
+    def save_organization_draft(self, payload):
         logger.info(f"edit organization for user: {self.username} org_uuid: {self.org_uuid}")
         updated_organization = OrganizationFactory.org_domain_entity_from_payload(payload)
         current_organization = org_repo.get_org_for_org_uuid(self.org_uuid)

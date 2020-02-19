@@ -14,6 +14,7 @@ class OrganizationType(Enum):
     ORGANIZATION = "organization"
     INDIVIDUAL = "individual"
 
+
 class Organization:
     def __init__(self, uuid, org_id, name, org_type, origin, description, short_description, url,
                  contacts, assets, metadata_ipfs_uri, duns_no, groups, addresses, org_state, members):
