@@ -43,4 +43,4 @@ def get_verification_transaction_data(event, context):
 
 @handle_exception_with_slack_notification(logger=logger, SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID)
 def dummy_for_redirection(event, context):
-    return generate_lambda_response(StatusCode.FOUND, {}, {"location": "http://ropsten-publisher.singularitynet.io.s3-website-us-east-1.amazonaws.com/enroll"}, cors_enabled=True)
+    return generate_lambda_response(StatusCode.FOUND, {}, headers={"location": "http://ropsten-publisher.singularitynet.io.s3-website-us-east-1.amazonaws.com/enroll"}, cors_enabled=True)
