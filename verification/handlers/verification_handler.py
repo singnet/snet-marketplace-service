@@ -1,5 +1,4 @@
 from aws_xray_sdk.core import patch_all
-
 from common.constant import StatusCode, ResponseStatus
 from common.exceptions import BadRequestException
 from common.logger import get_logger
