@@ -49,7 +49,21 @@ def get_group_for_org(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-def add_org(event, context):
+def create_organization(event, context):
+    payload = json.loads(event["body"])
+    required_keys = []
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    if not validate_dict(payload, required_keys):
+        raise BadRequestException()
+    response = OrganizationPublisherService(None, username).create_organization(payload)
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+def update_org(event, context):
     payload = json.loads(event["body"])
     required_keys = []
     action = event["queryStringParameters"].get("action", None)
@@ -59,9 +73,9 @@ def add_org(event, context):
     org_uuid = payload.get("org_uuid", None)
     org_service = OrganizationPublisherService(org_uuid, username)
     if action == AddOrganizationActions.DRAFT.value:
-        response = org_service.add_organization_draft(payload)
+        response = org_service.edit_organization(payload)
     elif action == AddOrganizationActions.SUBMIT.value:
-        response = org_service.submit_org_for_approval(payload)
+        response = org_service.submit_organization_for_approval(payload)
     else:
         raise Exception("Invalid action")
     return generate_lambda_response(

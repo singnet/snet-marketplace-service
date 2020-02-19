@@ -1,3 +1,4 @@
+from enum import Enum
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -8,6 +9,10 @@ from common.utils import json_to_file, datetime_to_string
 from registry.config import IPFS_URL, ASSET_DIR, METADATA_FILE_PATH
 from registry.constants import OrganizationAddressType
 
+
+class OrganizationType(Enum):
+    ORGANIZATION = "organization"
+    INDIVIDUAL = "individual"
 
 class Organization:
     def __init__(self, uuid, org_id, name, org_type, origin, description, short_description, url,
@@ -174,16 +179,22 @@ class Organization:
         self.__metadata_ipfs_uri = f"ipfs://{ipfs_hash}"
 
     def setup_id(self):
-        if self.is_org_uuid_set():
-            self.__uuid = uuid4().hex
-        if self.org_type == "individual" and self.is_org_id_set():
+        if self.__org_type == OrganizationType.INDIVIDUAL.value:
             self.__id = self.__uuid
+        elif self.__org_type == OrganizationType.ORGANIZATION.value:
+            self.__id = uuid4().hex
 
     def is_org_id_set(self):
         return self.__id is None or len(self.__id) == 0
 
     def is_org_uuid_set(self):
         return self.__uuid is None or len(self.__uuid) == 0
+
+    def is_valid_for_submit(self):
+        return True
+
+    def is_minor(self, updated_organization):
+        return True
 
 
 class OrganizationState:
