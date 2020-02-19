@@ -15,6 +15,7 @@ NETWORKS = {
 }
 NETWORK_ID = 3
 SLACK_HOOK = {}
+REGION_NAME = "us-east-2"
 
 JUMIO_API_KEY = "abcde1234!@#$"
 JUMIO_BASE_URL = "https://netverify.com/api/v4/"

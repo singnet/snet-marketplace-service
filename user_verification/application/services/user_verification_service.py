@@ -1,8 +1,8 @@
 import requests
-
+from common.boto_utils import BotoUtils
 from common.constant import StatusCode
 from user_verification.config import JUMIO_BASE_URL, JUMIO_API_KEY, SUCCESS_REDIRECTION_DAPP_URL, \
-    USER_REFERENCE_ID_NAMESPACE
+    USER_REFERENCE_ID_NAMESPACE, REGION_NAME
 from user_verification.infrastructure.repositories.user_verification_repository import UserVerificationRepository
 from uuid import uuid4, uuid5
 
@@ -11,19 +11,20 @@ user_verification_repo = UserVerificationRepository()
 
 class UserVerificationService:
     def __init__(self):
-        self.request_headers = {
-            "accept": "application/json",
-            "content-type": "application/json",
-            "content-length": 3495,
-            "authorization": f"Basic {JUMIO_API_KEY}"
-        }
+        self.boto_utils = BotoUtils(region_name=REGION_NAME)
 
     def initiate(self, username):
         transaction_id = uuid4().hex
         user_reference_id = uuid5(USER_REFERENCE_ID_NAMESPACE, username)
+        api_key = self.boto_utils.get_ssm_parameter(JUMIO_API_KEY)
 
         url = f"{JUMIO_BASE_URL}/initiate"
-        headers = self.request_headers
+        headers = {
+            "accept": "application/json",
+            "content-type": "application/json",
+            "content-length": 3495,
+            "authorization": f"Basic {api_key}"
+        }
         data = {
             "customerInternalReference": transaction_id,  # internal reference for the transaction.
             "userReference": user_reference_id,  # internal reference for the user.
