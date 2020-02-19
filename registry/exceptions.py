@@ -1,4 +1,4 @@
-from common.exceptions import CustomException
+from common.exceptions import CustomException, MethodNotImplemented
 
 
 class BadRequestException(CustomException):
@@ -36,4 +36,4 @@ class ServiceProtoNotFoundException(CustomException):
         super().__init__({})
 
 
-EXCEPTIONS = (BadRequestException, OrganizationNotFoundException)
+EXCEPTIONS = (BadRequestException, OrganizationNotFoundException, MethodNotImplemented)
