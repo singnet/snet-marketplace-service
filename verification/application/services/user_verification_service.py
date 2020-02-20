@@ -1,9 +1,9 @@
 import requests
 from common.boto_utils import BotoUtils
 from common.constant import StatusCode
-from user_verification.config import JUMIO_BASE_URL, JUMIO_API_KEY, SUCCESS_REDIRECTION_DAPP_URL, \
+from verification.config import JUMIO_BASE_URL, JUMIO_API_KEY, SUCCESS_REDIRECTION_DAPP_URL, \
     USER_REFERENCE_ID_NAMESPACE, REGION_NAME
-from user_verification.infrastructure.repositories.user_verification_repository import UserVerificationRepository
+from verification.infrastructure.repositories.user_verification_repository import UserVerificationRepository
 from uuid import uuid4, uuid5
 
 user_verification_repo = UserVerificationRepository()

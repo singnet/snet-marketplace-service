@@ -1,9 +1,9 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from user_verification.config import NETWORKS, NETWORK_ID
-from user_verification.infrastructure.models import UserVerificationModel
-from user_verification.constants import UserVerificationStatus
+from verification.config import NETWORKS, NETWORK_ID
+from verification.infrastructure.models import UserVerificationModel
+from verification.constants import UserVerificationStatus
 
 engine = create_engine(
     f"{NETWORKS[NETWORK_ID]['db']['DB_DRIVER']}://{NETWORKS[NETWORK_ID]['db']['DB_USER']}:"
