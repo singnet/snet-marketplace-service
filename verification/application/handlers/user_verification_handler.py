@@ -28,7 +28,7 @@ def submit(event):
     user_verification_service.submit(transaction_id, jumio_reference, error_code)
     response_headers = {"location": SUCCESS_REDIRECTION_DAPP_URL}
     return generate_lambda_response(
-        status_code=StatusCode.TEMP_REDIRECT, message={}, headers=response_headers, cors_enabled=True)
+        status_code=StatusCode.FOUND, message={}, headers=response_headers, cors_enabled=True)
 
 
 @exception_handler(logger, SLACK_HOOK, NETWORK_ID, BadRequestException)
