@@ -6,6 +6,7 @@ from verification.config import JUMIO_BASE_URL, JUMIO_API_KEY, SUCCESS_REDIRECTI
 from verification.infrastructure.repositories.user_verification_repository import UserVerificationRepository
 from uuid import uuid4, uuid5
 from verification.utils import get_user_reference_id_from_username
+from verification.exceptions import UnableToInitiateException
 
 user_verification_repo = UserVerificationRepository()
 
@@ -36,7 +37,7 @@ class UserVerificationService:
         status = request.status_code
         response = request.json()
         if status != StatusCode.OK:
-            raise Exception(response)
+            raise UnableToInitiateException(response)
 
         user_verification_repo.add_transaction(transaction_id, user_reference_id)
 

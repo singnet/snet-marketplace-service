@@ -6,3 +6,8 @@ class BadRequestException(CustomException):
     def __init__(self):
         super().__init__({})
 
+class UnableToInitiateException(CustomException):
+    error_message = "UNABLE_TO_INITIATE"
+
+    def __init__(self):
+        super().__init__({})
