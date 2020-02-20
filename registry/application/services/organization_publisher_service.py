@@ -4,6 +4,7 @@ from datetime import datetime
 from web3 import Web3
 
 from common.boto_utils import BotoUtils
+from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
 from registry.config import NOTIFICATION_ARN, PUBLISHER_PORTAL_DAPP_URL, REGION_NAME
 from registry.constants import OrganizationStatus, OrganizationMemberStatus, Role
@@ -39,17 +40,30 @@ class OrganizationPublisherService:
             "groups": [group.to_dict() for group in groups]
         }
 
-    def add_organization_draft(self, payload):
-        logger.info(f"add organization draft for user: {self.username}")
+    def create_organization(self, payload):
+        logger.info(f"create organization for user: {self.username}")
         organization = OrganizationFactory.org_domain_entity_from_payload(payload)
+        organization.setup_id()
         logger.info(f"assigned org_uuid : {self.org_uuid}")
-        org_repo.store_organization(organization, self.username, OrganizationStatus.DRAFT.value)
+        org_repo.add_organization(organization, self.username, OrganizationStatus.ONBOARDING.value)
         return "OK"
 
-    def submit_org_for_approval(self, payload):
+    def save_organization_draft(self, payload):
+        logger.info(f"edit organization for user: {self.username} org_uuid: {self.org_uuid}")
+        updated_organization = OrganizationFactory.org_domain_entity_from_payload(payload)
+        current_organization = org_repo.get_org_for_org_uuid(self.org_uuid)
+        if current_organization.is_minor(updated_organization):
+            org_repo.update_organization(updated_organization, self.username, OrganizationStatus.DRAFT.value)
+        else:
+            raise MethodNotImplemented()
+        return "OK"
+
+    def submit_organization_for_approval(self, payload):
         logger.info(f"submit for approval organization org_uuid: {self.org_uuid}")
         organization = OrganizationFactory.org_domain_entity_from_payload(payload)
-        org_repo.store_organization(organization, self.username, OrganizationStatus.APPROVAL_PENDING.value)
+        if not organization.is_valid_for_submit():
+            raise Exception("Invalid org metadata")
+        org_repo.store_organization(organization, self.username, OrganizationStatus.APPROVED.value)
         return "OK"
 
     def publish_org_to_ipfs(self):

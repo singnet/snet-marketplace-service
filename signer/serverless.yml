@@ -159,7 +159,7 @@ functions:
 
   free_call_token:
     warmup: true
-    handler: signer/signature_authenticator.main
+    handler: signer/lambda_handler.free_call_token_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:

@@ -2,6 +2,8 @@ from enum import Enum
 
 
 class OrganizationStatus(Enum):
+    ONBOARDING = "ONBOARDING"
+    ONBOARDING_APPROVED = "ONBOARDING_APPROVED"
     DRAFT = "DRAFT"
     APPROVAL_PENDING = "APPROVAL_PENDING"
     APPROVED = "APPROVED"
