@@ -48,17 +48,6 @@ class UserVerificationService:
         return "OK"
 
     def complete(self, payload):
-        verification_response = {
-            "call_back_type": payload.callBackType,
-            "jumio_reference": payload.jumioIdScanReference,
-            "verification_status": payload.verificationStatus,
-            "id_scan_status": payload.idScanStatus,
-            "id_scan_source": payload.idScanSource,
-            "transaction_date": payload.transactionDate,
-            "callback_date": payload.callbackDate,
-            "identity_verification": payload.identityVerification,
-            "id_type": payload.idType,
-        }
         user_verification_repo.complete_transaction(payload)
         return "OK"
 
