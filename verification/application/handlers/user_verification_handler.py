@@ -2,7 +2,7 @@ from common.logger import get_logger
 from common.utils import handle_exception_with_slack_notification, validate_dict, generate_lambda_response
 from common.constant import StatusCode, ResponseStatus
 from common.exceptions import BadRequestException
-from verification.config import SLACK_HOOK, NETWORK_ID
+from verification.config import SLACK_HOOK, NETWORK_ID, SUCCESS_REDIRECTION_DAPP_URL
 from verification.application.services.user_verification_service import UserVerificationService
 from verification.exceptions import BadRequestException
 from common.exception_handler import exception_handler
@@ -25,8 +25,10 @@ def submit(event):
     transaction_id = query_params.get("customerInternalReference", None)
     jumio_reference = query_params.get("transactionReference", None)
     error_code = query_params.get("errorCode", None)
-    response = user_verification_service.submit(transaction_id, jumio_reference, error_code)
-    return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response})
+    user_verification_service.submit(transaction_id, jumio_reference, error_code)
+    response_headers = {"location": SUCCESS_REDIRECTION_DAPP_URL}
+    return generate_lambda_response(
+        status_code=StatusCode.TEMP_REDIRECT, message={}, headers=response_headers, cors_enabled=True)
 
 
 @exception_handler(logger, SLACK_HOOK, NETWORK_ID, BadRequestException)
