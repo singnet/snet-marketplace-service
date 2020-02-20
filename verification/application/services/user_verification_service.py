@@ -5,6 +5,7 @@ from verification.config import JUMIO_BASE_URL, JUMIO_API_KEY, SUCCESS_REDIRECTI
     USER_REFERENCE_ID_NAMESPACE, REGION_NAME
 from verification.infrastructure.repositories.user_verification_repository import UserVerificationRepository
 from uuid import uuid4, uuid5
+from verification.utils import get_user_reference_id_from_username
 
 user_verification_repo = UserVerificationRepository()
 
@@ -15,7 +16,7 @@ class UserVerificationService:
 
     def initiate(self, username):
         transaction_id = uuid4().hex
-        user_reference_id = uuid5(USER_REFERENCE_ID_NAMESPACE, username)
+        user_reference_id = get_user_reference_id_from_username(username)
         api_key = self.boto_utils.get_ssm_parameter(JUMIO_API_KEY)
 
         url = f"{JUMIO_BASE_URL}/initiate"
@@ -46,7 +47,6 @@ class UserVerificationService:
         return "OK"
 
     def complete(self, payload):
-        # save the value from payload to DB
         verification_response = {
             "call_back_type": payload.callBackType,
             "jumio_reference": payload.jumioIdScanReference,
@@ -60,3 +60,8 @@ class UserVerificationService:
         }
         user_verification_repo.complete_transaction(payload)
         return "OK"
+
+    def get_status(self, username):
+        user_reference_id = get_user_reference_id_from_username(username)
+        status = user_verification_repo.get_status(user_reference_id)
+        return status

@@ -40,3 +40,10 @@ def complete(event):
         raise BadRequestException()
     response = user_verification_service.complete(payload)
     return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response})
+
+
+@exception_handler(logger, SLACK_HOOK, NETWORK_ID, BadRequestException)
+def get_status(event):
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    response = user_verification_service.get_status(username)
+    return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response})

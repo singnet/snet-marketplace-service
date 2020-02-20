@@ -61,3 +61,14 @@ class UserVerificationRepository:
         except Exception as e:
             self.session.rollback()
             raise e
+
+    def get_status(self, user_reference_id):
+        try:
+            user_verification_item = self.session.query(UserVerificationModel) \
+                .filter(UserVerificationModel.user_reference_id == user_reference_id) \
+                .first()
+            status = user_verification_item.verification_status
+            return status
+        except Exception as e:
+            self.session.rollback()
+            raise e
