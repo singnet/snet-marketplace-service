@@ -6,7 +6,7 @@ Base = declarative_base()
 
 
 class UserVerificationModel(Base):
-    __table_name__ = "user_verification"
+    __tablename__ = "user_verification"
     transaction_id = Column("transaction_id", VARCHAR(128), primary_key=True)
     user_reference_id = Column("user_reference_id", VARCHAR(128))
     call_back_type = Column("call_back_type", VARCHAR(128))
