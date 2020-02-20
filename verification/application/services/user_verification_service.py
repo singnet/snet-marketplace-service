@@ -1,12 +1,14 @@
+from uuid import uuid4
+
 import requests
+
 from common.boto_utils import BotoUtils
 from common.constant import StatusCode
-from verification.config import JUMIO_BASE_URL, JUMIO_API_KEY, SUCCESS_REDIRECTION_DAPP_URL, \
-    USER_REFERENCE_ID_NAMESPACE, REGION_NAME
-from verification.infrastructure.repositories.user_verification_repository import UserVerificationRepository
-from uuid import uuid4, uuid5
-from verification.utils import get_user_reference_id_from_username
+from verification.config import JUMIO_BASE_URL, JUMIO_API_KEY, SUCCESS_REDIRECTION_DAPP_URL, REGION_NAME
+from verification.constants import UserVerificationStatus
 from verification.exceptions import UnableToInitiateException
+from verification.infrastructure.repositories.user_verification_repository import UserVerificationRepository
+from verification.utils import get_user_reference_id_from_username
 
 user_verification_repo = UserVerificationRepository()
 
@@ -19,7 +21,7 @@ class UserVerificationService:
         transaction_id = uuid4().hex
         user_reference_id = get_user_reference_id_from_username(username)
 
-        def generate_headers(api_key):
+        def generate_headers():
             return {
                 "accept": "application/json",
                 "content-type": "application/json",
@@ -48,7 +50,10 @@ class UserVerificationService:
         return response
 
     def submit(self, transaction_id, jumio_reference, error_code):
-        user_verification_repo.update_jumio_reference(transaction_id, jumio_reference, error_code)
+        verification_status = UserVerificationStatus.SUBMIT_SUCCESS
+        if error_code:
+            verification_status = UserVerificationStatus.SUBMIT_ERROR
+        user_verification_repo.update_jumio_reference(transaction_id, jumio_reference, error_code, verification_status)
         return "OK"
 
     def complete(self, payload):

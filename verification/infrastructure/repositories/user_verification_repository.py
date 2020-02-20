@@ -28,16 +28,15 @@ class UserVerificationRepository:
             self.session.rollback()
             raise e
 
-    def update_jumio_reference(self, transaction_id, jumio_reference, error_code):
+    def update_jumio_reference(self, transaction_id, jumio_reference, error_code, verification_status):
         try:
             user_verification_item = self.session.query(UserVerificationModel) \
                 .filter(UserVerificationModel.transaction_id == transaction_id) \
                 .first()
             user_verification_item.jumio_reference = jumio_reference
-            user_verification_item.verification_status = UserVerificationStatus.SUBMIT_SUCCESS
+            user_verification_item.verification_status = verification_status
             if error_code:
                 user_verification_item.error_code = error_code
-                user_verification_item.verification_status = UserVerificationStatus.SUBMIT_ERROR
             self.session.commit()
         except Exception as e:
             self.session.rollback()
