@@ -18,20 +18,25 @@ class UserVerificationService:
     def initiate(self, username):
         transaction_id = uuid4().hex
         user_reference_id = get_user_reference_id_from_username(username)
-        api_key = self.boto_utils.get_ssm_parameter(JUMIO_API_KEY)
+
+        def generate_headers(api_key):
+            return {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "content-length": 3495,
+                "authorization": f"Basic {self.boto_utils.get_ssm_parameter(JUMIO_API_KEY)}"
+            }
+
+        def generate_post_body():
+            return {
+                "customerInternalReference": transaction_id,  # internal reference for the transaction.
+                "userReference": user_reference_id,  # internal reference for the user.
+                "successUrl": SUCCESS_REDIRECTION_DAPP_URL
+            }
 
         url = f"{JUMIO_BASE_URL}/initiate"
-        headers = {
-            "accept": "application/json",
-            "content-type": "application/json",
-            "content-length": 3495,
-            "authorization": f"Basic {api_key}"
-        }
-        data = {
-            "customerInternalReference": transaction_id,  # internal reference for the transaction.
-            "userReference": user_reference_id,  # internal reference for the user.
-            "successUrl": SUCCESS_REDIRECTION_DAPP_URL
-        }
+        headers = generate_headers()
+        data = generate_post_body()
         request = requests.post(url=url, headers=headers, data=data)
 
         status = request.status_code
@@ -40,7 +45,6 @@ class UserVerificationService:
             raise UnableToInitiateException(response)
 
         user_verification_repo.add_transaction(transaction_id, user_reference_id)
-
         return response
 
     def submit(self, transaction_id, jumio_reference, error_code):
