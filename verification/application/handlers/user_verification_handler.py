@@ -18,6 +18,7 @@ def initiate(event):
     response = user_verification_service.initiate(username)
     return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response})
 
+
 @exception_handler(logger, SLACK_HOOK, NETWORK_ID, BadRequestException)
 def submit(event):
     query_params = event["queryStringParameters"]
@@ -26,6 +27,7 @@ def submit(event):
     error_code = query_params.get("errorCode", None)
     response = user_verification_service.submit(transaction_id, jumio_reference, error_code)
     return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response})
+
 
 @exception_handler(logger, SLACK_HOOK, NETWORK_ID, BadRequestException)
 def complete(event):
@@ -38,4 +40,3 @@ def complete(event):
         raise BadRequestException()
     response = user_verification_service.complete(payload)
     return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response})
-
