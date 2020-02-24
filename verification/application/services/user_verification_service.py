@@ -4,11 +4,13 @@ import requests
 
 from common.boto_utils import BotoUtils
 from common.constant import StatusCode
-from verification.config import JUMIO_BASE_URL, JUMIO_API_KEY, SUCCESS_REDIRECTION_DAPP_URL, REGION_NAME
+from verification.config import JUMIO_BASE_URL, JUMIO_API_TOKEN, JUMIO_API_SECRET, SUCCESS_REDIRECTION_DAPP_URL, \
+    REGION_NAME
 from verification.constants import UserVerificationStatus
 from verification.exceptions import UnableToInitiateException
 from verification.infrastructure.repositories.user_verification_repository import UserVerificationRepository
-from verification.utils import get_user_reference_id_from_username
+from verification.utils import get_user_reference_id_from_username, generate_basic_auth
+from base64 import b64encode
 
 user_verification_repo = UserVerificationRepository()
 
@@ -26,7 +28,8 @@ class UserVerificationService:
                 "accept": "application/json",
                 "content-type": "application/json",
                 "content-length": 3495,
-                "authorization": f"Basic {self.boto_utils.get_ssm_parameter(JUMIO_API_KEY)}"
+                "authorization": generate_basic_auth(self.boto_utils.get_ssm_parameter(JUMIO_API_TOKEN),
+                                                     self.boto_utils.get_ssm_parameter(JUMIO_API_SECRET))
             }
 
         def generate_post_body():

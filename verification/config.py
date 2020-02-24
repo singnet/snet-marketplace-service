@@ -17,8 +17,9 @@ NETWORK_ID = 3
 SLACK_HOOK = {}
 REGION_NAME = "us-east-2"
 
-JUMIO_API_KEY = "abcde1234!@#$"
 JUMIO_BASE_URL = "https://netverify.com/api/v4/"
+JUMIO_API_TOKEN = ""
+JUMIO_API_SECRET = ""
 
 SUCCESS_REDIRECTION_DAPP_URL = "http://ropsten-publisher.singularitynet.io.s3-website-us-east-1.amazonaws.com/" \
                                "/onboarding/authenticate/individual"
