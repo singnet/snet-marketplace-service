@@ -22,7 +22,7 @@ class UserVerificationRepository:
     def add_transaction(self, transaction_id, user_reference_id):
         try:
             self.session.add(UserVerificationModel(transaction_id=transaction_id, user_reference_id=user_reference_id,
-                                                   verification_status=UserVerificationStatus.PENDING))
+                                                   verification_status=UserVerificationStatus.PENDING.value))
             self.session.commit()
         except Exception as e:
             self.session.rollback()

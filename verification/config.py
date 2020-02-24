@@ -7,7 +7,7 @@ NETWORKS = {
             "DB_DRIVER": "mysql+pymysql",
             "DB_HOST": "localhost",
             "DB_USER": "unittest_root",
-            "DB_PASSWORD": "unittest_pwd",
+            "DB_PASSWORD": "mK3Pc'x';$!3",
             "DB_NAME": "user_verification_unittest_db",
             "DB_PORT": 3306,
         },
@@ -17,7 +17,7 @@ NETWORK_ID = 3
 SLACK_HOOK = {}
 REGION_NAME = "us-east-2"
 
-JUMIO_BASE_URL = "https://netverify.com/api/v4/"
+JUMIO_BASE_URL = "https://netverify.com/api/v4"
 JUMIO_API_TOKEN = ""
 JUMIO_API_SECRET = ""
 

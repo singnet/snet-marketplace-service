@@ -26,7 +26,7 @@ class UserVerificationService:
             return {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "content-length": 3495,
+                "content-length": "3495",
                 "authorization": generate_basic_auth(self.boto_utils.get_ssm_parameter(JUMIO_API_TOKEN),
                                                      self.boto_utils.get_ssm_parameter(JUMIO_API_SECRET))
             }
