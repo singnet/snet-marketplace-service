@@ -10,7 +10,6 @@ from verification.constants import UserVerificationStatus
 from verification.exceptions import UnableToInitiateException
 from verification.infrastructure.repositories.user_verification_repository import UserVerificationRepository
 from verification.utils import get_user_reference_id_from_username, generate_basic_auth
-from base64 import b64encode
 
 user_verification_repo = UserVerificationRepository()
 
