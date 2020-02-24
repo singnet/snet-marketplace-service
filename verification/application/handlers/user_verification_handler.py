@@ -23,9 +23,8 @@ def initiate(event):
 def submit(event):
     query_params = event["queryStringParameters"]
     transaction_id = query_params.get("customerInternalReference", None)
-    jumio_reference = query_params.get("transactionReference", None)
     error_code = query_params.get("errorCode", None)
-    user_verification_service.submit(transaction_id, jumio_reference, error_code)
+    user_verification_service.submit(transaction_id, error_code)
     response_headers = {"location": SUCCESS_REDIRECTION_DAPP_URL}
     return generate_lambda_response(
         status_code=StatusCode.FOUND, message={}, headers=response_headers, cors_enabled=True)

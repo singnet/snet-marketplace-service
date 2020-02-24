@@ -19,21 +19,22 @@ class UserVerificationRepository:
     def __init__(self):
         self.session = default_session
 
-    def add_transaction(self, transaction_id, user_reference_id):
+    def add_transaction(self, transaction_id, user_reference_id, jumio_reference):
         try:
-            self.session.add(UserVerificationModel(transaction_id=transaction_id, user_reference_id=user_reference_id,
+            self.session.add(UserVerificationModel(transaction_id=transaction_id,
+                                                   user_reference_id=user_reference_id,
+                                                   jumio_reference=jumio_reference,
                                                    verification_status=UserVerificationStatus.PENDING.value))
             self.session.commit()
         except Exception as e:
             self.session.rollback()
             raise e
 
-    def update_jumio_reference(self, transaction_id, jumio_reference, error_code, verification_status):
+    def update_verification_status(self, transaction_id, error_code, verification_status):
         try:
             user_verification_item = self.session.query(UserVerificationModel) \
                 .filter(UserVerificationModel.transaction_id == transaction_id) \
                 .first()
-            user_verification_item.jumio_reference = jumio_reference
             user_verification_item.verification_status = verification_status
             if error_code:
                 user_verification_item.error_code = error_code
@@ -45,16 +46,17 @@ class UserVerificationRepository:
     def complete_transaction(self, verification_response):
         try:
             user_verification_item = self.session.query(UserVerificationModel) \
-                .filter(UserVerificationModel.jumio_reference == verification_response.jumioIdScanReference) \
+                .filter(UserVerificationModel.jumio_reference == verification_response["jumioIdScanReference"]) \
                 .first()
-            user_verification_item.call_back_type = verification_response.callBackType
-            user_verification_item.verification_status = verification_response.verificationStatus
-            user_verification_item.id_scan_status = verification_response.idScanStatus
-            user_verification_item.id_scan_source = verification_response.idScanSource
-            user_verification_item.transaction_date = verification_response.transactionDate
-            user_verification_item.callback_date = verification_response.callbackDate
-            user_verification_item.identity_verification = verification_response.identityVerification
-            user_verification_item.id_type = verification_response.idType
+            user_verification_item.call_back_type = verification_response["callBackType"]
+            user_verification_item.verification_status = \
+                UserVerificationStatus[verification_response["verificationStatus"]].value
+            user_verification_item.id_scan_status = verification_response["idScanStatus"]
+            user_verification_item.id_scan_source = verification_response["idScanSource"]
+            user_verification_item.transaction_date = verification_response["transactionDate"]
+            user_verification_item.callback_date = verification_response["callbackDate"]
+            user_verification_item.identity_verification = verification_response["identityVerification"]
+            user_verification_item.id_type = verification_response["idType"]
 
             self.session.commit()
         except Exception as e:

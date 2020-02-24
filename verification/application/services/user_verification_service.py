@@ -47,15 +47,15 @@ class UserVerificationService:
         response = request.json()
         if status != StatusCode.OK:
             raise UnableToInitiateException(response)
-
-        user_verification_repo.add_transaction(transaction_id, user_reference_id)
+        jumio_reference = response["transactionReference"]
+        user_verification_repo.add_transaction(transaction_id, user_reference_id, jumio_reference)
         return response
 
-    def submit(self, transaction_id, jumio_reference, error_code):
-        verification_status = UserVerificationStatus.SUBMIT_SUCCESS
+    def submit(self, transaction_id, error_code):
+        verification_status = UserVerificationStatus.SUBMIT_SUCCESS.value
         if error_code:
-            verification_status = UserVerificationStatus.SUBMIT_ERROR
-        user_verification_repo.update_jumio_reference(transaction_id, jumio_reference, error_code, verification_status)
+            verification_status = UserVerificationStatus.SUBMIT_ERROR.value
+        user_verification_repo.update_verification_status(transaction_id, error_code, verification_status)
         return "OK"
 
     def complete(self, payload):
