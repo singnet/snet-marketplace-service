@@ -183,7 +183,7 @@ class Organization:
         org_uuid = uuid4().hex
         self.__uuid = org_uuid
         if self.__org_type == OrganizationType.INDIVIDUAL.value:
-            self.__uuid = org_uuid
+            self.__id = org_uuid
 
     def is_org_id_set(self):
         return self.__id is None or len(self.__id) == 0
