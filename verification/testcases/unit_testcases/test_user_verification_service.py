@@ -84,6 +84,12 @@ class TestUserVerificationService(unittest.TestCase):
             assert False
 
     def test_complete(self):
+        user_verification_repo \
+            .session.add(UserVerificationModel(transaction_id=self.transaction_id,
+                                               user_reference_id=get_user_reference_id_from_username(
+                                                   self.username),
+                                               jumio_reference=self.jumio_reference,
+                                               verification_status=UserVerificationStatus.PENDING.value))
         payload = {
             "jumioIdScanReference": self.jumio_reference,
             "callBackType": "NETVERIFYID",
