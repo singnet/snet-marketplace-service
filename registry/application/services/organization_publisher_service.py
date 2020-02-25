@@ -44,7 +44,7 @@ class OrganizationPublisherService:
         logger.info(f"create organization for user: {self.username}")
         organization = OrganizationFactory.org_domain_entity_from_payload(payload)
         organization.setup_id()
-        logger.info(f"assigned org_uuid : {self.org_uuid}")
+        logger.info(f"assigned org_uuid : {organization.uuid}")
         org_repo.add_organization(organization, self.username, OrganizationStatus.ONBOARDING.value)
         return "OK"
 
