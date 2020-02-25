@@ -27,8 +27,12 @@ class Group:
             "name": self.name,
             "id": self.group_id,
             "payment_address": self.payment_address,
-            "payment_config": self.payment_config
+            "payment_config": self.payment_config,
+            "status": self.status
         }
+
+    def dump(self):
+        return self.to_dict()
 
     def setup_id(self):
         if self.group_id is None or len(self.group_id) == 0:

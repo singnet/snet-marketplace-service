@@ -148,6 +148,10 @@ class Organization:
     def members(self):
         return self.__members
 
+    @property
+    def org_state(self):
+        return self.__state
+
     def set_assets(self, assets):
         self.__assets = assets
 
@@ -239,6 +243,28 @@ class OrganizationState:
             state_dict["updated_on"] = datetime_to_string(self.__updated_on)
         if self.__reviewed_on is not None:
             state_dict["reviewed_on"] = datetime_to_string(self.__reviewed_on)
+
+        return state_dict
+
+    def dump(self):
+        state_dict = {
+            "state": self.__state,
+            "transaction_hash": self.__transaction_hash,
+            "wallet_address": self.__wallet_address,
+            "created_by": self.__created_by,
+            "created_on": "",
+            "updated_on": "",
+            "updated_by": self.__updated_by,
+            "reviewed_by": self.__reviewed_by,
+            "reviewed_on": "",
+        }
+
+        if self.__updated_on is not None:
+            state_dict["updated_on"] = datetime_to_string(self.__updated_on)
+        if self.__reviewed_on is not None:
+            state_dict["reviewed_on"] = datetime_to_string(self.__reviewed_on)
+        if self.__created_on is not None:
+            state_dict["created_on"] = datetime_to_string(self.__created_on)
 
         return state_dict
 

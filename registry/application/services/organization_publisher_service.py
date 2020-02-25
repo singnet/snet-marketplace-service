@@ -52,11 +52,17 @@ class OrganizationPublisherService:
         logger.info(f"edit organization for user: {self.username} org_uuid: {self.org_uuid}")
         updated_organization = OrganizationFactory.org_domain_entity_from_payload(payload)
         current_organization = org_repo.get_org_for_org_uuid(self.org_uuid)
+        self._archive_current_organization(current_organization)
+
         if current_organization.is_minor(updated_organization):
             org_repo.update_organization(updated_organization, self.username, OrganizationStatus.DRAFT.value)
         else:
             raise MethodNotImplemented()
         return "OK"
+
+    def _archive_current_organization(self, organization):
+        if organization.get_status() == OrganizationStatus.PUBLISHED.value:
+            org_repo.add_organization_archive(organization)
 
     def submit_organization_for_approval(self, payload):
         logger.info(f"submit for approval organization org_uuid: {self.org_uuid}")

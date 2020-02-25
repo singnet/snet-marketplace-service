@@ -5,7 +5,7 @@ from registry.constants import Role, OrganizationMemberStatus, OrganizationStatu
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.exceptions import OrganizationNotFoundException
 from registry.infrastructure.models import Organization, OrganizationMember, OrganizationState, Group, \
-    OrganizationAddress
+    OrganizationAddress, OrganizationArchive
 from registry.infrastructure.repositories.base_repository import BaseRepository
 
 
@@ -156,6 +156,17 @@ class OrganizationPublisherRepository(BaseRepository):
         self.add_all_items(addresses)
         self.add_all_items(groups)
 
+    def add_organization_archive(self, organization):
+        groups = [group.dump() for group in organization.groups]
+        org_state = organization.org_state.dump()
+        self.add_item(OrganizationArchive(
+            uuid=organization.uuid, name=organization.name, org_id=organization.id,
+            org_type=organization.org_type, origin=organization.origin, description=organization.description,
+            short_description=organization.short_description, url=organization.url,
+            duns_no=organization.duns_no, contacts=organization.contacts, assets=organization.assets,
+            metadata_ipfs_uri=organization.metadata_ipfs_uri, org_state=org_state, groups=groups
+        ))
+
     def get_org_member(self, username=None, org_uuid=None, role=None, status=None, invite_code=None):
         org_member_query = self.session.query(OrganizationMember)
         if org_uuid is not None:
@@ -235,7 +246,7 @@ class OrganizationPublisherRepository(BaseRepository):
             .filter(OrganizationMember.status == OrganizationMemberStatus.PENDING.value) \
             .first()
         if org_member is None:
-            raise Exception(f"No member found")
+            raise Exception(f"No member ound")
         
         if org_member.status == OrganizationMemberStatus.PUBLISHED.value and org_member.address == wallet_address:
             org_member.username = username
