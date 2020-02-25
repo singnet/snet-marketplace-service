@@ -1,282 +1,264 @@
+from enum import Enum
 from urllib.parse import urlparse
 from uuid import uuid4
 
 import requests
-from deepdiff import DeepDiff
 
-import common.ipfs_util as ipfs_util
-from common.logger import get_logger
-from common.utils import json_to_file
-from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH
-from registry.domain.models.organization_address import OrganizationAddress
+from common import ipfs_util
+from common.utils import json_to_file, datetime_to_string
+from registry.config import IPFS_URL, ASSET_DIR, METADATA_FILE_PATH
+from registry.constants import OrganizationAddressType
 
-logger = get_logger(__name__)
-EXCLUDE_PATHS = ["root.org_uuid", "root._Organization__duns_no", "root.owner", "root._Organization__owner_name",
-                 "root.assets['hero_image']['url']", "root.metadata_ipfs_hash", "root.origin"]
+
+class OrganizationType(Enum):
+    ORGANIZATION = "organization"
+    INDIVIDUAL = "individual"
 
 
 class Organization:
-    def __init__(self, name, org_id, org_uuid, org_type, owner, description, short_description, url, contacts, assets,
-                 metadata_ipfs_hash, duns_no, origin, addresses, groups, status, owner_name=None):
-        """
-        assets = [
-            {
-                "type": "hero_image",
-                "hash": "12sjdf4db",
-                "url": "https://dummy.dummy
-            }
-        ]
-        """
-        self.name = name
-        self.org_id = org_id
-        self.__owner_name = owner_name
-        self.org_uuid = org_uuid
-        self.org_type = org_type
-        self.owner = owner
-        self.description = description
-        self.short_description = short_description
-        self.url = url
+    def __init__(self, uuid, org_id, name, org_type, origin, description, short_description, url,
+                 contacts, assets, metadata_ipfs_uri, duns_no, groups, addresses, org_state, members):
+        self.__name = name
+        self.__id = org_id
+        self.__uuid = uuid
+        self.__org_type = org_type
+        self.__description = description
+        self.__short_description = short_description
+        self.__url = url
         self.__duns_no = duns_no
         self.__origin = origin
-        self.contacts = contacts
-        self.assets = assets
-        self.metadata_ipfs_hash = metadata_ipfs_hash
-        self.groups = groups
+        self.__contacts = contacts
+        self.__assets = assets
+        self.__metadata_ipfs_uri = metadata_ipfs_uri
+        self.__groups = groups
         self.__addresses = addresses
-        self.__status = status
-        self.__members = []
-
-    def setup_id(self):
-        if self.is_org_uuid_set():
-            self.org_uuid = uuid4().hex
-        if self.org_type == "individual" and self.is_org_id_set():
-            self.org_id = self.org_uuid
-
-    def is_org_id_set(self):
-        return self.org_id is None or len(self.org_id) == 0
-
-    def is_org_uuid_set(self):
-        return self.org_uuid is None or len(self.org_uuid) == 0
-
-    def add_group(self, group):
-        self.groups.append(group)
-
-    def add_all_groups(self, groups):
-        self.groups.extend(groups)
-
-    def add_owner(self, owner):
-        if self.owner is None or len(self.owner) == 0:
-            self.owner = owner
+        self.__state = org_state
+        self.__members = members
 
     def to_metadata(self):
         assets = {}
-        for key in self.assets:
-            assets[key] = self.assets[key]["ipfs_hash"]
+        for key in self.__assets:
+            assets[key] = self.__assets[key]["ipfs_uri"]
         return {
-            "name": self.name,
-            "org_id": self.org_id,
-            "org_type": self.org_type,
+            "org_name": self.__name,
+            "org_id": self.__id,
+            "org_type": self.__org_type,
             "description": {
-                "description": self.description,
-                "short_description": self.short_description,
-                "url": self.url
+                "description": self.__description,
+                "short_description": self.__short_description,
+                "url": self.__url
             },
-            "contacts": self.contacts,
+            "contacts": self.__contacts,
             "assets": assets,
-            "groups": [group.to_metadata() for group in self.groups]
+            "groups": [group.to_metadata() for group in self.__groups]
         }
 
     def to_dict(self):
-        return {
-            "name": self.name,
-            "org_id": self.org_id,
-            "org_uuid": self.org_uuid,
-            "org_type": self.org_type,
-            "description": self.description,
-            "short_description": self.short_description,
-            "url": self.url,
-            "duns_no": self.duns_no,
-            "owner": self.owner,
-            "origin": self.origin,
-            "owner_name": self.owner_name,
-            "contacts": self.contacts,
-            "assets": self.assets,
-            "metadata_ipfs_hash": self.metadata_ipfs_hash,
-            "groups": [group.to_dict() for group in self.groups],
-            "addresses": [address.to_dict() for address in self.addresses],
-            "status": self.status
+        head_quarter_address = None
+        mail_address = None
+        mail_address_same_hq_address = False
+        for address in self.addresses:
+            if address.address_type == OrganizationAddressType.MAIL_ADDRESS:
+                mail_address = address
+            if address.address_type == OrganizationAddressType.HEAD_QUARTER_ADDRESS:
+                head_quarter_address = address
+        if mail_address is not None and head_quarter_address is not None and mail_address == head_quarter_address:
+            mail_address_same_hq_address = True
+        org_dict = {
+            "org_name": self.__name,
+            "org_id": self.__id,
+            "org_uuid": self.__uuid,
+            "org_type": self.__org_type,
+            "description": self.__description,
+            "short_description": self.__short_description,
+            "url": self.__url,
+            "duns_no": self.__duns_no,
+            "origin": self.__origin,
+            "contacts": self.__contacts,
+            "assets": self.__assets,
+            "metadata_ipfs_uri": self.__metadata_ipfs_uri,
+            "groups": [group.to_dict() for group in self.__groups],
+            "org_address": {
+                "mail_address_same_hq_address": mail_address_same_hq_address,
+                "addresses": [address.to_dict() for address in self.__addresses]
+            },
+            "state": {}
         }
+        if self.__state is not None and isinstance(self.__state, OrganizationState):
+            org_dict["state"] = self.__state.to_dict()
+        return org_dict
 
-    def is_valid_draft(self):
-        validation = True
-        validation_keys = [self.org_id, self.name, self.org_type, self.org_uuid]
-        for key in validation_keys:
-            if key is None or len(key) == 0:
-                validation = False
+    @property
+    def name(self):
+        return self.__name
 
-        if self.short_description is not None and len(self.short_description) > 180:
-            return False
-        return validation
+    @property
+    def id(self):
+        return self.__id
 
-    def validate_approval_state(self):
-        validation = False
-        return self.is_valid_draft() and validation
+    @property
+    def uuid(self):
+        return self.__uuid
 
-    def validate_publish(self):
-        return self.validate_approval_state() and (
-                self.metadata_ipfs_hash is not None and len(self.metadata_ipfs_hash) != 0)
+    @property
+    def org_type(self):
+        return self.__org_type
 
-    def publish_assets(self):
-        ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
-        for asset_type in self.assets:
-            if "url" in self.assets[asset_type]:
-                url = self.assets[asset_type]["url"]
-                filename = urlparse(url).path.split("/")[-1]
-                response = requests.get(url)
-                filepath = f"{ASSET_DIR}/{filename}"
-                with open(filepath, 'wb') as asset_file:
-                    asset_file.write(response.content)
-                asset_ipfs_hash = ipfs_utils.write_file_in_ipfs(filepath)
-                self.assets[asset_type]["ipfs_hash"] = asset_ipfs_hash
+    @property
+    def description(self):
+        return self.__description
 
-    def publish_to_ipfs(self):
-        self.publish_assets()
-        ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
-        metadata = self.to_metadata()
-        filename = f"{METADATA_FILE_PATH}/{self.org_uuid}_org_metadata.json"
-        json_to_file(metadata, filename)
-        self.metadata_ipfs_hash = ipfs_utils.write_file_in_ipfs(filename, wrap_with_directory=False)
+    @property
+    def short_description(self):
+        return self.__short_description
 
-    def is_major_change(self, metdata_organziation):
-        return False
-
-    def is_same_organization_as_organization_from_metadata(self, metadata_organization):
-        diff = DeepDiff(self, metadata_organization, exclude_types=[OrganizationAddress],
-                        exclude_paths=EXCLUDE_PATHS)
-
-        logger.info(f"DIff for metadata organization {diff}")
-        if not diff:
-            return True
-        return False
+    @property
+    def url(self):
+        return self.__url
 
     @property
     def duns_no(self):
         return self.__duns_no
 
     @property
-    def owner_name(self):
-        return self.__owner_name
+    def origin(self):
+        return self.__origin
+
+    @property
+    def contacts(self):
+        return self.__contacts
 
     @property
     def addresses(self):
         return self.__addresses
 
     @property
-    def origin(self):
-        return self.__origin
+    def assets(self):
+        return self.__assets
 
     @property
-    def status(self):
-        return self.__status
+    def metadata_ipfs_uri(self):
+        return self.__metadata_ipfs_uri
+
+    @property
+    def groups(self):
+        return self.__groups
 
     @property
     def members(self):
         return self.__members
 
+    def set_assets(self, assets):
+        self.__assets = assets
 
-class OrganizationMember(object):
-    def __init__(self, org_uuid, username, status, role, address=None,
-                 invite_code=None, transaction_hash=None, invited_on=None, updated_on=None):
-        self.__role = role
-        self.__org_uuid = org_uuid
-        self.__username = username
-        self.__status = status
-        self.__address = address
-        self.__invite_code = invite_code
+    def set_state(self, state):
+        self.__state = state
+
+    def get_status(self):
+        return self.__state.state
+
+    def publish_assets(self):
+        ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
+        for asset_type in self.__assets:
+            if "url" in self.__assets[asset_type]:
+                url = self.__assets[asset_type]["url"]
+                filename = urlparse(url).path.split("/")[-1]
+                response = requests.get(url)
+                filepath = f"{ASSET_DIR}/{filename}"
+                with open(filepath, 'wb') as asset_file:
+                    asset_file.write(response.content)
+                asset_ipfs_hash = ipfs_utils.write_file_in_ipfs(filepath)
+                self.__assets[asset_type]["ipfs_uri"] = f"ipfs://{asset_ipfs_hash}"
+
+    def publish_to_ipfs(self):
+        self.publish_assets()
+        ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
+        metadata = self.to_metadata()
+        filename = f"{METADATA_FILE_PATH}/{self.__uuid}_org_metadata.json"
+        json_to_file(metadata, filename)
+        ipfs_hash = ipfs_utils.write_file_in_ipfs(filename, wrap_with_directory=False)
+        self.__metadata_ipfs_uri = f"ipfs://{ipfs_hash}"
+
+    def setup_id(self):
+        org_uuid = uuid4().hex
+        self.__uuid = org_uuid
+        if self.__org_type == OrganizationType.INDIVIDUAL.value:
+            self.__id = org_uuid
+
+    def is_org_id_set(self):
+        return self.__id is None or len(self.__id) == 0
+
+    def is_org_uuid_set(self):
+        return self.__uuid is None or len(self.__uuid) == 0
+
+    def is_valid_for_submit(self):
+        return True
+
+    def is_minor(self, updated_organization):
+        return True
+
+
+class OrganizationState:
+    def __init__(self, state, transaction_hash, wallet_address, created_by,
+                 created_on, updated_on, updated_by, reviewed_by, reviewed_on):
+        self.__state = state
         self.__transaction_hash = transaction_hash
-        self.__invited_on = invited_on
+        self.__wallet_address = wallet_address
+        self.__created_by = created_by
+        self.__created_on = created_on
         self.__updated_on = updated_on
+        self.__updated_by = updated_by
+        self.__reviewed_by = reviewed_by
+        self.__reviewed_on = reviewed_on
+
+    def to_dict(self):
+        state_dict = {
+            "state": self.__state,
+            "updated_on": "",
+            "updated_by": self.__updated_by,
+            "reviewed_by": self.__reviewed_by,
+            "reviewed_on": "",
+        }
+
+        if self.__updated_on is not None:
+            state_dict["updated_on"] = datetime_to_string(self.__updated_on)
+        if self.__reviewed_on is not None:
+            state_dict["reviewed_on"] = datetime_to_string(self.__reviewed_on)
+
+        return state_dict
 
     @property
-    def org_uuid(self):
-        return self.__org_uuid
-
-    @property
-    def username(self):
-        return self.__username
-
-    @property
-    def status(self):
-        return self.__status
-
-    @property
-    def address(self):
-        return self.__address
-
-    @property
-    def role(self):
-        return self.__role
-
-    @property
-    def invite_code(self):
-        return self.__invite_code
+    def state(self):
+        return self.__state
 
     @property
     def transaction_hash(self):
         return self.__transaction_hash
 
     @property
-    def invited_on(self):
-        return self.__invited_on
+    def wallet_address(self):
+        return self.__wallet_address
+
+    @property
+    def created_by(self):
+        return self.__created_by
+
+    @property
+    def created_on(self):
+        return self.__created_on
 
     @property
     def updated_on(self):
         return self.__updated_on
 
-    def set_transaction_hash(self, transaction_hash):
-        self.__transaction_hash = transaction_hash
+    @property
+    def updated_by(self):
+        return self.__updated_by
 
-    def __repr__(self):
-        return "Item(%s, %s,%s)" % (self.address, self.username, self.role)
+    @property
+    def reviewed_by(self):
+        return self.__reviewed_by
 
-    def __eq__(self, other):
-        if isinstance(other, OrganizationMember):
-            return self.address == other.address and self.username == other.username and self.role == other.role
-        else:
-            return False
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def __hash__(self):
-        return hash(self.__repr__())
-
-    def to_dict(self):
-        member_dict = {
-            "username": self.username,
-            "address": self.address,
-            "status": self.status,
-            "role": self.role,
-            "invited_on": "",
-            "updated_on": ""
-        }
-        if self.invited_on is not None:
-            member_dict["invited_on"] = self.invited_on.strftime("%Y-%m-%d %H:%M:%S")
-        if self.updated_on is not None:
-            member_dict["updated_on"] = self.updated_on.strftime("%Y-%m-%d %H:%M:%S")
-        return member_dict
-
-    def generate_invite_code(self):
-        self.__invite_code = uuid4().hex
-
-    def set_status(self, status):
-        self.__status = status
-
-    def set_invited_on(self, invited_on):
-        self.__invited_on = invited_on
-
-    def set_updated_on(self, updated_on):
-        self.__updated_on = updated_on
-
-    def set_role(self, role):
-        self.__role = role
+    @property
+    def reviewed_on(self):
+        return self.__reviewed_on

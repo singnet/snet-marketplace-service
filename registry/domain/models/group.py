@@ -17,6 +17,7 @@ class Group:
             "payment": {
                 "payment_address": self.payment_address,
                 "payment_expiration_threshold": self.payment_config["payment_expiration_threshold"],
+                "payment_channel_storage_type": self.payment_config["payment_channel_storage_type"],
                 "payment_channel_storage_client": self.payment_config["payment_channel_storage_client"]
             }
         }

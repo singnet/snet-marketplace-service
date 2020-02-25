@@ -83,10 +83,14 @@ def make_response(status_code, body, header=None):
     }
 
 
-def validate_dict(data_dict, required_keys):
+def validate_dict(data_dict, required_keys, strict=False):
     for key in required_keys:
         if key not in data_dict:
             return False
+
+    if strict:
+        return validate_dict(required_keys, data_dict.keys())
+
     return True
 
 
@@ -203,3 +207,20 @@ def handle_exception_with_slack_notification(*decorator_args, **decorator_kwargs
 def json_to_file(payload, filename):
     with open(filename, 'w') as f:
         f.write(json.dumps(payload, indent=4))
+
+
+def datetime_to_string(given_time):
+    return given_time.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def date_time_for_filename():
+    return datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
+
+
+def hash_to_bytesuri(s):
+    """
+    Convert in and from bytes uri format used in Registry contract
+    """
+    # TODO: we should pad string with zeros till closest 32 bytes word because of a bug in processReceipt (in snet_cli.contract.process_receipt)
+    s = "ipfs://" + s
+    return s.encode("ascii").ljust(32 * (len(s)//32 + 1), b"\0")

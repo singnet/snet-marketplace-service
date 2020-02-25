@@ -4,6 +4,7 @@ NETWORKS = {
         "http_provider": "https://ropsten.infura.io",
         "ws_provider": "wss://ropsten.infura.io/ws",
         "db": {
+            "DB_DRIVER": "mysql+pymysql",
             "DB_HOST": "localhost",
             "DB_USER": "unittest_root",
             "DB_PASSWORD": "unittest_pwd",
@@ -27,7 +28,7 @@ IPFS_URL = {
     'port': '80',
 
 }
-ALLOWED_ORIGIN = ["PUBLISHER_PORTAL"]
+ALLOWED_ORIGIN = ["PUBLISHER"]
 METADATA_FILE_PATH = "/tmp"
 REGION_NAME = "us-east-1"
 ASSET_BUCKET = ""

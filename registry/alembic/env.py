@@ -5,7 +5,7 @@ from sqlalchemy import pool
 
 from alembic import context
 from registry.config import NETWORK_ID, NETWORKS
-from registry.infrastructure.models.models import Base
+from registry.infrastructure.models import Base
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config

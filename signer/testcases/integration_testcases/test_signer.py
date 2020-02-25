@@ -3,6 +3,7 @@ import unittest
 from unittest.mock import patch
 
 from signer import lambda_handler
+from signer.lambda_handler import get_free_call_signer_address
 
 
 class TestSignUPAPI(unittest.TestCase):
@@ -123,8 +124,31 @@ class TestSignUPAPI(unittest.TestCase):
         assert response_body["data"]["r"] == "0x6057e2706d63351e774eaf56616afa7c138129b27b0dfd121457761d4267c3b8"
         assert response_body["data"]["s"] == "0x2f2b98ae088f6e5d4737fae8beba95c7203d33c07baaeccbb8eea5a6c361ae84"
         assert response_body["data"]["v"] == 27
-        assert response_body["data"]["signature"] == "0x6057e2706d63351e774eaf56616afa7c138129b27b0dfd121457761d4267c3b82f2b98ae088f6e5d4737fae8beba95c7203d33c07baaeccbb8eea5a6c361ae841b"
+        assert response_body["data"][
+                   "signature"] == "0x6057e2706d63351e774eaf56616afa7c138129b27b0dfd121457761d4267c3b82f2b98ae088f6e5d4737fae8beba95c7203d33c07baaeccbb8eea5a6c361ae841b"
 
+    @patch("boto3.client")
+    def test_free_call_signer_address(self, boto_client):
+        boto_client.return_value = None
+        event = {
+            "path": "/freecall/signer_address",
+            "requestContext": {
+                "authorizer": {
+                    "claims": {
+                        "email": "dummy_user1@dummy.io"
+                    }
+                }
+            },
+            "httpMethod": "GET",
+            "queryStringParameters": {"org_id": "test_org_id", "service_id": "test_service_id",
+                                      "group_id": "test_group_id"}
+        }
+        response = get_free_call_signer_address(event=event, context=None)
+        assert response["statusCode"] == 200
+        response_body = json.loads(response["body"])
+        assert response_body["status"] == "success"
+        assert response_body["data"]["free_call_signer_address"] == "0xBBE343b9BEf87Fb687cA83A014324d5E52cc3754"
 
-if __name__ == "__main__":
-    unittest.main()
+    def test_token_for_free_call(self):
+        pass
+

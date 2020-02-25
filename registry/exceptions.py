@@ -1,27 +1,39 @@
-from common.exceptions import CustomException
+from common.exceptions import CustomException, MethodNotImplemented
+
+
+class BadRequestException(CustomException):
+    error_message = "BAD_REQUEST"
+
+    def __init__(self):
+        super().__init__({})
 
 
 class OrganizationNotFoundException(CustomException):
-    error_message = "ORG_NOT_FOUND"
-    error_code = 0
+    error_message = "ORGANIZATION_NOT_FOUND"
 
-    def __init__(self, org_uuid):
-        error_details = {
-            "org_uuid": org_uuid
-        }
-        super().__init__(error_details)
+    def __init__(self):
+        super().__init__({})
 
 
-class MemberAlreadyExists(CustomException):
-    error_message = "MEMBER_ALREADY_EXISTS"
-    error_code = 0
+class InvalidOrigin(CustomException):
+    error_message = "SERVICE_PROTO_NOT_FOUND"
 
-    def __init__(self, org_uuid, failed_member_list):
-        error_details = {
-            "org_uuid": org_uuid,
-            "failed_to_invite_members": failed_member_list
-        }
-        super().__init__(error_details)
+    def __init__(self):
+        super().__init__({})
 
 
-EXCEPTIONS = (OrganizationNotFoundException, MemberAlreadyExists)
+class InvalidServiceState(CustomException):
+    error_message = "INVALID_SERVICE_STATE"
+
+    def __init__(self):
+        super().__init__({})
+
+
+class ServiceProtoNotFoundException(CustomException):
+    error_message = "SERVICE_PROTO_NOT_FOUND"
+
+    def __init__(self):
+        super().__init__({})
+
+
+EXCEPTIONS = (BadRequestException, OrganizationNotFoundException, MethodNotImplemented)

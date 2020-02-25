@@ -62,11 +62,39 @@ package:
     - orchestrator/**
     - notification/**
     - dapp_user/**
+    - signer/**
     - contract_api/**
   include:
     - node_modules/singularitynet-platform-contracts/**
 
 functions:
+
+  get-org-for_admin:
+    warmup: true
+    handler: registry.application.handlers.service_handlers.get_org_for_admin
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /admin/org
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
   get_all_org:
     handler: registry.application.handlers.organization_handlers.get_all_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -97,7 +125,69 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-  add_org:
+  get_groups_for_org:
+    warmup: true
+    handler: registry.application.handlers.organization_handlers.get_group_for_org
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /org/{org_uuid}/group
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-wit
+
+  create-org:
+    warmup: true
+    handler: registry.application.handlers.organization_handlers.create_organization
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: POST
+          path: /org/create
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
+  update-org:
     warmup: true
     handler: registry.application.handlers.organization_handlers.add_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -128,9 +218,9 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-  publish_org_ipfs:
+  publish-org-ipfs:
     warmup: true
-    handler: registry.application.handlers.organization_handlers.publish_org
+    handler: registry.application.handlers.organization_handlers.publish_org_on_ipfs
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -142,7 +232,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /org/{org_id}/ipfs_publish
+          path: /org/{org_uuid}/ipfs_publish
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -159,7 +249,7 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-  save_transaction:
+  save-org-transaction:
     warmup: true
     handler: registry.application.handlers.organization_handlers.save_transaction_hash_for_publish_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -173,7 +263,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /org/{org_id}/transaction
+          path: /org/{org_uuid}/transaction
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -190,9 +280,9 @@ functions:
               - X-Amz-User-Agent
               - x-requested-wit
 
-  get_org:
+  get-member:
     warmup: true
-    handler: registry.application.handlers.organization_handlers.get_org
+    handler: registry.application.handlers.organization_handlers.get_member
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -204,100 +294,16 @@ functions:
     events:
       - http:
           method: GET
-          path: /org/{org_id}
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-
-  get_all_groups_for_org:
-    warmup: true
-    handler: registry.application.handlers.organization_handlers.get_all_groups_for_org
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: GET
-          path: /org/{org_id}/group
+          path: /org/{org_uuid}/member/{username}
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-
-  add_group_for_org:
-    warmup: true
-    handler: registry.application.handlers.organization_handlers.add_group_draft_for_org
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: POST
-          path: /org/{org_id}/group
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-
-  get_group_for_org:
-    warmup: true
-    handler: registry.application.handlers.organization_handlers.get_group_for_org
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: GET
-          path: /org/{org_id}/group/{group_id}
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
+          request:
+            parameters:
+              paths:
+                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -323,44 +329,16 @@ functions:
     events:
       - http:
           method: GET
-          path: /org/{org_id}/member
+          path: /org/{org_uuid}/member
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-
-
-  get-member:
-    warmup: true
-    handler: registry.application.handlers.organization_handlers.get_member
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: GET
-          path: /org/{org_id}/member/{username}
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
+          request:
+            parameters:
+              paths:
+                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -386,12 +364,16 @@ functions:
     events:
       - http:
           method: POST
-          path: /org/{org_id}/member/invite
+          path: /org/{org_uuid}/member/invite
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
+          request:
+            parameters:
+              paths:
+                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -423,6 +405,10 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
+          request:
+            parameters:
+              paths:
+                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -479,12 +465,16 @@ functions:
     events:
       - http:
           method: POST
-          path: /org/{org_id}/member/publish
+          path: /org/{org_uuid}/member/publish
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
+          request:
+            parameters:
+              paths:
+                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -510,12 +500,16 @@ functions:
     events:
       - http:
           method: POST
-          path: /org/{org_id}/member/delete
+          path: /org/{org_uuid}/member/delete
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
+          request:
+            parameters:
+              paths:
+                orgId: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -539,3 +533,251 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+
+  verify-service-id:
+    warmup: true
+    handler: registry.application.handlers.service_handlers.verify_service_id
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /org/{org_uuid}/verify
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
+  create-service:
+    warmup: true
+    handler: registry.application.handlers.service_handlers.create_service
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: POST
+          path: /org/{org_uuid}/service
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
+  save-service:
+    warmup: true
+    handler: registry.application.handlers.service_handlers.save_service
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: PUT
+          path: /org/{org_uuid}/service/{service_uuid}/save
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
+  get-services-for-org:
+    warmup: true
+    handler: registry.application.handlers.service_handlers.get_services_for_organization
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: POST
+          path: /org/{org_uuid}/services
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
+  get-service-for-service-uuid:
+    warmup: true
+    handler: registry.application.handlers.service_handlers.get_service_for_service_uuid
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /org/{org_uuid}/service/{service_uuid}
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
+  publish-service-metadata-to-ipfs-hash:
+    warmup: true
+    handler: registry.application.handlers.service_handlers.publish_service_metadata_to_ipfs
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: POST
+          path: /org/{org_uuid}/service/{service_uuid}/ipfs_publish
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
+  submit-service:
+    warmup: true
+    handler: registry.application.handlers.service_handlers.submit_service_for_approval
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: PUT
+          path: /org/{org_uuid}/service/{service_uuid}/submit
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
+  save_service_transaction:
+    warmup: true
+    handler: registry.application.handlers.service_handlers.save_transaction_hash_for_published_service
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: POST
+          path: /org/{org_uuid}/service/{service_uuid}/transaction
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-wit
