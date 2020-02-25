@@ -6,13 +6,22 @@ from unittest.mock import patch
 from verification.infrastructure.models import UserVerificationModel
 from verification.constants import UserVerificationStatus
 import datetime
+
 user_verification_service = UserVerificationService()
 
 
 class TestUserVerificationService(unittest.TestCase):
+    def setUp(self):
+        self.username = "peterparker@marvel.io"
+        self.transaction_id = "4fe04f985eab4b40ac06545393c0ef55"
+        self.jumio_reference = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+
+    @patch("uuid.uuid4")
     @patch("requests.post")
     @patch("common.boto_utils.BotoUtils.get_ssm_parameter")
-    def test_initiate(self, mock_ssm_parameter, mock_post_request):
+    def test_initiate(self, mock_ssm_parameter, mock_post_request, mock_uuid4):
+        mock_uuid4.return_value.hex = self.transaction_id
         sample_response = {
             "timestamp": "2018-07-03T08:23:12.494Z",
             "transactionReference": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
@@ -22,8 +31,7 @@ class TestUserVerificationService(unittest.TestCase):
         mock_post_request.return_value.status_code = StatusCode.OK
         mock_post_request.return_value.json.return_value = sample_response
 
-        username = "peterparker@marvel.io"
-        response = user_verification_service.initiate(username)
+        response = user_verification_service.initiate(self.username)
         if response == sample_response:
             user_verification_model = user_verification_repo.session.query(UserVerificationModel) \
                 .filter(UserVerificationModel.jumio_reference == sample_response["transactionReference"]) \
@@ -37,11 +45,16 @@ class TestUserVerificationService(unittest.TestCase):
             assert False
 
     def test_submit_success(self):
-        transaction_id = "4fe04f985eab4b40ac06545393c0ef55"
-        response = user_verification_service.submit(transaction_id, None)
+        user_verification_repo \
+            .session.add(UserVerificationModel(transaction_id=self.transaction_id,
+                                               user_reference_id=get_user_reference_id_from_username(
+                                                   self.username),
+                                               jumio_reference=self.jumio_reference,
+                                               verification_status=UserVerificationStatus.PENDING.value))
+        response = user_verification_service.submit(self.transaction_id, None)
         if response == "OK":
             user_verification_model = user_verification_repo.session.query(UserVerificationModel) \
-                .filter(UserVerificationModel.transaction_id == transaction_id) \
+                .filter(UserVerificationModel.transaction_id == self.transaction_id) \
                 .first()
             if user_verification_model.verification_status == UserVerificationStatus.SUBMIT_SUCCESS.value:
                 assert True
@@ -51,12 +64,17 @@ class TestUserVerificationService(unittest.TestCase):
             assert False
 
     def test_submit_error(self):
-        transaction_id = "4fe04f985eab4b40ac06545393c0ef55"
+        user_verification_repo \
+            .session.add(UserVerificationModel(transaction_id=self.transaction_id,
+                                               user_reference_id=get_user_reference_id_from_username(
+                                                   self.username),
+                                               jumio_reference=self.jumio_reference,
+                                               verification_status=UserVerificationStatus.PENDING.value))
         error_code = 9100
-        response = user_verification_service.submit(transaction_id, error_code)
+        response = user_verification_service.submit(self.transaction_id, error_code)
         if response == "OK":
             user_verification_model = user_verification_repo.session.query(UserVerificationModel) \
-                .filter(UserVerificationModel.transaction_id == transaction_id) \
+                .filter(UserVerificationModel.transaction_id == self.transaction_id) \
                 .first()
             if user_verification_model.verification_status == UserVerificationStatus.SUBMIT_ERROR.value:
                 assert True
@@ -67,7 +85,7 @@ class TestUserVerificationService(unittest.TestCase):
 
     def test_complete(self):
         payload = {
-            "jumioIdScanReference": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+            "jumioIdScanReference": self.jumio_reference,
             "callBackType": "NETVERIFYID",
             "verificationStatus": "APPROVED_VERIFIED",
             "idScanStatus": "SUCCESS",
@@ -82,8 +100,10 @@ class TestUserVerificationService(unittest.TestCase):
             user_verification_model = user_verification_repo.session.query(UserVerificationModel) \
                 .filter(UserVerificationModel.jumio_reference == payload["jumioIdScanReference"]) \
                 .first()
-            verification_approved = user_verification_model.verification_status == UserVerificationStatus.APPROVED_VERIFIED.value
-            verification_denied = user_verification_model.verification_status == UserVerificationStatus.DENIED_FRAUD.value
+            verification_approved = user_verification_model.verification_status == UserVerificationStatus.\
+                APPROVED_VERIFIED.value
+            verification_denied = user_verification_model.verification_status == UserVerificationStatus.\
+                DENIED_FRAUD.value
             if verification_approved or verification_denied:
                 assert True
             else:
@@ -91,6 +111,8 @@ class TestUserVerificationService(unittest.TestCase):
         else:
             assert False
 
+    def tearDown(self):
+        user_verification_repo.session.query(UserVerificationModel).delete()
 
 if __name__ == '__main__':
     unittest.main()
