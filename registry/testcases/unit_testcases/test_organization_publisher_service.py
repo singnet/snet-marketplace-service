@@ -9,7 +9,7 @@ from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization as DomainOrganization
 from registry.infrastructure.models import Organization, OrganizationMember, OrganizationState, Group, \
     OrganizationAddress
-from registry.testcases.test_variables import ORG_PAYLOAD_MODEL, \
+from registry.testcases.test_variables import ORG_GROUPS, ORG_PAYLOAD_MODEL, \
     ORG_RESPONSE_MODEL, ORG_ADDRESS, ORIGIN
 
 ORG_PAYLOAD_REQUIRED_KEYS = ["org_id", "org_uuid", "org_name", "origin", "org_type", "metadata_ipfs_uri",
