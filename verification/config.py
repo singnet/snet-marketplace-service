@@ -22,6 +22,6 @@ JUMIO_API_TOKEN = ""
 JUMIO_API_SECRET = ""
 
 SUCCESS_REDIRECTION_DAPP_URL = "http://ropsten-publisher.singularitynet.io.s3-website-us-east-1.amazonaws.com/" \
-                               "/onboarding/authenticate/individual"
+                               "/onboarding/authenticate/individual/status"
 USER_REFERENCE_ID_NAMESPACE = "singularitynet"
 
