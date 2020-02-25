@@ -191,7 +191,22 @@ class Organization:
     def is_org_uuid_set(self):
         return self.__uuid is None or len(self.__uuid) == 0
 
+    def is_valid_field(self, field):
+        if field is not None and len(field) != 0:
+            return True
+        return False
+
     def is_valid_for_submit(self):
+        if not self.is_valid_field(self.__name):
+            return False
+        if not self.is_valid_field(self.__uuid):
+            return False
+        if not self.is_valid_field(self.__id):
+            return False
+        if not self.is_valid_field(self.__org_type):
+            return False
+        if len(self.__groups) == 0:
+            return False
         return True
 
     def is_minor(self, updated_organization):
