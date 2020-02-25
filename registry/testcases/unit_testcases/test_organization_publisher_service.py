@@ -28,7 +28,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
             "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN,
             "description": "", "short_description": "", "url": "https://dummy.dummy", "contacts": "",
             "assets": {"hero_image": {"url": "", "ipfs_uri": ""}},
-            "org_address": ORG_ADDRESS, "groups": [],
+            "org_address": ORG_ADDRESS, "groups": json.loads(ORG_GROUPS),
             "state": {}
         }
         response = OrganizationPublisherService(None, username).create_organization(payload)

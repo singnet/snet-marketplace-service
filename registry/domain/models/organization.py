@@ -180,10 +180,10 @@ class Organization:
         self.__metadata_ipfs_uri = f"ipfs://{ipfs_hash}"
 
     def setup_id(self):
+        org_uuid = uuid4().hex
+        self.__uuid = org_uuid
         if self.__org_type == OrganizationType.INDIVIDUAL.value:
-            self.__id = self.__uuid
-        elif self.__org_type == OrganizationType.ORGANIZATION.value:
-            self.__id = uuid4().hex
+            self.__id = org_uuid
 
     def is_org_id_set(self):
         return self.__id is None or len(self.__id) == 0
