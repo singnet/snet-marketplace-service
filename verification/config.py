@@ -7,8 +7,8 @@ NETWORKS = {
             "DB_DRIVER": "mysql+pymysql",
             "DB_HOST": "localhost",
             "DB_USER": "unittest_root",
-            "DB_PASSWORD": "mK3Pc'x';$!3",
-            "DB_NAME": "user_verification_unittest_db",
+            "DB_PASSWORD": "unittest_pwd",
+            "DB_NAME": "unittest_db",
             "DB_PORT": 3306,
         },
     }
