@@ -82,7 +82,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
             "description": "this is description", "short_description": "this is short description",
             "url": "https://dummy.dummy", "contacts": "",
             "assets": {"hero_image": {"url": "", "ipfs_uri": ""}},
-            "org_address": ORG_ADDRESS, "groups": [],
+            "org_address": ORG_ADDRESS, "groups": json.loads(ORG_GROUPS),
             "state": {}
         }
         organization = OrganizationFactory.org_domain_entity_from_payload(payload)
