@@ -246,7 +246,7 @@ class OrganizationPublisherRepository(BaseRepository):
             .filter(OrganizationMember.status == OrganizationMemberStatus.PENDING.value) \
             .first()
         if org_member is None:
-            raise Exception(f"No member ound")
+            raise Exception(f"No member found")
         
         if org_member.status == OrganizationMemberStatus.PUBLISHED.value and org_member.address == wallet_address:
             org_member.username = username
