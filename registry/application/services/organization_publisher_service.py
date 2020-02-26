@@ -67,7 +67,7 @@ class OrganizationPublisherService:
     def submit_organization_for_approval(self, payload):
         logger.info(f"submit for approval organization org_uuid: {self.org_uuid}")
         organization = OrganizationFactory.org_domain_entity_from_payload(payload)
-        if not organization.is_valid_for_submit():
+        if not organization.is_valid():
             raise Exception("Invalid org metadata")
         org_repo.store_organization(organization, self.username, OrganizationStatus.APPROVED.value)
         return "OK"

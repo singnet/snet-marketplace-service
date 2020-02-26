@@ -200,7 +200,7 @@ class Organization:
             return True
         return False
 
-    def is_valid_for_submit(self):
+    def is_valid(self):
         if not self.is_valid_field(self.__name):
             return False
         if not self.is_valid_field(self.__uuid):
