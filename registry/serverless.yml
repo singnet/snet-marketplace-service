@@ -189,7 +189,7 @@ functions:
 
   update-org:
     warmup: true
-    handler: registry.application.handlers.organization_handlers.add_org
+    handler: registry.application.handlers.organization_handlers.update_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
