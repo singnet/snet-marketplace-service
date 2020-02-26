@@ -22,7 +22,7 @@ class Group:
             }
         }
 
-    def to_dict(self):
+    def to_response(self):
         return {
             "name": self.name,
             "id": self.group_id,
@@ -31,8 +31,8 @@ class Group:
             "status": self.status
         }
 
-    def dump(self):
-        return self.to_dict()
+    def to_dict(self):
+        return self.to_response()
 
     def setup_id(self):
         if self.group_id is None or len(self.group_id) == 0:

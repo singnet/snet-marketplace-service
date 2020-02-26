@@ -59,7 +59,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         if org_db_model is None:
             assert False
         organization = OrganizationFactory.org_domain_entity_from_repo_model(org_db_model)
-        org_dict = organization.to_dict()
+        org_dict = organization.to_response()
         org_dict["state"] = {}
         org_dict["groups"] = []
         org_dict["assets"]["hero_image"]["url"] = ""

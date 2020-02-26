@@ -25,19 +25,19 @@ class OrganizationPublisherService:
     def get_for_admin(self, params):
         status = params.get("status", None)
         organizations = org_repo.get_org(status)
-        return [org.to_dict() for org in organizations]
+        return [org.to_response() for org in organizations]
 
     def get_all_org_for_user(self):
         logger.info(f"get organization for user: {self.username}")
         organizations = org_repo.get_org_for_user(username=self.username)
-        return [org.to_dict() for org in organizations]
+        return [org.to_response() for org in organizations]
 
     def get_groups_for_org(self):
         logger.info(f"get groups for org_uuid: {self.org_uuid}")
         groups = org_repo.get_groups_for_org(self.org_uuid)
         return {
             "org_uuid": self.org_uuid,
-            "groups": [group.to_dict() for group in groups]
+            "groups": [group.to_response() for group in groups]
         }
 
     def create_organization(self, payload):
@@ -77,7 +77,7 @@ class OrganizationPublisherService:
         organization = org_repo.get_org_for_org_uuid(self.org_uuid)
         organization.publish_to_ipfs()
         org_repo.store_ipfs_hash(organization, self.username)
-        return organization.to_dict()
+        return organization.to_response()
 
     def save_transaction_hash_for_publish_org(self, payload):
         transaction_hash = payload["transaction_hash"]
@@ -92,14 +92,14 @@ class OrganizationPublisherService:
         limit = pagination_details.get("limit", None)
         sort = pagination_details.get("sort", None)
         org_members_list = org_repo.get_org_member(org_uuid=self.org_uuid, status=status, role=role)
-        return [member.to_dict() for member in org_members_list]
+        return [member.to_response() for member in org_members_list]
 
     def get_member(self, member_username):
         members = org_repo.get_org_member(username=member_username, org_uuid=self.org_uuid)
         if len(members) == 0:
             logger.info(f"No member {member_username} for the organization {self.org_uuid}")
             return []
-        return [member.to_dict() for member in members]
+        return [member.to_response() for member in members]
 
     def verify_invite(self, invite_code):
         logger.info(f"verify member invite_code: {invite_code} username: {self.username}")
@@ -149,7 +149,7 @@ class OrganizationPublisherService:
 
         failed_invitation = [member.username for member in requested_invite_member_list
                              if member.username in current_org_member_username_list]
-        return {"member": [member.to_dict() for member in eligible_invite_member_list],
+        return {"member": [member.to_response() for member in eligible_invite_member_list],
                 "failed_invitation": failed_invitation}
 
     def _send_email_notification_for_inviting_organization_member(self, org_members_list, org_name):

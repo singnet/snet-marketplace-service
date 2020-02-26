@@ -53,7 +53,7 @@ class Organization:
             "groups": [group.to_metadata() for group in self.__groups]
         }
 
-    def to_dict(self):
+    def to_response(self):
         head_quarter_address = None
         mail_address = None
         mail_address_same_hq_address = False
@@ -77,15 +77,15 @@ class Organization:
             "contacts": self.__contacts,
             "assets": self.__assets,
             "metadata_ipfs_uri": self.__metadata_ipfs_uri,
-            "groups": [group.to_dict() for group in self.__groups],
+            "groups": [group.to_response() for group in self.__groups],
             "org_address": {
                 "mail_address_same_hq_address": mail_address_same_hq_address,
-                "addresses": [address.to_dict() for address in self.__addresses]
+                "addresses": [address.to_response() for address in self.__addresses]
             },
             "state": {}
         }
         if self.__state is not None and isinstance(self.__state, OrganizationState):
-            org_dict["state"] = self.__state.to_dict()
+            org_dict["state"] = self.__state.to_response()
         return org_dict
 
     @property
@@ -230,7 +230,7 @@ class OrganizationState:
         self.__reviewed_by = reviewed_by
         self.__reviewed_on = reviewed_on
 
-    def to_dict(self):
+    def to_response(self):
         state_dict = {
             "state": self.__state,
             "updated_on": "",
@@ -246,7 +246,7 @@ class OrganizationState:
 
         return state_dict
 
-    def dump(self):
+    def to_dict(self):
         state_dict = {
             "state": self.__state,
             "transaction_hash": self.__transaction_hash,

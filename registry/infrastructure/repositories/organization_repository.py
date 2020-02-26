@@ -157,8 +157,8 @@ class OrganizationPublisherRepository(BaseRepository):
         self.add_all_items(groups)
 
     def add_organization_archive(self, organization):
-        groups = [group.dump() for group in organization.groups]
-        org_state = organization.org_state.dump()
+        groups = [group.to_dict() for group in organization.groups]
+        org_state = organization.org_state.to_dict()
         self.add_item(OrganizationArchive(
             uuid=organization.uuid, name=organization.name, org_id=organization.id,
             org_type=organization.org_type, origin=organization.origin, description=organization.description,
