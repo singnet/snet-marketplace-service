@@ -46,7 +46,7 @@ class ServicePublisherService:
         service = ServiceFactory().create_service_entity_model(self.org_uuid, self.service_uuid, payload,
                                                                ServiceStatus.DRAFT.value)
         service = ServiceRepository().save_service(self.username, service, ServiceStatus.DRAFT.value)
-        return service.to_dict()
+        return service.to_response()
 
     def save_transaction_hash_for_published_service(self, payload):
         service = ServiceRepository().get_service_for_given_service_uuid(self.org_uuid, self.service_uuid)
@@ -62,7 +62,7 @@ class ServicePublisherService:
         service = ServiceFactory().create_service_entity_model(self.org_uuid, self.service_uuid, payload,
                                                                ServiceStatus.APPROVAL_PENDING.value)
         service = ServiceRepository().save_service(self.username, service, ServiceStatus.APPROVAL_PENDING.value)
-        return service.to_dict()
+        return service.to_response()
 
     def create_service(self, payload):
         service_uuid = uuid4().hex
@@ -93,7 +93,7 @@ class ServicePublisherService:
 
     def get_service_for_given_service_uuid(self):
         service = ServiceRepository().get_service_for_given_service_uuid(self.org_uuid, self.service_uuid)
-        return service.to_dict()
+        return service.to_response()
 
     def publish_service_data_to_ipfs(self):
         service = ServiceRepository().get_service_for_given_service_uuid(self.org_uuid, self.service_uuid)

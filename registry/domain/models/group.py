@@ -22,13 +22,17 @@ class Group:
             }
         }
 
-    def to_dict(self):
+    def to_response(self):
         return {
             "name": self.name,
             "id": self.group_id,
             "payment_address": self.payment_address,
-            "payment_config": self.payment_config
+            "payment_config": self.payment_config,
+            "status": self.status
         }
+
+    def to_dict(self):
+        return self.to_response()
 
     def setup_id(self):
         if self.group_id is None or len(self.group_id) == 0:
