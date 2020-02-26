@@ -70,7 +70,7 @@ class OrganizationMember(object):
     def __hash__(self):
         return hash(self.__repr__())
 
-    def to_dict(self):
+    def to_response(self):
         member_dict = {
             "username": self.username,
             "address": self.address,

@@ -47,10 +47,11 @@ class TestOrganizationPublisherService(unittest.TestCase):
         username = "karl@dummy.com"
         test_org_uuid = uuid4().hex
         test_org_id = "org_id"
+        groups = OrganizationFactory.group_domain_entity_from_group_list_payload(json.loads(ORG_GROUPS))
         org_repo.add_organization(
             DomainOrganization(test_org_uuid, test_org_id, "org_dummy", "ORGANIZATION", ORIGIN, "", "",
-                               "", [], {}, "", "", [], [], [], []),
-            username, OrganizationStatus.DRAFT.value)
+                               "", [], {}, "", "", groups, [], [], []),
+            username, OrganizationStatus.PUBLISHED.value)
         payload = json.loads(ORG_PAYLOAD_MODEL)
         payload["org_uuid"] = test_org_uuid
         OrganizationPublisherService(test_org_uuid, username).save_organization_draft(payload)
@@ -58,11 +59,13 @@ class TestOrganizationPublisherService(unittest.TestCase):
         if org_db_model is None:
             assert False
         organization = OrganizationFactory.org_domain_entity_from_repo_model(org_db_model)
-        org_dict = organization.to_dict()
+        org_dict = organization.to_response()
         org_dict["state"] = {}
+        org_dict["groups"] = []
         org_dict["assets"]["hero_image"]["url"] = ""
         expected_organization = json.loads(ORG_RESPONSE_MODEL)
         expected_organization["org_id"] = test_org_id
+        expected_organization["groups"] = []
         expected_organization["org_uuid"] = test_org_uuid
         self.assertDictEqual(expected_organization, org_dict)
 
@@ -79,7 +82,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
             "description": "this is description", "short_description": "this is short description",
             "url": "https://dummy.dummy", "contacts": "",
             "assets": {"hero_image": {"url": "", "ipfs_uri": ""}},
-            "org_address": ORG_ADDRESS, "groups": [],
+            "org_address": ORG_ADDRESS, "groups": json.loads(ORG_GROUPS),
             "state": {}
         }
         organization = OrganizationFactory.org_domain_entity_from_payload(payload)
