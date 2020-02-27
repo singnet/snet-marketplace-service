@@ -224,3 +224,11 @@ def hash_to_bytesuri(s):
     # TODO: we should pad string with zeros till closest 32 bytes word because of a bug in processReceipt (in snet_cli.contract.process_receipt)
     s = "ipfs://" + s
     return s.encode("ascii").ljust(32 * (len(s)//32 + 1), b"\0")
+
+
+def compare_string_element_in_list(existing_list, new_list):
+    added = []
+    removed = []
+    updated = []
+
+    return added, removed, updated

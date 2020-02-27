@@ -56,7 +56,7 @@ class Organization:
             "groups": [group.to_metadata() for group in self.__groups]
         }
 
-    def to_dict(self):
+    def to_response(self):
         head_quarter_address = None
         mail_address = None
         mail_address_same_hq_address = False
@@ -80,15 +80,15 @@ class Organization:
             "contacts": self.__contacts,
             "assets": self.__assets,
             "metadata_ipfs_uri": self.__metadata_ipfs_uri,
-            "groups": [group.to_dict() for group in self.__groups],
+            "groups": [group.to_response() for group in self.__groups],
             "org_address": {
                 "mail_address_same_hq_address": mail_address_same_hq_address,
-                "addresses": [address.to_dict() for address in self.__addresses]
+                "addresses": [address.to_response() for address in self.__addresses]
             },
             "state": {}
         }
         if self.__state is not None and isinstance(self.__state, OrganizationState):
-            org_dict["state"] = self.__state.to_dict()
+            org_dict["state"] = self.__state.to_response()
         return org_dict
 
     @property
@@ -151,6 +151,10 @@ class Organization:
     def members(self):
         return self.__members
 
+    @property
+    def org_state(self):
+        return self.__state
+
     def set_assets(self, assets):
         self.__assets = assets
 
@@ -183,10 +187,10 @@ class Organization:
         self.__metadata_ipfs_uri = f"ipfs://{ipfs_hash}"
 
     def setup_id(self):
+        org_uuid = uuid4().hex
+        self.__uuid = org_uuid
         if self.__org_type == OrganizationType.INDIVIDUAL.value:
-            self.__id = self.__uuid
-        elif self.__org_type == OrganizationType.ORGANIZATION.value:
-            self.__id = uuid4().hex
+            self.__id = org_uuid
 
     def is_org_id_set(self):
         return self.__id is None or len(self.__id) == 0
@@ -194,7 +198,22 @@ class Organization:
     def is_org_uuid_set(self):
         return self.__uuid is None or len(self.__uuid) == 0
 
-    def is_valid_for_submit(self):
+    def is_valid_field(self, field):
+        if field is not None and len(field) != 0:
+            return True
+        return False
+
+    def is_valid(self):
+        if not self.is_valid_field(self.__name):
+            return False
+        if not self.is_valid_field(self.__uuid):
+            return False
+        if not self.is_valid_field(self.__id):
+            return False
+        if not self.is_valid_field(self.__org_type):
+            return False
+        if len(self.__groups) == 0:
+            return False
         return True
 
     def is_minor(self, updated_organization):
@@ -217,7 +236,7 @@ class OrganizationState:
         self.__reviewed_by = reviewed_by
         self.__reviewed_on = reviewed_on
 
-    def to_dict(self):
+    def to_response(self):
         state_dict = {
             "state": self.__state,
             "updated_on": "",
@@ -230,6 +249,28 @@ class OrganizationState:
             state_dict["updated_on"] = datetime_to_string(self.__updated_on)
         if self.__reviewed_on is not None:
             state_dict["reviewed_on"] = datetime_to_string(self.__reviewed_on)
+
+        return state_dict
+
+    def to_dict(self):
+        state_dict = {
+            "state": self.__state,
+            "transaction_hash": self.__transaction_hash,
+            "wallet_address": self.__wallet_address,
+            "created_by": self.__created_by,
+            "created_on": "",
+            "updated_on": "",
+            "updated_by": self.__updated_by,
+            "reviewed_by": self.__reviewed_by,
+            "reviewed_on": "",
+        }
+
+        if self.__updated_on is not None:
+            state_dict["updated_on"] = datetime_to_string(self.__updated_on)
+        if self.__reviewed_on is not None:
+            state_dict["reviewed_on"] = datetime_to_string(self.__reviewed_on)
+        if self.__created_on is not None:
+            state_dict["created_on"] = datetime_to_string(self.__created_on)
 
         return state_dict
 

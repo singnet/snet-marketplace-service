@@ -32,7 +32,7 @@ class OrganizationAddress(Base):
     org_uuid = Column("org_uuid", VARCHAR(128),
                       ForeignKey("organization.uuid", ondelete="CASCADE", onupdate="CASCADE"),
                       nullable=False)
-    address_type = Column("address_type", VARCHAR(64))
+    address_type = Column("address_type",    VARCHAR(64))
     street_address = Column("street_address", VARCHAR(256))
     apartment = Column("apartment", VARCHAR(256))
     city = Column("city", VARCHAR(64))
@@ -85,6 +85,24 @@ class Group(Base):
     payment_address = Column("payment_address", VARCHAR(128))
     payment_config = Column("payment_config", JSON, nullable=False)
     status = Column("status", VARCHAR(128))
+
+
+class OrganizationArchive(Base):
+    __tablename__ = "organization_archive"
+    uuid = Column("uuid", VARCHAR(128), primary_key=True)
+    name = Column("name", VARCHAR(128))
+    org_id = Column("org_id", VARCHAR(128))
+    org_type = Column("org_type", VARCHAR(128))
+    origin = Column("origin", VARCHAR(128))
+    description = Column("description", VARCHAR(1024))
+    short_description = Column("short_description", VARCHAR(1024))
+    url = Column("url", VARCHAR(512))
+    duns_no = Column("duns_no", VARCHAR(36))
+    contacts = Column("contacts", JSON, nullable=False)
+    assets = Column("assets", JSON, nullable=False)
+    metadata_ipfs_uri = Column("metadata_ipfs_uri", VARCHAR(255))
+    groups = Column("groups", JSON, nullable=False)
+    org_state = Column("org_state", JSON, nullable=False)
 
 
 class Service(Base):

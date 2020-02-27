@@ -19,7 +19,7 @@ class Service:
         self._groups = groups
         self._service_state = service_state
 
-    def to_dict(self):
+    def to_response(self):
         return {
             "org_uuid": self._org_uuid,
             "service_uuid": self._uuid,
@@ -36,8 +36,8 @@ class Service:
             "tags": self._tags,
             "mpe_address": self._mpe_address,
             "metadata_ipfs_hash": self._metadata_ipfs_hash,
-            "groups": [group.to_dict() for group in self._groups],
-            "service_state": self._service_state.to_dict()
+            "groups": [group.to_response() for group in self._groups],
+            "service_state": self._service_state.to_response()
         }
 
     def to_metadata(self):
