@@ -11,6 +11,9 @@ from registry.infrastructure.repositories.organization_repository import Organiz
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 
 
+
+
+
 class TestOrganizationEventConsumer(unittest.TestCase):
     def setUp(self):
         self.org_repo = OrganizationPublisherRepository()
