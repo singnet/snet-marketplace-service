@@ -1,16 +1,16 @@
 """baseline
 
-Revision ID: f568768d83a9
+Revision ID: 00c6ccaf2428
 Revises: 
-Create Date: 2020-02-14 12:48:07.663775
+Create Date: 2020-02-27 16:17:17.465224
 
 """
-import sqlalchemy as sa
 from alembic import op
+import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = 'f568768d83a9'
+revision = '00c6ccaf2428'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -33,14 +33,31 @@ def upgrade():
     sa.Column('metadata_ipfs_uri', mysql.VARCHAR(length=255), nullable=True),
     sa.PrimaryKeyConstraint('uuid')
     )
+    op.create_table('organization_archive',
+    sa.Column('uuid', mysql.VARCHAR(length=128), nullable=False),
+    sa.Column('name', mysql.VARCHAR(length=128), nullable=True),
+    sa.Column('org_id', mysql.VARCHAR(length=128), nullable=True),
+    sa.Column('org_type', mysql.VARCHAR(length=128), nullable=True),
+    sa.Column('origin', mysql.VARCHAR(length=128), nullable=True),
+    sa.Column('description', mysql.VARCHAR(length=1024), nullable=True),
+    sa.Column('short_description', mysql.VARCHAR(length=1024), nullable=True),
+    sa.Column('url', mysql.VARCHAR(length=512), nullable=True),
+    sa.Column('duns_no', mysql.VARCHAR(length=36), nullable=True),
+    sa.Column('contacts', mysql.JSON(), nullable=False),
+    sa.Column('assets', mysql.JSON(), nullable=False),
+    sa.Column('metadata_ipfs_uri', mysql.VARCHAR(length=255), nullable=True),
+    sa.Column('groups', mysql.JSON(), nullable=False),
+    sa.Column('org_state', mysql.JSON(), nullable=False),
+    sa.PrimaryKeyConstraint('uuid')
+    )
     op.create_table('service_review_history',
     sa.Column('row_id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('org_uuid', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('service_uuid', mysql.VARCHAR(length=128), nullable=False),
-    sa.Column('reviewed_service_data', mysql.JSON(), nullable=False),
+    sa.Column('service_metadata', mysql.JSON(), nullable=False),
     sa.Column('state', mysql.VARCHAR(length=64), nullable=False),
-    sa.Column('reviewed_by', mysql.VARCHAR(length=128), nullable=False),
-    sa.Column('reviewed_on', mysql.TIMESTAMP(), nullable=False),
+    sa.Column('reviewed_by', mysql.VARCHAR(length=128), nullable=True),
+    sa.Column('reviewed_on', mysql.TIMESTAMP(), nullable=True),
     sa.Column('created_on', mysql.TIMESTAMP(), nullable=False),
     sa.Column('updated_on', mysql.TIMESTAMP(), nullable=False),
     sa.PrimaryKeyConstraint('row_id')
@@ -106,7 +123,7 @@ def upgrade():
     sa.Column('uuid', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('display_name', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('service_id', mysql.VARCHAR(length=128), nullable=True),
-    sa.Column('metadata_ipfs_hash', mysql.VARCHAR(length=255), nullable=True),
+    sa.Column('metadata_uri', mysql.VARCHAR(length=255), nullable=True),
     sa.Column('proto', mysql.JSON(), nullable=False),
     sa.Column('short_description', mysql.VARCHAR(length=1024), nullable=False),
     sa.Column('description', mysql.VARCHAR(length=1024), nullable=False),
@@ -168,5 +185,6 @@ def downgrade():
     op.drop_table('org_member')
     op.drop_table('group')
     op.drop_table('service_review_history')
+    op.drop_table('organization_archive')
     op.drop_table('organization')
     # ### end Alembic commands ###

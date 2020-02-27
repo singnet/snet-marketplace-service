@@ -32,7 +32,7 @@ class OrganizationAddress(Base):
     org_uuid = Column("org_uuid", VARCHAR(128),
                       ForeignKey("organization.uuid", ondelete="CASCADE", onupdate="CASCADE"),
                       nullable=False)
-    address_type = Column("address_type",    VARCHAR(64))
+    address_type = Column("address_type", VARCHAR(64))
     street_address = Column("street_address", VARCHAR(256))
     apartment = Column("apartment", VARCHAR(256))
     city = Column("city", VARCHAR(64))
@@ -105,6 +105,7 @@ class OrganizationArchive(Base):
     org_state = Column("org_state", JSON, nullable=False)
 
 
+
 class Service(Base):
     __tablename__ = "service"
     org_uuid = Column("org_uuid", VARCHAR(128),
@@ -113,7 +114,7 @@ class Service(Base):
     uuid = Column("uuid", VARCHAR(128), primary_key=True, nullable=False)
     display_name = Column("display_name", VARCHAR(128), nullable=False)
     service_id = Column("service_id", VARCHAR(128))
-    metadata_ipfs_hash = Column("metadata_ipfs_hash", VARCHAR(255))
+    metadata_uri = Column("metadata_uri", VARCHAR(255))
     proto = Column("proto", JSON, nullable=False, default={})
     short_description = Column("short_description", VARCHAR(1024), nullable=False, default="")
     description = Column("description", VARCHAR(1024), nullable=False, default="")
@@ -171,9 +172,9 @@ class ServiceReviewHistory(Base):
     row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
     org_uuid = Column("org_uuid", VARCHAR(128), nullable=False)
     service_uuid = Column("service_uuid", VARCHAR(128), nullable=False)
-    reviewed_service_data = Column("reviewed_service_data", JSON, nullable=False)
+    service_metadata = Column("service_metadata", JSON, nullable=False)
     state = Column("state", VARCHAR(64), nullable=False)
-    reviewed_by = Column("reviewed_by", VARCHAR(128), nullable=False)
-    reviewed_on = Column("reviewed_on", TIMESTAMP(timezone=False), nullable=False)
+    reviewed_by = Column("reviewed_by", VARCHAR(128))
+    reviewed_on = Column("reviewed_on", TIMESTAMP(timezone=False))
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
     updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=func.utc_timestamp())

@@ -1,7 +1,7 @@
 NETWORKS = {
     3: {
         "name": "test",
-        "http_provider": "https://ropsten.infura.io",
+        "http_provider": "https://ropsten.infura.io/v3/09027f4a13e841d48dbfefc67e7685d5",
         "ws_provider": "wss://ropsten.infura.io/ws",
         "db": {
             "DB_DRIVER": "mysql+pymysql",
@@ -24,7 +24,7 @@ SLACK_HOOK = {
     }
 }
 IPFS_URL = {
-    'url': '',
+    'url': 'ipfs.singularitynet.io',
     'port': '80',
 
 }
@@ -35,4 +35,6 @@ ASSET_BUCKET = ""
 ASSET_DIR = "/tmp"
 NOTIFICATION_ARN = ""
 PUBLISHER_PORTAL_DAPP_URL = ""
-
+EXECUTOR_ADDRESS = ""
+EXECUTOR_KEY = ""
+ORG_ID_FOR_TESTING_AI_SERVICE = ""

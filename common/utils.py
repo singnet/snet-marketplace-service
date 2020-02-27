@@ -3,7 +3,12 @@ import decimal
 import json
 import sys
 import traceback
-
+import glob
+import tarfile
+import os
+import io
+from zipfile import ZipFile
+from urllib.parse import urlparse
 import requests
 import web3
 from web3 import Web3
@@ -223,7 +228,41 @@ def hash_to_bytesuri(s):
     """
     # TODO: we should pad string with zeros till closest 32 bytes word because of a bug in processReceipt (in snet_cli.contract.process_receipt)
     s = "ipfs://" + s
-    return s.encode("ascii").ljust(32 * (len(s)//32 + 1), b"\0")
+    return s.encode("ascii").ljust(32 * (len(s) // 32 + 1), b"\0")
+
+
+def publish_zip_file_in_ipfs(file_url, file_dir, ipfs_client):
+    filename = download_zip_file_from_url(file_url=file_url, file_dir=file_dir)
+    file_in_tar_bytes = convert_zip_file_to_tar_bytes(file_dir=file_dir, filename=filename)
+    return ipfs_client.ipfs_conn.add_bytes(file_in_tar_bytes.getvalue())
+
+
+def download_zip_file_from_url(file_url, file_dir):
+    response = requests.get(file_url)
+    filename = urlparse(file_url).path.split("/")[-1]
+    if not os.path.exists(file_dir):
+        os.makedirs(file_dir)
+    with open(f"{file_dir}/{filename}", 'wb') as asset_file:
+        asset_file.write(response.content)
+    return filename
+
+
+def convert_zip_file_to_tar_bytes(file_dir, filename):
+    with ZipFile(f"{file_dir}/{filename}", 'r') as zipObj:
+        listOfFileNames = zipObj.namelist()
+        zipObj.extractall(file_dir, listOfFileNames)
+    if not os.path.isdir(file_dir):
+        raise Exception("Directory %s doesn't exists" % file_dir)
+    files = glob.glob(os.path.join(file_dir, "*.proto"))
+    if len(files) == 0:
+        raise Exception("Cannot find any %s files" % (os.path.join(file_dir, "*.proto")))
+    files.sort()
+    tar_bytes = io.BytesIO()
+    tar = tarfile.open(fileobj=tar_bytes, mode="w")
+    for f in files:
+        tar.add(f, os.path.basename(f))
+    tar.close()
+    return tar_bytes
 
 
 def compare_string_element_in_list(existing_list, new_list):
