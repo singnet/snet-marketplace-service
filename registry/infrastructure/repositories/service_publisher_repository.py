@@ -16,7 +16,7 @@ class ServicePublisherRepository(BaseRepository):
 
             services = []
             for service in raw_services_data:
-                services.append(ServiceFactory().convert_service_db_model_to_entity_model(service).to_response())
+                services.append(ServiceFactory().convert_service_db_model_to_entity_model(service).to_dict())
             self.session.commit()
         except Exception as e:
             self.session.rollback()

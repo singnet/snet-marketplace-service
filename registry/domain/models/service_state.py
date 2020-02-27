@@ -5,7 +5,7 @@ class ServiceState:
         self._state = state
         self._transaction_hash = transaction_hash
 
-    def to_response(self):
+    def to_dict(self):
         return {
             "org_uuid": self._org_uuid,
             "service_uuid": self._service_uuid,
