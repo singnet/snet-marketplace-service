@@ -65,7 +65,7 @@ class OrganizationEventConsumer(object):
         for existing_member in existing_members:
             existing_member.set_status(OrganizationMemberStatus.PUBLISHED.value)
             if existing_member.role == Role.OWNER.value:
-                self._organization_repository.update_org_member(org_uuid, existing_member, existing_member.address)
+                self._organization_repository.update_org_member_using_address(org_uuid, existing_member, existing_member.address)
             else:
                 existing_members_map[existing_member.address] = existing_member
 
@@ -88,7 +88,7 @@ class OrganizationEventConsumer(object):
             self._organization_repository.add_member(added_member)
 
         for member in updated_members:
-            self._organization_repository.update_org_member(org_uuid, member, member.address)
+            self._organization_repository.update_org_member_using_address(org_uuid, member, member.address)
 
 
 class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):

@@ -263,3 +263,16 @@ class OrganizationPublisherRepository(BaseRepository):
             org_member.status = OrganizationMemberStatus.ACCEPTED.value
         org_member.updated_on = datetime.utcnow()
         self.session.commit()
+
+
+    def update_org_member_using_address(self, org_uuid, member, wallet_address):
+        org_member = self.session.query(OrganizationMember) \
+            .filter(OrganizationMember.address == wallet_address) \
+            .filter(OrganizationMember.org_uuid == org_uuid) \
+            .first()
+        if org_member is None:
+            raise Exception(f"No existing member found")
+
+        org_member.status = member.status
+        org_member.updated_on = datetime.utcnow()
+        self.session.commit()
