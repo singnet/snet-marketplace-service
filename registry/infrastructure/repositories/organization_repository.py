@@ -1,11 +1,11 @@
 from datetime import datetime
 from uuid import uuid4
 
-from registry.constants import Role, OrganizationMemberStatus, OrganizationStatus
+from registry.constants import OrganizationMemberStatus, OrganizationStatus, Role
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.exceptions import OrganizationNotFoundException
-from registry.infrastructure.models import Organization, OrganizationMember, OrganizationState, Group, \
-    OrganizationAddress
+from registry.infrastructure.models import Group, Organization, OrganizationAddress, OrganizationMember, \
+    OrganizationState
 from registry.infrastructure.repositories.base_repository import BaseRepository
 
 
@@ -24,6 +24,14 @@ class OrganizationPublisherRepository(BaseRepository):
 
     def get_org_for_org_uuid(self, org_uuid):
         organization = self.session.query(Organization).filter(Organization.uuid == org_uuid).first()
+        if organization is None:
+            raise OrganizationNotFoundException()
+        organization_domain_entity = OrganizationFactory.org_domain_entity_from_repo_model(organization)
+        self.session.commit()
+        return organization_domain_entity
+
+    def get_org_for_org_id(self, org_id):
+        organization = self.session.query(Organization).filter(Organization.org_id == org_id).first()
         if organization is None:
             raise OrganizationNotFoundException()
         organization_domain_entity = OrganizationFactory.org_domain_entity_from_repo_model(organization)
@@ -236,11 +244,23 @@ class OrganizationPublisherRepository(BaseRepository):
             .first()
         if org_member is None:
             raise Exception(f"No member found")
-        
+
         if org_member.status == OrganizationMemberStatus.PUBLISHED.value and org_member.address == wallet_address:
             org_member.username = username
         elif org_member.status == OrganizationMemberStatus.PENDING.value and org_member.username == username:
             org_member.address = wallet_address
             org_member.status = OrganizationMemberStatus.ACCEPTED.value
+        org_member.updated_on = datetime.utcnow()
+        self.session.commit()
+
+    def update_org_member(self, org_uuid, member, wallet_address):
+        org_member = self.session.query(OrganizationMember) \
+            .filter(OrganizationMember.address == wallet_address) \
+            .filter(OrganizationMember.org_uuid == org_uuid) \
+            .first()
+        if org_member is None:
+            raise Exception(f"No existing member found")
+
+        org_member.status = member.status
         org_member.updated_on = datetime.utcnow()
         self.session.commit()

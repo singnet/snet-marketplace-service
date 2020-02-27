@@ -5,8 +5,8 @@ from uuid import uuid4
 import requests
 
 from common import ipfs_util
-from common.utils import json_to_file, datetime_to_string
-from registry.config import IPFS_URL, ASSET_DIR, METADATA_FILE_PATH
+from common.utils import datetime_to_string, json_to_file
+from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH
 from registry.constants import OrganizationAddressType
 
 
@@ -14,6 +14,9 @@ class OrganizationType(Enum):
     ORGANIZATION = "organization"
     INDIVIDUAL = "individual"
 
+
+EXCLUDE_PATHS = ["root.org_uuid", "root._Organization__duns_no", "root.owner", "root._Organization__owner_name",
+                 "root.assets['hero_image']['url']", "root.metadata_ipfs_hash", "root.origin"]
 
 class Organization:
     def __init__(self, uuid, org_id, name, org_type, origin, description, short_description, url,
@@ -196,6 +199,9 @@ class Organization:
 
     def is_minor(self, updated_organization):
         return True
+
+    def is_major_change(self, metdata_organziation):
+        return False
 
 
 class OrganizationState:
