@@ -1,38 +1,15 @@
-import base64
-from datetime import datetime
-
-from common import boto_utils
-from registry.config import REGION_NAME, METADATA_FILE_PATH, ASSET_BUCKET, ALLOWED_ORIGIN
+from registry.config import ALLOWED_ORIGIN
 from registry.domain.models.group import Group
 from registry.domain.models.organization import Organization, OrganizationState
-from registry.domain.models.organization_member import OrganizationMember
 from registry.domain.models.organization_address import OrganizationAddress
+from registry.domain.models.organization_member import OrganizationMember
+from registry.exceptions import InvalidOrigin
 
 
 class OrganizationFactory:
 
     @staticmethod
     def org_domain_entity_from_payload(payload):
-
-        def extract_and_upload_assets(uuid, raw_assets):
-            org_assets = {}
-            boto_client = boto_utils.BotoUtils(region_name=REGION_NAME)
-            for asset_type in raw_assets:
-                org_assets[asset_type] = {}
-                asset = raw_assets[asset_type]
-                if "raw" in asset and len(asset["raw"]) != 0:
-                    current_time = datetime.utcnow().strftime("%Y%m%d%H%M%S")
-                    key_name = f"{uuid}-{asset_type}-{current_time}.{asset['file_type']}"
-                    filename = f"{METADATA_FILE_PATH}/{key_name}"
-                    raw_file = base64.b64decode(asset["raw"].encode())
-                    with open(filename, 'wb') as image:
-                        image.write(raw_file)
-                    boto_client.s3_upload_file(filename, ASSET_BUCKET, key_name)
-                    asset_url = f"https://{ASSET_BUCKET}.s3.amazonaws.com/{key_name}"
-                    org_assets[asset_type]["url"] = asset_url
-                if "url" in asset:
-                    org_assets[asset_type]["url"] = asset["url"]
-            return org_assets
 
         org_uuid = payload["org_uuid"]
         org_id = payload["org_id"]
@@ -43,17 +20,17 @@ class OrganizationFactory:
         url = payload["url"]
         duns_no = payload["duns_no"]
         origin = payload["origin"]
+        if origin not in ALLOWED_ORIGIN:
+            raise InvalidOrigin()
         contacts = payload["contacts"]
-        assets = {}
-        metadata_ipfs_hash = payload["metadata_ipfs_hash"]
+        assets = payload["assets"]
+        metadata_ipfs_uri = payload["metadata_ipfs_uri"]
         groups = OrganizationFactory.group_domain_entity_from_group_list_payload(payload["groups"])
         addresses = OrganizationFactory\
             .domain_address_entity_from_address_list_payload(payload["org_address"]["addresses"])
         organization = Organization(
             org_uuid, org_id, org_name, org_type, origin, description, short_description, url, contacts,
-            assets, metadata_ipfs_hash, duns_no, groups, addresses, [], [])
-        organization.setup_id()
-        organization.set_assets(extract_and_upload_assets(organization.uuid, payload.get("assets", {})))
+            assets, metadata_ipfs_uri, duns_no, groups, addresses, None, [])
         return organization
 
     @staticmethod
@@ -106,7 +83,7 @@ class OrganizationFactory:
             url=organization_repo_model.url,
             contacts=organization_repo_model.contacts,
             assets=organization_repo_model.assets,
-            metadata_ipfs_hash=organization_repo_model.metadata_ipfs_hash,
+            metadata_ipfs_uri=organization_repo_model.metadata_ipfs_uri,
             duns_no=organization_repo_model.duns_no,
             groups=OrganizationFactory.parse_group_data_model(organization_repo_model.groups),
             addresses=OrganizationFactory.parse_organization_address_data_model(organization_repo_model.addresses),

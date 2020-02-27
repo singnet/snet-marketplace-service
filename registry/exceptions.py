@@ -1,4 +1,4 @@
-from common.exceptions import CustomException
+from common.exceptions import CustomException, MethodNotImplemented
 
 
 class BadRequestException(CustomException):
@@ -10,6 +10,13 @@ class BadRequestException(CustomException):
 
 class OrganizationNotFoundException(CustomException):
     error_message = "ORGANIZATION_NOT_FOUND"
+
+    def __init__(self):
+        super().__init__({})
+
+
+class InvalidOrigin(CustomException):
+    error_message = "SERVICE_PROTO_NOT_FOUND"
 
     def __init__(self):
         super().__init__({})
@@ -29,4 +36,4 @@ class ServiceProtoNotFoundException(CustomException):
         super().__init__({})
 
 
-EXCEPTIONS = (BadRequestException, OrganizationNotFoundException)
+EXCEPTIONS = (BadRequestException, OrganizationNotFoundException, MethodNotImplemented)

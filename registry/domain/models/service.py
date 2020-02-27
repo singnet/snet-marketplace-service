@@ -15,7 +15,7 @@ class Service:
         self._contributors = contributors
         self._tags = tags
         self._mpe_address = mpe_address
-        self._metadata_uri = metadata_uri
+        self._metadata_ipfs_hash = metadata_ipfs_hash
         self._groups = groups
         self._service_state = service_state
 

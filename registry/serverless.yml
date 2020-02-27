@@ -62,11 +62,39 @@ package:
     - orchestrator/**
     - notification/**
     - dapp_user/**
+    - signer/**
     - contract_api/**
   include:
     - node_modules/singularitynet-platform-contracts/**
 
 functions:
+
+  get-org-for_admin:
+    warmup: true
+    handler: registry.application.handlers.service_handlers.get_org_for_admin
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /admin/org
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
   get_all_org:
     handler: registry.application.handlers.organization_handlers.get_all_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -128,9 +156,40 @@ functions:
               - X-Amz-User-Agent
               - x-requested-wit
 
-  add_org:
+  create-org:
     warmup: true
-    handler: registry.application.handlers.organization_handlers.add_org
+    handler: registry.application.handlers.organization_handlers.create_organization
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: POST
+          path: /org/create
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
+  update-org:
+    warmup: true
+    handler: registry.application.handlers.organization_handlers.update_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -159,7 +218,7 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-  publish_org_ipfs:
+  publish-org-ipfs:
     warmup: true
     handler: registry.application.handlers.organization_handlers.publish_org_on_ipfs
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -304,7 +363,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - http:
-          method: GET
+          method: POST
           path: /org/{org_uuid}/member/invite
           authorizer:
             name: user-authorizer
@@ -340,7 +399,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /org/{org_uuid}/member/verify
+          path: /org/member/verify
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -405,7 +464,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - http:
-          method: GET
+          method: POST
           path: /org/{org_uuid}/member/publish
           authorizer:
             name: user-authorizer
@@ -440,7 +499,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - http:
-          method: GET
+          method: POST
           path: /org/{org_uuid}/member/delete
           authorizer:
             name: user-authorizer
@@ -629,7 +688,7 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-              -
+
   publish-service-metadata-to-ipfs-hash:
     warmup: true
     handler: registry.application.handlers.service_handlers.publish_service_metadata_to_ipfs

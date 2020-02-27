@@ -1,16 +1,16 @@
 import json
 import re
 import traceback
+from urllib.parse import unquote
 
 from aws_xray_sdk.core import patch_all
 
-from common.logger import get_logger
-from common.utils import Utils, handle_exception_with_slack_notification
-from common.utils import generate_lambda_response
-from signer.config import NET_ID, SLACK_HOOK, SIGNER_ADDRESS, NETWORK_ID
 from common.constant import StatusCode
 from common.exceptions import BadRequestException
-from signer.signer import Signer
+from common.logger import get_logger
+from common.utils import Utils, generate_lambda_response, handle_exception_with_slack_notification
+from signer.config import NETWORK_ID, NET_ID, SIGNER_ADDRESS, SLACK_HOOK
+from signer.signers import Signer
 
 patch_all()
 
@@ -18,7 +18,7 @@ obj_util = Utils()
 
 logger = get_logger(__name__)
 
-
+@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def request_handler(event, context):
     logger.info("Signer::event: ", event)
     if "path" not in event:
@@ -99,6 +99,27 @@ def request_handler(event, context):
         response = generate_lambda_response(500, err_msg, cors_enabled=True)
         traceback.print_exc()
     return response
+
+
+@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def free_call_token_handler(event, context):
+    logger.info(f"Request for freecall token event {event}")
+    signer = Signer(net_id=NET_ID)
+    payload_dict = event.get("queryStringParameters")
+    email = event["requestContext"]["authorizer"]["claims"]["email"]
+    org_id = payload_dict["org_id"]
+    service_id = payload_dict["service_id"]
+    group_id = unquote(payload_dict["group_id"])
+    public_key = payload_dict["public_key"]
+    logger.info(
+        f"Free call token generation for email:{email} org_id:{org_id} service_id:{service_id} group_id:{group_id} public_key:{public_key}")
+
+    token_data = signer.token_for_free_call(email, org_id, service_id, group_id, public_key)
+
+    return generate_lambda_response(200, {
+        "status": "success",
+        "data": token_data
+    }, cors_enabled=True)
 
 
 @handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)

@@ -25,6 +25,7 @@ class StatusCode:
     INTERNAL_SERVER_ERROR = 500
     CREATED = 201
     OK = 200
+    FOUND = 302
 
 
 class ResponseStatus:

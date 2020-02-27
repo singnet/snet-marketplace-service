@@ -1,9 +1,8 @@
-from datetime import datetime as dt
 from sqlalchemy import Column, Integer, ForeignKey, UniqueConstraint
+from sqlalchemy import func
 from sqlalchemy.dialects.mysql import JSON, TIMESTAMP, VARCHAR
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from sqlalchemy import func
 
 Base = declarative_base()
 
@@ -21,7 +20,7 @@ class Organization(Base):
     duns_no = Column("duns_no", VARCHAR(36))
     contacts = Column("contacts", JSON, nullable=False)
     assets = Column("assets", JSON, nullable=False)
-    metadata_uri = Column("metadata_uri", VARCHAR(255))
+    metadata_ipfs_uri = Column("metadata_ipfs_uri", VARCHAR(255))
     org_state = relationship("OrganizationState", backref='organization', lazy='joined')
     groups = relationship("Group", backref='organization', lazy='joined')
     addresses = relationship("OrganizationAddress", backref='organization', lazy='joined')
@@ -86,6 +85,25 @@ class Group(Base):
     payment_address = Column("payment_address", VARCHAR(128))
     payment_config = Column("payment_config", JSON, nullable=False)
     status = Column("status", VARCHAR(128))
+
+
+class OrganizationArchive(Base):
+    __tablename__ = "organization_archive"
+    uuid = Column("uuid", VARCHAR(128), primary_key=True)
+    name = Column("name", VARCHAR(128))
+    org_id = Column("org_id", VARCHAR(128))
+    org_type = Column("org_type", VARCHAR(128))
+    origin = Column("origin", VARCHAR(128))
+    description = Column("description", VARCHAR(1024))
+    short_description = Column("short_description", VARCHAR(1024))
+    url = Column("url", VARCHAR(512))
+    duns_no = Column("duns_no", VARCHAR(36))
+    contacts = Column("contacts", JSON, nullable=False)
+    assets = Column("assets", JSON, nullable=False)
+    metadata_ipfs_uri = Column("metadata_ipfs_uri", VARCHAR(255))
+    groups = Column("groups", JSON, nullable=False)
+    org_state = Column("org_state", JSON, nullable=False)
+
 
 
 class Service(Base):
