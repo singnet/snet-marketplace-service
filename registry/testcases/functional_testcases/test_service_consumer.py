@@ -8,13 +8,13 @@ from registry.constants import ServiceStatus
 from registry.consumer.service_event_consumer import ServiceCreatedEventConsumer
 from registry.infrastructure.models import Organization, Service, ServiceGroup, ServiceState, ServiceReviewHistory
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
-from registry.infrastructure.repositories.service_repository import ServiceRepository
+from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 
 
 class TestOrganizationEventConsumer(unittest.TestCase):
     def setUp(self):
         self.org_repo = OrganizationPublisherRepository()
-        self.service_repo = ServiceRepository()
+        self.service_repo = ServicePublisherRepository()
 
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
     @patch('common.ipfs_util.IPFSUtil.read_file_from_ipfs')
