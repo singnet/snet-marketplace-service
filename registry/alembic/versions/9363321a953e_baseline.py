@@ -1,8 +1,8 @@
 """baseline
 
-Revision ID: a29572ecf7eb
+Revision ID: 9363321a953e
 Revises: 
-Create Date: 2020-02-12 15:47:02.233556
+Create Date: 2020-02-27 15:07:38.831213
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = 'a29572ecf7eb'
+revision = '9363321a953e'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -30,17 +30,17 @@ def upgrade():
     sa.Column('duns_no', mysql.VARCHAR(length=36), nullable=True),
     sa.Column('contacts', mysql.JSON(), nullable=False),
     sa.Column('assets', mysql.JSON(), nullable=False),
-    sa.Column('metadata_ipfs_hash', mysql.VARCHAR(length=255), nullable=True),
+    sa.Column('metadata_uri', mysql.VARCHAR(length=255), nullable=True),
     sa.PrimaryKeyConstraint('uuid')
     )
     op.create_table('service_review_history',
     sa.Column('row_id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('org_uuid', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('service_uuid', mysql.VARCHAR(length=128), nullable=False),
-    sa.Column('reviewed_service_data', mysql.JSON(), nullable=False),
+    sa.Column('service_metadata', mysql.JSON(), nullable=False),
     sa.Column('state', mysql.VARCHAR(length=64), nullable=False),
-    sa.Column('reviewed_by', mysql.VARCHAR(length=128), nullable=False),
-    sa.Column('reviewed_on', mysql.TIMESTAMP(), nullable=False),
+    sa.Column('reviewed_by', mysql.VARCHAR(length=128), nullable=True),
+    sa.Column('reviewed_on', mysql.TIMESTAMP(), nullable=True),
     sa.Column('created_on', mysql.TIMESTAMP(), nullable=False),
     sa.Column('updated_on', mysql.TIMESTAMP(), nullable=False),
     sa.PrimaryKeyConstraint('row_id')
@@ -106,7 +106,7 @@ def upgrade():
     sa.Column('uuid', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('display_name', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('service_id', mysql.VARCHAR(length=128), nullable=True),
-    sa.Column('metadata_ipfs_hash', mysql.VARCHAR(length=255), nullable=True),
+    sa.Column('metadata_uri', mysql.VARCHAR(length=255), nullable=True),
     sa.Column('proto', mysql.JSON(), nullable=False),
     sa.Column('short_description', mysql.VARCHAR(length=1024), nullable=False),
     sa.Column('description', mysql.VARCHAR(length=1024), nullable=False),

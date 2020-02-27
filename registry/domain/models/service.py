@@ -1,6 +1,6 @@
 class Service:
     def __init__(self, org_uuid, uuid, service_id, display_name, short_description, description, project_url, proto,
-                 assets, ranking, rating, contributors, tags, mpe_address, metadata_ipfs_hash, groups, service_state):
+                 assets, ranking, rating, contributors, tags, mpe_address, metadata_uri, groups, service_state):
         self._org_uuid = org_uuid
         self._uuid = uuid
         self._service_id = service_id
@@ -15,7 +15,7 @@ class Service:
         self._contributors = contributors
         self._tags = tags
         self._mpe_address = mpe_address
-        self._metadata_ipfs_hash = metadata_ipfs_hash
+        self._metadata_uri = metadata_uri
         self._groups = groups
         self._service_state = service_state
 
@@ -35,7 +35,7 @@ class Service:
             "contributors": self._contributors,
             "tags": self._tags,
             "mpe_address": self._mpe_address,
-            "metadata_ipfs_hash": self._metadata_ipfs_hash,
+            "metadata_uri": self._metadata_uri,
             "groups": [group.to_dict() for group in self._groups],
             "service_state": self._service_state.to_dict()
         }
@@ -115,12 +115,12 @@ class Service:
         return self._contributors
 
     @property
-    def metadata_ipfs_hash(self):
-        return self._metadata_ipfs_hash
+    def metadata_uri(self):
+        return self._metadata_uri
 
-    @metadata_ipfs_hash.setter
-    def metadata_ipfs_hash(self, metadata_ipfs_hash):
-        self._metadata_ipfs_hash = metadata_ipfs_hash
+    @metadata_uri.setter
+    def metadata_uri(self, metadata_uri):
+        self._metadata_uri = metadata_uri
 
     @property
     def groups(self):

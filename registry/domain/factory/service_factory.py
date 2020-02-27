@@ -4,6 +4,7 @@ from registry.infrastructure.models import Service as ServiceDBModel, ServiceGro
     ServiceState as ServiceStateDBModel
 from registry.domain.models.service_group import ServiceGroup
 from registry.domain.models.service_state import ServiceState
+from registry.domain.models.service_review_history import ServiceReviewHistory
 from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus, ServiceAvailabilityStatus
 
 
@@ -20,7 +21,7 @@ class ServiceFactory:
             description=service.description,
             project_url=service.project_url,
             proto=service.proto,
-            metadata_ipfs_hash=service.metadata_ipfs_hash,
+            metadata_uri=service.metadata_uri,
             assets=service.assets,
             rating=service.rating,
             ranking=service.ranking,
@@ -43,7 +44,7 @@ class ServiceFactory:
             uuid=service.uuid,
             display_name=service.display_name,
             service_id=service.service_id,
-            metadata_ipfs_hash=service.metadata_ipfs_hash,
+            metadata_uri=service.metadata_uri,
             proto=service.proto,
             short_description=service.short_description,
             description=service.description,
@@ -90,6 +91,19 @@ class ServiceFactory:
         )
 
     @staticmethod
+    def convert_service_review_history_entity_model_to_db_model(service_review_history):
+        return ServiceReviewHistory(
+            org_uuid=service_review_history.org_uuid,
+            service_uuid=service_review_history.service_uuid,
+            service_metadata=service_review_history.service_metadata,
+            state=service_review_history.state,
+            reviewed_by=service_review_history.reviewed_by,
+            reviewed_on=service_review_history.reviewed_on,
+            created_on=service_review_history.created_on,
+            updated_on=service_review_history.updated_on
+        )
+
+    @staticmethod
     def create_service_entity_model(org_uuid, service_uuid, payload, status):
         service_state_entity_model = \
             ServiceFactory.create_service_state_entity_model(org_uuid, service_uuid,
@@ -102,7 +116,7 @@ class ServiceFactory:
             payload.get("short_description", ""), payload.get("description", ""), payload.get("project_url", ""),
             payload.get("proto", {}), payload.get("assets", {}), payload.get("ranking", DEFAULT_SERVICE_RANKING),
             payload.get("rating", {}), payload.get("contributors", []), payload.get("tags", []),
-            payload.get("mpe_address", ""), payload.get("metadata_ipfs_hash", ""), service_group_entity_model_list,
+            payload.get("mpe_address", ""), payload.get("metadata_uri", ""), service_group_entity_model_list,
             service_state_entity_model)
 
     @staticmethod
