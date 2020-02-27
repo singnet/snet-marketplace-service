@@ -7,7 +7,6 @@ from common.logger import get_logger
 from common.utils import generate_lambda_response, handle_exception_with_slack_notification, validate_dict, \
     validate_dict_list
 from registry.application.services.service_publisher_service import ServicePublisherService
-from registry.application.services.service import Service
 from registry.config import NETWORK_ID, SLACK_HOOK
 from registry.exceptions import EXCEPTIONS
 
