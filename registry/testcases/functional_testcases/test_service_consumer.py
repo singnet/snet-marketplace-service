@@ -51,7 +51,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
                 uuid=service_uuid,
                 display_name="test_display_name",
                 service_id="test_service_id",
-                metadata_ipfs_hash="Qasdfghjklqwertyuiopzxcvbnm",
+                metadata_uri="Qasdfghjklqwertyuiopzxcvbnm",
                 short_description="test_short_description",
                 description="test_description",
                 project_url="https://dummy.io",
