@@ -61,7 +61,7 @@ class OrganizationState(Base):
 
 class OrganizationMember(Base):
     __tablename__ = "org_member"
-    row_id = Column("row_id", Integer, autoincrement=True,primary_key=True)
+    row_id = Column("row_id", Integer, autoincrement=True, primary_key=True)
     invite_code = Column("invite_code", VARCHAR(128))
     org_uuid = Column("org_uuid", VARCHAR(128),
                       ForeignKey("organization.uuid", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
