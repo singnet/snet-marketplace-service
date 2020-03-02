@@ -9,6 +9,7 @@ from common.logger import get_logger
 from registry.config import NETWORK_ID
 from registry.constants import OrganizationMemberStatus, OrganizationStatus, Role
 from registry.domain.factory.organization_factory import OrganizationFactory
+from registry.exceptions import OrganizationNotFoundException
 
 logger = get_logger(__name__)
 
@@ -98,8 +99,13 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
         self._process_organization_create_event(org_id, ipfs_org_metadata, recieved_members)
 
     def _get_existing_organization_records(self, org_id):
-        existing_publish_in_progress_organization = self._organization_repository.get_org_for_org_id(
-            org_id)
+        try:
+            existing_publish_in_progress_organization = self._organization_repository.get_org_for_org_id(
+                org_id)
+        except OrganizationNotFoundException:
+            return None
+        except Exception as e:
+            raise e
 
         return existing_publish_in_progress_organization
 
