@@ -32,14 +32,12 @@ class TestOrganizationPublisherService(unittest.TestCase):
             "state": {}
         }
         response = OrganizationPublisherService(None, username).create_organization(payload)
-        if response == "OK":
-            org_db_model = org_repo.session.query(Organization).first()
-            if org_db_model is not None:
-                assert True
-            else:
-                assert False
+        org_db_model = org_repo.session.query(Organization).first()
+        if org_db_model is not None:
+            assert True
         else:
             assert False
+
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
