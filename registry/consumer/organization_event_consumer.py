@@ -149,3 +149,4 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
             traceback.print_exc()
             logger.exception(e)
             raise Exception(f"Error while processing org created event for org_id {org_id}")
+
