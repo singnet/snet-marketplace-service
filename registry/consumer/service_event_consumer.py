@@ -6,9 +6,7 @@ from web3 import Web3
 from common.blockchain_util import BlockChainUtil
 from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
-from common.s3_util import S3Util
-from contract_api.config import NETWORK_ID, S3_BUCKET_ACCESS_KEY, \
-    S3_BUCKET_SECRET_KEY
+from registry.config import NETWORK_ID
 from registry.constants import ServiceStatus
 from registry.domain.factory.service_factory import ServiceFactory
 
@@ -19,7 +17,6 @@ class ServiceEventConsumer(object):
 
     def __init__(self, ws_provider, ipfs_url, ipfs_port, service_repository, organiztion_repository):
         self._blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
-        self._s3_util = S3Util(S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY)
         self._service_repository = service_repository
         self._organiztion_repository = organiztion_repository
         self._ipfs_util = IPFSUtil(ipfs_url, ipfs_port)
