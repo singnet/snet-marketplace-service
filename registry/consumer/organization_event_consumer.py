@@ -60,7 +60,7 @@ class OrganizationEventConsumer(object):
         recieved_members_map = {}
         existing_members_map = {}
         for recieved_member in recieved_members:
-            recieved_member.statusset_status (OrganizationMemberStatus.PUBLISHED.value)
+            recieved_member.set_status (OrganizationMemberStatus.PUBLISHED.value)
             recieved_members_map[recieved_member.address] = recieved_member
 
         for existing_member in existing_members:
