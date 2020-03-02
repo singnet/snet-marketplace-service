@@ -1,7 +1,7 @@
 from datetime import datetime as dt
 from registry.domain.models.service import Service
 from registry.infrastructure.models import Service as ServiceDBModel, ServiceGroup as ServiceGroupDBModel, \
-    ServiceState as ServiceStateDBModel
+    ServiceState as ServiceStateDBModel, ServiceReviewHistory
 from registry.domain.models.service_group import ServiceGroup
 from registry.domain.models.service_state import ServiceState
 from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus, ServiceAvailabilityStatus

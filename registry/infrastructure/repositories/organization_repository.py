@@ -5,7 +5,7 @@ from registry.constants import Role, OrganizationMemberStatus, OrganizationStatu
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.exceptions import OrganizationNotFoundException
 from registry.infrastructure.models import Organization, OrganizationMember, OrganizationState, Group, \
-    OrganizationAddress
+    OrganizationAddress, OrganizationArchive
 from registry.infrastructure.repositories.base_repository import BaseRepository
 
 
