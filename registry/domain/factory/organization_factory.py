@@ -167,6 +167,24 @@ class OrganizationFactory:
         return org_member
 
     @staticmethod
+    def parse_group_domain_entity_from_metadata(payload):
+        group_id = payload["group_id"]
+        group_name = payload["group_name"]
+        payment_address = payload['payment']["payment_address"]
+        payment_config = {"payment_expiration_threshold": payload['payment']["payment_expiration_threshold"],
+                          "payment_channel_storage_type": payload['payment']["payment_channel_storage_type"],
+                          "payment_channel_storage_client": payload['payment']["payment_channel_storage_client"]}
+        group = Group(group_name, group_id, payment_address, payment_config, '')
+        group.setup_id()
+        return group
+
+    @staticmethod
+    def group_domain_entity_from_group_list_metadata(payload):
+        domain_group_entity = []
+        for group in payload:
+            domain_group_entity.append(OrganizationFactory.parse_group_domain_entity_from_metadata(group))
+        return domain_group_entity
+    @staticmethod
     def parser_org_members_from_metadata(org_uuid, members, status):
 
         org_members = []
@@ -205,7 +223,7 @@ class OrganizationFactory:
         assets = OrganizationFactory.parse_organization_metadata_assets(ipfs_org_metadata.get("assets", None))
         metadata_ipfs_hash = ipfs_org_metadata.get("metadata_ipfs_hash", None)
         owner = ""
-        groups = OrganizationFactory.group_domain_entity_from_group_list_payload(ipfs_org_metadata.get("groups", []))
+        groups = OrganizationFactory.group_domain_entity_from_group_list_metadata(ipfs_org_metadata.get("groups", []))
 
         organization = Organization(org_uuid, org_id,org_name,org_type, owner, long_description,
                                     short_description, url, contacts, assets, metadata_ipfs_hash, "", "", [], groups,
