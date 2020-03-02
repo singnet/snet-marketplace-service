@@ -38,6 +38,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         else:
             assert False
 
+
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
     def test_edit_organization(self, mock_boto, mock_ipfs):
