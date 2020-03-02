@@ -141,3 +141,6 @@ class Service:
     @property
     def mpe_address(self):
         return self._mpe_address
+
+    def is_major_change(self, other):
+        return False

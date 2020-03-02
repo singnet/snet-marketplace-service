@@ -263,3 +263,11 @@ def convert_zip_file_to_tar_bytes(file_dir, filename):
         tar.add(f, os.path.basename(f))
     tar.close()
     return tar_bytes
+
+
+def compare_string_element_in_list(existing_list, new_list):
+    added = []
+    removed = []
+    updated = []
+
+    return added, removed, updated
