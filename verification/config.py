@@ -18,10 +18,11 @@ SLACK_HOOK = {}
 REGION_NAME = "us-east-2"
 
 JUMIO_BASE_URL = "https://netverify.com/api/v4"
-JUMIO_API_TOKEN = ""
-JUMIO_API_SECRET = ""
-
-SUCCESS_REDIRECTION_DAPP_URL = "http://ropsten-publisher.singularitynet.io.s3-website-us-east-1.amazonaws.com/" \
-                               "/onboarding/authenticate/individual/status"
-USER_REFERENCE_ID_NAMESPACE = "singularitynet"
-
+JUMIO_INITIATE_URL = f"{JUMIO_BASE_URL}/initiate"
+JUMIO_SUCCESS_URL = ""
+JUMIO_ERROR_URL = "https://ropsten-marketplace.singularitynet.io/verification/{}/error"
+JUMIO_CALLBACK_URL = "https://ropsten-marketplace.singularitynet.io/verification/{}/callback"
+JUMIO_WORKFLOW_ID = 200
+JUMIO_API_TOKEN_SSM_KEY = "JUMIO_API_TOKEN"
+JUMIO_API_SECRET_SSM_KEY = "JUMIO_API_SECRET"
+ALLOWED_VERIFICATION_REQUESTS = 2

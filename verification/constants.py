@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class UserVerificationStatus(Enum):
+class JumioVerificationStatus(Enum):
     PENDING = "PENDING"
     SUBMIT_SUCCESS = "SUBMIT_SUCCESS"
     SUBMIT_ERROR = "SUBMIT_ERROR"
@@ -13,5 +13,14 @@ class UserVerificationStatus(Enum):
     NO_ID_UPLOADED = "DENIED"
 
 
+class VerificationStatus(Enum):
+    PENDING = "PENDING"
+    SUBMIT = "SUBMITTED"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    FAILED = "FAILED"
 
 
+class VerificationType(Enum):
+    JUMIO = "JUMIO"
+    DUNS = "DUNS"

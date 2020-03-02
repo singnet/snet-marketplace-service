@@ -5,17 +5,30 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 
-class UserVerificationModel(Base):
-    __tablename__ = "user_verification"
-    transaction_id = Column("transaction_id", VARCHAR(128), primary_key=True)
-    user_reference_id = Column("user_reference_id", VARCHAR(128))
-    call_back_type = Column("call_back_type", VARCHAR(128))
-    jumio_reference = Column("jumio_reference", VARCHAR(128))
-    verification_status = Column("verification_status", VARCHAR(128))
-    id_scan_status = Column("id_scan_status", VARCHAR(128))
-    id_scan_source = Column("id_scan_source", VARCHAR(128))
+class VerificationModel(Base):
+    __tablename__ = "verification"
+    id = Column("id", VARCHAR(225), primary_key=True)
+    verification_type = Column("verification_type", VARCHAR(225), primary_key=True)
+    entity_id = Column("entity_id", VARCHAR(255))
+    status = Column("status", VARCHAR(255))
+    requestee = Column("requestee", VARCHAR(255))
+    created_at = Column("created_at", TIMESTAMP(timezone=False))
+    updated_at = Column("updated_at", TIMESTAMP(timezone=False))
+
+
+class JumioVerificationModel(Base):
+    __tablename__ = "jumio_verification"
+    row_id = Column("row_id", Integer, autoincrement=True, primary_key=True)
+    verification_id = Column("verification_id", VARCHAR(255))
+    username = Column("username", VARCHAR(255))
+    jumio_reference_id = Column("jumio_reference_id", VARCHAR(255))
+    user_reference_id = Column("user_reference_id", VARCHAR(255))
+    redirect_url = Column("redirect_url", VARCHAR(255))
+    callback_type = Column("callback_type", VARCHAR(255))
+    verification_status = Column("verification_status", VARCHAR(255))
+    id_scan_status = Column("id_scan_status", VARCHAR(255))
+    id_scan_source = Column("id_scan_source", VARCHAR(255))
     transaction_date = Column("transaction_date", TIMESTAMP(timezone=False))
     callback_date = Column("callback_date", TIMESTAMP(timezone=False))
     identity_verification = Column("identity_verification", JSON, default={})
-    id_type = Column("id_type", VARCHAR(128))
-    error_code = Column("error_code", Integer)
+
