@@ -11,7 +11,7 @@ class ServiceGroup:
         self._free_call_signer_address = free_call_signer_address
         self._daemon_address = daemon_address
 
-    def to_response(self):
+    def to_dict(self):
         return {
             "group_id": self._group_id,
             "group_name": self._group_name,
