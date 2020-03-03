@@ -1,10 +1,9 @@
 from datetime import datetime as dt
 from registry.domain.models.service import Service
 from registry.infrastructure.models import Service as ServiceDBModel, ServiceGroup as ServiceGroupDBModel, \
-    ServiceState as ServiceStateDBModel
+    ServiceState as ServiceStateDBModel, ServiceReviewHistory
 from registry.domain.models.service_group import ServiceGroup
 from registry.domain.models.service_state import ServiceState
-from registry.domain.models.service_review_history import ServiceReviewHistory
 from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus, ServiceAvailabilityStatus
 
 
@@ -12,6 +11,8 @@ class ServiceFactory:
 
     @staticmethod
     def convert_service_db_model_to_entity_model(service):
+        if service is None:
+            return None
         return Service(
             org_uuid=service.org_uuid,
             uuid=service.uuid,
@@ -144,3 +145,64 @@ class ServiceFactory:
             free_calls=group.get("free_calls", 0),
             free_call_signer_address=group.get("free_call_signer_address", None),
         )
+
+    @staticmethod
+    def create_service_from_service_metadata(org_uuid, service_uuid, service_metadata, tags_data, status):
+        # s={
+        #     "version": 1,
+        #     "display_name": "Entity Disambiguation",
+        #     "encoding": "proto",
+        #     "service_type": "grpc",
+        #     "model_ipfs_hash": "Qmd21xqgX8fkU4fD2bFMNG2Q86wAB4GmGBekQfLoiLtXYv",
+        #     "mpe_address": "0x34E2EeE197EfAAbEcC495FdF3B1781a3b894eB5f",
+        #     "groups": [
+        #         {
+        #             "group_name": "default_group",
+        #             "free_calls": 12,
+        #             "free_call_signer_address": "0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F",
+        #             "daemon_address ": ["0x1234", "0x345"],
+        #             "pricing": [
+        #                 {
+        #                     "price_model": "fixed_price",
+        #                     "price_in_cogs": 1,
+        #                     "default": True
+        #                 }
+        #             ],
+        #             "endpoints": [
+        #                 "https://tz-services-1.snet.sh:8005"
+        #             ],
+        #             "group_id": "EoFmN3nvaXpf6ew8jJbIPVghE5NXfYupFF7PkRmVyGQ="
+        #         }
+        #     ],
+        #     "assets": {
+        #         "hero_image": "Qmb1n3LxPXLHTUMu7afrpZdpug4WhhcmVVCEwUxjLQafq1/hero_named-entity-disambiguation.png"
+        #     },
+        #     "service_description": {
+        #         "url": "https://singnet.github.io/nlp-services-misc/users_guide/named-entity-disambiguation-service.html",
+        #         "description": "Provide further clearity regaridng entities named within a piece of text. For example, \"Paris is the capital of France\", we would want to link \"Paris\" to Paris the city not Paris Hilton in this case.",
+        #         "short_description": "text of 180 chars"
+        #     },
+        #     "contributors": [
+        #         {
+        #             "name": "dummy dummy",
+        #             "email_id": "dummy@dummy.io"
+        #         }
+        #     ]
+        # }
+        service_state_entity_model = \
+            ServiceFactory.create_service_state_entity_model(org_uuid, service_uuid,
+                                                             getattr(ServiceStatus, status).value)
+        service_group_entity_model_list = [
+            ServiceFactory.create_service_group_entity_model("", service_uuid, group) for group in
+            service_metadata.get("groups", [])]
+        return Service(
+            org_uuid, service_uuid, service_metadata.get("service_id", ""), service_metadata.get("display_name", ""),
+            service_metadata.get("short_description", ""), service_metadata.get("description", ""),
+            service_metadata.get("project_url", ""),
+            service_metadata.get("proto", {}), service_metadata.get("assets", {}),
+            service_metadata.get("ranking", DEFAULT_SERVICE_RANKING),
+            service_metadata.get("rating", {}), service_metadata.get("contributors", []),
+            tags_data,
+            service_metadata.get("mpe_address", ""), service_metadata.get("metadata_ipfs_hash", ""),
+            service_group_entity_model_list,
+            service_state_entity_model)
