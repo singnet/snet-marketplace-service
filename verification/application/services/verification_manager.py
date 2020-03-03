@@ -63,7 +63,7 @@ class VerificationManager:
     def callback(self, verification_id, verification_details):
         verification = verification_repository.get_verification(verification_id)
         if verification.type == VerificationType.JUMIO.value:
-            jumio_verification = JumioService(verification_details).callback(verification_id, verification_details)
+            jumio_verification = JumioService(jumio_repository).callback(verification_id, verification_details)
 
             if jumio_verification.verification_status in REJECTED_JUMIO_VERIFICATION:
                 verification_status = VerificationStatus.REJECTED.value

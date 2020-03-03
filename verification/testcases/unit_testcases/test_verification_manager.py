@@ -43,6 +43,7 @@ class TestVerificationManager(TestCase):
         username = "karl@snet.io"
         user_reference_id = "6a7e9b7d8a9e61566a7bd24345cbebdbea08389f"
         created_at = datetime.utcnow()
+
         mock_verification = Verification(id=verification_id, type="JUMIO", entity_id=username,
                                          status=VerificationStatus.PENDING.value, requestee=username,
                                          created_at=created_at, updated_at=created_at)
@@ -53,8 +54,31 @@ class TestVerificationManager(TestCase):
             created_at=created_at, redirect_url="url", verification_status=JumioVerificationStatus.PENDING.value,
             transaction_status=JumioTransactionStatus.PENDING.value)
         mock_jumio_repo.update_transaction_status = Mock(return_value=mock_jumio_verification)
+
         response = VerificationManager().submit(verification_id, "SUCCESS")
         self.assertEqual(response, DAPP_POST_JUMIO_URL)
 
-    def test_callback(self):
-        pass
+    @patch("verification.application.services.verification_manager.verification_repository")
+    @patch("verification.application.services.verification_manager.jumio_repository")
+    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123")))
+    def test_callback(self, mock_boto_utils, mock_jumio_repo, mock_verification_repo):
+        verification_id = uuid4().hex
+        username = "karl@snet.io"
+        user_reference_id = "6a7e9b7d8a9e61566a7bd24345cbebdbea08389f"
+        created_at = datetime.utcnow()
+
+        mock_verification = Verification(id=verification_id, type="JUMIO", entity_id=username,
+                                         status=VerificationStatus.PENDING.value, requestee=username,
+                                         created_at=created_at, updated_at=created_at)
+        mock_verification_repo.get_verification = Mock(return_value=mock_verification)
+        mock_verification_repo.update_status = Mock()
+        mock_jumio_verification = JumioVerification(
+            verification_id=verification_id, username=username, user_reference_id=user_reference_id,
+            created_at=created_at, redirect_url="url", verification_status=JumioVerificationStatus.APPROVED_VERIFIED.value,
+            transaction_status=JumioTransactionStatus.DONE.value)
+        mock_jumio_repo.update_verification_and_transaction_status = Mock(return_value=mock_jumio_verification)
+
+        payload = {
+            "callbackDate": "2001-05-02T20:23:10.123Z",
+            "verificationStatus": "APPROVED_VERIFIED"
+        }

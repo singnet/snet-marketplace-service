@@ -61,7 +61,7 @@ class JumioService:
 
     def callback(self, verification_id, verification_details):
         verification_status = verification_details["verificationStatus"]
-        callback_date = verification_details["callbackDate"]
+        callback_date = datetime.strptime(verification_details["callbackDate"], "%Y-%m-%dT%H:%M:%S.%fZ")
 
         if verification_status == JumioVerificationStatus.NO_ID_UPLOADED.value:
             transaction_status = JumioTransactionStatus.FAILED.value
