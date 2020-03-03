@@ -35,6 +35,12 @@ ASSET_BUCKET = ""
 ASSET_DIR = "/tmp"
 NOTIFICATION_ARN = ""
 PUBLISHER_PORTAL_DAPP_URL = ""
-EXECUTOR_ADDRESS = ""
-EXECUTOR_KEY = ""
 ORG_ID_FOR_TESTING_AI_SERVICE = ""
+BLOCKCHAIN_TEST_ENV = {
+    "network_id": 3,
+    "network_name": "ropsten",
+    "executor_address": "",
+    "executor_key": "",
+    "free_calls": 100
+}
+SLACK_CHANNEL_FOR_APPROVAL_TEAM = ""

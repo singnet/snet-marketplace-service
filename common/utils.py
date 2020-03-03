@@ -13,10 +13,12 @@ import requests
 import web3
 from web3 import Web3
 
+from common.logger import get_logger
 from common.constant import COGS_TO_AGI, StatusCode
 from common.exceptions import OrganizationNotFound
 
 IGNORED_LIST = ['row_id', 'row_created', 'row_updated']
+logger = get_logger(__name__)
 
 
 class Utils:
@@ -263,3 +265,25 @@ def convert_zip_file_to_tar_bytes(file_dir, filename):
         tar.add(f, os.path.basename(f))
     tar.close()
     return tar_bytes
+
+
+def send_email_notification(recipients, notification_subject, notification_message, notification_arn, boto_util):
+    for recipient in recipients:
+        send_notification_payload = {"body": json.dumps({
+            "message": notification_message,
+            "subject": notification_subject,
+            "notification_type": "support",
+            "recipient": recipient})}
+        boto_util.invoke_lambda(lambda_function_arn=notification_arn, invocation_type="RequestResponse",
+                                payload=json.dumps(send_notification_payload))
+        logger.info(f"email_sent to {recipient}")
+
+
+def send_slack_notification(slack_msg, slack_url, slack_channel):
+    payload = {"channel": f"#{slack_channel}",
+               "username": "webhookbot",
+               "text": slack_msg,
+               "icon_emoji": ":ghost:"
+               }
+    slack_response = requests.post(url=slack_url, data=json.dumps(payload))
+    logger.info(slack_response.status_code, slack_response.text)
