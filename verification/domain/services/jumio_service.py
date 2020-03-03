@@ -27,12 +27,23 @@ class JumioService:
             verification_id=verification_id, username=username, user_reference_id=user_reference_id,
             verification_status=JumioVerificationStatus.PENDING.value, created_at=current_time,
             transaction_date=current_time, transaction_status=TransactionStatus.PENDING)
+
+        headers, body = self.make_payload_for_initiate(jumio_verification)
+        response = requests.post(JUMIO_INITIATE_URL, data=body, headers=headers)
+        if response.status_code != 200:
+            raise UnableToInitiateException()
+        response_body = response.json()
+        jumio_verification.redirect_url = response_body["redirectUrl"]
+        jumio_verification.jumio_reference_id = response_body["transactionReference"]
+        return jumio_verification
+
+    def make_payload_for_initiate(self, jumio_verification):
         payload = {
-            "customerInternalReference": verification_id,
-            "userReference": user_reference_id,
-            "successUrl": JUMIO_SUBMIT_URL.format(verification_id),
-            "errorUrl": JUMIO_SUBMIT_URL.format(verification_id),
-            "callbackUrl": JUMIO_CALLBACK_URL.format(verification_id),
+            "customerInternalReference": jumio_verification.verification_id,
+            "userReference": jumio_verification.user_reference_id,
+            "successUrl": JUMIO_SUBMIT_URL.format(jumio_verification.verification_id),
+            "errorUrl": JUMIO_SUBMIT_URL.format(jumio_verification.verification_id),
+            "callbackUrl": JUMIO_CALLBACK_URL.format(jumio_verification.verification_id),
             "workflowId": 200,
         }
         body = json.dumps(payload)
@@ -47,13 +58,7 @@ class JumioService:
             "User-Agent": "Publisher Dapp",
             "Authorization": authorization
         }
-        response = requests.post(JUMIO_INITIATE_URL, data=body, headers=headers)
-        if response.status_code != 200:
-            raise UnableToInitiateException()
-        response_body = response.json()
-        jumio_verification.redirect_url = response_body["redirectUrl"]
-        jumio_verification.jumio_reference_id = response_body["transactionReference"]
-        return jumio_verification
+        return headers, body
 
     def submit(self, verification_id, transaction_status):
         verification = self.repo.update_transaction_status(verification_id, transaction_status)
