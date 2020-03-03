@@ -15,7 +15,7 @@ class UnableToInitiateException(CustomException):
         super().__init__({})
 
 
-class NotAllowedToInitiate(CustomException):
+class NotAllowedToInitiateException(CustomException):
     error_message = "NOT_ALLOWED_TO_INITIATE"
 
     def __init__(self, message):
@@ -24,4 +24,4 @@ class NotAllowedToInitiate(CustomException):
         })
 
 
-EXCEPTIONS = [UnableToInitiateException, BadRequestException, NotAllowedToInitiate]
+EXCEPTIONS = (UnableToInitiateException, BadRequestException, NotAllowedToInitiateException)

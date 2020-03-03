@@ -14,7 +14,7 @@ class VerificationFactory:
     @staticmethod
     def verification_entity_from_db(verification_db):
         return Verification(
-            verification_db.id, verification_db.verfication_type, verification_db.entity_id,
+            verification_db.id, verification_db.verification_type, verification_db.entity_id,
             verification_db.status, verification_db.requestee, verification_db.created_at, verification_db.updated_at)
 
     @staticmethod

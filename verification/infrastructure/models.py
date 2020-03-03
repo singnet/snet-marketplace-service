@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer
-from sqlalchemy.dialects.mysql import JSON, TIMESTAMP, VARCHAR
+from sqlalchemy.dialects.mysql import TIMESTAMP, VARCHAR
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()

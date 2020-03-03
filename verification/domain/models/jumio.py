@@ -6,7 +6,7 @@ class JumioVerification:
         self.username = username
         self.user_reference_id = user_reference_id
         self.verification_status = verification_status
-        self.transcation_status = transaction_status
+        self.transaction_status = transaction_status
         self.created_at = created_at
         self.redirect_url = redirect_url
         self.jumio_reference_id = jumio_reference_id

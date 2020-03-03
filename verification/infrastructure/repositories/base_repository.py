@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from registry.config import NETWORKS, NETWORK_ID
+from verification.config import NETWORKS, NETWORK_ID
 
 engine = create_engine(
     f"{NETWORKS[NETWORK_ID]['db']['DB_DRIVER']}://{NETWORKS[NETWORK_ID]['db']['DB_USER']}:"

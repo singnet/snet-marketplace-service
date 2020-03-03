@@ -11,7 +11,7 @@ from verification.exceptions import EXCEPTIONS, BadRequestException
 logger = get_logger(__name__)
 
 
-@exception_handler(logger, SLACK_HOOK, NETWORK_ID, EXCEPTIONS)
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def initiate(event, context):
     payload = json.loads(event["body"])
     username = event["requestContext"]["authorizer"]["claims"]["email"]

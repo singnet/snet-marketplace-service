@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from registry.infrastructure.repositories.base_repository import BaseRepository
+from verification.infrastructure.repositories.base_repository import BaseRepository
 from verification.domain.factory.verification_factory import VerificationFactory
 from verification.infrastructure.models import VerificationModel
 

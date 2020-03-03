@@ -8,8 +8,10 @@ class JumioRepository(BaseRepository):
     def add_jumio_verification(self, verification):
         self.add_item(JumioVerificationModel(
             verification_id=verification.verification_id, username=verification.username,
-            jumio_reference_id=verification.jumio_reference_id, verification_status=verification.verification_status,
-            redirect_url=verification.redirect_url
+            jumio_reference_id=verification.jumio_reference_id, user_reference_id=verification.user_reference_id,
+            redirect_url=verification.redirect_url, transaction_status=verification.transaction_status,
+            verification_status=verification.verification_status, transaction_date=verification.transaction_date,
+            callback_date=verification.callback_date, created_at=verification.created_at
         ))
 
     def _get_verification(self, verification_id):

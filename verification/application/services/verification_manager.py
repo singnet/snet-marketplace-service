@@ -7,7 +7,7 @@ from verification.constants import VerificationType, VerificationStatus, JumioTr
     REJECTED_JUMIO_VERIFICATION, FAILED_JUMIO_VERIFICATION, VERIFIED_JUMIO_VERIFICATION
 from verification.domain.models.verfication import Verification
 from verification.domain.services.jumio_service import JumioService
-from verification.exceptions import NotAllowedToInitiate
+from verification.exceptions import NotAllowedToInitiateException
 from verification.infrastructure.repositories.jumio_repository import JumioRepository
 from verification.infrastructure.repositories.verification_repository import VerificationRepository
 
@@ -42,20 +42,17 @@ class VerificationManager:
     def terminate_if_not_allowed_to_verify(self, entity_id, verification_type):
         verifications = verification_repository.get_all_verification(entity_id, verification_type)
 
-        if len(verifications) > ALLOWED_VERIFICATION_REQUESTS:
-            raise NotAllowedToInitiate(f"Exceeded max({ALLOWED_VERIFICATION_REQUESTS}) requests")
+        if len(verifications) >= ALLOWED_VERIFICATION_REQUESTS:
+            raise NotAllowedToInitiateException(f"Exceeded max({ALLOWED_VERIFICATION_REQUESTS}) requests")
 
     def submit(self, verification_id, transaction_status):
         verification = verification_repository.get_verification(verification_id)
         if verification.type == VerificationType.JUMIO.value:
             jumio_verification = JumioService(jumio_repository).submit(verification.id, transaction_status)
 
-            if jumio_verification.transcation_status == JumioTransactionStatus.SUCCESS.value:
-                verification_status = VerificationStatus.SUBMIT.value
-            else:
+            if jumio_verification.transaction_status == JumioTransactionStatus.ERROR.value:
                 verification_status = VerificationStatus.ERROR.value
-
-            verification_repository.update_status(verification.id, verification_status)
+                verification_repository.update_status(verification.id, verification_status)
         else:
             raise MethodNotImplemented()
         return DAPP_POST_JUMIO_URL
