@@ -26,7 +26,6 @@ class StatusCode:
     CREATED = 201
     OK = 200
     FOUND = 302
-    TEMPORARY_REDIRECT = 307
 
 
 class ResponseStatus:
