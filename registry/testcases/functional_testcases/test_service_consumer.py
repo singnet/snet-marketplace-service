@@ -155,3 +155,5 @@ class TestOrganizationEventConsumer(unittest.TestCase):
         self.service_repo.session.query(ServiceState).delete()
         self.service_repo.session.query(ServiceGroup).delete()
         self.service_repo.session.query(ServiceReviewHistory).delete()
+
+
