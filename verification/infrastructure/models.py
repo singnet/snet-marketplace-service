@@ -24,11 +24,8 @@ class JumioVerificationModel(Base):
     jumio_reference_id = Column("jumio_reference_id", VARCHAR(255))
     user_reference_id = Column("user_reference_id", VARCHAR(255))
     redirect_url = Column("redirect_url", VARCHAR(255))
-    callback_type = Column("callback_type", VARCHAR(255))
+    transaction_status = Column("transaction_status", VARCHAR(255))
     verification_status = Column("verification_status", VARCHAR(255))
-    id_scan_status = Column("id_scan_status", VARCHAR(255))
-    id_scan_source = Column("id_scan_source", VARCHAR(255))
     transaction_date = Column("transaction_date", TIMESTAMP(timezone=False))
     callback_date = Column("callback_date", TIMESTAMP(timezone=False))
-    identity_verification = Column("identity_verification", JSON, default={})
-
+    created_at = Column("created_at", TIMESTAMP(timezone=False))

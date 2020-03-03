@@ -2,8 +2,8 @@ from datetime import datetime
 from uuid import uuid4
 
 from common.exceptions import MethodNotImplemented
-from verification.config import ALLOWED_VERIFICATION_REQUESTS
-from verification.constants import VerificationType, VerificationStatus
+from verification.config import ALLOWED_VERIFICATION_REQUESTS, DAPP_POST_JUMIO_URL
+from verification.constants import VerificationType, VerificationStatus, JumioTransactionStatus
 from verification.domain.models.verfication import Verification
 from verification.domain.services.jumio_service import JumioService
 from verification.exceptions import NotAllowedToInitiate
@@ -30,7 +30,7 @@ class VerificationManager:
             raise MethodNotImplemented()
 
     def initiate_jumio_verification(self, username, verification):
-        jumio_verification = JumioService().initiate(username, verification.id)
+        jumio_verification = JumioService(jumio_repository).initiate(username, verification.id)
         verification_repository.add_verification(verification)
         jumio_repository.add_jumio_verification(jumio_verification)
         return {
@@ -42,8 +42,18 @@ class VerificationManager:
         if len(verifications) > ALLOWED_VERIFICATION_REQUESTS:
             raise NotAllowedToInitiate(f"Exceeded max({ALLOWED_VERIFICATION_REQUESTS}) requests")
 
-    def submit(self):
-        pass
+    def submit(self, verification_id, transaction_status):
+        verification = verification_repository.get_verification(verification_id)
+        if verification.type == VerificationType.JUMIO.value:
+            jumio_verification = JumioService(jumio_repository).submit(verification.id, transaction_status)
+            if jumio_verification.transcation_status == JumioTransactionStatus.SUCCESS.value:
+                verification_status = VerificationStatus.SUBMIT.value
+            else:
+                verification_status = VerificationStatus.ERROR.value
+            verification_repository.update_status(verification.id, verification_status)
+        else:
+            raise MethodNotImplemented()
+        return DAPP_POST_JUMIO_URL
 
     def call_back(self):
         pass

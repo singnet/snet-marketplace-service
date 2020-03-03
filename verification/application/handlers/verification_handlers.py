@@ -19,12 +19,8 @@ def initiate(event, context):
     if not validate_dict(payload, required_keys, strict=True):
         raise BadRequestException()
     response = VerificationManager().initiate_verification(payload, username)
-    return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response})
+    return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response}, cors_enabled=True)
 
 
 def callback(event, context):
-    pass
-
-
-def error(event, context):
     pass

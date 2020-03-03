@@ -1,7 +1,13 @@
+from datetime import datetime
 from unittest import TestCase
 from unittest.mock import patch, Mock
+from uuid import uuid4
 
 from verification.application.services.verification_manager import VerificationManager
+from verification.config import DAPP_POST_JUMIO_URL
+from verification.constants import JumioVerificationStatus, VerificationStatus, JumioTransactionStatus
+from verification.domain.models.jumio import JumioVerification
+from verification.domain.models.verfication import Verification
 
 
 class TestVerificationManager(TestCase):
@@ -18,11 +24,34 @@ class TestVerificationManager(TestCase):
         }),
         status_code=200
     ))
-    def test_initiate_verification_with_jumio(self, mock_requests_post, mock_boto_utils, mock_jumio_repo, mock_verification_repo):
+    def test_initiate_verification_with_jumio(self, mock_requests_post, mock_boto_utils, mock_jumio_repo,
+                                              mock_verification_repo):
         username = "karl@dummy.io"
         verification_details = {
             "type": "JUMIO",
             "entity_id": username
         }
         response = VerificationManager().initiate_verification(verification_details, username)
-        self.assertEqual(response["redirect_url"], "https://yourcompany.netverify.com/web/v4/app?locale=en-GB&authorizationToken=xxx")
+        self.assertEqual(response["redirect_url"],
+                         "https://yourcompany.netverify.com/web/v4/app?locale=en-GB&authorizationToken=xxx")
+
+    @patch("verification.application.services.verification_manager.verification_repository")
+    @patch("verification.application.services.verification_manager.jumio_repository")
+    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123")))
+    def test_submit(self, mock_boto_utils, mock_jumio_repo, mock_verification_repo):
+        verification_id = uuid4().hex
+        username = "karl@snet.io"
+        user_reference_id = "6a7e9b7d8a9e61566a7bd24345cbebdbea08389f"
+        created_at = datetime.utcnow()
+        mock_verification = Verification(id=verification_id, type="JUMIO", entity_id=username,
+                                         status=VerificationStatus.PENDING.value, requestee=username,
+                                         created_at=created_at, updated_at=created_at)
+        mock_verification_repo.get_verification = Mock(return_value=mock_verification)
+        mock_verification_repo.update_status = Mock()
+        mock_jumio_verification = JumioVerification(
+            verification_id=verification_id, username=username, user_reference_id=user_reference_id,
+            created_at=created_at, redirect_url="url", verification_status=JumioVerificationStatus.PENDING.value,
+            transaction_status=JumioTransactionStatus.PENDING.value)
+        mock_jumio_repo.update_transaction_status = Mock(return_value=mock_jumio_verification)
+        response = VerificationManager().submit(verification_id, "SUCCESS")
+        self.assertEqual(response, DAPP_POST_JUMIO_URL)

@@ -6,7 +6,7 @@ from datetime import datetime
 import requests
 
 from common import boto_utils
-from verification.config import JUMIO_CALLBACK_URL, JUMIO_ERROR_URL, JUMIO_SUCCESS_URL, REGION_NAME, \
+from verification.config import JUMIO_CALLBACK_URL, JUMIO_SUBMIT_URL, REGION_NAME, \
     JUMIO_API_SECRET_SSM_KEY, JUMIO_API_TOKEN_SSM_KEY, JUMIO_INITIATE_URL
 from verification.constants import JumioVerificationStatus
 from verification.domain.models.jumio import JumioVerification
@@ -15,7 +15,8 @@ from verification.exceptions import UnableToInitiateException
 
 class JumioService:
 
-    def __init__(self):
+    def __init__(self, repo):
+        self.repo = repo
         self.boto_utils = boto_utils.BotoUtils(region_name=REGION_NAME)
 
     def initiate(self, username, verification_id):
@@ -23,13 +24,13 @@ class JumioService:
         user_reference_id = generate_sha_hash(username)
         jumio_verification = JumioVerification(
             verification_id=verification_id, username=username, user_reference_id=user_reference_id,
-            verification_status=JumioVerificationStatus.PENDING.value, created_at=current_time, updated_at=current_time)
+            verification_status=JumioVerificationStatus.PENDING.value, created_at=current_time)
         payload = {
             "customerInternalReference": verification_id,
             "userReference": user_reference_id,
-            "successUrl": JUMIO_SUCCESS_URL,
-            "errorUrl": JUMIO_ERROR_URL.format(verification_id),
-            "callbackUrl": JUMIO_CALLBACK_URL,
+            "successUrl": JUMIO_SUBMIT_URL.format(verification_id),
+            "errorUrl": JUMIO_SUBMIT_URL.format(verification_id),
+            "callbackUrl": JUMIO_CALLBACK_URL.format(verification_id),
             "workflowId": 200,
         }
         body = json.dumps(payload)
@@ -52,6 +53,10 @@ class JumioService:
         jumio_verification.jumio_reference_id = response_body["transactionReference"]
         return jumio_verification
 
+    def submit(self, verification_id, transaction_status):
+        verification = self.repo.update_transaction_status(verification_id, transaction_status)
+        return verification
+
 
 def generate_basic_auth(username, password):
     encoded_user_pass = b64encode(bytes(username + ':' + password, "utf-8")).decode("ascii")
@@ -60,3 +65,4 @@ def generate_basic_auth(username, password):
 
 def generate_sha_hash(target_string):
     return sha1(target_string.encode("utf-8")).hexdigest()
+

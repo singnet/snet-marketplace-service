@@ -19,8 +19,9 @@ REGION_NAME = "us-east-2"
 
 JUMIO_BASE_URL = "https://netverify.com/api/v4"
 JUMIO_INITIATE_URL = f"{JUMIO_BASE_URL}/initiate"
-JUMIO_SUCCESS_URL = ""
-JUMIO_ERROR_URL = "https://ropsten-marketplace.singularitynet.io/verification/{}/error"
+JUMIO_SUBMIT_URL = "https://ropsten-marketplace.singularitynet.io/verification/{}/submit"
+DAPP_POST_JUMIO_URL = "http://ropsten-publisher.singularitynet.io.s3-website-us-east-1.amazonaws.com" \
+                      "/onboarding/authenticate/individual/status"
 JUMIO_CALLBACK_URL = "https://ropsten-marketplace.singularitynet.io/verification/{}/callback"
 JUMIO_WORKFLOW_ID = 200
 JUMIO_API_TOKEN_SSM_KEY = "JUMIO_API_TOKEN"
