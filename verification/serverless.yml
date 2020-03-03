@@ -60,7 +60,6 @@ package:
 
 functions:
   initiate-user-verification:
-    warmup: true
     handler: verification/handlers.user_verification_handler.initiate
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -70,12 +69,10 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-      tags:
-        Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
       events:
         - http:
             method: POST
-            path: /verification/user/initiate
+            path: /intiate
             authorizer:
               name: user-authorizer
               type: COGNITO_USER_POOLS
@@ -102,12 +99,10 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-      tags:
-        Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
       events:
         - http:
             method: POST
-            path: /verification/user/submit
+            path: /{verification_id}/submit
             cors:
               origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
               header:
@@ -118,7 +113,7 @@ functions:
                 - X-Amz-Security-Token
                 - X-Amz-User-Agent
 
-  complete-user-verification:
+  callback:
     warmup: true
     handler: verification/handlers.user_verification_handler.complete
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -134,44 +129,7 @@ functions:
       events:
         - http:
             method: POST
-            path: /verification/user/complete
-            authorizer:
-              name: user-authorizer
-              type: COGNITO_USER_POOLS
-              arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-              identitySource: method.request.header.Authorization
-            cors:
-              origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-              header:
-                - Content-Type
-                - X-Amz-Date
-                - Authorization
-                - X-Api-Key
-                - X-Amz-Security-Token
-                - X-Amz-User-Agent
-
-  get-status:
-    warmup: true
-    handler: verification/handlers.user_verification_handler.get_status
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-      tags:
-        Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
-      events:
-        - http:
-            method: GET
-            path: /verification/user/status
-            authorizer:
-              name: user-authorizer
-              type: COGNITO_USER_POOLS
-              arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-              identitySource: method.request.header.Authorization
+            path: /{verification}/callback
             cors:
               origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
               header:
