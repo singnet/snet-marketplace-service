@@ -268,5 +268,5 @@ class Service:
         logger.info(validator.errors)
         return is_valid
 
-
-
+    def is_major_change(self, other):
+        return False
