@@ -1,8 +1,8 @@
 """baseline
 
-Revision ID: 00c6ccaf2428
+Revision ID: e86132e236a9
 Revises: 
-Create Date: 2020-02-27 16:17:17.465224
+Create Date: 2020-03-02 19:39:43.545694
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = '00c6ccaf2428'
+revision = 'e86132e236a9'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -74,8 +74,8 @@ def upgrade():
     sa.PrimaryKeyConstraint('row_id')
     )
     op.create_table('org_member',
-    sa.Column('row_id', sa.Integer(), autoincrement=True, nullable=True),
-    sa.Column('invite_code', mysql.VARCHAR(length=128), nullable=False),
+    sa.Column('row_id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('invite_code', mysql.VARCHAR(length=128), nullable=True),
     sa.Column('org_uuid', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('role', mysql.VARCHAR(length=128), nullable=True),
     sa.Column('username', mysql.VARCHAR(length=128), nullable=True),
@@ -86,7 +86,7 @@ def upgrade():
     sa.Column('created_on', mysql.TIMESTAMP(), nullable=True),
     sa.Column('updated_on', mysql.TIMESTAMP(), nullable=True),
     sa.ForeignKeyConstraint(['org_uuid'], ['organization.uuid'], onupdate='CASCADE', ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('invite_code')
+    sa.PrimaryKeyConstraint('row_id')
     )
     op.create_table('organization_address',
     sa.Column('row_id', sa.Integer(), autoincrement=True, nullable=False),

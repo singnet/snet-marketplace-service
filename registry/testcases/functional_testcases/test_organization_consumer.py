@@ -73,11 +73,19 @@ class TestOrganizationService(unittest.TestCase):
             "assets": {
                 'hero_image': 'QmagaSbQAdEtFkwc9ZQUDdYgUtXz93MPByngbx1b4cPidj/484b38d1c1fe4717ad4acab99394ea82-hero_image-20200107083215.png'},
             "groups": [{
-                "name": "my-group",
-                "id": "group_id",
-                "payment_address": "0x123",
-                "payment_config": {
-
+                "group_name": "my-group",
+                "group_id": "group_id",
+                "payment": {
+                    "payment_address": "0x123",
+                    "payment_expiration_threshold": 40320,
+                    "payment_channel_storage_type": "etcd",
+                    "payment_channel_storage_client": {
+                        "connection_timeout": "5s",
+                        "request_timeout": "3s",
+                        "endpoints": [
+                            "http://127.0.0.1:2379"
+                        ]
+                    }
                 }
             }]
         }
