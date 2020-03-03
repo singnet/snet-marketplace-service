@@ -72,7 +72,7 @@ def update_org(event, context):
         raise BadRequestException()
     org_uuid = payload.get("org_uuid", None)
     org_service = OrganizationPublisherService(org_uuid, username)
-    if action in [AddOrganizationActions.DRAFT.value, action == AddOrganizationActions.SUBMIT.value]:
+    if action in [AddOrganizationActions.DRAFT.value,  AddOrganizationActions.SUBMIT.value]:
         response = org_service.update_organization(payload, action)
     else:
         raise Exception("Invalid action")
