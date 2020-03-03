@@ -13,6 +13,20 @@ class JumioVerificationStatus(Enum):
     NO_ID_UPLOADED = "NO_ID_UPLOADED"
 
 
+REJECTED_JUMIO_VERIFICATION = [
+    JumioVerificationStatus.DENIED_FRAUD.value, JumioVerificationStatus.DENIED_UNSUPPORTED_ID_TYPE.value,
+    JumioVerificationStatus.DENIED_UNSUPPORTED_ID_COUNTRY.value
+]
+
+FAILED_JUMIO_VERIFICATION = [
+    JumioVerificationStatus.ERROR_NOT_READABLE_ID.value, JumioVerificationStatus.NO_ID_UPLOADED.value
+]
+
+VERIFIED_JUMIO_VERIFICATION = [
+    JumioVerificationStatus.APPROVED_VERIFIED.value
+]
+
+
 class VerificationStatus(Enum):
     PENDING = "PENDING"
     SUBMIT = "SUBMITTED"
@@ -29,5 +43,5 @@ class VerificationType(Enum):
 
 class JumioTransactionStatus(Enum):
     PENDING = "PENDING"
-    SUCCESS = "SUCCESS"
+    DONE = "DONE"
     ERROR = "ERROR"

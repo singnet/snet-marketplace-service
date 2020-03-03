@@ -55,3 +55,6 @@ class TestVerificationManager(TestCase):
         mock_jumio_repo.update_transaction_status = Mock(return_value=mock_jumio_verification)
         response = VerificationManager().submit(verification_id, "SUCCESS")
         self.assertEqual(response, DAPP_POST_JUMIO_URL)
+
+    def test_callback(self):
+        pass

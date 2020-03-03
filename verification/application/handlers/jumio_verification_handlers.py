@@ -4,7 +4,7 @@ from verification.application.services.verification_manager import VerificationM
 from verification.exceptions import BadRequestException
 
 
-def submit_success(event, context):
+def submit(event, context):
     query_parameters = event["queryStringParameters"]
     path_parameters = event["pathParameters"]
     if "transactionStatus" not in query_parameters:
@@ -15,4 +15,3 @@ def submit_success(event, context):
 
     return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": {}},
                                     cors_enabled=True, headers={"location": redirect_url})
-

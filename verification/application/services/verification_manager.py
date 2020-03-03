@@ -3,7 +3,8 @@ from uuid import uuid4
 
 from common.exceptions import MethodNotImplemented
 from verification.config import ALLOWED_VERIFICATION_REQUESTS, DAPP_POST_JUMIO_URL
-from verification.constants import VerificationType, VerificationStatus, JumioTransactionStatus
+from verification.constants import VerificationType, VerificationStatus, JumioTransactionStatus, \
+    REJECTED_JUMIO_VERIFICATION, FAILED_JUMIO_VERIFICATION, VERIFIED_JUMIO_VERIFICATION
 from verification.domain.models.verfication import Verification
 from verification.domain.services.jumio_service import JumioService
 from verification.exceptions import NotAllowedToInitiate
@@ -23,6 +24,7 @@ class VerificationManager:
         current_time = datetime.utcnow()
         verification = Verification(verification_id, verification_type, entity_id,
                                     VerificationStatus.PENDING.value, username, current_time, current_time)
+
         if verification_type == VerificationType.JUMIO.value:
             self.terminate_if_not_allowed_to_verify(entity_id, verification_type)
             return self.initiate_jumio_verification(username, verification)
@@ -39,6 +41,7 @@ class VerificationManager:
 
     def terminate_if_not_allowed_to_verify(self, entity_id, verification_type):
         verifications = verification_repository.get_all_verification(entity_id, verification_type)
+
         if len(verifications) > ALLOWED_VERIFICATION_REQUESTS:
             raise NotAllowedToInitiate(f"Exceeded max({ALLOWED_VERIFICATION_REQUESTS}) requests")
 
@@ -46,14 +49,33 @@ class VerificationManager:
         verification = verification_repository.get_verification(verification_id)
         if verification.type == VerificationType.JUMIO.value:
             jumio_verification = JumioService(jumio_repository).submit(verification.id, transaction_status)
+
             if jumio_verification.transcation_status == JumioTransactionStatus.SUCCESS.value:
                 verification_status = VerificationStatus.SUBMIT.value
             else:
                 verification_status = VerificationStatus.ERROR.value
+
             verification_repository.update_status(verification.id, verification_status)
         else:
             raise MethodNotImplemented()
         return DAPP_POST_JUMIO_URL
 
-    def call_back(self):
-        pass
+    def callback(self, verification_id, verification_details):
+        verification = verification_repository.get_verification(verification_id)
+        if verification.type == VerificationType.JUMIO.value:
+            jumio_verification = JumioService(verification_details).callback(verification_id, verification_details)
+
+            if jumio_verification.verification_status in REJECTED_JUMIO_VERIFICATION:
+                verification_status = VerificationStatus.REJECTED.value
+            elif jumio_verification.verification_status in FAILED_JUMIO_VERIFICATION:
+                verification_status = VerificationStatus.FAILED.value
+            elif jumio_verification.verification_status in VERIFIED_JUMIO_VERIFICATION:
+                verification_status = VerificationStatus.APPROVED.value
+            else:
+                raise MethodNotImplemented()
+
+            verification_repository.update_status(verification_id, verification_status)
+
+        else:
+            raise MethodNotImplemented()
+        return {}

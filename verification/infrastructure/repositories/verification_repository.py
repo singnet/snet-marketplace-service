@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from registry.infrastructure.repositories.base_repository import BaseRepository
 from verification.domain.factory.verification_factory import VerificationFactory
 from verification.infrastructure.models import VerificationModel
@@ -46,6 +48,7 @@ class VerificationRepository(BaseRepository):
         try:
             verification_db = self._get_verification(verification_id)
             verification_db.status = status
+            verification_db.updated_at = datetime.utcnow()
             verification = VerificationFactory.verification_entity_from_db(verification_db)
             self.session.commit()
         except:
