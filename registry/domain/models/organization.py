@@ -216,11 +216,8 @@ class Organization:
             return False
         return True
 
-    def is_minor(self, updated_organization):
+    def is_not_major(self, updated_organization):
         return True
-
-    def is_major_change(self, metdata_organziation):
-        return False
 
 
 class OrganizationState:

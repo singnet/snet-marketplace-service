@@ -61,7 +61,7 @@ class OrganizationPublisherService:
         current_organization = org_repo.get_org_for_org_uuid(self.org_uuid)
 
         self._archive_current_organization(current_organization)
-        if current_organization.is_minor(updated_organization):
+        if current_organization.is_not_minor(updated_organization):
             if current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
                 updated_state = OrganizationStatus.ONBOARDING_APPROVED.value
             else:
