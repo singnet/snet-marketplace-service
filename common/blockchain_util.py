@@ -11,6 +11,7 @@ from common.logger import get_logger
 
 logger = get_logger(__name__)
 
+
 class ContractType(Enum):
     REGISTRY = "REGISTRY"
     MPE = "MPE"
@@ -103,6 +104,8 @@ class BlockChainUtil(object):
         return self.web3_object.eth.getTransactionReceipt(transaction_hash)
 
     def get_contract_file_paths(self, base_path, contract_name):
+        logger.info(f"base_path: {base_path}, contract_name: {contract_name}")
+
         if contract_name == ContractType.REGISTRY.value:
             json_file = "Registry.json"
         elif contract_name == ContractType.MPE.value:
