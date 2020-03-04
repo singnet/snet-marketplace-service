@@ -217,7 +217,7 @@ class Organization:
             return False
         return True
 
-    def is_not_major(self, updated_organization):
+    def is_major_change(self, updated_organization):
         return True
 
     @staticmethod
@@ -234,7 +234,7 @@ class Organization:
     
     @staticmethod
     def next_state_for_update(current_organization, updated_organization):
-        if current_organization.is_not_major(updated_organization):
+        if not current_organization.is_major_change(updated_organization):
             if current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
                 next_state = OrganizationStatus.ONBOARDING_APPROVED.value
             else:
