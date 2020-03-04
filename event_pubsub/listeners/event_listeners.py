@@ -115,3 +115,16 @@ class RFAIEventListener(EventListener):
 
         return error_map, success_map
 
+
+class TokenStakeEventListener(EventListener):
+    EVENTS_LIMIT = 30
+
+    def listen_and_publish_token_stake_events(self):
+        token_stake_events = self._event_repository.read_token_stake_events()
+        error_map, success_map = self._publish_events(token_stake_events)
+        for row_id, error in error_map.items():
+            self._event_repository.update_token_stake_raw_events(1, row_id, error['error_code'], error['error_message'])
+
+        for row_id in success_map:
+            self._event_repository.update_token_stake_raw_events(1, row_id, 200, "")
+        return error_map, success_map
