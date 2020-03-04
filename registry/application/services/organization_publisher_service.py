@@ -59,6 +59,10 @@ class OrganizationPublisherService:
 
         updated_organization = OrganizationFactory.org_domain_entity_from_payload(payload)
         current_organization = org_repo.get_org_for_org_uuid(self.org_uuid)
+
+        if current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
+            updated_state = OrganizationStatus.ONBOARDING_APPROVED.value
+
         self._archive_current_organization(current_organization)
         if current_organization.is_minor(updated_organization):
             org_repo.update_organization(updated_organization, self.username, updated_state)

@@ -25,6 +25,7 @@ class OrganizationStatus(Enum):
     REJECTED = "REJECTED"
     FAILED = "FAILED"
     PUBLISHED_UNAPPROVED = "PUBLISHED_UNAPPROVED"
+    ONBOARDING_REJECTED = "ONBOARDING_REJECTED"
 
 
 class AddOrganizationActions(Enum):
