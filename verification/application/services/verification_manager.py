@@ -76,3 +76,7 @@ class VerificationManager:
         else:
             raise MethodNotImplemented()
         return {}
+
+    def get_status_for_entity(self, entity_id):
+        verification = verification_repository.get_verification(entity_id)
+        return verification.to_response()

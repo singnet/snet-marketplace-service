@@ -56,3 +56,15 @@ class VerificationRepository(BaseRepository):
             raise
         self.session.close()
         return verification
+
+    def get_latest_verification_for_entity(self, entity_id):
+        try:
+            verification_db = self.session.query(VerificationModel).filter(VerificationModel.entity_id == entity_id)\
+                .order_by(VerificationModel.created_at.desc()).first()
+            verification = VerificationFactory.verification_entity_from_db(verification_db)
+            self.session.commit()
+        except:
+            self.session.rollback()
+            raise
+        self.session.close()
+        return verification

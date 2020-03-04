@@ -1,3 +1,4 @@
+from common.utils import datetime_to_string
 from verification.constants import VerificationType
 
 
@@ -14,3 +15,19 @@ class Verification:
 
     def set_jumio(self, jumio):
         self.jumio = jumio
+
+    def to_response(self):
+        response_dict = {
+            "id": self.id,
+            "type": self.type,
+            "entity_id": self.entity_id,
+            "status": self.status,
+            "requestee": self.requestee,
+            "created_at": "",
+            "updated_at": "",
+        }
+        if self.created_at is not None:
+            response_dict["created_at"] = datetime_to_string(self.created_at)
+        if self.updated_at is not None:
+            response_dict["updated_at"] = datetime_to_string(self.updated_at)
+        return response_dict

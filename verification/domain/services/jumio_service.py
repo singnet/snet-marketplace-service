@@ -61,6 +61,8 @@ class JumioService:
         return headers, body
 
     def submit(self, verification_id, transaction_status):
+        if transaction_status not in [JumioTransactionStatus.ERROR.value, JumioTransactionStatus.SUCCESS.value]:
+            raise Exception("Received invalid status from jumio on submit")
         verification = self.repo.update_transaction_status(verification_id, transaction_status)
         return verification
 
