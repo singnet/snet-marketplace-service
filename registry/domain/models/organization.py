@@ -223,28 +223,28 @@ class Organization:
     @staticmethod
     def next_state(current_organization, updated_organization, action):
         if action == OrganizationActions.DRAFT.value:
-            updated_state = current_organization.next_state_for_update(updated_organization)
+            next_state = current_organization.next_state_for_update(updated_organization)
         elif action == OrganizationActions.SUBMIT.value:
-            updated_state = current_organization.next_state_for_update(updated_organization)
+            next_state = current_organization.next_state_for_update(updated_organization)
         elif action == OrganizationActions.CREATE.value:
-            updated_state = OrganizationStatus.ONBOARDING.value
+            next_state = OrganizationStatus.ONBOARDING.value
         else:
             raise Exception("Invalid Action for Organization")
-        return updated_state
+        return next_state
     
     @staticmethod
     def next_state_for_update(current_organization, updated_organization):
         if current_organization.is_not_major(updated_organization):
             if current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
-                updated_state = OrganizationStatus.ONBOARDING_APPROVED.value
+                next_state = OrganizationStatus.ONBOARDING_APPROVED.value
             else:
-                updated_state = OrganizationStatus.APPROVED.value
+                next_state = OrganizationStatus.APPROVED.value
         else:
             if current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
-                updated_state = OrganizationStatus.ONBOARDING_APPROVED.value
+                next_state = OrganizationStatus.ONBOARDING_APPROVED.value
             else:
                 raise MethodNotImplemented()
-        return updated_state
+        return next_state
 
 
 class OrganizationState:
