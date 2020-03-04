@@ -6,7 +6,7 @@ from common.logger import get_logger
 from common.utils import generate_lambda_response, validate_dict
 from registry.application.services.organization_publisher_service import OrganizationPublisherService
 from registry.config import SLACK_HOOK, NETWORK_ID
-from registry.constants import AddOrganizationActions
+from registry.constants import OrganizationActions
 from registry.exceptions import EXCEPTIONS, BadRequestException
 
 logger = get_logger(__name__)
@@ -72,7 +72,7 @@ def update_org(event, context):
         raise BadRequestException()
     org_uuid = payload.get("org_uuid", None)
     org_service = OrganizationPublisherService(org_uuid, username)
-    if action in [AddOrganizationActions.DRAFT.value,  AddOrganizationActions.SUBMIT.value]:
+    if action in [OrganizationActions.DRAFT.value, OrganizationActions.SUBMIT.value]:
         response = org_service.update_organization(payload, action)
     else:
         raise Exception("Invalid action")
