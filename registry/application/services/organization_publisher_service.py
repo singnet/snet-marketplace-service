@@ -45,7 +45,7 @@ class OrganizationPublisherService:
         organization = OrganizationFactory.org_domain_entity_from_payload(payload)
         organization.setup_id()
         logger.info(f"assigned org_uuid : {organization.uuid}")
-        updated_state = Organization.next_state(None, None, OrganizationActions.CREATE)
+        updated_state = Organization.next_state(None, None, OrganizationActions.CREATE.value)
         org_repo.add_organization(organization, self.username, updated_state)
         return organization.to_response()
 

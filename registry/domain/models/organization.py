@@ -223,9 +223,9 @@ class Organization:
     @staticmethod
     def next_state(current_organization, updated_organization, action):
         if action == OrganizationActions.DRAFT.value:
-            next_state = current_organization.next_state_for_update(updated_organization)
+            next_state = current_organization.next_state_for_update(current_organization, updated_organization)
         elif action == OrganizationActions.SUBMIT.value:
-            next_state = current_organization.next_state_for_update(updated_organization)
+            next_state = current_organization.next_state_for_update(current_organization, updated_organization)
         elif action == OrganizationActions.CREATE.value:
             next_state = OrganizationStatus.ONBOARDING.value
         else:
