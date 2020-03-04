@@ -43,5 +43,6 @@ class VerificationType(Enum):
 class JumioTransactionStatus(Enum):
     SUCCESS = "SUCCESS"
     PENDING = "PENDING"
+    FAILED = "FAILED"
     DONE = "DONE"
     ERROR = "ERROR"

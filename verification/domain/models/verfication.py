@@ -1,5 +1,4 @@
 from common.utils import datetime_to_string
-from verification.constants import VerificationType
 
 
 class Verification:
