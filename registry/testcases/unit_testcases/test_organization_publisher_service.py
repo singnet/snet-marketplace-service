@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 from uuid import uuid4
 
 from registry.application.services.organization_publisher_service import OrganizationPublisherService, org_repo
-from registry.constants import OrganizationStatus, AddOrganizationActions
+from registry.constants import OrganizationStatus, OrganizationActions
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization as DomainOrganization
 from registry.infrastructure.models import Organization, OrganizationMember, OrganizationState, Group, \
@@ -53,7 +53,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         payload = json.loads(ORG_PAYLOAD_MODEL)
         payload["org_uuid"] = test_org_uuid
         OrganizationPublisherService(test_org_uuid, username)\
-            .update_organization(payload, AddOrganizationActions.DRAFT.value)
+            .update_organization(payload, OrganizationActions.DRAFT.value)
         org_db_model = org_repo.session.query(Organization).first()
         if org_db_model is None:
             assert False
@@ -87,7 +87,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         organization = OrganizationFactory.org_domain_entity_from_payload(payload)
         org_repo.add_organization(organization, username, OrganizationStatus.DRAFT.value)
         OrganizationPublisherService(test_org_uuid, username)\
-            .update_organization(payload, AddOrganizationActions.SUBMIT.value)
+            .update_organization(payload, OrganizationActions.SUBMIT.value)
         org_db_model = org_repo.session.query(Organization).first()
         if org_db_model is None:
             assert False

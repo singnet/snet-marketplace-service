@@ -1,0 +1,1 @@
+test_initiate_redirect_url = 'https://yourcompany.netverify.com/web/v4/app?locale=en-GB&authorizationToken=xxx'
