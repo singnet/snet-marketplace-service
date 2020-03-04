@@ -218,7 +218,7 @@ class Organization:
         return True
 
     def is_major_change(self, updated_organization):
-        return True
+        return False
 
     @staticmethod
     def next_state(current_organization, updated_organization, action):
