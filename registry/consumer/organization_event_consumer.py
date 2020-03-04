@@ -138,7 +138,7 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
             elif existing_publish_in_progress_organization.is_major_change(received_organization_event):
                 org_uuid = existing_publish_in_progress_organization.uuid
                 existing_members = self._organization_repository.get_org_member(org_uuid=
-                                                                                existing_publish_in_progress_organization.org_uuid)
+                                                                                existing_publish_in_progress_organization.uuid)
                 self._organization_repository.store_organization(received_organization_event, BLOCKCHAIN_USER,
                                                                  OrganizationStatus.APPROVAL_PENDING)
             else:
