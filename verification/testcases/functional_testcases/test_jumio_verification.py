@@ -4,7 +4,7 @@ from datetime import datetime
 from unittest import TestCase
 from unittest.mock import patch, Mock
 
-from verification.application.handlers.verification_handlers import initiate
+from verification.application.handlers.verification_handlers import initiate, get_status
 from verification.application.handlers.jumio_verification_handlers import submit
 from verification.application.services.verification_manager import verification_repository, jumio_repository
 from verification.constants import JumioTransactionStatus, VerificationStatus, JumioVerificationStatus
@@ -155,8 +155,35 @@ class TestJumioVerification(TestCase):
         self.assertEqual(jumio_verfication.user_reference_id, sha1(username.encode("utf-8")).hexdigest())
 
     @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123")))
-    def test_jumio_callback(self, mock_boto_utils):
-        pass
+    def test_jumio_get_status(self, mock_boto_utils):
+        test_verification_id = "9f2c90119cb7424b8d69319ce211ddfc"
+        verification_type = "JUMIO"
+        username = "karl@dummy.io"
+        current_time = datetime.utcnow()
+        verification_repository.add_item(VerificationModel(
+            id=test_verification_id, verification_type=verification_type, entity_id=username, status="PENDING",
+            requestee=username, created_at=current_time, updated_at=current_time
+        ))
+        jumio_repository.add_item(JumioVerificationModel(
+            verification_id=test_verification_id, username=username, jumio_reference_id="123-13-13-134-1234",
+            user_reference_id=sha1(username.encode("utf-8")).hexdigest(),
+            redirect_url="https://yourcompany.netverify.com/web/v4/app?locale=en-GB&authorizationToken=xxx",
+            transaction_status="PENDING", verification_status="PENDING", transaction_date=current_time,
+            created_at=current_time
+        ))
+        event = {
+            "requestContext": {"authorizer": {"claims": {"email": username}}},
+            "queryStringParameters": {
+                "type": "JUMIO"
+            }
+        }
+        verification = json.loads(get_status(event, None)["body"])["data"]
+        self.assertEqual(verification["entity_id"], username)
+        self.assertEqual(verification["status"], VerificationStatus.PENDING.value)
+        self.assertEqual(verification["requestee"], username)
+        self.assertEqual(verification["type"], "JUMIO")
+        assert (verification["id"] is not None or verification["id"] != "") and verification["id"] == test_verification_id
+
 
     def tearDown(self):
         jumio_repository.session.query(JumioVerificationModel).delete()
