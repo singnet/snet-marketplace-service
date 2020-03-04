@@ -72,10 +72,8 @@ def update_org(event, context):
         raise BadRequestException()
     org_uuid = payload.get("org_uuid", None)
     org_service = OrganizationPublisherService(org_uuid, username)
-    if action == AddOrganizationActions.DRAFT.value:
-        response = org_service.save_organization_draft(payload)
-    elif action == AddOrganizationActions.SUBMIT.value:
-        response = org_service.submit_organization_for_approval(payload)
+    if action in [AddOrganizationActions.DRAFT.value,  AddOrganizationActions.SUBMIT.value]:
+        response = org_service.update_organization(payload, action)
     else:
         raise Exception("Invalid action")
     return generate_lambda_response(
