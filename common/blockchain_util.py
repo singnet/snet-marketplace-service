@@ -16,6 +16,7 @@ class ContractType(Enum):
     REGISTRY = "REGISTRY"
     MPE = "MPE"
     RFAI = "RFAI"
+    TokenStake = "TokenStake"
 
 
 class BlockChainUtil(object):
@@ -112,7 +113,8 @@ class BlockChainUtil(object):
             json_file = "MultiPartyEscrow.json"
         elif contract_name == ContractType.RFAI.value:
             json_file = "ServiceRequest.json"
-
+        elif contract_name == ContractType.TokenStake.value:
+            json_file = "TokenStake.json"
         else:
             raise Exception("Invalid contract Type {}".format(contract_name))
 
