@@ -219,7 +219,7 @@ class Signer:
 
         request = state_service_pb2.FreeCallStateRequest()
         request.user_id = email
-        request.token_to_make_free_call = token_to_get_free_call
+        request.token_for_free_call = token_to_get_free_call
         request.token_expiry_date_block = expiry_date_block
         request.signature = signature
         request.current_block = current_block_number
