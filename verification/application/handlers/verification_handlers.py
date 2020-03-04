@@ -26,6 +26,7 @@ def initiate(event, context):
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def callback(event, context):
+    logger.info(f"received event from jumio for callback {event}")
     payload = json.loads(event["body"])
     path_parameters = event["pathParameters"]
     if "verificationStatus" not in payload or "verification_id" not in path_parameters:
