@@ -67,7 +67,10 @@ class OrganizationPublisherService:
             else:
                 updated_state = OrganizationStatus.APPROVED.value
         else:
-            raise MethodNotImplemented()
+            if current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
+                updated_state = OrganizationStatus.ONBOARDING_APPROVED.value
+            else:
+                raise MethodNotImplemented()
         org_repo.update_organization(updated_organization, self.username, updated_state)
         return "OK"
 
