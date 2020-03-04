@@ -1,5 +1,5 @@
 {
-  "name": "payments",
+  "name": "verification",
   "version": "1.0.0",
   "description": "",
   "author": "SingularityNet",
@@ -7,7 +7,8 @@
   	"serverless-offline": "5.12.0",
     "serverless-plugin-tracing": "2.0.0",
     "serverless-prune-plugin": "1.4.1",
-    "serverless-python-requirements": "5.0.0"
+    "serverless-python-requirements": "5.0.0",
+    "singularitynet-platform-contracts": "0.3.4"
 
   }
 }
