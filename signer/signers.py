@@ -80,7 +80,7 @@ class Signer:
                         service_id, org_id, group_id)
 
     def _get_no_of_free_call_made(self, username, org_id, service_id, group_id):
-        token_to_get_free_call, expiry_date_block, signature, current_block_number, daemon_endpoint = self.token_to_get_free_call(
+        token_to_get_free_call, expiry_date_block, signature, current_block_number, daemon_endpoint = self._token_to_get_free_call(
             username, org_id, service_id, group_id)
         total_free_call_made = 0
         try:
@@ -273,7 +273,7 @@ class Signer:
         raise Exception("Unable to fetch daemon Endpoint information for service %s under organization %s for %s group.",
                         service_id, org_id, group_id)
 
-    def token_to_get_free_call(self, email, org_id, service_id, group_id):
+    def _token_to_get_free_call(self, email, org_id, service_id, group_id):
         signer_public_key_checksum = Web3.toChecksumAddress(SIGNER_ADDRESS)
         current_block_number = self.obj_blockchain_utils.get_current_block_no()
         expiry_date_block = current_block_number + FREE_CALL_EXPIRY
@@ -294,7 +294,7 @@ class Signer:
         return token_to_get_free_call, expiry_date_block, signature, current_block_number, daemon_endpoint
 
     def token_to_make_free_call(self, email, org_id, service_id, group_id, user_public_key):
-        token_to_get_free_call, expiry_date_block, signature, current_block_number, daemon_endpoint = self.token_to_get_free_call(
+        token_to_get_free_call, expiry_date_block, signature, current_block_number, daemon_endpoint = self._token_to_get_free_call(
             email, org_id, service_id, group_id)
 
         token_with_expiry_to_make_free_call=""
