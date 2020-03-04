@@ -8,6 +8,11 @@ MPE_CNTRCT_PATH = COMMON_CNTRCT_PATH + '/abi/MultiPartyEscrow.json'
 REG_ADDR_PATH = COMMON_CNTRCT_PATH + '/networks/Registry.json'
 MPE_ADDR_PATH = COMMON_CNTRCT_PATH + '/networks/MultiPartyEscrow.json'
 
+TEST_COMMON_CNTRCT_PATH = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), 'test', 'node_modules', 'singularitynet-platform-contracts'))
+TEST_REG_CNTRCT_PATH = TEST_COMMON_CNTRCT_PATH + '/abi/Registry.json'
+TEST_REG_ADDR_PATH = TEST_COMMON_CNTRCT_PATH + '/networks/Registry.json'
+
 
 class OrganizationStatus(Enum):
     ONBOARDING = "ONBOARDING"
@@ -20,11 +25,13 @@ class OrganizationStatus(Enum):
     REJECTED = "REJECTED"
     FAILED = "FAILED"
     PUBLISHED_UNAPPROVED = "PUBLISHED_UNAPPROVED"
+    ONBOARDING_REJECTED = "ONBOARDING_REJECTED"
 
 
-class AddOrganizationActions(Enum):
+class OrganizationActions(Enum):
     DRAFT = "DRAFT"
     SUBMIT = "SUBMIT"
+    CREATE = "CREATE"
 
 
 class OrganizationMemberStatus(Enum):
@@ -65,6 +72,11 @@ class ServiceStatus(Enum):
 class OrganizationAddressType(Enum):
     MAIL_ADDRESS = "mailing_address"
     HEAD_QUARTER_ADDRESS = "headquarter_address"
+
+
+class EnvironmentType(Enum):
+    TEST = "TEST"
+    MAINNET = "MAINNET"
 
 
 DEFAULT_SERVICE_RANKING = 1

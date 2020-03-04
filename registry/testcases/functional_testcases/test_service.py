@@ -2,6 +2,7 @@ import json
 from unittest import TestCase
 from datetime import datetime as dt
 from unittest.mock import patch
+
 from registry.application.handlers.service_handlers import verify_service_id, save_service, create_service, \
     get_services_for_organization, get_service_for_service_uuid, publish_service_metadata_to_ipfs, \
     submit_service_for_approval, save_transaction_hash_for_published_service, \
@@ -12,7 +13,6 @@ from registry.infrastructure.models import Organization, Service, ServiceState, 
     ServiceReviewHistory
 from registry.constants import ServiceAvailabilityStatus, ServiceStatus
 from common.constant import StatusCode
-from uuid import uuid4
 
 org_repo = OrganizationPublisherRepository()
 service_repo = ServicePublisherRepository()
@@ -613,12 +613,17 @@ class TestService(TestCase):
             "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"},
         }
         response = legal_approval_of_service(event, context=None)
-        print(response)
 
     @patch(
         "registry.domain.services.service_publisher_domain_service.ServicePublisherDomainService.register_or_update_service_in_blockchain")
-    def test_submit_service_for_approval(self, blockchain_transaction):
+    @patch("common.utils.publish_zip_file_in_ipfs")
+    @patch("common.ipfs_util.IPFSUtil.write_file_in_ipfs")
+    @patch("common.utils.send_email_notification")
+    @patch("common.utils.send_slack_notification")
+    def test_submit_service_for_approval(self, slack_notification, email_notification, file_ipfs_hash, zip_file_ipfs_hash, blockchain_transaction):
         blockchain_transaction.return_value = "0x2w3e4r5t6y7u8i9o0oi8u7y6t5r4e3w2"
+        zip_file_ipfs_hash.return_value = "Qwertyuiopasdfghjklzxcvbnm"
+        file_ipfs_hash.return_value = "Qzertyuiopasdfghjklzxcvbnn"
         self.tearDown()
         org_repo.add_item(
             Organization(
@@ -651,6 +656,7 @@ class TestService(TestCase):
                 ranking=1,
                 proto={"proto_files": {
                     "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/test_org_uuid/services/test_service_uuid/assets/20200212111248_proto_files.zip"}},
+                contributors={"email_id": "prashant@singularitynet.io"},
                 created_on=dt.utcnow()
             )
         )
@@ -690,13 +696,37 @@ class TestService(TestCase):
             "httpMethod": "PUT",
             "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"},
             "body": json.dumps({
+                "service_id": "test_service_id",
+                "display_name": "test_display_name",
                 "description": "test description updated",
+                "mpe_address": "0xq2w3e4r5t6y7u8i9i98u7y6t5r4e3w2",
                 "assets": {
                     "proto_files": {
                         "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/test_org_uuid/services/test"
                                "_service_uuid/assets/20200212111248_proto_files.zip"
                     }
-                }
+                },
+                "contributors": [{"email_id": "prashant@singularitynet.io"}],
+                "groups": [{"group_name": "default_group",
+                            "free_calls": 12,
+                            "free_call_signer_address": "0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F",
+                            "daemon_address": ["0x1234", "0x345"],
+                            "pricing": [
+                                {
+                                    "price_model": "fixed_price",
+                                    "price_in_cogs": 1,
+                                    "default": True
+                                }
+                            ],
+                            "endpoints": [
+                                "https://tz-services-1.snet.sh:8005"
+                            ],
+                            "test_endpoints": [
+                                "https://tz-services-1.snet.sh:8005"
+                            ],
+                            "group_id": "EoFmN3nvaXpf6ew8jJbIPVghE5NXfYupFF7PkRmVyGQ="
+
+                            }]
             }
             )
         }
