@@ -28,9 +28,10 @@ class OrganizationStatus(Enum):
     ONBOARDING_REJECTED = "ONBOARDING_REJECTED"
 
 
-class AddOrganizationActions(Enum):
+class OrganizationActions(Enum):
     DRAFT = "DRAFT"
     SUBMIT = "SUBMIT"
+    CREATE = "CREATE"
 
 
 class OrganizationMemberStatus(Enum):

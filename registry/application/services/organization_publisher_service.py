@@ -4,11 +4,11 @@ from datetime import datetime
 from web3 import Web3
 
 from common.boto_utils import BotoUtils
-from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
 from registry.config import NOTIFICATION_ARN, PUBLISHER_PORTAL_DAPP_URL, REGION_NAME
-from registry.constants import OrganizationStatus, OrganizationMemberStatus, Role, AddOrganizationActions
+from registry.constants import OrganizationStatus, OrganizationMemberStatus, Role, OrganizationActions
 from registry.domain.factory.organization_factory import OrganizationFactory
+from registry.domain.models.organization import Organization
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 
 org_repo = OrganizationPublisherRepository()
@@ -45,32 +45,17 @@ class OrganizationPublisherService:
         organization = OrganizationFactory.org_domain_entity_from_payload(payload)
         organization.setup_id()
         logger.info(f"assigned org_uuid : {organization.uuid}")
-        org_repo.add_organization(organization, self.username, OrganizationStatus.ONBOARDING.value)
+        updated_state = Organization.next_state(None, None, OrganizationActions.CREATE)
+        org_repo.add_organization(organization, self.username, updated_state)
         return organization.to_response()
 
     def update_organization(self, payload, action):
         logger.info(f"update organization for user: {self.username} org_uuid: {self.org_uuid} action: {action}")
-        if action == AddOrganizationActions.DRAFT.value:
-            updated_state = OrganizationStatus.DRAFT.value
-        elif action == AddOrganizationActions.SUBMIT.value:
-            updated_state = OrganizationStatus.APPROVAL_PENDING.value
-        else:
-            raise Exception("Invalid action")
-
         updated_organization = OrganizationFactory.org_domain_entity_from_payload(payload)
         current_organization = org_repo.get_org_for_org_uuid(self.org_uuid)
 
         self._archive_current_organization(current_organization)
-        if current_organization.is_not_minor(updated_organization):
-            if current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
-                updated_state = OrganizationStatus.ONBOARDING_APPROVED.value
-            else:
-                updated_state = OrganizationStatus.APPROVED.value
-        else:
-            if current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
-                updated_state = OrganizationStatus.ONBOARDING_APPROVED.value
-            else:
-                raise MethodNotImplemented()
+        updated_state = Organization.next_state(current_organization, updated_organization, action)
         org_repo.update_organization(updated_organization, self.username, updated_state)
         return "OK"
 
