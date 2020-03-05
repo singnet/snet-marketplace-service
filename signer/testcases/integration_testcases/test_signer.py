@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 
 from signer import lambda_handler
-from signer.lambda_handler import get_free_call_signer_address
+from signer.lambda_handler import free_call_token_handler, get_free_call_signer_address
 
 
 class TestSignUPAPI(unittest.TestCase):
@@ -149,6 +149,34 @@ class TestSignUPAPI(unittest.TestCase):
         assert response_body["status"] == "success"
         assert response_body["data"]["free_call_signer_address"] == "0xBBE343b9BEf87Fb687cA83A014324d5E52cc3754"
 
-    def test_token_for_free_call(self):
-        pass
 
+
+    @patch("signer.signers.Signer._get_no_of_free_calls_from_daemon")
+    @patch("signer.signers.Signer._get_daemon_endpoint_for_group")
+    @patch("common.blockchain_util.BlockChainUtil.read_contract_address")
+    @patch("common.blockchain_util.BlockChainUtil.get_current_block_no")
+    @patch("boto3.client")
+    def test_token_for_free_call(self, boto_client,mock_current_block_no,mock_read_contract_address,mock_endpoint,mock_daemon_free_call):
+        boto_client.return_value = None
+
+        mock_read_contract_address.return_value = "0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C"
+        mock_current_block_no.return_value = 6521925
+        mock_endpoint.return_value = "1.2.3.4"
+        mock_daemon_free_call.return_value=10
+
+        event = {
+            "path": "/freecall/signer_address",
+            "requestContext": {
+                "authorizer": {
+                    "claims": {
+                        "email": "dummy_user1@dummy.io"
+                    }
+                }
+            },
+            "httpMethod": "GET",
+            "queryStringParameters": {"org_id": "test_org_id", "service_id": "test_service_id",
+                                      "group_id": "test_group_id","public_key":"0xBEEC34186ed77F1CEbb92fd1C11cDD2F9789Dbe5"}
+        }
+
+        response = free_call_token_handler(event, "")
+        assert response == {'statusCode': 200, 'body': '{"status": "success", "data": {"token_to_make_free_call": "b\'B\\\\xbe pb\\\\xf7\\\\x8f8\\\\xcf\\\\xf6\\\\x88\\\\xfda#\\\\x9de\\\\x95-\\\\xebkN5F\\\\xdf\\\\xe7\\\\x9d\\\\x11\\\\x88\\\\xcd\\\\xd3rMD\\\\xd6\\\\x08\\\\x809\\\\xd5$\\\\x95\\\\x99mt\\\\x9fS\\\\xc4\\\\x1c\\\\xd2P\\\\x12\\\\xb9\\\\xe9\\\\xa5\\\\xb9\\\\x18\\\\xa2\\\\xce]\\\\x1d\\\\x0c\\\\x02\\\\x0cx\\"\\\\x1b\'", "token_issue_date_block": 6694725}}', 'headers': {'Content-Type': 'application/json', 'X-Requested-With': '*', 'Access-Control-Allow-Headers': 'Access-Control-Allow-Origin, Content-Type, X-Amz-Date, Authorization,X-Api-Key,x-requested-with', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,OPTIONS,POST'}}
