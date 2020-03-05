@@ -72,24 +72,24 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-      events:
-        - http:
-            method: POST
-            path: /intiate
-            authorizer:
-              name: user-authorizer
-              type: COGNITO_USER_POOLS
-              arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-              identitySource: method.request.header.Authorization
-            cors:
-              origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-              header:
-                - Content-Type
-                - X-Amz-Date
-                - Authorization
-                - X-Api-Key
-                - X-Amz-Security-Token
-                - X-Amz-User-Agent
+    events:
+      - http:
+          method: POST
+          path: /intiate
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            header:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
 
   submit-user-verification:
     warmup: true
@@ -102,19 +102,19 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-      events:
-        - http:
-            method: POST
-            path: /{verification_id}/submit
-            cors:
-              origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-              header:
-                - Content-Type
-                - X-Amz-Date
-                - Authorization
-                - X-Api-Key
-                - X-Amz-Security-Token
-                - X-Amz-User-Agent
+    events:
+      - http:
+          method: POST
+          path: /{verification_id}/submit
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            header:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
 
   callback:
     warmup: true
@@ -129,16 +129,16 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
       tags:
         Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
-      events:
-        - http:
-            method: POST
-            path: /{verification}/callback
-            cors:
-              origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-              header:
-                - Content-Type
-                - X-Amz-Date
-                - Authorization
-                - X-Api-Key
-                - X-Amz-Security-Token
-                - X-Amz-User-Agent
+    events:
+      - http:
+          method: POST
+          path: /{verification}/callback
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            header:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
