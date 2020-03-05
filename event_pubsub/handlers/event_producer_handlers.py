@@ -39,7 +39,7 @@ def rfai_event_producer_handler(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
-def token_stake_producer_handler(event, context):
+def token_stake_event_producer_handler(event, context):
     try:
         token_stake_event_producer.produce_event(NETWORK_ID)
     except Exception as e:
