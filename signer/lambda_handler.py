@@ -114,7 +114,8 @@ def free_call_token_handler(event, context):
     logger.info(
         f"Free call token generation for email:{email} org_id:{org_id} service_id:{service_id} group_id:{group_id} public_key:{public_key}")
 
-    token_data = signer.token_for_free_call(email, org_id, service_id, group_id, public_key)
+    token_data = signer.token_to_make_free_call(email, org_id, service_id, group_id, public_key)
+
 
     return generate_lambda_response(200, {
         "status": "success",
