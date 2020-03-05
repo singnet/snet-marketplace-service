@@ -105,7 +105,7 @@ class Signer:
         """
         free_calls_allowed = self._get_free_calls_allowed(org_id, service_id, group_id)
         total_calls_made = self._get_no_of_free_call_made(username, org_id, service_id, group_id)
-        is_free_calls_allowed = (True if ((free_calls_allowed - total_calls_made) > 0) else False)
+        is_free_calls_allowed = (True if ((free_calls_allowed - total_calls_made) >= 0) else False)
         return is_free_calls_allowed
 
     def signature_for_free_call(self, user_data, org_id, service_id, group_id):
