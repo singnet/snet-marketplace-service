@@ -97,9 +97,9 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         else:
             service_uuid = uuid4().hex
 
-        recieved_service = ServiceFactory.create_service_from_service_metadata(org_uuid, service_uuid,
+        recieved_service = ServiceFactory.create_service_from_service_metadata(org_uuid, service_uuid,service_id,
                                                                                event_ipfs_data, tags_data,
-                                                                               ServiceStatus.DRAFT.value)
+                                                                               ServiceStatus.PUBLISHED_UNAPPROVED.value)
         if not existing_service:
             self._service_repository.add_service(recieved_service, "")
 

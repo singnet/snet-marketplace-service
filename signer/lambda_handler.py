@@ -20,7 +20,7 @@ logger = get_logger(__name__)
 
 @handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def request_handler(event, context):
-    logger.info("Signer::event: ", event)
+    logger.info(f"Signer::event: {event}")
     if "path" not in event:
         return generate_lambda_response(400, "Bad Request", cors_enabled=True)
     try:
