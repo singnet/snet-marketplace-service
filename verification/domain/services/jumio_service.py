@@ -54,7 +54,6 @@ class JumioService:
         headers = {
             "Accept": "application/json",
             "Content-Type": "application/json",
-            "Content-Length": str(len(body)),
             "User-Agent": "Publisher Dapp",
             "Authorization": authorization
         }
