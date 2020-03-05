@@ -225,8 +225,8 @@ class OrganizationFactory:
         owner = ""
         groups = OrganizationFactory.group_domain_entity_from_group_list_metadata(ipfs_org_metadata.get("groups", []))
 
-        organization = Organization(org_uuid, org_id,org_name,org_type, owner, long_description,
-                                    short_description, url, contacts, assets, metadata_ipfs_hash, "", "", [], groups,
-                                    OrganizationStatus.PUBLISHED.value)
+        organization = Organization(org_uuid, org_id, org_name, org_type, "", long_description,
+                                    short_description, url, contacts, assets, metadata_ipfs_hash, "", groups, [],
+                                    OrganizationStatus.PUBLISHED.value, [])
 
         return organization
