@@ -74,7 +74,7 @@ class OrganizationPublisherRepository(BaseRepository):
     def store_organization(self, organization, username, state):
         organization_db_model = self.session.query(Organization).filter(
             Organization.uuid == organization.uuid).first()
-        if state in [OrganizationStatus.DRAFT.value, OrganizationStatus.APPROVAL_PENDING.value]:
+        if state in [OrganizationStatus.DRAFT.value, OrganizationStatus.APPROVAL_PENDING.value,OrganizationStatus.PUBLISHED_UNAPPROVED.value]:
             if organization_db_model is None:
                 self.add_organization(organization, username, state)
             else:
