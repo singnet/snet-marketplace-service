@@ -130,7 +130,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /{verification}/callback
+          path: /{verification_id}/callback
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             header:
