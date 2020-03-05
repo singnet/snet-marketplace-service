@@ -133,6 +133,7 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
             if not existing_publish_in_progress_organization:
                 existing_members = []
                 received_organization_event.setup_id()
+                org_uuid = received_organization_event.uuid
                 self._create_event_outside_publisher_portal(received_organization_event)
 
             elif existing_publish_in_progress_organization.is_major_change(received_organization_event):
