@@ -195,4 +195,14 @@ CREATE TABLE `daemon_token` (
   KEY `daemon_id_idx` (`daemon_id`),
   UNIQUE KEY `uq_daemon_id` (`daemon_id`)
 ) ;
-
+-- -----------------------------------------
+CREATE TABLE `service_status_stats` (
+       `row_id` int(11) NOT NULL AUTO_INCREMENT,
+       `org_id` varchar(128) NOT NULL,
+       `service_id` varchar(128) NOT NULL,
+       `previous_state` varchar(128) NOT NULL,
+       `current_state` varchar(128) NOT NULL,
+       `row_created` timestamp NULL DEFAULT NULL,
+       `row_updated` timestamp NULL DEFAULT NULL,
+       PRIMARY KEY (`row_id`)
+     ) ;
