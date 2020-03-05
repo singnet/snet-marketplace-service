@@ -80,14 +80,18 @@ class Signer:
                         service_id, org_id, group_id)
 
     def _get_no_of_free_call_made(self, username, org_id, service_id, group_id):
+
         token_to_get_free_call, expiry_date_block, signature, current_block_number, daemon_endpoint = self._token_to_get_free_call(
             username, org_id, service_id, group_id)
         total_free_call_made = 0
         try:
+
             total_free_call_made = self._get_no_of_free_calls_from_daemon(username, token_to_get_free_call,
                                                                           expiry_date_block, signature,
                                                                           current_block_number, daemon_endpoint)
-        except:
+        except Exception as e:
+            logger.info(
+                f"Free call from daemon not available switching to metering {org_id} {service_id} {group_id} {username}")
             total_free_call_made = self._get_total_calls_made(username, org_id, service_id, group_id)
 
         return total_free_call_made
