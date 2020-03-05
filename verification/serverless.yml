@@ -62,7 +62,7 @@ package:
     - node_modules/singularitynet-platform-contracts/**
 
 functions:
-  initiate-user-verification:
+  initiate:
     handler: verification/application/handlers/verification_handlers.initiate
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
