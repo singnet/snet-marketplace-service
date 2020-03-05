@@ -62,7 +62,7 @@ package:
     - node_modules/singularitynet-platform-contracts/**
 
 functions:
-  initiate-user-verification:
+  initiate:
     handler: verification/application/handlers/verification_handlers.initiate
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -142,7 +142,7 @@ functions:
               - X-Amz-User-Agent
 
   status:
-    handler: verification/handlers.verification_handlers.get_status
+    handler: verification/application/handlers/verification_handlers.get_status
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
