@@ -62,8 +62,8 @@ package:
     - node_modules/singularitynet-platform-contracts/**
 
 functions:
-  initiate-user-verification:
-    handler: verification/handlers.verification_handlers.initiate
+  initiate:
+    handler: verification/application/handlers/verification_handlers.initiate
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -92,7 +92,7 @@ functions:
               - X-Amz-User-Agent
 
   submit:
-    handler: verification/handlers.jumio_verification_handlers.submit
+    handler: verification/application/handlers/jumio_verification_handlers.submit
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -116,7 +116,7 @@ functions:
               - X-Amz-User-Agent
 
   callback:
-    handler: verification/handlers.verification_handlers.callback
+    handler: verification/application/handlers/verification_handlers.callback
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -142,7 +142,7 @@ functions:
               - X-Amz-User-Agent
 
   status:
-    handler: verification/handlers.verification_handlers.get_status
+    handler: verification/application/handlers/verification_handlers.get_status
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
