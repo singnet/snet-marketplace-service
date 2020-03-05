@@ -1,87 +1,35 @@
-import os
-IPFS_URL = {
-    'url': 'ipfs.singularitynet.io',
-    'port': '80',
-    'protocol': 'http'
-}
-NETWORKS = {
-    1: {
-        'name': 'mainnet',
-        'ws_provider': 'wss://mainnet.infura.io/ws',
-        'db': {}
-    },
-    3: {
-        'name': 'ropsten',
-        'ws_provider': 'wss: // ropsten.infura.io / ws',
-        'db': {}
-    },
-    42: {
-        'name': 'kovan',
-        'ws_provider': 'wss://kovan.infura.io/ws',
-        'http_provider': 'https://kovan.infura.io',
-        'db': {'DB_HOST': '',
-               'DB_USER': '',
-               'DB_PASSWORD': '',
-               'DB_NAME': '',
-               'DB_PORT': 3306
-               }
-    }
-}
-MPE_EVTS = ['ChannelOpen', 'ChannelClaim',
-            'ChannelSenderClaim', 'ChannelExtend', 'ChannelAddFunds']
-REG_EVTS = ['OrganizationCreated', 'OrganizationModified', 'OrganizationDeleted', 'ServiceCreated',
-            'ServiceMetadataModified', 'ServiceTagsModified', 'ServiceDeleted']
-COMMON_CNTRCT_PATH = '../node_modules/singularitynet-platform-contracts'
+COMMON_CNTRCT_PATH = './common/node_modules/singularitynet-platform-contracts'
 REG_CNTRCT_PATH = COMMON_CNTRCT_PATH + '/abi/Registry.json'
 MPE_CNTRCT_PATH = COMMON_CNTRCT_PATH + '/abi/MultiPartyEscrow.json'
 REG_ADDR_PATH = COMMON_CNTRCT_PATH + '/networks/Registry.json'
 MPE_ADDR_PATH = COMMON_CNTRCT_PATH + '/networks/MultiPartyEscrow.json'
-SLACK_HOOK = {
-    'hostname': '',
-    'port': 443,
-    'path': '',
-    'method': 'POST',
-    'headers': {
-        'Content-Type': 'application/json'
-    }
-}
-ERROR_MSG = {
-    1001: "Error Code: {} Network Id is Invalid !!",
-    1002: "Error Code: {} Unable to process _init_w3.",
-    9001: "Missing error code {} ",
-    "default": "Unable to process error."
-}
 
-EVNTS_LIMIT = "100"
-SRVC_STATUS_GRPC_TIMEOUT = 10
+""" Payment Service """
+PAYMENT_METHOD_PAYPAL = "paypal"
 
 
-ASSETS_BUCKET_NAME = "enhanced-marketplace"
-ASSETS_PREFIX = "assets"
-NET_ID = ''
-PATH_PREFIX = ""
-PREFIX_FREE_CALL = ""
-METERING_ARN = ""
-GET_ALL_SERVICE_OFFSET_LIMIT = 0
-GET_ALL_SERVICE_LIMIT = 15
-GET_FREE_CALLS_METERING_ARN = ""
+class PaymentStatus:
+    PENDING = "PENDING"
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
+
+
+class TransactionStatus:
+    PENDING = "PENDING"
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
 
 
 class StatusCode:
-    BAD_PARAMETERS_CODE = 400
-    SERVER_ERROR_CODE = 500
-    SUCCESS_POST_CODE = 201
-    SUCCESS_GET_CODE = 200
+    BAD_REQUEST = 400
+    INTERNAL_SERVER_ERROR = 500
+    CREATED = 201
+    OK = 200
+    FOUND = 302
 
 
-HEADER_POST_RESPONSE = {
-    "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
-}
+class ResponseStatus:
+    FAILED = "failed"
+    SUCCESS = "success"
 
-
-class StatusMessage:
-    BAD_PARAMETER = "Request validation failed"
-    SERVER_ERROR_MSG = "failed"
-    SUCCESS_POST_CODE = "successful"
+COGS_TO_AGI = "0.00000001"

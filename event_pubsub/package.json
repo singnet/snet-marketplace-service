@@ -1,0 +1,14 @@
+{
+  "name": "signer",
+  "version": "1.0.0",
+  "description": "",
+  "author": "SingularityNet",
+  "dependencies": {
+    "singularitynet-platform-contracts": "^0.3.4",
+    "serverless-offline": "5.12.0",
+    "serverless-plugin-tracing": "2.0.0",
+    "serverless-prune-plugin": "1.4.1",
+    "serverless-python-requirements": "5.0.0",
+    "singularitynet-rfai-contracts": "^0.2.7"
+  }
+}
