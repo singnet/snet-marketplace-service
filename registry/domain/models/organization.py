@@ -5,9 +5,10 @@ from uuid import uuid4
 import requests
 
 from common import ipfs_util
+from common.exceptions import MethodNotImplemented
 from common.utils import datetime_to_string, json_to_file
 from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH
-from registry.constants import OrganizationAddressType
+from registry.constants import OrganizationAddressType, OrganizationActions, OrganizationStatus
 
 
 class OrganizationType(Enum):
@@ -216,11 +217,34 @@ class Organization:
             return False
         return True
 
-    def is_minor(self, updated_organization):
-        return True
-
-    def is_major_change(self, metdata_organziation):
+    def is_major_change(self, updated_organization):
         return False
+
+    @staticmethod
+    def next_state(current_organization, updated_organization, action):
+        if action == OrganizationActions.DRAFT.value:
+            next_state = current_organization.next_state_for_update(current_organization, updated_organization)
+        elif action == OrganizationActions.SUBMIT.value:
+            next_state = current_organization.next_state_for_update(current_organization, updated_organization)
+        elif action == OrganizationActions.CREATE.value:
+            next_state = OrganizationStatus.ONBOARDING.value
+        else:
+            raise Exception("Invalid Action for Organization")
+        return next_state
+    
+    @staticmethod
+    def next_state_for_update(current_organization, updated_organization):
+        if not current_organization.is_major_change(updated_organization):
+            if current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
+                next_state = OrganizationStatus.ONBOARDING_APPROVED.value
+            else:
+                next_state = OrganizationStatus.APPROVED.value
+        else:
+            if current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
+                next_state = OrganizationStatus.ONBOARDING_APPROVED.value
+            else:
+                raise MethodNotImplemented()
+        return next_state
 
 
 class OrganizationState:

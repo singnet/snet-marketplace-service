@@ -159,6 +159,7 @@ class ServiceGroup(Base):
     group_name = Column("group_name", VARCHAR(128), nullable=False, default="")
     pricing = Column("pricing", JSON, nullable=False, default=[])
     endpoints = Column("endpoints", JSON, nullable=False, default=[])
+    test_endpoints = Column("test_endpoints", JSON, nullable=False, default=[])
     daemon_address = Column("daemon_address", JSON, nullable=False, default=[])
     free_calls = Column("free_calls", Integer, nullable=False, default=0)
     free_call_signer_address = Column("free_call_signer_address", VARCHAR(128))
