@@ -1,16 +1,16 @@
 """baseline
 
-Revision ID: 978b36f4976d
+Revision ID: c52f41ddd2f6
 Revises: 
-Create Date: 2020-03-03 16:28:58.660139
+Create Date: 2020-03-05 18:39:21.407572
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = '978b36f4976d'
+revision = 'c52f41ddd2f6'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -24,7 +24,7 @@ def upgrade():
     sa.Column('username', mysql.VARCHAR(length=255), nullable=True),
     sa.Column('jumio_reference_id', mysql.VARCHAR(length=255), nullable=True),
     sa.Column('user_reference_id', mysql.VARCHAR(length=255), nullable=True),
-    sa.Column('redirect_url', mysql.VARCHAR(length=255), nullable=True),
+    sa.Column('redirect_url', mysql.VARCHAR(length=1024), nullable=True),
     sa.Column('transaction_status', mysql.VARCHAR(length=255), nullable=True),
     sa.Column('verification_status', mysql.VARCHAR(length=255), nullable=True),
     sa.Column('transaction_date', mysql.TIMESTAMP(), nullable=True),
