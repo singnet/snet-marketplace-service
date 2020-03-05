@@ -7,7 +7,7 @@ plugins:
 service: verification
 custom:
   pythonRequirements:
-    fileName: verification/requirement.txt
+    fileName: verification/requirements.txt
     dockerizePip: true
     useDownloadCache: true
     useStaticCache: true
@@ -57,6 +57,9 @@ package:
     - log_setup.py
     - heath_check.sh
     - node_modules/**
+    - registry/**
+  include:
+    - node_modules/singularitynet-platform-contracts/**
 
 functions:
   initiate-user-verification:
