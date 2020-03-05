@@ -123,12 +123,24 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
         try:
 
             existing_publish_in_progress_organization = self._get_existing_organization_records(org_id)
+
             if existing_publish_in_progress_organization:
                 org_uuid = existing_publish_in_progress_organization.uuid
+                origin = existing_publish_in_progress_organization.origin
+                duns_no = existing_publish_in_progress_organization.duns_no
+                addresses = existing_publish_in_progress_organization.addresses
+                members = existing_publish_in_progress_organization.members
+
             else:
                 org_uuid = ""
+                origin = ""
+                duns_no = ""
+                addresses = []
+                members = []
 
-            received_organization_event = OrganizationFactory.parse_organization_metadata(org_uuid, ipfs_org_metadata)
+            received_organization_event = OrganizationFactory.parse_organization_metadata(org_uuid, ipfs_org_metadata,
+                                                                                          origin, duns_no, addresses,
+                                                                                          members)
 
             if not existing_publish_in_progress_organization:
                 existing_members = []
@@ -140,13 +152,14 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                 org_uuid = existing_publish_in_progress_organization.uuid
                 existing_members = self._organization_repository.get_org_member(org_uuid=
                                                                                 existing_publish_in_progress_organization.org_uuid)
-                self._organization_repository.store_organization(existing_publish_in_progress_organization, BLOCKCHAIN_USER,
+                self._organization_repository.store_organization(received_organization_event,
+                                                                 BLOCKCHAIN_USER,
                                                                  OrganizationStatus.APPROVAL_PENDING)
             else:
                 org_uuid = existing_publish_in_progress_organization.uuid
                 existing_members = self._organization_repository.get_org_member(
                     org_uuid=existing_publish_in_progress_organization.uuid)
-                self._mark_existing_publish_in_progress_as_published(existing_publish_in_progress_organization)
+                self._mark_existing_publish_in_progress_as_published(received_organization_event)
 
             recieved_members = OrganizationFactory.parser_org_members_from_metadata(org_uuid, recieved_members_list,
                                                                                     OrganizationMemberStatus.PUBLISHED.value)

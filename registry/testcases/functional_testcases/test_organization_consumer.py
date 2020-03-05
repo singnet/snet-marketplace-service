@@ -106,6 +106,7 @@ class TestOrganizationService(unittest.TestCase):
         assert published_org.groups[0].group_id == "group_id"
         assert published_org.groups[0].name == "my-group"
         assert published_org.groups[0].payment_address == "0x123"
+        assert published_org.duns_no == '123456789'
 
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
