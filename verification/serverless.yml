@@ -92,7 +92,6 @@ functions:
               - X-Amz-User-Agent
 
   submit:
-    warmup: true
     handler: verification/handlers.jumio_verification_handlers.submit
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -117,7 +116,6 @@ functions:
               - X-Amz-User-Agent
 
   callback:
-    warmup: true
     handler: verification/handlers.verification_handlers.callback
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -144,7 +142,6 @@ functions:
               - X-Amz-User-Agent
 
   status:
-    warmup: true
     handler: verification/handlers.verification_handlers.get_status
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
