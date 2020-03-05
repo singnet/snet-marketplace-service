@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from verification.infrastructure.repositories.base_repository import BaseRepository
 from verification.domain.factory.verification_factory import VerificationFactory
 from verification.infrastructure.models import VerificationModel
+from verification.infrastructure.repositories.base_repository import BaseRepository
 
 
 class VerificationRepository(BaseRepository):
@@ -61,6 +61,9 @@ class VerificationRepository(BaseRepository):
         try:
             verification_db = self.session.query(VerificationModel).filter(VerificationModel.entity_id == entity_id)\
                 .order_by(VerificationModel.created_at.desc()).first()
+            if verification_db is None:
+                self.session.commit()
+                return None
             verification = VerificationFactory.verification_entity_from_db(verification_db)
             self.session.commit()
         except:

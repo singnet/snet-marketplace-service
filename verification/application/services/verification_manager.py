@@ -84,4 +84,6 @@ class VerificationManager:
 
     def get_status_for_entity(self, entity_id):
         verification = verification_repository.get_latest_verification_for_entity(entity_id)
+        if verification is None:
+            return {}
         return verification.to_response()
