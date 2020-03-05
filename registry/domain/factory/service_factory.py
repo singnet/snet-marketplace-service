@@ -59,7 +59,8 @@ class ServiceFactory:
             mpe_address=service.mpe_address,
             created_on=dt.utcnow(),
             groups=[ServiceFactory.convert_service_group_entity_model_to_db_model(group) for group in service.groups],
-            service_state=ServiceFactory.convert_service_state_entity_model_to_db_model(username, service.service_state)
+            service_state=ServiceFactory.convert_service_state_entity_model_to_db_model(username, service.service_state),
+            updated_on = dt.utcnow()
         )
 
     @staticmethod
@@ -147,7 +148,7 @@ class ServiceFactory:
         )
 
     @staticmethod
-    def create_service_from_service_metadata(org_uuid, service_uuid, service_metadata, tags_data, status):
+    def create_service_from_service_metadata(org_uuid, service_uuid,service_id, service_metadata, tags_data, status):
         service_state_entity_model = \
             ServiceFactory.create_service_state_entity_model(org_uuid, service_uuid,
                                                              getattr(ServiceStatus, status).value)
@@ -155,7 +156,7 @@ class ServiceFactory:
             ServiceFactory.create_service_group_entity_model("", service_uuid, group) for group in
             service_metadata.get("groups", [])]
         return Service(
-            org_uuid, service_uuid, service_metadata.get("service_id", ""), service_metadata.get("display_name", ""),
+            org_uuid, service_uuid,service_id, service_metadata.get("display_name", ""),
             service_metadata.get("short_description", ""), service_metadata.get("description", ""),
             service_metadata.get("project_url", ""),
             service_metadata.get("proto", {}), service_metadata.get("assets", {}),
