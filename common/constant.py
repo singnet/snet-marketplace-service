@@ -32,5 +32,4 @@ class ResponseStatus:
     FAILED = "failed"
     SUCCESS = "success"
 
-
 COGS_TO_AGI = "0.00000001"

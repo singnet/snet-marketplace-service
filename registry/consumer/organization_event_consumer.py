@@ -123,16 +123,29 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
         try:
 
             existing_publish_in_progress_organization = self._get_existing_organization_records(org_id)
+
             if existing_publish_in_progress_organization:
                 org_uuid = existing_publish_in_progress_organization.uuid
+                origin = existing_publish_in_progress_organization.origin
+                duns_no = existing_publish_in_progress_organization.duns_no
+                addresses = existing_publish_in_progress_organization.addresses
+                members = existing_publish_in_progress_organization.members
+
             else:
                 org_uuid = ""
+                origin = ""
+                duns_no = ""
+                addresses = []
+                members = []
 
-            received_organization_event = OrganizationFactory.parse_organization_metadata(org_uuid, ipfs_org_metadata)
+            received_organization_event = OrganizationFactory.parse_organization_metadata(org_uuid, ipfs_org_metadata,
+                                                                                          origin, duns_no, addresses,
+                                                                                          members)
 
             if not existing_publish_in_progress_organization:
                 existing_members = []
                 received_organization_event.setup_id()
+                org_uuid = received_organization_event.uuid
                 self._create_event_outside_publisher_portal(received_organization_event)
 
             elif existing_publish_in_progress_organization.is_major_change(received_organization_event):
