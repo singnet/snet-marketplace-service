@@ -79,30 +79,37 @@ class Signer:
         raise Exception("Unable to fetch total calls made for service %s under organization %s for %s group.",
                         service_id, org_id, group_id)
 
-    def _get_no_of_free_call_made(self, username, org_id, service_id, group_id):
+    def _get_no_of_free_call_available(self, username, org_id, service_id, group_id):
+
         token_to_get_free_call, expiry_date_block, signature, current_block_number, daemon_endpoint = self._token_to_get_free_call(
             username, org_id, service_id, group_id)
-        total_free_call_made = 0
+        total_free_call_available = 0
         try:
-            total_free_call_made = self._get_no_of_free_calls_from_daemon(username, token_to_get_free_call,
+
+            total_free_call_available = self._get_no_of_free_calls_from_daemon(username, token_to_get_free_call,
                                                                           expiry_date_block, signature,
                                                                           current_block_number, daemon_endpoint)
-        except:
+        except Exception as e:
+            logger.info(
+                f"Free call from daemon not available switching to metering {org_id} {service_id} {group_id} {username}")
+            free_calls_allowed = self._get_free_calls_allowed(org_id, service_id, group_id)
             total_free_call_made = self._get_total_calls_made(username, org_id, service_id, group_id)
 
-        return total_free_call_made
+            total_free_call_available=free_calls_allowed-total_free_call_made
 
-
+        return total_free_call_available
 
     def _free_calls_allowed(self, username, org_id, service_id, group_id):
         """
             Method to check free calls exists for given user or not.
             Call monitoring service to get the details
         """
-        free_calls_allowed = self._get_free_calls_allowed(org_id, service_id, group_id)
-        total_calls_made = self._get_no_of_free_call_made(username, org_id, service_id, group_id)
-        is_free_calls_allowed = (True if ((free_calls_allowed - total_calls_made) > 0) else False)
-        return is_free_calls_allowed
+
+        free_calls_available = self._get_no_of_free_call_available(username, org_id, service_id, group_id)
+        if free_calls_available > 0:
+            return True;
+
+        return False
 
     def signature_for_free_call(self, user_data, org_id, service_id, group_id):
         """
