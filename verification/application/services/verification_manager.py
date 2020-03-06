@@ -22,14 +22,15 @@ class VerificationManager:
 
     def initiate_verification(self, verification_details, username):
         verification_type = verification_details["type"]
-        entity_id = verification_details["entity_id"]
-        logger.info(f"initiate verification for type: {verification_type} entity_id: {entity_id}")
         verification_id = uuid4().hex
         current_time = datetime.utcnow()
-        verification = Verification(verification_id, verification_type, entity_id,
-                                    VerificationStatus.PENDING.value, username, current_time, current_time)
 
         if verification_type == VerificationType.JUMIO.value:
+            entity_id = username
+            logger.info(f"initiate verification for type: {verification_type} entity_id: {entity_id}")
+            verification = Verification(verification_id, verification_type, entity_id,
+                                        VerificationStatus.PENDING.value, username, current_time, current_time)
+
             self.terminate_if_not_allowed_to_verify(entity_id, verification_type)
             return self.initiate_jumio_verification(username, verification)
         else:
