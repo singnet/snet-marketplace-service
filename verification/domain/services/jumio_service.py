@@ -2,6 +2,7 @@ import json
 from _sha1 import sha1
 from base64 import b64encode
 from datetime import datetime
+from urllib.parse import parse_qsl
 
 import requests
 
@@ -66,8 +67,9 @@ class JumioService:
         return verification
 
     def callback(self, verification_id, verification_details):
-        verification_status = verification_details["verificationStatus"]
-        callback_date = datetime.strptime(verification_details["callbackDate"], "%Y-%m-%dT%H:%M:%S.%fZ")
+        jumio_response = dict(parse_qsl(verification_details))
+        verification_status = jumio_response["verificationStatus"]
+        callback_date = datetime.strptime(jumio_response["callbackDate"], "%Y-%m-%dT%H:%M:%S.%fZ")
 
         if verification_status == JumioVerificationStatus.NO_ID_UPLOADED.value:
             transaction_status = JumioTransactionStatus.FAILED.value
