@@ -24,7 +24,7 @@ class VerificationManager:
         verification_type = verification_details["type"]
         verification_id = uuid4().hex
         current_time = datetime.utcnow()
-
+        logger.info(f"initiate verification for type: {verification_type}")
         if verification_type == VerificationType.JUMIO.value:
             entity_id = username
             logger.info(f"initiate verification for type: {verification_type} entity_id: {entity_id}")
