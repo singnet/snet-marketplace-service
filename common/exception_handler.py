@@ -51,7 +51,7 @@ def exception_handler(*decorator_args, **decorator_kwargs):
                         "error": {
                             "code": 0,
                             "message": e.error_message,
-                            "details": {"exception": e.error_details}
+                            "details": e.error_details
                         }
                     },
                     cors_enabled=True
