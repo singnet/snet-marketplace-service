@@ -153,7 +153,7 @@ def signature_to_get_free_call_from_daemon_handler(event, context):
     signature_data = {
         "token_to_get_free_call": token_to_get_free_call,
         "expiry_date_block": expiry_date_block,
-        "signature": signature,
+        "signature": signature.hex(),
         "current_block_number": current_block_number, "daemon_endpoint": daemon_endpoint
     }
 
