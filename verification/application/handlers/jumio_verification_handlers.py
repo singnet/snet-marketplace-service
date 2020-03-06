@@ -16,5 +16,5 @@ def submit(event, context):
     status = query_parameters["transactionStatus"]
     verification_id = path_parameters["verification_id"]
     redirect_url = VerificationManager().submit(verification_id, status)
-    return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": {}},
+    return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": {}, "error": {}},
                                     cors_enabled=True, headers={"location": redirect_url})
