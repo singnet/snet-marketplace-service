@@ -16,8 +16,8 @@ logger = get_logger(__name__)
 def initiate(event, context):
     payload = json.loads(event["body"])
     username = event["requestContext"]["authorizer"]["claims"]["email"]
-    required_keys = ["type", "entity_id"]
-    if not validate_dict(payload, required_keys, strict=True):
+    required_keys = ["type"]
+    if not validate_dict(payload, required_keys):
         raise BadRequestException()
     response = VerificationManager().initiate_verification(payload, username)
     return generate_lambda_response(StatusCode.CREATED, {"status": ResponseStatus.SUCCESS, "data": response},
