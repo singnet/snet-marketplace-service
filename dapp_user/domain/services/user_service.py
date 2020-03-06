@@ -108,7 +108,7 @@ class UserService:
         # passing event here as metering contract is that it need the entire event object
         # metering will eventually go out  then we will clean this up.
         try:
-            payload_dict = json.loads(event['body'])
+            payload_dict = event['queryStringParameters']
             email = event["requestContext"]["authorizer"]["claims"]["email"]
             lambda_client = boto3.client('lambda')
             org_id=payload_dict['org_id']
