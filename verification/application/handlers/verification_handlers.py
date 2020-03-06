@@ -16,7 +16,7 @@ logger = get_logger(__name__)
 def initiate(event, context):
     payload = json.loads(event["body"])
     username = event["requestContext"]["authorizer"]["claims"]["email"]
-    required_keys = ["type", "entity_id"]
+    required_keys = ["type"]
     if not validate_dict(payload, required_keys, strict=True):
         raise BadRequestException()
     response = VerificationManager().initiate_verification(payload, username)
