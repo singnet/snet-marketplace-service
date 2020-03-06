@@ -36,16 +36,11 @@ class TestJumioVerification(TestCase):
             })
         }
         response = initiate(event, None)
-        self.assertDictEqual(response, {
-            'statusCode': 201,
-            'body': '{"status": "success", "data": {"redirect_url": '
-                    '"https://yourcompany.netverify.com/web/v4/app?locale=en-GB&authorizationToken=xxx"}}',
-            'headers': {
-                'Content-Type': 'application/json', 'X-Requested-With': '*',
-                'Access-Control-Allow-Headers':
-                    'Access-Control-Allow-Origin, Content-Type, X-Amz-Date, Authorization,X-Api-Key,x-requested-with',
-                'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,OPTIONS,POST'}})
-
+        self.assertDictEqual(json.loads(response["body"]), {
+                "status": "success",
+                "data": {"redirect_url":
+                             "https://yourcompany.netverify.com/web/v4/app?locale=en-GB&authorizationToken=xxx"},
+                "error": {}})
         verification = verification_repository.session.query(VerificationModel).first()
         if verification is None:
             assert False
@@ -375,7 +370,6 @@ class TestJumioVerification(TestCase):
         self.assertEqual(jumio_verfication.verification_status, JumioVerificationStatus.NO_ID_UPLOADED.value)
         self.assertEqual(jumio_verfication.username, username)
         self.assertEqual(jumio_verfication.user_reference_id, sha1(username.encode("utf-8")).hexdigest())
-
 
     def tearDown(self):
         jumio_repository.session.query(JumioVerificationModel).delete()
