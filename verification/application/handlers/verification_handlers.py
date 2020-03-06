@@ -20,7 +20,8 @@ def initiate(event, context):
     if not validate_dict(payload, required_keys):
         raise BadRequestException()
     response = VerificationManager().initiate_verification(payload, username)
-    return generate_lambda_response(StatusCode.CREATED, {"status": ResponseStatus.SUCCESS, "data": response},
+    return generate_lambda_response(StatusCode.CREATED,
+                                    {"status": ResponseStatus.SUCCESS, "data": response, "error": {}},
                                     cors_enabled=True)
 
 
@@ -33,7 +34,8 @@ def callback(event, context):
         raise BadRequestException()
     verification_id = path_parameters["verification_id"]
     response = VerificationManager().callback(verification_id, payload)
-    return generate_lambda_response(StatusCode.CREATED, {"status": ResponseStatus.SUCCESS, "data": response},
+    return generate_lambda_response(StatusCode.CREATED,
+                                    {"status": ResponseStatus.SUCCESS, "data": response, "error": {}},
                                     cors_enabled=True)
 
 
@@ -48,5 +50,5 @@ def get_status(event, context):
     else:
         raise Exception("Invalid verification type")
     response = VerificationManager().get_status_for_entity(entity_id)
-    return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response},
+    return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response, "error": {}},
                                     cors_enabled=True)
