@@ -3,21 +3,24 @@ from urllib.parse import urlparse
 from uuid import uuid4
 
 import requests
+from deepdiff import DeepDiff
 
 from common import ipfs_util
 from common.exceptions import MethodNotImplemented
+from common.logger import get_logger
 from common.utils import datetime_to_string, json_to_file
 from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH
 from registry.constants import OrganizationAddressType, OrganizationActions, OrganizationStatus
+from registry.domain.models.organization_address import OrganizationAddress
 
-
+logger = get_logger(__name__)
 class OrganizationType(Enum):
     ORGANIZATION = "organization"
     INDIVIDUAL = "individual"
 
 
-EXCLUDE_PATHS = ["root.org_uuid", "root._Organization__duns_no", "root.owner", "root._Organization__owner_name",
-                 "root.assets['hero_image']['url']", "root.metadata_ipfs_hash", "root.origin"]
+EXCLUDE_PATHS = ["root.uuid", "root._Organization__duns_no", "root.owner",
+                 "root.assets['hero_image']['url']", "root.metadata_ipfs_uri", "root.origin"]
 
 class Organization:
     def __init__(self, uuid, org_id, name, org_type, origin, description, short_description, url,
@@ -218,6 +221,12 @@ class Organization:
         return True
 
     def is_major_change(self, updated_organization):
+        diff = DeepDiff(self, updated_organization, exclude_types=[OrganizationAddress],
+                        exclude_paths=EXCLUDE_PATHS)
+
+        logger.info(f"DIff for metadata organization {diff}")
+        if not diff:
+            return True
         return False
 
     @staticmethod
@@ -231,7 +240,7 @@ class Organization:
         else:
             raise Exception("Invalid Action for Organization")
         return next_state
-    
+
     @staticmethod
     def next_state_for_update(current_organization, updated_organization):
         if not current_organization.is_major_change(updated_organization):
