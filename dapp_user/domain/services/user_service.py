@@ -139,7 +139,7 @@ class UserService:
                 daemon_endpoint = signature_response["data"].get("daemon_endpoint", "")
                 free_call_available = self._get_no_of_free_calls_from_daemon(email, token_to_get_free_call,
                                                                              expiry_date_block,
-                                                                             bytes.fromhex(signature),
+                                                                             bytes.fromhex(eval(signature)),
                                                                              current_block_number, daemon_endpoint)
                 reponse = {"username": email, "org_id": payload_dict['org_id'],
                            "service_id": payload_dict['service_id'],
