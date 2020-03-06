@@ -61,7 +61,7 @@ def request_handler(event, context):
 
     elif "/usage/freecalls" == path:
         user_service = UserService()
-        response_data=user_service.get_free_call(event)
+        return user_service.get_free_call(event)
 
     elif "/wallet/register" == path:
         """ Deprecated """

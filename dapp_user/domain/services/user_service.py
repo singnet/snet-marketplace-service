@@ -10,6 +10,7 @@ from dapp_user.config import DELETE_USER_WALLET_ARN, GET_FREE_CALLS_METERING_ARN
 from dapp_user.constant import Status
 from dapp_user.domain.factory.user_factory import UserFactory
 from dapp_user.infrastructure.repositories.user_repository import UserRepository
+from dapp_user.lambda_handler import get_response
 from dapp_user.stubs import state_service_pb2, state_service_pb2_grpc
 
 logger = get_logger(__name__)
@@ -137,14 +138,14 @@ class UserService:
                 daemon_endpoint = signature_response["data"].get("daemon_endpoint", "")
                 free_call_available = self._get_no_of_free_calls_from_daemon(email, token_to_get_free_call,expiry_date_block, signature,current_block_number, daemon_endpoint)
 
-                return {"username": email, "org_id": payload_dict['org_id'], "service_id": payload_dict['service_id'],
+                return get_response(200,{"username": email, "org_id": payload_dict['org_id'], "service_id": payload_dict['service_id'],
                         "total_calls_made": FREE_CALL_AVAILABLE - free_call_available,
-                        "free_calls_allowed": FREE_CALL_AVAILABLE}
+                        "free_calls_allowed": FREE_CALL_AVAILABLE})
             else:
                 raise Exception("Error while getting signature to make free call to daemon")
 
-        except:
-            logger.info(f"Failed to get freecall from daemon  {email} {org_id} {service_id}")
+        except Exception as e:
+            logger.info(f"Failed to get freecall from daemon  {email} {org_id} {service_id} error {str(e)}")
             lambda_client = boto3.client('lambda')
             response = lambda_client.invoke(FunctionName=GET_FREE_CALLS_METERING_ARN, InvocationType='RequestResponse',
                                             Payload=json.dumps(event))
