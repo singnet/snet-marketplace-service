@@ -5,12 +5,12 @@ import boto3
 
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
+from common.utils import generate_lambda_response
 from dapp_user.config import DELETE_USER_WALLET_ARN, GET_FREE_CALLS_METERING_ARN, \
     GET_SIGNATURE_TO_GET_FREE_CALL_FROM_DAEMON, REGION_NAME
 from dapp_user.constant import Status
 from dapp_user.domain.factory.user_factory import UserFactory
 from dapp_user.infrastructure.repositories.user_repository import UserRepository
-from dapp_user.lambda_handler import get_response
 from dapp_user.stubs import state_service_pb2, state_service_pb2_grpc
 
 logger = get_logger(__name__)
@@ -77,7 +77,8 @@ class UserService:
         if delete_user_wallet_response["statusCode"] != 201:
             raise Exception(f"Failed to delete user wallet")
 
-    def _get_no_of_free_calls_from_daemon(self, email, token_to_get_free_call, expiry_date_block, signature,current_block_number, daemon_endpoint):
+    def _get_no_of_free_calls_from_daemon(self, email, token_to_get_free_call, expiry_date_block, signature,
+                                          current_block_number, daemon_endpoint):
 
         request = state_service_pb2.FreeCallStateRequest()
         request.user_id = email
@@ -112,17 +113,17 @@ class UserService:
             payload_dict = event['queryStringParameters']
             email = payload_dict['username']
             lambda_client = boto3.client('lambda')
-            org_id=payload_dict['organization_id']
-            service_id=payload_dict['service_id']
-            #hardcod the value unitl dapp passes it
-            group_id="m5FKWq4hW0foGW5qSbzGSjgZRuKs7A1ZwbIrJ9e96rc="
+            org_id = payload_dict['organization_id']
+            service_id = payload_dict['service_id']
+            # hardcod the value unitl dapp passes it
+            group_id = "m5FKWq4hW0foGW5qSbzGSjgZRuKs7A1ZwbIrJ9e96rc="
             response = lambda_client.invoke(FunctionName=GET_SIGNATURE_TO_GET_FREE_CALL_FROM_DAEMON,
                                             InvocationType='RequestResponse',
                                             Payload=json.dumps(
-                                                {"queryStringParameters": {"username":email,
-                                                          "org_id": org_id,
-                                                          "service_id": service_id,
-                                                          "group_id": group_id}}
+                                                {"queryStringParameters": {"username": email,
+                                                                           "org_id": org_id,
+                                                                           "service_id": service_id,
+                                                                           "group_id": group_id}}
                                             ))
             result = json.loads(response.get('Payload').read())
 
@@ -140,10 +141,12 @@ class UserService:
                                                                              expiry_date_block,
                                                                              bytes.fromhex(signature),
                                                                              current_block_number, daemon_endpoint)
+                reponse = {"username": email, "org_id": payload_dict['org_id'],
+                           "service_id": payload_dict['service_id'],
+                           "total_calls_made": FREE_CALL_AVAILABLE - free_call_available,
+                           "free_calls_allowed": FREE_CALL_AVAILABLE}
 
-                return get_response(200,{"username": email, "org_id": payload_dict['org_id'], "service_id": payload_dict['service_id'],
-                        "total_calls_made": FREE_CALL_AVAILABLE - free_call_available,
-                        "free_calls_allowed": FREE_CALL_AVAILABLE})
+                return generate_lambda_response(200, reponse, cors_enabled=True)
             else:
                 raise Exception("Error while getting signature to make free call to daemon")
 
