@@ -109,17 +109,19 @@ class UserService:
         # metering will eventually go out  then we will clean this up.
         try:
             payload_dict = event['queryStringParameters']
-            email = event["requestContext"]["authorizer"]["claims"]["email"]
+            email = payload_dict['username']
             lambda_client = boto3.client('lambda')
-            org_id=payload_dict['org_id']
+            org_id=payload_dict['organization_id']
             service_id=payload_dict['service_id']
+            #hardcod the value unitl dapp passes it
+            group_id="m5FKWq4hW0foGW5qSbzGSjgZRuKs7A1ZwbIrJ9e96rc="
             response = lambda_client.invoke(FunctionName=GET_SIGNATURE_TO_GET_FREE_CALL_FROM_DAEMON,
                                             InvocationType='RequestResponse',
                                             Payload=json.dumps(
-                                                {"body": {"username":email,
+                                                {"queryStringParameters": {"username":email,
                                                           "org_id": org_id,
                                                           "service_id": service_id,
-                                                          "group_id": payload_dict['group_id']}}
+                                                          "group_id": group_id}}
                                             ))
             result = json.loads(response.get('Payload').read())
 

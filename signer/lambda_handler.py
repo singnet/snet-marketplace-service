@@ -141,7 +141,7 @@ def signature_to_get_free_call_from_daemon_handler(event, context):
     logger.info(f"Request for freecall token event {event}")
     signer = Signer(net_id=NET_ID)
     payload_dict = event.get("queryStringParameters")
-    email = event["requestContext"]["authorizer"]["claims"]["email"]
+    email = payload_dict["username"]
     org_id = payload_dict["org_id"]
     service_id = payload_dict["service_id"]
     group_id = unquote(payload_dict["group_id"])
