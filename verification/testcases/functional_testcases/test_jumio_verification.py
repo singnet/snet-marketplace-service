@@ -274,9 +274,34 @@ class TestJumioVerification(TestCase):
                 created_at=current_time
             ))
             event = {
-                "body": json.dumps({
-                    "verificationStatus": status,
-                    "callbackDate": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+                "body": urlencode(
+                {
+                    "callBackType": "NETVERIFYID",
+                    "callbackDate": "2020-03-06T12:10:50.835Z",
+                    "clientIp": "157.51.114.166",
+                    "customerId": "14bb645983cafeb2bb14bf4df2dff297182aef9f",
+                    "firstAttemptDate": "2020-03-06T12:10:31.339Z",
+                    "idCheckDataPositions": "N/A",
+                    "idCheckDocumentValidation": "N/A",
+                    "idCheckHologram": "N/A",
+                    "idCheckMRZcode": "N/A",
+                    "idCheckMicroprint": "N/A",
+                    "idCheckSecurityFeatures": "N/A",
+                    "idCheckSignature": "N/A",
+                    "idCountry": "IND",
+                    "idScanImage": "https://lon.netverify.com/recognition/v1/idscan/cf657461-bf54-46dd-93e4-2496d6f115b1/front",
+                    "idScanImageBackside": "https://lon.netverify.com/recognition/v1/idscan/cf657461-bf54-46dd-93e4-2496d6f115b1/back",
+                    "idScanImageFace": "https://lon.netverify.com/recognition/v1/idscan/cf657461-bf54-46dd-93e4-2496d6f115b1/face",
+                    "idScanSource": "WEB_UPLOAD",
+                    "idScanStatus": "ERROR",
+                    "idType": "ID_CARD",
+                    "jumioIdScanReference": "cf657461-bf54-46dd-93e4-2496d6f115b1",
+                    "merchantIdScanReference": "52c90d23cf6847edbac663bb770a0f58",
+                    "rejectReason":
+                        {"rejectReasonCode": "201", "rejectReasonDescription": "NO_DOCUMENT",
+                         "rejectReasonDetails": []},
+                    "transactionDate": "2020-03-06T12:02:56.028Z",
+                    "verificationStatus": status
                 }),
                 "pathParameters": {
                     "verification_id": test_verification_id
@@ -322,10 +347,35 @@ class TestJumioVerification(TestCase):
             created_at=current_time
         ))
         event = {
-            "body": json.dumps({
-                "verificationStatus": JumioVerificationStatus.ERROR_NOT_READABLE_ID.value,
-                "callbackDate": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-            }),
+            "body": urlencode(
+                {
+                    "callBackType": "NETVERIFYID",
+                    "callbackDate": "2020-03-06T12:10:50.835Z",
+                    "clientIp": "157.51.114.166",
+                    "customerId": "14bb645983cafeb2bb14bf4df2dff297182aef9f",
+                    "firstAttemptDate": "2020-03-06T12:10:31.339Z",
+                    "idCheckDataPositions": "N/A",
+                    "idCheckDocumentValidation": "N/A",
+                    "idCheckHologram": "N/A",
+                    "idCheckMRZcode": "N/A",
+                    "idCheckMicroprint": "N/A",
+                    "idCheckSecurityFeatures": "N/A",
+                    "idCheckSignature": "N/A",
+                    "idCountry": "IND",
+                    "idScanImage": "https://lon.netverify.com/recognition/v1/idscan/cf657461-bf54-46dd-93e4-2496d6f115b1/front",
+                    "idScanImageBackside": "https://lon.netverify.com/recognition/v1/idscan/cf657461-bf54-46dd-93e4-2496d6f115b1/back",
+                    "idScanImageFace": "https://lon.netverify.com/recognition/v1/idscan/cf657461-bf54-46dd-93e4-2496d6f115b1/face",
+                    "idScanSource": "WEB_UPLOAD",
+                    "idScanStatus": "ERROR",
+                    "idType": "ID_CARD",
+                    "jumioIdScanReference": "cf657461-bf54-46dd-93e4-2496d6f115b1",
+                    "merchantIdScanReference": "52c90d23cf6847edbac663bb770a0f58",
+                    "rejectReason":
+                        {"rejectReasonCode": "201", "rejectReasonDescription": "NO_DOCUMENT",
+                         "rejectReasonDetails": []},
+                    "transactionDate": "2020-03-06T12:02:56.028Z",
+                    "verificationStatus": JumioVerificationStatus.ERROR_NOT_READABLE_ID.value
+                }),
             "pathParameters": {
                 "verification_id": test_verification_id
             }
@@ -369,10 +419,35 @@ class TestJumioVerification(TestCase):
             created_at=current_time
         ))
         event = {
-            "body": json.dumps({
-                "verificationStatus": JumioVerificationStatus.NO_ID_UPLOADED.value,
-                "callbackDate": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-            }),
+            "body": urlencode(
+                {
+                    "callBackType": "NETVERIFYID",
+                    "callbackDate": "2020-03-06T12:10:50.835Z",
+                    "clientIp": "157.51.114.166",
+                    "customerId": "14bb645983cafeb2bb14bf4df2dff297182aef9f",
+                    "firstAttemptDate": "2020-03-06T12:10:31.339Z",
+                    "idCheckDataPositions": "N/A",
+                    "idCheckDocumentValidation": "N/A",
+                    "idCheckHologram": "N/A",
+                    "idCheckMRZcode": "N/A",
+                    "idCheckMicroprint": "N/A",
+                    "idCheckSecurityFeatures": "N/A",
+                    "idCheckSignature": "N/A",
+                    "idCountry": "IND",
+                    "idScanImage": "https://lon.netverify.com/recognition/v1/idscan/cf657461-bf54-46dd-93e4-2496d6f115b1/front",
+                    "idScanImageBackside": "https://lon.netverify.com/recognition/v1/idscan/cf657461-bf54-46dd-93e4-2496d6f115b1/back",
+                    "idScanImageFace": "https://lon.netverify.com/recognition/v1/idscan/cf657461-bf54-46dd-93e4-2496d6f115b1/face",
+                    "idScanSource": "WEB_UPLOAD",
+                    "idScanStatus": "ERROR",
+                    "idType": "ID_CARD",
+                    "jumioIdScanReference": "cf657461-bf54-46dd-93e4-2496d6f115b1",
+                    "merchantIdScanReference": "52c90d23cf6847edbac663bb770a0f58",
+                    "rejectReason":
+                        {"rejectReasonCode": "201", "rejectReasonDescription": "NO_DOCUMENT",
+                         "rejectReasonDetails": []},
+                    "transactionDate": "2020-03-06T12:02:56.028Z",
+                    "verificationStatus": JumioVerificationStatus.NO_ID_UPLOADED.value
+                }),
             "pathParameters": {
                 "verification_id": test_verification_id
             }
