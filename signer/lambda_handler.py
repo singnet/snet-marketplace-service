@@ -151,7 +151,7 @@ def signature_to_get_free_call_from_daemon_handler(event, context):
 
     token_to_get_free_call, expiry_date_block, signature, current_block_number, daemon_endpoint = signer.token_to_get_free_call(email, org_id, service_id, group_id)
     signature_data = {
-        "token_to_get_free_call": token_to_get_free_call,
+        "token_to_get_free_call": token_to_get_free_call.hex(),
         "expiry_date_block": expiry_date_block,
         "signature": signature.hex(),
         "current_block_number": current_block_number, "daemon_endpoint": daemon_endpoint
