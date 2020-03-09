@@ -114,8 +114,8 @@ class UserService:
             email = payload_dict['username']
             lambda_client = boto3.client('lambda')
             org_id = payload_dict['organization_id']
-            service_id = payload_dict['group_id']
-            group_id = payload_dict['service_id']
+            service_id = payload_dict['service_id']
+            group_id = payload_dict['group_id']
             response = lambda_client.invoke(FunctionName=GET_SIGNATURE_TO_GET_FREE_CALL_FROM_DAEMON,
                                             InvocationType='RequestResponse',
                                             Payload=json.dumps(
