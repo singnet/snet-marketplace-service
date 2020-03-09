@@ -114,9 +114,8 @@ class UserService:
             email = payload_dict['username']
             lambda_client = boto3.client('lambda')
             org_id = payload_dict['organization_id']
-            service_id = payload_dict['service_id']
-            # hardcod the value unitl dapp passes it
-            group_id = "m5FKWq4hW0foGW5qSbzGSjgZRuKs7A1ZwbIrJ9e96rc="
+            service_id = payload_dict['group_id']
+            group_id = payload_dict['service_id']
             response = lambda_client.invoke(FunctionName=GET_SIGNATURE_TO_GET_FREE_CALL_FROM_DAEMON,
                                             InvocationType='RequestResponse',
                                             Payload=json.dumps(
