@@ -219,3 +219,16 @@ def register_member(event, context):
         StatusCode.CREATED,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+def org_verification(event, context):
+    query_parameters = event["queryStringParameters"]
+    if "org_type" not in query_parameters:
+        raise BadRequestException()
+    org_type = query_parameters["org_type"]
+    response = OrganizationPublisherService(None, None).update_verification(org_type, query_parameters)
+    return generate_lambda_response(
+        StatusCode.CREATED,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=False
+    )

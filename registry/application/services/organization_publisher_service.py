@@ -8,7 +8,7 @@ from common.logger import get_logger
 from registry.config import NOTIFICATION_ARN, PUBLISHER_PORTAL_DAPP_URL, REGION_NAME
 from registry.constants import OrganizationStatus, OrganizationMemberStatus, Role, OrganizationActions
 from registry.domain.factory.organization_factory import OrganizationFactory
-from registry.domain.models.organization import Organization
+from registry.domain.models.organization import Organization, OrganizationType
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 
 org_repo = OrganizationPublisherRepository()
@@ -170,3 +170,10 @@ class OrganizationPublisherService:
     @staticmethod
     def _get_org_member_notification_subject(org_name):
         return f"Membership Invitation from  Organization {org_name}"
+
+    def update_verification(self, org_type, verification_details):
+        if org_type == OrganizationType.INDIVIDUAL.value:
+            owner_username = verification_details["username"]
+            status = verification_details["status"]
+            org_repo.update_all_individual_organization_for_user(owner_username, status)
+        return {}

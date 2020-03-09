@@ -46,6 +46,12 @@ class Role(Enum):
     MEMBER = "MEMBER"
 
 
+# Should be subset of with verification.constants.VerificationStatus
+class VerificationStatus(Enum):
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+
+
 class Action(Enum):
     CREATE = "CREATE"
     SUBMIT = "SUBMIT"
