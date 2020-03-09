@@ -162,7 +162,3 @@ class UserService:
                                             Payload=json.dumps(event))
             result = json.loads(response.get('Payload').read())
             return result
-
-
-if __name__ == '__main__':
-    UserService().get_free_call()
