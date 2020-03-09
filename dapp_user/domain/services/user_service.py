@@ -80,7 +80,6 @@ class UserService:
     def _get_no_of_free_calls_from_daemon(self,email, token_to_get_free_call, expiry_date_block, signature,
                                           current_block_number, daemon_endpoint):
 
-        logger.info(f"Get free call for {email} {daemon_endpoint} {current_block_number}")
         request = state_service_pb2.FreeCallStateRequest()
         request.user_id = email
         request.token_for_free_call = token_to_get_free_call
@@ -145,9 +144,8 @@ class UserService:
                                                                              bytes.fromhex(signature),
                                                                              current_block_number, daemon_endpoint)
 
-                logger.info(f"No of free call from daemon {free_call_available} for {org_id} {service_id} {group_id} {email}")
-                reponse = {"username": email, "org_id": payload_dict['org_id'],
-                           "service_id": payload_dict['service_id'],
+                reponse = {"username": email, "org_id": org_id,
+                           "service_id": service_id,
                            "total_calls_made": FREE_CALL_AVAILABLE - free_call_available,
                            "free_calls_allowed": FREE_CALL_AVAILABLE}
 
