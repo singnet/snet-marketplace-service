@@ -1,5 +1,5 @@
 import json
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 
 import boto3
 
@@ -80,6 +80,7 @@ class UserService:
     def _get_no_of_free_calls_from_daemon(self, email, token_to_get_free_call, expiry_date_block, signature,
                                           current_block_number, daemon_endpoint):
 
+
         request = state_service_pb2.FreeCallStateRequest()
         request.user_id = email
         request.token_for_free_call = token_to_get_free_call
@@ -115,7 +116,7 @@ class UserService:
             lambda_client = boto3.client('lambda')
             org_id = payload_dict['organization_id']
             service_id = payload_dict['service_id']
-            group_id = payload_dict['group_id']
+            group_id = unquote(payload_dict['group_id'])
             response = lambda_client.invoke(FunctionName=GET_SIGNATURE_TO_GET_FREE_CALL_FROM_DAEMON,
                                             InvocationType='RequestResponse',
                                             Payload=json.dumps(
@@ -124,10 +125,13 @@ class UserService:
                                                                            "service_id": service_id,
                                                                            "group_id": group_id}}
                                             ))
-            result = json.loads(response.get('Payload').read())
 
+            result = json.loads(response.get('Payload').read())
+            logger.info(f"result {result}")
             response_body_raw = json.loads(response.get("Payload").read())["body"]
+            logger.info(f"response body raw {response_body_raw}")
             signature_response = json.loads(response_body_raw)
+            logger.info(f"signature response body raw {signature_response}")
 
             if signature_response["status"] == "success":
                 logger.info(f"Got signature to make free call to daemon for {email} : {signature_response['data']}")
@@ -140,6 +144,8 @@ class UserService:
                                                                              expiry_date_block,
                                                                              bytes.fromhex(signature),
                                                                              current_block_number, daemon_endpoint)
+
+                logger.info(f"No of free call from daemon {free_call_available} for {org_id} {service_id} {group_id} {email}")
                 reponse = {"username": email, "org_id": payload_dict['org_id'],
                            "service_id": payload_dict['service_id'],
                            "total_calls_made": FREE_CALL_AVAILABLE - free_call_available,
@@ -156,3 +162,7 @@ class UserService:
                                             Payload=json.dumps(event))
             result = json.loads(response.get('Payload').read())
             return result
+
+
+if __name__ == '__main__':
+    UserService().get_free_call()
