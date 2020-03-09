@@ -77,7 +77,7 @@ class UserService:
         if delete_user_wallet_response["statusCode"] != 201:
             raise Exception(f"Failed to delete user wallet")
 
-    def get_no_of_free_calls_from_daemon(email, token_to_get_free_call, expiry_date_block, signature,
+    def _get_no_of_free_calls_from_daemon(self,email, token_to_get_free_call, expiry_date_block, signature,
                                           current_block_number, daemon_endpoint):
 
         logger.info(f"Get free call for {email} {daemon_endpoint} {current_block_number}")
