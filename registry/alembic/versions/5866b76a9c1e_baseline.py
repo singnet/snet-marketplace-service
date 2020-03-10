@@ -1,16 +1,16 @@
 """baseline
 
-Revision ID: d69cfd6b8ec1
+Revision ID: 5866b76a9c1e
 Revises: 
-Create Date: 2020-03-10 12:55:45.352293
+Create Date: 2020-03-10 15:54:27.088657
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = 'd69cfd6b8ec1'
+revision = '5866b76a9c1e'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -34,7 +34,8 @@ def upgrade():
     sa.PrimaryKeyConstraint('uuid')
     )
     op.create_table('organization_archive',
-    sa.Column('uuid', mysql.VARCHAR(length=128), nullable=False),
+    sa.Column('row_id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('uuid', mysql.VARCHAR(length=128), nullable=True),
     sa.Column('name', mysql.VARCHAR(length=128), nullable=True),
     sa.Column('org_id', mysql.VARCHAR(length=128), nullable=True),
     sa.Column('org_type', mysql.VARCHAR(length=128), nullable=True),
@@ -48,7 +49,7 @@ def upgrade():
     sa.Column('metadata_ipfs_uri', mysql.VARCHAR(length=255), nullable=True),
     sa.Column('groups', mysql.JSON(), nullable=False),
     sa.Column('org_state', mysql.JSON(), nullable=False),
-    sa.PrimaryKeyConstraint('uuid')
+    sa.PrimaryKeyConstraint('row_id')
     )
     op.create_table('service_review_history',
     sa.Column('row_id', sa.Integer(), autoincrement=True, nullable=False),
