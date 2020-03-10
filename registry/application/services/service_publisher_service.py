@@ -211,7 +211,7 @@ class ServicePublisherService:
         # notify approval team via slack
         slack_msg = f"Service {service.service_id} under org_id {org_id} is submitted for approval"
         self.notify_approval_team_when_user_submit_for_approval(slack_msg=slack_msg)
-        return response
+        return service.to_dict()
 
     @staticmethod
     def publish_to_ipfs(filename, data):
