@@ -1,9 +1,9 @@
+from datetime import datetime
+
 from sqlalchemy import Column, Integer, ForeignKey, UniqueConstraint
-from sqlalchemy import func
 from sqlalchemy.dialects.mysql import JSON, TIMESTAMP, VARCHAR
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from datetime import datetime
 
 Base = declarative_base()
 
@@ -90,7 +90,8 @@ class Group(Base):
 
 class OrganizationArchive(Base):
     __tablename__ = "organization_archive"
-    uuid = Column("uuid", VARCHAR(128), primary_key=True)
+    row_id = Column("row_id", Integer, autoincrement=True, primary_key=True)
+    uuid = Column("uuid", VARCHAR(128))
     name = Column("name", VARCHAR(128))
     org_id = Column("org_id", VARCHAR(128))
     org_type = Column("org_type", VARCHAR(128))
@@ -104,7 +105,6 @@ class OrganizationArchive(Base):
     metadata_ipfs_uri = Column("metadata_ipfs_uri", VARCHAR(255))
     groups = Column("groups", JSON, nullable=False)
     org_state = Column("org_state", JSON, nullable=False)
-
 
 
 class Service(Base):
@@ -127,7 +127,7 @@ class Service(Base):
     tags = Column("tags", JSON, nullable=False, default=[])
     mpe_address = Column("mpe_address", VARCHAR(128), nullable=False, default="")
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
-    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False,default=datetime.utcnow())
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=datetime.utcnow())
     groups = relationship("ServiceGroup", uselist=True)
     service_state = relationship("ServiceState", uselist=False)
 
@@ -145,7 +145,7 @@ class ServiceState(Base):
     updated_by = Column("updated_by", VARCHAR(128), nullable=False)
     approved_by = Column("approved_by", VARCHAR(128))
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
-    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False,default=datetime.utcnow())
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=datetime.utcnow())
     UniqueConstraint(org_uuid, service_uuid, name="uq_org_srvc")
 
 
@@ -165,7 +165,7 @@ class ServiceGroup(Base):
     free_calls = Column("free_calls", Integer, nullable=False, default=0)
     free_call_signer_address = Column("free_call_signer_address", VARCHAR(128))
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
-    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False,default=datetime.utcnow())
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=datetime.utcnow())
     UniqueConstraint(org_uuid, service_uuid, group_id, name="uq_org_srvc_grp")
 
 
@@ -179,4 +179,4 @@ class ServiceReviewHistory(Base):
     reviewed_by = Column("reviewed_by", VARCHAR(128))
     reviewed_on = Column("reviewed_on", TIMESTAMP(timezone=False))
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
-    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False,default=datetime.utcnow())
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=datetime.utcnow())
