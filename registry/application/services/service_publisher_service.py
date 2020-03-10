@@ -188,25 +188,28 @@ class ServicePublisherService:
         utils.send_slack_notification(slack_msg=slack_msg, slack_url=slack_url, slack_channel=SLACK_CHANNEL_FOR_APPROVAL_TEAM)
 
     def submit_service_for_approval(self, payload):
+        # we should get org_id from organization service for given org_uuid than from payload
+        org_id = payload["org_id"]
+
         # service is submitted for approval. service state is APPROVAL PENDING.
         service = service_factory.create_service_entity_model(
             self._org_uuid, self._service_uuid, payload, ServiceStatus.APPROVAL_PENDING.value)
 
         # publish service test data on ipfs and save service submitted for approval
-        service = self.obj_service_publisher_domain_service.publish_service_data_to_ipfs(service,
-                                                                                         EnvironmentType.TEST.value)
+        service = self.obj_service_publisher_domain_service.publish_service_data_to_ipfs(
+            service, EnvironmentType.TEST.value)
         service = ServicePublisherRepository().save_service(self._username, service, service.service_state.state)
 
         # publish service on test network
         response = self.obj_service_publisher_domain_service.publish_service_on_blockchain(
-            service, environment=EnvironmentType.TEST.value)
+            org_id=org_id, service=service, environment=EnvironmentType.TEST.value)
 
         # notify service contributors via email
-        self.notify_service_contributor_when_user_submit_for_approval(service.org_uuid, service.service_id,
+        self.notify_service_contributor_when_user_submit_for_approval(org_id, service.service_id,
                                                                       service.contributors)
 
         # notify approval team via slack
-        slack_msg = f"Service {service.service_id} under org_id {service.org_uuid} is submitted for approval"
+        slack_msg = f"Service {service.service_id} under org_id {org_id} is submitted for approval"
         self.notify_approval_team_when_user_submit_for_approval(slack_msg=slack_msg)
         return response
 
