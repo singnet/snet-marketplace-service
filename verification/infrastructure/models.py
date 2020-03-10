@@ -23,7 +23,7 @@ class JumioVerificationModel(Base):
     username = Column("username", VARCHAR(255))
     jumio_reference_id = Column("jumio_reference_id", VARCHAR(255))
     user_reference_id = Column("user_reference_id", VARCHAR(255))
-    redirect_url = Column("redirect_url", VARCHAR(255))
+    redirect_url = Column("redirect_url", VARCHAR(1024))
     transaction_status = Column("transaction_status", VARCHAR(255))
     verification_status = Column("verification_status", VARCHAR(255))
     transaction_date = Column("transaction_date", TIMESTAMP(timezone=False))

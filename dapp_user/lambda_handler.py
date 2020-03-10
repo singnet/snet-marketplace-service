@@ -1,15 +1,14 @@
 import json
 import re
-import traceback
-import boto3
-from dapp_user.config import NETWORKS, GET_FREE_CALLS_METERING_ARN, SLACK_HOOK, NETWORK_ID
-from common.repository import Repository
-from common.utils import Utils
-from common.utils import handle_exception_with_slack_notification
-from common.logger import get_logger
 
-from dapp_user.user import User
 from aws_xray_sdk.core import patch_all
+
+from common.logger import get_logger
+from common.repository import Repository
+from common.utils import Utils, handle_exception_with_slack_notification
+from dapp_user.config import NETWORKS, NETWORK_ID, SLACK_HOOK
+from dapp_user.domain.services.user_service import UserService
+from dapp_user.user import User
 
 patch_all()
 
@@ -61,11 +60,8 @@ def request_handler(event, context):
             feedback_data=payload_dict['feedback'], user_data=event['requestContext'])
 
     elif "/usage/freecalls" == path:
-        lambda_client = boto3.client('lambda')
-        response = lambda_client.invoke(FunctionName=GET_FREE_CALLS_METERING_ARN, InvocationType='RequestResponse',
-                                        Payload=json.dumps(event))
-        result = json.loads(response.get('Payload').read())
-        return result
+        user_service = UserService()
+        return user_service.get_free_call(event)
 
     elif "/wallet/register" == path:
         """ Deprecated """

@@ -4,3 +4,5 @@ schema==0.6.8
 requests==2.22.0
 web3==4.9.2
 aws-xray-sdk==2.4.2
+grpcio==1.22.0
+protobuf==3.9.0

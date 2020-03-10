@@ -75,7 +75,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /intiate
+          path: /initiate
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS

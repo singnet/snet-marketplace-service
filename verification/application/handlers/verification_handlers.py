@@ -16,24 +16,26 @@ logger = get_logger(__name__)
 def initiate(event, context):
     payload = json.loads(event["body"])
     username = event["requestContext"]["authorizer"]["claims"]["email"]
-    required_keys = ["type", "entity_id"]
-    if not validate_dict(payload, required_keys, strict=True):
+    required_keys = ["type"]
+    if not validate_dict(payload, required_keys):
         raise BadRequestException()
     response = VerificationManager().initiate_verification(payload, username)
-    return generate_lambda_response(StatusCode.CREATED, {"status": ResponseStatus.SUCCESS, "data": response},
+    return generate_lambda_response(StatusCode.CREATED,
+                                    {"status": ResponseStatus.SUCCESS, "data": response, "error": {}},
                                     cors_enabled=True)
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def callback(event, context):
     logger.info(f"received event from jumio for callback {event}")
-    payload = json.loads(event["body"])
+    payload = event["body"]
     path_parameters = event["pathParameters"]
     if "verificationStatus" not in payload or "verification_id" not in path_parameters:
         raise BadRequestException()
     verification_id = path_parameters["verification_id"]
     response = VerificationManager().callback(verification_id, payload)
-    return generate_lambda_response(StatusCode.CREATED, {"status": ResponseStatus.SUCCESS, "data": response},
+    return generate_lambda_response(StatusCode.CREATED,
+                                    {"status": ResponseStatus.SUCCESS, "data": response, "error": {}},
                                     cors_enabled=True)
 
 
@@ -48,5 +50,5 @@ def get_status(event, context):
     else:
         raise Exception("Invalid verification type")
     response = VerificationManager().get_status_for_entity(entity_id)
-    return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response},
+    return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response, "error": {}},
                                     cors_enabled=True)
