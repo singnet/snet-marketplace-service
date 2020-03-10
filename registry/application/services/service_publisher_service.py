@@ -201,8 +201,8 @@ class ServicePublisherService:
         service = ServicePublisherRepository().save_service(self._username, service, service.service_state.state)
 
         # publish service on test network
-        response = self.obj_service_publisher_domain_service.publish_service_on_blockchain(
-            org_id=org_id, service=service, environment=EnvironmentType.TEST.value)
+        # response = self.obj_service_publisher_domain_service.publish_service_on_blockchain(
+        #     org_id=org_id, service=service, environment=EnvironmentType.TEST.value)
 
         # notify service contributors via email
         self.notify_service_contributor_when_user_submit_for_approval(org_id, service.service_id,
@@ -211,7 +211,7 @@ class ServicePublisherService:
         # notify approval team via slack
         slack_msg = f"Service {service.service_id} under org_id {org_id} is submitted for approval"
         self.notify_approval_team_when_user_submit_for_approval(slack_msg=slack_msg)
-        return response
+        return service.to_dict()
 
     @staticmethod
     def publish_to_ipfs(filename, data):
