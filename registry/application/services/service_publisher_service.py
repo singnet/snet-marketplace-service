@@ -88,18 +88,18 @@ class ServicePublisherService:
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
         return service.to_dict()
 
-    # @staticmethod
-    # def publish_assets(service):
-    #     ASSETS_SUPPORTED = ["hero_image"]
-    #     for asset in service.assets.key():
-    #         if asset in ASSETS_SUPPORTED:
-    #             asset_url = service.assets.get("proto_files", {}).get("url", None)
-    #             if asset_url is None:
-    #                 logger.info(f"asset url for {asset} is missing ")
-    #             asset_ipfs_hash = publish_zip_file_in_ipfs(file_url=asset_url,
-    #                                                        file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}",
-    #                                                        ipfs_client=IPFSUtil(IPFS_URL['url'], IPFS_URL['port']))
-    #             service.assets[asset]["ipfs_hash"] = asset_ipfs_hash
+    @staticmethod
+    def publish_assets(service):
+        ASSETS_SUPPORTED = ["hero_image", "demo_files"]
+        for asset in service.assets.keys():
+            if asset in ASSETS_SUPPORTED:
+                asset_url = service.assets.get("proto_files", {}).get("url", None)
+                if asset_url is None:
+                    logger.info(f"asset url for {asset} is missing ")
+                asset_ipfs_hash = publish_zip_file_in_ipfs(file_url=asset_url,
+                                                           file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}",
+                                                           ipfs_client=IPFSUtil(IPFS_URL['url'], IPFS_URL['port']))
+                service.assets[asset]["ipfs_hash"] = asset_ipfs_hash
 
     def publish_service_data_to_ipfs(self):
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
@@ -116,6 +116,7 @@ class ServicePublisherService:
                 "service_type": "grpc"
             }
             service.assets["proto_files"]["ipfs_hash"] = asset_ipfs_hash
+            self.publish_assets(service)
             service = ServicePublisherRepository().save_service(self._username, service, service.service_state.state)
             service_metadata = service.to_metadata()
             filename = f"{METADATA_FILE_PATH}/{service.uuid}_service_metadata.json"
