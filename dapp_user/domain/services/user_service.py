@@ -1,5 +1,5 @@
 import json
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 import boto3
 
@@ -77,7 +77,7 @@ class UserService:
         if delete_user_wallet_response["statusCode"] != 201:
             raise Exception(f"Failed to delete user wallet")
 
-    def _get_no_of_free_calls_from_daemon(self, email, token_to_get_free_call, expiry_date_block, signature,
+    def _get_no_of_free_calls_from_daemon(self,email, token_to_get_free_call, expiry_date_block, signature,
                                           current_block_number, daemon_endpoint):
 
         request = state_service_pb2.FreeCallStateRequest()
@@ -102,7 +102,7 @@ class UserService:
 
         stub = state_service_pb2_grpc.FreeCallStateServiceStub(channel)
         response = stub.GetFreeCallsAvailable(request)
-
+        logger.info(f"No of free  free call for {email} {daemon_endpoint} {current_block_number} is {response.free_calls_available}")
         return response.free_calls_available
 
     def get_free_call(self, event):
@@ -115,7 +115,7 @@ class UserService:
             lambda_client = boto3.client('lambda')
             org_id = payload_dict['organization_id']
             service_id = payload_dict['service_id']
-            group_id = payload_dict['group_id']
+            group_id = unquote(payload_dict['group_id'])
             response = lambda_client.invoke(FunctionName=GET_SIGNATURE_TO_GET_FREE_CALL_FROM_DAEMON,
                                             InvocationType='RequestResponse',
                                             Payload=json.dumps(
@@ -124,10 +124,13 @@ class UserService:
                                                                            "service_id": service_id,
                                                                            "group_id": group_id}}
                                             ))
-            result = json.loads(response.get('Payload').read())
 
-            response_body_raw = json.loads(response.get("Payload").read())["body"]
-            signature_response = json.loads(response_body_raw)
+            result = json.loads(response.get('Payload').read())
+            logger.info(f"result {result}")
+
+            signature_response = json.loads(result['body'])
+
+            logger.info(f"signature response {signature_response}")
 
             if signature_response["status"] == "success":
                 logger.info(f"Got signature to make free call to daemon for {email} : {signature_response['data']}")
@@ -140,8 +143,9 @@ class UserService:
                                                                              expiry_date_block,
                                                                              bytes.fromhex(signature),
                                                                              current_block_number, daemon_endpoint)
-                reponse = {"username": email, "org_id": payload_dict['org_id'],
-                           "service_id": payload_dict['service_id'],
+
+                reponse = {"username": email, "org_id": org_id,
+                           "service_id": service_id,
                            "total_calls_made": FREE_CALL_AVAILABLE - free_call_available,
                            "free_calls_allowed": FREE_CALL_AVAILABLE}
 

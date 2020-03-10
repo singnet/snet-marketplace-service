@@ -108,6 +108,28 @@ SERVICE_METADATA_SCHEMA = {
                         "empty": False
                     }
                 }
+            },
+            "demo_files": {
+                "type": "dict",
+                "schema": {
+                    "url": {
+                        "type": "string"
+                    },
+                    "ipfs_hash": {
+                        "type": "string"
+                    }
+                }
+            },
+            "hero_image": {
+                "type": "dict",
+                "schema": {
+                    "url": {
+                        "type": "string"
+                    },
+                    "ipfs_hash": {
+                        "type": "string"
+                    }
+                }
             }
         }
     },

@@ -11,12 +11,9 @@ logger = get_logger(__name__)
 
 def is_access_allowed(username, action, org_uuid):
     org_member_details = org_repository.get_org_member(username, org_uuid)
-    logger.info(f"{org_member_details}")
-    if not org_member_details:
+    if len(org_member_details) == 0:
         return False
-    logger.info(f" org member details {org_member_details[0]}")
     role = org_member_details[0].role
-
     if action in POLICY[Role[role]]:
         return True
     return False
@@ -34,11 +31,9 @@ def secured(*decorator_args, **decorator_kwargs):
     def check_access(func):
         def wrapper(*args, **kwargs):
             if 'event' in kwargs:
-                logger.info("got event as dict")
                 org_uuid = reduce(dict.get, org_uuid_path, kwargs['event'])
                 username = reduce(dict.get, username_path, kwargs['event'])
             else:
-                logger.info("got event as tupple")
                 event, context = args
                 org_uuid = reduce(dict.get, org_uuid_path, event)
                 username = reduce(dict.get, username_path, event)
