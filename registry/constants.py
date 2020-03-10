@@ -80,6 +80,14 @@ class OrganizationAddressType(Enum):
     HEAD_QUARTER_ADDRESS = "headquarter_address"
 
 
+class OrganizationType(Enum):
+    ORGANIZATION = "organization"
+    INDIVIDUAL = "individual"
+
+
+ORG_TYPE_VERIFICATION_TYPE_MAPPING = {"JUMIO": OrganizationType.INDIVIDUAL.value, }
+
+
 class EnvironmentType(Enum):
     TEST = "TEST"
     MAINNET = "MAINNET"

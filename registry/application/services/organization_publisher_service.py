@@ -4,11 +4,13 @@ from datetime import datetime
 from web3 import Web3
 
 from common.boto_utils import BotoUtils
+from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
 from registry.config import NOTIFICATION_ARN, PUBLISHER_PORTAL_DAPP_URL, REGION_NAME
-from registry.constants import OrganizationStatus, OrganizationMemberStatus, Role, OrganizationActions
+from registry.constants import OrganizationStatus, OrganizationMemberStatus, Role, OrganizationActions, \
+    OrganizationType, ORG_TYPE_VERIFICATION_TYPE_MAPPING
 from registry.domain.factory.organization_factory import OrganizationFactory
-from registry.domain.models.organization import Organization, OrganizationType
+from registry.domain.models.organization import Organization
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 
 org_repo = OrganizationPublisherRepository()
@@ -171,9 +173,14 @@ class OrganizationPublisherService:
     def _get_org_member_notification_subject(org_name):
         return f"Membership Invitation from  Organization {org_name}"
 
-    def update_verification(self, org_type, verification_details):
-        if org_type == OrganizationType.INDIVIDUAL.value:
-            owner_username = verification_details["username"]
-            status = verification_details["status"]
-            org_repo.update_all_individual_organization_for_user(owner_username, status)
+    def update_verification(self, verification_type, verification_details):
+        if verification_type in ORG_TYPE_VERIFICATION_TYPE_MAPPING:
+            if ORG_TYPE_VERIFICATION_TYPE_MAPPING[verification_type] == OrganizationType.INDIVIDUAL.value:
+                owner_username = verification_details["username"]
+                status = verification_details["status"]
+                org_repo.update_all_individual_organization_for_user(owner_username, status)
+            else:
+                raise MethodNotImplemented()
+        else:
+            raise MethodNotImplemented()
         return {}

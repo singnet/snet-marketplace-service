@@ -4,9 +4,9 @@ from unittest.mock import Mock, patch
 from uuid import uuid4
 
 from registry.application.services.organization_publisher_service import OrganizationPublisherService, org_repo
-from registry.constants import OrganizationStatus, OrganizationActions
+from registry.constants import OrganizationStatus, OrganizationActions, OrganizationType
 from registry.domain.factory.organization_factory import OrganizationFactory
-from registry.domain.models.organization import Organization as DomainOrganization, OrganizationType
+from registry.domain.models.organization import Organization as DomainOrganization
 from registry.infrastructure.models import Organization, OrganizationMember, OrganizationState, Group, \
     OrganizationAddress
 from registry.testcases.test_variables import ORG_GROUPS, ORG_PAYLOAD_MODEL, \
@@ -136,7 +136,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
                                                          "", "", [], {}, "", "", [], [], [], []),
                                       username, OrganizationStatus.APPROVED.value)
         OrganizationPublisherService(None, None).update_verification(
-            OrganizationType.INDIVIDUAL.value, verification_details={"status": "APPROVED", "username": username})
+            "JUMIO", verification_details={"status": "APPROVED", "username": username})
         organization = org_repo.get_org(OrganizationStatus.ONBOARDING_APPROVED.value)
         self.assertEqual(len(organization), 3)
 

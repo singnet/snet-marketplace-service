@@ -1,9 +1,10 @@
 from datetime import datetime
 from uuid import uuid4
 
+from common import boto_utils
 from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
-from verification.config import ALLOWED_VERIFICATION_REQUESTS, DAPP_POST_JUMIO_URL
+from verification.config import ALLOWED_VERIFICATION_REQUESTS, DAPP_POST_JUMIO_URL, REGION_NAME, REGISTRY_ARN
 from verification.constants import VerificationType, VerificationStatus, JumioTransactionStatus, \
     REJECTED_JUMIO_VERIFICATION, FAILED_JUMIO_VERIFICATION, VERIFIED_JUMIO_VERIFICATION
 from verification.domain.models.verfication import Verification
@@ -19,6 +20,9 @@ logger = get_logger(__name__)
 
 
 class VerificationManager:
+
+    def __index__(self):
+        self.boto_utils = boto_utils.BotoUtils(region_name=REGION_NAME)
 
     def initiate_verification(self, verification_details, username):
         verification_type = verification_details["type"]
@@ -82,6 +86,21 @@ class VerificationManager:
         else:
             raise MethodNotImplemented()
         return {}
+
+    def _ack_verification(self, verification):
+        if verification.type == VerificationType.JUMIO.value:
+            payload = {
+                "path": "/org/verification",
+                "queryStringParameters": {
+                    "status": verification.status,
+                    "username": verification.entity_id,
+                    "verification_type": verification.type
+                }
+            }
+            self.boto_utils.invoke_lambda(REGISTRY_ARN["ORG_VERIFICATION"],
+                                          invocation_type="RequestResponse", payload=payload)
+        else:
+            raise MethodNotImplemented()
 
     def get_status_for_entity(self, entity_id):
         verification = verification_repository.get_latest_verification_for_entity(entity_id)
