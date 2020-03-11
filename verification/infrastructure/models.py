@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer
+from sqlalchemy import Column, Integer, JSON
 from sqlalchemy.dialects.mysql import TIMESTAMP, VARCHAR
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -26,6 +26,7 @@ class JumioVerificationModel(Base):
     redirect_url = Column("redirect_url", VARCHAR(1024))
     transaction_status = Column("transaction_status", VARCHAR(255))
     verification_status = Column("verification_status", VARCHAR(255))
+    reject_reason = Column("reject_reason", JSON)
     transaction_date = Column("transaction_date", TIMESTAMP(timezone=False))
     callback_date = Column("callback_date", TIMESTAMP(timezone=False))
     created_at = Column("created_at", TIMESTAMP(timezone=False))

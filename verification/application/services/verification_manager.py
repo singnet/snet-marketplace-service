@@ -106,4 +106,8 @@ class VerificationManager:
         verification = verification_repository.get_latest_verification_for_entity(entity_id)
         if verification is None:
             return {}
-        return verification.to_response()
+        response = verification.to_response()
+        if verification.type == VerificationType.JUMIO.value:
+            jumio_verification = jumio_repository.get_verification(verification.id)
+            response["jumio"] = jumio_verification.to_dict()
+        return response

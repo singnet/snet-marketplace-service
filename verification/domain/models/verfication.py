@@ -2,7 +2,7 @@ from common.utils import datetime_to_string
 
 
 class Verification:
-    def __init__(self, id, type, entity_id, status, requestee, created_at, updated_at, jumio=None):
+    def __init__(self, id, type, entity_id, status, requestee, created_at, updated_at, reject_reason=None):
         self.id = id
         self.type = type
         self.entity_id = entity_id
@@ -10,10 +10,6 @@ class Verification:
         self.requestee = requestee
         self.created_at = created_at
         self.updated_at = updated_at
-        self.jumio = jumio
-
-    def set_jumio(self, jumio):
-        self.jumio = jumio
 
     def to_response(self):
         response_dict = {
@@ -23,7 +19,7 @@ class Verification:
             "status": self.status,
             "requestee": self.requestee,
             "created_at": "",
-            "updated_at": "",
+            "updated_at": ""
         }
         if self.created_at is not None:
             response_dict["created_at"] = datetime_to_string(self.created_at)
