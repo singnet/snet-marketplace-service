@@ -1,10 +1,11 @@
 from datetime import datetime as dt
+
+from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus
 from registry.domain.models.service import Service
-from registry.infrastructure.models import Service as ServiceDBModel, ServiceGroup as ServiceGroupDBModel, \
-    ServiceState as ServiceStateDBModel, ServiceReviewHistory
 from registry.domain.models.service_group import ServiceGroup
 from registry.domain.models.service_state import ServiceState
-from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus, ServiceAvailabilityStatus
+from registry.infrastructure.models import Service as ServiceDBModel, ServiceGroup as ServiceGroupDBModel, \
+    ServiceReviewHistory, ServiceState as ServiceStateDBModel
 
 
 class ServiceFactory:
@@ -148,7 +149,8 @@ class ServiceFactory:
         )
 
     @staticmethod
-    def create_service_from_service_metadata(org_uuid, service_uuid,service_id, service_metadata, tags_data, status):
+    def create_service_from_service_metadata(org_uuid, service_uuid, service_id, service_metadata, tags_data, ranking,
+                                             rating, status):
         service_state_entity_model = \
             ServiceFactory.create_service_state_entity_model(org_uuid, service_uuid,
                                                              getattr(ServiceStatus, status).value)
@@ -156,12 +158,12 @@ class ServiceFactory:
             ServiceFactory.create_service_group_entity_model("", service_uuid, group) for group in
             service_metadata.get("groups", [])]
         return Service(
-            org_uuid, service_uuid,service_id, service_metadata.get("display_name", ""),
+            org_uuid, service_uuid, service_id, service_metadata.get("display_name", ""),
             service_metadata.get("short_description", ""), service_metadata.get("description", ""),
             service_metadata.get("project_url", ""),
             service_metadata.get("proto", {}), service_metadata.get("assets", {}),
-            service_metadata.get("ranking", DEFAULT_SERVICE_RANKING),
-            service_metadata.get("rating", {}), service_metadata.get("contributors", []),
+            ranking,
+            rating, service_metadata.get("contributors", []),
             tags_data,
             service_metadata.get("mpe_address", ""), service_metadata.get("metadata_ipfs_hash", ""),
             service_group_entity_model_list,
