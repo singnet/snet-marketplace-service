@@ -88,6 +88,19 @@ class ServicePublisherService:
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
         return service.to_dict()
 
+    @staticmethod
+    def publish_assets(service):
+        ASSETS_SUPPORTED = ["hero_image", "demo_files"]
+        for asset in service.assets.keys():
+            if asset in ASSETS_SUPPORTED:
+                asset_url = service.assets.get("proto_files", {}).get("url", None)
+                if asset_url is None:
+                    logger.info(f"asset url for {asset} is missing ")
+                asset_ipfs_hash = publish_zip_file_in_ipfs(file_url=asset_url,
+                                                           file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}",
+                                                           ipfs_client=IPFSUtil(IPFS_URL['url'], IPFS_URL['port']))
+                service.assets[asset]["ipfs_hash"] = asset_ipfs_hash
+
     def publish_service_data_to_ipfs(self):
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
         if service.service_state.state == ServiceStatus.APPROVED.value:
@@ -103,6 +116,7 @@ class ServicePublisherService:
                 "service_type": "grpc"
             }
             service.assets["proto_files"]["ipfs_hash"] = asset_ipfs_hash
+            self.publish_assets(service)
             service = ServicePublisherRepository().save_service(self._username, service, service.service_state.state)
             service_metadata = service.to_metadata()
             filename = f"{METADATA_FILE_PATH}/{service.uuid}_service_metadata.json"
@@ -165,7 +179,8 @@ class ServicePublisherService:
 
     @staticmethod
     def unregister_service_in_blockchain_after_service_is_approved(service_id):
-        transaction_hash = ServicePublisherService.unregister_service_in_blockchain(org_id=ORG_ID_FOR_TESTING_AI_SERVICE, service_id=service_id)
+        transaction_hash = ServicePublisherService.unregister_service_in_blockchain(
+            org_id=ORG_ID_FOR_TESTING_AI_SERVICE, service_id=service_id)
         logger.info(
             f"Transaction hash {transaction_hash} generated while unregistering service_id {service_id} in blockchain")
 
@@ -180,12 +195,14 @@ class ServicePublisherService:
         notification_message = f"Your service {service_id} under {org_id} has successfully submitted for approval. " \
                                f"We will notify you once it is approved/rejected from our approval team. Usually it " \
                                f"takes {5} - {10} days for approval."
-        utils.send_email_notification(recipients, notification_subject, notification_message, NOTIFICATION_ARN, boto_util)
+        utils.send_email_notification(recipients, notification_subject, notification_message, NOTIFICATION_ARN,
+                                      boto_util)
 
     @staticmethod
     def notify_approval_team_when_user_submit_for_approval(slack_msg):
         slack_url = SLACK_HOOK['hostname'] + SLACK_HOOK['path']
-        utils.send_slack_notification(slack_msg=slack_msg, slack_url=slack_url, slack_channel=SLACK_CHANNEL_FOR_APPROVAL_TEAM)
+        utils.send_slack_notification(slack_msg=slack_msg, slack_url=slack_url,
+                                      slack_channel=SLACK_CHANNEL_FOR_APPROVAL_TEAM)
 
     def submit_service_for_approval(self, payload):
         # we should get org_id from organization service for given org_uuid than from payload
@@ -201,17 +218,17 @@ class ServicePublisherService:
         service = ServicePublisherRepository().save_service(self._username, service, service.service_state.state)
 
         # publish service on test network
-        response = self.obj_service_publisher_domain_service.publish_service_on_blockchain(
-            org_id=org_id, service=service, environment=EnvironmentType.TEST.value)
+        # response = self.obj_service_publisher_domain_service.publish_service_on_blockchain(
+        #     org_id=org_id, service=service, environment=EnvironmentType.TEST.value)
 
         # notify service contributors via email
-        self.notify_service_contributor_when_user_submit_for_approval(org_id, service.service_id,
-                                                                      service.contributors)
-
-        # notify approval team via slack
-        slack_msg = f"Service {service.service_id} under org_id {org_id} is submitted for approval"
-        self.notify_approval_team_when_user_submit_for_approval(slack_msg=slack_msg)
-        return response
+        # self.notify_service_contributor_when_user_submit_for_approval(org_id, service.service_id,
+        #                                                               service.contributors)
+        #
+        # # notify approval team via slack
+        # slack_msg = f"Service {service.service_id} under org_id {org_id} is submitted for approval"
+        # self.notify_approval_team_when_user_submit_for_approval(slack_msg=slack_msg)
+        return service.to_dict()
 
     @staticmethod
     def publish_to_ipfs(filename, data):
