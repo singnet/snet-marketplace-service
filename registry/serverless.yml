@@ -795,61 +795,6 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-#  Admin level API needs to be private
-  list-of-orgs-services-submitted-for-approval:
-    warmup: true
-    handler: registry.application.handlers.service_handlers.list_of_orgs_with_services_submitted_for_approval
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: POST
-          path: /admin/orgs/services
-          private: true
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-
-  legal-approval-of-service:
-    warmup: true
-    handler: registry.application.handlers.service_handlers.legal_approval_of_service
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: POST
-          path: /admin/org/{org_uuid}/service/{service_uuid}
-          private: true
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-
   pre_token_auth_handler:
     handler: registry.application.access_control.authorization.pre_token_auth_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -922,3 +867,58 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+
+#  Admin level API needs to be private
+#  list-of-orgs-services-submitted-for-approval:
+#    warmup: true
+#    handler: registry.application.handlers.service_handlers.list_of_orgs_with_services_submitted_for_approval
+#    role: ${file(./config.${self:provider.stage}.json):ROLE}
+#    vpc:
+#      securityGroupIds:
+#        - ${file(./config.${self:provider.stage}.json):SG1}
+#        - ${file(./config.${self:provider.stage}.json):SG2}
+#      subnetIds:
+#        - ${file(./config.${self:provider.stage}.json):VPC1}
+#        - ${file(./config.${self:provider.stage}.json):VPC2}
+#    events:
+#      - http:
+#          method: POST
+#          path: /admin/orgs/services
+#          private: true
+#          cors:
+#            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+#            headers:
+#              - Content-Type
+#              - X-Amz-Date
+#              - Authorization
+#              - X-Api-Key
+#              - X-Amz-Security-Token
+#              - X-Amz-User-Agent
+#              - x-requested-with
+#
+#  legal-approval-of-service:
+#    warmup: true
+#    handler: registry.application.handlers.service_handlers.legal_approval_of_service
+#    role: ${file(./config.${self:provider.stage}.json):ROLE}
+#    vpc:
+#      securityGroupIds:
+#        - ${file(./config.${self:provider.stage}.json):SG1}
+#        - ${file(./config.${self:provider.stage}.json):SG2}
+#      subnetIds:
+#        - ${file(./config.${self:provider.stage}.json):VPC1}
+#        - ${file(./config.${self:provider.stage}.json):VPC2}
+#    events:
+#      - http:
+#          method: POST
+#          path: /admin/org/{org_uuid}/service/{service_uuid}
+#          private: true
+#          cors:
+#            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+#            headers:
+#              - Content-Type
+#              - X-Amz-Date
+#              - Authorization
+#              - X-Api-Key
+#              - X-Amz-Security-Token
+#              - X-Amz-User-Agent
+#              - x-requested-with
