@@ -72,14 +72,9 @@ class JumioService:
         verification.verification_status = jumio_response["verificationStatus"]
         verification.callback_date = datetime.strptime(jumio_response["callbackDate"], "%Y-%m-%dT%H:%M:%S.%fZ")
 
-        if verification.verification_status == JumioVerificationStatus.NO_ID_UPLOADED.value:
-            verification.transaction_status = JumioTransactionStatus.FAILED.value
-        elif verification.verification_status in [JumioVerificationStatus.DENIED_FRAUD.value,
-                                                  JumioVerificationStatus.ERROR_NOT_READABLE_ID.value]:
-            verification.transaction_status = JumioTransactionStatus.DONE.value
+        verification.setup_transaction_status()
+        if verification.has_reject_reason():
             verification.reject_reason = json.loads(jumio_response["rejectReason"])
-        else:
-            verification.transaction_status = JumioTransactionStatus.DONE.value
 
         verification = self.repo.update_verification_and_transaction_status(verification)
         return verification
