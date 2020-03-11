@@ -18,6 +18,7 @@ class ServiceGroup:
             "group_id": self._group_id,
             "group_name": self._group_name,
             "endpoints": self._endpoints,
+            "test_endpoints": self._test_endpoints,
             "pricing": self._pricing,
             "free_calls": self._free_calls,
             "free_call_signer_address": self._free_call_signer_address,
