@@ -1,7 +1,7 @@
 NETWORKS = {
     3: {
         "name": "test",
-        "http_provider": "https://ropsten.infura.io/v3/09027f4a13e841d48dbfefc67e7685d5",
+        "http_provider": "https://ropsten.infura.io",
         "ws_provider": "wss://ropsten.infura.io/ws",
         "db": {
             "DB_DRIVER": "mysql+pymysql",
@@ -44,3 +44,20 @@ BLOCKCHAIN_TEST_ENV = {
     "free_calls": 100
 }
 SLACK_CHANNEL_FOR_APPROVAL_TEAM = ""
+DAEMON_CONFIG_FOR_TEST = {
+    "allowed_user_flag": True,
+    "allowed_user_addresses": [],
+    "blockchain_enabled": False,
+    "passthrough_enabled": True,
+    "daemon_end_point": "0.0.0.0:XXXX",
+    "passthrough_endpoint": "http://localhost:XXXX"
+}
+DAEMON_CONFIG = {
+    "ipfs_end_point": "",
+    "blockchain_network_selected": "ropsten",
+    "organization_id": None,
+    "service_id": None,
+    "metering_end_point": "https://ropsten-marketplace.singularitynet.io",
+    "authentication_address": None,
+    "blockchain_enabled": True
+}
