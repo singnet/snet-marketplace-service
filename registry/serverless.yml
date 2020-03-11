@@ -875,7 +875,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /org/{org_uuid}/service/{service_uuid}/daemon/config/test
+          path: /org/{org_uuid}/service/{service_uuid}/group/daemon/config/test
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -906,7 +906,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /org/{org_uuid}/service/{service_uuid}/daemon/config
+          path: /org/{org_uuid}/service/{service_uuid}/group/daemon/config
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
