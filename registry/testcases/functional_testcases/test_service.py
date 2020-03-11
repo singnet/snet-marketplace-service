@@ -696,6 +696,7 @@ class TestService(TestCase):
             "httpMethod": "PUT",
             "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"},
             "body": json.dumps({
+                "org_id": "curation",
                 "service_id": "test_service_id",
                 "display_name": "test_display_name",
                 "description": "test description updated",

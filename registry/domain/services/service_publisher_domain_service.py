@@ -29,8 +29,8 @@ class ServicePublisherDomainService:
         if proto_url is None:
             raise ServiceProtoNotFoundException
         proto_ipfs_hash = utils.publish_zip_file_in_ipfs(file_url=proto_url,
-                                                   file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}",
-                                                   ipfs_client=ipfs_client)
+                                                         file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}",
+                                                         ipfs_client=ipfs_client)
         service.proto = {
             "model_ipfs_hash": proto_ipfs_hash,
             "encoding": "proto",
@@ -40,16 +40,9 @@ class ServicePublisherDomainService:
         return service
 
     @staticmethod
-    def publish_service_metadata_to_ipfs(service):
-        service_metadata = service.to_metadata()
-        if not service.is_metadata_valid(service_metadata):
-            logger.info("Service metadata is not valid")
-            raise Exception("INVALID_METADATA")
-        filename = f"{METADATA_FILE_PATH}/{service.uuid}_service_metadata.json"
-        json_to_file(service_metadata, filename)
+    def publish_file_to_ipfs(filename):
         metadata_ipfs_hash = ipfs_client.write_file_in_ipfs(filename, wrap_with_directory=False)
-        service.metadata_uri = METADATA_URI_PREFIX + metadata_ipfs_hash
-        return service
+        return metadata_ipfs_hash
 
     @staticmethod
     def organization_exist_in_blockchain(org_id):
@@ -134,16 +127,22 @@ class ServicePublisherDomainService:
     def publish_service_data_to_ipfs(self, service, environment):
         # publish assets
         service = self.publish_service_proto_to_ipfs(service)
+        service_metadata = service.to_metadata()
         if environment == EnvironmentType.TEST.value:
             for group in service.groups:
-                group.endpoints = group.test_endpoints
-        service = self.publish_service_metadata_to_ipfs(service)
+                service_metadata["groups"][0]["endpoints"] = group.test_endpoints
+
+        if not service.is_metadata_valid(service_metadata):
+            logger.info("Service metadata is not valid")
+            raise Exception("INVALID_METADATA")
+        service_metadata_filename = f"{METADATA_FILE_PATH}/{service.uuid}_service_metadata.json"
+        json_to_file(service_metadata, service_metadata_filename)
+        service.metadata_uri = METADATA_URI_PREFIX + self.publish_file_to_ipfs(service_metadata_filename)
         return service
 
-    def publish_service_on_blockchain(self, service, environment):
+    def publish_service_on_blockchain(self, org_id, service, environment):
         # deploy service on testing blockchain environment for verification
         transaction_hash = self.register_or_update_service_in_blockchain(
-            org_id=ORG_ID_FOR_TESTING_AI_SERVICE, service_id=service.service_id,
+            org_id=org_id, service_id=service.service_id,
             metadata_uri=hash_to_bytesuri(service.metadata_uri), tags=service.tags, environment=environment)
         return service.to_dict()
-
