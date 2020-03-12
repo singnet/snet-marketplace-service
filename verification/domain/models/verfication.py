@@ -10,6 +10,10 @@ class Verification:
         self.requestee = requestee
         self.created_at = created_at
         self.updated_at = updated_at
+        if reject_reason is None:
+            self.reject_reason = ""
+        else:
+            self.reject_reason = reject_reason
 
     def to_response(self):
         response_dict = {
@@ -18,6 +22,7 @@ class Verification:
             "entity_id": self.entity_id,
             "status": self.status,
             "requestee": self.requestee,
+            "reject_reason": self.reject_reason,
             "created_at": "",
             "updated_at": ""
         }
