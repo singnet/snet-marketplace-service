@@ -21,7 +21,7 @@ logger = get_logger(__name__)
 
 class VerificationManager:
 
-    def __index__(self):
+    def __init__(self):
         self.boto_utils = boto_utils.BotoUtils(region_name=REGION_NAME)
 
     def initiate_verification(self, verification_details, username):
