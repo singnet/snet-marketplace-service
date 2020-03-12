@@ -8,7 +8,7 @@ NETWORKS = {
             "DB_HOST": "localhost",
             "DB_USER": "unittest_root",
             "DB_PASSWORD": "unittest_pwd",
-            "DB_NAME": "unittest_db",
+            "DB_NAME": "verification_unittest_db",
             "DB_PORT": 3306,
         },
     }
@@ -26,3 +26,7 @@ JUMIO_WORKFLOW_ID = 200
 JUMIO_API_TOKEN_SSM_KEY = ""
 JUMIO_API_SECRET_SSM_KEY = ""
 ALLOWED_VERIFICATION_REQUESTS = 2
+
+REGISTRY_ARN = {
+    "ORG_VERIFICATION": ""
+}

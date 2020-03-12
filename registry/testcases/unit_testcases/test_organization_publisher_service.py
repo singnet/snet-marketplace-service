@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 from uuid import uuid4
 
 from registry.application.services.organization_publisher_service import OrganizationPublisherService, org_repo
-from registry.constants import OrganizationStatus, OrganizationActions
+from registry.constants import OrganizationStatus, OrganizationActions, OrganizationType
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization as DomainOrganization
 from registry.infrastructure.models import Organization, OrganizationMember, OrganizationState, Group, \
@@ -38,7 +38,6 @@ class TestOrganizationPublisherService(unittest.TestCase):
         else:
             assert False
 
-
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
     def test_edit_organization(self, mock_boto, mock_ipfs):
@@ -52,7 +51,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
             username, OrganizationStatus.PUBLISHED.value)
         payload = json.loads(ORG_PAYLOAD_MODEL)
         payload["org_uuid"] = test_org_uuid
-        OrganizationPublisherService(test_org_uuid, username)\
+        OrganizationPublisherService(test_org_uuid, username) \
             .update_organization(payload, OrganizationActions.DRAFT.value)
         org_db_model = org_repo.session.query(Organization).first()
         if org_db_model is None:
@@ -86,7 +85,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         }
         organization = OrganizationFactory.org_domain_entity_from_payload(payload)
         org_repo.add_organization(organization, username, OrganizationStatus.DRAFT.value)
-        OrganizationPublisherService(test_org_uuid, username)\
+        OrganizationPublisherService(test_org_uuid, username) \
             .update_organization(payload, OrganizationActions.SUBMIT.value)
         org_db_model = org_repo.session.query(Organization).first()
         if org_db_model is None:
@@ -119,6 +118,27 @@ class TestOrganizationPublisherService(unittest.TestCase):
             username, OrganizationStatus.APPROVED.value)
         response = OrganizationPublisherService(test_org_id, username).publish_org_to_ipfs()
         self.assertEqual(response["metadata_ipfs_uri"], "ipfs://Q12PWP")
+
+    @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q12PWP")))
+    @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
+    def test_org_verification(self, mock_boto_utils, mock_ipfs_utils):
+        username = "karl@dummy.in"
+        for count in range(0, 3):
+            org_id = uuid4().hex
+            org_repo.add_organization(DomainOrganization(org_id, org_id, f"org_{org_id}",
+                                                         OrganizationType.INDIVIDUAL.value, ORIGIN, "",
+                                                         "", "", [], {}, "", "", [], [], [], []),
+                                      username, OrganizationStatus.ONBOARDING.value)
+        for count in range(0, 3):
+            org_id = uuid4().hex
+            org_repo.add_organization(DomainOrganization(org_id, org_id, f"org_{org_id}",
+                                                         OrganizationType.INDIVIDUAL.value, ORIGIN, "",
+                                                         "", "", [], {}, "", "", [], [], [], []),
+                                      username, OrganizationStatus.APPROVED.value)
+        OrganizationPublisherService(None, None).update_verification(
+            "JUMIO", verification_details={"status": "APPROVED", "username": username})
+        organization = org_repo.get_org(OrganizationStatus.ONBOARDING_APPROVED.value)
+        self.assertEqual(len(organization), 3)
 
     def tearDown(self):
         org_repo.session.query(Group).delete()

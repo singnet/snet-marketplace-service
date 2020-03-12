@@ -46,6 +46,12 @@ class Role(Enum):
     MEMBER = "MEMBER"
 
 
+# Should be subset of with verification.constants.VerificationStatus
+class VerificationStatus(Enum):
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+
+
 class Action(Enum):
     CREATE = "CREATE"
     SUBMIT = "SUBMIT"
@@ -72,6 +78,14 @@ class ServiceStatus(Enum):
 class OrganizationAddressType(Enum):
     MAIL_ADDRESS = "mailing_address"
     HEAD_QUARTER_ADDRESS = "headquarter_address"
+
+
+class OrganizationType(Enum):
+    ORGANIZATION = "organization"
+    INDIVIDUAL = "individual"
+
+
+ORG_TYPE_VERIFICATION_TYPE_MAPPING = {"JUMIO": OrganizationType.INDIVIDUAL.value, }
 
 
 class EnvironmentType(Enum):

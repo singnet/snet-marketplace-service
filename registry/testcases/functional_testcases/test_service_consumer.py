@@ -1,6 +1,6 @@
 import unittest
 from datetime import datetime
-from random import random, randrange
+from random import randrange
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -9,9 +9,6 @@ from registry.consumer.service_event_consumer import ServiceCreatedEventConsumer
 from registry.infrastructure.models import Organization, Service, ServiceGroup, ServiceState, ServiceReviewHistory
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
-
-
-
 
 
 class TestOrganizationEventConsumer(unittest.TestCase):
