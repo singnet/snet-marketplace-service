@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import uuid4
 
-from registry.constants import Role, OrganizationMemberStatus, OrganizationStatus
+from registry.constants import Role, OrganizationMemberStatus, OrganizationStatus, VerificationStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.exceptions import OrganizationNotFoundException
 from registry.infrastructure.models import Organization, OrganizationMember, OrganizationState, Group, \
@@ -275,4 +275,19 @@ class OrganizationPublisherRepository(BaseRepository):
 
         org_member.status = member.status
         org_member.updated_on = datetime.utcnow()
+        self.session.commit()
+
+    def update_all_individual_organization_for_user(self, username, status):
+        organizations_db = self.session.query(Organization)\
+            .join(OrganizationMember, Organization.uuid == OrganizationMember.org_uuid)\
+            .filter(OrganizationMember.username == username).all()
+        for organization in organizations_db:
+            if organization.org_state[0].state == OrganizationStatus.ONBOARDING.value:
+                if status == VerificationStatus.APPROVED.value:
+                    updated_status = OrganizationStatus.ONBOARDING_APPROVED.value
+                elif status == VerificationStatus.REJECTED.value:
+                    updated_status = OrganizationStatus.ONBOARDING_REJECTED.value
+                else:
+                    raise Exception("Invalid verification status")
+                organization.org_state[0].state = updated_status
         self.session.commit()

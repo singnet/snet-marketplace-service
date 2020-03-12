@@ -1,4 +1,3 @@
-from enum import Enum
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -10,14 +9,10 @@ from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
 from common.utils import datetime_to_string, json_to_file
 from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH
-from registry.constants import OrganizationAddressType, OrganizationActions, OrganizationStatus
+from registry.constants import OrganizationAddressType, OrganizationActions, OrganizationStatus, OrganizationType
 from registry.domain.models.organization_address import OrganizationAddress
 
 logger = get_logger(__name__)
-class OrganizationType(Enum):
-    ORGANIZATION = "organization"
-    INDIVIDUAL = "individual"
-
 
 EXCLUDE_PATHS = ["root.uuid", "root._Organization__duns_no", "root.owner",
                  "root.assets['hero_image']['url']", "root.metadata_ipfs_uri", "root.origin"]

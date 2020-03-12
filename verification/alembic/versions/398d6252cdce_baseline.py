@@ -1,8 +1,8 @@
 """baseline
 
-Revision ID: c52f41ddd2f6
+Revision ID: 398d6252cdce
 Revises: 
-Create Date: 2020-03-05 18:39:21.407572
+Create Date: 2020-03-12 10:10:15.689958
 
 """
 import sqlalchemy as sa
@@ -10,7 +10,7 @@ from alembic import op
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = 'c52f41ddd2f6'
+revision = '398d6252cdce'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -27,6 +27,7 @@ def upgrade():
     sa.Column('redirect_url', mysql.VARCHAR(length=1024), nullable=True),
     sa.Column('transaction_status', mysql.VARCHAR(length=255), nullable=True),
     sa.Column('verification_status', mysql.VARCHAR(length=255), nullable=True),
+    sa.Column('reject_reason', sa.JSON(), nullable=True),
     sa.Column('transaction_date', mysql.TIMESTAMP(), nullable=True),
     sa.Column('callback_date', mysql.TIMESTAMP(), nullable=True),
     sa.Column('created_at', mysql.TIMESTAMP(), nullable=True),
@@ -38,6 +39,7 @@ def upgrade():
     sa.Column('entity_id', mysql.VARCHAR(length=255), nullable=True),
     sa.Column('status', mysql.VARCHAR(length=255), nullable=True),
     sa.Column('requestee', mysql.VARCHAR(length=255), nullable=True),
+    sa.Column('reject_reason', mysql.VARCHAR(length=1024), nullable=True),
     sa.Column('created_at', mysql.TIMESTAMP(), nullable=True),
     sa.Column('updated_at', mysql.TIMESTAMP(), nullable=True),
     sa.PrimaryKeyConstraint('id', 'verification_type')

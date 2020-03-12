@@ -1,9 +1,10 @@
 from datetime import datetime
 from uuid import uuid4
 
+from common import boto_utils
 from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
-from verification.config import ALLOWED_VERIFICATION_REQUESTS, DAPP_POST_JUMIO_URL
+from verification.config import ALLOWED_VERIFICATION_REQUESTS, DAPP_POST_JUMIO_URL, REGION_NAME, REGISTRY_ARN
 from verification.constants import VerificationType, VerificationStatus, JumioTransactionStatus, \
     REJECTED_JUMIO_VERIFICATION, FAILED_JUMIO_VERIFICATION, VERIFIED_JUMIO_VERIFICATION
 from verification.domain.models.verfication import Verification
@@ -19,6 +20,9 @@ logger = get_logger(__name__)
 
 
 class VerificationManager:
+
+    def __init__(self):
+        self.boto_utils = boto_utils.BotoUtils(region_name=REGION_NAME)
 
     def initiate_verification(self, verification_details, username):
         verification_type = verification_details["type"]
@@ -58,8 +62,8 @@ class VerificationManager:
             jumio_verification = JumioService(jumio_repository).submit(verification.id, transaction_status)
 
             if jumio_verification.transaction_status == JumioTransactionStatus.ERROR.value:
-                verification_status = VerificationStatus.ERROR.value
-                verification_repository.update_status(verification.id, verification_status)
+                verification.verification_status = VerificationStatus.ERROR.value
+                verification_repository.update_verification(verification)
         else:
             raise MethodNotImplemented()
         return DAPP_POST_JUMIO_URL
@@ -71,20 +75,40 @@ class VerificationManager:
             jumio_verification = JumioService(jumio_repository).callback(verification_id, verification_details)
 
             if jumio_verification.verification_status in REJECTED_JUMIO_VERIFICATION:
-                verification_status = VerificationStatus.REJECTED.value
+                verification.verification_status = VerificationStatus.REJECTED.value
             elif jumio_verification.verification_status in FAILED_JUMIO_VERIFICATION:
-                verification_status = VerificationStatus.FAILED.value
+                verification.verification_status = VerificationStatus.FAILED.value
             elif jumio_verification.verification_status in VERIFIED_JUMIO_VERIFICATION:
-                verification_status = VerificationStatus.APPROVED.value
+                verification.verification_status = VerificationStatus.APPROVED.value
             else:
                 raise MethodNotImplemented()
-            verification_repository.update_status(verification_id, verification_status)
+            verification.reject_reason = jumio_verification.construct_reject_reason()
+            verification_repository.update_verification(verification)
         else:
             raise MethodNotImplemented()
         return {}
+
+    def _ack_verification(self, verification):
+        if verification.type == VerificationType.JUMIO.value:
+            payload = {
+                "path": "/org/verification",
+                "queryStringParameters": {
+                    "status": verification.status,
+                    "username": verification.entity_id,
+                    "verification_type": verification.type
+                }
+            }
+            self.boto_utils.invoke_lambda(REGISTRY_ARN["ORG_VERIFICATION"],
+                                          invocation_type="RequestResponse", payload=payload)
+        else:
+            raise MethodNotImplemented()
 
     def get_status_for_entity(self, entity_id):
         verification = verification_repository.get_latest_verification_for_entity(entity_id)
         if verification is None:
             return {}
-        return verification.to_response()
+        response = verification.to_response()
+        if verification.type == VerificationType.JUMIO.value:
+            jumio_verification = jumio_repository.get_verification(verification.id)
+            response["jumio"] = jumio_verification.to_dict()
+        return response
