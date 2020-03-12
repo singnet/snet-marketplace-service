@@ -19,7 +19,6 @@ class User:
     def __init__(self, obj_repo):
         self.repo = obj_repo
         self.obj_utils = Utils()
-        self.ssm_client = boto3.client('ssm')
         self.boto_client = BotoUtils(region_name=REGION_NAME)
 
     def _set_user_data(self, user_data, origin):
@@ -48,8 +47,7 @@ class User:
 
     def _fetch_private_key_from_ssm(self, address):
         try:
-            store = self.ssm_client.get_parameter(
-                Name=PATH_PREFIX + str(address), WithDecryption=True)
+            store = self.boto_client.get_ssm_parameter(parameter=PATH_PREFIX + str(address))
             return store['Parameter']['Value']
         except Exception as e:
             print(repr(e))
