@@ -67,16 +67,16 @@ class JumioService:
         return verification
 
     def callback(self, verification_id, verification_details):
+        verification = self.repo.get_verification(verification_id)
         jumio_response = dict(parse_qsl(verification_details))
-        verification_status = jumio_response["verificationStatus"]
-        callback_date = datetime.strptime(jumio_response["callbackDate"], "%Y-%m-%dT%H:%M:%S.%fZ")
+        verification.verification_status = jumio_response["verificationStatus"]
+        verification.callback_date = datetime.strptime(jumio_response["callbackDate"], "%Y-%m-%dT%H:%M:%S.%fZ")
 
-        if verification_status == JumioVerificationStatus.NO_ID_UPLOADED.value:
-            transaction_status = JumioTransactionStatus.FAILED.value
-        else:
-            transaction_status = JumioTransactionStatus.DONE.value
-        verification = self.repo.update_verification_and_transaction_status(
-            verification_id, verification_status, transaction_status, callback_date)
+        verification.setup_transaction_status()
+        if verification.has_reject_reason():
+            verification.reject_reason = json.loads(jumio_response["rejectReason"])
+
+        verification = self.repo.update_verification_and_transaction_status(verification)
         return verification
 
 

@@ -44,10 +44,11 @@ class VerificationRepository(BaseRepository):
         self.session.close()
         return verification
 
-    def update_status(self, verification_id, status):
+    def update_verification(self, verification):
         try:
-            verification_db = self._get_verification(verification_id)
-            verification_db.status = status
+            verification_db = self._get_verification(verification.id)
+            verification_db.status = verification.verification_status
+            verification_db.reject_reason = verification.reject_reason
             verification_db.updated_at = datetime.utcnow()
             verification = VerificationFactory.verification_entity_from_db(verification_db)
             self.session.commit()
