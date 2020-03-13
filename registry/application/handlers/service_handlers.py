@@ -177,6 +177,7 @@ def list_of_orgs_with_services_submitted_for_approval(event, context):
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def get_daemon_config_for_test(event, context):
+    logger.info(f"event for get_daemon_config_for_test:: {event}")
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
     if "org_uuid" not in path_parameters and "service_uuid" not in path_parameters and "group_id" not in path_parameters:
@@ -193,6 +194,7 @@ def get_daemon_config_for_test(event, context):
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def get_daemon_config_for_current_network(event, context):
+    logger.info(f"event for get_daemon_config_for_current_network:: {event}")
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
     if "org_uuid" not in path_parameters and "service_uuid" not in path_parameters and "group_id" not in path_parameters:
