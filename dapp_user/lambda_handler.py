@@ -37,6 +37,8 @@ def request_handler(event, context):
         return get_response(405, "Method Not Allowed")
 
     if "/signup" == path:
+        if not payload_dict:
+            payload_dict= {}
         origin_from_payload = payload_dict.get("origin", "")
         try:
             origin = getattr(SourceDApp, origin_from_payload).value
