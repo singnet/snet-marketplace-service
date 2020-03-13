@@ -235,15 +235,14 @@ def hash_to_bytesuri(s):
 
 def publish_file_in_ipfs(file_url, file_dir, ipfs_client):
     filename = download_file_from_url(file_url=file_url, file_dir=file_dir)
-    file_type = os.path.splitext(filename)
-    if file_type.lower() is ".zip":
-        return publish_zip_file_in_ipfs(file_url, file_dir, ipfs_client)
+    file_type = os.path.splitext(filename)[1]
+    if file_type.lower() == ".zip":
+        return publish_zip_file_in_ipfs(filename, file_dir, ipfs_client)
     ipfs_hash = ipfs_client.write_file_in_ipfs(f"{file_dir}/{filename}", wrap_with_directory=False)
     return ipfs_hash
 
 
-def publish_zip_file_in_ipfs(file_url, file_dir, ipfs_client):
-    filename = download_file_from_url(file_url=file_url, file_dir=file_dir)
+def publish_zip_file_in_ipfs(filename, file_dir, ipfs_client):
     file_in_tar_bytes = convert_zip_file_to_tar_bytes(file_dir=file_dir, filename=filename)
     return ipfs_client.ipfs_conn.add_bytes(file_in_tar_bytes.getvalue())
 
