@@ -3,15 +3,22 @@ import decimal
 import json
 import sys
 import traceback
-
+import glob
+import tarfile
+import os
+import io
+from zipfile import ZipFile
+from urllib.parse import urlparse
 import requests
 import web3
 from web3 import Web3
 
+from common.logger import get_logger
 from common.constant import COGS_TO_AGI, StatusCode
 from common.exceptions import OrganizationNotFound
 
 IGNORED_LIST = ['row_id', 'row_created', 'row_updated']
+logger = get_logger(__name__)
 
 
 class Utils:
@@ -223,4 +230,69 @@ def hash_to_bytesuri(s):
     """
     # TODO: we should pad string with zeros till closest 32 bytes word because of a bug in processReceipt (in snet_cli.contract.process_receipt)
     s = "ipfs://" + s
-    return s.encode("ascii").ljust(32 * (len(s)//32 + 1), b"\0")
+    return s.encode("ascii").ljust(32 * (len(s) // 32 + 1), b"\0")
+
+
+def publish_file_in_ipfs(file_url, file_dir, ipfs_client):
+    filename = download_file_from_url(file_url=file_url, file_dir=file_dir)
+    file_type = os.path.splitext(filename)[1]
+    if file_type.lower() == ".zip":
+        return publish_zip_file_in_ipfs(filename, file_dir, ipfs_client)
+    ipfs_hash = ipfs_client.write_file_in_ipfs(f"{file_dir}/{filename}", wrap_with_directory=False)
+    return ipfs_hash
+
+
+def publish_zip_file_in_ipfs(filename, file_dir, ipfs_client):
+    file_in_tar_bytes = convert_zip_file_to_tar_bytes(file_dir=file_dir, filename=filename)
+    return ipfs_client.ipfs_conn.add_bytes(file_in_tar_bytes.getvalue())
+
+
+def download_file_from_url(file_url, file_dir):
+    response = requests.get(file_url)
+    filename = urlparse(file_url).path.split("/")[-1]
+    if not os.path.exists(file_dir):
+        os.makedirs(file_dir)
+    with open(f"{file_dir}/{filename}", 'wb') as asset_file:
+        asset_file.write(response.content)
+    return filename
+
+
+def convert_zip_file_to_tar_bytes(file_dir, filename):
+    with ZipFile(f"{file_dir}/{filename}", 'r') as zipObj:
+        listOfFileNames = zipObj.namelist()
+        zipObj.extractall(file_dir, listOfFileNames)
+    if not os.path.isdir(file_dir):
+        raise Exception("Directory %s doesn't exists" % file_dir)
+    files = glob.glob(os.path.join(file_dir, "*.proto"))
+    if len(files) == 0:
+        raise Exception("Cannot find any %s files" % (os.path.join(file_dir, "*.proto")))
+    files.sort()
+    tar_bytes = io.BytesIO()
+    tar = tarfile.open(fileobj=tar_bytes, mode="w")
+    for f in files:
+        tar.add(f, os.path.basename(f))
+    tar.close()
+    return tar_bytes
+
+
+def send_email_notification(recipients, notification_subject, notification_message, notification_arn, boto_util):
+    for recipient in recipients:
+        if bool(recipient):
+            send_notification_payload = {"body": json.dumps({
+                "message": notification_message,
+                "subject": notification_subject,
+                "notification_type": "support",
+                "recipient": recipient})}
+            boto_util.invoke_lambda(lambda_function_arn=notification_arn, invocation_type="RequestResponse",
+                                    payload=json.dumps(send_notification_payload))
+            logger.info(f"email_sent to {recipient}")
+
+
+def send_slack_notification(slack_msg, slack_url, slack_channel):
+    payload = {"channel": f"#{slack_channel}",
+               "username": "webhookbot",
+               "text": slack_msg,
+               "icon_emoji": ":ghost:"
+               }
+    slack_response = requests.post(url=slack_url, data=json.dumps(payload))
+    logger.info(slack_response.status_code, slack_response.text)

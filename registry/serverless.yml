@@ -189,7 +189,7 @@ functions:
 
   update-org:
     warmup: true
-    handler: registry.application.handlers.organization_handlers.add_org
+    handler: registry.application.handlers.organization_handlers.update_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -217,6 +217,23 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+
+  org-verification:
+    handler: registry.application.handlers.organization_handlers.org_verification
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: POST
+          path: /org/verification
+          private: true
+
 
   publish-org-ipfs:
     warmup: true
@@ -524,7 +541,20 @@ functions:
 
   organization_event_consumer_handler:
     warmup: true
-    handler: registry.application.handlers.organization_consumer_handlers.organization_event_consumer_handler
+    handler: registry.application.handlers.consumer_handlers.organization_event_consumer_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+
+
+  service_event_consumer_handler:
+    warmup: true
+    handler: registry.application.handlers.consumer_handlers.service_event_consumer_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -780,4 +810,132 @@ functions:
               - X-Api-Key
               - X-Amz-Security-Token
               - X-Amz-User-Agent
-              - x-requested-wit
+              - x-requested-with
+
+  pre_token_auth_handler:
+    handler: registry.application.access_control.authorization.pre_token_auth_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+
+  daemon-config-for-test:
+    warmup: true
+    handler: registry.application.handlers.service_handlers.get_daemon_config_for_test
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /org/{org_uuid}/service/{service_uuid}/group/{group_id}/daemon/config/test
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
+  daemon-config-for-given-network-id:
+    warmup: true
+    handler: registry.application.handlers.service_handlers.get_daemon_config_for_current_network
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /org/{org_uuid}/service/{service_uuid}/group/{group_id}/daemon/config
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
+#  Admin level API needs to be private
+#  list-of-orgs-services-submitted-for-approval:
+#    warmup: true
+#    handler: registry.application.handlers.service_handlers.list_of_orgs_with_services_submitted_for_approval
+#    role: ${file(./config.${self:provider.stage}.json):ROLE}
+#    vpc:
+#      securityGroupIds:
+#        - ${file(./config.${self:provider.stage}.json):SG1}
+#        - ${file(./config.${self:provider.stage}.json):SG2}
+#      subnetIds:
+#        - ${file(./config.${self:provider.stage}.json):VPC1}
+#        - ${file(./config.${self:provider.stage}.json):VPC2}
+#    events:
+#      - http:
+#          method: POST
+#          path: /admin/orgs/services
+#          private: true
+#          cors:
+#            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+#            headers:
+#              - Content-Type
+#              - X-Amz-Date
+#              - Authorization
+#              - X-Api-Key
+#              - X-Amz-Security-Token
+#              - X-Amz-User-Agent
+#              - x-requested-with
+#
+#  legal-approval-of-service:
+#    warmup: true
+#    handler: registry.application.handlers.service_handlers.legal_approval_of_service
+#    role: ${file(./config.${self:provider.stage}.json):ROLE}
+#    vpc:
+#      securityGroupIds:
+#        - ${file(./config.${self:provider.stage}.json):SG1}
+#        - ${file(./config.${self:provider.stage}.json):SG2}
+#      subnetIds:
+#        - ${file(./config.${self:provider.stage}.json):VPC1}
+#        - ${file(./config.${self:provider.stage}.json):VPC2}
+#    events:
+#      - http:
+#          method: POST
+#          path: /admin/org/{org_uuid}/service/{service_uuid}
+#          private: true
+#          cors:
+#            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+#            headers:
+#              - Content-Type
+#              - X-Amz-Date
+#              - Authorization
+#              - X-Api-Key
+#              - X-Amz-Security-Token
+#              - X-Amz-User-Agent
+#              - x-requested-with

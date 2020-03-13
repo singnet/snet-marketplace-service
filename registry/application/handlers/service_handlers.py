@@ -4,16 +4,17 @@ from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.exceptions import BadRequestException
 from common.logger import get_logger
-from common.utils import generate_lambda_response, handle_exception_with_slack_notification, validate_dict, \
+from common.utils import generate_lambda_response, validate_dict, \
     validate_dict_list
 from registry.application.services.service_publisher_service import ServicePublisherService
 from registry.config import NETWORK_ID, SLACK_HOOK
+from registry.constants import EnvironmentType
 from registry.exceptions import EXCEPTIONS
 
 logger = get_logger(__name__)
 
 
-@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def verify_service_id(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
@@ -29,7 +30,7 @@ def verify_service_id(event, context):
     )
 
 
-@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def save_transaction_hash_for_published_service(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
@@ -38,14 +39,15 @@ def save_transaction_hash_for_published_service(event, context):
         raise BadRequestException()
     org_uuid = path_parameters["org_uuid"]
     service_uuid = path_parameters["service_uuid"]
-    response = ServicePublisherService(username, org_uuid, service_uuid).save_transaction_hash_for_published_service(payload)
+    response = ServicePublisherService(username, org_uuid, service_uuid).save_transaction_hash_for_published_service(
+        payload)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
 
-@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def submit_service_for_approval(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
@@ -61,7 +63,7 @@ def submit_service_for_approval(event, context):
     )
 
 
-@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def save_service(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
@@ -77,7 +79,7 @@ def save_service(event, context):
     )
 
 
-@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def create_service(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
@@ -92,7 +94,7 @@ def create_service(event, context):
     )
 
 
-@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def get_services_for_organization(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
@@ -107,7 +109,7 @@ def get_services_for_organization(event, context):
     )
 
 
-@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def get_service_for_service_uuid(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
@@ -122,7 +124,7 @@ def get_service_for_service_uuid(event, context):
     )
 
 
-@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def publish_service_metadata_to_ipfs(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
@@ -131,6 +133,76 @@ def publish_service_metadata_to_ipfs(event, context):
     org_uuid = path_parameters["org_uuid"]
     service_uuid = path_parameters["service_uuid"]
     response = ServicePublisherService(username, org_uuid, service_uuid).publish_service_data_to_ipfs()
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def legal_approval_of_service(event, context):
+    path_parameters = event["pathParameters"]
+    if "org_uuid" not in path_parameters and "service_uuid" not in path_parameters:
+        raise BadRequestException()
+    org_uuid = path_parameters["org_uuid"]
+    service_uuid = path_parameters["service_uuid"]
+    response = ServicePublisherService(None, org_uuid, service_uuid).approve_service()
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def list_of_service_pending_for_approval_from_slack(event, context):
+    path_parameters = event["pathParameters"]
+    if "org_uuid" not in path_parameters:
+        raise BadRequestException()
+    org_uuid = path_parameters["org_uuid"]
+    response = ServicePublisherService(None, org_uuid, None).get_list_of_service_pending_for_approval()
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def list_of_orgs_with_services_submitted_for_approval(event, context):
+    response = ServicePublisherService(None, None, None).get_list_of_orgs_with_services_submitted_for_approval()
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def get_daemon_config_for_test(event, context):
+    logger.info(f"event for get_daemon_config_for_test:: {event}")
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    path_parameters = event["pathParameters"]
+    if "org_uuid" not in path_parameters and "service_uuid" not in path_parameters and "group_id" not in path_parameters:
+        raise BadRequestException()
+    org_uuid = path_parameters["org_uuid"]
+    service_uuid = path_parameters["service_uuid"]
+    group_id = path_parameters["group_id"]
+    response = ServicePublisherService(username, org_uuid, service_uuid).daemon_config(environment=EnvironmentType.TEST.value)
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def get_daemon_config_for_current_network(event, context):
+    logger.info(f"event for get_daemon_config_for_current_network:: {event}")
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    path_parameters = event["pathParameters"]
+    if "org_uuid" not in path_parameters and "service_uuid" not in path_parameters and "group_id" not in path_parameters:
+        raise BadRequestException()
+    org_uuid = path_parameters["org_uuid"]
+    service_uuid = path_parameters["service_uuid"]
+    group_id = path_parameters["group_id"]
+    response = ServicePublisherService(username, org_uuid, service_uuid).daemon_config(environment=EnvironmentType.MAIN.value)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True

@@ -1,6 +1,147 @@
+from cerberus import Validator
+from common.logger import get_logger
+
+logger = get_logger(__name__)
+
+SERVICE_METADATA_SCHEMA = {
+    "version": {
+        "type": "integer",
+        "empty": False
+    },
+    "display_name": {
+        "type": "string",
+        "empty": False
+    },
+    "encoding": {
+        "type": "string",
+        "empty": False
+    },
+    "service_type": {
+        "type": "string",
+        "empty": False
+    },
+    "model_ipfs_hash": {
+        "type": "string",
+        "empty": False
+    },
+    "mpe_address": {
+        "type": "string",
+        "empty": False
+    },
+    "groups": {
+        "type": "list",
+        "schema": {
+            "type": "dict",
+            "schema": {
+                "group_name": {
+                    "type": "string",
+                    "empty": False
+                },
+                "free_calls": {
+                    "type": "integer",
+                    "empty": False
+                },
+                "free_call_signer_address": {
+                    "type": "string",
+                    "empty": False
+                },
+                "daemon_address": {
+                    "type": "list",
+                    "schema": {
+                        "type": "string"
+                    }
+                },
+                "pricing": {
+                    "type": "list",
+                    "schema": {
+                        "type": "dict",
+                        "schema": {
+                            "price_model": {
+                                "type": "string"
+                            },
+                            "price_in_cogs": {
+                                "type": "integer"
+                            },
+                            "default": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                },
+                "endpoints": {
+                    "type": "list",
+                    "empty": False
+                },
+                "group_id": {
+                    "type": "string",
+                    "empty": False
+                }
+            }
+        }
+    },
+    "service_description": {
+        "type": "dict",
+        "schema": {
+            "url": {
+                "type": "string"
+            },
+            "short_description": {
+                "type": "string"
+            },
+            "description": {
+                "type": "string"
+            }
+        }
+    },
+    "assets": {
+        "type": "dict",
+        "schema": {
+            "proto_files": {
+                "type": "dict",
+                "schema": {
+                    "url": {
+                        "type": "string",
+                        "empty": False
+                    },
+                    "ipfs_hash": {
+                        "type": "string",
+                        "empty": False
+                    }
+                }
+            },
+            "demo_files": {
+                "type": "dict",
+                "schema": {
+                    "url": {
+                        "type": "string"
+                    },
+                    "ipfs_hash": {
+                        "type": "string"
+                    }
+                }
+            },
+            "hero_image": {
+                "type": "dict",
+                "schema": {
+                    "url": {
+                        "type": "string"
+                    },
+                    "ipfs_hash": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    },
+    "contributors": {
+        "type": "list"
+    },
+}
+
+
 class Service:
     def __init__(self, org_uuid, uuid, service_id, display_name, short_description, description, project_url, proto,
-                 assets, ranking, rating, contributors, tags, mpe_address, metadata_ipfs_hash, groups, service_state):
+                 assets, ranking, rating, contributors, tags, mpe_address, metadata_uri, groups, service_state):
         self._org_uuid = org_uuid
         self._uuid = uuid
         self._service_id = service_id
@@ -15,7 +156,7 @@ class Service:
         self._contributors = contributors
         self._tags = tags
         self._mpe_address = mpe_address
-        self._metadata_ipfs_hash = metadata_ipfs_hash
+        self._metadata_uri = metadata_uri
         self._groups = groups
         self._service_state = service_state
 
@@ -35,7 +176,7 @@ class Service:
             "contributors": self._contributors,
             "tags": self._tags,
             "mpe_address": self._mpe_address,
-            "metadata_ipfs_hash": self._metadata_ipfs_hash,
+            "metadata_uri": self._metadata_uri,
             "groups": [group.to_dict() for group in self._groups],
             "service_state": self._service_state.to_dict()
         }
@@ -115,12 +256,12 @@ class Service:
         return self._contributors
 
     @property
-    def metadata_ipfs_hash(self):
-        return self._metadata_ipfs_hash
+    def metadata_uri(self):
+        return self._metadata_uri
 
-    @metadata_ipfs_hash.setter
-    def metadata_ipfs_hash(self, metadata_ipfs_hash):
-        self._metadata_ipfs_hash = metadata_ipfs_hash
+    @metadata_uri.setter
+    def metadata_uri(self, metadata_uri):
+        self._metadata_uri = metadata_uri
 
     @property
     def groups(self):
@@ -141,3 +282,13 @@ class Service:
     @property
     def mpe_address(self):
         return self._mpe_address
+
+    @staticmethod
+    def is_metadata_valid(service_metadata):
+        validator = Validator()
+        is_valid = validator.validate(service_metadata, SERVICE_METADATA_SCHEMA)
+        logger.info(validator.errors)
+        return is_valid
+
+    def is_major_change(self, other):
+        return False

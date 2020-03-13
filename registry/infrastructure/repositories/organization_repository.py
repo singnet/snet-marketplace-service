@@ -1,11 +1,11 @@
 from datetime import datetime
 from uuid import uuid4
 
-from registry.constants import Role, OrganizationMemberStatus, OrganizationStatus
+from registry.constants import Role, OrganizationMemberStatus, OrganizationStatus, VerificationStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.exceptions import OrganizationNotFoundException
 from registry.infrastructure.models import Organization, OrganizationMember, OrganizationState, Group, \
-    OrganizationAddress
+    OrganizationAddress, OrganizationArchive
 from registry.infrastructure.repositories.base_repository import BaseRepository
 
 
@@ -24,6 +24,14 @@ class OrganizationPublisherRepository(BaseRepository):
 
     def get_org_for_org_uuid(self, org_uuid):
         organization = self.session.query(Organization).filter(Organization.uuid == org_uuid).first()
+        if organization is None:
+            raise OrganizationNotFoundException()
+        organization_domain_entity = OrganizationFactory.org_domain_entity_from_repo_model(organization)
+        self.session.commit()
+        return organization_domain_entity
+
+    def get_org_for_org_id(self, org_id):
+        organization = self.session.query(Organization).filter(Organization.org_id == org_id).first()
         if organization is None:
             raise OrganizationNotFoundException()
         organization_domain_entity = OrganizationFactory.org_domain_entity_from_repo_model(organization)
@@ -66,7 +74,7 @@ class OrganizationPublisherRepository(BaseRepository):
     def store_organization(self, organization, username, state):
         organization_db_model = self.session.query(Organization).filter(
             Organization.uuid == organization.uuid).first()
-        if state in [OrganizationStatus.DRAFT.value, OrganizationStatus.APPROVAL_PENDING.value]:
+        if state in [OrganizationStatus.DRAFT.value, OrganizationStatus.APPROVAL_PENDING.value,OrganizationStatus.PUBLISHED_UNAPPROVED.value]:
             if organization_db_model is None:
                 self.add_organization(organization, username, state)
             else:
@@ -156,6 +164,17 @@ class OrganizationPublisherRepository(BaseRepository):
         self.add_all_items(addresses)
         self.add_all_items(groups)
 
+    def add_organization_archive(self, organization):
+        groups = [group.to_dict() for group in organization.groups]
+        org_state = organization.org_state.to_dict()
+        self.add_item(OrganizationArchive(
+            uuid=organization.uuid, name=organization.name, org_id=organization.id,
+            org_type=organization.org_type, origin=organization.origin, description=organization.description,
+            short_description=organization.short_description, url=organization.url,
+            duns_no=organization.duns_no, contacts=organization.contacts, assets=organization.assets,
+            metadata_ipfs_uri=organization.metadata_ipfs_uri, org_state=org_state, groups=groups
+        ))
+
     def get_org_member(self, username=None, org_uuid=None, role=None, status=None, invite_code=None):
         org_member_query = self.session.query(OrganizationMember)
         if org_uuid is not None:
@@ -236,11 +255,39 @@ class OrganizationPublisherRepository(BaseRepository):
             .first()
         if org_member is None:
             raise Exception(f"No member found")
-        
+
         if org_member.status == OrganizationMemberStatus.PUBLISHED.value and org_member.address == wallet_address:
             org_member.username = username
         elif org_member.status == OrganizationMemberStatus.PENDING.value and org_member.username == username:
             org_member.address = wallet_address
             org_member.status = OrganizationMemberStatus.ACCEPTED.value
         org_member.updated_on = datetime.utcnow()
+        self.session.commit()
+
+
+    def update_org_member_using_address(self, org_uuid, member, wallet_address):
+        org_member = self.session.query(OrganizationMember) \
+            .filter(OrganizationMember.address == wallet_address) \
+            .filter(OrganizationMember.org_uuid == org_uuid) \
+            .first()
+        if org_member is None:
+            raise Exception(f"No existing member found")
+
+        org_member.status = member.status
+        org_member.updated_on = datetime.utcnow()
+        self.session.commit()
+
+    def update_all_individual_organization_for_user(self, username, status):
+        organizations_db = self.session.query(Organization)\
+            .join(OrganizationMember, Organization.uuid == OrganizationMember.org_uuid)\
+            .filter(OrganizationMember.username == username).all()
+        for organization in organizations_db:
+            if organization.org_state[0].state == OrganizationStatus.ONBOARDING.value:
+                if status == VerificationStatus.APPROVED.value:
+                    updated_status = OrganizationStatus.ONBOARDING_APPROVED.value
+                elif status == VerificationStatus.REJECTED.value:
+                    updated_status = OrganizationStatus.ONBOARDING_REJECTED.value
+                else:
+                    raise Exception("Invalid verification status")
+                organization.org_state[0].state = updated_status
         self.session.commit()

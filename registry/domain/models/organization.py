@@ -1,19 +1,21 @@
-from enum import Enum
 from urllib.parse import urlparse
 from uuid import uuid4
 
 import requests
+from deepdiff import DeepDiff
 
 from common import ipfs_util
-from common.utils import json_to_file, datetime_to_string
-from registry.config import IPFS_URL, ASSET_DIR, METADATA_FILE_PATH
-from registry.constants import OrganizationAddressType
+from common.exceptions import MethodNotImplemented
+from common.logger import get_logger
+from common.utils import datetime_to_string, json_to_file
+from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH
+from registry.constants import OrganizationAddressType, OrganizationActions, OrganizationStatus, OrganizationType
+from registry.domain.models.organization_address import OrganizationAddress
 
+logger = get_logger(__name__)
 
-class OrganizationType(Enum):
-    ORGANIZATION = "organization"
-    INDIVIDUAL = "individual"
-
+EXCLUDE_PATHS = ["root.uuid", "root._Organization__duns_no", "root.owner",
+                 "root.assets['hero_image']['url']", "root.metadata_ipfs_uri", "root.origin"]
 
 class Organization:
     def __init__(self, uuid, org_id, name, org_type, origin, description, short_description, url,
@@ -53,7 +55,7 @@ class Organization:
             "groups": [group.to_metadata() for group in self.__groups]
         }
 
-    def to_dict(self):
+    def to_response(self):
         head_quarter_address = None
         mail_address = None
         mail_address_same_hq_address = False
@@ -77,15 +79,15 @@ class Organization:
             "contacts": self.__contacts,
             "assets": self.__assets,
             "metadata_ipfs_uri": self.__metadata_ipfs_uri,
-            "groups": [group.to_dict() for group in self.__groups],
+            "groups": [group.to_response() for group in self.__groups],
             "org_address": {
                 "mail_address_same_hq_address": mail_address_same_hq_address,
-                "addresses": [address.to_dict() for address in self.__addresses]
+                "addresses": [address.to_response() for address in self.__addresses]
             },
             "state": {}
         }
         if self.__state is not None and isinstance(self.__state, OrganizationState):
-            org_dict["state"] = self.__state.to_dict()
+            org_dict["state"] = self.__state.to_response()
         return org_dict
 
     @property
@@ -148,6 +150,10 @@ class Organization:
     def members(self):
         return self.__members
 
+    @property
+    def org_state(self):
+        return self.__state
+
     def set_assets(self, assets):
         self.__assets = assets
 
@@ -191,11 +197,58 @@ class Organization:
     def is_org_uuid_set(self):
         return self.__uuid is None or len(self.__uuid) == 0
 
-    def is_valid_for_submit(self):
+    def is_valid_field(self, field):
+        if field is not None and len(field) != 0:
+            return True
+        return False
+
+    def is_valid(self):
+        if not self.is_valid_field(self.__name):
+            return False
+        if not self.is_valid_field(self.__uuid):
+            return False
+        if not self.is_valid_field(self.__id):
+            return False
+        if not self.is_valid_field(self.__org_type):
+            return False
+        if len(self.__groups) == 0:
+            return False
         return True
 
-    def is_minor(self, updated_organization):
-        return True
+    def is_major_change(self, updated_organization):
+        diff = DeepDiff(self, updated_organization, exclude_types=[OrganizationAddress],
+                        exclude_paths=EXCLUDE_PATHS)
+
+        logger.info(f"DIff for metadata organization {diff}")
+        if not diff:
+            return True
+        return False
+
+    @staticmethod
+    def next_state(current_organization, updated_organization, action):
+        if action == OrganizationActions.DRAFT.value:
+            next_state = current_organization.next_state_for_update(current_organization, updated_organization)
+        elif action == OrganizationActions.SUBMIT.value:
+            next_state = current_organization.next_state_for_update(current_organization, updated_organization)
+        elif action == OrganizationActions.CREATE.value:
+            next_state = OrganizationStatus.ONBOARDING.value
+        else:
+            raise Exception("Invalid Action for Organization")
+        return next_state
+
+    @staticmethod
+    def next_state_for_update(current_organization, updated_organization):
+        if not current_organization.is_major_change(updated_organization):
+            if current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
+                next_state = OrganizationStatus.ONBOARDING_APPROVED.value
+            else:
+                next_state = OrganizationStatus.APPROVED.value
+        else:
+            if current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
+                next_state = OrganizationStatus.ONBOARDING_APPROVED.value
+            else:
+                raise MethodNotImplemented()
+        return next_state
 
 
 class OrganizationState:
@@ -211,7 +264,7 @@ class OrganizationState:
         self.__reviewed_by = reviewed_by
         self.__reviewed_on = reviewed_on
 
-    def to_dict(self):
+    def to_response(self):
         state_dict = {
             "state": self.__state,
             "updated_on": "",
@@ -224,6 +277,28 @@ class OrganizationState:
             state_dict["updated_on"] = datetime_to_string(self.__updated_on)
         if self.__reviewed_on is not None:
             state_dict["reviewed_on"] = datetime_to_string(self.__reviewed_on)
+
+        return state_dict
+
+    def to_dict(self):
+        state_dict = {
+            "state": self.__state,
+            "transaction_hash": self.__transaction_hash,
+            "wallet_address": self.__wallet_address,
+            "created_by": self.__created_by,
+            "created_on": "",
+            "updated_on": "",
+            "updated_by": self.__updated_by,
+            "reviewed_by": self.__reviewed_by,
+            "reviewed_on": "",
+        }
+
+        if self.__updated_on is not None:
+            state_dict["updated_on"] = datetime_to_string(self.__updated_on)
+        if self.__reviewed_on is not None:
+            state_dict["reviewed_on"] = datetime_to_string(self.__reviewed_on)
+        if self.__created_on is not None:
+            state_dict["created_on"] = datetime_to_string(self.__created_on)
 
         return state_dict
 

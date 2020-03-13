@@ -1,11 +1,11 @@
 from datetime import datetime as dt
 from registry.domain.factory.service_factory import ServiceFactory
-from registry.infrastructure.models import Service, ServiceGroup, ServiceState, ServiceReviewHistory
+from registry.infrastructure.models import Service, ServiceGroup, ServiceState, ServiceReviewHistory, Organization
 from registry.infrastructure.repositories.base_repository import BaseRepository
 from sqlalchemy import func
 
 
-class ServiceRepository(BaseRepository):
+class ServicePublisherRepository(BaseRepository):
     def get_services_for_organization(self, org_uuid, payload):
         try:
             raw_services_data = self.session.query(Service). \
@@ -63,7 +63,7 @@ class ServiceRepository(BaseRepository):
                 Service.uuid == service.uuid).first()
             service_record.display_name = service.display_name
             service_record.service_id = service.service_id
-            service_record.metadata_ipfs_hash = service.metadata_ipfs_hash
+            service_record.metadata_uri = service.metadata_uri
             service_record.proto = service.proto
             service_record.short_description = service.short_description
             service_record.description = service.description
@@ -97,3 +97,43 @@ class ServiceRepository(BaseRepository):
             self.session.rollback()
             raise e
         return service
+
+    def add_service_review(self, org_uuid, service_uuid, payload):
+        self.add_item(
+            ServiceReviewHistory(
+                org_uuid=org_uuid,
+                service_uuid=service_uuid,
+                reviewed_service_data=payload["service_metadata"],
+                state="",
+                reviewed_by=payload["reviewed_by"],
+                reviewed_on=payload["reviewed_by"],
+                created_on=payload["created_on"],
+                updated_on=payload["updated_on"]
+            )
+        )
+
+    def get_all_services_eligible_for_approval_atleast_once(self, status):
+        pass
+
+    def get_all_services_review_data(self):
+        services_review_db = self.session.query(ServiceReviewHistory).all()
+        services_review = [ServiceFactory.convert_service_review_history_entity_model_to_db_model(service_review_db) for
+                           service_review_db in services_review_db]
+        self.session.commit()
+        return services_review
+
+    def get_service_for_given_service_id_and_org_id(self, org_id, service_id):
+        try:
+
+            organization = self.session.query(Organization).filter(Organization.org_id == org_id).first()
+            if not organization:
+                raise Exception(f"No organization found for this service {service_id}")
+            org_uuid = organization.uuid
+            service_db = self.session.query(Service).filter(Service.org_uuid == org_uuid).filter(
+                Service.service_id == service_id).first()
+            service = ServiceFactory().convert_service_db_model_to_entity_model(service_db)
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            raise e
+        return org_uuid, service

@@ -7,8 +7,10 @@ from common.boto_utils import BotoUtils
 from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
 from registry.config import NOTIFICATION_ARN, PUBLISHER_PORTAL_DAPP_URL, REGION_NAME
-from registry.constants import OrganizationStatus, OrganizationMemberStatus, Role
+from registry.constants import OrganizationStatus, OrganizationMemberStatus, Role, OrganizationActions, \
+    OrganizationType, ORG_TYPE_VERIFICATION_TYPE_MAPPING
 from registry.domain.factory.organization_factory import OrganizationFactory
+from registry.domain.models.organization import Organization
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 
 org_repo = OrganizationPublisherRepository()
@@ -25,19 +27,19 @@ class OrganizationPublisherService:
     def get_for_admin(self, params):
         status = params.get("status", None)
         organizations = org_repo.get_org(status)
-        return [org.to_dict() for org in organizations]
+        return [org.to_response() for org in organizations]
 
     def get_all_org_for_user(self):
         logger.info(f"get organization for user: {self.username}")
         organizations = org_repo.get_org_for_user(username=self.username)
-        return [org.to_dict() for org in organizations]
+        return [org.to_response() for org in organizations]
 
     def get_groups_for_org(self):
         logger.info(f"get groups for org_uuid: {self.org_uuid}")
         groups = org_repo.get_groups_for_org(self.org_uuid)
         return {
             "org_uuid": self.org_uuid,
-            "groups": [group.to_dict() for group in groups]
+            "groups": [group.to_response() for group in groups]
         }
 
     def create_organization(self, payload):
@@ -45,33 +47,30 @@ class OrganizationPublisherService:
         organization = OrganizationFactory.org_domain_entity_from_payload(payload)
         organization.setup_id()
         logger.info(f"assigned org_uuid : {organization.uuid}")
-        org_repo.add_organization(organization, self.username, OrganizationStatus.ONBOARDING.value)
-        return "OK"
+        updated_state = Organization.next_state(None, None, OrganizationActions.CREATE.value)
+        org_repo.add_organization(organization, self.username, updated_state)
+        return organization.to_response()
 
-    def save_organization_draft(self, payload):
-        logger.info(f"edit organization for user: {self.username} org_uuid: {self.org_uuid}")
+    def update_organization(self, payload, action):
+        logger.info(f"update organization for user: {self.username} org_uuid: {self.org_uuid} action: {action}")
         updated_organization = OrganizationFactory.org_domain_entity_from_payload(payload)
         current_organization = org_repo.get_org_for_org_uuid(self.org_uuid)
-        if current_organization.is_minor(updated_organization):
-            org_repo.update_organization(updated_organization, self.username, OrganizationStatus.DRAFT.value)
-        else:
-            raise MethodNotImplemented()
+
+        self._archive_current_organization(current_organization)
+        updated_state = Organization.next_state(current_organization, updated_organization, action)
+        org_repo.update_organization(updated_organization, self.username, updated_state)
         return "OK"
 
-    def submit_organization_for_approval(self, payload):
-        logger.info(f"submit for approval organization org_uuid: {self.org_uuid}")
-        organization = OrganizationFactory.org_domain_entity_from_payload(payload)
-        if not organization.is_valid_for_submit():
-            raise Exception("Invalid org metadata")
-        org_repo.store_organization(organization, self.username, OrganizationStatus.APPROVED.value)
-        return "OK"
+    def _archive_current_organization(self, organization):
+        if organization.get_status() == OrganizationStatus.PUBLISHED.value:
+            org_repo.add_organization_archive(organization)
 
     def publish_org_to_ipfs(self):
         logger.info(f"publish organization to ipfs org_uuid: {self.org_uuid}")
         organization = org_repo.get_org_for_org_uuid(self.org_uuid)
         organization.publish_to_ipfs()
         org_repo.store_ipfs_hash(organization, self.username)
-        return organization.to_dict()
+        return organization.to_response()
 
     def save_transaction_hash_for_publish_org(self, payload):
         transaction_hash = payload["transaction_hash"]
@@ -86,14 +85,14 @@ class OrganizationPublisherService:
         limit = pagination_details.get("limit", None)
         sort = pagination_details.get("sort", None)
         org_members_list = org_repo.get_org_member(org_uuid=self.org_uuid, status=status, role=role)
-        return [member.to_dict() for member in org_members_list]
+        return [member.to_response() for member in org_members_list]
 
     def get_member(self, member_username):
         members = org_repo.get_org_member(username=member_username, org_uuid=self.org_uuid)
         if len(members) == 0:
             logger.info(f"No member {member_username} for the organization {self.org_uuid}")
             return []
-        return [member.to_dict() for member in members]
+        return [member.to_response() for member in members]
 
     def verify_invite(self, invite_code):
         logger.info(f"verify member invite_code: {invite_code} username: {self.username}")
@@ -143,7 +142,7 @@ class OrganizationPublisherService:
 
         failed_invitation = [member.username for member in requested_invite_member_list
                              if member.username in current_org_member_username_list]
-        return {"member": [member.to_dict() for member in eligible_invite_member_list],
+        return {"member": [member.to_response() for member in eligible_invite_member_list],
                 "failed_invitation": failed_invitation}
 
     def _send_email_notification_for_inviting_organization_member(self, org_members_list, org_name):
@@ -173,3 +172,15 @@ class OrganizationPublisherService:
     @staticmethod
     def _get_org_member_notification_subject(org_name):
         return f"Membership Invitation from  Organization {org_name}"
+
+    def update_verification(self, verification_type, verification_details):
+        if verification_type in ORG_TYPE_VERIFICATION_TYPE_MAPPING:
+            if ORG_TYPE_VERIFICATION_TYPE_MAPPING[verification_type] == OrganizationType.INDIVIDUAL.value:
+                owner_username = verification_details["username"]
+                status = verification_details["status"]
+                org_repo.update_all_individual_organization_for_user(owner_username, status)
+            else:
+                raise MethodNotImplemented()
+        else:
+            raise MethodNotImplemented()
+        return {}

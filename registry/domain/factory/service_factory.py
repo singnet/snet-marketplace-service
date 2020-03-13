@@ -1,16 +1,19 @@
 from datetime import datetime as dt
+
+from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus
 from registry.domain.models.service import Service
-from registry.infrastructure.models import Service as ServiceDBModel, ServiceGroup as ServiceGroupDBModel, \
-    ServiceState as ServiceStateDBModel
 from registry.domain.models.service_group import ServiceGroup
 from registry.domain.models.service_state import ServiceState
-from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus, ServiceAvailabilityStatus
+from registry.infrastructure.models import Service as ServiceDBModel, ServiceGroup as ServiceGroupDBModel, \
+    ServiceReviewHistory, ServiceState as ServiceStateDBModel
 
 
 class ServiceFactory:
 
     @staticmethod
     def convert_service_db_model_to_entity_model(service):
+        if service is None:
+            return None
         return Service(
             org_uuid=service.org_uuid,
             uuid=service.uuid,
@@ -20,7 +23,7 @@ class ServiceFactory:
             description=service.description,
             project_url=service.project_url,
             proto=service.proto,
-            metadata_ipfs_hash=service.metadata_ipfs_hash,
+            metadata_uri=service.metadata_uri,
             assets=service.assets,
             rating=service.rating,
             ranking=service.ranking,
@@ -30,7 +33,8 @@ class ServiceFactory:
             service_state=ServiceState(service.service_state.org_uuid, service.service_state.service_uuid,
                                        service.service_state.state, service.service_state.transaction_hash),
             groups=[ServiceGroup(org_uuid=group.org_uuid, service_uuid=group.service_uuid, group_id=group.group_id,
-                                 group_name=group.group_name, endpoints=group.endpoints, pricing=group.pricing,
+                                 group_name=group.group_name, endpoints=group.endpoints,
+                                 test_endpoints=group.test_endpoints, pricing=group.pricing,
                                  free_calls=group.free_calls, daemon_address=group.daemon_address,
                                  free_call_signer_address=group.free_call_signer_address)
                     for group in service.groups]
@@ -43,7 +47,7 @@ class ServiceFactory:
             uuid=service.uuid,
             display_name=service.display_name,
             service_id=service.service_id,
-            metadata_ipfs_hash=service.metadata_ipfs_hash,
+            metadata_uri=service.metadata_uri,
             proto=service.proto,
             short_description=service.short_description,
             description=service.description,
@@ -56,7 +60,8 @@ class ServiceFactory:
             mpe_address=service.mpe_address,
             created_on=dt.utcnow(),
             groups=[ServiceFactory.convert_service_group_entity_model_to_db_model(group) for group in service.groups],
-            service_state=ServiceFactory.convert_service_state_entity_model_to_db_model(username, service.service_state)
+            service_state=ServiceFactory.convert_service_state_entity_model_to_db_model(username, service.service_state),
+            updated_on = dt.utcnow()
         )
 
     @staticmethod
@@ -68,6 +73,7 @@ class ServiceFactory:
             group_name=service_group.group_name,
             pricing=service_group.pricing,
             endpoints=service_group.endpoints,
+            test_endpoints=service_group.test_endpoints,
             daemon_address=service_group.daemon_address,
             free_calls=service_group.free_calls,
             free_call_signer_address=service_group.free_call_signer_address,
@@ -90,6 +96,19 @@ class ServiceFactory:
         )
 
     @staticmethod
+    def convert_service_review_history_entity_model_to_db_model(service_review_history):
+        return ServiceReviewHistory(
+            org_uuid=service_review_history.org_uuid,
+            service_uuid=service_review_history.service_uuid,
+            service_metadata=service_review_history.service_metadata,
+            state=service_review_history.state,
+            reviewed_by=service_review_history.reviewed_by,
+            reviewed_on=service_review_history.reviewed_on,
+            created_on=service_review_history.created_on,
+            updated_on=service_review_history.updated_on
+        )
+
+    @staticmethod
     def create_service_entity_model(org_uuid, service_uuid, payload, status):
         service_state_entity_model = \
             ServiceFactory.create_service_state_entity_model(org_uuid, service_uuid,
@@ -102,7 +121,7 @@ class ServiceFactory:
             payload.get("short_description", ""), payload.get("description", ""), payload.get("project_url", ""),
             payload.get("proto", {}), payload.get("assets", {}), payload.get("ranking", DEFAULT_SERVICE_RANKING),
             payload.get("rating", {}), payload.get("contributors", []), payload.get("tags", []),
-            payload.get("mpe_address", ""), payload.get("metadata_ipfs_hash", ""), service_group_entity_model_list,
+            payload.get("mpe_address", ""), payload.get("metadata_uri", ""), service_group_entity_model_list,
             service_state_entity_model)
 
     @staticmethod
@@ -123,7 +142,29 @@ class ServiceFactory:
             group_name=group.get("group_name", ""),
             pricing=group.get("pricing", []),
             endpoints=group.get("endpoints", []),
+            test_endpoints=group.get("test_endpoints", []),
             daemon_address=group.get("daemon_address", []),
             free_calls=group.get("free_calls", 0),
             free_call_signer_address=group.get("free_call_signer_address", None),
         )
+
+    @staticmethod
+    def create_service_from_service_metadata(org_uuid, service_uuid, service_id, service_metadata, tags_data, ranking,
+                                             rating, status):
+        service_state_entity_model = \
+            ServiceFactory.create_service_state_entity_model(org_uuid, service_uuid,
+                                                             getattr(ServiceStatus, status).value)
+        service_group_entity_model_list = [
+            ServiceFactory.create_service_group_entity_model("", service_uuid, group) for group in
+            service_metadata.get("groups", [])]
+        return Service(
+            org_uuid, service_uuid, service_id, service_metadata.get("display_name", ""),
+            service_metadata.get("short_description", ""), service_metadata.get("description", ""),
+            service_metadata.get("project_url", ""),
+            service_metadata.get("proto", {}), service_metadata.get("assets", {}),
+            ranking,
+            rating, service_metadata.get("contributors", []),
+            tags_data,
+            service_metadata.get("mpe_address", ""), service_metadata.get("metadata_ipfs_hash", ""),
+            service_group_entity_model_list,
+            service_state_entity_model)
