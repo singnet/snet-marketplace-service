@@ -126,11 +126,8 @@ class UserService:
                                             ))
 
             result = json.loads(response.get('Payload').read())
-            logger.info(f"result {result}")
-
             signature_response = json.loads(result['body'])
 
-            logger.info(f"signature response {signature_response}")
 
             if signature_response["status"] == "success":
                 logger.info(f"Got signature to make free call to daemon for {email} : {signature_response['data']}")

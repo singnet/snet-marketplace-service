@@ -7,7 +7,7 @@ from common.blockchain_util import BlockChainUtil
 from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
 from registry.config import NETWORK_ID
-from registry.constants import ServiceStatus
+from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus
 from registry.domain.factory.service_factory import ServiceFactory
 
 logger = get_logger(__name__)
@@ -94,11 +94,16 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
 
         if existing_service:
             service_uuid = existing_service.uuid
+            ranking = existing_service.ranking
+            rating = existing_service.rating
         else:
             service_uuid = uuid4().hex
+            ranking = DEFAULT_SERVICE_RANKING
+            rating = {}
 
-        recieved_service = ServiceFactory.create_service_from_service_metadata(org_uuid, service_uuid,service_id,
-                                                                               event_ipfs_data, tags_data,
+        recieved_service = ServiceFactory.create_service_from_service_metadata(org_uuid, service_uuid, service_id,
+                                                                               event_ipfs_data, tags_data, ranking,
+                                                                               rating,
                                                                                ServiceStatus.PUBLISHED_UNAPPROVED.value)
         if not existing_service:
             self._service_repository.add_service(recieved_service, "")
