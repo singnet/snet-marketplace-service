@@ -856,7 +856,7 @@ functions:
 
   daemon-config-for-given-network-id:
     warmup: true
-    handler: registry.application.handlers.service_handlers.get_daemon_config_for_given_network_id
+    handler: registry.application.handlers.service_handlers.get_daemon_config_for_current_network
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
