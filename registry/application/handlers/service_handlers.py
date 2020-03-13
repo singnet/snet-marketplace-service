@@ -8,7 +8,7 @@ from common.utils import generate_lambda_response, validate_dict, \
     validate_dict_list
 from registry.application.services.service_publisher_service import ServicePublisherService
 from registry.config import NETWORK_ID, SLACK_HOOK
-from registry.config import DAEMON_CONFIG, DAEMON_CONFIG_FOR_TEST
+from registry.constants import EnvironmentType
 from registry.exceptions import EXCEPTIONS
 
 logger = get_logger(__name__)
@@ -177,7 +177,14 @@ def list_of_orgs_with_services_submitted_for_approval(event, context):
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def get_daemon_config_for_test(event, context):
-    response = {"daemon_config": DAEMON_CONFIG_FOR_TEST}
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    path_parameters = event["pathParameters"]
+    if "org_uuid" not in path_parameters and "service_uuid" not in path_parameters and "group_id" not in path_parameters:
+        raise BadRequestException()
+    org_uuid = path_parameters["org_uuid"]
+    service_uuid = path_parameters["service_uuid"]
+    group_id = path_parameters["group_id"]
+    response = ServicePublisherService(username, org_uuid, service_uuid).daemon_config(environment=EnvironmentType.TEST.value)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
@@ -185,14 +192,16 @@ def get_daemon_config_for_test(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
-def get_daemon_config_for_given_network_id(event, context):
-    query_parameters = event["queryStringParameters"]
-    if "network_id" not in query_parameters:
+def get_daemon_config_for_current_network(event, context):
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    path_parameters = event["pathParameters"]
+    if "org_uuid" not in path_parameters and "service_uuid" not in path_parameters and "group_id" not in path_parameters:
         raise BadRequestException()
-    network_id = query_parameters["network_id"]
-    response = {"daemon_config": DAEMON_CONFIG}
+    org_uuid = path_parameters["org_uuid"]
+    service_uuid = path_parameters["service_uuid"]
+    group_id = path_parameters["group_id"]
+    response = ServicePublisherService(username, org_uuid, service_uuid).daemon_config(environment=EnvironmentType.MAIN.value)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
-

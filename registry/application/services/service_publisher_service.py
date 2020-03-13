@@ -1,14 +1,18 @@
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
-from registry.constants import ServiceAvailabilityStatus, ServiceStatus
-from registry.config import IPFS_URL, METADATA_FILE_PATH, ASSET_DIR, ORG_ID_FOR_TESTING_AI_SERVICE, SLACK_HOOK
+from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
+from registry.constants import ServiceAvailabilityStatus, ServiceStatus, OrganizationStatus
+from registry.config import IPFS_URL, METADATA_FILE_PATH, ASSET_DIR, SLACK_HOOK, BLOCKCHAIN_TEST_ENV, NETWORKS, \
+    NETWORK_ID
 from uuid import uuid4
-from registry.exceptions import InvalidServiceState, ServiceProtoNotFoundException, OrganizationNotFoundException
+from registry.exceptions import InvalidServiceState, ServiceProtoNotFoundException, OrganizationNotFoundException, \
+    OrganizationNotPublishedException, ServiceNotFoundException, ServiceGroupNotFoundException
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.services.service_publisher_domain_service import ServicePublisherDomainService
 from common.ipfs_util import IPFSUtil
 from common.boto_utils import BotoUtils
 from common import utils
-from common.utils import json_to_file, hash_to_bytesuri, publish_zip_file_in_ipfs
+from common.utils import json_to_file, hash_to_bytesuri, publish_zip_file_in_ipfs, publish_file_in_ipfs, \
+    download_file_from_url
 from registry.constants import EnvironmentType
 from common.constant import StatusCode
 from registry.config import REGION_NAME, NOTIFICATION_ARN, SLACK_CHANNEL_FOR_APPROVAL_TEAM
@@ -93,12 +97,12 @@ class ServicePublisherService:
         ASSETS_SUPPORTED = ["hero_image", "demo_files"]
         for asset in service.assets.keys():
             if asset in ASSETS_SUPPORTED:
-                asset_url = service.assets.get("proto_files", {}).get("url", None)
+                asset_url = service.assets.get(asset, {}).get("url", None)
                 if asset_url is None:
                     logger.info(f"asset url for {asset} is missing ")
-                asset_ipfs_hash = publish_zip_file_in_ipfs(file_url=asset_url,
-                                                           file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}",
-                                                           ipfs_client=IPFSUtil(IPFS_URL['url'], IPFS_URL['port']))
+                asset_ipfs_hash = publish_file_in_ipfs(file_url=asset_url,
+                                                       file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}",
+                                                       ipfs_client=IPFSUtil(IPFS_URL['url'], IPFS_URL['port']))
                 service.assets[asset]["ipfs_hash"] = asset_ipfs_hash
 
     def publish_service_data_to_ipfs(self):
@@ -107,7 +111,9 @@ class ServicePublisherService:
             proto_url = service.assets.get("proto_files", {}).get("url", None)
             if proto_url is None:
                 raise ServiceProtoNotFoundException
-            asset_ipfs_hash = publish_zip_file_in_ipfs(file_url=proto_url,
+            filename = download_file_from_url(file_url=proto_url,
+                                              file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}")
+            asset_ipfs_hash = publish_zip_file_in_ipfs(filename=filename,
                                                        file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}",
                                                        ipfs_client=IPFSUtil(IPFS_URL['url'], IPFS_URL['port']))
             service.proto = {
@@ -178,16 +184,16 @@ class ServicePublisherService:
         # return transaction_hash
 
     @staticmethod
-    def unregister_service_in_blockchain_after_service_is_approved(service_id):
+    def unregister_service_in_blockchain_after_service_is_approved(org_id, service_id):
         transaction_hash = ServicePublisherService.unregister_service_in_blockchain(
-            org_id=ORG_ID_FOR_TESTING_AI_SERVICE, service_id=service_id)
+            org_id=org_id, service_id=service_id)
         logger.info(
             f"Transaction hash {transaction_hash} generated while unregistering service_id {service_id} in blockchain")
 
     @staticmethod
     def notify_service_contributor_when_user_submit_for_approval(org_id, service_id, contributors):
         # notify service contributor for submission via email
-        recipients = [contributor["email_id"] for contributor in contributors]
+        recipients = [contributor.get("email_id", "") for contributor in contributors]
         if not recipients:
             logger.info(f"Unable to find service contributors for service {service_id} under {org_id}")
             return
@@ -205,30 +211,38 @@ class ServicePublisherService:
                                       slack_channel=SLACK_CHANNEL_FOR_APPROVAL_TEAM)
 
     def submit_service_for_approval(self, payload):
-        # we should get org_id from organization service for given org_uuid than from payload
-        org_id = payload["org_id"]
 
-        # service is submitted for approval. service state is APPROVAL PENDING.
+        user_as_contributor = [{"email_id": self._username}]
+        payload["contributor"] = payload.get("contributor", user_as_contributor) + user_as_contributor
+
+        organization = OrganizationPublisherRepository().get_org_for_org_uuid(self._org_uuid)
+        if not organization:
+            raise OrganizationNotFoundException()
+        if not organization.org_state.state == OrganizationStatus.PUBLISHED.value:
+            raise OrganizationNotPublishedException()
+
         service = service_factory.create_service_entity_model(
             self._org_uuid, self._service_uuid, payload, ServiceStatus.APPROVAL_PENDING.value)
 
-        # publish service test data on ipfs and save service submitted for approval
-        service = self.obj_service_publisher_domain_service.publish_service_data_to_ipfs(
-            service, EnvironmentType.TEST.value)
+        # publish service data with test config on ipfs
+        service = self.obj_service_publisher_domain_service.publish_service_data_to_ipfs(service,
+                                                                                         EnvironmentType.TEST.value)
+
         service = ServicePublisherRepository().save_service(self._username, service, service.service_state.state)
 
         # publish service on test network
-        # response = self.obj_service_publisher_domain_service.publish_service_on_blockchain(
-        #     org_id=org_id, service=service, environment=EnvironmentType.TEST.value)
+        response = self.obj_service_publisher_domain_service.publish_service_on_blockchain(org_id=organization.id,
+                                                                                           service=service,
+                                                                                           environment=EnvironmentType.TEST.value)
 
         # notify service contributors via email
-        # self.notify_service_contributor_when_user_submit_for_approval(org_id, service.service_id,
-        #                                                               service.contributors)
-        #
-        # # notify approval team via slack
-        # slack_msg = f"Service {service.service_id} under org_id {org_id} is submitted for approval"
-        # self.notify_approval_team_when_user_submit_for_approval(slack_msg=slack_msg)
-        return service.to_dict()
+        self.notify_service_contributor_when_user_submit_for_approval(organization.id, service.service_id,
+                                                                      service.contributors)
+
+        # notify approval team via slack
+        slack_msg = f"Service {service.service_id} under org_id {organization.id} is submitted for approval"
+        self.notify_approval_team_when_user_submit_for_approval(slack_msg=slack_msg)
+        return response
 
     @staticmethod
     def publish_to_ipfs(filename, data):
@@ -236,3 +250,31 @@ class ServicePublisherService:
         service_metadata_ipfs_hash = IPFSUtil(
             IPFS_URL['url'], IPFS_URL['port']).write_file_in_ipfs(filename, wrap_with_directory=False)
         return service_metadata_ipfs_hash
+
+    def daemon_config(self, environment):
+        organization = OrganizationPublisherRepository().get_org_for_org_uuid(self._org_uuid)
+        if not organization:
+            raise OrganizationNotFoundException()
+        service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
+        if not service:
+            raise ServiceNotFoundException()
+        network_name = NETWORKS[NETWORK_ID]["name"].lower()
+        if environment is EnvironmentType.TEST.value:
+            daemon_config = {
+                "allowed_user_flag": True,
+                "allowed_user_addresses": [member.address for member in organization.members] + [
+                    BLOCKCHAIN_TEST_ENV["executor_address"]],
+                "blockchain_enabled": False,
+                "passthrough_enabled": True
+            }
+        elif environment is EnvironmentType.MAIN.value:
+            daemon_config = {
+                "ipfs_end_point": f"http://{IPFS_URL['url']}:{IPFS_URL['port']}",
+                "blockchain_network_selected": network_name,
+                "organization_id": organization.id,
+                "service_id": service.service_id,
+                "metering_end_point": f"https://{network_name}-marketplace.singularitynet.io",
+                "authentication_address": None,
+                "blockchain_enabled": True
+            }
+        return daemon_config

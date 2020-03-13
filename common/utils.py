@@ -233,13 +233,22 @@ def hash_to_bytesuri(s):
     return s.encode("ascii").ljust(32 * (len(s) // 32 + 1), b"\0")
 
 
+def publish_file_in_ipfs(file_url, file_dir, ipfs_client):
+    filename = download_file_from_url(file_url=file_url, file_dir=file_dir)
+    file_type = os.path.splitext(filename)
+    if file_type.lower() is ".zip":
+        return publish_zip_file_in_ipfs(file_url, file_dir, ipfs_client)
+    ipfs_hash = ipfs_client.write_file_in_ipfs(f"{file_dir}/{filename}", wrap_with_directory=False)
+    return ipfs_hash
+
+
 def publish_zip_file_in_ipfs(file_url, file_dir, ipfs_client):
-    filename = download_zip_file_from_url(file_url=file_url, file_dir=file_dir)
+    filename = download_file_from_url(file_url=file_url, file_dir=file_dir)
     file_in_tar_bytes = convert_zip_file_to_tar_bytes(file_dir=file_dir, filename=filename)
     return ipfs_client.ipfs_conn.add_bytes(file_in_tar_bytes.getvalue())
 
 
-def download_zip_file_from_url(file_url, file_dir):
+def download_file_from_url(file_url, file_dir):
     response = requests.get(file_url)
     filename = urlparse(file_url).path.split("/")[-1]
     if not os.path.exists(file_dir):
@@ -269,14 +278,15 @@ def convert_zip_file_to_tar_bytes(file_dir, filename):
 
 def send_email_notification(recipients, notification_subject, notification_message, notification_arn, boto_util):
     for recipient in recipients:
-        send_notification_payload = {"body": json.dumps({
-            "message": notification_message,
-            "subject": notification_subject,
-            "notification_type": "support",
-            "recipient": recipient})}
-        boto_util.invoke_lambda(lambda_function_arn=notification_arn, invocation_type="RequestResponse",
-                                payload=json.dumps(send_notification_payload))
-        logger.info(f"email_sent to {recipient}")
+        if bool(recipient):
+            send_notification_payload = {"body": json.dumps({
+                "message": notification_message,
+                "subject": notification_subject,
+                "notification_type": "support",
+                "recipient": recipient})}
+            boto_util.invoke_lambda(lambda_function_arn=notification_arn, invocation_type="RequestResponse",
+                                    payload=json.dumps(send_notification_payload))
+            logger.info(f"email_sent to {recipient}")
 
 
 def send_slack_notification(slack_msg, slack_url, slack_channel):

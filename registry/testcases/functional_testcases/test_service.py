@@ -2,15 +2,17 @@ import json
 from unittest import TestCase
 from datetime import datetime as dt
 from unittest.mock import patch
-
 from registry.application.handlers.service_handlers import verify_service_id, save_service, create_service, \
     get_services_for_organization, get_service_for_service_uuid, publish_service_metadata_to_ipfs, \
     submit_service_for_approval, save_transaction_hash_for_published_service, \
     list_of_orgs_with_services_submitted_for_approval, legal_approval_of_service
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
-from registry.infrastructure.models import Organization, Service, ServiceState, ServiceGroup, \
-    ServiceReviewHistory
+from registry.infrastructure.models import Organization as OrganizationDBModel
+from registry.infrastructure.models import Service as ServiceDBModel
+from registry.infrastructure.models import ServiceState as ServiceStateDBModel
+from registry.infrastructure.models import ServiceGroup as ServiceGroupDBModel
+from registry.infrastructure.models import ServiceReviewHistory as ServiceReviewHistoryDBModel
 from registry.constants import ServiceAvailabilityStatus, ServiceStatus
 from common.constant import StatusCode
 
@@ -25,7 +27,7 @@ class TestService(TestCase):
     def test_verify_service_id(self):
         self.tearDown()
         org_repo.add_item(
-            Organization(
+            OrganizationDBModel(
                 name="test_org",
                 org_id="test_org_id",
                 uuid="test_org_uuid",
@@ -43,7 +45,7 @@ class TestService(TestCase):
             )
         )
         service_repo.add_item(
-            Service(
+            ServiceDBModel(
                 org_uuid="test_org_uuid",
                 uuid="test_service_uuid",
                 display_name="test_display_name",
@@ -99,7 +101,7 @@ class TestService(TestCase):
     def test_create_service(self):
         self.tearDown()
         org_repo.add_item(
-            Organization(
+            OrganizationDBModel(
                 name="test_org",
                 org_id="test_org_id",
                 uuid="test_org_uuid",
@@ -137,7 +139,7 @@ class TestService(TestCase):
     def test_get_services_for_organization(self):
         self.tearDown()
         org_repo.add_item(
-            Organization(
+            OrganizationDBModel(
                 name="test_org",
                 org_id="test_org_id",
                 uuid="test_org_uuid",
@@ -155,7 +157,7 @@ class TestService(TestCase):
             )
         )
         service_repo.add_item(
-            Service(
+            ServiceDBModel(
                 org_uuid="test_org_uuid",
                 uuid="test_service_uuid",
                 display_name="test_display_name",
@@ -169,7 +171,7 @@ class TestService(TestCase):
             )
         )
         service_repo.add_item(
-            ServiceState(
+            ServiceStateDBModel(
                 row_id=1000,
                 org_uuid="test_org_uuid",
                 service_uuid="test_service_uuid",
@@ -181,7 +183,7 @@ class TestService(TestCase):
             )
         )
         service_repo.add_item(
-            ServiceGroup(
+            ServiceGroupDBModel(
                 row_id="1000",
                 org_uuid="test_org_uuid",
                 service_uuid="test_service_uuid",
@@ -226,7 +228,7 @@ class TestService(TestCase):
     def test_save_service(self):
         self.tearDown()
         org_repo.add_item(
-            Organization(
+            OrganizationDBModel(
                 name="test_org",
                 org_id="test_org_id",
                 uuid="test_org_uuid",
@@ -244,7 +246,7 @@ class TestService(TestCase):
             )
         )
         service_repo.add_item(
-            Service(
+            ServiceDBModel(
                 org_uuid="test_org_uuid",
                 uuid="test_service_uuid",
                 display_name="test_display_name",
@@ -258,7 +260,7 @@ class TestService(TestCase):
             )
         )
         service_repo.add_item(
-            ServiceState(
+            ServiceStateDBModel(
                 row_id=1000,
                 org_uuid="test_org_uuid",
                 service_uuid="test_service_uuid",
@@ -269,7 +271,7 @@ class TestService(TestCase):
             )
         )
         service_repo.add_item(
-            ServiceGroup(
+            ServiceGroupDBModel(
                 row_id="1000",
                 org_uuid="test_org_uuid",
                 service_uuid="test_service_uuid",
@@ -359,7 +361,7 @@ class TestService(TestCase):
     def test_get_service_for_service_uuid(self):
         self.tearDown()
         org_repo.add_item(
-            Organization(
+            OrganizationDBModel(
                 name="test_org",
                 org_id="test_org_id",
                 uuid="test_org_uuid",
@@ -377,7 +379,7 @@ class TestService(TestCase):
             )
         )
         service_repo.add_item(
-            Service(
+            ServiceDBModel(
                 org_uuid="test_org_uuid",
                 uuid="test_service_uuid",
                 display_name="test_display_name",
@@ -391,7 +393,7 @@ class TestService(TestCase):
             )
         )
         service_repo.add_item(
-            ServiceState(
+            ServiceStateDBModel(
                 row_id=1000,
                 org_uuid="test_org_uuid",
                 service_uuid="test_service_uuid",
@@ -426,7 +428,7 @@ class TestService(TestCase):
         mock_ipfs.return_value = "QmeoVWV99BJoa9czuxg6AiSyFiyVNNFpcaSMYTQUft785u"
         self.tearDown()
         org_repo.add_item(
-            Organization(
+            OrganizationDBModel(
                 name="test_org",
                 org_id="test_org_id",
                 uuid="test_org_uuid",
@@ -444,7 +446,7 @@ class TestService(TestCase):
             )
         )
         service_repo.add_item(
-            Service(
+            ServiceDBModel(
                 org_uuid="test_org_uuid",
                 uuid="test_service_uuid",
                 display_name="test_display_name",
@@ -456,12 +458,16 @@ class TestService(TestCase):
                 proto={"encoding": "proto", "service_type": "grpc", "model_ipfs_hash": "test_model_ipfs_hash"},
                 ranking=1,
                 assets={"proto_files": {
-                    "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/test_org_uuid/services/test_service_uuid/assets/20200212111248_proto_files.zip"}},
+                    "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/test_org_uuid/services/test_service_uuid/assets/20200212111248_proto_files.zip"},
+                    "hero_image": {
+                        "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/ba88d221c5264d6f859e62b15ddd63cf/services/b36f882be79043e18ae0f7c946128b31/assets/20200310063017_asset.png",
+                        "ipfs_hash": ""}, "demo_files": {
+                        "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/ba88d221c5264d6f859e62b15ddd63cf/services/b36f882be79043e18ae0f7c946128b31/component/20200310063120_component.zip"}},
                 created_on=dt.utcnow()
             )
         )
         service_repo.add_item(
-            ServiceState(
+            ServiceStateDBModel(
                 row_id=1000,
                 org_uuid="test_org_uuid",
                 service_uuid="test_service_uuid",
@@ -491,7 +497,7 @@ class TestService(TestCase):
     def test_save_transaction_hash_for_published_service(self):
         self.tearDown()
         org_repo.add_item(
-            Organization(
+            OrganizationDBModel(
                 name="test_org",
                 org_id="test_org_id",
                 uuid="test_org_uuid",
@@ -509,7 +515,7 @@ class TestService(TestCase):
             )
         )
         service_repo.add_item(
-            Service(
+            ServiceDBModel(
                 org_uuid="test_org_uuid",
                 uuid="test_service_uuid",
                 display_name="test_display_name",
@@ -523,7 +529,7 @@ class TestService(TestCase):
             )
         )
         service_repo.add_item(
-            ServiceState(
+            ServiceStateDBModel(
                 row_id=1000,
                 org_uuid="test_org_uuid",
                 service_uuid="test_service_uuid",
@@ -555,7 +561,7 @@ class TestService(TestCase):
     def test_list_of_orgs_with_services_submitted_for_approval(self):
         self.tearDown()
         service_repo.add_item(
-            ServiceReviewHistory(
+            ServiceReviewHistoryDBModel(
                 org_uuid="test_org_uuid",
                 service_uuid="test_service_uuid",
                 service_metadata={},
@@ -588,7 +594,7 @@ class TestService(TestCase):
     def test_legal_approval_of_service(self):
         self.tearDown()
         service_repo.add_item(
-            ServiceReviewHistory(
+            ServiceReviewHistoryDBModel(
                 org_uuid="test_org_uuid",
                 service_uuid="test_service_uuid",
                 service_metadata={},
@@ -614,134 +620,134 @@ class TestService(TestCase):
         }
         response = legal_approval_of_service(event, context=None)
 
-    @patch(
-        "registry.domain.services.service_publisher_domain_service.ServicePublisherDomainService.register_or_update_service_in_blockchain")
-    @patch("common.utils.publish_zip_file_in_ipfs")
-    @patch("common.ipfs_util.IPFSUtil.write_file_in_ipfs")
-    @patch("common.utils.send_email_notification")
-    @patch("common.utils.send_slack_notification")
-    def test_submit_service_for_approval(self, slack_notification, email_notification, file_ipfs_hash, zip_file_ipfs_hash, blockchain_transaction):
-        blockchain_transaction.return_value = "0x2w3e4r5t6y7u8i9o0oi8u7y6t5r4e3w2"
-        zip_file_ipfs_hash.return_value = "Qwertyuiopasdfghjklzxcvbnm"
-        file_ipfs_hash.return_value = "Qzertyuiopasdfghjklzxcvbnn"
-        self.tearDown()
-        org_repo.add_item(
-            Organization(
-                name="test_org",
-                org_id="test_org_id",
-                uuid="test_org_uuid",
-                org_type="organization",
-                description="that is the dummy org for testcases",
-                short_description="that is the short description",
-                url="https://dummy.url",
-                contacts=[],
-                assets={},
-                duns_no=12345678,
-                origin="PUBLISHER_DAPP",
-                groups=[],
-                addresses=[],
-                metadata_ipfs_uri="#dummyhashdummyhash"
-            )
-        )
-        service_repo.add_item(
-            Service(
-                org_uuid="test_org_uuid",
-                uuid="test_service_uuid",
-                display_name="test_display_name",
-                service_id="test_service_id",
-                metadata_uri="Qasdfghjklqwertyuiopzxcvbnm",
-                short_description="test_short_description",
-                description="test_description",
-                project_url="https://dummy.io",
-                ranking=1,
-                proto={"proto_files": {
-                    "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/test_org_uuid/services/test_service_uuid/assets/20200212111248_proto_files.zip"}},
-                contributors={"email_id": "prashant@singularitynet.io"},
-                created_on=dt.utcnow()
-            )
-        )
-        service_repo.add_item(
-            ServiceState(
-                row_id=1000,
-                org_uuid="test_org_uuid",
-                service_uuid="test_service_uuid",
-                state=ServiceStatus.DRAFT.value,
-                created_by="dummy_user",
-                updated_by="dummy_user",
-                created_on=dt.utcnow()
-            )
-        )
-        service_repo.add_item(
-            ServiceGroup(
-                row_id="1000",
-                org_uuid="test_org_uuid",
-                service_uuid="test_service_uuid",
-                group_id="test_group_id",
-                endpoints=["https://dummydaemonendpoint.io"],
-                daemon_address=["0xq2w3e4rr5t6y7u8i9"],
-                free_calls=10,
-                free_call_signer_address="0xq2s3e4r5t6y7u8i9o0",
-                created_on=dt.utcnow()
-            )
-        )
-        event = {
-            "path": "/org/test_org_uuid/service",
-            "requestContext": {
-                "authorizer": {
-                    "claims": {
-                        "email": "dummy_user1@dummy.io"
-                    }
-                }
-            },
-            "httpMethod": "PUT",
-            "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"},
-            "body": json.dumps({
-                "org_id": "curation",
-                "service_id": "test_service_id",
-                "display_name": "test_display_name",
-                "description": "test description updated",
-                "mpe_address": "0xq2w3e4r5t6y7u8i9i98u7y6t5r4e3w2",
-                "assets": {
-                    "proto_files": {
-                        "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/test_org_uuid/services/test"
-                               "_service_uuid/assets/20200212111248_proto_files.zip"
-                    }
-                },
-                "contributors": [{"email_id": "prashant@singularitynet.io"}],
-                "groups": [{"group_name": "default_group",
-                            "free_calls": 12,
-                            "free_call_signer_address": "0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F",
-                            "daemon_address": ["0x1234", "0x345"],
-                            "pricing": [
-                                {
-                                    "price_model": "fixed_price",
-                                    "price_in_cogs": 1,
-                                    "default": True
-                                }
-                            ],
-                            "endpoints": [
-                                "https://tz-services-1.snet.sh:8005"
-                            ],
-                            "test_endpoints": [
-                                "https://tz-services-1.snet.sh:8005"
-                            ],
-                            "group_id": "EoFmN3nvaXpf6ew8jJbIPVghE5NXfYupFF7PkRmVyGQ="
-
-                            }]
-            }
-            )
-        }
-        response = submit_service_for_approval(event=event, context=None)
-        assert (response["statusCode"] == 200)
-        response_body = json.loads(response["body"])
-        assert (response_body["status"] == "success")
-        assert (response_body["data"]["service_uuid"] == "test_service_uuid")
-        assert (response_body["data"]["service_state"]["state"] == ServiceStatus.APPROVAL_PENDING.value)
+    # @patch(
+    #     "registry.domain.services.service_publisher_domain_service.ServicePublisherDomainService.register_or_update_service_in_blockchain")
+    # @patch("common.utils.publish_zip_file_in_ipfs")
+    # @patch("common.ipfs_util.IPFSUtil.write_file_in_ipfs")
+    # @patch("common.utils.send_email_notification")
+    # @patch("common.utils.send_slack_notification")
+    # def test_submit_service_for_approval(self, slack_notification, email_notification, file_ipfs_hash, zip_file_ipfs_hash, blockchain_transaction):
+    #     blockchain_transaction.return_value = "0x2w3e4r5t6y7u8i9o0oi8u7y6t5r4e3w2"
+    #     zip_file_ipfs_hash.return_value = "Qwertyuiopasdfghjklzxcvbnm"
+    #     file_ipfs_hash.return_value = "Qzertyuiopasdfghjklzxcvbnn"
+    #     self.tearDown()
+    #     org_repo.add_item(
+    #         OrganizationDBModel(
+    #             name="test_org",
+    #             org_id="test_org_id",
+    #             uuid="test_org_uuid",
+    #             org_type="organization",
+    #             description="that is the dummy org for testcases",
+    #             short_description="that is the short description",
+    #             url="https://dummy.url",
+    #             contacts=[],
+    #             assets={},
+    #             duns_no=12345678,
+    #             origin="PUBLISHER_DAPP",
+    #             groups=[],
+    #             addresses=[],
+    #             metadata_ipfs_uri="#dummyhashdummyhash"
+    #         )
+    #     )
+    #     service_repo.add_item(
+    #         ServiceDBModel(
+    #             org_uuid="test_org_uuid",
+    #             uuid="test_service_uuid",
+    #             display_name="test_display_name",
+    #             service_id="test_service_id",
+    #             metadata_uri="Qasdfghjklqwertyuiopzxcvbnm",
+    #             short_description="test_short_description",
+    #             description="test_description",
+    #             project_url="https://dummy.io",
+    #             ranking=1,
+    #             proto={"proto_files": {
+    #                 "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/test_org_uuid/services/test_service_uuid/assets/20200212111248_proto_files.zip"}},
+    #             contributors={"email_id": "prashant@singularitynet.io"},
+    #             created_on=dt.utcnow()
+    #         )
+    #     )
+    #     service_repo.add_item(
+    #         ServiceStateDBModel(
+    #             row_id=1000,
+    #             org_uuid="test_org_uuid",
+    #             service_uuid="test_service_uuid",
+    #             state=ServiceStatus.DRAFT.value,
+    #             created_by="dummy_user",
+    #             updated_by="dummy_user",
+    #             created_on=dt.utcnow()
+    #         )
+    #     )
+    #     service_repo.add_item(
+    #         ServiceGroupDBModel(
+    #             row_id="1000",
+    #             org_uuid="test_org_uuid",
+    #             service_uuid="test_service_uuid",
+    #             group_id="test_group_id",
+    #             endpoints=["https://dummydaemonendpoint.io"],
+    #             daemon_address=["0xq2w3e4rr5t6y7u8i9"],
+    #             free_calls=10,
+    #             free_call_signer_address="0xq2s3e4r5t6y7u8i9o0",
+    #             created_on=dt.utcnow()
+    #         )
+    #     )
+    #     event = {
+    #         "path": "/org/test_org_uuid/service",
+    #         "requestContext": {
+    #             "authorizer": {
+    #                 "claims": {
+    #                     "email": "dummy_user1@dummy.io"
+    #                 }
+    #             }
+    #         },
+    #         "httpMethod": "PUT",
+    #         "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"},
+    #         "body": json.dumps({
+    #             "org_id": "curation",
+    #             "service_id": "test_service_id",
+    #             "display_name": "test_display_name",
+    #             "description": "test description updated",
+    #             "mpe_address": "0xq2w3e4r5t6y7u8i9i98u7y6t5r4e3w2",
+    #             "assets": {
+    #                 "proto_files": {
+    #                     "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/test_org_uuid/services/test"
+    #                            "_service_uuid/assets/20200212111248_proto_files.zip"
+    #                 }
+    #             },
+    #             "contributors": [{"email_id": "prashant@singularitynet.io"}],
+    #             "groups": [{"group_name": "default_group",
+    #                         "free_calls": 12,
+    #                         "free_call_signer_address": "0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F",
+    #                         "daemon_address": ["0x1234", "0x345"],
+    #                         "pricing": [
+    #                             {
+    #                                 "price_model": "fixed_price",
+    #                                 "price_in_cogs": 1,
+    #                                 "default": True
+    #                             }
+    #                         ],
+    #                         "endpoints": [
+    #                             "https://tz-services-1.snet.sh:8005"
+    #                         ],
+    #                         "test_endpoints": [
+    #                             "https://tz-services-1.snet.sh:8005"
+    #                         ],
+    #                         "group_id": "EoFmN3nvaXpf6ew8jJbIPVghE5NXfYupFF7PkRmVyGQ="
+    #
+    #                         }]
+    #         }
+    #         )
+    #     }
+    #     response = submit_service_for_approval(event=event, context=None)
+    #     assert (response["statusCode"] == 200)
+    #     response_body = json.loads(response["body"])
+    #     assert (response_body["status"] == "success")
+    #     assert (response_body["data"]["service_uuid"] == "test_service_uuid")
+    #     assert (response_body["data"]["service_state"]["state"] == ServiceStatus.APPROVAL_PENDING.value)
 
     def tearDown(self):
-        org_repo.session.query(Organization).delete()
-        org_repo.session.query(Service).delete()
-        org_repo.session.query(ServiceGroup).delete()
-        org_repo.session.query(ServiceState).delete()
-        org_repo.session.query(ServiceReviewHistory).delete()
+        org_repo.session.query(OrganizationDBModel).delete()
+        org_repo.session.query(ServiceDBModel).delete()
+        org_repo.session.query(ServiceGroupDBModel).delete()
+        org_repo.session.query(ServiceStateDBModel).delete()
+        org_repo.session.query(ServiceReviewHistoryDBModel).delete()
         org_repo.session.commit()
