@@ -258,11 +258,12 @@ class ServicePublisherService:
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
         if not service:
             raise ServiceNotFoundException()
+        organization_members = OrganizationPublisherRepository().get_org_member(org_uuid=self._org_uuid)
         network_name = NETWORKS[NETWORK_ID]["name"].lower()
         if environment is EnvironmentType.TEST.value:
             daemon_config = {
                 "allowed_user_flag": True,
-                "allowed_user_addresses": [member.address for member in organization.members] + [
+                "allowed_user_addresses": [member.address for member in organization_members] + [
                     BLOCKCHAIN_TEST_ENV["executor_address"]],
                 "blockchain_enabled": False,
                 "passthrough_enabled": True
