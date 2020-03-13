@@ -314,4 +314,4 @@ class Signer:
                 SIGNER_KEY)
 
         return {"token_to_make_free_call": token_with_expiry_to_make_free_call.hex(),
-                "token_issue_date_block": expiry_date_block}
+                "token_expiration_block": expiry_date_block}
