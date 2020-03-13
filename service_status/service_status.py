@@ -72,19 +72,37 @@ class ServiceStatus:
         response = self.repo.execute(update_query, [status, next_check_timestamp, failed_status_count, row_id])
         return response
 
+    def _update_service_status_stats(self, org_id, service_id, old_status, status):
+        previous_state = "UP" if (old_status == 1) else "DOWN"
+        current_state = "UP" if (status == 1) else "DOWN"
+
+        try:
+            insert_query = "insert into service_status_stats " \
+                           "(org_id, service_id, previous_state, current_state, row_created, row_updated) " \
+                           "values (%s, %s, %s, %s, %s, %s)"
+            self.repo.execute(insert_query, [org_id, service_id, previous_state, current_state,
+                                             dt.utcnow(), dt.utcnow()])
+        except Exception as e:
+            logger.info(f"error in inserting service status stats, |error: {e}")
+        return
+
     def update_service_status(self):
         service_endpoint_data = self._get_service_endpoint_data()
         rows_updated = 0
         for record in service_endpoint_data:
             status = self._ping_url(record["endpoint"])
+            old_status = int.from_bytes(record["is_available"], "big")
             failed_status_count = self._calculate_failed_status_count(
-                current_status=status, old_status=int.from_bytes(record["is_available"], "big"),
+                current_status=status, old_status=old_status,
                 old_failed_status_count=record["failed_status_count"])
             next_check_timestamp = self._calculate_next_check_timestamp(failed_status_count=failed_status_count)
             query_data = self._update_service_status_parameters(status=status,
                                                                 next_check_timestamp=next_check_timestamp,
                                                                 failed_status_count=failed_status_count,
                                                                 row_id=record["row_id"])
+            if old_status != status:
+                self._update_service_status_stats(record["org_id"], record["service_id"], old_status, status)
+
             if status == 0:
                 org_id = record["org_id"]
                 service_id = record["service_id"]
@@ -159,3 +177,4 @@ class ServiceStatus:
             if email_id is not None:
                 emails.append(email_id)
         return emails
+
