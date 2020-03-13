@@ -36,4 +36,25 @@ class ServiceProtoNotFoundException(CustomException):
         super().__init__({})
 
 
+class OrganizationNotPublishedException(CustomException):
+    error_message = "ORGANIZATION IS NOT PUBLISHED"
+
+    def __init__(self):
+        super().__init__({})
+
+
+class ServiceNotFoundException(CustomException):
+    error_message = "SERVICE_NOT_FOUND"
+
+    def __init__(self):
+        super().__init__({})
+
+
+class ServiceGroupNotFoundException(CustomException):
+    error_message = "SERVICE_GROUP_NOT_FOUND"
+
+    def __init__(self):
+        super().__init__({})
+
+
 EXCEPTIONS = (BadRequestException, OrganizationNotFoundException, MethodNotImplemented)

@@ -1,6 +1,7 @@
 import os
 from enum import Enum
 
+
 COMMON_CNTRCT_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), 'node_modules', 'singularitynet-platform-contracts'))
 REG_CNTRCT_PATH = COMMON_CNTRCT_PATH + '/abi/Registry.json'
@@ -46,6 +47,12 @@ class Role(Enum):
     MEMBER = "MEMBER"
 
 
+# Should be subset of with verification.constants.VerificationStatus
+class VerificationStatus(Enum):
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+
+
 class Action(Enum):
     CREATE = "CREATE"
     SUBMIT = "SUBMIT"
@@ -74,9 +81,17 @@ class OrganizationAddressType(Enum):
     HEAD_QUARTER_ADDRESS = "headquarter_address"
 
 
+class OrganizationType(Enum):
+    ORGANIZATION = "organization"
+    INDIVIDUAL = "individual"
+
+
+ORG_TYPE_VERIFICATION_TYPE_MAPPING = {"JUMIO": OrganizationType.INDIVIDUAL.value, }
+
+
 class EnvironmentType(Enum):
     TEST = "TEST"
-    MAINNET = "MAINNET"
+    MAIN = "MAIN"
 
 
 DEFAULT_SERVICE_RANKING = 1

@@ -10,8 +10,9 @@ class JumioRepository(BaseRepository):
             verification_id=verification.verification_id, username=verification.username,
             jumio_reference_id=verification.jumio_reference_id, user_reference_id=verification.user_reference_id,
             redirect_url=verification.redirect_url, transaction_status=verification.transaction_status,
-            verification_status=verification.verification_status, transaction_date=verification.transaction_date,
-            callback_date=verification.callback_date, created_at=verification.created_at
+            verification_status=verification.verification_status, reject_reason=verification.reject_reason,
+            transaction_date=verification.transaction_date, callback_date=verification.callback_date,
+            created_at=verification.created_at
         ))
 
     def _get_verification(self, verification_id):
@@ -44,13 +45,13 @@ class JumioRepository(BaseRepository):
         self.session.close()
         return verification
 
-    def update_verification_and_transaction_status(self, verification_id, verification_status,
-                                                   transaction_status, callback_date):
+    def update_verification_and_transaction_status(self, verification):
         try:
-            verification_db = self._get_verification(verification_id)
-            verification_db.transaction_status = transaction_status
-            verification_db.verification_status = verification_status
-            verification_db.callback_date = callback_date
+            verification_db = self._get_verification(verification.verification_id)
+            verification_db.transaction_status = verification.transaction_status
+            verification_db.verification_status = verification.verification_status
+            verification_db.callback_date = verification.callback_date
+            verification_db.reject_reason = verification.reject_reason
             verification = VerificationFactory.jumio_verification_entity_from_db(verification_db)
             self.session.commit()
         except:

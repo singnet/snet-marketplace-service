@@ -19,10 +19,9 @@ class User:
     def __init__(self, obj_repo):
         self.repo = obj_repo
         self.obj_utils = Utils()
-        self.ssm_client = boto3.client('ssm')
         self.boto_client = BotoUtils(region_name=REGION_NAME)
 
-    def _set_user_data(self, user_data):
+    def _set_user_data(self, user_data, origin):
         """ Method to set user information. """
         try:
             claims = user_data['authorizer']['claims']
@@ -32,12 +31,12 @@ class User:
                 status = 1
             else:
                 raise Exception("Email verification is pending.")
-            q_dta = [claims['email'], user_data['accountId'], claims['nickname'], claims['email'], status,
+            q_dta = [claims['email'], user_data['accountId'], origin, claims['nickname'], claims['email'], status,
                      status, user_data['requestId'], user_data['requestTimeEpoch'], dt.utcnow(), dt.utcnow()]
             set_usr_dta = self.repo.execute(
-                "INSERT INTO user (username, account_id, name, email, email_verified, status, request_id, "
+                "INSERT INTO user (username, account_id, origin, name, email, email_verified, status, request_id, "
                 "request_time_epoch, row_created, row_updated) "
-                "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", q_dta)
+                "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", q_dta)
             if len(set_usr_dta) > 0:
                 return "success"
             else:
@@ -48,20 +47,19 @@ class User:
 
     def _fetch_private_key_from_ssm(self, address):
         try:
-            store = self.ssm_client.get_parameter(
-                Name=PATH_PREFIX + str(address), WithDecryption=True)
+            store = self.boto_client.get_ssm_parameter(parameter=PATH_PREFIX + str(address))
             return store['Parameter']['Value']
         except Exception as e:
             print(repr(e))
             raise Exception("Error fetching value from parameter store.")
 
-    def user_signup(self, user_data):
+    def user_signup(self, user_data, origin):
         """ Method to assign pre-seeded wallet to user.
             This is one time process.
         """
         try:
             username = user_data['authorizer']['claims']['email']
-            set_user_data = self._set_user_data(user_data)
+            set_user_data = self._set_user_data(user_data, origin)
             print(set_user_data)
             return set_user_data
         except Exception as e:

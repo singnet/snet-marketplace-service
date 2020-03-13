@@ -2,7 +2,7 @@ import web3
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.constants import ServiceStatus, TEST_REG_ADDR_PATH, TEST_REG_CNTRCT_PATH, EnvironmentType
 from registry.exceptions import ServiceProtoNotFoundException, OrganizationNotFoundException
-from common.utils import hash_to_bytesuri, json_to_file
+from common.utils import hash_to_bytesuri, json_to_file, publish_zip_file_in_ipfs
 from common import utils
 from registry.config import ASSET_DIR, METADATA_FILE_PATH, ORG_ID_FOR_TESTING_AI_SERVICE, IPFS_URL, NETWORK_ID, \
     NETWORKS, BLOCKCHAIN_TEST_ENV
@@ -15,6 +15,18 @@ ipfs_client = IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
 blockchain_util = BlockChainUtil(provider=NETWORKS[NETWORK_ID]["http_provider"], provider_type="HTTP_PROVIDER")
 logger = get_logger(__name__)
 METADATA_URI_PREFIX = "ipfs://"
+SERVICE_ASSETS_SUPPORTED = {
+    "proto_files": {
+        "required": True
+    },
+    "hero_image": {
+        "required": False
+    },
+    "demo_files": {
+        "required": False
+
+    }
+}
 
 
 class ServicePublisherDomainService:
@@ -22,6 +34,24 @@ class ServicePublisherDomainService:
         self._username = username
         self._org_uuid = org_uuid
         self._service_uuid = service_uuid
+
+    def publish_service_assets(self, service_assets):
+        assets_url_ipfs_hash_dict = {}
+        for asset in service_assets.keys():
+            if asset in SERVICE_ASSETS_SUPPORTED.keys():
+                asset_url = service_assets.get(asset, {}).get("url", None)
+                if bool(asset_url):
+                    logger.info(f"asset url for {asset} is missing ")
+                    if SERVICE_ASSETS_SUPPORTED[asset]["required"]:
+                        raise Exception(f"ASSET {asset} NOT FOUND")
+                asset_ipfs_hash = publish_zip_file_in_ipfs(file_url=asset_url,
+                                                           file_dir=f"{ASSET_DIR}/{self._org_uuid}/{self._service_uuid}",
+                                                           ipfs_client=IPFSUtil(IPFS_URL['url'], IPFS_URL['port']))
+                assets_url_ipfs_hash_dict[asset] = {
+                    "ipfs_hash": asset_ipfs_hash,
+                    "url": asset_url
+                }
+        return assets_url_ipfs_hash_dict
 
     @staticmethod
     def publish_service_proto_to_ipfs(service):

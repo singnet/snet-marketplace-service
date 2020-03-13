@@ -1,7 +1,7 @@
 NETWORKS = {
     3: {
         "name": "test",
-        "http_provider": "https://ropsten.infura.io/v3/09027f4a13e841d48dbfefc67e7685d5",
+        "http_provider": "https://ropsten.infura.io",
         "ws_provider": "wss://ropsten.infura.io/ws",
         "db": {
             "DB_DRIVER": "mysql+pymysql",
