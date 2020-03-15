@@ -58,7 +58,7 @@ class TestOrganizationService(unittest.TestCase):
         nock_read_bytesio_from_ipfs.return_value = ""
         mock_s3_push.return_value = "http://test-s3-push"
         ipfs_mock_value = {
-            "name": "test_org",
+            "org_name": "test_org",
             "org_id": "org_id",
             "metadata_ipfs_hash": "Q3E12",
             "org_type": "organization",
@@ -91,7 +91,7 @@ class TestOrganizationService(unittest.TestCase):
         }
         self.org_repo.session.commit()
         mock_ipfs_read.return_value = ipfs_mock_value
-        mock_get_org_details_from_blockchain.return_value = "org_id", ipfs_mock_value, []
+        mock_get_org_details_from_blockchain.return_value = "org_id", ipfs_mock_value,"Q3E12", "79345c7861342442792f6d5a5c7831375c7831645c7866325c7831385c78623661615c7830325c7831635c783838505c7838355c783138775c7831395c7863395c7839315c786563585c786437455c78393821",[]
         org_event_consumer = OrganizationCreatedAndModifiedEventConsumer("wss://ropsten.infura.io/ws",
                                                                          "http://ipfs.singularitynet.io",
                                                                          80, self.org_repo)
@@ -132,7 +132,7 @@ class TestOrganizationService(unittest.TestCase):
         nock_read_bytesio_from_ipfs.return_value = ""
         mock_s3_push.return_value = "http://test-s3-push"
         ipfs_mock_value = {
-            "name": "test_org",
+            "org_name": "test_org",
             "org_id": "org_id",
             "metadata_ipfs_hash": "Q3E12",
             "org_type": "organization",
@@ -165,7 +165,9 @@ class TestOrganizationService(unittest.TestCase):
         }
         self.org_repo.session.commit()
         mock_ipfs_read.return_value = ipfs_mock_value
-        mock_get_org_details_from_blockchain.return_value = "org_id", ipfs_mock_value, []
+        mock_get_org_details_from_blockchain.return_value = "org_id", ipfs_mock_value, "Q3E12", "79345c7861342442792f6d5a5c7831375c7831645c7866325c7831385c78623661615c7830325c7831635c783838505c7838355c783138775c7831395c7863395c7839315c786563585c786437455c78393821", []
+
+
         org_event_consumer = OrganizationCreatedAndModifiedEventConsumer("wss://ropsten.infura.io/ws",
                                                                          "http://ipfs.singularitynet.io",
                                                                          80, self.org_repo)
