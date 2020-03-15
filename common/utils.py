@@ -1,21 +1,22 @@
 import datetime
 import decimal
-import json
-import sys
-import traceback
 import glob
-import tarfile
-import os
 import io
-from zipfile import ZipFile
+import json
+import os
+import sys
+import tarfile
+import traceback
 from urllib.parse import urlparse
+from zipfile import ZipFile
+
 import requests
 import web3
 from web3 import Web3
 
-from common.logger import get_logger
 from common.constant import COGS_TO_AGI, StatusCode
 from common.exceptions import OrganizationNotFound
+from common.logger import get_logger
 
 IGNORED_LIST = ['row_id', 'row_created', 'row_updated']
 logger = get_logger(__name__)
@@ -231,6 +232,11 @@ def hash_to_bytesuri(s):
     # TODO: we should pad string with zeros till closest 32 bytes word because of a bug in processReceipt (in snet_cli.contract.process_receipt)
     s = "ipfs://" + s
     return s.encode("ascii").ljust(32 * (len(s) // 32 + 1), b"\0")
+
+
+def ipfsuri_to_bytesuri(uri):
+    # we should pad string with zeros till closest 32 bytes word because of a bug in processReceipt (in snet_cli.contract.process_receipt)
+    return uri.encode("ascii").ljust(32 * (len(uri) // 32 + 1), b"\0")
 
 
 def publish_zip_file_in_ipfs(file_url, file_dir, ipfs_client):
