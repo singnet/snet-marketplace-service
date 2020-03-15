@@ -1,6 +1,7 @@
 import os
 from enum import Enum
 
+
 COMMON_CNTRCT_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), 'node_modules', 'singularitynet-platform-contracts'))
 REG_CNTRCT_PATH = COMMON_CNTRCT_PATH + '/abi/Registry.json'
@@ -90,7 +91,7 @@ ORG_TYPE_VERIFICATION_TYPE_MAPPING = {"JUMIO": OrganizationType.INDIVIDUAL.value
 
 class EnvironmentType(Enum):
     TEST = "TEST"
-    MAINNET = "MAINNET"
+    MAIN = "MAIN"
 
 
 DEFAULT_SERVICE_RANKING = 1
