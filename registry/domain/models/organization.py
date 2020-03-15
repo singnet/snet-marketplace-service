@@ -185,9 +185,6 @@ class Organization:
         ipfs_hash = ipfs_utils.write_file_in_ipfs(filename, wrap_with_directory=False)
         self.__metadata_ipfs_uri = f"ipfs://{ipfs_hash}"
 
-    def publish_to_test_network(self):
-        pass
-
     def setup_id(self):
         org_uuid = uuid4().hex
         self.__uuid = org_uuid
