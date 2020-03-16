@@ -4,8 +4,8 @@ from registry.constants import ServiceAvailabilityStatus, ServiceStatus, Organiz
 from registry.config import IPFS_URL, METADATA_FILE_PATH, ASSET_DIR, SLACK_HOOK, BLOCKCHAIN_TEST_ENV, NETWORKS, \
     NETWORK_ID
 from uuid import uuid4
-from registry.exceptions import InvalidServiceState, ServiceProtoNotFoundException, OrganizationNotFoundException, \
-    OrganizationNotPublishedException, ServiceNotFoundException, ServiceGroupNotFoundException
+from registry.exceptions import InvalidServiceStateException, ServiceProtoNotFoundException, OrganizationNotFoundException, \
+    OrganizationNotPublishedException, ServiceNotFoundException, ServiceGroupNotFoundException, InvalidOrganizationStateException
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.services.service_publisher_domain_service import ServicePublisherDomainService
 from common.ipfs_util import IPFSUtil
@@ -130,7 +130,7 @@ class ServicePublisherService:
             return {"service_metadata": service.to_metadata(),
                     "metadata_ipfs_hash": "ipfs://" + service.metadata_ipfs_hash}
         logger.info(f"Service status needs to be {ServiceStatus.APPROVED.value} to be eligible for publishing.")
-        raise InvalidServiceState()
+        raise InvalidServiceStateException()
 
     def approve_service(self):
         pass
@@ -218,6 +218,8 @@ class ServicePublisherService:
         organization = OrganizationPublisherRepository().get_org_for_org_uuid(self._org_uuid)
         if not organization:
             raise OrganizationNotFoundException()
+        if not organization.org_state:
+            raise InvalidOrganizationStateException()
         if not organization.org_state.state == OrganizationStatus.PUBLISHED.value:
             raise OrganizationNotPublishedException()
 
@@ -275,7 +277,7 @@ class ServicePublisherService:
                 "organization_id": organization.id,
                 "service_id": service.service_id,
                 "metering_end_point": f"https://{network_name}-marketplace.singularitynet.io",
-                "authentication_address": None,
+                "authentication_address": [member.address for member in organization_members],
                 "blockchain_enabled": True
             }
         return daemon_config
