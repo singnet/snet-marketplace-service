@@ -1091,8 +1091,8 @@ class TestService(TestCase):
         assert (response_body["data"]["passthrough_enabled"] is True)
 
     def tearDown(self):
-        org_repo.session.query(OrganizationDBModel).delete()
         org_repo.session.query(OrganizationMemberDBModel).delete()
+        org_repo.session.query(OrganizationDBModel).delete()
         org_repo.session.query(ServiceDBModel).delete()
         org_repo.session.query(ServiceGroupDBModel).delete()
         org_repo.session.query(ServiceStateDBModel).delete()
