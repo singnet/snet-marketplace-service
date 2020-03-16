@@ -4,7 +4,8 @@ from uuid import uuid4
 from common import boto_utils
 from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
-from verification.config import ALLOWED_VERIFICATION_REQUESTS, DAPP_POST_JUMIO_URL, REGION_NAME, REGISTRY_ARN
+from verification.config import ALLOWED_VERIFICATION_REQUESTS, DAPP_POST_JUMIO_URL, REGION_NAME, REGISTRY_ARN, \
+    VERIFIED_MAIL_DOMAIN
 from verification.constants import VerificationType, VerificationStatus, JumioTransactionStatus, \
     REJECTED_JUMIO_VERIFICATION, FAILED_JUMIO_VERIFICATION, VERIFIED_JUMIO_VERIFICATION
 from verification.domain.models.verfication import Verification
@@ -36,6 +37,8 @@ class VerificationManager:
                                         VerificationStatus.PENDING.value, username, current_time, current_time)
 
             self.terminate_if_not_allowed_to_verify(entity_id, verification_type)
+            if entity_id.split("@")[1] in VERIFIED_MAIL_DOMAIN:
+                return self.initiate_snet_verification(verification)
             return self.initiate_jumio_verification(username, verification)
         else:
             raise MethodNotImplemented()
