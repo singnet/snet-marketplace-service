@@ -60,7 +60,8 @@ class TestJumioVerification(TestCase):
         self.assertEqual(jumio_verfication.verification_status, JumioVerificationStatus.PENDING.value)
         self.assertEqual(jumio_verfication.user_reference_id, sha1(username.encode("utf-8")).hexdigest())
 
-    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123")))
+    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123"),
+           invoke_lambda=Mock(return_value={"statusCode": 201})))
     def test_jumio_initiate_two(self, mock_boto_utils):
         """ user is from verified domain list """
         username = "karl@allowed.io"

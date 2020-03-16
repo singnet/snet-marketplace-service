@@ -5,14 +5,17 @@ from common.exception_handler import exception_handler
 from common.exceptions import BadRequestException
 from common.logger import get_logger
 from common.utils import generate_lambda_response
+from registry.application.access_control.authorization import secured
 from registry.application.services.service_publisher_service import ServicePublisherService
 from registry.config import NETWORK_ID, SLACK_HOOK
-from registry.constants import EnvironmentType
+from registry.constants import EnvironmentType, Action
 
 logger = get_logger(__name__)
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
+         username_path=("requestContext", "authorizer", "claims", "email"))
 def verify_service_id(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
@@ -29,6 +32,8 @@ def verify_service_id(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
+         username_path=("requestContext", "authorizer", "claims", "email"))
 def save_transaction_hash_for_published_service(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
@@ -46,6 +51,8 @@ def save_transaction_hash_for_published_service(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
+         username_path=("requestContext", "authorizer", "claims", "email"))
 def submit_service_for_approval(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
@@ -62,6 +69,8 @@ def submit_service_for_approval(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
+         username_path=("requestContext", "authorizer", "claims", "email"))
 def save_service(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
@@ -78,6 +87,8 @@ def save_service(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
+         username_path=("requestContext", "authorizer", "claims", "email"))
 def create_service(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
@@ -93,6 +104,8 @@ def create_service(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
+         username_path=("requestContext", "authorizer", "claims", "email"))
 def get_services_for_organization(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
@@ -108,6 +121,8 @@ def get_services_for_organization(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
+         username_path=("requestContext", "authorizer", "claims", "email"))
 def get_service_for_service_uuid(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
@@ -123,6 +138,8 @@ def get_service_for_service_uuid(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
+         username_path=("requestContext", "authorizer", "claims", "email"))
 def publish_service_metadata_to_ipfs(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
@@ -174,6 +191,8 @@ def list_of_orgs_with_services_submitted_for_approval(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
+         username_path=("requestContext", "authorizer", "claims", "email"))
 def get_daemon_config_for_test(event, context):
     logger.info(f"event for get_daemon_config_for_test:: {event}")
     username = event["requestContext"]["authorizer"]["claims"]["email"]
@@ -191,6 +210,8 @@ def get_daemon_config_for_test(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
+         username_path=("requestContext", "authorizer", "claims", "email"))
 def get_daemon_config_for_current_network(event, context):
     logger.info(f"event for get_daemon_config_for_current_network:: {event}")
     username = event["requestContext"]["authorizer"]["claims"]["email"]

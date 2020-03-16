@@ -15,14 +15,21 @@ class OrganizationNotFoundException(CustomException):
         super().__init__({})
 
 
-class InvalidOrigin(CustomException):
+class InvalidOriginException(CustomException):
     error_message = "SERVICE_PROTO_NOT_FOUND"
 
     def __init__(self):
         super().__init__({})
 
 
-class InvalidServiceState(CustomException):
+class InvalidOrganizationStateException(CustomException):
+    error_message = "INVALID_ORGANIZATION_STATE"
+
+    def __init__(self):
+        super().__init__({})
+
+
+class InvalidServiceStateException(CustomException):
     error_message = "INVALID_SERVICE_STATE"
 
     def __init__(self):

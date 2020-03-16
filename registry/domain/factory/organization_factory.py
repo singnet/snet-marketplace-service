@@ -4,7 +4,7 @@ from registry.domain.models.group import Group
 from registry.domain.models.organization import Organization, OrganizationState
 from registry.domain.models.organization_address import OrganizationAddress
 from registry.domain.models.organization_member import OrganizationMember
-from registry.exceptions import InvalidOrigin
+from registry.exceptions import InvalidOriginException
 
 
 class OrganizationFactory:
@@ -22,7 +22,7 @@ class OrganizationFactory:
         duns_no = payload["duns_no"]
         origin = payload["origin"]
         if origin not in ALLOWED_ORIGIN:
-            raise InvalidOrigin()
+            raise InvalidOriginException()
         contacts = payload["contacts"]
         assets = payload["assets"]
         metadata_ipfs_uri = payload["metadata_ipfs_uri"]
