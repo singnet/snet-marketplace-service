@@ -60,6 +60,29 @@ class TestJumioVerification(TestCase):
         self.assertEqual(jumio_verfication.verification_status, JumioVerificationStatus.PENDING.value)
         self.assertEqual(jumio_verfication.user_reference_id, sha1(username.encode("utf-8")).hexdigest())
 
+    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123"),
+           invoke_lambda=Mock(return_value={"statusCode": 201})))
+    def test_jumio_initiate_two(self, mock_boto_utils):
+        """ user is from verified domain list """
+        username = "karl@allowed.io"
+        event = {
+            "requestContext": {"authorizer": {"claims": {"email": username}}},
+            "body": json.dumps({
+                "type": "JUMIO",
+                "entity_id": username
+            })
+        }
+        response = initiate(event, None)
+        verification = verification_repository.session.query(VerificationModel).first()
+        if verification is None:
+            assert False
+        self.assertEqual(verification.entity_id, username)
+        self.assertEqual(verification.status, VerificationStatus.APPROVED.value)
+        self.assertEqual(verification.requestee, username)
+        self.assertEqual(verification.verification_type, "JUMIO")
+        assert verification.id is not None or verification.id != ""
+
+
     @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123")))
     def test_jumio_submit_with_success(self, mock_boto_utils):
         test_verification_id = "9f2c90119cb7424b8d69319ce211ddfc"
