@@ -4,7 +4,8 @@ from uuid import uuid4
 from common import boto_utils
 from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
-from verification.config import ALLOWED_VERIFICATION_REQUESTS, DAPP_POST_JUMIO_URL, REGION_NAME, REGISTRY_ARN
+from verification.config import ALLOWED_VERIFICATION_REQUESTS, DAPP_POST_JUMIO_URL, REGION_NAME, REGISTRY_ARN, \
+    VERIFIED_MAIL_DOMAIN
 from verification.constants import VerificationType, VerificationStatus, JumioTransactionStatus, \
     REJECTED_JUMIO_VERIFICATION, FAILED_JUMIO_VERIFICATION, VERIFIED_JUMIO_VERIFICATION
 from verification.domain.models.verfication import Verification
@@ -34,11 +35,25 @@ class VerificationManager:
             logger.info(f"initiate verification for type: {verification_type} entity_id: {entity_id}")
             verification = Verification(verification_id, verification_type, entity_id,
                                         VerificationStatus.PENDING.value, username, current_time, current_time)
-
+            if self.is_allowed_bypass_verification(entity_id):
+                return self.initiate_snet_verification(verification)
             self.terminate_if_not_allowed_to_verify(entity_id, verification_type)
             return self.initiate_jumio_verification(username, verification)
         else:
             raise MethodNotImplemented()
+
+    def is_allowed_bypass_verification(self, entity_id):
+        if entity_id.split("@")[1] in VERIFIED_MAIL_DOMAIN:
+            return True
+        return False
+
+    def initiate_snet_verification(self, verification):
+        verification.status = VerificationStatus.APPROVED.value
+        verification_repository.add_verification(verification)
+        self._ack_verification(verification)
+        return {
+            "redirect_url": ""
+        }
 
     def initiate_jumio_verification(self, username, verification):
         jumio_verification = JumioService(jumio_repository).initiate(username, verification.id)
