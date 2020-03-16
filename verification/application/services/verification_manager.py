@@ -36,7 +36,7 @@ class VerificationManager:
             verification = Verification(verification_id, verification_type, entity_id,
                                         VerificationStatus.PENDING.value, username, current_time, current_time)
             if self.is_allowed_bypass_verification(entity_id):
-                self.initiate_snet_verification(verification)
+                return self.initiate_snet_verification(verification)
             self.terminate_if_not_allowed_to_verify(entity_id, verification_type)
             return self.initiate_jumio_verification(username, verification)
         else:
