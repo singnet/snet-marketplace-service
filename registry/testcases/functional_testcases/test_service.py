@@ -133,6 +133,25 @@ class TestService(TestCase):
 
     def test_create_service(self):
 
+        org_repo.add_item(
+            OrganizationDBModel(
+                name="test_org",
+                org_id="test_org_id",
+                uuid="test_org_uuid",
+                org_type="organization",
+                description="that is the dummy org for testcases",
+                short_description="that is the short description",
+                url="https://dummy.url",
+                contacts=[],
+                assets={},
+                duns_no=12345678,
+                origin="PUBLISHER_DAPP",
+                groups=[],
+                addresses=[],
+                metadata_ipfs_uri="#dummyhashdummyhash"
+            )
+        )
+
         new_org_members = [
             {
                 "username": "dummy_user1@dummy.io",
@@ -155,24 +174,7 @@ class TestService(TestCase):
                 ) for member in new_org_members
             ]
         )
-        org_repo.add_item(
-            OrganizationDBModel(
-                name="test_org",
-                org_id="test_org_id",
-                uuid="test_org_uuid",
-                org_type="organization",
-                description="that is the dummy org for testcases",
-                short_description="that is the short description",
-                url="https://dummy.url",
-                contacts=[],
-                assets={},
-                duns_no=12345678,
-                origin="PUBLISHER_DAPP",
-                groups=[],
-                addresses=[],
-                metadata_ipfs_uri="#dummyhashdummyhash"
-            )
-        )
+
         event = {
             "requestContext": {
                 "authorizer": {
@@ -766,6 +768,38 @@ class TestService(TestCase):
 
     def test_list_of_orgs_with_services_submitted_for_approval(self):
 
+
+        service_repo.add_item(
+            ServiceReviewHistoryDBModel(
+                org_uuid="test_org_uuid",
+                service_uuid="test_service_uuid",
+                service_metadata={},
+                state=ServiceStatus.APPROVAL_PENDING.value,
+                reviewed_by=None,
+                reviewed_on=None,
+                created_on=dt.utcnow(),
+                updated_on=dt.utcnow()
+
+            )
+        )
+        org_repo.add_item(
+            OrganizationDBModel(
+                name="test_org",
+                org_id="test_org_id",
+                uuid="test_org_uuid",
+                org_type="organization",
+                description="that is the dummy org for testcases",
+                short_description="that is the short description",
+                url="https://dummy.url",
+                contacts=[],
+                assets={},
+                duns_no=12345678,
+                origin="PUBLISHER_DAPP",
+                groups=[],
+                addresses=[],
+                metadata_ipfs_uri="#dummyhashdummyhash"
+            )
+        )
         new_org_members = [
             {
                 "username": "dummy_user1@dummy.io",
@@ -787,19 +821,6 @@ class TestService(TestCase):
                     updated_on=dt.utcnow()
                 ) for member in new_org_members
             ]
-        )
-        service_repo.add_item(
-            ServiceReviewHistoryDBModel(
-                org_uuid="test_org_uuid",
-                service_uuid="test_service_uuid",
-                service_metadata={},
-                state=ServiceStatus.APPROVAL_PENDING.value,
-                reviewed_by=None,
-                reviewed_on=None,
-                created_on=dt.utcnow(),
-                updated_on=dt.utcnow()
-
-            )
         )
         event = {
             "path": "/admin/orgs/services",
