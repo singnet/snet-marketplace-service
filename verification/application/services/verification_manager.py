@@ -40,6 +40,14 @@ class VerificationManager:
         else:
             raise MethodNotImplemented()
 
+    def initiate_snet_verification(self, verification):
+        verification.status = VerificationStatus.APPROVED.value
+        verification_repository.add_verification(verification)
+        self._ack_verification(verification)
+        return {
+            "redirect_url": ""
+        }
+
     def initiate_jumio_verification(self, username, verification):
         jumio_verification = JumioService(jumio_repository).initiate(username, verification.id)
         verification_repository.add_verification(verification)
