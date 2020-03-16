@@ -782,7 +782,7 @@ class TestService(TestCase):
                     address=member["address"],
                     status=OrganizationMemberStatus.ACCEPTED.value,
                     transaction_hash="0x123",
-                    invite_code=uuid4(),
+                    invite_code=str(uuid4()),
                     invited_on=dt.utcnow(),
                     updated_on=dt.utcnow()
                 ) for member in new_org_members
