@@ -1,9 +1,9 @@
 import json
-
 from common.constant import StatusCode
-from dapp_user.exceptions import BadRequestException
+from common.exception_handler import exception_handler
 from common.logger import get_logger
 from common.utils import validate_dict_list, handle_exception_with_slack_notification, generate_lambda_response
+from dapp_user.exceptions import BadRequestException
 from dapp_user.config import SLACK_HOOK, NETWORK_ID
 from dapp_user.domain.services.user_service import UserService
 
@@ -46,3 +46,8 @@ def delete_user(event, context):
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def register_user_post_aws_cognito_signup(event, context):
+    logger.info(f"Post aws cognito sign up event {event}")
