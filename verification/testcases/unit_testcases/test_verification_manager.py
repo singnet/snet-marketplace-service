@@ -16,7 +16,8 @@ class TestVerificationManager(TestCase):
            return_value=Mock(add_verification=Mock(), get_all_verification=Mock(return_value=[])))
     @patch("verification.application.services.verification_manager.jumio_repository",
            return_value=Mock(add_jumio_verification=Mock()))
-    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123")))
+    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123"),
+           invoke_lambda=Mock(return_value={"statusCode": 201})))
     @patch("requests.post", return_value=Mock(
         json=Mock(return_value={
             "timestamp": "2018-07-03T08:23:12.494Z", "transactionReference": "123-13-13-134-1234",
@@ -25,7 +26,7 @@ class TestVerificationManager(TestCase):
         status_code=200
     ))
     def test_initiate_verification_with_allowed_domain_users(self, mock_requests_post, mock_boto_utils, mock_jumio_repo,
-                                              mock_verification_repo):
+                                                             mock_verification_repo):
         username = "karl@allowed.io"
         verification_details = {
             "type": "JUMIO",
@@ -58,7 +59,6 @@ class TestVerificationManager(TestCase):
         self.assertEqual(response["redirect_url"],
                          "https://yourcompany.netverify.com/web/v4/app?locale=en-GB&authorizationToken=xxx")
 
-
     @patch("verification.application.services.verification_manager.verification_repository")
     @patch("verification.application.services.verification_manager.jumio_repository")
     @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123")))
@@ -84,7 +84,8 @@ class TestVerificationManager(TestCase):
 
     @patch("verification.application.services.verification_manager.verification_repository")
     @patch("verification.application.services.verification_manager.jumio_repository")
-    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123")))
+    @patch("common.boto_utils.BotoUtils", return_value=Mock(
+        get_ssm_parameter=Mock(return_value="123")))
     def test_callback(self, mock_boto_utils, mock_jumio_repo, mock_verification_repo):
         verification_id = uuid4().hex
         username = "karl@snet.io"
@@ -98,7 +99,8 @@ class TestVerificationManager(TestCase):
         mock_verification_repo.update_status = Mock()
         mock_jumio_verification = JumioVerification(
             verification_id=verification_id, username=username, user_reference_id=user_reference_id,
-            created_at=created_at, redirect_url="url", verification_status=JumioVerificationStatus.APPROVED_VERIFIED.value,
+            created_at=created_at, redirect_url="url",
+            verification_status=JumioVerificationStatus.APPROVED_VERIFIED.value,
             transaction_status=JumioTransactionStatus.DONE.value)
         mock_jumio_repo.update_verification_and_transaction_status = Mock(return_value=mock_jumio_verification)
 
