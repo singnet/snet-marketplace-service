@@ -4,13 +4,11 @@ from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.exceptions import BadRequestException
 from common.logger import get_logger
-from common.utils import generate_lambda_response, validate_dict, \
-    validate_dict_list
+from common.utils import generate_lambda_response
 from registry.application.access_control.authorization import secured
 from registry.application.services.service_publisher_service import ServicePublisherService
 from registry.config import NETWORK_ID, SLACK_HOOK
 from registry.constants import EnvironmentType, Action
-from registry.exceptions import EXCEPTIONS
 
 logger = get_logger(__name__)
 
