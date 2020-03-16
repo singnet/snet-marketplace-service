@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from uuid import uuid4
 
@@ -113,8 +114,12 @@ class VerificationManager:
                     "verification_type": verification.type
                 }
             }
-            self.boto_utils.invoke_lambda(REGISTRY_ARN["ORG_VERIFICATION"],
-                                          invocation_type="RequestResponse", payload=payload)
+            lambda_response = self.boto_utils.invoke_lambda(REGISTRY_ARN["ORG_VERIFICATION"],
+                                                            invocation_type="RequestResponse",
+                                                            payload=json.dumps(payload))
+
+            if lambda_response["statusCode"] != 201:
+                raise Exception(f"Failed to acknowledge callback to registry")
         else:
             raise MethodNotImplemented()
 
