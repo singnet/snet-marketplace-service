@@ -40,17 +40,21 @@ class OrganizationEventConsumer(object):
 
         return registry_contract
 
+    def _get_tarnsaction_hash(self, event):
+        return eval(event['data']['transactionHash']).hex()
+
     def _get_org_details_from_blockchain(self, event):
         logger.info(f"processing org event {event}")
 
         registry_contract = self._get_registry_contract()
         org_id = self._get_org_id_from_event(event)
+        transaction_hash = self._get_tarnsaction_hash(event)
 
         blockchain_org_data = registry_contract.functions.getOrganizationById(org_id.encode('utf-8')).call()
         org_metadata_uri = Web3.toText(blockchain_org_data[2]).rstrip("\x00").lstrip("ipfs://")
         ipfs_org_metadata = self._ipfs_util.read_file_from_ipfs(org_metadata_uri)
         members = blockchain_org_data[4]
-        return org_id, ipfs_org_metadata, members
+        return org_id, ipfs_org_metadata, org_metadata_uri, transaction_hash, members
 
     def _process_members(self, org_uuid, existing_members, recieved_members):
 
@@ -60,13 +64,14 @@ class OrganizationEventConsumer(object):
         recieved_members_map = {}
         existing_members_map = {}
         for recieved_member in recieved_members:
-            recieved_member.set_status (OrganizationMemberStatus.PUBLISHED.value)
+            recieved_member.set_status(OrganizationMemberStatus.PUBLISHED.value)
             recieved_members_map[recieved_member.address] = recieved_member
 
         for existing_member in existing_members:
             existing_member.set_status(OrganizationMemberStatus.PUBLISHED.value)
             if existing_member.role == Role.OWNER.value:
-                self._organization_repository.update_org_member_using_address(org_uuid, existing_member, existing_member.address)
+                self._organization_repository.update_org_member_using_address(org_uuid, existing_member,
+                                                                              existing_member.address)
             else:
                 existing_members_map[existing_member.address] = existing_member
 
@@ -95,8 +100,10 @@ class OrganizationEventConsumer(object):
 class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
 
     def on_event(self, event):
-        org_id, ipfs_org_metadata, recieved_members = self._get_org_details_from_blockchain(event)
-        self._process_organization_create_event(org_id, ipfs_org_metadata, recieved_members)
+        org_id, ipfs_org_metadata, org_metadata_uri, transaction_hash, recieved_members = self._get_org_details_from_blockchain(
+            event)
+        self._process_organization_create_event(org_id, ipfs_org_metadata, org_metadata_uri, transaction_hash,
+                                                recieved_members)
 
     def _get_existing_organization_records(self, org_id):
         try:
@@ -119,10 +126,16 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                                                          OrganizationStatus.PUBLISHED_UNAPPROVED.value
                                                          )
 
-    def _process_organization_create_event(self, org_id, ipfs_org_metadata, recieved_members_list):
+    def _process_organization_create_event(self, org_id, ipfs_org_metadata, org_metadata_uri,transaction_hash, recieved_members_list):
         try:
 
             existing_publish_in_progress_organization = self._get_existing_organization_records(org_id)
+            org_uuid = ""
+            origin = ""
+            duns_no = ""
+            addresses = []
+            members = []
+            assets = {}
 
             if existing_publish_in_progress_organization:
                 org_uuid = existing_publish_in_progress_organization.uuid
@@ -130,16 +143,12 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                 duns_no = existing_publish_in_progress_organization.duns_no
                 addresses = existing_publish_in_progress_organization.addresses
                 members = existing_publish_in_progress_organization.members
+                assets = existing_publish_in_progress_organization.assets
 
-            else:
-                org_uuid = ""
-                origin = ""
-                duns_no = ""
-                addresses = []
-                members = []
 
             received_organization_event = OrganizationFactory.parse_organization_metadata(org_uuid, ipfs_org_metadata,
                                                                                           origin, duns_no, addresses,
+                                                                                          org_metadata_uri, assets,transaction_hash,
                                                                                           members)
 
             if not existing_publish_in_progress_organization:
@@ -170,4 +179,3 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
             traceback.print_exc()
             logger.exception(e)
             raise Exception(f"Error while processing org created event for org_id {org_id}")
-
