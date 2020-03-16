@@ -776,14 +776,6 @@ class TestService(TestCase):
 
         new_org_members = [
             {
-                "username": "karl@dummy.io",
-                "address": "0x123"
-            },
-            {
-                "username": "trax@dummy.io",
-                "address": "0x234"
-            },
-            {
                 "username": "dummy_user1@dummy.io",
                 "address": "0x345"
             }
@@ -1011,14 +1003,7 @@ class TestService(TestCase):
             )
         )
         new_org_members = [
-            {
-                "username": "karl@dummy.io",
-                "address": "0x123"
-            },
-            {
-                "username": "trax@dummy.io",
-                "address": "0x234"
-            },
+
             {
                 "username": "dummy_user1@dummy.io",
                 "address": "0x345"
@@ -1086,7 +1071,7 @@ class TestService(TestCase):
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
         assert (response_body["data"]["allowed_user_flag"] is True)
-        assert (len(response_body["data"]["allowed_user_addresses"]) == 4)
+        assert (len(response_body["data"]["allowed_user_addresses"]) == 2)
         assert (response_body["data"]["blockchain_enabled"] is False)
         assert (response_body["data"]["passthrough_enabled"] is True)
 
