@@ -37,7 +37,6 @@ class OrganizationService:
         raw_transaction = self.blockchain_util.sign_transaction_with_private_key(transaction_object=transaction_object,
                                                                                  private_key=executor_key)
         transaction_hash = self.blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
-        print(transaction_hash)
         logger.info(
             f"transaction hash {transaction_hash} generated while registering organization {org_id} in {environment} blockchain "
             f"environment.")
