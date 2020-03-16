@@ -31,13 +31,3 @@ class JumioVerificationModel(Base):
     transaction_date = Column("transaction_date", TIMESTAMP(timezone=False))
     callback_date = Column("callback_date", TIMESTAMP(timezone=False))
     created_at = Column("created_at", TIMESTAMP(timezone=False))
-
-
-class OrganizationVerification(Base):
-    __tablename__ = "org_verification"
-    verification_id = Column("verification_id", VARCHAR(255))
-    org_uuid = Column("org_uuid", VARCHAR(255))
-    verification_status = Column("verification_status", VARCHAR(255))
-    comments = Column("comments", JSON)
-    created_at = Column("created_at", TIMESTAMP(timezone=False))
-    updated_at = Column("updated_at", TIMESTAMP(timezone=False))

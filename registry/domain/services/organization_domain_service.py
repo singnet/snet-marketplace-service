@@ -40,10 +40,11 @@ class OrganizationService:
         logger.info(
             f"transaction hash {transaction_hash} generated while registering organization {org_id} in {environment} blockchain "
             f"environment.")
+        return transaction_hash
 
     def publish_organization_to_test_network(self, organization):
         metadata_uri = organization.metadata_ipfs_uri
         members = []
         environment = EnvironmentType.TEST.value
         org_id = organization.id
-        self.register_organization_in_blockchain(org_id, metadata_uri, members, environment)
+        return self.register_organization_in_blockchain(org_id, metadata_uri, members, environment)

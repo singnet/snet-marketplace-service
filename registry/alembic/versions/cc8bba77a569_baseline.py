@@ -1,8 +1,8 @@
 """baseline
 
-Revision ID: 5866b76a9c1e
+Revision ID: cc8bba77a569
 Revises: 
-Create Date: 2020-03-10 15:54:27.088657
+Create Date: 2020-03-16 21:12:22.373871
 
 """
 import sqlalchemy as sa
@@ -10,7 +10,7 @@ from alembic import op
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = '5866b76a9c1e'
+revision = 'cc8bba77a569'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -109,6 +109,7 @@ def upgrade():
     sa.Column('org_uuid', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('state', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('transaction_hash', mysql.VARCHAR(length=128), nullable=True),
+    sa.Column('test_transaction_hash', mysql.VARCHAR(length=128), nullable=True),
     sa.Column('user_address', mysql.VARCHAR(length=128), nullable=True),
     sa.Column('created_by', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('created_on', mysql.TIMESTAMP(), nullable=True),

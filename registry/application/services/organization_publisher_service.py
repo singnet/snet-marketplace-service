@@ -70,8 +70,8 @@ class OrganizationPublisherService:
         logger.info(f"publish organization to ipfs org_uuid: {self.org_uuid}")
         organization = org_repo.get_org_for_org_uuid(self.org_uuid)
         organization.publish_to_ipfs()
-        OrganizationService().publish_organization_to_test_network(organization)
-        org_repo.store_ipfs_hash(organization, self.username)
+        test_transaction_hash = OrganizationService().publish_organization_to_test_network(organization)
+        org_repo.store_ipfs_hash_and_test_transaction_hash(organization, self.username, test_transaction_hash)
         return organization.to_response()
 
     def save_transaction_hash_for_publish_org(self, payload):

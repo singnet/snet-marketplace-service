@@ -51,6 +51,7 @@ class OrganizationState(Base):
                       ForeignKey("organization.uuid", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     state = Column("state", VARCHAR(128), nullable=False)
     transaction_hash = Column("transaction_hash", VARCHAR(128))
+    test_transaction_hash = Column("test_transaction_hash", VARCHAR(128))
     wallet_address = Column("user_address", VARCHAR(128))
     created_by = Column("created_by", VARCHAR(128), nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False))
