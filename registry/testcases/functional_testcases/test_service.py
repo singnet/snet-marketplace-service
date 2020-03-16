@@ -135,14 +135,6 @@ class TestService(TestCase):
 
         new_org_members = [
             {
-                "username": "karl@dummy.io",
-                "address": "0x123"
-            },
-            {
-                "username": "trax@dummy.io",
-                "address": "0x234"
-            },
-            {
                 "username": "dummy_user1@dummy.io",
                 "address": "0x345"
             }
@@ -790,7 +782,7 @@ class TestService(TestCase):
                     address=member["address"],
                     status=OrganizationMemberStatus.ACCEPTED.value,
                     transaction_hash="0x123",
-                    invite_code="q2w3e4r5t6y7u8i9",
+                    invite_code=uuid4(),
                     invited_on=dt.utcnow(),
                     updated_on=dt.utcnow()
                 ) for member in new_org_members
