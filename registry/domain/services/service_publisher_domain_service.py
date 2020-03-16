@@ -58,9 +58,9 @@ class ServicePublisherDomainService:
         proto_url = service.assets.get("proto_files", {}).get("url", None)
         if proto_url is None:
             raise ServiceProtoNotFoundException
-        proto_ipfs_hash = utils.publish_zip_file_in_ipfs(file_url=proto_url,
-                                                         file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}",
-                                                         ipfs_client=ipfs_client)
+        proto_ipfs_hash = utils.publish_file_in_ipfs(file_url=proto_url,
+                                                     file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}",
+                                                     ipfs_client=ipfs_client)
         service.proto = {
             "model_ipfs_hash": proto_ipfs_hash,
             "encoding": "proto",
