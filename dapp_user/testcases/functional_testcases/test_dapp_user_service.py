@@ -36,12 +36,12 @@ class DappUserService(TestCase):
             }
         }
         response = register_user_post_aws_cognito_signup(event, None)
-        assert (response["statusCode"] == 200)
-        response_body = json.loads(response["body"])
+        assert (response["response"]["statusCode"] == 200)
+        response_body = json.loads(response["response"]["body"])
         assert (response_body["status"] == "success")
         response = register_user_post_aws_cognito_signup(event, None)
-        assert (response["statusCode"] == 500)
-        response_body = json.loads(response["body"])
+        assert (response["response"]["statusCode"] == 500)
+        response_body = json.loads(response["response"]["body"])
         assert (response_body["status"] == "failed")
 
     def tearDown(self):

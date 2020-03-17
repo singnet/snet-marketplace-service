@@ -59,4 +59,4 @@ class UserRepository:
             "INSERT INTO user (username, account_id, origin, name, email, email_verified, status, request_id, "
             "request_time_epoch, row_created, row_updated) "
             "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", query_parameters)
-        return "success"
+        return "SUCCESS"
