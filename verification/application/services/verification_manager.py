@@ -97,7 +97,7 @@ class VerificationManager:
             jumio_verification = JumioService(jumio_repository).submit(verification.id, transaction_status)
 
             if jumio_verification.transaction_status == JumioTransactionStatus.ERROR.value:
-                verification.verification_status = VerificationStatus.ERROR.value
+                verification.status = VerificationStatus.ERROR.value
                 verification_repository.update_verification(verification)
         else:
             raise MethodNotImplemented()
@@ -111,11 +111,11 @@ class VerificationManager:
             jumio_verification = JumioService(jumio_repository).callback(verification_id, verification_details)
 
             if jumio_verification.verification_status in REJECTED_JUMIO_VERIFICATION:
-                verification.verification_status = VerificationStatus.REJECTED.value
+                verification.status = VerificationStatus.REJECTED.value
             elif jumio_verification.verification_status in FAILED_JUMIO_VERIFICATION:
-                verification.verification_status = VerificationStatus.FAILED.value
+                verification.status = VerificationStatus.FAILED.value
             elif jumio_verification.verification_status in VERIFIED_JUMIO_VERIFICATION:
-                verification.verification_status = VerificationStatus.APPROVED.value
+                verification.status = VerificationStatus.APPROVED.value
             else:
                 raise MethodNotImplemented()
             verification.reject_reason = jumio_verification.construct_reject_reason()
