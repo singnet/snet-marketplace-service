@@ -1,14 +1,15 @@
 import web3
-from registry.domain.factory.service_factory import ServiceFactory
-from registry.constants import ServiceStatus, TEST_REG_ADDR_PATH, TEST_REG_CNTRCT_PATH, EnvironmentType
-from registry.exceptions import ServiceProtoNotFoundException, OrganizationNotFoundException
-from common.utils import hash_to_bytesuri, json_to_file, publish_zip_file_in_ipfs
+
 from common import utils
-from registry.config import ASSET_DIR, METADATA_FILE_PATH, ORG_ID_FOR_TESTING_AI_SERVICE, IPFS_URL, NETWORK_ID, \
-    NETWORKS, BLOCKCHAIN_TEST_ENV
-from common.ipfs_util import IPFSUtil
 from common.blockchain_util import BlockChainUtil
+from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
+from common.utils import hash_to_bytesuri, json_to_file, publish_zip_file_in_ipfs
+from registry.config import ASSET_DIR, METADATA_FILE_PATH, IPFS_URL, NETWORK_ID, \
+    NETWORKS, BLOCKCHAIN_TEST_ENV
+from registry.constants import TEST_REG_ADDR_PATH, TEST_REG_CNTRCT_PATH, EnvironmentType
+from registry.domain.factory.service_factory import ServiceFactory
+from registry.exceptions import ServiceProtoNotFoundException, OrganizationNotFoundException
 
 service_factory = ServiceFactory()
 ipfs_client = IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])

@@ -1,21 +1,21 @@
 import json
-from unittest import TestCase
 from datetime import datetime as dt
+from unittest import TestCase
 from unittest.mock import patch
+from uuid import uuid4
+
+from common.constant import StatusCode
 from registry.application.handlers.service_handlers import verify_service_id, save_service, create_service, \
     get_services_for_organization, get_service_for_service_uuid, publish_service_metadata_to_ipfs, \
-    submit_service_for_approval, save_transaction_hash_for_published_service, \
+    save_transaction_hash_for_published_service, \
     list_of_orgs_with_services_submitted_for_approval, legal_approval_of_service, get_daemon_config_for_test
+from registry.constants import ServiceAvailabilityStatus, ServiceStatus, OrganizationMemberStatus, Role
+from registry.infrastructure.models import Organization as OrganizationDBModel, OrganizationMember as \
+    OrganizationMemberDBModel, Service as ServiceDBModel, \
+    ServiceGroup as ServiceGroupDBModel, \
+    ServiceReviewHistory as ServiceReviewHistoryDBModel, ServiceState as ServiceStateDBModel
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
-from registry.infrastructure.models import Organization as OrganizationDBModel
-from registry.infrastructure.models import OrganizationMember as OrganizationMemberDBModel
-from registry.infrastructure.models import Service as ServiceDBModel
-from registry.infrastructure.models import ServiceState as ServiceStateDBModel
-from registry.infrastructure.models import ServiceGroup as ServiceGroupDBModel
-from registry.infrastructure.models import ServiceReviewHistory as ServiceReviewHistoryDBModel
-from registry.constants import ServiceAvailabilityStatus, ServiceStatus, OrganizationMemberStatus, Role
-from common.constant import StatusCode
 
 org_repo = OrganizationPublisherRepository()
 service_repo = ServicePublisherRepository()
@@ -26,7 +26,6 @@ class TestService(TestCase):
         pass
 
     def test_verify_service_id(self):
-        self.tearDown()
         org_repo.add_item(
             OrganizationDBModel(
                 name="test_org",
@@ -44,6 +43,36 @@ class TestService(TestCase):
                 addresses=[],
                 metadata_ipfs_uri="#dummyhashdummyhash"
             )
+        )
+        new_org_members = [
+            {
+                "username": "karl@dummy.io",
+                "address": "0x123"
+            },
+            {
+                "username": "trax@dummy.io",
+                "address": "0x234"
+            },
+            {
+                "username": "dummy_user1@dummy.io",
+                "address": "0x345"
+            }
+
+        ]
+        org_repo.add_all_items(
+            [
+                OrganizationMemberDBModel(
+                    username=member["username"],
+                    org_uuid="test_org_uuid",
+                    role=Role.MEMBER.value,
+                    address=member["address"],
+                    status=OrganizationMemberStatus.ACCEPTED.value,
+                    transaction_hash="0x123",
+                    invite_code=str(uuid4()),
+                    invited_on=dt.utcnow(),
+                    updated_on=dt.utcnow()
+                ) for member in new_org_members
+            ]
         )
         service_repo.add_item(
             ServiceDBModel(
@@ -100,7 +129,6 @@ class TestService(TestCase):
         assert (response_body["data"] == ServiceAvailabilityStatus.AVAILABLE.value)
 
     def test_create_service(self):
-        self.tearDown()
         org_repo.add_item(
             OrganizationDBModel(
                 name="test_org",
@@ -119,6 +147,30 @@ class TestService(TestCase):
                 metadata_ipfs_uri="#dummyhashdummyhash"
             )
         )
+
+        new_org_members = [
+            {
+                "username": "dummy_user1@dummy.io",
+                "address": "0x345"
+            }
+
+        ]
+        org_repo.add_all_items(
+            [
+                OrganizationMemberDBModel(
+                    username=member["username"],
+                    org_uuid="test_org_uuid",
+                    role=Role.MEMBER.value,
+                    address=member["address"],
+                    status=OrganizationMemberStatus.ACCEPTED.value,
+                    transaction_hash="0x123",
+                    invite_code=str(uuid4()),
+                    invited_on=dt.utcnow(),
+                    updated_on=dt.utcnow()
+                ) for member in new_org_members
+            ]
+        )
+
         event = {
             "requestContext": {
                 "authorizer": {
@@ -138,7 +190,6 @@ class TestService(TestCase):
         assert (response_body["data"]["org_uuid"] == "test_org_uuid")
 
     def test_get_services_for_organization(self):
-        self.tearDown()
         org_repo.add_item(
             OrganizationDBModel(
                 name="test_org",
@@ -156,6 +207,36 @@ class TestService(TestCase):
                 addresses=[],
                 metadata_ipfs_uri="#dummyhashdummyhash"
             )
+        )
+        new_org_members = [
+            {
+                "username": "karl@dummy.io",
+                "address": "0x123"
+            },
+            {
+                "username": "trax@dummy.io",
+                "address": "0x234"
+            },
+            {
+                "username": "dummy_user1@dummy.io",
+                "address": "0x345"
+            }
+
+        ]
+        org_repo.add_all_items(
+            [
+                OrganizationMemberDBModel(
+                    username=member["username"],
+                    org_uuid="test_org_uuid",
+                    role=Role.MEMBER.value,
+                    address=member["address"],
+                    status=OrganizationMemberStatus.ACCEPTED.value,
+                    transaction_hash="0x123",
+                    invite_code=str(uuid4()),
+                    invited_on=dt.utcnow(),
+                    updated_on=dt.utcnow()
+                ) for member in new_org_members
+            ]
         )
         service_repo.add_item(
             ServiceDBModel(
@@ -227,7 +308,6 @@ class TestService(TestCase):
         assert (len(response_body["data"]["result"]) == 1)
 
     def test_save_service(self):
-        self.tearDown()
         org_repo.add_item(
             OrganizationDBModel(
                 name="test_org",
@@ -245,6 +325,36 @@ class TestService(TestCase):
                 addresses=[],
                 metadata_ipfs_uri="#dummyhashdummyhash"
             )
+        )
+        new_org_members = [
+            {
+                "username": "karl@dummy.io",
+                "address": "0x123"
+            },
+            {
+                "username": "trax@dummy.io",
+                "address": "0x234"
+            },
+            {
+                "username": "dummy_user1@dummy.io",
+                "address": "0x345"
+            }
+
+        ]
+        org_repo.add_all_items(
+            [
+                OrganizationMemberDBModel(
+                    username=member["username"],
+                    org_uuid="test_org_uuid",
+                    role=Role.MEMBER.value,
+                    address=member["address"],
+                    status=OrganizationMemberStatus.ACCEPTED.value,
+                    transaction_hash="0x123",
+                    invite_code=str(uuid4()),
+                    invited_on=dt.utcnow(),
+                    updated_on=dt.utcnow()
+                ) for member in new_org_members
+            ]
         )
         service_repo.add_item(
             ServiceDBModel(
@@ -360,7 +470,6 @@ class TestService(TestCase):
         assert (response_body["data"]["service_state"]["state"] == ServiceStatus.DRAFT.value)
 
     def test_get_service_for_service_uuid(self):
-        self.tearDown()
         org_repo.add_item(
             OrganizationDBModel(
                 name="test_org",
@@ -378,6 +487,36 @@ class TestService(TestCase):
                 addresses=[],
                 metadata_ipfs_uri="#dummyhashdummyhash"
             )
+        )
+        new_org_members = [
+            {
+                "username": "karl@dummy.io",
+                "address": "0x123"
+            },
+            {
+                "username": "trax@dummy.io",
+                "address": "0x234"
+            },
+            {
+                "username": "dummy_user1@dummy.io",
+                "address": "0x345"
+            }
+
+        ]
+        org_repo.add_all_items(
+            [
+                OrganizationMemberDBModel(
+                    username=member["username"],
+                    org_uuid="test_org_uuid",
+                    role=Role.MEMBER.value,
+                    address=member["address"],
+                    status=OrganizationMemberStatus.ACCEPTED.value,
+                    transaction_hash="0x123",
+                    invite_code=str(uuid4()),
+                    invited_on=dt.utcnow(),
+                    updated_on=dt.utcnow()
+                ) for member in new_org_members
+            ]
         )
         service_repo.add_item(
             ServiceDBModel(
@@ -404,6 +543,7 @@ class TestService(TestCase):
                 created_on=dt.utcnow()
             )
         )
+
         event = {
             "path": "/org/test_org_uuid/service",
             "requestContext": {
@@ -427,7 +567,7 @@ class TestService(TestCase):
     @patch("registry.application.services.service_publisher_service.ServicePublisherService.publish_to_ipfs")
     def test_get_service_metadata_uri(self, mock_ipfs):
         mock_ipfs.return_value = "QmeoVWV99BJoa9czuxg6AiSyFiyVNNFpcaSMYTQUft785u"
-        self.tearDown()
+
         org_repo.add_item(
             OrganizationDBModel(
                 name="test_org",
@@ -445,6 +585,36 @@ class TestService(TestCase):
                 addresses=[],
                 metadata_ipfs_uri="#dummyhashdummyhash"
             )
+        )
+        new_org_members = [
+            {
+                "username": "karl@dummy.io",
+                "address": "0x123"
+            },
+            {
+                "username": "trax@dummy.io",
+                "address": "0x234"
+            },
+            {
+                "username": "dummy_user1@dummy.io",
+                "address": "0x345"
+            }
+
+        ]
+        org_repo.add_all_items(
+            [
+                OrganizationMemberDBModel(
+                    username=member["username"],
+                    org_uuid="test_org_uuid",
+                    role=Role.MEMBER.value,
+                    address=member["address"],
+                    status=OrganizationMemberStatus.ACCEPTED.value,
+                    transaction_hash="0x123",
+                    invite_code=str(uuid4()),
+                    invited_on=dt.utcnow(),
+                    updated_on=dt.utcnow()
+                ) for member in new_org_members
+            ]
         )
         service_repo.add_item(
             ServiceDBModel(
@@ -496,7 +666,6 @@ class TestService(TestCase):
         assert (response_body["status"] == "success")
 
     def test_save_transaction_hash_for_published_service(self):
-        self.tearDown()
         org_repo.add_item(
             OrganizationDBModel(
                 name="test_org",
@@ -514,6 +683,36 @@ class TestService(TestCase):
                 addresses=[],
                 metadata_ipfs_uri="#dummyhashdummyhash"
             )
+        )
+        new_org_members = [
+            {
+                "username": "karl@dummy.io",
+                "address": "0x123"
+            },
+            {
+                "username": "trax@dummy.io",
+                "address": "0x234"
+            },
+            {
+                "username": "dummy_user1@dummy.io",
+                "address": "0x345"
+            }
+
+        ]
+        org_repo.add_all_items(
+            [
+                OrganizationMemberDBModel(
+                    username=member["username"],
+                    org_uuid="test_org_uuid",
+                    role=Role.MEMBER.value,
+                    address=member["address"],
+                    status=OrganizationMemberStatus.ACCEPTED.value,
+                    transaction_hash="0x123",
+                    invite_code=str(uuid4()),
+                    invited_on=dt.utcnow(),
+                    updated_on=dt.utcnow()
+                ) for member in new_org_members
+            ]
         )
         service_repo.add_item(
             ServiceDBModel(
@@ -560,7 +759,6 @@ class TestService(TestCase):
         assert (response_body["data"] == StatusCode.OK)
 
     def test_list_of_orgs_with_services_submitted_for_approval(self):
-        self.tearDown()
         service_repo.add_item(
             ServiceReviewHistoryDBModel(
                 org_uuid="test_org_uuid",
@@ -573,6 +771,46 @@ class TestService(TestCase):
                 updated_on=dt.utcnow()
 
             )
+        )
+        org_repo.add_item(
+            OrganizationDBModel(
+                name="test_org",
+                org_id="test_org_id",
+                uuid="test_org_uuid",
+                org_type="organization",
+                description="that is the dummy org for testcases",
+                short_description="that is the short description",
+                url="https://dummy.url",
+                contacts=[],
+                assets={},
+                duns_no=12345678,
+                origin="PUBLISHER_DAPP",
+                groups=[],
+                addresses=[],
+                metadata_ipfs_uri="#dummyhashdummyhash"
+            )
+        )
+        new_org_members = [
+            {
+                "username": "dummy_user1@dummy.io",
+                "address": "0x345"
+            }
+
+        ]
+        org_repo.add_all_items(
+            [
+                OrganizationMemberDBModel(
+                    username=member["username"],
+                    org_uuid="test_org_uuid",
+                    role=Role.MEMBER.value,
+                    address=member["address"],
+                    status=OrganizationMemberStatus.ACCEPTED.value,
+                    transaction_hash="0x123",
+                    invite_code=str(uuid4()),
+                    invited_on=dt.utcnow(),
+                    updated_on=dt.utcnow()
+                ) for member in new_org_members
+            ]
         )
         event = {
             "path": "/admin/orgs/services",
@@ -593,7 +831,6 @@ class TestService(TestCase):
         assert (response_body["data"][0]["services"][0]["service_uuid"] == "test_service_uuid")
 
     def test_legal_approval_of_service(self):
-        self.tearDown()
         service_repo.add_item(
             ServiceReviewHistoryDBModel(
                 org_uuid="test_org_uuid",
@@ -746,7 +983,6 @@ class TestService(TestCase):
     #     assert (response_body["data"]["service_state"]["state"] == ServiceStatus.APPROVAL_PENDING.value)
 
     def test_daemon_config_for_test_environment(self):
-        self.tearDown()
         org_repo.add_item(
             OrganizationDBModel(
                 name="test_org",
@@ -766,18 +1002,12 @@ class TestService(TestCase):
             )
         )
         new_org_members = [
+
             {
-                "username": "karl@dummy.io",
-                "address": "0x123"
-            },
-            {
-                "username": "trax@dummy.io",
-                "address": "0x234"
-            },
-            {
-                "username": "nyx@dummy.io",
+                "username": "dummy_user1@dummy.io",
                 "address": "0x345"
             }
+
         ]
         org_repo.add_all_items(
             [
@@ -788,7 +1018,7 @@ class TestService(TestCase):
                     address=member["address"],
                     status=OrganizationMemberStatus.ACCEPTED.value,
                     transaction_hash="0x123",
-                    invite_code="q2w3e4r5t6y7u8i9",
+                    invite_code=str(uuid4()),
                     invited_on=dt.utcnow(),
                     updated_on=dt.utcnow()
                 ) for member in new_org_members
@@ -835,18 +1065,18 @@ class TestService(TestCase):
             "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid",
                                "group_id": "test_group_id"}
         }
-        response = get_daemon_config_for_test(event, context=None)
+        response = get_daemon_config_for_test(event, "")
         assert (response["statusCode"] == 200)
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
         assert (response_body["data"]["allowed_user_flag"] is True)
-        assert (len(response_body["data"]["allowed_user_addresses"]) == 4)
+        assert (len(response_body["data"]["allowed_user_addresses"]) == 2)
         assert (response_body["data"]["blockchain_enabled"] is False)
         assert (response_body["data"]["passthrough_enabled"] is True)
 
     def tearDown(self):
-        org_repo.session.query(OrganizationDBModel).delete()
         org_repo.session.query(OrganizationMemberDBModel).delete()
+        org_repo.session.query(OrganizationDBModel).delete()
         org_repo.session.query(ServiceDBModel).delete()
         org_repo.session.query(ServiceGroupDBModel).delete()
         org_repo.session.query(ServiceStateDBModel).delete()

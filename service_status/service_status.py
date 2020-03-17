@@ -1,18 +1,18 @@
-import re
 import json
+import re
 from datetime import datetime as dt
 from datetime import timedelta
+
+import grpc
+from grpc_health.v1 import health_pb2 as heartb_pb2
+from grpc_health.v1 import health_pb2_grpc as heartb_pb2_grpc
+
+from common.boto_utils import BotoUtils
+from common.logger import get_logger
 from common.utils import Utils
 from service_status.config import REGION_NAME, NOTIFICATION_ARN, SLACK_HOOK, NETWORKS, NETWORK_ID, \
     MAXIMUM_INTERVAL_IN_HOUR, MINIMUM_INTERVAL_IN_HOUR
-from common.boto_utils import BotoUtils
-from common.utils import Utils
-from common.logger import get_logger
 from service_status.constant import SRVC_STATUS_GRPC_TIMEOUT, LIMIT
-from grpc_health.v1 import health_pb2 as heartb_pb2
-from grpc_health.v1 import health_pb2_grpc as heartb_pb2_grpc
-import grpc
-import sys
 
 logger = get_logger(__name__)
 boto_util = BotoUtils(region_name=REGION_NAME)

@@ -41,7 +41,7 @@ class OrganizationEventConsumer(object):
         return registry_contract
 
     def _get_tarnsaction_hash(self, event):
-        return eval(event['data']['transactionHash']).hex()
+        return event['data']['transactionHash']
 
     def _get_org_details_from_blockchain(self, event):
         logger.info(f"processing org event {event}")
