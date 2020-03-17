@@ -13,16 +13,16 @@ class DappUserService(TestCase):
         event = {
             'version': '1',
             'region': 'us-east-2',
-            'userPoolId': 'us-east-1_vnsxyLKbb',
-            'userName': '61ef1036-d2cb-4388-9915-a9289eec973e',
+            'userPoolId': 'us-east-2 tyuiop',
+            'userName': '12345-d2cb-6789-9915-45678',
             'callerContext': {
                 'awsSdkVersion': 'aws-sdk-unknown-unknown',
-                'clientId': '16247r8cm0icg7j1f41gd3k9qh'
+                'clientId': 'dummy_client_id'
             },
             'triggerSource': 'PostConfirmation_ConfirmSignUp',
             'request': {
                 'userAttributes': {
-                    'sub': '61ef1036-d2cb-4388-9915-a9289eec973e',
+                    'sub': '23456789-d2cb-4388-9915-3456789',
                     'cognito:email_alias': 'piyush@grr.la',
                     'cognito:user_status': 'CONFIRMED',
                     'email_verified': 'true',
