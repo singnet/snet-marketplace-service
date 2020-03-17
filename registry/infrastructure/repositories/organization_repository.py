@@ -63,14 +63,23 @@ class OrganizationPublisherRepository(BaseRepository):
 
     def persist_publish_org_transaction_hash(self, org_uuid, transaction_hash, wallet_address, username):
         organization_db_model = self.session.query(Organization).filter(Organization.uuid == org_uuid).first()
-        if organization_db_model is None:
+        org_owner = self.session.query(OrganizationMember).filter(OrganizationMember.role == Role.OWNER.value)\
+            .filter(OrganizationMember.org_uuid == org_uuid).first()
+        if organization_db_model is None or org_owner is None:
             raise OrganizationNotFoundException()
-        organization_db_model.org_state[0].trasaction_hash = transaction_hash
-        organization_db_model.org_state[0].wallet_address = wallet_address
-        organization_db_model.org_state[0].state = OrganizationStatus.PUBLISH_IN_PROGRESS.value
-        organization_db_model.org_state[0].updated_on = datetime.utcnow()
-        organization_db_model.org_state[0].updated_by = username
-        self.session.commit()
+        try:
+            organization_db_model.org_state[0].wallet_address = wallet_address
+            organization_db_model.org_state[0].state = OrganizationStatus.PUBLISH_IN_PROGRESS.value
+            organization_db_model.org_state[0].updated_on = datetime.utcnow()
+            organization_db_model.org_state[0].updated_by = username
+            organization_db_model.org_state[0].transaction_hash = transaction_hash
+            org_owner.address = wallet_address
+            org_owner.transaction_hash = transaction_hash
+            org_owner.status = OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value
+            self.session.commit()
+        except:
+            self.session.rollback()
+            raise
 
     def store_organization(self, organization, username, state):
         organization_db_model = self.session.query(Organization).filter(
