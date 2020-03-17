@@ -1,4 +1,6 @@
 import json
+import sys
+import traceback
 from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.logger import get_logger
@@ -6,6 +8,7 @@ from common.utils import validate_dict_list, handle_exception_with_slack_notific
 from dapp_user.exceptions import BadRequestException
 from dapp_user.config import SLACK_HOOK, NETWORK_ID
 from dapp_user.domain.services.user_service import UserService
+from common.utils import Utils
 
 logger = get_logger(__name__)
 
@@ -48,13 +51,42 @@ def delete_user(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def register_user_post_aws_cognito_signup(event, context):
-    logger.info(f"Post aws cognito sign up event {event}")
-    user_service = UserService()
-    response = user_service.register_user(user_attribute=event["request"]["userAttributes"],
-                                          client_id=event["callerContext"]["clientId"])
-    return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
-    )
+    try:
+        logger.info(f"Post aws cognito sign up event {event}")
+        user_service = UserService()
+        if event['triggerSource'] == "PostConfirmation_ConfirmSignUp":
+            response = user_service.register_user(user_attribute=event["request"]["userAttributes"],
+                                                  client_id=event["callerContext"]["clientId"])
+        else:
+            response = "IGNORE"
+        event["response"] = generate_lambda_response(
+            StatusCode.OK,
+            {"status": "success", "data": response, "error": {}},
+            cors_enabled=True
+        )
+    except Exception as e:
+        event["response"] = generate_lambda_response(
+            StatusCode.INTERNAL_SERVER_ERROR,
+            {"status": "failed",
+             "data": "", "error": {
+                "code": 0,
+                "message": e.error_message,
+                "details": e.error_details}},
+            cors_enabled=True
+        )
+        error_message = f"Error Reported! \n" \
+                        f"network_id: {NETWORK_ID}\n" \
+                        f"event: {event['triggerSource']}, \n" \
+                        f"handler: register_user_post_aws_cognito_signup \n" \
+                        f"error_description: \n"
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        exc_tb_lines = traceback.format_tb(exc_tb)
+        error_message = error_message + e.error_message + "\n"
+        logger.exception(error_message)
+        slack_message = error_message
+        for exc_lines in exc_tb_lines:
+            slack_message = slack_message + exc_lines
+        slack_message = f"```{slack_message}```"
+        Utils().report_slack(type=0, slack_msg=slack_message, SLACK_HOOK=SLACK_HOOK)
+    return event
