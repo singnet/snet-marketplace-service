@@ -79,8 +79,9 @@ class BlockChainUtil(object):
         self.contract = self.load_contract(path=contract_path)
         self.contract_address = self.read_contract_address(net_id=net_id, path=contract_address_path, key='address')
         self.contract_instance = self.contract_instance(contract_abi=self.contract, address=self.contract_address)
-        print("gas_price == ", self.web3_object.eth.gasPrice)
-        print("nonce == ", nonce)
+        logger.info(f"gas_price :: {self.web3_object.eth.gasPrice}")
+        logger.info(f"nonce :: {nonce}")
+        logger.info(f"positional_inputs :: {positional_inputs}")
         gas_price = 3 * (self.web3_object.eth.gasPrice)
         transaction_object = getattr(self.contract_instance.functions, method_name)(
             *positional_inputs).buildTransaction({
