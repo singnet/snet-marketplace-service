@@ -1,0 +1,48 @@
+import json
+from unittest import TestCase
+from dapp_user.application.handlers.user_handlers import register_user_post_aws_cognito_signup
+from common.repository import Repository
+from dapp_user.config import NETWORK_ID, NETWORKS
+from unittest.mock import patch
+
+class DappUserService(TestCase):
+    def setUp(self):
+        self._repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
+
+    @patch("common.utils.Utils.report_slack")
+    def test_register_user_on_post_cognito_signup(self, report_slack):
+        report_slack.return_value = None
+        event = {
+            'version': '1',
+            'region': 'us-east-2',
+            'userPoolId': 'us-east-2 tyuiop',
+            'userName': '12345-d2cb-6789-9915-45678',
+            'callerContext': {
+                'awsSdkVersion': 'aws-sdk-unknown-unknown',
+                'clientId': 'dummy_client_id'
+            },
+            'triggerSource': 'PostConfirmation_ConfirmSignUp',
+            'request': {
+                'userAttributes': {
+                    'sub': '23456789-d2cb-4388-9915-3456789',
+                    'cognito:email_alias': 'piyush@grr.la',
+                    'cognito:user_status': 'CONFIRMED',
+                    'email_verified': 'true',
+                    'nickname': 'Piyush',
+                    'email': 'piyush@grr.la'
+                }
+            },
+            'response': {
+            }
+        }
+        response = register_user_post_aws_cognito_signup(event, None)
+        assert (response["statusCode"] == 200)
+        response_body = json.loads(response["body"])
+        assert (response_body["status"] == "success")
+        response = register_user_post_aws_cognito_signup(event, None)
+        assert (response["statusCode"] == 500)
+        response_body = json.loads(response["body"])
+        assert (response_body["status"] == "failed")
+
+    def tearDown(self):
+        self._repo.execute("DELETE FROM user")

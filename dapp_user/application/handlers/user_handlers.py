@@ -51,3 +51,10 @@ def delete_user(event, context):
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def register_user_post_aws_cognito_signup(event, context):
     logger.info(f"Post aws cognito sign up event {event}")
+    user_service = UserService()
+    response = user_service.register_user(user_attribute=event["request"]["userAttributes"],
+                                          client_id=event["callerContext"]["clientId"])
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )

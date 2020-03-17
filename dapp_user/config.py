@@ -1,3 +1,5 @@
+from enum import Enum
+from dapp_user.constant import SourceDApp
 NETWORKS = {
     3: {
         "name": "test",
@@ -27,4 +29,5 @@ CONTRACT_API_ARN = ""
 DELETE_USER_WALLET_ARN = ""
 REGION_NAME = "us-east-2"
 NETWORK_ID = 3
-GET_SIGNATURE_TO_GET_FREE_CALL_FROM_DAEMON=""
+GET_SIGNATURE_TO_GET_FREE_CALL_FROM_DAEMON = ""
+CALLER_REFERENCE = {"dummy_client_id": SourceDApp.PUBLISHER_DAPP.value}
