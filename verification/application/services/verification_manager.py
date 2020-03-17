@@ -134,13 +134,31 @@ class VerificationManager:
         return {}
 
     def _ack_verification(self, verification):
+        VERIFICATION_SERVICE = "VERIFICATION_SERVICE"
         if verification.type == VerificationType.JUMIO.value:
             payload = {
                 "path": "/org/verification",
                 "queryStringParameters": {
                     "status": verification.status,
                     "username": verification.entity_id,
-                    "verification_type": verification.type
+                    "verification_type": verification.type,
+                    "updated_by": VERIFICATION_SERVICE
+                }
+            }
+            lambda_response = self.boto_utils.invoke_lambda(REGISTRY_ARN["ORG_VERIFICATION"],
+                                                            invocation_type="RequestResponse",
+                                                            payload=json.dumps(payload))
+
+            if lambda_response["statusCode"] != 201:
+                raise Exception(f"Failed to acknowledge callback to registry")
+        elif verification.type == VerificationType.DUNS.value:
+            payload = {
+                "path": "/org/verification",
+                "queryStringParameters": {
+                    "status": verification.status,
+                    "org_uuid": verification.entity_id,
+                    "verification_type": verification.type,
+                    "updated_by": VERIFICATION_SERVICE
                 }
             }
             lambda_response = self.boto_utils.invoke_lambda(REGISTRY_ARN["ORG_VERIFICATION"],
