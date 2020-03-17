@@ -46,3 +46,15 @@ class UserRepository:
     def delete_user(self, username):
         query = "DELETE FROM user WHERE username = %s "
         self._repo.execute(query, [username])
+
+    def register_user_data(self, user):
+        """ register user data """
+        if not user.email_verified:
+            raise Exception("Email verification is pending.")
+        query_parameters = [user.email, "", user.origin, user.name, user.email, user.email_verified,
+                            user.email_verified, "", "", dt.utcnow(), dt.utcnow()]
+        query_response = self._repo.execute(
+            "INSERT INTO user (username, account_id, origin, name, email, email_verified, status, request_id, "
+            "request_time_epoch, row_created, row_updated) "
+            "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", query_parameters)
+        return "User already exist" if not query_response else "success"

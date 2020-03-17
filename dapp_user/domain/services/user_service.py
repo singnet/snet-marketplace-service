@@ -1,8 +1,7 @@
 import json
-from urllib.parse import unquote, urlparse
-
 import boto3
-
+import grpc
+from urllib.parse import unquote, urlparse
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from common.utils import generate_lambda_response
@@ -12,10 +11,7 @@ from dapp_user.constant import Status
 from dapp_user.domain.factory.user_factory import UserFactory
 from dapp_user.infrastructure.repositories.user_repository import UserRepository
 from dapp_user.stubs import state_service_pb2, state_service_pb2_grpc
-
 logger = get_logger(__name__)
-
-import grpc
 
 FREE_CALL_AVAILABLE = 15
 
@@ -77,7 +73,7 @@ class UserService:
         if delete_user_wallet_response["statusCode"] != 201:
             raise Exception(f"Failed to delete user wallet")
 
-    def _get_no_of_free_calls_from_daemon(self,email, token_to_get_free_call, expiry_date_block, signature,
+    def _get_no_of_free_calls_from_daemon(self, email, token_to_get_free_call, expiry_date_block, signature,
                                           current_block_number, daemon_endpoint):
 
         request = state_service_pb2.FreeCallStateRequest()
@@ -102,11 +98,11 @@ class UserService:
 
         stub = state_service_pb2_grpc.FreeCallStateServiceStub(channel)
         response = stub.GetFreeCallsAvailable(request)
-        logger.info(f"No of free  free call for {email} {daemon_endpoint} {current_block_number} is {response.free_calls_available}")
+        logger.info(
+            f"No of free  free call for {email} {daemon_endpoint} {current_block_number} is {response.free_calls_available}")
         return response.free_calls_available
 
     def get_free_call(self, event):
-
         # passing event here as metering contract is that it need the entire event object
         # metering will eventually go out  then we will clean this up.
         try:
@@ -128,7 +124,6 @@ class UserService:
             result = json.loads(response.get('Payload').read())
             signature_response = json.loads(result['body'])
 
-
             if signature_response["status"] == "success":
                 logger.info(f"Got signature to make free call to daemon for {email} : {signature_response['data']}")
                 token_to_get_free_call = signature_response["data"].get("token_to_get_free_call", "")
@@ -136,17 +131,18 @@ class UserService:
                 signature = signature_response["data"].get("signature", "")
                 current_block_number = signature_response["data"].get("current_block_number", "")
                 daemon_endpoint = signature_response["data"].get("daemon_endpoint", "")
-                free_call_available = self._get_no_of_free_calls_from_daemon(email, bytes.fromhex(token_to_get_free_call),
+                free_call_available = self._get_no_of_free_calls_from_daemon(email,
+                                                                             bytes.fromhex(token_to_get_free_call),
                                                                              expiry_date_block,
                                                                              bytes.fromhex(signature),
                                                                              current_block_number, daemon_endpoint)
 
-                reponse = {"username": email, "org_id": org_id,
-                           "service_id": service_id,
-                           "total_calls_made": FREE_CALL_AVAILABLE - free_call_available,
-                           "free_calls_allowed": FREE_CALL_AVAILABLE}
+                response = {"username": email, "org_id": org_id,
+                            "service_id": service_id,
+                            "total_calls_made": FREE_CALL_AVAILABLE - free_call_available,
+                            "free_calls_allowed": FREE_CALL_AVAILABLE}
 
-                return generate_lambda_response(200, reponse, cors_enabled=True)
+                return generate_lambda_response(200, response, cors_enabled=True)
             else:
                 raise Exception("Error while getting signature to make free call to daemon")
 
@@ -157,3 +153,7 @@ class UserService:
                                             Payload=json.dumps(event))
             result = json.loads(response.get('Payload').read())
             return result
+
+    def register_user(self, user_attribute, client_id):
+        user = self.user_factory.create_user_domain_model(payload=user_attribute, client_id=client_id)
+        return self.user_repo.register_user_data(user)
