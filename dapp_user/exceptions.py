@@ -10,3 +10,17 @@ class InvalidCallerReferenceException(CustomException):
 
     def __init__(self):
         super().__init__({})
+
+
+class UserAlreadyExistException(CustomException):
+    error_message = "USER ALREADY EXIST"
+
+    def __init__(self):
+        super().__init__({})
+
+
+class EmailNotVerifiedException(CustomException):
+    error_message = "EMAIL VERIFICATION PENDING"
+
+    def __init__(self):
+        super().__init__({})

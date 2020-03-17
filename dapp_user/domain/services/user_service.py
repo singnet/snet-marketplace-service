@@ -11,6 +11,9 @@ from dapp_user.constant import Status
 from dapp_user.domain.factory.user_factory import UserFactory
 from dapp_user.infrastructure.repositories.user_repository import UserRepository
 from dapp_user.stubs import state_service_pb2, state_service_pb2_grpc
+from dapp_user.exceptions import EmailNotVerifiedException
+
+
 logger = get_logger(__name__)
 
 FREE_CALL_AVAILABLE = 15
@@ -156,4 +159,6 @@ class UserService:
 
     def register_user(self, user_attribute, client_id):
         user = self.user_factory.create_user_domain_model(payload=user_attribute, client_id=client_id)
+        if not user.email_verified:
+            raise EmailNotVerifiedException()
         return self.user_repo.register_user_data(user)
