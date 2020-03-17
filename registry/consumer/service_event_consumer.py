@@ -9,8 +9,10 @@ from common.logger import get_logger
 from registry.config import NETWORK_ID
 from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus
 from registry.domain.factory.service_factory import ServiceFactory
+from registry.domain.models.service import Service
 
 logger = get_logger(__name__)
+BLOCKCHAIN_USER = "BLOCKCHAIN_USER"
 
 
 class ServiceEventConsumer(object):
@@ -81,34 +83,64 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         metadata_uri = self._get_metadata_uri_from_event(event)
         service_ipfs_data = self._ipfs_util.read_file_from_ipfs(metadata_uri)
         self._process_service_data(org_id=org_id, service_id=service_id,
-                                   event_ipfs_data=service_ipfs_data, tags_data=tags_data)
+                                   service_metadata=service_ipfs_data, tags_data=tags_data)
 
     def _get_existing_service_details(self, org_id, service_id):
-        org_uuid,existing_service = self._service_repository.get_service_for_given_service_id_and_org_id(org_id, service_id)
+        org_uuid, existing_service = self._service_repository.get_service_for_given_service_id_and_org_id(org_id,
+                                                                                                          service_id)
 
-        return org_uuid,existing_service
+        return org_uuid, existing_service
 
-    def _process_service_data(self, org_id, service_id, event_ipfs_data, tags_data):
+    def _process_service_data(self, org_id, service_id, service_metadata, tags_data):
 
         org_uuid, existing_service = self._get_existing_service_details(org_id, service_id)
+        service_uuid = str(uuid4())
+        display_name = service_metadata.get("display_name", "")
+        short_description = service_metadata.get("short_description", "")
+        description = service_metadata.get("description", "")
+        project_url = service_metadata.get("project_url", "")
+        proto = service_metadata.get("project_url", "")
+        assets = service_metadata.get("assets", {})
+        mpe_address = service_metadata.get("mpe_address", "")
+        metadata_ipfs_hash = service_metadata.get("metadata_ipfs_hash", "")
+        contributors = service_metadata.get("contributors", [])
+        state = \
+            ServiceFactory.create_service_state_entity_model(org_uuid, service_uuid,
+                                                             getattr(ServiceStatus, "PUBLISHED_UNAPPROVED").value)
+        groups = [
+            ServiceFactory.create_service_group_entity_model("", service_uuid, group) for group in
+            service_metadata.get("groups", [])]
 
         if existing_service:
-            service_uuid = existing_service.uuid
-            ranking = existing_service.ranking
-            rating = existing_service.rating
-        else:
-            service_uuid = uuid4().hex
-            ranking = DEFAULT_SERVICE_RANKING
-            rating = {}
+            existing_service.display_name = display_name
+            existing_service.short_description = short_description
+            existing_service.description = description
+            existing_service.project_url = project_url
+            existing_service.proto = proto
+            existing_service.assets = assets
+            existing_service.mpe_address = mpe_address
+            existing_service.metadata_ipfs_hash = metadata_ipfs_hash
+            existing_service.contributors = contributors
+            existing_service.tags = tags_data
+            existing_service.groups = [
+                ServiceFactory.create_service_group_entity_model("", existing_service.uuid, group) for group in
+                service_metadata.get("groups", [])]
 
-        recieved_service = ServiceFactory.create_service_from_service_metadata(org_uuid, service_uuid, service_id,
-                                                                               event_ipfs_data, tags_data, ranking,
-                                                                               rating,
-                                                                               ServiceStatus.PUBLISHED_UNAPPROVED.value)
+        recieved_service = Service(
+            org_uuid, str(uuid4()), service_id, display_name, short_description,
+            description, project_url,
+            proto, assets,
+            DEFAULT_SERVICE_RANKING,
+            {}, contributors,
+            tags_data,
+            mpe_address, metadata_ipfs_hash,
+            groups,
+            state)
+
         if not existing_service:
-            self._service_repository.add_service(recieved_service, "")
+            self._service_repository.add_service(recieved_service, BLOCKCHAIN_USER)
 
         elif existing_service.is_major_change(recieved_service):
-            self._service_repository.save_service(recieved_service, ServiceStatus.DRAFT.value)
+            self._service_repository.save_service(BLOCKCHAIN_USER, existing_service, ServiceStatus.DRAFT.value)
         else:
-            self._service_repository.save_service("", recieved_service, ServiceStatus.PUBLISHED.value)
+            self._service_repository.save_service(BLOCKCHAIN_USER, existing_service, ServiceStatus.PUBLISHED.value)
