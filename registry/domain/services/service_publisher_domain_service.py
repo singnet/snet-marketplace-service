@@ -4,7 +4,7 @@ from common import utils
 from common.blockchain_util import BlockChainUtil
 from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
-from common.utils import hash_to_bytesuri, json_to_file, publish_zip_file_in_ipfs
+from common.utils import ipfsuri_to_bytesuri, json_to_file, publish_zip_file_in_ipfs
 from registry.config import ASSET_DIR, METADATA_FILE_PATH, IPFS_URL, NETWORK_ID, \
     NETWORKS, BLOCKCHAIN_TEST_ENV
 from registry.constants import TEST_REG_ADDR_PATH, TEST_REG_CNTRCT_PATH, EnvironmentType
@@ -89,8 +89,8 @@ class ServicePublisherDomainService:
         # get list of services
         services = []
         if service_id in services:
-            return True
-        return True
+            return False
+        return False
 
     def generate_blockchain_transaction_for_test_environment(*positional_inputs, method_name):
         transaction_object = blockchain_util.create_transaction_object(*positional_inputs, method_name=method_name,
@@ -175,5 +175,5 @@ class ServicePublisherDomainService:
         # deploy service on testing blockchain environment for verification
         transaction_hash = self.register_or_update_service_in_blockchain(
             org_id=org_id, service_id=service.service_id,
-            metadata_uri=hash_to_bytesuri(service.metadata_uri), tags=service.tags, environment=environment)
+            metadata_uri=ipfsuri_to_bytesuri(service.metadata_uri), tags=service.tags, environment=environment)
         return service.to_dict()
