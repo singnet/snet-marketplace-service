@@ -9,7 +9,7 @@ from registry.config import ASSET_DIR, METADATA_FILE_PATH, IPFS_URL, NETWORK_ID,
     NETWORKS, BLOCKCHAIN_TEST_ENV
 from registry.constants import TEST_REG_ADDR_PATH, TEST_REG_CNTRCT_PATH, EnvironmentType
 from registry.domain.factory.service_factory import ServiceFactory
-from registry.exceptions import ServiceProtoNotFoundException, OrganizationNotFoundException
+from registry.exceptions import ServiceProtoNotFoundException, OrganizationNotFoundException, EnvironmentNotFoundException
 
 service_factory = ServiceFactory()
 ipfs_client = IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
@@ -117,7 +117,7 @@ class ServicePublisherDomainService:
             transaction_object = ServicePublisherDomainService.generate_blockchain_transaction_for_test_environment(
                 *positional_inputs, method_name=method_name)
         else:
-            logger.info("Environment Not Found.")
+            raise EnvironmentNotFoundException()
         raw_transaction = blockchain_util.sign_transaction_with_private_key(transaction_object=transaction_object,
                                                                             private_key=executor_key)
         transaction_hash = blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
@@ -137,7 +137,7 @@ class ServicePublisherDomainService:
             transaction_object = ServicePublisherDomainService.generate_blockchain_transaction_for_test_environment(
                 *positional_inputs, method_name=method_name)
         else:
-            logger.info("Environment Not Found.")
+            raise EnvironmentNotFoundException()
         raw_transaction = blockchain_util.sign_transaction_with_private_key(transaction_object=transaction_object,
                                                                             private_key=executor_key)
         transaction_hash = blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
@@ -153,7 +153,7 @@ class ServicePublisherDomainService:
             contract_address = blockchain_util.read_contract_address(net_id=NETWORK_ID, path=TEST_REG_ADDR_PATH,
                                                                      key='address')
         else:
-            logger.info("Environment Not Found.")
+            raise EnvironmentNotFoundException()
         if not ServicePublisherDomainService.organization_exist_in_blockchain(org_id=org_id, contract=contract,
                                                                               contract_address=contract_address):
             raise OrganizationNotFoundException()
