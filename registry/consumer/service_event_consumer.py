@@ -100,7 +100,8 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         description = service_metadata.get("description", "")
         project_url = service_metadata.get("project_url", "")
         proto = service_metadata.get("project_url", "")
-        assets = service_metadata.get("assets", {})
+        assets = ServiceFactory.parse_service_metadata_assets(
+            service_metadata.get("assets", {}), None)
         mpe_address = service_metadata.get("mpe_address", "")
         metadata_ipfs_hash = service_metadata.get("metadata_ipfs_hash", "")
         contributors = service_metadata.get("contributors", [])
@@ -117,7 +118,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             existing_service.description = description
             existing_service.project_url = project_url
             existing_service.proto = proto
-            existing_service.assets = assets
+            existing_service.assets = ServiceFactory.parse_service_metadata_assets(assets, existing_service.assets)
             existing_service.mpe_address = mpe_address
             existing_service.metadata_ipfs_hash = metadata_ipfs_hash
             existing_service.contributors = contributors
