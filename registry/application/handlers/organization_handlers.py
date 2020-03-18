@@ -66,7 +66,7 @@ def create_organization(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-#TODO change this api to  pathParameters  @secured(action=Action.CREATE, org_uuid_path=("body", "org_uuid"),
+# TODO change this api to  pathParameters  @secured(action=Action.CREATE, org_uuid_path=("body", "org_uuid"),
 #          username_path=("requestContext", "authorizer", "claims", "email"))
 def update_org(event, context):
     payload = json.loads(event["body"])
@@ -248,4 +248,14 @@ def org_verification(event, context):
     return generate_lambda_response(
         StatusCode.CREATED,
         {"status": "success", "data": response, "error": {}}, cors_enabled=False
+    )
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+def get_all_org_id(event, context):
+    logger.info(event)
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    response = OrganizationPublisherService(None, None).get_all_org_id()
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )

@@ -35,6 +35,10 @@ class OrganizationPublisherService:
         organizations = org_repo.get_org_for_user(username=self.username)
         return [org.to_response() for org in organizations]
 
+    def get_all_org_id(self):
+        organizations = org_repo.get_org()
+        return [org.id for org in organizations]
+
     def get_groups_for_org(self):
         logger.info(f"get groups for org_uuid: {self.org_uuid}")
         groups = org_repo.get_groups_for_org(self.org_uuid)
