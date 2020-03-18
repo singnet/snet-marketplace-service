@@ -1,0 +1,72 @@
+import json
+from datetime import datetime
+
+from common.utils import datetime_to_string
+from verification.constants import DUNSVerificationStatus
+
+
+class DUNSVerification:
+    def __init__(self, verification_id, org_uuid, status, comments, created_at, update_at):
+        self.verification_id = verification_id
+        self.org_uuid = org_uuid
+        self.status = status
+        self.comments = comments
+        self.created_at = created_at
+        self.updated_at = update_at
+
+    def initiate(self):
+        self.status = DUNSVerificationStatus.PENDING.value
+        current_time = datetime.utcnow()
+        self.created_at = current_time
+        self.updated_at = current_time
+
+    def update_callback(self, verification_details):
+        verification_details = json.loads(verification_details)
+        self.add_comment(verification_details["comment"], verification_details["username"])
+        status = verification_details["verificationStatus"]
+
+        if status not in [DUNSVerificationStatus.PENDING.value, DUNSVerificationStatus.APPROVED.value,
+                          DUNSVerificationStatus.REJECTED.value]:
+            raise Exception("Invalid status for verification")
+
+        self.status = status
+        self.updated_at = datetime.utcnow()
+
+    def to_dict(self):
+        verification_dict = {
+            "verification_id": self.verification_id,
+            "org_uuid": self.org_uuid,
+            "status": self.status,
+            "comments": self.comment_list(),
+            "created_at": "",
+            "updated_at": ""
+        }
+        if self.created_at is not None:
+            verification_dict["created_at"] = datetime_to_string(self.created_at)
+        if self.updated_at is not None:
+            verification_dict["updated_at"] = datetime_to_string(self.updated_at)
+
+    def comment_list(self):
+        return [comment.to_dict() for comment in self.comments]
+
+    def add_comment(self, comment, username):
+        self.comments.append(
+            Comment(comment, username, datetime.utcnow())
+        )
+
+
+class Comment:
+    def __init__(self, comment, created_by, created_at):
+        self.comment = comment
+        self.created_by = created_by
+        self.created_at = created_at
+
+    def to_dict(self):
+        comment_dict = {
+            "comment": self.comment,
+            "created_by": self.created_by,
+            "created_at": ""
+        }
+        if self.created_at is not None:
+            comment_dict["created_at"] = datetime_to_string(self.created_at)
+        return comment_dict

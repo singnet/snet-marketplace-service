@@ -1,6 +1,7 @@
 from _datetime import datetime as dt
 from common.repository import Repository
 from dapp_user.config import NETWORK_ID, NETWORKS
+from dapp_user.exceptions import UserAlreadyExistException
 
 
 class UserRepository:
@@ -46,3 +47,16 @@ class UserRepository:
     def delete_user(self, username):
         query = "DELETE FROM user WHERE username = %s "
         self._repo.execute(query, [username])
+
+    def register_user_data(self, user):
+        """ register user data """
+        user_data = self.get_user_data_for_given_username(username=user.username)
+        if bool(user_data):
+            raise UserAlreadyExistException()
+        query_parameters = [user.email, "", user.origin, user.name, user.email, user.email_verified,
+                            user.email_verified, "", "", dt.utcnow(), dt.utcnow()]
+        query_response = self._repo.execute(
+            "INSERT INTO user (username, account_id, origin, name, email, email_verified, status, request_id, "
+            "request_time_epoch, row_created, row_updated) "
+            "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", query_parameters)
+        return "SUCCESS"

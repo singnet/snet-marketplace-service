@@ -1,5 +1,8 @@
 from dapp_user.domain.models.user_preference import UserPreference
+from dapp_user.domain.models.user import User
 from dapp_user.constant import SourceDApp, CommunicationType, PreferenceType
+from dapp_user.config import CALLER_REFERENCE
+from dapp_user.exceptions import InvalidCallerReferenceException
 
 
 class UserFactory:
@@ -32,3 +35,17 @@ class UserFactory:
                 source=source, status=status, opt_out_reason=opt_out_reason)
             preferences.append(preference)
         return preferences
+
+    @staticmethod
+    def create_user_domain_model(payload, client_id):
+        origin = CALLER_REFERENCE.get(client_id, None)
+        if not origin:
+            raise InvalidCallerReferenceException()
+        return User(
+            username=payload["email"],
+            name=payload["nickname"],
+            email=payload["email"],
+            email_verified=int(bool(payload['email_verified'])),
+            origin=origin,
+            preferences=[]
+        )
