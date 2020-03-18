@@ -68,6 +68,11 @@ class ServiceAvailabilityStatus(Enum):
     UNAVAILABLE = "UNAVAILABLE"
 
 
+class OrganizationIDAvailabilityStatus(Enum):
+    AVAILABLE = "AVAILABLE"
+    UNAVAILABLE = "UNAVAILABLE"
+
+
 class ServiceStatus(Enum):
     DRAFT = "DRAFT"
     APPROVAL_PENDING = "APPROVAL_PENDING"

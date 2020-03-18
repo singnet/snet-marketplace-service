@@ -9,7 +9,8 @@ from registry.config import ASSET_DIR, METADATA_FILE_PATH, IPFS_URL, NETWORK_ID,
     NETWORKS, BLOCKCHAIN_TEST_ENV
 from registry.constants import TEST_REG_ADDR_PATH, TEST_REG_CNTRCT_PATH, EnvironmentType
 from registry.domain.factory.service_factory import ServiceFactory
-from registry.exceptions import ServiceProtoNotFoundException, OrganizationNotFoundException, EnvironmentNotFoundException
+from registry.exceptions import ServiceProtoNotFoundException, OrganizationNotFoundException, \
+    EnvironmentNotFoundException
 
 service_factory = ServiceFactory()
 ipfs_client = IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])

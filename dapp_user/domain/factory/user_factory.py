@@ -1,7 +1,7 @@
-from dapp_user.domain.models.user_preference import UserPreference
-from dapp_user.domain.models.user import User
-from dapp_user.constant import SourceDApp, CommunicationType, PreferenceType
 from dapp_user.config import CALLER_REFERENCE
+from dapp_user.constant import SourceDApp, CommunicationType, PreferenceType
+from dapp_user.domain.models.user import User
+from dapp_user.domain.models.user_preference import UserPreference
 from dapp_user.exceptions import InvalidCallerReferenceException
 
 

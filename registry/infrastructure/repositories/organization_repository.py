@@ -11,7 +11,7 @@ from registry.infrastructure.repositories.base_repository import BaseRepository
 
 class OrganizationPublisherRepository(BaseRepository):
 
-    def get_org(self, status):
+    def get_org(self, status=None):
         organization_query = self.session.query(Organization)
         if status is not None:
             organization_query = organization_query\
