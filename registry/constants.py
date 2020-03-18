@@ -1,7 +1,6 @@
 import os
 from enum import Enum
 
-
 COMMON_CNTRCT_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), 'node_modules', 'singularitynet-platform-contracts'))
 REG_CNTRCT_PATH = COMMON_CNTRCT_PATH + '/abi/Registry.json'
@@ -62,6 +61,11 @@ class Action(Enum):
 
 
 class ServiceAvailabilityStatus(Enum):
+    AVAILABLE = "AVAILABLE"
+    UNAVAILABLE = "UNAVAILABLE"
+
+
+class OrganizationIDAvailabilityStatus(Enum):
     AVAILABLE = "AVAILABLE"
     UNAVAILABLE = "UNAVAILABLE"
 

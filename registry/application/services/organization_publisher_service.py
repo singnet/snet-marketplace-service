@@ -8,7 +8,7 @@ from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
 from registry.config import NOTIFICATION_ARN, PUBLISHER_PORTAL_DAPP_URL, REGION_NAME
 from registry.constants import OrganizationStatus, OrganizationMemberStatus, Role, OrganizationActions, \
-    OrganizationType, ORG_TYPE_VERIFICATION_TYPE_MAPPING
+    OrganizationType, ORG_TYPE_VERIFICATION_TYPE_MAPPING, OrganizationIDAvailabilityStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization
 from registry.domain.services.organization_domain_service import OrganizationService
@@ -38,6 +38,12 @@ class OrganizationPublisherService:
     def get_all_org_id(self):
         organizations = org_repo.get_org()
         return [org.id for org in organizations]
+
+    def get_org_id_availability_status(self, org_id):
+        org_id_list = self.get_all_org_id()
+        if org_id in org_id_list:
+            return OrganizationIDAvailabilityStatus.AVAILABLE.value
+        return OrganizationIDAvailabilityStatus.UNAVAILABLE.value
 
     def get_groups_for_org(self):
         logger.info(f"get groups for org_uuid: {self.org_uuid}")
