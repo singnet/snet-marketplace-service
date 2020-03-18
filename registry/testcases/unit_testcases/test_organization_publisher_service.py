@@ -138,7 +138,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
                                                          "", "", [], {}, "", "", [], [], [], []),
                                       username, OrganizationStatus.APPROVED.value)
         OrganizationPublisherService(None, None).update_verification(
-            "JUMIO", verification_details={"status": "APPROVED", "username": username})
+            "JUMIO", verification_details={"updated_by": "TEST_CASES", "status": "APPROVED", "username": username})
         organization = org_repo.get_org(OrganizationStatus.ONBOARDING_APPROVED.value)
         self.assertEqual(len(organization), 3)
 
