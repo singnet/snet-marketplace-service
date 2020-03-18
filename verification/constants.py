@@ -27,6 +27,12 @@ VERIFIED_JUMIO_VERIFICATION = [
 ]
 
 
+class DUNSVerificationStatus(Enum):
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+
+
 class VerificationStatus(Enum):
     PENDING = "PENDING"
     APPROVED = "APPROVED"

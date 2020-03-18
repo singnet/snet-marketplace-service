@@ -47,7 +47,7 @@ class VerificationRepository(BaseRepository):
     def update_verification(self, verification):
         try:
             verification_db = self._get_verification(verification.id)
-            verification_db.status = verification.verification_status
+            verification_db.status = verification.status
             verification_db.reject_reason = verification.reject_reason
             verification_db.updated_at = datetime.utcnow()
             verification = VerificationFactory.verification_entity_from_db(verification_db)

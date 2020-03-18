@@ -6,8 +6,6 @@ Create Date: 2020-03-03 19:32:40.022260
 
 """
 from alembic import op
-import sqlalchemy as sa
-
 
 # revision identifiers, used by Alembic.
 revision = 'e3ff027707a0'
@@ -32,7 +30,8 @@ def upgrade():
           `row_updated` timestamp NULL DEFAULT NULL,
           `row_created` timestamp NULL DEFAULT NULL,
           PRIMARY KEY (`row_id`),
-          KEY `blk_no_idx` (`block_no`)
+          KEY `blk_no_idx` (`block_no`),
+          UNIQUE KEY `uq_st_ev` (`block_no`,`transactionHash`)
         ) ;
             """)
 

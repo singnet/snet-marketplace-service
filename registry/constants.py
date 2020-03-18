@@ -28,6 +28,9 @@ class OrganizationStatus(Enum):
     ONBOARDING_REJECTED = "ONBOARDING_REJECTED"
 
 
+ORG_STATUS_LIST = [OrganizationStatus.APPROVED.value, OrganizationStatus.REJECTED.value]
+
+
 class OrganizationActions(Enum):
     DRAFT = "DRAFT"
     SUBMIT = "SUBMIT"
@@ -90,7 +93,8 @@ class OrganizationType(Enum):
     INDIVIDUAL = "individual"
 
 
-ORG_TYPE_VERIFICATION_TYPE_MAPPING = {"JUMIO": OrganizationType.INDIVIDUAL.value, }
+ORG_TYPE_VERIFICATION_TYPE_MAPPING = {"JUMIO": OrganizationType.INDIVIDUAL.value,
+                                      "DUNS": OrganizationType.ORGANIZATION.value}
 
 
 class EnvironmentType(Enum):
