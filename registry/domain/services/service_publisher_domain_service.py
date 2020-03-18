@@ -76,21 +76,29 @@ class ServicePublisherDomainService:
         return metadata_ipfs_hash
 
     @staticmethod
-    def organization_exist_in_blockchain(org_id):
-        # get list of organization from blockchain
-        return True
-        orgs = []
-        if org_id in orgs:
-            return True
-        return False
+    def organization_exist_in_blockchain(org_id, contract, contract_address):
+        # get Organization By Id
+        method_name = "getOrganizationById"
+        positional_inputs = (web3.Web3.toHex(text=org_id),)
+        contract = blockchain_util.contract_instance(contract_abi=contract, address=contract_address)
+
+        org_data = blockchain_util.call_contract_function(contract=contract, contract_function=method_name,
+                                                          positional_inputs=positional_inputs)
+        logger.info(f"Org data :: {org_data}")
+        org_found = org_data[0]
+        return org_found
 
     @staticmethod
-    def service_exist_in_blockchain(org_id, service_id):
-        # get list of services
-        services = []
-        if service_id in services:
-            return False
-        return False
+    def service_exist_in_blockchain(org_id, service_id, contract, contract_address):
+        method_name = "getServiceRegistrationById"
+        positional_inputs = (web3.Web3.toHex(text=org_id), web3.Web3.toHex(text=service_id))
+        contract = blockchain_util.contract_instance(contract_abi=contract, address=contract_address)
+
+        service_data = blockchain_util.call_contract_function(contract=contract, contract_function=method_name,
+                                                              positional_inputs=positional_inputs)
+        logger.info(f"Services :: {service_data}")
+        service_found = service_data[0]
+        return service_found
 
     def generate_blockchain_transaction_for_test_environment(*positional_inputs, method_name):
         transaction_object = blockchain_util.create_transaction_object(*positional_inputs, method_name=method_name,
@@ -140,9 +148,19 @@ class ServicePublisherDomainService:
 
     @staticmethod
     def register_or_update_service_in_blockchain(org_id, service_id, metadata_uri, tags, environment):
-        if not ServicePublisherDomainService.organization_exist_in_blockchain(org_id=org_id):
+        if environment == EnvironmentType.TEST.value:
+            contract = blockchain_util.load_contract(path=TEST_REG_CNTRCT_PATH)
+            contract_address = blockchain_util.read_contract_address(net_id=NETWORK_ID, path=TEST_REG_ADDR_PATH,
+                                                                     key='address')
+        else:
+            logger.info("Environment Not Found.")
+        if not ServicePublisherDomainService.organization_exist_in_blockchain(org_id=org_id, contract=contract,
+                                                                              contract_address=contract_address):
             raise OrganizationNotFoundException()
-        if ServicePublisherDomainService.service_exist_in_blockchain(org_id=org_id, service_id=service_id):
+
+        if ServicePublisherDomainService.service_exist_in_blockchain(org_id=org_id, service_id=service_id,
+                                                                     contract=contract,
+                                                                     contract_address=contract_address):
             # service exists in blockchain. update service in blockchain
             transaction_hash = ServicePublisherDomainService.update_service_in_blockchain(
                 org_id=org_id, service_id=service_id, metadata_uri=metadata_uri, environment=environment)
