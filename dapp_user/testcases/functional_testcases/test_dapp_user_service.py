@@ -19,7 +19,7 @@ class DappUserService(TestCase):
             'userName': '12345-d2cb-6789-9915-45678',
             'callerContext': {
                 'awsSdkVersion': 'aws-sdk-unknown-unknown',
-                'clientId': 'dummy_client_id'
+                'clientId': 'dummy_client_id_1'
             },
             'triggerSource': 'PostConfirmation_ConfirmSignUp',
             'request': {

@@ -30,4 +30,9 @@ DELETE_USER_WALLET_ARN = ""
 REGION_NAME = "us-east-2"
 NETWORK_ID = 3
 GET_SIGNATURE_TO_GET_FREE_CALL_FROM_DAEMON = ""
-CALLER_REFERENCE = {"dummy_client_id": SourceDApp.PUBLISHER_DAPP.value}
+CALLER_REFERENCE = {
+    "dummy_client_id_1": SourceDApp.PUBLISHER_DAPP.value,
+    "dummy_client_id_2": SourceDApp.MARKETPLACE_DAPP.value,
+    "dummy_client_id_3": SourceDApp.TOKEN_STAKE_DAPP.value,
+    "dummy_client_id_4": SourceDApp.RFAI_DAPP.value
+}
