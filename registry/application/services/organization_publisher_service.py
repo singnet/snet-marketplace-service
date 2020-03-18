@@ -8,7 +8,7 @@ from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
 from registry.config import NOTIFICATION_ARN, PUBLISHER_PORTAL_DAPP_URL, REGION_NAME
 from registry.constants import OrganizationStatus, OrganizationMemberStatus, Role, OrganizationActions, \
-    OrganizationType, ORG_TYPE_VERIFICATION_TYPE_MAPPING
+    OrganizationType, ORG_TYPE_VERIFICATION_TYPE_MAPPING, ORG_STATUS_LIST
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization
 from registry.domain.services.organization_domain_service import OrganizationService
@@ -180,9 +180,21 @@ class OrganizationPublisherService:
             if ORG_TYPE_VERIFICATION_TYPE_MAPPING[verification_type] == OrganizationType.INDIVIDUAL.value:
                 owner_username = verification_details["username"]
                 status = verification_details["status"]
-                org_repo.update_all_individual_organization_for_user(owner_username, status)
+                updated_by = verification_details["updated_by"]
+                org_repo.update_all_individual_organization_for_user(owner_username, status, updated_by)
+            elif ORG_TYPE_VERIFICATION_TYPE_MAPPING[verification_type] == OrganizationType.INDIVIDUAL.value:
+                status = verification_details["status"]
+                org_uuid = verification_details["org_uuid"]
+                updated_by = verification_details["updated_by"]
+                if status in ORG_STATUS_LIST:
+                    org_repo.update_organization_status(org_uuid, status, updated_by)
+                else:
+                    logger.error(f"Invalid status {status}")
+                    raise MethodNotImplemented()
             else:
+                logger.error(f"Invalid verification type {verification_type}")
                 raise MethodNotImplemented()
         else:
+            logger.error(f"Invalid verification type {verification_type}")
             raise MethodNotImplemented()
         return {}
