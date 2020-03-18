@@ -254,10 +254,11 @@ def org_verification(event, context):
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def verify_org_id(event, context):
     logger.info(event)
-    path_parameters = event["pathParameters"]
-    if "org_id" not in path_parameters:
+    query_parameters = event["queryStringParameters"]
+    if "org_id" not in query_parameters:
         raise BadRequestException()
-    response = OrganizationPublisherService(None, None).get_org_id_availability_status()
+    org_id = query_parameters["org_id"]
+    response = OrganizationPublisherService(None, None).get_org_id_availability_status(org_id)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True

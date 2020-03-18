@@ -138,7 +138,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /org/{org_id}/verify
+          path: /org/verify
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
