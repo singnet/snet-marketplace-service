@@ -42,8 +42,8 @@ class OrganizationPublisherService:
     def get_org_id_availability_status(self, org_id):
         org_id_list = self.get_all_org_id()
         if org_id in org_id_list:
-            return OrganizationIDAvailabilityStatus.AVAILABLE.value
-        return OrganizationIDAvailabilityStatus.UNAVAILABLE.value
+            return OrganizationIDAvailabilityStatus.UNAVAILABLE.value
+        return OrganizationIDAvailabilityStatus.AVAILABLE.value
 
     def get_groups_for_org(self):
         logger.info(f"get groups for org_uuid: {self.org_uuid}")
