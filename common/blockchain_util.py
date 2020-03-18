@@ -4,7 +4,6 @@ from enum import Enum
 
 import web3
 from eth_account.messages import defunct_hash_message
-
 from web3 import Web3
 
 from common.logger import get_logger

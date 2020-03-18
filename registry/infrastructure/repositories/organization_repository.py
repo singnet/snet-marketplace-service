@@ -11,7 +11,7 @@ from registry.infrastructure.repositories.base_repository import BaseRepository
 
 class OrganizationPublisherRepository(BaseRepository):
 
-    def get_org(self, status):
+    def get_org(self, status=None):
         organization_query = self.session.query(Organization)
         if status is not None:
             organization_query = organization_query\
@@ -96,6 +96,17 @@ class OrganizationPublisherRepository(BaseRepository):
         if organization_db_model is None:
             raise OrganizationNotFoundException()
         self._update_organization(organization_db_model, organization, username, state)
+
+    def update_organization_status(self, org_uuid, status, updated_by):
+        try:
+            organization = self.session.query(Organization).filter(Organization.uuid == org_uuid).first()
+            organization.org_state[0].state = status
+            organization.org_state[0].updated_by = updated_by
+            organization.org_state[0].updated_on = datetime.utcnow()
+            self.session.commit()
+        except:
+            self.session.rollback()
+            raise
 
     def add_organization(self, organization, username, state):
         current_time = datetime.utcnow()
@@ -287,7 +298,7 @@ class OrganizationPublisherRepository(BaseRepository):
         org_member.updated_on = datetime.utcnow()
         self.session.commit()
 
-    def update_all_individual_organization_for_user(self, username, status):
+    def update_all_individual_organization_for_user(self, username, status, updated_by):
         organizations_db = self.session.query(Organization)\
             .join(OrganizationMember, Organization.uuid == OrganizationMember.org_uuid)\
             .filter(OrganizationMember.username == username).all()
@@ -299,5 +310,7 @@ class OrganizationPublisherRepository(BaseRepository):
                     updated_status = OrganizationStatus.ONBOARDING_REJECTED.value
                 else:
                     raise Exception("Invalid verification status")
+                organization.org_state[0].updated_by = updated_by
+                organization.org_state[0].updated_at = datetime.utcnow()
                 organization.org_state[0].state = updated_status
         self.session.commit()
