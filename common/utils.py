@@ -4,9 +4,11 @@ import glob
 import io
 import json
 import os
+import os.path
 import sys
 import tarfile
 import traceback
+import zipfile
 from urllib.parse import urlparse
 from zipfile import ZipFile
 
@@ -302,3 +304,13 @@ def send_slack_notification(slack_msg, slack_url, slack_channel):
                }
     slack_response = requests.post(url=slack_url, data=json.dumps(payload))
     logger.info(slack_response.status_code, slack_response.text)
+
+
+def extract_zip_file(zip_file_path, extracted_path):
+    with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+        zip_ref.extractall(extracted_path)
+
+
+def make_tarfile(output_filename, source_dir):
+    with tarfile.open(output_filename, "w:gz") as tar:
+        tar.add(source_dir, arcname=os.path.basename(source_dir))
