@@ -4,7 +4,6 @@ from enum import Enum
 
 import web3
 from eth_account.messages import defunct_hash_message
-
 from web3 import Web3
 
 from common.logger import get_logger
@@ -123,3 +122,9 @@ class BlockChainUtil(object):
         contract_abi_path = base_path + "/{}/{}".format("abi", json_file)
 
         return contract_network_path, contract_abi_path
+
+    @staticmethod
+    def call_contract_function(contract, contract_function, positional_inputs):
+        function = getattr(contract.functions, contract_function)
+        result = function(*positional_inputs).call()
+        return result

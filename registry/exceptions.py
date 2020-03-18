@@ -64,4 +64,11 @@ class ServiceGroupNotFoundException(CustomException):
         super().__init__({})
 
 
+class EnvironmentNotFoundException(CustomException):
+    error_message = "Environment Not Found"
+
+    def __init__(self):
+        super().__init__({})
+
+
 EXCEPTIONS = (BadRequestException, OrganizationNotFoundException, MethodNotImplemented)

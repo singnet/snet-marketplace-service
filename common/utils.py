@@ -303,7 +303,7 @@ def send_slack_notification(slack_msg, slack_url, slack_channel):
                "icon_emoji": ":ghost:"
                }
     slack_response = requests.post(url=slack_url, data=json.dumps(payload))
-    logger.info(slack_response.status_code, slack_response.text)
+    logger.info(f"slack response :: {slack_response.status_code}, {slack_response.text}")
 
 
 def extract_zip_file(zip_file_path, extracted_path):

@@ -8,7 +8,7 @@ from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
 from registry.config import NOTIFICATION_ARN, PUBLISHER_PORTAL_DAPP_URL, REGION_NAME
 from registry.constants import OrganizationStatus, OrganizationMemberStatus, Role, OrganizationActions, \
-    OrganizationType, ORG_TYPE_VERIFICATION_TYPE_MAPPING
+    OrganizationType, ORG_TYPE_VERIFICATION_TYPE_MAPPING, OrganizationIDAvailabilityStatus, ORG_STATUS_LIST
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization
 from registry.domain.services.organization_domain_service import OrganizationService
@@ -35,6 +35,16 @@ class OrganizationPublisherService:
         organizations = org_repo.get_org_for_user(username=self.username)
         return [org.to_response() for org in organizations]
 
+    def get_all_org_id(self):
+        organizations = org_repo.get_org()
+        return [org.id for org in organizations]
+
+    def get_org_id_availability_status(self, org_id):
+        org_id_list = self.get_all_org_id()
+        if org_id in org_id_list:
+            return OrganizationIDAvailabilityStatus.UNAVAILABLE.value
+        return OrganizationIDAvailabilityStatus.AVAILABLE.value
+
     def get_groups_for_org(self):
         logger.info(f"get groups for org_uuid: {self.org_uuid}")
         groups = org_repo.get_groups_for_org(self.org_uuid)
@@ -48,6 +58,9 @@ class OrganizationPublisherService:
         organization = OrganizationFactory.org_domain_entity_from_payload(payload)
         organization.setup_id()
         logger.info(f"assigned org_uuid : {organization.uuid}")
+        org_ids = self.get_all_org_id()
+        if organization.id in org_ids:
+            raise Exception("Org_id already exists")
         updated_state = Organization.next_state(None, None, OrganizationActions.CREATE.value)
         org_repo.add_organization(organization, self.username, updated_state)
         return organization.to_response()
@@ -180,9 +193,21 @@ class OrganizationPublisherService:
             if ORG_TYPE_VERIFICATION_TYPE_MAPPING[verification_type] == OrganizationType.INDIVIDUAL.value:
                 owner_username = verification_details["username"]
                 status = verification_details["status"]
-                org_repo.update_all_individual_organization_for_user(owner_username, status)
+                updated_by = verification_details["updated_by"]
+                org_repo.update_all_individual_organization_for_user(owner_username, status, updated_by)
+            elif ORG_TYPE_VERIFICATION_TYPE_MAPPING[verification_type] == OrganizationType.INDIVIDUAL.value:
+                status = verification_details["status"]
+                org_uuid = verification_details["org_uuid"]
+                updated_by = verification_details["updated_by"]
+                if status in ORG_STATUS_LIST:
+                    org_repo.update_organization_status(org_uuid, status, updated_by)
+                else:
+                    logger.error(f"Invalid status {status}")
+                    raise MethodNotImplemented()
             else:
+                logger.error(f"Invalid verification type {verification_type}")
                 raise MethodNotImplemented()
         else:
+            logger.error(f"Invalid verification type {verification_type}")
             raise MethodNotImplemented()
         return {}
