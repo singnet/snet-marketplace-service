@@ -35,14 +35,8 @@ class DappUserService(TestCase):
             'response': {
             }
         }
-        event_response, context = register_user_post_aws_cognito_signup(event, None)
-        assert (event_response["response"]["statusCode"] == 200)
-        response_body = json.loads(event_response["response"]["body"])
-        assert (response_body["status"] == "success")
-        response = register_user_post_aws_cognito_signup(event, None)
-        assert (event_response["response"]["statusCode"] == 500)
-        response_body = json.loads(event_response["response"]["body"])
-        assert (response_body["status"] == "failed")
+        event_response = register_user_post_aws_cognito_signup(event, None)
+        assert (event_response == event)
 
     def tearDown(self):
         self._repo.execute("DELETE FROM user")
