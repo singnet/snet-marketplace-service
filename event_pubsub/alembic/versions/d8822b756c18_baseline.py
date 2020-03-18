@@ -31,7 +31,8 @@ def upgrade():
           `row_updated` timestamp NULL DEFAULT NULL,
           `row_created` timestamp NULL DEFAULT NULL,
           PRIMARY KEY (`row_id`),
-          KEY `blk_no_idx` (`block_no`)
+          KEY `blk_no_idx` (`block_no`),
+          UNIQUE KEY `uq_rg_ev` (`block_no`,`transactionHash`)
         ) ;
             """)
 
@@ -50,7 +51,8 @@ def upgrade():
           `row_updated` timestamp NULL DEFAULT NULL,
           `row_created` timestamp NULL DEFAULT NULL,
           PRIMARY KEY (`row_id`),
-          KEY `blk_no_idx` (`block_no`)
+          KEY `blk_no_idx` (`block_no`),
+          UNIQUE KEY `uq_mpe_ev` (`block_no`,`transactionHash`)
         ) ;
         """)
     conn.execute("""
@@ -69,7 +71,8 @@ def upgrade():
       `row_updated` timestamp NULL DEFAULT NULL,
       `row_created` timestamp NULL DEFAULT NULL,
       PRIMARY KEY (`row_id`),
-      KEY `blk_no_idx` (`block_no`)
+      KEY `blk_no_idx` (`block_no`),
+      UNIQUE KEY `uq_rf_ev` (`block_no`,`transactionHash`)
     )
 
         """)

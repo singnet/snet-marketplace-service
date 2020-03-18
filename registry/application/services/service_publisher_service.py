@@ -1,22 +1,24 @@
-from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
-from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
-from registry.constants import ServiceAvailabilityStatus, ServiceStatus, OrganizationStatus
+from uuid import uuid4
+
+from common import utils
+from common.boto_utils import BotoUtils
+from common.constant import StatusCode
+from common.ipfs_util import IPFSUtil
+from common.logger import get_logger
+from common.utils import json_to_file, publish_zip_file_in_ipfs, publish_file_in_ipfs, \
+    download_file_from_url
 from registry.config import IPFS_URL, METADATA_FILE_PATH, ASSET_DIR, SLACK_HOOK, BLOCKCHAIN_TEST_ENV, NETWORKS, \
     NETWORK_ID
-from uuid import uuid4
-from registry.exceptions import InvalidServiceStateException, ServiceProtoNotFoundException, OrganizationNotFoundException, \
-    OrganizationNotPublishedException, ServiceNotFoundException, ServiceGroupNotFoundException, InvalidOrganizationStateException
+from registry.config import REGION_NAME, NOTIFICATION_ARN, SLACK_CHANNEL_FOR_APPROVAL_TEAM
+from registry.constants import EnvironmentType
+from registry.constants import ServiceAvailabilityStatus, ServiceStatus, OrganizationStatus
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.services.service_publisher_domain_service import ServicePublisherDomainService
-from common.ipfs_util import IPFSUtil
-from common.boto_utils import BotoUtils
-from common import utils
-from common.utils import json_to_file, hash_to_bytesuri, publish_zip_file_in_ipfs, publish_file_in_ipfs, \
-    download_file_from_url
-from registry.constants import EnvironmentType
-from common.constant import StatusCode
-from registry.config import REGION_NAME, NOTIFICATION_ARN, SLACK_CHANNEL_FOR_APPROVAL_TEAM
-from common.logger import get_logger
+from registry.exceptions import InvalidOrganizationStateException, InvalidServiceStateException, \
+    ServiceProtoNotFoundException, OrganizationNotFoundException, \
+    OrganizationNotPublishedException, ServiceNotFoundException
+from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
+from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 
 ALLOWED_ATTRIBUTES_FOR_SERVICE_SEARCH = ["display_name"]
 DEFAULT_ATTRIBUTE_FOR_SERVICE_SEARCH = "display_name"
@@ -280,4 +282,6 @@ class ServicePublisherService:
                 "authentication_address": [member.address for member in organization_members],
                 "blockchain_enabled": True
             }
+        else:
+            raise Exception("invalid env")
         return daemon_config

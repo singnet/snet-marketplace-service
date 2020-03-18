@@ -1,14 +1,15 @@
 import web3
-from registry.domain.factory.service_factory import ServiceFactory
-from registry.constants import ServiceStatus, TEST_REG_ADDR_PATH, TEST_REG_CNTRCT_PATH, EnvironmentType
-from registry.exceptions import ServiceProtoNotFoundException, OrganizationNotFoundException
-from common.utils import hash_to_bytesuri, json_to_file, publish_zip_file_in_ipfs
+
 from common import utils
-from registry.config import ASSET_DIR, METADATA_FILE_PATH, ORG_ID_FOR_TESTING_AI_SERVICE, IPFS_URL, NETWORK_ID, \
-    NETWORKS, BLOCKCHAIN_TEST_ENV
-from common.ipfs_util import IPFSUtil
 from common.blockchain_util import BlockChainUtil
+from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
+from common.utils import ipfsuri_to_bytesuri, json_to_file, publish_zip_file_in_ipfs
+from registry.config import ASSET_DIR, METADATA_FILE_PATH, IPFS_URL, NETWORK_ID, \
+    NETWORKS, BLOCKCHAIN_TEST_ENV
+from registry.constants import TEST_REG_ADDR_PATH, TEST_REG_CNTRCT_PATH, EnvironmentType
+from registry.domain.factory.service_factory import ServiceFactory
+from registry.exceptions import ServiceProtoNotFoundException, OrganizationNotFoundException
 
 service_factory = ServiceFactory()
 ipfs_client = IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
@@ -58,9 +59,9 @@ class ServicePublisherDomainService:
         proto_url = service.assets.get("proto_files", {}).get("url", None)
         if proto_url is None:
             raise ServiceProtoNotFoundException
-        proto_ipfs_hash = utils.publish_zip_file_in_ipfs(file_url=proto_url,
-                                                         file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}",
-                                                         ipfs_client=ipfs_client)
+        proto_ipfs_hash = utils.publish_file_in_ipfs(file_url=proto_url,
+                                                     file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}",
+                                                     ipfs_client=ipfs_client)
         service.proto = {
             "model_ipfs_hash": proto_ipfs_hash,
             "encoding": "proto",
@@ -88,8 +89,8 @@ class ServicePublisherDomainService:
         # get list of services
         services = []
         if service_id in services:
-            return True
-        return True
+            return False
+        return False
 
     def generate_blockchain_transaction_for_test_environment(*positional_inputs, method_name):
         transaction_object = blockchain_util.create_transaction_object(*positional_inputs, method_name=method_name,
@@ -174,5 +175,5 @@ class ServicePublisherDomainService:
         # deploy service on testing blockchain environment for verification
         transaction_hash = self.register_or_update_service_in_blockchain(
             org_id=org_id, service_id=service.service_id,
-            metadata_uri=hash_to_bytesuri(service.metadata_uri), tags=service.tags, environment=environment)
+            metadata_uri=ipfsuri_to_bytesuri(service.metadata_uri), tags=service.tags, environment=environment)
         return service.to_dict()

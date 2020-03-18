@@ -5,7 +5,7 @@ class SourceDApp(Enum):
     PUBLISHER_DAPP = "PUBLISHER_DAPP"
     MARKETPLACE_DAPP = "MARKETPLACE_DAPP"
     RFAI_DAPP = "RFAI_DAPP"
-    STAKE_DAPP = "STAKE_DAPP"
+    TOKEN_STAKE_DAPP = "TOKEN_STAKE_DAPP"
 
 
 class CommunicationType(Enum):

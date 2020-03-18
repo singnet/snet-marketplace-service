@@ -1,23 +1,21 @@
 import json
-from unittest import TestCase
 from datetime import datetime as dt
+from unittest import TestCase
 from unittest.mock import patch
 from uuid import uuid4
 
+from common.constant import StatusCode
 from registry.application.handlers.service_handlers import verify_service_id, save_service, create_service, \
     get_services_for_organization, get_service_for_service_uuid, publish_service_metadata_to_ipfs, \
-    submit_service_for_approval, save_transaction_hash_for_published_service, \
+    save_transaction_hash_for_published_service, \
     list_of_orgs_with_services_submitted_for_approval, legal_approval_of_service, get_daemon_config_for_test
+from registry.constants import ServiceAvailabilityStatus, ServiceStatus, OrganizationMemberStatus, Role
+from registry.infrastructure.models import Organization as OrganizationDBModel, OrganizationMember as \
+    OrganizationMemberDBModel, Service as ServiceDBModel, \
+    ServiceGroup as ServiceGroupDBModel, \
+    ServiceReviewHistory as ServiceReviewHistoryDBModel, ServiceState as ServiceStateDBModel
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
-from registry.infrastructure.models import Organization as OrganizationDBModel, OrganizationMember
-from registry.infrastructure.models import OrganizationMember as OrganizationMemberDBModel
-from registry.infrastructure.models import Service as ServiceDBModel
-from registry.infrastructure.models import ServiceState as ServiceStateDBModel
-from registry.infrastructure.models import ServiceGroup as ServiceGroupDBModel
-from registry.infrastructure.models import ServiceReviewHistory as ServiceReviewHistoryDBModel
-from registry.constants import ServiceAvailabilityStatus, ServiceStatus, OrganizationMemberStatus, Role
-from common.constant import StatusCode
 
 org_repo = OrganizationPublisherRepository()
 service_repo = ServicePublisherRepository()
@@ -28,7 +26,6 @@ class TestService(TestCase):
         pass
 
     def test_verify_service_id(self):
-
         org_repo.add_item(
             OrganizationDBModel(
                 name="test_org",
@@ -132,7 +129,6 @@ class TestService(TestCase):
         assert (response_body["data"] == ServiceAvailabilityStatus.AVAILABLE.value)
 
     def test_create_service(self):
-
         org_repo.add_item(
             OrganizationDBModel(
                 name="test_org",
@@ -194,7 +190,6 @@ class TestService(TestCase):
         assert (response_body["data"]["org_uuid"] == "test_org_uuid")
 
     def test_get_services_for_organization(self):
-
         org_repo.add_item(
             OrganizationDBModel(
                 name="test_org",
@@ -313,7 +308,6 @@ class TestService(TestCase):
         assert (len(response_body["data"]["result"]) == 1)
 
     def test_save_service(self):
-
         org_repo.add_item(
             OrganizationDBModel(
                 name="test_org",
@@ -476,7 +470,6 @@ class TestService(TestCase):
         assert (response_body["data"]["service_state"]["state"] == ServiceStatus.DRAFT.value)
 
     def test_get_service_for_service_uuid(self):
-
         org_repo.add_item(
             OrganizationDBModel(
                 name="test_org",
@@ -673,7 +666,6 @@ class TestService(TestCase):
         assert (response_body["status"] == "success")
 
     def test_save_transaction_hash_for_published_service(self):
-
         org_repo.add_item(
             OrganizationDBModel(
                 name="test_org",
@@ -767,8 +759,6 @@ class TestService(TestCase):
         assert (response_body["data"] == StatusCode.OK)
 
     def test_list_of_orgs_with_services_submitted_for_approval(self):
-
-
         service_repo.add_item(
             ServiceReviewHistoryDBModel(
                 org_uuid="test_org_uuid",
@@ -841,7 +831,6 @@ class TestService(TestCase):
         assert (response_body["data"][0]["services"][0]["service_uuid"] == "test_service_uuid")
 
     def test_legal_approval_of_service(self):
-
         service_repo.add_item(
             ServiceReviewHistoryDBModel(
                 org_uuid="test_org_uuid",
@@ -994,9 +983,6 @@ class TestService(TestCase):
     #     assert (response_body["data"]["service_state"]["state"] == ServiceStatus.APPROVAL_PENDING.value)
 
     def test_daemon_config_for_test_environment(self):
-
-
-
         org_repo.add_item(
             OrganizationDBModel(
                 name="test_org",
@@ -1079,7 +1065,7 @@ class TestService(TestCase):
             "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid",
                                "group_id": "test_group_id"}
         }
-        response = get_daemon_config_for_test(event,"")
+        response = get_daemon_config_for_test(event, "")
         assert (response["statusCode"] == 200)
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
