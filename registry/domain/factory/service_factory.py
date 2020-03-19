@@ -176,7 +176,7 @@ class ServiceFactory:
         url = ""
         for key, value in assets.items():
             if existing_assets and key in existing_assets:
-                if 'url' in existing_assets[key]:
+                if  existing_assets[key] and 'url' in existing_assets[key]:
                     url = existing_assets[key]['url']
             else:
                 url = ""
