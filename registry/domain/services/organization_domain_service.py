@@ -15,11 +15,8 @@ class OrganizationService:
         self.blockchain_util = BlockChainUtil(provider_type="HTTP_PROVIDER",
                                               provider=NETWORKS[NETWORK_ID]['http_provider'])
 
-    def organization_exist_in_blockchain(self, org_id):
+    def organization_exist_in_blockchain(self, org_id, contract, contract_address):
         method_name = "getOrganizationById"
-        contract = self.blockchain_util.load_contract(path=TEST_REG_CNTRCT_PATH)
-        contract_address = self.blockchain_util.read_contract_address(net_id=NETWORK_ID, path=TEST_REG_ADDR_PATH,
-                                                                      key='address')
         positional_inputs = (web3.Web3.toHex(text=org_id),)
         contract = self.blockchain_util.contract_instance(contract_abi=contract, address=contract_address)
 
@@ -79,7 +76,10 @@ class OrganizationService:
         members = []
         environment = EnvironmentType.TEST.value
         org_id = organization.id
-        if self.organization_exist_in_blockchain(org_id):
+        contract = self.blockchain_util.load_contract(path=TEST_REG_CNTRCT_PATH)
+        contract_address = self.blockchain_util.read_contract_address(net_id=NETWORK_ID, path=TEST_REG_ADDR_PATH,
+                                                                      key='address')
+        if self.organization_exist_in_blockchain(org_id, contract, contract_address):
             return self.update_organization_in_blockchain(org_id, metadata_uri, environment)
         else:
             return self.register_organization_in_blockchain(org_id, metadata_uri, members, environment)
