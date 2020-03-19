@@ -261,7 +261,7 @@ class ServicePublisherService:
             }
         elif environment is EnvironmentType.MAIN.value:
             daemon_config = {
-                "ipfs_end_point": f"http://{IPFS_URL['url']}:{IPFS_URL['port']}",
+                "ipfs_end_point": f"{IPFS_URL['url']}:{IPFS_URL['port']}",
                 "blockchain_network_selected": network_name,
                 "organization_id": organization.id,
                 "service_id": service.service_id,
