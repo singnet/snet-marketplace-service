@@ -168,3 +168,21 @@ class ServiceFactory:
             service_metadata.get("mpe_address", ""), service_metadata.get("metadata_ipfs_hash", ""),
             service_group_entity_model_list,
             service_state_entity_model)
+
+    @staticmethod
+    def parse_service_metadata_assets(assets, existing_assets):
+        if assets is None:
+            return None
+        url = ""
+        for key, value in assets.items():
+            if existing_assets and key in existing_assets:
+                if 'url' in existing_assets[key]:
+                    url = existing_assets[key]['url']
+            else:
+                url = ""
+
+            assets[key] = {
+                "ipfs_hash": value,
+                "url": url
+            }
+        return assets
