@@ -11,7 +11,7 @@ from common.repository import Repository
 from common.s3_util import S3Util
 from common.utils import download_file_from_url, extract_zip_file, make_tarfile
 from contract_api.config import ASSETS_BUCKET_NAME, ASSETS_PREFIX, GET_SERVICE_FROM_ORGID_SERVICE_ID_REGISTRY_ARN, \
-    MARKETPLACE_DAPP_BUILD, NETWORKS, NETWORK_ID, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY
+    MARKETPLACE_DAPP_BUILD, NETWORKS, NETWORK_ID, REGION_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY
 from contract_api.consumers.event_consumer import EventConsumer
 from contract_api.dao.service_repository import ServiceRepository
 
@@ -190,6 +190,9 @@ class SeviceDeletedEventConsumer(ServiceEventConsumer):
 
 
 class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
+
+    def __init__(self):
+        self.lambda_client = boto3.client("lambda", region_name=REGION_NAME)
 
     def on_event(self, event):
         org_id, service_id, tags_data = self._get_service_details_from_blockchain(event)
