@@ -1,14 +1,14 @@
 import json
 import sys
 import traceback
-
 from common.constant import StatusCode
+from common.exception_handler import exception_handler
 from common.logger import get_logger
-from common.utils import Utils
 from common.utils import validate_dict_list, handle_exception_with_slack_notification, generate_lambda_response
+from dapp_user.exceptions import BadRequestException
 from dapp_user.config import SLACK_HOOK, NETWORK_ID
 from dapp_user.domain.services.user_service import UserService
-from dapp_user.exceptions import BadRequestException
+from common.utils import Utils
 
 logger = get_logger(__name__)
 
