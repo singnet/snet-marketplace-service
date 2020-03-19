@@ -15,6 +15,20 @@ class OrganizationService:
         self.blockchain_util = BlockChainUtil(provider_type="HTTP_PROVIDER",
                                               provider=NETWORKS[NETWORK_ID]['http_provider'])
 
+    def organization_exist_in_blockchain(self, org_id):
+        method_name = "getOrganizationById"
+        contract = self.blockchain_util.load_contract(path=TEST_REG_CNTRCT_PATH)
+        contract_address = self.blockchain_util.read_contract_address(net_id=NETWORK_ID, path=TEST_REG_ADDR_PATH,
+                                                                      key='address')
+        positional_inputs = (web3.Web3.toHex(text=org_id),)
+        contract = self.blockchain_util.contract_instance(contract_abi=contract, address=contract_address)
+
+        org_data = self.blockchain_util.call_contract_function(contract=contract, contract_function=method_name,
+                                                               positional_inputs=positional_inputs)
+        logger.info(f"Org data :: {org_data}")
+        org_found = org_data[0]
+        return org_found
+
     def generate_blockchain_transaction_for_test_environment(self, *positional_inputs, method_name):
         transaction_object = self.blockchain_util.create_transaction_object(*positional_inputs, method_name=method_name,
                                                                             address=BLOCKCHAIN_TEST_ENV[
@@ -23,6 +37,24 @@ class OrganizationService:
                                                                             contract_address_path=TEST_REG_ADDR_PATH,
                                                                             net_id=BLOCKCHAIN_TEST_ENV["network_id"])
         return transaction_object
+
+    def update_organization_in_blockchain(self, org_id, metadata_uri, environment):
+        method_name = "changeOrganizationMetadataURI"
+        positional_inputs = (web3.Web3.toHex(text=org_id), ipfsuri_to_bytesuri(metadata_uri))
+        if environment == EnvironmentType.TEST.value:
+            executor_key = BLOCKCHAIN_TEST_ENV["executor_key"]
+            transaction_object = self.generate_blockchain_transaction_for_test_environment(
+                *positional_inputs, method_name=method_name)
+        else:
+            logger.info("Environment Not Found.")
+            raise MethodNotImplemented()
+        raw_transaction = self.blockchain_util.sign_transaction_with_private_key(transaction_object=transaction_object,
+                                                                                 private_key=executor_key)
+        transaction_hash = self.blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
+        logger.info(
+            f"transaction hash {transaction_hash} generated while registering organization "
+            f"{org_id} in {environment} blockchain environment.")
+        return transaction_hash
 
     def register_organization_in_blockchain(self, org_id, metadata_uri, members, environment):
         method_name = "createOrganization"
@@ -38,8 +70,8 @@ class OrganizationService:
                                                                                  private_key=executor_key)
         transaction_hash = self.blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
         logger.info(
-            f"transaction hash {transaction_hash} generated while registering organization {org_id} in {environment} blockchain "
-            f"environment.")
+            f"transaction hash {transaction_hash} generated while registering organization "
+            f"{org_id} in {environment} blockchain environment.")
         return transaction_hash
 
     def publish_organization_to_test_network(self, organization):
@@ -47,4 +79,7 @@ class OrganizationService:
         members = []
         environment = EnvironmentType.TEST.value
         org_id = organization.id
-        return self.register_organization_in_blockchain(org_id, metadata_uri, members, environment)
+        if self.organization_exist_in_blockchain(org_id):
+            return self.update_organization_in_blockchain(org_id, metadata_uri, environment)
+        else:
+            return self.register_organization_in_blockchain(org_id, metadata_uri, members, environment)
