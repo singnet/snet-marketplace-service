@@ -200,7 +200,7 @@ class OrganizationFactory:
             return None
         url = ""
         for key, value in assets.items():
-            if key in existing_assets:
+            if existing_assets and key in existing_assets:
                 if 'url' in existing_assets[key]:
                     url = existing_assets[key]['url']
             else:

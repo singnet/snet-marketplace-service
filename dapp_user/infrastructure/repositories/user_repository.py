@@ -1,5 +1,4 @@
 from _datetime import datetime as dt
-
 from common.repository import Repository
 from dapp_user.config import NETWORK_ID, NETWORKS
 from dapp_user.exceptions import UserAlreadyExistException

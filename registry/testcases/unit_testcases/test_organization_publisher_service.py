@@ -110,7 +110,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q12PWP")))
     @patch("registry.domain.services.organization_domain_service."
-           "OrganizationService.publish_organization_to_test_network")
+           "OrganizationService.publish_organization_to_test_network", return_value="0x123")
     def test_org_publish_to_ipfs(self, mock_test_network_publish, mock_ipfs_utils):
         test_org_id = uuid4().hex
         username = "dummy@snet.io"

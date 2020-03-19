@@ -1,10 +1,9 @@
+import json
 from unittest import TestCase
-from unittest.mock import patch
-
-from common.repository import Repository
 from dapp_user.application.handlers.user_handlers import register_user_post_aws_cognito_signup
+from common.repository import Repository
 from dapp_user.config import NETWORK_ID, NETWORKS
-
+from unittest.mock import patch
 
 class DappUserService(TestCase):
     def setUp(self):

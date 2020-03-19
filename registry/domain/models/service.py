@@ -1,4 +1,5 @@
 from cerberus import Validator
+
 from common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -183,17 +184,33 @@ class Service:
     def display_name(self):
         return self._display_name
 
+    @display_name.setter
+    def display_name(self, val):
+        self._display_name = val
+
     @property
     def short_description(self):
         return self._short_description
+
+    @short_description.setter
+    def short_description(self, val):
+        self._short_description = val
 
     @property
     def description(self):
         return self._description
 
+    @description.setter
+    def description(self, val):
+        self._description = val
+
     @property
     def project_url(self):
         return self._project_url
+
+    @project_url.setter
+    def project_url(self, val):
+        self._project_url = val
 
     @property
     def proto(self):
@@ -223,6 +240,10 @@ class Service:
     def contributors(self):
         return self._contributors
 
+    @contributors.setter
+    def contributors(self, val):
+        self._contributors = val
+
     @property
     def metadata_uri(self):
         return self._metadata_uri
@@ -234,6 +255,10 @@ class Service:
     @property
     def groups(self):
         return [group for group in self._groups]
+
+    @groups.setter
+    def groups(self, val):
+        self._groups = val
 
     @property
     def service_state(self):
@@ -247,9 +272,18 @@ class Service:
     def tags(self):
         return self._tags
 
+    @tags.setter
+    def tags(self, val):
+        self._tags = val
+
+
     @property
     def mpe_address(self):
         return self._mpe_address
+
+    @mpe_address.setter
+    def mpe_address(self, val):
+        self._mpe_address = val
 
     @staticmethod
     def is_metadata_valid(service_metadata):
