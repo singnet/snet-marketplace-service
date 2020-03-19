@@ -10,7 +10,7 @@ provider:
   runtime: python3.6
   description: offchain information of organizations and services
   memorySize: 512
-  timeout: 30
+  timeout: 60
   region: ${file(./config.${self:provider.stage}.json):REGION}
   stage: ${opt:stage,'dev'}
   deploymentBucket:
