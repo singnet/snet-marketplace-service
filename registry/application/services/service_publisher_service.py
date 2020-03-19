@@ -124,7 +124,7 @@ class ServicePublisherService:
                 "service_type": "grpc"
             }
             service.assets["proto_files"]["ipfs_hash"] = asset_ipfs_hash
-            self.publish_assets(service)
+            ServicePublisherDomainService.publish_assets(service)
             service = ServicePublisherRepository().save_service(self._username, service, service.service_state.state)
             service_metadata = service.to_metadata()
             filename = f"{METADATA_FILE_PATH}/{service.uuid}_service_metadata.json"
