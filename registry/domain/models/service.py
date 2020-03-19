@@ -96,40 +96,8 @@ SERVICE_METADATA_SCHEMA = {
     "assets": {
         "type": "dict",
         "schema": {
-            "proto_files": {
-                "type": "dict",
-                "schema": {
-                    "url": {
-                        "type": "string",
-                        "empty": False
-                    },
-                    "ipfs_hash": {
-                        "type": "string",
-                        "empty": False
-                    }
-                }
-            },
-            "demo_files": {
-                "type": "dict",
-                "schema": {
-                    "url": {
-                        "type": "string"
-                    },
-                    "ipfs_hash": {
-                        "type": "string"
-                    }
-                }
-            },
             "hero_image": {
-                "type": "dict",
-                "schema": {
-                    "url": {
-                        "type": "string"
-                    },
-                    "ipfs_hash": {
-                        "type": "string"
-                    }
-                }
+                "type": "string"
             }
         }
     },
@@ -137,7 +105,7 @@ SERVICE_METADATA_SCHEMA = {
         "type": "list"
     },
 }
-
+REQUIRED_ASSETS_FOR_METADATA = ['hero_image']
 
 class Service:
     def __init__(self, org_uuid, uuid, service_id, display_name, short_description, description, project_url, proto,
@@ -195,7 +163,7 @@ class Service:
                 "short_description": self.short_description,
                 "description": self._description
             },
-            "assets": self._assets,
+            "assets": self.prepare_assets_for_metadata(),
             "contributors": self._contributors
         }
 
@@ -292,3 +260,11 @@ class Service:
 
     def is_major_change(self, other):
         return False
+
+    def prepare_assets_for_metadata(self):
+        metadata_assets = {}
+        for asset in self.assets.keys():
+            if asset in REQUIRED_ASSETS_FOR_METADATA:
+                metadata_assets.update({asset: self.assets[asset].get("ipfs_hash", "")})
+        return metadata_assets
+
