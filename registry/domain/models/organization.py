@@ -2,7 +2,6 @@ from urllib.parse import urlparse
 from uuid import uuid4
 
 import requests
-from deepdiff import DeepDiff
 
 from common import ipfs_util
 from common.exceptions import MethodNotImplemented
@@ -10,7 +9,6 @@ from common.logger import get_logger
 from common.utils import datetime_to_string, json_to_file
 from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH
 from registry.constants import OrganizationActions, OrganizationAddressType, OrganizationStatus, OrganizationType
-from registry.domain.models.organization_address import OrganizationAddress
 
 logger = get_logger(__name__)
 
@@ -250,12 +248,14 @@ class Organization:
         return True
 
     def is_major_change(self, updated_organization):
-        diff = DeepDiff(self, updated_organization, exclude_types=[OrganizationAddress],
-                        exclude_paths=EXCLUDE_PATHS)
-
-        logger.info(f"DIff for metadata organization {diff}")
-        if not diff:
-            return True
+        # diff = DeepDiff(self, updated_organization, exclude_types=[OrganizationAddress],
+        #                 exclude_paths=EXCLUDE_PATHS)
+        #
+        # logger.info(f"DIff for metadata organization {diff}")
+        # if not diff:
+        #     return True
+        # return False
+        #TODO reanable it once all isue are fixed
         return False
 
     @staticmethod
