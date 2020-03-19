@@ -1,6 +1,7 @@
 import json
 import os
 
+import boto3
 from web3 import Web3
 
 from common.blockchain_util import BlockChainUtil
@@ -9,8 +10,8 @@ from common.logger import get_logger
 from common.repository import Repository
 from common.s3_util import S3Util
 from common.utils import download_file_from_url, extract_zip_file, make_tarfile
-from contract_api.config import ASSETS_BUCKET_NAME, ASSETS_PREFIX, NETWORKS, NETWORK_ID, S3_BUCKET_ACCESS_KEY, \
-    S3_BUCKET_SECRET_KEY
+from contract_api.config import ASSETS_BUCKET_NAME, ASSETS_PREFIX, GET_SERVICE_FROM_ORGID_SERVICE_ID_REGISTRY_ARN, \
+    MARKETPLACE_DAPP_BUILD, NETWORKS, NETWORK_ID, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY
 from contract_api.consumers.event_consumer import EventConsumer
 from contract_api.dao.service_repository import ServiceRepository
 
@@ -234,8 +235,27 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
 
         return proto_file_s3_path, component_files_s3_path
 
-    def _trigger_code_build_for_marketplace_dapp(self):
+    def _trigger_code_build_for_marketplace_dapp(self, org_id, service_id):
         logger.info(f"Triggered Dapp Code Build")
+        cb = boto3.client('codebuild')
+        build = {
+            'projectName': MARKETPLACE_DAPP_BUILD,
+            'environmentVariablesOverride': [
+                {
+                    'name': 'event_id',
+                    'value': f"{org_id}_{service_id}",
+                    'type': 'PLAINTEXT'
+                },
+            ]
+        }
+
+        try:
+            build = cb.start_build(**build)
+
+            logger.info('Codebuild returned: {}'.format(build))
+        except Exception as e:
+            logger.error(f"Failed BUild for {org_id} {service_id}")
+            raise e
 
     def _process_service_deployment(self, org_id, service_id):
         proto_file_s3_path, component_files_s3_path = self._get_s3_path_url_for_proto_and_component(org_id, service_id)
@@ -249,4 +269,4 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
         self._s3_util.push_file_to_s3(proto_file_tar_path, ASSETS_BUCKET_NAME,
                                       f"assets/{org_id}/{service_id}/{component_files_tar_path.split('/')[-1]}")
 
-        self._trigger_code_build_for_marketplace_dapp()
+        self._trigger_code_build_for_marketplace_dapp(org_id, service_id)
