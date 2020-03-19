@@ -58,7 +58,7 @@ class OrganizationPublisherRepository(BaseRepository):
         organization_db_model.metadata_ipfs_uri = organization.metadata_ipfs_uri
         organization_db_model.org_state[0].updated_on = datetime.utcnow()
         organization_db_model.org_state[0].updated_by = username
-        organization_db_model.org_state[0].test_transcation_hash = test_transaction_hash
+        organization_db_model.org_state[0].test_transaction_hash = test_transaction_hash
         self.session.commit()
 
     def persist_publish_org_transaction_hash(self, org_uuid, transaction_hash, wallet_address, username):
