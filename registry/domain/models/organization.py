@@ -203,7 +203,7 @@ class Organization:
                 with open(filepath, 'wb') as asset_file:
                     asset_file.write(response.content)
                 asset_ipfs_hash = ipfs_utils.write_file_in_ipfs(filepath)
-                self.__assets[asset_type]["ipfs_uri"] = f"ipfs://{asset_ipfs_hash}"
+                self.__assets[asset_type]["ipfs_uri"] = f"{asset_ipfs_hash}"
 
     def publish_to_ipfs(self):
         self.publish_assets()
