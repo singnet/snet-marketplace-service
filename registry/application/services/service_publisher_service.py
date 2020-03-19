@@ -16,7 +16,7 @@ from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.services.service_publisher_domain_service import ServicePublisherDomainService
 from registry.exceptions import InvalidOrganizationStateException, InvalidServiceStateException, \
     ServiceProtoNotFoundException, OrganizationNotFoundException, \
-    OrganizationNotPublishedException, ServiceNotFoundException
+    OrganizationNotPublishedException, ServiceNotFoundException, EnvironmentNotFoundException
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 
@@ -94,19 +94,6 @@ class ServicePublisherService:
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
         return service.to_dict()
 
-    @staticmethod
-    def publish_assets(service):
-        ASSETS_SUPPORTED = ["hero_image", "demo_files"]
-        for asset in service.assets.keys():
-            if asset in ASSETS_SUPPORTED:
-                asset_url = service.assets.get(asset, {}).get("url", None)
-                if asset_url is None:
-                    logger.info(f"asset url for {asset} is missing ")
-                asset_ipfs_hash = publish_file_in_ipfs(file_url=asset_url,
-                                                       file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}",
-                                                       ipfs_client=IPFSUtil(IPFS_URL['url'], IPFS_URL['port']))
-                service.assets[asset]["ipfs_hash"] = asset_ipfs_hash
-
     def publish_service_data_to_ipfs(self):
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
         if service.service_state.state == ServiceStatus.APPROVED.value:
@@ -124,7 +111,7 @@ class ServicePublisherService:
                 "service_type": "grpc"
             }
             service.assets["proto_files"]["ipfs_hash"] = asset_ipfs_hash
-            self.publish_assets(service)
+            ServicePublisherDomainService.publish_assets(service)
             service = ServicePublisherRepository().save_service(self._username, service, service.service_state.state)
             service_metadata = service.to_metadata()
             filename = f"{METADATA_FILE_PATH}/{service.uuid}_service_metadata.json"
@@ -283,5 +270,5 @@ class ServicePublisherService:
                 "blockchain_enabled": True
             }
         else:
-            raise Exception("invalid env")
+            raise EnvironmentNotFoundException()
         return daemon_config

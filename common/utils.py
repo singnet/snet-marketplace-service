@@ -241,12 +241,12 @@ def ipfsuri_to_bytesuri(uri):
     return uri.encode("ascii").ljust(32 * (len(uri) // 32 + 1), b"\0")
 
 
-def publish_file_in_ipfs(file_url, file_dir, ipfs_client):
+def publish_file_in_ipfs(file_url, file_dir, ipfs_client, wrap_with_directory=True):
     filename = download_file_from_url(file_url=file_url, file_dir=file_dir)
     file_type = os.path.splitext(filename)[1]
     if file_type.lower() == ".zip":
         return publish_zip_file_in_ipfs(filename, file_dir, ipfs_client)
-    ipfs_hash = ipfs_client.write_file_in_ipfs(f"{file_dir}/{filename}", wrap_with_directory=False)
+    ipfs_hash = ipfs_client.write_file_in_ipfs(f"{file_dir}/{filename}", wrap_with_directory)
     return ipfs_hash
 
 

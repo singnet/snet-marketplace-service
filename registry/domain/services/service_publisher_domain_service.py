@@ -4,7 +4,7 @@ from common import utils
 from common.blockchain_util import BlockChainUtil
 from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
-from common.utils import ipfsuri_to_bytesuri, json_to_file, publish_zip_file_in_ipfs
+from common.utils import ipfsuri_to_bytesuri, json_to_file, publish_zip_file_in_ipfs, publish_file_in_ipfs
 from registry.config import ASSET_DIR, METADATA_FILE_PATH, IPFS_URL, NETWORK_ID, \
     NETWORKS, BLOCKCHAIN_TEST_ENV
 from registry.constants import TEST_REG_ADDR_PATH, TEST_REG_CNTRCT_PATH, EnvironmentType
@@ -177,6 +177,7 @@ class ServicePublisherDomainService:
     def publish_service_data_to_ipfs(self, service, environment):
         # publish assets
         service = self.publish_service_proto_to_ipfs(service)
+        self.publish_assets(service)
         service_metadata = service.to_metadata()
         if environment == EnvironmentType.TEST.value:
             for group in service.groups:
@@ -196,3 +197,16 @@ class ServicePublisherDomainService:
             org_id=org_id, service_id=service.service_id,
             metadata_uri=ipfsuri_to_bytesuri(service.metadata_uri), tags=service.tags, environment=environment)
         return service.to_dict()
+
+    @staticmethod
+    def publish_assets(service):
+        ASSETS_SUPPORTED = ["hero_image", "demo_files"]
+        for asset in service.assets.keys():
+            if asset in ASSETS_SUPPORTED:
+                asset_url = service.assets.get(asset, {}).get("url", None)
+                if asset_url is None:
+                    logger.info(f"asset url for {asset} is missing ")
+                asset_ipfs_hash = publish_file_in_ipfs(file_url=asset_url,
+                                                       file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}",
+                                                       ipfs_client=IPFSUtil(IPFS_URL['url'], IPFS_URL['port']))
+                service.assets[asset]["ipfs_hash"] = asset_ipfs_hash
