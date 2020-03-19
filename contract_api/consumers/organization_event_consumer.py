@@ -33,7 +33,7 @@ class OrganizationEventConsumer(EventConsumer):
         pass
 
     def _push_asset_to_s3_using_hash(self, hash, org_id, service_id):
-        io_bytes = self._ipfs_util.read_bytesio_from_ipfs(hash)
+        io_bytes = self._ipfs_util.read_bytesio_from_ipfs(hash.lstrip("ipfs://"))
         filename = hash.split("/")[1]
         if service_id:
             s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename
