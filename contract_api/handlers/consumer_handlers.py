@@ -1,10 +1,10 @@
 from common.constant import StatusCode
 from common.logger import get_logger
-from common.utils import generate_lambda_response, Utils
-from contract_api.config import NETWORKS, SLACK_HOOK
-from contract_api.config import NETWORK_ID
+from common.utils import Utils, generate_lambda_response, handle_exception_with_slack_notification
+from contract_api.config import IPFS_URL, NETWORKS, NETWORK_ID, SLACK_HOOK
 from contract_api.consumers.consumer_factory import get_organization_event_consumer, get_service_event_consumer
 from contract_api.consumers.mpe_event_consumer import MPEEventConsumer
+from contract_api.consumers.service_event_consumer import ServiceCreatedDeploymentEventHandler
 
 logger = get_logger(__name__)
 util=Utils()
@@ -46,3 +46,11 @@ def mpe_event_consumer_handler(event, context):
         logger.exception(f"error  {str(e)} while processing event {event}")
         util.report_slack("ERROR", f"got error :  {str(e)} \n for event : {event}", SLACK_HOOK)
         return generate_lambda_response(500, str(e))
+
+
+@handle_exception_with_slack_notification(logger=logger, SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID)
+def service_create_deployment_handler(event, context):
+    service_deployment_handler = ServiceCreatedDeploymentEventHandler(NETWORKS[NETWORK_ID]["ws_provider"],
+                                                                      IPFS_URL['url'], IPFS_URL['port'])
+    service_deployment_handler.on_event(event)
+    return generate_lambda_response(200, StatusCode.OK)

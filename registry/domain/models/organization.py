@@ -9,7 +9,7 @@ from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
 from common.utils import datetime_to_string, json_to_file
 from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH
-from registry.constants import OrganizationAddressType, OrganizationActions, OrganizationStatus, OrganizationType
+from registry.constants import OrganizationActions, OrganizationAddressType, OrganizationStatus, OrganizationType
 from registry.domain.models.organization_address import OrganizationAddress
 
 logger = get_logger(__name__)
@@ -106,6 +106,10 @@ class Organization:
     def org_type(self):
         return self.__org_type
 
+    @org_type.setter
+    def org_type(self, val):
+        self.__org_type = val
+
     @property
     def description(self):
         return self.__description
@@ -114,9 +118,17 @@ class Organization:
     def short_description(self):
         return self.__short_description
 
+    @short_description.setter
+    def short_description(self, val):
+        self.__short_description = val
+
     @property
     def url(self):
         return self.__url
+
+    @url.setter
+    def url(self, val):
+        self.__url = val
 
     @property
     def duns_no(self):
@@ -130,6 +142,10 @@ class Organization:
     def contacts(self):
         return self.__contacts
 
+    @contacts.setter
+    def contacts(self, val):
+        self.__contacts = val
+
     @property
     def addresses(self):
         return self.__addresses
@@ -138,13 +154,26 @@ class Organization:
     def assets(self):
         return self.__assets
 
+    @assets.setter
+    def assets(self, val):
+        self.__assets = val
+
+
     @property
     def metadata_ipfs_uri(self):
         return self.__metadata_ipfs_uri
 
+    @metadata_ipfs_uri.setter
+    def metadata_ipfs_uri(self, val):
+        self.__metadata_ipfs_uri = val
+
     @property
     def groups(self):
         return self.__groups
+
+    @groups.setter
+    def groups(self, val):
+        self.__groups = val
 
     @property
     def members(self):

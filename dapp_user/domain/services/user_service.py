@@ -1,9 +1,7 @@
 import json
-from urllib.parse import unquote, urlparse
-
 import boto3
 import grpc
-
+from urllib.parse import unquote, urlparse
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from common.utils import generate_lambda_response
@@ -11,9 +9,10 @@ from dapp_user.config import DELETE_USER_WALLET_ARN, GET_FREE_CALLS_METERING_ARN
     GET_SIGNATURE_TO_GET_FREE_CALL_FROM_DAEMON, REGION_NAME
 from dapp_user.constant import Status
 from dapp_user.domain.factory.user_factory import UserFactory
-from dapp_user.exceptions import EmailNotVerifiedException
 from dapp_user.infrastructure.repositories.user_repository import UserRepository
 from dapp_user.stubs import state_service_pb2, state_service_pb2_grpc
+from dapp_user.exceptions import EmailNotVerifiedException
+
 
 logger = get_logger(__name__)
 

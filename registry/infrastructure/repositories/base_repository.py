@@ -1,16 +1,16 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+import os
 
 from registry.config import NETWORKS, NETWORK_ID
+from registry.infrastructure.models import Base
 
-engine = create_engine(
-    f"{NETWORKS[NETWORK_ID]['db']['DB_DRIVER']}://{NETWORKS[NETWORK_ID]['db']['DB_USER']}:"
-    f"{NETWORKS[NETWORK_ID]['db']['DB_PASSWORD']}"
-    f"@{NETWORKS[NETWORK_ID]['db']['DB_HOST']}:"
-    f"{NETWORKS[NETWORK_ID]['db']['DB_PORT']}/{NETWORKS[NETWORK_ID]['db']['DB_NAME']}", echo=False)
-
+DB_URL = os.getenv('DB_URL', 'sqlite:///dev_metrics.db')
+engine = create_engine(DB_URL, echo=False)
 Session = sessionmaker(bind=engine)
-default_session = Session()
+Base.metadata.create_all(engine)
+default_session=Session(autoflush=False)
+
 
 
 class BaseRepository:

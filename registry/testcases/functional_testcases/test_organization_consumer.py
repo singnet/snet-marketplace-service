@@ -102,11 +102,12 @@ class TestOrganizationService(unittest.TestCase):
         assert published_org.name == "test_org"
         assert published_org.id == "org_id"
         assert published_org.org_type == "organization"
-        #assert published_org.metadata_ipfs_uri == "Q3E12"
+        assert published_org.metadata_ipfs_uri == "Q3E12"
         assert published_org.groups[0].group_id == "group_id"
         assert published_org.groups[0].name == "my-group"
         assert published_org.groups[0].payment_address == "0x123"
         assert published_org.duns_no == '123456789'
+        assert published_org.org_state.state == "PUBLISHED"
 
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
@@ -183,7 +184,7 @@ class TestOrganizationService(unittest.TestCase):
         assert published_org.groups[0].group_id == "group_id"
         assert published_org.groups[0].name == "my-group"
         assert published_org.groups[0].payment_address == "0x123"
-        #assert published_org.org_state.state == 'PUBLISHED_UNAPPROVED'
+        assert published_org.org_state.state == 'PUBLISHED_UNAPPROVED'
 
     def tearDown(self):
         self.org_repo.session.query(Organization).delete()
