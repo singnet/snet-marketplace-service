@@ -172,7 +172,9 @@ class ServiceFactory:
     @staticmethod
     def parse_service_metadata_assets(assets, existing_assets):
         if assets is None:
-            return None
+            assets= {}
+        if existing_assets is None:
+            existing_assets={}
         url = ""
         for key, value in assets.items():
             if existing_assets and key in existing_assets:
