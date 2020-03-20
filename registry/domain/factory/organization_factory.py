@@ -197,7 +197,9 @@ class OrganizationFactory:
     @staticmethod
     def parse_organization_metadata_assets(assets, existing_assets):
         if assets is None:
-            return None
+            assets= {}
+        if existing_assets is None:
+            existing_assets={}
         url = ""
         for key, value in assets.items():
             if existing_assets and key in existing_assets:
@@ -210,7 +212,8 @@ class OrganizationFactory:
                 "ipfs_hash": value,
                 "url": url
             }
-        return assets
+        merged = {**existing_assets, **assets}
+        return  merged
 
     @staticmethod
     def parse_organization_metadata(org_uuid, ipfs_org_metadata, origin, duns_no, addresses, metadata_uri,existing_assets,transaction_hash,members):
