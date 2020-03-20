@@ -220,8 +220,8 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
         lambda_payload = {
             "httpMethod": "GET",
             "queryStringParameters": {
-                "orgId": org_id,
-                "serviceId": service_id
+                "org_id": org_id,
+                "service_id": service_id
             },
         }
         response = self.lambda_client.invoke(
