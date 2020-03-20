@@ -191,7 +191,8 @@ class SeviceDeletedEventConsumer(ServiceEventConsumer):
 
 class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
 
-    def __init__(self):
+    def __init__(self, ws_provider, ipfs_url, ipfs_port):
+        super().__init__(ws_provider, ipfs_url, ipfs_port)
         self.lambda_client = boto3.client("lambda", region_name=REGION_NAME)
 
     def on_event(self, event):
@@ -228,7 +229,9 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
             InvocationType="RequestResponse",
             Payload=json.dumps(lambda_payload),
         )
+
         result = json.loads(response.get('Payload').read())
+        logger.info(f"Extracted  file path for {org_id} {service_id} result {result}")
         response = json.loads(result['body'])
 
         if response["status"] == "success":
@@ -264,11 +267,15 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
         proto_file_s3_path, component_files_s3_path = self._get_s3_path_url_for_proto_and_component(org_id, service_id)
 
         proto_file_tar_path = self._extract_zip_and_and_tar(org_id, service_id, proto_file_s3_path)
+        logger.info(f"Extracted proto file path for {org_id} {service_id}")
         component_files_tar_path = self._extract_zip_and_and_tar(org_id, service_id,
                                                                  component_files_s3_path)
 
+
+
         self._s3_util.push_file_to_s3(proto_file_tar_path, ASSETS_BUCKET_NAME,
                                       f"assets/{org_id}/{service_id}/{proto_file_tar_path.split('/')[-1]}")
+        logger.info(f"Pushed proto file tar to s3 {org_id} {service_id}")
         self._s3_util.push_file_to_s3(proto_file_tar_path, ASSETS_BUCKET_NAME,
                                       f"assets/{org_id}/{service_id}/{component_files_tar_path.split('/')[-1]}")
 
