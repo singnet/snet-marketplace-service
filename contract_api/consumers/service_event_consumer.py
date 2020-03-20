@@ -233,7 +233,6 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
 
         result = json.loads(response.get('Payload').read())
 
-        logger.info(f"Extracted  file path for {org_id} {service_id} result {result}")
         response = json.loads(result['body'])
 
         if response["status"] == "success":
@@ -244,14 +243,18 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
         return proto_file_s3_path, component_files_s3_path
 
     def _trigger_code_build_for_marketplace_dapp(self, org_id, service_id):
-        logger.info(f"Triggered Dapp Code Build")
         cb = boto3.client('codebuild')
         build = {
             'projectName': MARKETPLACE_DAPP_BUILD,
             'environmentVariablesOverride': [
                 {
-                    'name': 'event_id',
-                    'value': f"{org_id}_{service_id}",
+                    'name': 'org_id',
+                    'value': f"{org_id}",
+                    'type': 'PLAINTEXT'
+                },
+                {
+                    'name': 'service_id',
+                    'value': f"{service_id}",
                     'type': 'PLAINTEXT'
                 },
             ]
@@ -266,18 +269,17 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
             raise e
 
     def _process_service_deployment(self, org_id, service_id):
+        logger.info(f"Processing Service deployment for {org_id} {service_id}")
         proto_file_s3_path, component_files_s3_path = self._get_s3_path_url_for_proto_and_component(org_id, service_id)
 
         proto_file_tar_path = self._extract_zip_and_and_tar(org_id, service_id, proto_file_s3_path)
-        logger.info(f"Extracted proto file path for {org_id} {service_id}")
         component_files_tar_path = self._extract_zip_and_and_tar(org_id, service_id,
                                                                  component_files_s3_path)
 
 
-
         self._s3_util.push_file_to_s3(proto_file_tar_path, ASSETS_BUCKET_NAME,
                                       f"assets/{org_id}/{service_id}/{proto_file_tar_path.split('/')[-1]}")
-        logger.info(f"Pushed proto file tar to s3 {org_id} {service_id}")
+
         self._s3_util.push_file_to_s3(proto_file_tar_path, ASSETS_BUCKET_NAME,
                                       f"assets/{org_id}/{service_id}/{component_files_tar_path.split('/')[-1]}")
 
