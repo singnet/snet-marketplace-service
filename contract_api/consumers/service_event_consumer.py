@@ -11,7 +11,8 @@ from common.repository import Repository
 from common.s3_util import S3Util
 from common.utils import download_file_from_url, extract_zip_file, make_tarfile
 from contract_api.config import ASSETS_BUCKET_NAME, ASSETS_PREFIX, GET_SERVICE_FROM_ORGID_SERVICE_ID_REGISTRY_ARN, \
-    MARKETPLACE_DAPP_BUILD, NETWORKS, NETWORK_ID, REGION_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY
+    MARKETPLACE_DAPP_BUILD, NETWORKS, NETWORK_ID, REGION_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY, \
+    ASSET_TEMP_EXTRACT_DIRECTORY
 from contract_api.consumers.event_consumer import EventConsumer
 from contract_api.dao.service_repository import ServiceRepository
 
@@ -200,7 +201,7 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
         self._process_service_deployment(org_id=org_id, service_id=service_id)
 
     def _extract_zip_and_and_tar(self, org_id, service_id, s3_url):
-        root_directory = "/var/task/"
+        root_directory = ASSET_TEMP_EXTRACT_DIRECTORY
         zip_directory = root_directory + org_id + "/" + "/" + service_id
         extracted_zip_directory = root_directory + "extracted/" + org_id + "/" + service_id
 
@@ -231,6 +232,7 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
         )
 
         result = json.loads(response.get('Payload').read())
+
         logger.info(f"Extracted  file path for {org_id} {service_id} result {result}")
         response = json.loads(result['body'])
 
