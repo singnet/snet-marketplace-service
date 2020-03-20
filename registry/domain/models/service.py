@@ -1,5 +1,5 @@
 from cerberus import Validator
-
+from registry.constants import UserType, ServiceSupportType
 from common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -108,6 +108,7 @@ SERVICE_METADATA_SCHEMA = {
 }
 REQUIRED_ASSETS_FOR_METADATA = ['hero_image']
 
+
 class Service:
     def __init__(self, org_uuid, uuid, service_id, display_name, short_description, description, project_url, proto,
                  assets, ranking, rating, contributors, tags, mpe_address, metadata_uri, groups, service_state):
@@ -128,6 +129,7 @@ class Service:
         self._metadata_uri = metadata_uri
         self._groups = groups
         self._service_state = service_state
+        self._comments = {UserType.SERVICE_PROVIDER.value: "", UserType.SERVICE_APPROVER.value: ""}
 
     def to_dict(self):
         return {
@@ -147,7 +149,8 @@ class Service:
             "mpe_address": self._mpe_address,
             "metadata_uri": self._metadata_uri,
             "groups": [group.to_dict() for group in self._groups],
-            "service_state": self._service_state.to_dict()
+            "service_state": self._service_state.to_dict(),
+            "comments": self._comments
         }
 
     def to_metadata(self):
@@ -276,7 +279,6 @@ class Service:
     def tags(self, val):
         self._tags = val
 
-
     @property
     def mpe_address(self):
         return self._mpe_address
@@ -284,6 +286,15 @@ class Service:
     @mpe_address.setter
     def mpe_address(self, val):
         self._mpe_address = val
+
+    @property
+    def comments(self):
+        return self._comments
+
+    @comments.setter
+    def comments(self, comments):
+        self._comments[UserType.SERVICE_PROVIDER.value] = comments.get(UserType.SERVICE_PROVIDER.value, "")
+        self._comments[UserType.SERVICE_APPROVER.value] = comments.get(UserType.SERVICE_APPROVER.value, "")
 
     @staticmethod
     def is_metadata_valid(service_metadata):
@@ -301,4 +312,3 @@ class Service:
             if asset in REQUIRED_ASSETS_FOR_METADATA:
                 metadata_assets.update({asset: self.assets[asset].get("ipfs_hash", "")})
         return metadata_assets
-
