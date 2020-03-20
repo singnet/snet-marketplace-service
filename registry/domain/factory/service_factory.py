@@ -4,8 +4,9 @@ from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus
 from registry.domain.models.service import Service
 from registry.domain.models.service_group import ServiceGroup
 from registry.domain.models.service_state import ServiceState
+from registry.domain.models.service_comment import ServiceComment
 from registry.infrastructure.models import Service as ServiceDBModel, ServiceGroup as ServiceGroupDBModel, \
-    ServiceReviewHistory, ServiceState as ServiceStateDBModel
+    ServiceReviewHistory, ServiceState as ServiceStateDBModel, ServiceComment as ServiceCommentDBModel
 
 
 class ServiceFactory:
@@ -60,8 +61,9 @@ class ServiceFactory:
             mpe_address=service.mpe_address,
             created_on=dt.utcnow(),
             groups=[ServiceFactory.convert_service_group_entity_model_to_db_model(group) for group in service.groups],
-            service_state=ServiceFactory.convert_service_state_entity_model_to_db_model(username, service.service_state),
-            updated_on = dt.utcnow()
+            service_state=ServiceFactory.convert_service_state_entity_model_to_db_model(username,
+                                                                                        service.service_state),
+            updated_on=dt.utcnow()
         )
 
     @staticmethod
@@ -170,13 +172,37 @@ class ServiceFactory:
             service_state_entity_model)
 
     @staticmethod
+    def create_service_comment_entity_model(org_uuid, service_uuid, support_type, user_type, commented_by, comment):
+        return ServiceComment(
+            org_uuid=org_uuid,
+            service_uuid=service_uuid,
+            support_type=support_type,
+            user_type=user_type,
+            commented_by=commented_by,
+            comment=comment
+        )
+
+    @staticmethod
+    def convert_service_comment_db_model_to_entity_model(service_comment):
+        if service_comment is None:
+            return None
+        return ServiceComment(
+            org_uuid=service_comment.org_uuid,
+            service_uuid = service_comment.service_uuid,
+            support_type = service_comment.support_type,
+            user_type = service_comment.user_type,
+            commented_by = service_comment.commented_by,
+            comment = service_comment.comment
+        )
+
+    @staticmethod
     def parse_service_metadata_assets(assets, existing_assets):
         if assets is None:
             return None
         url = ""
         for key, value in assets.items():
             if existing_assets and key in existing_assets:
-                if  existing_assets[key] and 'url' in existing_assets[key]:
+                if existing_assets[key] and 'url' in existing_assets[key]:
                     url = existing_assets[key]['url']
             else:
                 url = ""
