@@ -185,4 +185,5 @@ class ServiceFactory:
                 "ipfs_hash": value,
                 "url": url
             }
-        return assets
+        merged = {**existing_assets, **assets}
+        return merged

@@ -210,7 +210,8 @@ class OrganizationFactory:
                 "ipfs_hash": value,
                 "url": url
             }
-        return assets
+        merged = {**existing_assets, **assets}
+        return  merged
 
     @staticmethod
     def parse_organization_metadata(org_uuid, ipfs_org_metadata, origin, duns_no, addresses, metadata_uri,existing_assets,transaction_hash,members):
