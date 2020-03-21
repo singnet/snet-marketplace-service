@@ -114,4 +114,4 @@ class OrganizationOrchestratorService:
         status = raw_response["statusCode"]
         if status != 200:
             raise Exception("Failed to create Organization")
-        return json.loads(raw_response["body"])
+        return json.loads(raw_response["body"])["data"]
