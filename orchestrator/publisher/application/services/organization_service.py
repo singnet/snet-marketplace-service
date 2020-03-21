@@ -112,6 +112,6 @@ class OrganizationOrchestratorService:
                                                       invocation_type="RequestResponse",
                                                       payload=json.dumps(create_organization_payload))
         status = raw_response["statusCode"]
-        if status != 201:
+        if status != 200:
             raise Exception("Failed to create Organization")
         return json.loads(raw_response["body"])
