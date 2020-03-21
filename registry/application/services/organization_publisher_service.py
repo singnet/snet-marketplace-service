@@ -195,7 +195,7 @@ class OrganizationPublisherService:
                 status = verification_details["status"]
                 updated_by = verification_details["updated_by"]
                 org_repo.update_all_individual_organization_for_user(owner_username, status, updated_by)
-            elif ORG_TYPE_VERIFICATION_TYPE_MAPPING[verification_type] == OrganizationType.INDIVIDUAL.value:
+            elif ORG_TYPE_VERIFICATION_TYPE_MAPPING[verification_type] == OrganizationType.ORGANIZATION.value:
                 status = verification_details["status"]
                 org_uuid = verification_details["org_uuid"]
                 updated_by = verification_details["updated_by"]
