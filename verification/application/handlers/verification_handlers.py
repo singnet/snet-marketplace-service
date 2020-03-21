@@ -47,6 +47,8 @@ def get_status(event, context):
     verification_type = query_parameters["type"]
     if verification_type == VerificationType.JUMIO.value:
         entity_id = event["requestContext"]["authorizer"]["claims"]["email"]
+    elif verification_type == VerificationType.DUNS.value:
+        entity_id = query_parameters["entity_id"]
     else:
         raise Exception("Invalid verification type")
     response = VerificationManager().get_status_for_entity(entity_id)
