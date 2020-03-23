@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 from unittest import TestCase
+from unittest.mock import patch, Mock
 from uuid import uuid4
 
 from verification.application.handlers.verification_handlers import initiate, callback
@@ -37,7 +38,9 @@ class TestDUNSVerification(TestCase):
         self.assertEqual(DUNSVerificationStatus.PENDING.value, duns_verification.status)
         self.assertEqual(org_uuid, duns_verification.org_uuid)
 
-    def test_callback(self):
+    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123"),
+           invoke_lambda=Mock(return_value={"statusCode": 201})))
+    def test_callback(self, mock_boto):
         test_verification_id = "9f2c90119cb7424b8d69319ce211ddfc"
         verification_type = "DUNS"
         org_uuid = uuid4().hex
