@@ -239,3 +239,12 @@ def get_service_details_using_org_id_service_id(event, context):
         StatusCode.OK,
         {"status": "success", "data": service.to_dict(), "error": {}}, cors_enabled=True
     )
+
+
+def service_deployment_status_notification_handler(event,context):
+    logger.info(f"Service Build status event {event}")
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": "chill", "error": {}}, cors_enabled=True
+    )
+
