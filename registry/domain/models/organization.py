@@ -38,7 +38,12 @@ class Organization:
     def to_metadata(self):
         assets = {}
         for key in self.__assets:
-            assets[key] = self.__assets[key]["ipfs_uri"]
+            ipfs_hash = ""
+            ipfs_uri = self.__assets[key]["ipfs_uri"]
+            uri_prefix = "ipfs://"
+            if ipfs_uri.startswith(uri_prefix):
+                ipfs_hash = ipfs_uri[len(uri_prefix):]
+            assets[key] = ipfs_hash
         return {
             "org_name": self.__name,
             "org_id": self.__id,
