@@ -1,7 +1,9 @@
 from datetime import datetime as dt
 from registry.domain.factory.service_factory import ServiceFactory
-from registry.infrastructure.models import Service, ServiceGroup, ServiceState, ServiceReviewHistory, Organization
+from registry.infrastructure.models import Service, ServiceGroup, ServiceState, ServiceReviewHistory, Organization, \
+    ServiceComment
 from registry.infrastructure.repositories.base_repository import BaseRepository
+from registry.constants import ServiceSupportType, UserType
 from sqlalchemy import func
 
 
@@ -137,3 +139,34 @@ class ServicePublisherRepository(BaseRepository):
             self.session.rollback()
             raise e
         return org_uuid, service
+
+    def save_service_comments(self, service_comment):
+        self.add_item(
+            ServiceComment(
+                org_uuid=service_comment.org_uuid,
+                service_uuid=service_comment.service_uuid,
+                support_type=service_comment.support_type,
+                user_type=service_comment.user_type,
+                commented_by=service_comment.commented_by,
+                comment=service_comment.comment,
+                created_on=dt.utcnow(),
+                updated_on=dt.utcnow()
+
+            )
+        )
+        return service_comment.to_dict()
+
+    def get_last_service_comment(self, org_uuid, service_uuid, support_type, user_type):
+        try:
+            service_comment_db = self.session.query(ServiceComment)\
+                .filter(ServiceComment.org_uuid == org_uuid).\
+                filter(ServiceComment.service_uuid == service_uuid).\
+                filter(ServiceComment.support_type == support_type).\
+                filter(ServiceComment.user_type == user_type).\
+                order_by(ServiceComment.created_on.desc()).first()
+            service_comment = ServiceFactory().convert_service_comment_db_model_to_entity_model(service_comment_db)
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            raise e
+        return service_comment

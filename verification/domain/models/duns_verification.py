@@ -51,7 +51,7 @@ class DUNSVerification:
 
     def add_comment(self, comment, username):
         self.comments.append(
-            Comment(comment, username, datetime.utcnow())
+            Comment(comment, username, datetime_to_string(datetime.utcnow()))
         )
 
 
@@ -65,8 +65,6 @@ class Comment:
         comment_dict = {
             "comment": self.comment,
             "created_by": self.created_by,
-            "created_at": ""
+            "created_at": self.created_at
         }
-        if self.created_at is not None:
-            comment_dict["created_at"] = datetime_to_string(self.created_at)
         return comment_dict

@@ -131,6 +131,7 @@ class VerificationManager:
             duns_repository.update_verification(duns_verification)
         else:
             raise MethodNotImplemented()
+        self._ack_verification(verification)
         return {}
 
     def _ack_verification(self, verification):
