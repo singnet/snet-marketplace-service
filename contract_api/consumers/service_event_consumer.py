@@ -202,7 +202,7 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
 
     def _extract_zip_and_and_tar(self, org_id, service_id, s3_url):
         root_directory = ASSET_TEMP_EXTRACT_DIRECTORY
-        zip_directory = root_directory + org_id + "/" + "/" + service_id
+        zip_directory = root_directory + org_id  + "/" + service_id
         extracted_zip_directory = root_directory + "extracted/" + org_id + "/" + service_id
 
         zip_file_name = download_file_from_url(s3_url, zip_directory)
@@ -280,7 +280,11 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
         self._s3_util.push_file_to_s3(proto_file_tar_path, ASSETS_BUCKET_NAME,
                                       f"assets/{org_id}/{service_id}/{proto_file_tar_path.split('/')[-1]}")
 
-        self._s3_util.push_file_to_s3(proto_file_tar_path, ASSETS_BUCKET_NAME,
+        self._s3_util.push_file_to_s3(component_files_tar_path, ASSETS_BUCKET_NAME,
                                       f"assets/{org_id}/{service_id}/{component_files_tar_path.split('/')[-1]}")
 
         self._trigger_code_build_for_marketplace_dapp(org_id, service_id)
+
+
+
+
