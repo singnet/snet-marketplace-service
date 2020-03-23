@@ -58,7 +58,7 @@ def submit_service_for_approval(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
     payload = json.loads(event["body"])
-    if "org_uuid" not in path_parameters and "service_uuid" not in path_parameters:
+    if not path_parameters.get("org_uuid", "") and not path_parameters.get("service_uuid", ""):
         raise BadRequestException()
     org_uuid = path_parameters["org_uuid"]
     service_uuid = path_parameters["service_uuid"]
@@ -95,7 +95,7 @@ def create_service(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
     payload = json.loads(event["body"])
-    if "org_uuid" not in path_parameters:
+    if not path_parameters.get("org_uuid", ""):
         raise BadRequestException()
     org_uuid = path_parameters["org_uuid"]
     response = ServicePublisherService(username, org_uuid, None).create_service(payload)
