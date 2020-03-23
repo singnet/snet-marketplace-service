@@ -21,10 +21,12 @@ class ContractType(Enum):
 class BlockChainUtil(object):
 
     def __init__(self, provider_type, provider):
-        if provider_type == "HTTP_PROVIDER":
-            self.provider = Web3.HTTPProvider(provider)
-        elif provider_type == "WS_PROVIDER":
-            self.provider = web3.providers.WebsocketProvider(provider)
+        self._provider_type = provider_type
+        self._provider_url = provider
+        if self._provider_type == "HTTP_PROVIDER":
+            self.provider = Web3.HTTPProvider(self._provider_url)
+        elif self._provider_type == "WS_PROVIDER":
+            self.provider = web3.providers.WebsocketProvider(self._provider_url)
         else:
             raise Exception("Only HTTP_PROVIDER and WS_PROVIDER provider type are supported.")
         self.web3_object = Web3(self.provider)
@@ -39,7 +41,8 @@ class BlockChainUtil(object):
         return Web3.toChecksumAddress(contract[str(net_id)][key])
 
     def contract_instance(self, contract_abi, address):
-        return self.web3_object.eth.contract(abi=contract_abi, address=address)
+        web3_object = Web3(self.provider)
+        return web3_object.eth.contract(abi=contract_abi, address=address)
 
     def get_contract_instance(self, base_path, contract_name, net_id):
         contract_network_path, contract_abi_path = self.get_contract_file_paths(base_path, contract_name)
