@@ -100,6 +100,13 @@ class OrganizationPublisherRepository(BaseRepository):
     def update_organization_status(self, org_uuid, status, updated_by):
         try:
             organization = self.session.query(Organization).filter(Organization.uuid == org_uuid).first()
+            if organization.org_state[0].state in [OrganizationStatus.ONBOARDING.value,
+                                                   OrganizationStatus.ONBOARDING_REJECTED,
+                                                   OrganizationStatus.ONBOARDING_APPROVED]:
+                if status == OrganizationStatus.REJECTED.value:
+                    status = OrganizationStatus.ONBOARDING_REJECTED
+                elif status == OrganizationStatus.APPROVED.value:
+                    status = OrganizationStatus.ONBOARDING_APPROVED
             organization.org_state[0].state = status
             organization.org_state[0].updated_by = updated_by
             organization.org_state[0].updated_on = datetime.utcnow()
