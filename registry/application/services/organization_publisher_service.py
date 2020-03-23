@@ -8,7 +8,8 @@ from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
 from registry.config import NOTIFICATION_ARN, PUBLISHER_PORTAL_DAPP_URL, REGION_NAME
 from registry.constants import OrganizationStatus, OrganizationMemberStatus, Role, OrganizationActions, \
-    OrganizationType, ORG_TYPE_VERIFICATION_TYPE_MAPPING, OrganizationIDAvailabilityStatus, ORG_STATUS_LIST
+    OrganizationType, ORG_TYPE_VERIFICATION_TYPE_MAPPING, OrganizationIDAvailabilityStatus, ORG_STATUS_LIST, \
+    EnvironmentType
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization
 from registry.domain.services.organization_domain_service import OrganizationService
@@ -41,7 +42,10 @@ class OrganizationPublisherService:
 
     def get_org_id_availability_status(self, org_id):
         org_id_list = self.get_all_org_id()
+
         if org_id in org_id_list:
+            return OrganizationIDAvailabilityStatus.UNAVAILABLE.value
+        if OrganizationService().is_org_published(org_id, EnvironmentType.MAIN.value):
             return OrganizationIDAvailabilityStatus.UNAVAILABLE.value
         return OrganizationIDAvailabilityStatus.AVAILABLE.value
 

@@ -31,6 +31,7 @@ class DUNSVerificationStatus(Enum):
     PENDING = "PENDING"
     APPROVED = "APPROVED"
     REJECTED = "REJECTED"
+    CHANGE_REQUESTED = "CHANGE_REQUESTED"
 
 
 class VerificationStatus(Enum):
@@ -39,6 +40,7 @@ class VerificationStatus(Enum):
     REJECTED = "REJECTED"
     FAILED = "FAILED"
     ERROR = "ERROR"
+    CHANGE_REQUESTED = "CHANGE_REQUESTED"
 
 
 class VerificationType(Enum):
