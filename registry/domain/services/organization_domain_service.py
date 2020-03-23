@@ -5,7 +5,7 @@ from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
 from common.utils import ipfsuri_to_bytesuri
 from registry.config import BLOCKCHAIN_TEST_ENV, NETWORKS, NETWORK_ID
-from registry.constants import EnvironmentType, TEST_REG_CNTRCT_PATH, TEST_REG_ADDR_PATH
+from registry.constants import EnvironmentType, TEST_REG_CNTRCT_PATH, TEST_REG_ADDR_PATH, REG_CNTRCT_PATH, REG_ADDR_PATH
 
 logger = get_logger(__name__)
 
@@ -15,9 +15,22 @@ class OrganizationService:
         self.blockchain_util = BlockChainUtil(provider_type="HTTP_PROVIDER",
                                               provider=NETWORKS[NETWORK_ID]['http_provider'])
 
+    def is_org_published(self, org_id, environment):
+        if environment == EnvironmentType.TEST.value:
+            contract = self.blockchain_util.load_contract(path=TEST_REG_CNTRCT_PATH)
+            contract_address = self.blockchain_util.read_contract_address(net_id=NETWORK_ID, path=TEST_REG_ADDR_PATH,
+                                                                          key='address')
+        elif environment == EnvironmentType.MAIN.value:
+            contract = self.blockchain_util.load_contract(path=REG_CNTRCT_PATH)
+            contract_address = self.blockchain_util.read_contract_address(net_id=NETWORK_ID, path=REG_ADDR_PATH,
+                                                                          key='address')
+        else:
+            raise MethodNotImplemented()
+        return self.organization_exist_in_blockchain(org_id, contract, contract_address)
+
     def organization_exist_in_blockchain(self, org_id, contract, contract_address):
         method_name = "getOrganizationById"
-        positional_inputs = (web3.Web3.toHex(text=org_id),)
+        positional_inputs = (web3.Web3.toHex(text=org_id))
         contract = self.blockchain_util.contract_instance(contract_abi=contract, address=contract_address)
 
         org_data = self.blockchain_util.call_contract_function(contract=contract, contract_function=method_name,
@@ -76,10 +89,7 @@ class OrganizationService:
         members = []
         environment = EnvironmentType.TEST.value
         org_id = organization.id
-        contract = self.blockchain_util.load_contract(path=TEST_REG_CNTRCT_PATH)
-        contract_address = self.blockchain_util.read_contract_address(net_id=NETWORK_ID, path=TEST_REG_ADDR_PATH,
-                                                                      key='address')
-        if self.organization_exist_in_blockchain(org_id, contract, contract_address):
+        if self.is_org_published(org_id, environment):
             return self.update_organization_in_blockchain(org_id, metadata_uri, environment)
         else:
             return self.register_organization_in_blockchain(org_id, metadata_uri, members, environment)
