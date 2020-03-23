@@ -11,7 +11,8 @@ from common.repository import Repository
 from common.s3_util import S3Util
 from common.utils import download_file_from_url, extract_zip_file, make_tarfile
 from contract_api.config import ASSETS_BUCKET_NAME, ASSETS_PREFIX, GET_SERVICE_FROM_ORGID_SERVICE_ID_REGISTRY_ARN, \
-    MARKETPLACE_DAPP_BUILD, NETWORKS, NETWORK_ID, REGION_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY
+    MARKETPLACE_DAPP_BUILD, NETWORKS, NETWORK_ID, REGION_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY, \
+    ASSET_TEMP_EXTRACT_DIRECTORY
 from contract_api.consumers.event_consumer import EventConsumer
 from contract_api.dao.service_repository import ServiceRepository
 
@@ -191,7 +192,8 @@ class SeviceDeletedEventConsumer(ServiceEventConsumer):
 
 class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
 
-    def __init__(self):
+    def __init__(self, ws_provider, ipfs_url, ipfs_port):
+        super().__init__(ws_provider, ipfs_url, ipfs_port)
         self.lambda_client = boto3.client("lambda", region_name=REGION_NAME)
 
     def on_event(self, event):
@@ -199,7 +201,7 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
         self._process_service_deployment(org_id=org_id, service_id=service_id)
 
     def _extract_zip_and_and_tar(self, org_id, service_id, s3_url):
-        root_directory = "/var/task/"
+        root_directory = ASSET_TEMP_EXTRACT_DIRECTORY
         zip_directory = root_directory + org_id + "/" + "/" + service_id
         extracted_zip_directory = root_directory + "extracted/" + org_id + "/" + service_id
 
@@ -219,8 +221,8 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
         lambda_payload = {
             "httpMethod": "GET",
             "queryStringParameters": {
-                "orgId": org_id,
-                "serviceId": service_id
+                "org_id": org_id,
+                "service_id": service_id
             },
         }
         response = self.lambda_client.invoke(
@@ -228,7 +230,9 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
             InvocationType="RequestResponse",
             Payload=json.dumps(lambda_payload),
         )
+
         result = json.loads(response.get('Payload').read())
+
         response = json.loads(result['body'])
 
         if response["status"] == "success":
@@ -239,14 +243,18 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
         return proto_file_s3_path, component_files_s3_path
 
     def _trigger_code_build_for_marketplace_dapp(self, org_id, service_id):
-        logger.info(f"Triggered Dapp Code Build")
         cb = boto3.client('codebuild')
         build = {
             'projectName': MARKETPLACE_DAPP_BUILD,
             'environmentVariablesOverride': [
                 {
-                    'name': 'event_id',
-                    'value': f"{org_id}_{service_id}",
+                    'name': 'org_id',
+                    'value': f"{org_id}",
+                    'type': 'PLAINTEXT'
+                },
+                {
+                    'name': 'service_id',
+                    'value': f"{service_id}",
                     'type': 'PLAINTEXT'
                 },
             ]
@@ -261,14 +269,17 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
             raise e
 
     def _process_service_deployment(self, org_id, service_id):
+        logger.info(f"Processing Service deployment for {org_id} {service_id}")
         proto_file_s3_path, component_files_s3_path = self._get_s3_path_url_for_proto_and_component(org_id, service_id)
 
         proto_file_tar_path = self._extract_zip_and_and_tar(org_id, service_id, proto_file_s3_path)
         component_files_tar_path = self._extract_zip_and_and_tar(org_id, service_id,
                                                                  component_files_s3_path)
 
+
         self._s3_util.push_file_to_s3(proto_file_tar_path, ASSETS_BUCKET_NAME,
                                       f"assets/{org_id}/{service_id}/{proto_file_tar_path.split('/')[-1]}")
+
         self._s3_util.push_file_to_s3(proto_file_tar_path, ASSETS_BUCKET_NAME,
                                       f"assets/{org_id}/{service_id}/{component_files_tar_path.split('/')[-1]}")
 

@@ -11,7 +11,8 @@ from registry.config import IPFS_URL, METADATA_FILE_PATH, ASSET_DIR, SLACK_HOOK,
     NETWORK_ID
 from registry.config import REGION_NAME, NOTIFICATION_ARN, SLACK_CHANNEL_FOR_APPROVAL_TEAM
 from registry.constants import EnvironmentType
-from registry.constants import ServiceAvailabilityStatus, ServiceStatus, OrganizationStatus
+from registry.constants import ServiceAvailabilityStatus, ServiceStatus, OrganizationStatus, ServiceSupportType, \
+    UserType
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.services.service_publisher_domain_service import ServicePublisherDomainService
 from registry.exceptions import InvalidOrganizationStateException, InvalidServiceStateException, \
@@ -51,6 +52,17 @@ class ServicePublisherService:
         service = ServiceFactory().create_service_entity_model(self._org_uuid, self._service_uuid, payload,
                                                                ServiceStatus.DRAFT.value)
         service = ServicePublisherRepository().save_service(self._username, service, ServiceStatus.DRAFT.value)
+        comments = payload.get("comments", {}).get(UserType.SERVICE_PROVIDER.value, "")
+        if bool(comments):
+            service_provider_comment = service_factory. \
+                create_service_comment_entity_model(org_uuid=self._org_uuid,
+                                                    service_uuid=self._service_uuid,
+                                                    support_type="SERVICE_APPROVAL",
+                                                    user_type="SERVICE_PROVIDER",
+                                                    commented_by=self._username,
+                                                    comment=comments)
+            ServicePublisherRepository().save_service_comments(service_provider_comment)
+            service.comments = self.get_service_comments()
         return service.to_dict()
 
     def save_transaction_hash_for_published_service(self, payload):
@@ -90,8 +102,23 @@ class ServicePublisherService:
                                                                                                  filter_parameters)
         return {"total_count": search_count, "offset": offset, "limit": limit, "result": search_result}
 
+    def get_service_comments(self):
+        service_provider_comment = ServicePublisherRepository().get_last_service_comment(
+            org_uuid=self._org_uuid, service_uuid=self._service_uuid,
+            support_type=ServiceSupportType.SERVICE_APPROVAL.value, user_type=UserType.SERVICE_PROVIDER.value)
+        approver_comment = ServicePublisherRepository().get_last_service_comment(
+            org_uuid=self._org_uuid, service_uuid=self._service_uuid,
+            support_type=ServiceSupportType.SERVICE_APPROVAL.value, user_type=UserType.SERVICE_APPROVER.value)
+        return {
+            UserType.SERVICE_PROVIDER.value: None if not service_provider_comment else service_provider_comment.comment,
+            UserType.SERVICE_APPROVER.value: None if not approver_comment else approver_comment.comment
+        }
+
     def get_service_for_given_service_uuid(self):
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
+        if not service:
+            return None
+        service.comments = self.get_service_comments()
         return service.to_dict()
 
     def publish_service_data_to_ipfs(self):
@@ -219,6 +246,16 @@ class ServicePublisherService:
         service = self.obj_service_publisher_domain_service.publish_service_data_to_ipfs(service,
                                                                                          EnvironmentType.TEST.value)
 
+        comments = payload.get("comments", {}).get(UserType.SERVICE_PROVIDER.value, "")
+        if bool(comments):
+            service_provider_comment = service_factory. \
+                create_service_comment_entity_model(org_uuid=self._org_uuid,
+                                                    service_uuid=self._service_uuid,
+                                                    support_type="SERVICE_APPROVAL",
+                                                    user_type="SERVICE_PROVIDER",
+                                                    commented_by=self._username,
+                                                    comment=comments)
+            ServicePublisherRepository().save_service_comments(service_provider_comment)
         service = ServicePublisherRepository().save_service(self._username, service, service.service_state.state)
 
         # publish service on test network
@@ -261,7 +298,7 @@ class ServicePublisherService:
             }
         elif environment is EnvironmentType.MAIN.value:
             daemon_config = {
-                "ipfs_end_point": f"http://{IPFS_URL['url']}:{IPFS_URL['port']}",
+                "ipfs_end_point": f"{IPFS_URL['url']}:{IPFS_URL['port']}",
                 "blockchain_network_selected": network_name,
                 "organization_id": organization.id,
                 "service_id": service.service_id,
