@@ -9,6 +9,8 @@ import sys
 import tarfile
 import traceback
 import zipfile
+import hashlib
+import hmac
 from urllib.parse import urlparse
 from zipfile import ZipFile
 
@@ -314,3 +316,9 @@ def extract_zip_file(zip_file_path, extracted_path):
 def make_tarfile(output_filename, source_dir):
     with tarfile.open(output_filename, "w:gz") as tar:
         tar.add(source_dir, arcname=os.path.basename(source_dir))
+
+
+def validate_signature(signature, message, key, opt_params):
+    derived_signature = opt_params.get("slack_signature_prefix", "") \
+                        + hmac.new(key.encode(), message.encode(), hashlib.sha256).hexdigest()
+    return hmac.compare_digest(derived_signature, signature)
