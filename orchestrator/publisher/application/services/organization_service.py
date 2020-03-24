@@ -1,8 +1,10 @@
 import json
 
+from common import utils
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
-from orchestrator.config import REGION_NAME, REGISTRY_ARN, WALLETS_SERVICE_ARN, VERIFICATION_ARN
+from orchestrator.config import REGION_NAME, REGISTRY_ARN, WALLETS_SERVICE_ARN, VERIFICATION_ARN, SLACK_HOOK, \
+    SLACK_CHANNEL_FOR_APPROVAL_TEAM
 from orchestrator.constant import VerificationType, OrganizationType
 
 logger = get_logger(__name__)
@@ -75,7 +77,16 @@ class OrganizationOrchestratorService:
             self.initiate_verification(username, VerificationType.JUMIO.value, username)
         else:
             raise Exception(f"Verification initiate failed for Invalid org type {org_type}")
+
+        slack_msg = f"Organization with org_id {org_details['org_id']} is submitted for approval"
+        OrganizationOrchestratorService.notify_approval_team(slack_msg)
         return org_details
+
+    @staticmethod
+    def notify_approval_team(slack_msg):
+        slack_url = SLACK_HOOK['hostname'] + SLACK_HOOK['path']
+        utils.send_slack_notification(slack_msg=slack_msg, slack_url=slack_url,
+                                      slack_channel=SLACK_CHANNEL_FOR_APPROVAL_TEAM)
 
     def initiate_verification(self, entity_id, verification_type, username):
         if verification_type == VerificationType.JUMIO.value:
