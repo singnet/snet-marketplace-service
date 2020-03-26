@@ -271,7 +271,7 @@ class TestService(TestCase):
                 service_uuid="test_service_uuid",
                 group_id="test_group_id",
                 pricing={},
-                endpoints=["https://dummydaemonendpoint.io"],
+                endpoints={"https://dummydaemonendpoint.io":{"verfied":True}},
                 daemon_address=["0xq2w3e4rr5t6y7u8i9"],
                 free_calls=10,
                 free_call_signer_address="",
@@ -387,7 +387,7 @@ class TestService(TestCase):
                 org_uuid="test_org_uuid",
                 service_uuid="test_service_uuid",
                 group_id="test_group_id",
-                endpoints=["https://dummydaemonendpoint.io"],
+                endpoints={"https://dummydaemonendpoint.io": {"verfied": True}},
                 daemon_address=["0xq2w3e4rr5t6y7u8i9"],
                 free_calls=10,
                 free_call_signer_address="0xq2s3e4r5t6y7u8i9o0",
@@ -420,7 +420,7 @@ class TestService(TestCase):
                                 "price_in_cogs": 1
                             }
                         ],
-                        "endpoints": []
+                        "endpoints": {}
                     }
                 ]
             })
@@ -457,7 +457,7 @@ class TestService(TestCase):
                                 "price_in_cogs": 2
                             }
                         ],
-                        "endpoints": []
+                        "endpoints": {}
                     }
                 ]
             })

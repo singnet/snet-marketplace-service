@@ -72,7 +72,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
                 org_uuid=org_uuid,
                 service_uuid=service_uuid,
                 group_id="test_group_id",
-                endpoints=["https://dummydaemonendpoint.io"],
+                endpoints={"https://dummydaemonendpoint.io": {"verfied": True}},
                 daemon_address=["0xq2w3e4rr5t6y7u8i9"],
                 free_calls=10,
                 free_call_signer_address="0xq2s3e4r5t6y7u8i9o0",
