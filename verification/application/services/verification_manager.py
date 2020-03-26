@@ -191,5 +191,6 @@ class VerificationManager:
         response = [verification.to_response() for verification in verification_list]
         if verification_type == VerificationType.DUNS.value:
             for verification in response:
-                duns_repository.get_verification(verification["id"])
+                dun_verification = duns_repository.get_verification(verification["id"])
+                verification["duns"] = dun_verification.to_dict()
         return response
