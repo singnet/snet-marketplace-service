@@ -141,8 +141,8 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
 
-  slack-callback:
-    handler: verification/application/handlers/slack_verification_handlers.callback
+  duns-callback:
+    handler: verification/application/handlers/duns_verification_handlers.callback
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
