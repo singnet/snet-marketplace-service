@@ -36,6 +36,11 @@ class OrganizationPublisherService:
         organizations = org_repo.get_org_for_user(username=self.username)
         return [org.to_response() for org in organizations]
 
+    def get_org_list(self, parameters):
+        org_uuid_list = parameters["org_uuid"].split(",")
+        organizations = org_repo.get_org_for_org_uuid_list(org_uuid_list)
+        return [org.to_response() for org in organizations]
+
     def get_all_org_id(self):
         organizations = org_repo.get_org()
         return [org.id for org in organizations]

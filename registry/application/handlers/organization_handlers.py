@@ -27,8 +27,14 @@ def get_org_for_admin(event, context):
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def get_all_org(event, context):
     logger.info(event)
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    response = OrganizationPublisherService(None, username).get_all_org_for_user()
+    query_parameters = event["queryStringParameters"]
+    if query_parameters is None:
+        username = event["requestContext"]["authorizer"]["claims"]["email"]
+        response = OrganizationPublisherService(None, username).get_all_org_for_user()
+    elif validate_dict(query_parameters, ["org_uuid"], strict=True):
+        response = OrganizationPublisherService(None, None).get_org_list(query_parameters)
+    else:
+        raise BadRequestException()
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
