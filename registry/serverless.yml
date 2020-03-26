@@ -69,7 +69,7 @@ package:
 
 functions:
 
-  get-org-admin:
+  get-org-for-admin:
     warmup: true
     handler: registry.application.handlers.organization_handlers.org_for_admin
     role: ${file(./config.${self:provider.stage}.json):ROLE}
