@@ -141,6 +141,33 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
 
+  duns-callback:
+    handler: verification/application/handlers/duns_verification_handlers.callback
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+      tags:
+        Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+    events:
+      - http:
+          method: POST
+          path: /callback
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            header:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+
+
   status:
     handler: verification/application/handlers/verification_handlers.get_status
     role: ${file(./config.${self:provider.stage}.json):ROLE}

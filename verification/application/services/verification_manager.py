@@ -134,6 +134,19 @@ class VerificationManager:
         self._ack_verification(verification)
         return {}
 
+    def slack_callback(self, entity_id, verification_details):
+        verification = verification_repository.get_latest_verification_for_entity(entity_id)
+        if verification.type == VerificationType.DUNS.value:
+            duns_verification = duns_repository.get_verification(verification.id)
+            duns_verification.update_callback(verification_details)
+            verification.status = duns_verification.status
+            verification_repository.update_verification(verification)
+            duns_repository.update_verification(duns_verification)
+        else:
+            raise MethodNotImplemented()
+        self._ack_verification(verification)
+        return {}
+
     def _ack_verification(self, verification):
         VERIFICATION_SERVICE = "VERIFICATION_SERVICE"
         if verification.type == VerificationType.JUMIO.value:
