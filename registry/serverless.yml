@@ -71,7 +71,7 @@ functions:
 
   get-org-for-admin:
     warmup: true
-    handler: registry.application.handlers.organization_handlers.org_for_admin
+    handler: registry.application.handlers.organization_handlers.get_org_for_admin
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
