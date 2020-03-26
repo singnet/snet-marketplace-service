@@ -4,8 +4,9 @@ from datetime import datetime
 from web3 import Web3
 
 from common.boto_utils import BotoUtils
-from common.exceptions import MethodNotImplemented
+from common.exceptions import MethodNotImplemented, BadRequestException
 from common.logger import get_logger
+from common.utils import validate_dict
 from registry.config import NOTIFICATION_ARN, PUBLISHER_PORTAL_DAPP_URL, REGION_NAME
 from registry.constants import OrganizationStatus, OrganizationMemberStatus, Role, OrganizationActions, \
     OrganizationType, ORG_TYPE_VERIFICATION_TYPE_MAPPING, OrganizationIDAvailabilityStatus, ORG_STATUS_LIST, \
@@ -27,8 +28,14 @@ class OrganizationPublisherService:
         self.boto_utils = BotoUtils(region_name=REGION_NAME)
 
     def get_for_admin(self, params):
-        status = params.get("status", None)
-        organizations = org_repo.get_org(status)
+        if validate_dict(params, ["status"], strict=True):
+            status = params["status"]
+            organizations = org_repo.get_org(status)
+        elif validate_dict(params, ["org_uuid"], strict=True):
+            org_uuid_list = params["org_uuid"].split(",")
+            organizations = org_repo.get_org_for_org_uuid_list(org_uuid_list)
+        else:
+            raise BadRequestException()
         return [org.to_response() for org in organizations]
 
     def get_all_org_for_user(self):
