@@ -54,3 +54,13 @@ def get_status(event, context):
     response = VerificationManager().get_status_for_entity(entity_id)
     return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response, "error": {}},
                                     cors_enabled=True)
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+def get_verifications(event, context):
+    query_parameters = event["queryStringParameters"]
+    if "type" not in query_parameters:
+        raise BadRequestException()
+    response = VerificationManager().get_verifications(query_parameters)
+    return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response, "error": {}},
+                                    cors_enabled=True)

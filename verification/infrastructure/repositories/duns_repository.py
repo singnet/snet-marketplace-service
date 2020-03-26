@@ -35,8 +35,8 @@ class DUNSRepository(BaseRepository):
 
     def update_verification(self, verification):
         verification_db = self._get_verification(verification_id=verification.verification_id)
-        if verification is None:
-            logger.error("Verification not found with id {verification.id}")
+        if verification_db is None:
+            logger.error(f"Verification not found with id {verification.verification_id}")
             raise Exception("verification not found")
         verification_db.status = verification.status
         verification_db.updated_at = verification.updated_at,

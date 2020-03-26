@@ -183,3 +183,13 @@ class VerificationManager:
             duns_verification = duns_repository.get_verification(org_uuid=entity_id)
             response["duns"] = duns_verification.to_dict()
         return response
+
+    def get_verifications(self, parameters):
+        status = parameters.get("status", None)
+        verification_type = parameters.get("type", None)
+        verification_list = verification_repository.get_verification_list(verification_type, status)
+        response = [verification.to_response() for verification in verification_list]
+        if verification_type == VerificationType.DUNS.value:
+            for verification in response:
+                duns_repository.get_verification(verification["id"])
+        return response
