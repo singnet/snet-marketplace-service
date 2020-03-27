@@ -22,12 +22,6 @@ class OrganizationPublisherRepository(BaseRepository):
         self.session.commit()
         return organization_domain_entity
 
-    def get_org_for_org_uuid_list(self, org_uuid_list):
-        organization = self.session.query(Organization).filter(Organization.uuid.in_(org_uuid_list)).all()
-        organization_domain_entity = OrganizationFactory.org_member_domain_from_repo_model_list(organization)
-        self.session.commit()
-        return organization_domain_entity
-
     def get_org_for_org_uuid(self, org_uuid):
         organization = self.session.query(Organization).filter(Organization.uuid == org_uuid).first()
         if organization is None:
