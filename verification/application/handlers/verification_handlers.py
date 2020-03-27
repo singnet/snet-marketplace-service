@@ -1,5 +1,7 @@
 import json
 
+from aws_xray_sdk.core import patch_all
+
 from common.constant import StatusCode, ResponseStatus
 from common.exception_handler import exception_handler
 from common.logger import get_logger
@@ -9,6 +11,7 @@ from verification.config import NETWORK_ID, SLACK_HOOK
 from verification.constants import VerificationType
 from verification.exceptions import EXCEPTIONS, BadRequestException
 
+patch_all()
 logger = get_logger(__name__)
 
 
@@ -52,5 +55,15 @@ def get_status(event, context):
     else:
         raise Exception("Invalid verification type")
     response = VerificationManager().get_status_for_entity(entity_id)
+    return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response, "error": {}},
+                                    cors_enabled=True)
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+def get_verifications(event, context):
+    query_parameters = event["queryStringParameters"]
+    if "type" not in query_parameters:
+        raise BadRequestException()
+    response = VerificationManager().get_verifications(query_parameters)
     return generate_lambda_response(StatusCode.OK, {"status": ResponseStatus.SUCCESS, "data": response, "error": {}},
                                     cors_enabled=True)

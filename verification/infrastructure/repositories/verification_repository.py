@@ -72,3 +72,14 @@ class VerificationRepository(BaseRepository):
             raise
         self.session.close()
         return verification
+
+    def get_verification_list(self, verification_type, status):
+        verification_query = self.session.query(VerificationModel)
+        if verification_type is not None:
+            verification_query = verification_query.filter(VerificationModel.verification_type == verification_type)
+        if status is not None:
+            verification_query = verification_query.filter(VerificationModel.status == status)
+        verification_db = verification_query.all()
+        verification = VerificationFactory.verification_entity_from_db_list(verification_db)
+        self.session.commit()
+        return verification

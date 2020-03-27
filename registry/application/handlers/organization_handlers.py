@@ -1,5 +1,7 @@
 import json
 
+from aws_xray_sdk.core import patch_all
+
 from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.logger import get_logger
@@ -10,13 +12,14 @@ from registry.config import NETWORK_ID, SLACK_HOOK
 from registry.constants import Action, OrganizationActions
 from registry.exceptions import BadRequestException, EXCEPTIONS
 
+patch_all()
 logger = get_logger(__name__)
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def get_org_for_admin(event, context):
     logger.info(event)
-    query_parameters = event["queryParameters"]
+    query_parameters = event["queryStringParameters"]
     response = OrganizationPublisherService(None, None).get_for_admin(query_parameters)
     return generate_lambda_response(
         StatusCode.OK,
