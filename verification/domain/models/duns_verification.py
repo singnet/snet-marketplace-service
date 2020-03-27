@@ -26,7 +26,7 @@ class DUNSVerification:
         status = verification_details["verificationStatus"]
 
         if status not in [DUNSVerificationStatus.PENDING.value, DUNSVerificationStatus.APPROVED.value,
-                          DUNSVerificationStatus.REJECTED.value]:
+                          DUNSVerificationStatus.REJECTED.value, DUNSVerificationStatus.CHANGE_REQUESTED.value]:
             raise Exception("Invalid status for verification")
 
         self.status = status
