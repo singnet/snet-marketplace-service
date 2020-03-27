@@ -266,7 +266,7 @@ class TokenStakeEventProducer(BlockchainEventProducer):
 
     def _get_base_contract_path(self):
         return os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '..', '..', 'node_modules', 'singularitynet-platform-contracts'))
+            os.path.join(os.path.dirname(__file__), '..', '..', 'node_modules', 'singularitynet-stake-contracts'))
 
     def produce_event(self, net_id):
         last_block_number = self._event_repository.read_last_read_block_number_for_event(self._contract_name)
