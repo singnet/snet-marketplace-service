@@ -154,9 +154,4 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             self._service_repository.save_service(BLOCKCHAIN_USER, existing_service, ServiceStatus.PUBLISHED.value)
 
 
-event = {'data': {'row_id': 146, 'block_no': 7066137, 'event': 'OrganizationCreated',
-                  'json_str': "{'orgId': b'TestId123332\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'}",
-                  'processed': 0,
-                  'transactionHash': '0xcb496a660d2891793e7f6f53e91bdbdae7ad6d4d20a95c03a66f501f7c1439ef',
-                  'logIndex': '8', 'error_code': 0, 'error_msg': '', 'row_updated': '2020-03-18 13:38:01',
-                  'row_created': '2020-03-18 13:38:01'}, 'name': 'OrganizationCreated'}
+
