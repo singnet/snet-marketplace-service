@@ -164,7 +164,7 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                                                        short_description, url, contacts, assets, org_metadata_uri,
                                                        duns_no, groups,
                                                        addresses,
-                                                       OrganizationStatus.PUBLISHED.value,
+                                                       OrganizationStatus.DRAFT.value,
                                                        members)
 
             if existing_publish_in_progress_organization:
@@ -187,7 +187,8 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                 org_uuid = received_organization_event.uuid
                 self._create_event_outside_publisher_portal(received_organization_event)
 
-            elif existing_publish_in_progress_organization.is_major_change(received_organization_event):
+            elif existing_publish_in_progress_organization.org_state.transaction_hash != transaction_hash and existing_publish_in_progress_organization.is_major_change(
+                received_organization_event):
 
                 org_uuid = existing_publish_in_progress_organization.uuid
                 logger.info(f"Detected Major change for {org_uuid}")

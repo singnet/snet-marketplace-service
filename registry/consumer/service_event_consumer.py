@@ -42,6 +42,9 @@ class ServiceEventConsumer(object):
         org_id = Web3.toText(org_id_bytes).rstrip("\x00")
         return org_id
 
+    def _get_tarnsaction_hash(self, event):
+        return event['data']['transactionHash']
+
     def _get_service_id_from_event(self, event):
         event_data = event['data']
         service_data = eval(event_data['json_str'])
@@ -72,18 +75,19 @@ class ServiceEventConsumer(object):
         tags_data = self._fetch_tags(
             registry_contract=registry_contract, org_id_hex=org_id.encode("utf-8"),
             service_id_hex=service_id.encode("utf-8"))
+        transaction_hash= self._get_tarnsaction_hash(event)
 
-        return org_id, service_id, tags_data
+        return org_id, service_id, tags_data ,transaction_hash
 
 
 class ServiceCreatedEventConsumer(ServiceEventConsumer):
 
     def on_event(self, event):
-        org_id, service_id, tags_data = self._get_service_details_from_blockchain(event)
+        org_id, service_id, tags_data ,transaction_hash = self._get_service_details_from_blockchain(event)
         metadata_uri = self._get_metadata_uri_from_event(event)
         service_ipfs_data = self._ipfs_util.read_file_from_ipfs(metadata_uri)
         self._process_service_data(org_id=org_id, service_id=service_id,
-                                   service_metadata=service_ipfs_data, tags_data=tags_data)
+                                   service_metadata=service_ipfs_data, tags_data=tags_data,transaction_hash=transaction_hash)
 
     def _get_existing_service_details(self, org_id, service_id):
         org_uuid, existing_service = self._service_repository.get_service_for_given_service_id_and_org_id(org_id,
@@ -91,7 +95,10 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
 
         return org_uuid, existing_service
 
-    def _process_service_data(self, org_id, service_id, service_metadata, tags_data):
+    def _is_same_transaction(self):
+        pass
+
+    def _process_service_data(self, org_id, service_id, service_metadata, tags_data,transaction_hash):
 
         org_uuid, existing_service = self._get_existing_service_details(org_id, service_id)
         service_uuid = str(uuid4())
@@ -141,7 +148,10 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         if not existing_service:
             self._service_repository.add_service(recieved_service, BLOCKCHAIN_USER)
 
-        elif existing_service.is_major_change(recieved_service):
+        elif existing_service.service_state.transaction_hash != transaction_hash and existing_service.is_major_change(recieved_service):
             self._service_repository.save_service(BLOCKCHAIN_USER, existing_service, ServiceStatus.DRAFT.value)
         else:
             self._service_repository.save_service(BLOCKCHAIN_USER, existing_service, ServiceStatus.PUBLISHED.value)
+
+
+
