@@ -39,11 +39,9 @@ class EventRepository(object):
 
     def update_mpe_raw_events(self, processed, row_id, error_code, error_message):
         try:
-            self.connection.begin_transaction()
             update_events = 'UPDATE mpe_events_raw SET processed = %s , error_code = %s, error_msg = %s WHERE row_id = %s '
             update_events_reponse = self.connection.execute(update_events,
                                                             [processed, error_code, error_message, row_id])
-            self.connection.commit_transaction()
 
         except Exception as e:
             self.connection.rollback_transaction()
@@ -51,11 +49,9 @@ class EventRepository(object):
 
     def update_registry_raw_events(self, processed, row_id, error_code, error_message):
         try:
-            self.connection.begin_transaction()
             update_events = 'UPDATE registry_events_raw SET processed = %s, error_code = %s, error_msg = %s WHERE row_id = %s '
             update_events_reponse = self.connection.execute(update_events,
                                                             [processed, error_code, error_message, row_id])
-            self.connection.commit_transaction()
 
         except Exception as e:
             logger.exception(f"Error while updating the registry_raw_event {str(e)}")
@@ -64,7 +60,6 @@ class EventRepository(object):
 
     def update_token_stake_raw_events(self, processed, row_id, error_code, error_message):
         try:
-            self.connection.begin_transaction()
             update_events = 'UPDATE token_stake_events_raw SET processed = %s, error_code = %s, error_msg = %s WHERE row_id = %s '
             update_events_response = self.connection.execute(update_events,
                                                              [processed, error_code, error_message, row_id])
@@ -79,7 +74,6 @@ class EventRepository(object):
             update_events = 'UPDATE rfai_events_raw SET processed = %s, error_code = %s, error_msg = %s WHERE row_id = %s '
             update_events_reponse = self.connection.execute(update_events,
                                                             [processed, error_code, error_message, row_id])
-            self.connection.commit_transaction()
 
         except Exception as e:
             logger.exception(f"Error while updating the registry_raw_event {str(e)}")
