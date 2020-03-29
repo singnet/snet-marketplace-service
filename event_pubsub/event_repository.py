@@ -57,6 +57,7 @@ class EventRepository(object):
             query = 'select * from token_stake_events_raw where processed = 0 order by block_no asc limit ' + str(
                 EventRepository.EVENTS_LIMIT)
             events = self.connection.execute(query)
+            self.connection.commit_transaction()
             return events
         except Exception as e:
             self.connection.rollback_transaction()
@@ -93,6 +94,7 @@ class EventRepository(object):
             update_events = 'UPDATE token_stake_events_raw SET processed = %s, error_code = %s, error_msg = %s WHERE row_id = %s '
             update_events_response = self.connection.execute(update_events,
                                                              [processed, error_code, error_message, row_id])
+            self.connection.commit_transaction()
 
         except Exception as e:
             logger.exception(f"Error while updating the token_stake_raw_event {str(e)}")
