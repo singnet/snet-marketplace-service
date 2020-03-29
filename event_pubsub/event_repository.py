@@ -194,10 +194,11 @@ class EventRepository(object):
 
             read_params = [event_type]
             result = self.connection.execute(read_query, read_params)
+            self.connection.commit_transaction()
 
             return result[0]['last_block_number']
 
-            self.connection.commit_transaction()
+
         except Exception as e:
             self.connection.rollback_transaction()
             raise e
