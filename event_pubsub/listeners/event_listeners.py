@@ -127,6 +127,6 @@ class TokenStakeEventListener(EventListener):
             self._event_repository.update_token_stake_raw_events(1, row_id, error['error_code'], error['error_message'])
 
         for row_id in success_map:
-            logger.debug(f"Updated event process status for success {row_id} {error}")
+            logger.debug(f"Updated event process status for success {row_id} ")
             self._event_repository.update_token_stake_raw_events(1, row_id, 200, "")
         return error_map, success_map
