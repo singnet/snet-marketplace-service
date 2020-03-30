@@ -1,6 +1,7 @@
 from cerberus import Validator
-from registry.constants import UserType, ServiceSupportType
+
 from common.logger import get_logger
+from registry.constants import UserType
 
 logger = get_logger(__name__)
 
@@ -46,7 +47,7 @@ SERVICE_METADATA_SCHEMA = {
                     "type": "string",
                     "empty": False
                 },
-                "daemon_address": {
+                "daemon_addresses": {
                     "type": "list",
                     "schema": {
                         "type": "string"
@@ -98,7 +99,13 @@ SERVICE_METADATA_SCHEMA = {
         "type": "dict",
         "schema": {
             "hero_image": {
-                "type": "string"
+                "type": "dict"
+            },
+            "demo_files": {
+                "type": "dict"
+            },
+            "proto_files":{
+                "type":"dict"
             }
         }
     },
