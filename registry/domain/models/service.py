@@ -1,6 +1,7 @@
 from cerberus import Validator
-from registry.constants import UserType, ServiceSupportType
+
 from common.logger import get_logger
+from registry.constants import UserType
 
 logger = get_logger(__name__)
 
@@ -46,10 +47,12 @@ SERVICE_METADATA_SCHEMA = {
                     "type": "string",
                     "empty": False
                 },
-                "daemon_address": {
+                "daemon_addresses": {
                     "type": "list",
                     "schema": {
-                        "type": "string"
+                        "type": "string",
+                        "empty":True
+
                     }
                 },
                 "pricing": {
