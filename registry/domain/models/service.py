@@ -50,7 +50,9 @@ SERVICE_METADATA_SCHEMA = {
                 "daemon_addresses": {
                     "type": "list",
                     "schema": {
-                        "type": "string"
+                        "type": "string",
+                        "empty":True
+
                     }
                 },
                 "pricing": {
@@ -100,12 +102,6 @@ SERVICE_METADATA_SCHEMA = {
         "schema": {
             "hero_image": {
                 "type": "dict"
-            },
-            "demo_files": {
-                "type": "dict"
-            },
-            "proto_files":{
-                "type":"dict"
             }
         }
     },
