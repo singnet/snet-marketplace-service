@@ -227,11 +227,14 @@ class OrganizationPublisherService:
             raise MethodNotImplemented()
 
         # TODO send_email should not have boto_utils
-        if organization:
-            contacts = []
-            for contact in organization.contacts:
-                contacts.append(contact['email_id'])
-            send_email_notification(contacts, ORG_APPROVE_SUBJECT.format(organization.name), ORG_APPROVE_MESSAGE.format(organization.name), NOTIFICATION_ARN,
-                                    self.boto_utils)
+        try:
+            if organization:
+                contacts = []
+                for contact in organization.contacts:
+                    contacts.append(contact['email_id'])
+                send_email_notification(contacts, ORG_APPROVE_SUBJECT.format(organization.name), ORG_APPROVE_MESSAGE.format(organization.name), NOTIFICATION_ARN,
+                                        self.boto_utils)
+        except:
+            logger.info(f"Error happend while sending approval mail for {organization.name}")
 
         return {}
