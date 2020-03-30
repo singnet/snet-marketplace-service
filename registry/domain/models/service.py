@@ -73,7 +73,7 @@ SERVICE_METADATA_SCHEMA = {
                     },
                 },
                 "endpoints": {
-                    "type": "list",
+                    "type": "dict",
                     "empty": False
                 },
                 "group_id": {
@@ -315,3 +315,5 @@ class Service:
             if asset in REQUIRED_ASSETS_FOR_METADATA:
                 metadata_assets.update({asset: self.assets[asset].get("ipfs_hash", "")})
         return metadata_assets
+
+

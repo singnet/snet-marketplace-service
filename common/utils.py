@@ -1,6 +1,8 @@
 import datetime
 import decimal
 import glob
+import hashlib
+import hmac
 import io
 import json
 import os
@@ -9,8 +11,6 @@ import sys
 import tarfile
 import traceback
 import zipfile
-import hashlib
-import hmac
 from urllib.parse import urlparse
 from zipfile import ZipFile
 
@@ -287,15 +287,18 @@ def convert_zip_file_to_tar_bytes(file_dir, filename):
 
 def send_email_notification(recipients, notification_subject, notification_message, notification_arn, boto_util):
     for recipient in recipients:
-        if bool(recipient):
-            send_notification_payload = {"body": json.dumps({
-                "message": notification_message,
-                "subject": notification_subject,
-                "notification_type": "support",
-                "recipient": recipient})}
-            boto_util.invoke_lambda(lambda_function_arn=notification_arn, invocation_type="RequestResponse",
-                                    payload=json.dumps(send_notification_payload))
-            logger.info(f"email_sent to {recipient}")
+        try:
+            if bool(recipient):
+                send_notification_payload = {"body": json.dumps({
+                    "message": notification_message,
+                    "subject": notification_subject,
+                    "notification_type": "support",
+                    "recipient": recipient})}
+                boto_util.invoke_lambda(lambda_function_arn=notification_arn, invocation_type="RequestResponse",
+                                        payload=json.dumps(send_notification_payload))
+                logger.info(f"email_sent to {recipient}")
+        except:
+            logger.error(f"Error happened while sending email to recipient {recipient}")
 
 
 def send_slack_notification(slack_msg, slack_url, slack_channel):
