@@ -19,8 +19,8 @@ from registry.infrastructure.repositories.organization_repository import Organiz
 org_repo = OrganizationPublisherRepository()
 
 logger = get_logger(__name__)
-ORG_APPROVE_SUBJECT = "Organization Approoved"
-ORG_APPROVE_MESSAGE = "You organization has been approved "
+ORG_APPROVE_SUBJECT = "Organization  {} Approved "
+ORG_APPROVE_MESSAGE = "You organization  {} has been approved"
 
 
 class OrganizationPublisherService:
@@ -231,7 +231,7 @@ class OrganizationPublisherService:
             contacts = []
             for contact in organization.contacts:
                 contacts.append(contact['email_id'])
-            send_email_notification(contacts, ORG_APPROVE_SUBJECT, ORG_APPROVE_MESSAGE, NOTIFICATION_ARN,
+            send_email_notification(contacts, ORG_APPROVE_SUBJECT.format(organization.name), ORG_APPROVE_MESSAGE.format(organization.name), NOTIFICATION_ARN,
                                     self.boto_utils)
 
         return {}
