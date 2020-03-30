@@ -6,7 +6,7 @@ from web3 import Web3
 from common.boto_utils import BotoUtils
 from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
-from registry.config import NOTIFICATION_ARN, PUBLISHER_PORTAL_DAPP_URL, REGION_NAME, PUBLISHER_PORTAL_SUPPORT_URL
+from registry.config import NOTIFICATION_ARN, PUBLISHER_PORTAL_DAPP_URL, REGION_NAME, PUBLISHER_PORTAL_SUPPORT_MAIL
 from registry.constants import OrganizationStatus, OrganizationMemberStatus, Role, OrganizationActions, \
     OrganizationType, ORG_TYPE_VERIFICATION_TYPE_MAPPING, OrganizationIDAvailabilityStatus, ORG_STATUS_LIST, \
     EnvironmentType
@@ -190,7 +190,7 @@ class OrganizationPublisherService:
                f"Your invite code is <strong>{invite_code}</strong>.</p><br/><p>Please click on the link below to " \
                f"accept the invitation.</p><p>{PUBLISHER_PORTAL_DAPP_URL}</p><br/><br/><p>" \
                f"<em>Please do not reply to the email for any enquiries for any queries please email at " \
-               f"{PUBLISHER_PORTAL_SUPPORT_URL}.</em></p><p>Warmest regards, <br />SingularityNET Publisher Portal " \
+               f"{PUBLISHER_PORTAL_SUPPORT_MAIL}.</em></p><p>Warmest regards, <br />SingularityNET Publisher Portal " \
                f"Team</p></div></body></html>"
 
     @staticmethod
