@@ -200,23 +200,23 @@ class OrganizationPublisherService:
     def _get_org_member_notification_subject(org_name):
         return f"Membership Invitation from  Organization {org_name}"
 
-    def _get_contacts_for_all_organization_for_given_user(self, username):
+    def _get_org_contacts_for_all_organization_for_given_user(self, username):
         organizations = org_repo.get_org_for_user(username)
-        contacts = []
+        org_contacts = {}
         for organization in organizations:
-            contacts.extend(organization._get_all_contact_for_organization())
+            org_contacts[organization.name] = organization._get_all_contact_for_organization()
 
-        return list(dict.fromkeys(contacts))
+        return org_contacts
 
     def update_verification(self, verification_type, verification_details):
-        contacts = []
+        org_contacts = {}
         if verification_type in ORG_TYPE_VERIFICATION_TYPE_MAPPING:
             if ORG_TYPE_VERIFICATION_TYPE_MAPPING[verification_type] == OrganizationType.INDIVIDUAL.value:
                 owner_username = verification_details["username"]
                 status = verification_details["status"]
                 updated_by = verification_details["updated_by"]
                 org_repo.update_all_individual_organization_for_user(owner_username, status, updated_by)
-                contacts = self._get_contacts_for_all_organization_for_given_user(owner_username)
+                contacts = self._get_org_contacts_for_all_organization_for_given_user(owner_username)
 
             elif ORG_TYPE_VERIFICATION_TYPE_MAPPING[verification_type] == OrganizationType.ORGANIZATION.value:
                 status = verification_details["status"]
@@ -225,7 +225,9 @@ class OrganizationPublisherService:
                 if status in ORG_STATUS_LIST:
                     org_repo.update_organization_status(org_uuid, status, updated_by)
                     organization = org_repo.get_org_for_org_uuid(org_uuid)
-                    contacts = organization._get_all_contact_for_organization()
+                    contacts_mail = organization._get_all_contact_for_organization()
+                    org_contacts[organization.name] = contacts_mail
+
 
                 else:
                     logger.error(f"Invalid status {status}")
@@ -239,10 +241,10 @@ class OrganizationPublisherService:
 
         # TODO send_email should not have boto_utils
         try:
-
-            send_email_notification(contacts, ORG_APPROVE_SUBJECT.format(organization.name),
-                                    ORG_APPROVE_MESSAGE.format(organization.name), NOTIFICATION_ARN,
-                                    self.boto_utils)
+            for org_name, contacts in org_contacts.items():
+                send_email_notification(contacts, ORG_APPROVE_SUBJECT.format(org_name),
+                                        ORG_APPROVE_MESSAGE.format(org_name), NOTIFICATION_ARN,
+                                        self.boto_utils)
         except:
             logger.info(f"Error happened while sending approval mail for {organization.name} and contacts {contacts}")
 
