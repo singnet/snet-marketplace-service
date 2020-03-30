@@ -6,10 +6,11 @@ from web3 import Web3
 from common.boto_utils import BotoUtils
 from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
-from registry.config import NOTIFICATION_ARN, PUBLISHER_PORTAL_DAPP_URL, REGION_NAME, PUBLISHER_PORTAL_SUPPORT_MAIL
-from registry.constants import OrganizationStatus, OrganizationMemberStatus, Role, OrganizationActions, \
-    OrganizationType, ORG_TYPE_VERIFICATION_TYPE_MAPPING, OrganizationIDAvailabilityStatus, ORG_STATUS_LIST, \
-    EnvironmentType
+from common.utils import send_email_notification
+from registry.config import NOTIFICATION_ARN, PUBLISHER_PORTAL_DAPP_URL, PUBLISHER_PORTAL_SUPPORT_MAIL, REGION_NAME
+from registry.constants import EnvironmentType, ORG_STATUS_LIST, ORG_TYPE_VERIFICATION_TYPE_MAPPING, \
+    OrganizationActions, OrganizationIDAvailabilityStatus, OrganizationMemberStatus, OrganizationStatus, \
+    OrganizationType, Role
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization
 from registry.domain.services.organization_domain_service import OrganizationService
@@ -18,6 +19,8 @@ from registry.infrastructure.repositories.organization_repository import Organiz
 org_repo = OrganizationPublisherRepository()
 
 logger = get_logger(__name__)
+ORG_APPROVE_SUBJECT = "Organization Approoved"
+ORG_APPROVE_MESSAGE = "You organization has been approved "
 
 
 class OrganizationPublisherService:
@@ -198,18 +201,21 @@ class OrganizationPublisherService:
         return f"Membership Invitation from  Organization {org_name}"
 
     def update_verification(self, verification_type, verification_details):
+        organization = None
         if verification_type in ORG_TYPE_VERIFICATION_TYPE_MAPPING:
             if ORG_TYPE_VERIFICATION_TYPE_MAPPING[verification_type] == OrganizationType.INDIVIDUAL.value:
                 owner_username = verification_details["username"]
                 status = verification_details["status"]
                 updated_by = verification_details["updated_by"]
                 org_repo.update_all_individual_organization_for_user(owner_username, status, updated_by)
+                organization = org_repo.get_org_for_user(owner_username)
             elif ORG_TYPE_VERIFICATION_TYPE_MAPPING[verification_type] == OrganizationType.ORGANIZATION.value:
                 status = verification_details["status"]
                 org_uuid = verification_details["org_uuid"]
                 updated_by = verification_details["updated_by"]
                 if status in ORG_STATUS_LIST:
                     org_repo.update_organization_status(org_uuid, status, updated_by)
+                    organization = org_repo.get_org_for_org_uuid(org_uuid)
                 else:
                     logger.error(f"Invalid status {status}")
                     raise MethodNotImplemented()
@@ -219,4 +225,13 @@ class OrganizationPublisherService:
         else:
             logger.error(f"Invalid verification type {verification_type}")
             raise MethodNotImplemented()
+
+        # TODO send_email should not have boto_utils
+        if organization:
+            contacts = []
+            for contact in organization.contacts:
+                contacts.append(contact['email_id'])
+            send_email_notification(contacts, ORG_APPROVE_SUBJECT, ORG_APPROVE_MESSAGE, NOTIFICATION_ARN,
+                                    self.boto_utils)
+
         return {}
