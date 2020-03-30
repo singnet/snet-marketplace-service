@@ -235,6 +235,6 @@ class OrganizationPublisherService:
                 send_email_notification(contacts, ORG_APPROVE_SUBJECT.format(organization.name), ORG_APPROVE_MESSAGE.format(organization.name), NOTIFICATION_ARN,
                                         self.boto_utils)
         except:
-            logger.info(f"Error happend while sending approval mail for {organization.name}")
+            logger.info(f"Error happened while sending approval mail for {organization.name} and contacts {contacts}")
 
         return {}
