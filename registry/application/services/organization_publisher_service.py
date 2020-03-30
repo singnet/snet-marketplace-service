@@ -186,7 +186,7 @@ class OrganizationPublisherService:
 
     @staticmethod
     def _get_org_member_notification_message(invite_code, org_name):
-        return f"<html><head></head><body><div><p>Hello,</p><p>Organization {org_name} has sent you membership invite. " \
+        return f"<html><head></head><body><div><p>Hello,</p><p>Organization <em>{org_name}</em> has sent you membership invite. " \
                f"Your invite code is <strong>{invite_code}</strong>.</p><br/><p>Please click on the link below to " \
                f"accept the invitation.</p><p>{PUBLISHER_PORTAL_DAPP_URL}</p><br/><br/><p>" \
                f"<em>Please do not reply to the email for any enquiries for any queries please email at " \
