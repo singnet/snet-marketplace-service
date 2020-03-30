@@ -101,7 +101,7 @@ SERVICE_METADATA_SCHEMA = {
         "type": "dict",
         "schema": {
             "hero_image": {
-                "type": "dict"
+                "type": "string"
             }
         }
     },
