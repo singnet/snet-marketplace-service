@@ -175,7 +175,7 @@ class ServicePublisherRepository(BaseRepository):
         try:
             raw_services_data = self.session.query(Service) \
                 .join(ServiceState, Service.uuid == ServiceState.service_uuid).filter(
-                ServiceState.state == ServiceStatus.APPROVAL_PENDING.value).all()
+                ServiceState.state == ServiceStatus.APPROVAL_PENDING.value).limit(limit)
             services = []
             for service in raw_services_data:
                 services.append(ServiceFactory().convert_service_db_model_to_entity_model(service))
