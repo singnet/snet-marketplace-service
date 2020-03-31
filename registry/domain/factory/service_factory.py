@@ -145,7 +145,7 @@ class ServiceFactory:
             pricing=group.get("pricing", []),
             endpoints=group.get("endpoints", []),
             test_endpoints=group.get("test_endpoints", []),
-            daemon_address=group.get("daemon_address", []),
+            daemon_address=group.get("daemon_adresses", []),
             free_calls=group.get("free_calls", 0),
             free_call_signer_address=group.get("free_call_signer_address", None),
         )
