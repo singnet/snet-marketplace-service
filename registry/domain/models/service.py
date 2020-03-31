@@ -73,7 +73,7 @@ SERVICE_METADATA_SCHEMA = {
                     },
                 },
                 "endpoints": {
-                    "type": "dict",
+                    "type": "list",
                     "empty": False
                 },
                 "group_id": {
