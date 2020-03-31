@@ -7,7 +7,7 @@ from registry.infrastructure.models import Service as ServiceDBModel, ServiceSta
     Organization as OrganizationDBModel, OrganizationState as OrganizationStateDBModel
 from registry.domain.models.organization import Organization as OrganizationDomainModel
 from registry.constants import OrganizationStatus, ServiceStatus
-
+from unittest.mock import patch
 org_repo = OrganizationPublisherRepository()
 service_repo = ServicePublisherRepository()
 
@@ -16,7 +16,15 @@ class TestSlackChatOperation(TestCase):
     def setUp(self):
         pass
 
-    def test_get_list_of_service_pending_for_approval(self):
+    @patch("registry.application.services.slack_chat_operation.SlackChatOperation.validate_slack_user")
+    @patch("registry.application.services.slack_chat_operation.SlackChatOperation.validate_slack_channel_id")
+    @patch("registry.application.services.slack_chat_operation.SlackChatOperation.validate_slack_signature")
+    @patch("registry.application.services.slack_chat_operation.requests.post")
+    def test_get_list_of_service_pending_for_approval(self, post_request, validate_slack_signature, validate_slack_channel_id, validate_slack_user):
+        validate_slack_channel_id.return_value = True
+        validate_slack_user.return_value = True
+        validate_slack_signature.return_value = True
+        post_request.return_value = {}
         self.tearDown()
         org_repo.add_organization(
             OrganizationDomainModel(

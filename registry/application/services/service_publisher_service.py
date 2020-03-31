@@ -110,7 +110,7 @@ class ServicePublisherService:
             org_uuid=self._org_uuid, service_uuid=self._service_uuid,
             support_type=ServiceSupportType.SERVICE_APPROVAL.value, user_type=UserType.SERVICE_APPROVER.value)
         return {
-            UserType.SERVICE_PROVIDER.value: "<div></div>" if not service_provider_comment else f"<div>{service_provider_comment.comment}</div>",
+            UserType.SERVICE_PROVIDER.value: None if not service_provider_comment else f"{service_provider_comment.comment}",
             UserType.SERVICE_APPROVER.value: "<div></div>" if not approver_comment else f"<div>{approver_comment.comment}</div>"
         }
 
