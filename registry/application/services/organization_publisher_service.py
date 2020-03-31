@@ -12,7 +12,7 @@ from registry.constants import OrganizationStatus, OrganizationMemberStatus, Rol
     EnvironmentType
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization
-from registry.domain.services.organization_domain_service import OrganizationService
+from registry.domain.services.organization_domain_service import OrganizationBlockChainUtil
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 
 org_repo = OrganizationPublisherRepository()
@@ -50,7 +50,7 @@ class OrganizationPublisherService:
 
         if org_id in org_id_list:
             return OrganizationIDAvailabilityStatus.UNAVAILABLE.value
-        if OrganizationService().is_org_published(org_id, EnvironmentType.MAIN.value):
+        if OrganizationBlockChainUtil(EnvironmentType.MAIN.value).is_org_published(org_id):
             return OrganizationIDAvailabilityStatus.UNAVAILABLE.value
         return OrganizationIDAvailabilityStatus.AVAILABLE.value
 
@@ -92,7 +92,8 @@ class OrganizationPublisherService:
         logger.info(f"publish organization to ipfs org_uuid: {self.org_uuid}")
         organization = org_repo.get_org_for_org_uuid(self.org_uuid)
         organization.publish_to_ipfs()
-        test_transaction_hash = OrganizationService().publish_organization_to_test_network(organization)
+        test_transaction_hash = OrganizationBlockChainUtil(EnvironmentType.TEST.value)\
+            .publish_organization_to_test_network(organization)
         org_repo.store_ipfs_hash_and_test_transaction_hash(organization, self.username, test_transaction_hash)
         return organization.to_response()
 
