@@ -301,6 +301,7 @@ class Service:
 
     @staticmethod
     def is_metadata_valid(service_metadata):
+        logger.info(f"service_metadata: {service_metadata}")
         validator = Validator()
         is_valid = validator.validate(service_metadata, SERVICE_METADATA_SCHEMA)
         logger.info(validator.errors)
