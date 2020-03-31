@@ -41,7 +41,10 @@ class BlockChainUtil(object):
         return Web3.toChecksumAddress(contract[str(net_id)][key])
 
     def contract_instance(self, contract_abi, address):
-        provider = web3.providers.WebsocketProvider(self._provider_url)
+        if self._provider_type == "HTTP_PROVIDER":
+            provider = Web3.HTTPProvider(self._provider_url)
+        elif self._provider_type == "WS_PROVIDER":
+            provider = web3.providers.WebsocketProvider(self._provider_url)
         web3_object = Web3(provider)
         self.provider = provider
         self.web3_object = web3_object
