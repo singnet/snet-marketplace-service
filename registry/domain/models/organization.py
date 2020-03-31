@@ -284,6 +284,14 @@ class Organization:
                 raise MethodNotImplemented()
         return next_state
 
+    def _get_all_contact_for_organization(self):
+        contacts = set()
+        for contact in self.contacts:
+            contacts.add(contact['email_id'])
+
+        return list(contacts)
+
+
 
 class OrganizationState:
     def __init__(self, state, transaction_hash, wallet_address, created_by,

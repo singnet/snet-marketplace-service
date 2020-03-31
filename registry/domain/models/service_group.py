@@ -22,16 +22,22 @@ class ServiceGroup:
             "pricing": self._pricing,
             "free_calls": self._free_calls,
             "free_call_signer_address": self._free_call_signer_address,
-            "daemon_address ": self._daemon_address
+            "daemon_addresses ": self._daemon_address
         }
+
+    def _get_endpoints(self, endpoint_dict):
+        endpoints = []
+        for endpoint, val in endpoint_dict.items():
+            endpoints.extend(endpoint)
+        return endpoints
 
     def to_metadata(self):
         return {
             "free_calls": self._free_calls,
             "free_call_signer_address": self._free_call_signer_address,
-            "daemon_address": self._daemon_address,
+            "daemon_addresses": self._daemon_address,
             "pricing": self._pricing,
-            "endpoints": self._endpoints,
+            "endpoints": self._get_endpoints(self._endpoints),
             "group_id": self._group_id,
             "group_name": self._group_name
         }

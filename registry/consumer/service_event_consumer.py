@@ -116,7 +116,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             ServiceFactory.create_service_state_entity_model(org_uuid, service_uuid,
                                                              getattr(ServiceStatus, "PUBLISHED_UNAPPROVED").value)
         groups = [
-            ServiceFactory.create_service_group_entity_model("", service_uuid, group) for group in
+            ServiceFactory.create_service_group_entity_model(org_uuid, service_uuid, group) for group in
             service_metadata.get("groups", [])]
 
         if existing_service:
@@ -131,7 +131,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             existing_service.contributors = contributors
             existing_service.tags = tags_data
             existing_service.groups = [
-                ServiceFactory.create_service_group_entity_model("", existing_service.uuid, group) for group in
+                ServiceFactory.create_service_group_entity_model(org_uuid, existing_service.uuid, group) for group in
                 service_metadata.get("groups", [])]
 
         recieved_service = Service(
