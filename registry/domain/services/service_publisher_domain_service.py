@@ -1,21 +1,15 @@
-import web3
-
 from common import utils
-from common.blockchain_util import BlockChainUtil
 from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
 from common.utils import ipfsuri_to_bytesuri, json_to_file, publish_zip_file_in_ipfs, publish_file_in_ipfs
-from registry.config import ASSET_DIR, METADATA_FILE_PATH, IPFS_URL, NETWORK_ID, \
-    NETWORKS, BLOCKCHAIN_TEST_ENV
-from registry.constants import TEST_REG_ADDR_PATH, TEST_REG_CNTRCT_PATH, EnvironmentType
+from registry.config import ASSET_DIR, METADATA_FILE_PATH, IPFS_URL
+from registry.constants import EnvironmentType
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.services.registry_blockchain_util import RegistryBlockChainUtil
-from registry.exceptions import ServiceProtoNotFoundException, OrganizationNotFoundException, \
-    EnvironmentNotFoundException
+from registry.exceptions import ServiceProtoNotFoundException
 
 service_factory = ServiceFactory()
 ipfs_client = IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
-blockchain_util = BlockChainUtil(provider=NETWORKS[NETWORK_ID]["http_provider"], provider_type="HTTP_PROVIDER")
 logger = get_logger(__name__)
 METADATA_URI_PREFIX = "ipfs://"
 SERVICE_ASSETS_SUPPORTED = {
