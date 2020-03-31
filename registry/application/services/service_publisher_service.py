@@ -309,3 +309,20 @@ class ServicePublisherService:
         else:
             raise EnvironmentNotFoundException()
         return daemon_config
+
+    @staticmethod
+    def get_list_of_service_pending_for_approval(limit):
+        list_of_services = []
+        services = ServicePublisherRepository().get_list_of_service_pending_for_approval(limit)
+        for service in services:
+            org = OrganizationPublisherRepository().get_org_for_org_uuid(org_uuid=service.org_uuid)
+            list_of_services.append({
+                "org_uuid": service.org_uuid,
+                "org_id": org.id,
+                "service_uuid": service.uuid,
+                "service_id": service.service_id,
+                "display_name": service.display_name,
+                "requested_at": None
+            })
+
+        return list_of_services
