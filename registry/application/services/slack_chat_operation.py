@@ -5,7 +5,7 @@ from common.logger import get_logger
 from registry.config import SIGNING_SECRET
 from registry.application.services.service_publisher_service import ServicePublisherService
 from registry.config import STAGING_URL, ALLOWED_SLACK_USER, SERVICE_REVIEW_API_ENDPOINT, SLACK_APPROVAL_CHANNEL_URL, \
-    ALLOWED_SLACK_CHANNEL_ID
+    ALLOWED_SLACK_CHANNEL_ID, MAX_SERVICES_SLACK_LISTING
 
 logger = get_logger(__name__)
 
@@ -38,7 +38,7 @@ class SlackChatOperation:
     def get_list_of_service_pending_for_approval(self):
         list_of_service_pending_for_approval = \
             ServicePublisherService(username=None, org_uuid=None, service_uuid=None). \
-                get_list_of_service_pending_for_approval(limit=10)
+                get_list_of_service_pending_for_approval(limit=MAX_SERVICES_SLACK_LISTING)
         slack_blocks = self.generate_service_listing_slack_blocks(list_of_service_pending_for_approval)
         slack_payload = {"blocks": slack_blocks}
         logger.info(f"slack_payload: {slack_payload}")
