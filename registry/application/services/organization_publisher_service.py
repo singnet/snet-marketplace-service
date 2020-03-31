@@ -6,16 +6,21 @@ from web3 import Web3
 from common.boto_utils import BotoUtils
 from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
-from registry.config import NOTIFICATION_ARN, PUBLISHER_PORTAL_DAPP_URL, REGION_NAME
-from registry.constants import OrganizationStatus, OrganizationMemberStatus, Role, OrganizationActions, \
-    OrganizationType, ORG_TYPE_VERIFICATION_TYPE_MAPPING
+from common.utils import send_email_notification
+from registry.config import NOTIFICATION_ARN, PUBLISHER_PORTAL_DAPP_URL, PUBLISHER_PORTAL_SUPPORT_MAIL, REGION_NAME
+from registry.constants import EnvironmentType, ORG_STATUS_LIST, ORG_TYPE_VERIFICATION_TYPE_MAPPING, \
+    OrganizationActions, OrganizationIDAvailabilityStatus, OrganizationMemberStatus, OrganizationStatus, \
+    OrganizationType, Role
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization
+from registry.domain.services.organization_domain_service import OrganizationService
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 
 org_repo = OrganizationPublisherRepository()
 
 logger = get_logger(__name__)
+ORG_APPROVE_SUBJECT = "Organization  {} Approved "
+ORG_APPROVE_MESSAGE = "You organization  {} has been approved"
 
 
 class OrganizationPublisherService:
@@ -25,7 +30,7 @@ class OrganizationPublisherService:
         self.boto_utils = BotoUtils(region_name=REGION_NAME)
 
     def get_for_admin(self, params):
-        status = params.get("status", None)
+        status = params["status"]
         organizations = org_repo.get_org(status)
         return [org.to_response() for org in organizations]
 
@@ -33,6 +38,24 @@ class OrganizationPublisherService:
         logger.info(f"get organization for user: {self.username}")
         organizations = org_repo.get_org_for_user(username=self.username)
         return [org.to_response() for org in organizations]
+
+    def get_org_list(self, parameters):
+        org_uuid_list = parameters["org_uuid"].split(",")
+        organizations = org_repo.get_org_for_org_uuid_list(org_uuid_list)
+        return [org.to_response() for org in organizations]
+
+    def get_all_org_id(self):
+        organizations = org_repo.get_org()
+        return [org.id for org in organizations]
+
+    def get_org_id_availability_status(self, org_id):
+        org_id_list = self.get_all_org_id()
+
+        if org_id in org_id_list:
+            return OrganizationIDAvailabilityStatus.UNAVAILABLE.value
+        if OrganizationService().is_org_published(org_id, EnvironmentType.MAIN.value):
+            return OrganizationIDAvailabilityStatus.UNAVAILABLE.value
+        return OrganizationIDAvailabilityStatus.AVAILABLE.value
 
     def get_groups_for_org(self):
         logger.info(f"get groups for org_uuid: {self.org_uuid}")
@@ -47,6 +70,9 @@ class OrganizationPublisherService:
         organization = OrganizationFactory.org_domain_entity_from_payload(payload)
         organization.setup_id()
         logger.info(f"assigned org_uuid : {organization.uuid}")
+        org_ids = self.get_all_org_id()
+        if organization.id in org_ids:
+            raise Exception("Org_id already exists")
         updated_state = Organization.next_state(None, None, OrganizationActions.CREATE.value)
         org_repo.add_organization(organization, self.username, updated_state)
         return organization.to_response()
@@ -69,7 +95,8 @@ class OrganizationPublisherService:
         logger.info(f"publish organization to ipfs org_uuid: {self.org_uuid}")
         organization = org_repo.get_org_for_org_uuid(self.org_uuid)
         organization.publish_to_ipfs()
-        org_repo.store_ipfs_hash(organization, self.username)
+        test_transaction_hash = OrganizationService().publish_organization_to_test_network(organization)
+        org_repo.store_ipfs_hash_and_test_transaction_hash(organization, self.username, test_transaction_hash)
         return organization.to_response()
 
     def save_transaction_hash_for_publish_org(self, payload):
@@ -162,25 +189,63 @@ class OrganizationPublisherService:
 
     @staticmethod
     def _get_org_member_notification_message(invite_code, org_name):
-        return f"<html><head></head><body><div><p>Hello,</p><p>Organization {org_name} has sent you membership invite. " \
+        return f"<html><head></head><body><div><p>Hello,</p><p>Organization <em>{org_name}</em> has sent you membership invite. " \
                f"Your invite code is <strong>{invite_code}</strong>.</p><br/><p>Please click on the link below to " \
                f"accept the invitation.</p><p>{PUBLISHER_PORTAL_DAPP_URL}</p><br/><br/><p>" \
-               "<em>Please do not reply to the email for any enquiries for any queries please email at " \
-               "cs-marketplace@singularitynet.io.</em></p><p>Warmest regards, <br />SingularityNET Marketplace " \
-               "Team</p></div></body></html>"
+               f"<em>Please do not reply to the email for any enquiries for any queries please email at " \
+               f"{PUBLISHER_PORTAL_SUPPORT_MAIL}.</em></p><p>Warmest regards, <br />SingularityNET Publisher Portal " \
+               f"Team</p></div></body></html>"
 
     @staticmethod
     def _get_org_member_notification_subject(org_name):
         return f"Membership Invitation from  Organization {org_name}"
 
+    def _get_org_contacts_for_all_organization_for_given_user(self, username):
+        organizations = org_repo.get_org_for_user(username)
+        org_contacts = {}
+        for organization in organizations:
+            org_contacts[organization.name] = organization._get_all_contact_for_organization()
+
+        return org_contacts
+
     def update_verification(self, verification_type, verification_details):
+        org_contacts = {}
         if verification_type in ORG_TYPE_VERIFICATION_TYPE_MAPPING:
             if ORG_TYPE_VERIFICATION_TYPE_MAPPING[verification_type] == OrganizationType.INDIVIDUAL.value:
                 owner_username = verification_details["username"]
                 status = verification_details["status"]
-                org_repo.update_all_individual_organization_for_user(owner_username, status)
+                updated_by = verification_details["updated_by"]
+                org_repo.update_all_individual_organization_for_user(owner_username, status, updated_by)
+                contacts = self._get_org_contacts_for_all_organization_for_given_user(owner_username)
+
+            elif ORG_TYPE_VERIFICATION_TYPE_MAPPING[verification_type] == OrganizationType.ORGANIZATION.value:
+                status = verification_details["status"]
+                org_uuid = verification_details["org_uuid"]
+                updated_by = verification_details["updated_by"]
+                if status in ORG_STATUS_LIST:
+                    org_repo.update_organization_status(org_uuid, status, updated_by)
+                    organization = org_repo.get_org_for_org_uuid(org_uuid)
+                    contacts_mail = organization._get_all_contact_for_organization()
+                    org_contacts[organization.name] = contacts_mail
+
+
+                else:
+                    logger.error(f"Invalid status {status}")
+                    raise MethodNotImplemented()
             else:
+                logger.error(f"Invalid verification type {verification_type}")
                 raise MethodNotImplemented()
         else:
+            logger.error(f"Invalid verification type {verification_type}")
             raise MethodNotImplemented()
+
+        # TODO send_email should not have boto_utils
+        try:
+            for org_name, contacts in org_contacts.items():
+                send_email_notification(contacts, ORG_APPROVE_SUBJECT.format(org_name),
+                                        ORG_APPROVE_MESSAGE.format(org_name), NOTIFICATION_ARN,
+                                        self.boto_utils)
+        except:
+            logger.info(f"Error happened while sending approval mail for {organization.name} and contacts {contacts}")
+
         return {}

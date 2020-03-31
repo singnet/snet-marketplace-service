@@ -1,7 +1,8 @@
-import ipfsapi
 import io
-import logging
 import json
+import logging
+
+import ipfsapi
 
 
 class IPFSUtil(object):
@@ -27,7 +28,7 @@ class IPFSUtil(object):
                     return result[1]['Hash'] + '/' + result[0]['Name']
                 return result['Hash']
         except Exception as err:
-            logging.error("File error ", repr(err))
+            logging.error(f"File error {repr(err)}")
         return ''
 
     def read_file_from_ipfs(self, ipfs_hash):

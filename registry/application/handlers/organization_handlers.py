@@ -1,5 +1,7 @@
 import json
 
+from aws_xray_sdk.core import patch_all
+
 from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.logger import get_logger
@@ -10,13 +12,14 @@ from registry.config import NETWORK_ID, SLACK_HOOK
 from registry.constants import Action, OrganizationActions
 from registry.exceptions import BadRequestException, EXCEPTIONS
 
+patch_all()
 logger = get_logger(__name__)
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def get_org_for_admin(event, context):
     logger.info(event)
-    query_parameters = event["queryParameters"]
+    query_parameters = event["queryStringParameters"]
     response = OrganizationPublisherService(None, None).get_for_admin(query_parameters)
     return generate_lambda_response(
         StatusCode.OK,
@@ -66,7 +69,7 @@ def create_organization(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-#TODO change this api to  pathParameters  @secured(action=Action.CREATE, org_uuid_path=("body", "org_uuid"),
+# TODO change this api to  pathParameters  @secured(action=Action.CREATE, org_uuid_path=("body", "org_uuid"),
 #          username_path=("requestContext", "authorizer", "claims", "email"))
 def update_org(event, context):
     payload = json.loads(event["body"])
@@ -248,4 +251,18 @@ def org_verification(event, context):
     return generate_lambda_response(
         StatusCode.CREATED,
         {"status": "success", "data": response, "error": {}}, cors_enabled=False
+    )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+def verify_org_id(event, context):
+    logger.info(event)
+    query_parameters = event["queryStringParameters"]
+    if "org_id" not in query_parameters:
+        raise BadRequestException()
+    org_id = query_parameters["org_id"]
+    response = OrganizationPublisherService(None, None).get_org_id_availability_status(org_id)
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )

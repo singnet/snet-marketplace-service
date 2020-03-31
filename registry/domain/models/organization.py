@@ -2,15 +2,13 @@ from urllib.parse import urlparse
 from uuid import uuid4
 
 import requests
-from deepdiff import DeepDiff
 
 from common import ipfs_util
 from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
 from common.utils import datetime_to_string, json_to_file
 from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH
-from registry.constants import OrganizationAddressType, OrganizationActions, OrganizationStatus, OrganizationType
-from registry.domain.models.organization_address import OrganizationAddress
+from registry.constants import OrganizationActions, OrganizationAddressType, OrganizationStatus, OrganizationType
 
 logger = get_logger(__name__)
 
@@ -40,7 +38,12 @@ class Organization:
     def to_metadata(self):
         assets = {}
         for key in self.__assets:
-            assets[key] = self.__assets[key]["ipfs_uri"]
+            ipfs_hash = ""
+            ipfs_uri = self.__assets[key]["ipfs_uri"]
+            uri_prefix = "ipfs://"
+            if ipfs_uri.startswith(uri_prefix):
+                ipfs_hash = ipfs_uri[len(uri_prefix):]
+            assets[key] = ipfs_hash
         return {
             "org_name": self.__name,
             "org_id": self.__id,
@@ -106,6 +109,10 @@ class Organization:
     def org_type(self):
         return self.__org_type
 
+    @org_type.setter
+    def org_type(self, val):
+        self.__org_type = val
+
     @property
     def description(self):
         return self.__description
@@ -114,9 +121,17 @@ class Organization:
     def short_description(self):
         return self.__short_description
 
+    @short_description.setter
+    def short_description(self, val):
+        self.__short_description = val
+
     @property
     def url(self):
         return self.__url
+
+    @url.setter
+    def url(self, val):
+        self.__url = val
 
     @property
     def duns_no(self):
@@ -130,6 +145,10 @@ class Organization:
     def contacts(self):
         return self.__contacts
 
+    @contacts.setter
+    def contacts(self, val):
+        self.__contacts = val
+
     @property
     def addresses(self):
         return self.__addresses
@@ -138,13 +157,26 @@ class Organization:
     def assets(self):
         return self.__assets
 
+    @assets.setter
+    def assets(self, val):
+        self.__assets = val
+
+
     @property
     def metadata_ipfs_uri(self):
         return self.__metadata_ipfs_uri
 
+    @metadata_ipfs_uri.setter
+    def metadata_ipfs_uri(self, val):
+        self.__metadata_ipfs_uri = val
+
     @property
     def groups(self):
         return self.__groups
+
+    @groups.setter
+    def groups(self, val):
+        self.__groups = val
 
     @property
     def members(self):
@@ -216,12 +248,14 @@ class Organization:
         return True
 
     def is_major_change(self, updated_organization):
-        diff = DeepDiff(self, updated_organization, exclude_types=[OrganizationAddress],
-                        exclude_paths=EXCLUDE_PATHS)
-
-        logger.info(f"DIff for metadata organization {diff}")
-        if not diff:
-            return True
+        # diff = DeepDiff(self, updated_organization, exclude_types=[OrganizationAddress],
+        #                 exclude_paths=EXCLUDE_PATHS)
+        #
+        # logger.info(f"DIff for metadata organization {diff}")
+        # if not diff:
+        #     return True
+        # return False
+        #TODO reanable it once all isue are fixed
         return False
 
     @staticmethod
@@ -249,6 +283,14 @@ class Organization:
             else:
                 raise MethodNotImplemented()
         return next_state
+
+    def _get_all_contact_for_organization(self):
+        contacts = set()
+        for contact in self.contacts:
+            contacts.add(contact['email_id'])
+
+        return list(contacts)
+
 
 
 class OrganizationState:

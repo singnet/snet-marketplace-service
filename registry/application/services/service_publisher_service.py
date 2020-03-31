@@ -1,22 +1,25 @@
-from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
-from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
-from registry.constants import ServiceAvailabilityStatus, ServiceStatus, OrganizationStatus
+from uuid import uuid4
+
+from common import utils
+from common.boto_utils import BotoUtils
+from common.constant import StatusCode
+from common.ipfs_util import IPFSUtil
+from common.logger import get_logger
+from common.utils import json_to_file, publish_zip_file_in_ipfs, publish_file_in_ipfs, \
+    download_file_from_url
 from registry.config import IPFS_URL, METADATA_FILE_PATH, ASSET_DIR, SLACK_HOOK, BLOCKCHAIN_TEST_ENV, NETWORKS, \
     NETWORK_ID
-from uuid import uuid4
-from registry.exceptions import InvalidServiceState, ServiceProtoNotFoundException, OrganizationNotFoundException, \
-    OrganizationNotPublishedException, ServiceNotFoundException, ServiceGroupNotFoundException
+from registry.config import REGION_NAME, NOTIFICATION_ARN, SLACK_CHANNEL_FOR_APPROVAL_TEAM
+from registry.constants import EnvironmentType
+from registry.constants import ServiceAvailabilityStatus, ServiceStatus, OrganizationStatus, ServiceSupportType, \
+    UserType
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.services.service_publisher_domain_service import ServicePublisherDomainService
-from common.ipfs_util import IPFSUtil
-from common.boto_utils import BotoUtils
-from common import utils
-from common.utils import json_to_file, hash_to_bytesuri, publish_zip_file_in_ipfs, publish_file_in_ipfs, \
-    download_file_from_url
-from registry.constants import EnvironmentType
-from common.constant import StatusCode
-from registry.config import REGION_NAME, NOTIFICATION_ARN, SLACK_CHANNEL_FOR_APPROVAL_TEAM
-from common.logger import get_logger
+from registry.exceptions import InvalidOrganizationStateException, InvalidServiceStateException, \
+    ServiceProtoNotFoundException, OrganizationNotFoundException, \
+    OrganizationNotPublishedException, ServiceNotFoundException, EnvironmentNotFoundException
+from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
+from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 
 ALLOWED_ATTRIBUTES_FOR_SERVICE_SEARCH = ["display_name"]
 DEFAULT_ATTRIBUTE_FOR_SERVICE_SEARCH = "display_name"
@@ -49,6 +52,17 @@ class ServicePublisherService:
         service = ServiceFactory().create_service_entity_model(self._org_uuid, self._service_uuid, payload,
                                                                ServiceStatus.DRAFT.value)
         service = ServicePublisherRepository().save_service(self._username, service, ServiceStatus.DRAFT.value)
+        comments = payload.get("comments", {}).get(UserType.SERVICE_PROVIDER.value, "")
+        if bool(comments):
+            service_provider_comment = service_factory. \
+                create_service_comment_entity_model(org_uuid=self._org_uuid,
+                                                    service_uuid=self._service_uuid,
+                                                    support_type="SERVICE_APPROVAL",
+                                                    user_type="SERVICE_PROVIDER",
+                                                    commented_by=self._username,
+                                                    comment=comments)
+            ServicePublisherRepository().save_service_comments(service_provider_comment)
+            service.comments = self.get_service_comments()
         return service.to_dict()
 
     def save_transaction_hash_for_published_service(self, payload):
@@ -88,22 +102,24 @@ class ServicePublisherService:
                                                                                                  filter_parameters)
         return {"total_count": search_count, "offset": offset, "limit": limit, "result": search_result}
 
+    def get_service_comments(self):
+        service_provider_comment = ServicePublisherRepository().get_last_service_comment(
+            org_uuid=self._org_uuid, service_uuid=self._service_uuid,
+            support_type=ServiceSupportType.SERVICE_APPROVAL.value, user_type=UserType.SERVICE_PROVIDER.value)
+        approver_comment = ServicePublisherRepository().get_last_service_comment(
+            org_uuid=self._org_uuid, service_uuid=self._service_uuid,
+            support_type=ServiceSupportType.SERVICE_APPROVAL.value, user_type=UserType.SERVICE_APPROVER.value)
+        return {
+            UserType.SERVICE_PROVIDER.value: "<div></div>" if not service_provider_comment else f"<div>{service_provider_comment.comment}</div>",
+            UserType.SERVICE_APPROVER.value: "<div></div>" if not approver_comment else f"<div>{approver_comment.comment}</div>"
+        }
+
     def get_service_for_given_service_uuid(self):
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
+        if not service:
+            return None
+        service.comments = self.get_service_comments()
         return service.to_dict()
-
-    @staticmethod
-    def publish_assets(service):
-        ASSETS_SUPPORTED = ["hero_image", "demo_files"]
-        for asset in service.assets.keys():
-            if asset in ASSETS_SUPPORTED:
-                asset_url = service.assets.get(asset, {}).get("url", None)
-                if asset_url is None:
-                    logger.info(f"asset url for {asset} is missing ")
-                asset_ipfs_hash = publish_file_in_ipfs(file_url=asset_url,
-                                                       file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}",
-                                                       ipfs_client=IPFSUtil(IPFS_URL['url'], IPFS_URL['port']))
-                service.assets[asset]["ipfs_hash"] = asset_ipfs_hash
 
     def publish_service_data_to_ipfs(self):
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
@@ -122,7 +138,7 @@ class ServicePublisherService:
                 "service_type": "grpc"
             }
             service.assets["proto_files"]["ipfs_hash"] = asset_ipfs_hash
-            self.publish_assets(service)
+            ServicePublisherDomainService.publish_assets(service)
             service = ServicePublisherRepository().save_service(self._username, service, service.service_state.state)
             service_metadata = service.to_metadata()
             filename = f"{METADATA_FILE_PATH}/{service.uuid}_service_metadata.json"
@@ -130,7 +146,7 @@ class ServicePublisherService:
             return {"service_metadata": service.to_metadata(),
                     "metadata_ipfs_hash": "ipfs://" + service.metadata_ipfs_hash}
         logger.info(f"Service status needs to be {ServiceStatus.APPROVED.value} to be eligible for publishing.")
-        raise InvalidServiceState()
+        raise InvalidServiceStateException()
 
     def approve_service(self):
         pass
@@ -218,6 +234,8 @@ class ServicePublisherService:
         organization = OrganizationPublisherRepository().get_org_for_org_uuid(self._org_uuid)
         if not organization:
             raise OrganizationNotFoundException()
+        if not organization.org_state:
+            raise InvalidOrganizationStateException()
         if not organization.org_state.state == OrganizationStatus.PUBLISHED.value:
             raise OrganizationNotPublishedException()
 
@@ -228,6 +246,16 @@ class ServicePublisherService:
         service = self.obj_service_publisher_domain_service.publish_service_data_to_ipfs(service,
                                                                                          EnvironmentType.TEST.value)
 
+        comments = payload.get("comments", {}).get(UserType.SERVICE_PROVIDER.value, "")
+        if bool(comments):
+            service_provider_comment = service_factory. \
+                create_service_comment_entity_model(org_uuid=self._org_uuid,
+                                                    service_uuid=self._service_uuid,
+                                                    support_type="SERVICE_APPROVAL",
+                                                    user_type="SERVICE_PROVIDER",
+                                                    commented_by=self._username,
+                                                    comment=comments)
+            ServicePublisherRepository().save_service_comments(service_provider_comment)
         service = ServicePublisherRepository().save_service(self._username, service, service.service_state.state)
 
         # publish service on test network
@@ -258,23 +286,26 @@ class ServicePublisherService:
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
         if not service:
             raise ServiceNotFoundException()
+        organization_members = OrganizationPublisherRepository().get_org_member(org_uuid=self._org_uuid)
         network_name = NETWORKS[NETWORK_ID]["name"].lower()
         if environment is EnvironmentType.TEST.value:
             daemon_config = {
                 "allowed_user_flag": True,
-                "allowed_user_addresses": [member.address for member in organization.members] + [
+                "allowed_user_addresses": [member.address for member in organization_members] + [
                     BLOCKCHAIN_TEST_ENV["executor_address"]],
                 "blockchain_enabled": False,
                 "passthrough_enabled": True
             }
         elif environment is EnvironmentType.MAIN.value:
             daemon_config = {
-                "ipfs_end_point": f"http://{IPFS_URL['url']}:{IPFS_URL['port']}",
+                "ipfs_end_point": f"{IPFS_URL['url']}:{IPFS_URL['port']}",
                 "blockchain_network_selected": network_name,
                 "organization_id": organization.id,
                 "service_id": service.service_id,
                 "metering_end_point": f"https://{network_name}-marketplace.singularitynet.io",
-                "authentication_address": None,
+                "authentication_address": [member.address for member in organization_members],
                 "blockchain_enabled": True
             }
+        else:
+            raise EnvironmentNotFoundException()
         return daemon_config

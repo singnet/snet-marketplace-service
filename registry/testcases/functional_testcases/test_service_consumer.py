@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from registry.constants import ServiceStatus
 from registry.consumer.service_event_consumer import ServiceCreatedEventConsumer
-from registry.infrastructure.models import Organization, Service, ServiceGroup, ServiceState, ServiceReviewHistory
+from registry.infrastructure.models import Organization, Service, ServiceGroup, ServiceReviewHistory, ServiceState
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 
@@ -21,9 +21,8 @@ class TestOrganizationEventConsumer(unittest.TestCase):
     @patch('common.ipfs_util.IPFSUtil.read_bytesio_from_ipfs')
     @patch('registry.consumer.service_event_consumer.ServiceEventConsumer._fetch_tags')
     def test_on_service_created_event(self, mock_fetch_tags, nock_read_bytesio_from_ipfs, mock_ipfs_read, mock_s3_push):
-
-        org_uuid=str(uuid4())
-        service_uuid=str(uuid4())
+        org_uuid = str(uuid4())
+        service_uuid = str(uuid4())
         self.org_repo.add_item(
             Organization(
                 name="test_org",
@@ -53,7 +52,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
                 description="test_description",
                 project_url="https://dummy.io",
                 ranking=1,
-                created_on=datetime.utcnow(),updated_on=datetime.utcnow()
+                created_on=datetime.utcnow(), updated_on=datetime.utcnow()
             )
         )
         self.service_repo.add_item(
@@ -62,9 +61,10 @@ class TestOrganizationEventConsumer(unittest.TestCase):
                 org_uuid=org_uuid,
                 service_uuid=service_uuid,
                 state=ServiceStatus.DRAFT.value,
+                transaction_hash='0x1234',
                 created_by="dummy_user",
                 updated_by="dummy_user",
-                created_on=datetime.utcnow(),updated_on=datetime.utcnow()
+                created_on=datetime.utcnow(), updated_on=datetime.utcnow()
             )
         )
         self.service_repo.add_item(
@@ -73,17 +73,17 @@ class TestOrganizationEventConsumer(unittest.TestCase):
                 org_uuid=org_uuid,
                 service_uuid=service_uuid,
                 group_id="test_group_id",
-                endpoints=["https://dummydaemonendpoint.io"],
+                endpoints={"https://dummydaemonendpoint.io": {"verfied": True}},
                 daemon_address=["0xq2w3e4rr5t6y7u8i9"],
                 free_calls=10,
                 free_call_signer_address="0xq2s3e4r5t6y7u8i9o0",
-                created_on=datetime.utcnow(),updated_on=datetime.utcnow()
+                created_on=datetime.utcnow(), updated_on=datetime.utcnow()
             )
         )
         event = {"data": {'row_id': 202, 'block_no': 6325625, 'event': 'ServiceCreated',
                           'json_str': "{'orgId': b'test_org_id\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'serviceId': b'test_service_id\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'metadataURI': b'ipfs://QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'}",
                           'processed': b'\x00',
-                          'transactionHash': 'b"\\xa7P*\\xaf\\xfd\\xd5.E\\x8c\\x0bKAF\'\\x15\\x03\\xef\\xdaO\'\\x86/<\\xfb\\xc4\\xf0@\\xf0\\xc1P\\x8c\\xc7"',
+                          'transactionHash': '0x12345',
                           'logIndex': '0', 'error_code': 1, 'error_msg': '',
                           'row_updated': datetime(2019, 10, 21, 9, 59, 37),
                           'row_created': datetime(2019, 10, 21, 9, 59, 37)}, "name": "ServiceCreated"}
@@ -134,7 +134,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
                                                              80, self.service_repo, self.org_repo)
         service_event_consumer.on_event(event=event)
 
-        published_service=self.service_repo.get_service_for_given_service_uuid(org_uuid,service_uuid)
+        published_service = self.service_repo.get_service_for_given_service_uuid(org_uuid, service_uuid)
         assert published_service.display_name == "Annotation Service"
         assert published_service.tags[0] == "tag1"
         assert published_service.groups[0].group_name == "default_group"
@@ -146,7 +146,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
     @patch('common.ipfs_util.IPFSUtil.read_bytesio_from_ipfs')
     @patch('registry.consumer.service_event_consumer.ServiceEventConsumer._fetch_tags')
     def test_on_service_created_event_from_snet_cli(self, mock_fetch_tags, nock_read_bytesio_from_ipfs, mock_ipfs_read,
-                                      mock_s3_push):
+                                                    mock_s3_push):
         org_uuid = str(uuid4())
         self.org_repo.add_item(
             Organization(
@@ -170,7 +170,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
         event = {"data": {'row_id': 202, 'block_no': 6325625, 'event': 'ServiceCreated',
                           'json_str': "{'orgId': b'test_org_id\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'serviceId': b'test_service_id\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'metadataURI': b'ipfs://QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'}",
                           'processed': b'\x00',
-                          'transactionHash': 'b"\\xa7P*\\xaf\\xfd\\xd5.E\\x8c\\x0bKAF\'\\x15\\x03\\xef\\xdaO\'\\x86/<\\xfb\\xc4\\xf0@\\xf0\\xc1P\\x8c\\xc7"',
+                          'transactionHash': '0x12345',
                           'logIndex': '0', 'error_code': 1, 'error_msg': '',
                           'row_updated': datetime(2019, 10, 21, 9, 59, 37),
                           'row_created': datetime(2019, 10, 21, 9, 59, 37)}, "name": "ServiceCreated"}
@@ -221,13 +221,13 @@ class TestOrganizationEventConsumer(unittest.TestCase):
                                                              80, self.service_repo, self.org_repo)
         service_event_consumer.on_event(event=event)
 
-        org_uuid,published_service = self.service_repo.get_service_for_given_service_id_and_org_id("test_org_id", "test_service_id")
+        org_uuid, published_service = self.service_repo.get_service_for_given_service_id_and_org_id("test_org_id",
+                                                                                                    "test_service_id")
         assert published_service.display_name == "Annotation Service"
         assert published_service.tags[0] == "tag1"
         assert published_service.groups[0].group_name == "default_group"
         assert published_service.groups[0].pricing[0]['price_model'] == "fixed_price"
         assert published_service.service_state.state == "PUBLISHED_UNAPPROVED"
-
 
     def tearDown(self):
         self.org_repo.session.query(Organization).delete()
@@ -239,5 +239,3 @@ class TestOrganizationEventConsumer(unittest.TestCase):
         self.service_repo.session.query(ServiceState).delete()
         self.service_repo.session.query(ServiceGroup).delete()
         self.service_repo.session.query(ServiceReviewHistory).delete()
-
-

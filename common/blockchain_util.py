@@ -4,7 +4,6 @@ from enum import Enum
 
 import web3
 from eth_account.messages import defunct_hash_message
-
 from web3 import Web3
 
 from common.logger import get_logger
@@ -22,10 +21,12 @@ class ContractType(Enum):
 class BlockChainUtil(object):
 
     def __init__(self, provider_type, provider):
-        if provider_type == "HTTP_PROVIDER":
-            self.provider = Web3.HTTPProvider(provider)
-        elif provider_type == "WS_PROVIDER":
-            self.provider = web3.providers.WebsocketProvider(provider)
+        self._provider_type = provider_type
+        self._provider_url = provider
+        if self._provider_type == "HTTP_PROVIDER":
+            self.provider = Web3.HTTPProvider(self._provider_url)
+        elif self._provider_type == "WS_PROVIDER":
+            self.provider = web3.providers.WebsocketProvider(self._provider_url)
         else:
             raise Exception("Only HTTP_PROVIDER and WS_PROVIDER provider type are supported.")
         self.web3_object = Web3(self.provider)
@@ -40,7 +41,8 @@ class BlockChainUtil(object):
         return Web3.toChecksumAddress(contract[str(net_id)][key])
 
     def contract_instance(self, contract_abi, address):
-        return self.web3_object.eth.contract(abi=contract_abi, address=address)
+        web3_object = Web3(self.provider)
+        return web3_object.eth.contract(abi=contract_abi, address=address)
 
     def get_contract_instance(self, base_path, contract_name, net_id):
         contract_network_path, contract_abi_path = self.get_contract_file_paths(base_path, contract_name)
@@ -79,8 +81,9 @@ class BlockChainUtil(object):
         self.contract = self.load_contract(path=contract_path)
         self.contract_address = self.read_contract_address(net_id=net_id, path=contract_address_path, key='address')
         self.contract_instance = self.contract_instance(contract_abi=self.contract, address=self.contract_address)
-        print("gas_price == ", self.web3_object.eth.gasPrice)
-        print("nonce == ", nonce)
+        logger.info(f"gas_price :: {self.web3_object.eth.gasPrice}")
+        logger.info(f"nonce :: {nonce}")
+        logger.info(f"positional_inputs :: {positional_inputs}")
         gas_price = 3 * (self.web3_object.eth.gasPrice)
         transaction_object = getattr(self.contract_instance.functions, method_name)(
             *positional_inputs).buildTransaction({
@@ -122,3 +125,9 @@ class BlockChainUtil(object):
         contract_abi_path = base_path + "/{}/{}".format("abi", json_file)
 
         return contract_network_path, contract_abi_path
+
+    @staticmethod
+    def call_contract_function(contract, contract_function, positional_inputs):
+        function = getattr(contract.functions, contract_function)
+        result = function(*positional_inputs).call()
+        return result

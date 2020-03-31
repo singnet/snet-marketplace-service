@@ -109,7 +109,9 @@ class TestOrganizationPublisherService(unittest.TestCase):
         assert True
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q12PWP")))
-    def test_org_publish_to_ipfs(self, mock_ipfs_utils):
+    @patch("registry.domain.services.organization_domain_service."
+           "OrganizationService.publish_organization_to_test_network", return_value="0x123")
+    def test_org_publish_to_ipfs(self, mock_test_network_publish, mock_ipfs_utils):
         test_org_id = uuid4().hex
         username = "dummy@snet.io"
         org_repo.add_organization(
@@ -136,7 +138,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
                                                          "", "", [], {}, "", "", [], [], [], []),
                                       username, OrganizationStatus.APPROVED.value)
         OrganizationPublisherService(None, None).update_verification(
-            "JUMIO", verification_details={"status": "APPROVED", "username": username})
+            "JUMIO", verification_details={"updated_by": "TEST_CASES", "status": "APPROVED", "username": username})
         organization = org_repo.get_org(OrganizationStatus.ONBOARDING_APPROVED.value)
         self.assertEqual(len(organization), 3)
 

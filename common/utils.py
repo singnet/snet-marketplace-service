@@ -1,21 +1,26 @@
 import datetime
 import decimal
-import json
-import sys
-import traceback
 import glob
-import tarfile
-import os
+import hashlib
+import hmac
 import io
-from zipfile import ZipFile
+import json
+import os
+import os.path
+import sys
+import tarfile
+import traceback
+import zipfile
 from urllib.parse import urlparse
+from zipfile import ZipFile
+
 import requests
 import web3
 from web3 import Web3
 
-from common.logger import get_logger
 from common.constant import COGS_TO_AGI, StatusCode
 from common.exceptions import OrganizationNotFound
+from common.logger import get_logger
 
 IGNORED_LIST = ['row_id', 'row_created', 'row_updated']
 logger = get_logger(__name__)
@@ -233,12 +238,17 @@ def hash_to_bytesuri(s):
     return s.encode("ascii").ljust(32 * (len(s) // 32 + 1), b"\0")
 
 
-def publish_file_in_ipfs(file_url, file_dir, ipfs_client):
+def ipfsuri_to_bytesuri(uri):
+    # we should pad string with zeros till closest 32 bytes word because of a bug in processReceipt (in snet_cli.contract.process_receipt)
+    return uri.encode("ascii").ljust(32 * (len(uri) // 32 + 1), b"\0")
+
+
+def publish_file_in_ipfs(file_url, file_dir, ipfs_client, wrap_with_directory=True):
     filename = download_file_from_url(file_url=file_url, file_dir=file_dir)
     file_type = os.path.splitext(filename)[1]
     if file_type.lower() == ".zip":
         return publish_zip_file_in_ipfs(filename, file_dir, ipfs_client)
-    ipfs_hash = ipfs_client.write_file_in_ipfs(f"{file_dir}/{filename}", wrap_with_directory=False)
+    ipfs_hash = ipfs_client.write_file_in_ipfs(f"{file_dir}/{filename}", wrap_with_directory)
     return ipfs_hash
 
 
@@ -277,15 +287,18 @@ def convert_zip_file_to_tar_bytes(file_dir, filename):
 
 def send_email_notification(recipients, notification_subject, notification_message, notification_arn, boto_util):
     for recipient in recipients:
-        if bool(recipient):
-            send_notification_payload = {"body": json.dumps({
-                "message": notification_message,
-                "subject": notification_subject,
-                "notification_type": "support",
-                "recipient": recipient})}
-            boto_util.invoke_lambda(lambda_function_arn=notification_arn, invocation_type="RequestResponse",
-                                    payload=json.dumps(send_notification_payload))
-            logger.info(f"email_sent to {recipient}")
+        try:
+            if bool(recipient):
+                send_notification_payload = {"body": json.dumps({
+                    "message": notification_message,
+                    "subject": notification_subject,
+                    "notification_type": "support",
+                    "recipient": recipient})}
+                boto_util.invoke_lambda(lambda_function_arn=notification_arn, invocation_type="RequestResponse",
+                                        payload=json.dumps(send_notification_payload))
+                logger.info(f"email_sent to {recipient}")
+        except:
+            logger.error(f"Error happened while sending email to recipient {recipient}")
 
 
 def send_slack_notification(slack_msg, slack_url, slack_channel):
@@ -295,4 +308,20 @@ def send_slack_notification(slack_msg, slack_url, slack_channel):
                "icon_emoji": ":ghost:"
                }
     slack_response = requests.post(url=slack_url, data=json.dumps(payload))
-    logger.info(slack_response.status_code, slack_response.text)
+    logger.info(f"slack response :: {slack_response.status_code}, {slack_response.text}")
+
+
+def extract_zip_file(zip_file_path, extracted_path):
+    with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+        zip_ref.extractall(extracted_path)
+
+
+def make_tarfile(output_filename, source_dir):
+    with tarfile.open(output_filename, "w:gz") as tar:
+        tar.add(source_dir, arcname=os.path.basename(source_dir))
+
+
+def validate_signature(signature, message, key, opt_params):
+    derived_signature = opt_params.get("slack_signature_prefix", "") \
+                        + hmac.new(key.encode(), message.encode(), hashlib.sha256).hexdigest()
+    return hmac.compare_digest(derived_signature, signature)

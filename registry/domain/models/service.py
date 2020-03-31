@@ -1,5 +1,7 @@
 from cerberus import Validator
+
 from common.logger import get_logger
+from registry.constants import UserType
 
 logger = get_logger(__name__)
 
@@ -45,10 +47,12 @@ SERVICE_METADATA_SCHEMA = {
                     "type": "string",
                     "empty": False
                 },
-                "daemon_address": {
+                "daemon_addresses": {
                     "type": "list",
                     "schema": {
-                        "type": "string"
+                        "type": "string",
+                        "empty":True
+
                     }
                 },
                 "pricing": {
@@ -96,40 +100,8 @@ SERVICE_METADATA_SCHEMA = {
     "assets": {
         "type": "dict",
         "schema": {
-            "proto_files": {
-                "type": "dict",
-                "schema": {
-                    "url": {
-                        "type": "string",
-                        "empty": False
-                    },
-                    "ipfs_hash": {
-                        "type": "string",
-                        "empty": False
-                    }
-                }
-            },
-            "demo_files": {
-                "type": "dict",
-                "schema": {
-                    "url": {
-                        "type": "string"
-                    },
-                    "ipfs_hash": {
-                        "type": "string"
-                    }
-                }
-            },
             "hero_image": {
-                "type": "dict",
-                "schema": {
-                    "url": {
-                        "type": "string"
-                    },
-                    "ipfs_hash": {
-                        "type": "string"
-                    }
-                }
+                "type": "string"
             }
         }
     },
@@ -137,6 +109,7 @@ SERVICE_METADATA_SCHEMA = {
         "type": "list"
     },
 }
+REQUIRED_ASSETS_FOR_METADATA = ['hero_image']
 
 
 class Service:
@@ -159,6 +132,7 @@ class Service:
         self._metadata_uri = metadata_uri
         self._groups = groups
         self._service_state = service_state
+        self._comments = {UserType.SERVICE_PROVIDER.value: "", UserType.SERVICE_APPROVER.value: ""}
 
     def to_dict(self):
         return {
@@ -178,7 +152,8 @@ class Service:
             "mpe_address": self._mpe_address,
             "metadata_uri": self._metadata_uri,
             "groups": [group.to_dict() for group in self._groups],
-            "service_state": self._service_state.to_dict()
+            "service_state": self._service_state.to_dict(),
+            "comments": self._comments
         }
 
     def to_metadata(self):
@@ -195,7 +170,7 @@ class Service:
                 "short_description": self.short_description,
                 "description": self._description
             },
-            "assets": self._assets,
+            "assets": self.prepare_assets_for_metadata(),
             "contributors": self._contributors
         }
 
@@ -215,17 +190,33 @@ class Service:
     def display_name(self):
         return self._display_name
 
+    @display_name.setter
+    def display_name(self, val):
+        self._display_name = val
+
     @property
     def short_description(self):
         return self._short_description
+
+    @short_description.setter
+    def short_description(self, val):
+        self._short_description = val
 
     @property
     def description(self):
         return self._description
 
+    @description.setter
+    def description(self, val):
+        self._description = val
+
     @property
     def project_url(self):
         return self._project_url
+
+    @project_url.setter
+    def project_url(self, val):
+        self._project_url = val
 
     @property
     def proto(self):
@@ -255,6 +246,10 @@ class Service:
     def contributors(self):
         return self._contributors
 
+    @contributors.setter
+    def contributors(self, val):
+        self._contributors = val
+
     @property
     def metadata_uri(self):
         return self._metadata_uri
@@ -266,6 +261,10 @@ class Service:
     @property
     def groups(self):
         return [group for group in self._groups]
+
+    @groups.setter
+    def groups(self, val):
+        self._groups = val
 
     @property
     def service_state(self):
@@ -279,12 +278,30 @@ class Service:
     def tags(self):
         return self._tags
 
+    @tags.setter
+    def tags(self, val):
+        self._tags = val
+
     @property
     def mpe_address(self):
         return self._mpe_address
 
+    @mpe_address.setter
+    def mpe_address(self, val):
+        self._mpe_address = val
+
+    @property
+    def comments(self):
+        return self._comments
+
+    @comments.setter
+    def comments(self, comments):
+        self._comments[UserType.SERVICE_PROVIDER.value] = comments.get(UserType.SERVICE_PROVIDER.value, "")
+        self._comments[UserType.SERVICE_APPROVER.value] = comments.get(UserType.SERVICE_APPROVER.value, "")
+
     @staticmethod
     def is_metadata_valid(service_metadata):
+        logger.info(f"service_metadata: {service_metadata}")
         validator = Validator()
         is_valid = validator.validate(service_metadata, SERVICE_METADATA_SCHEMA)
         logger.info(validator.errors)
@@ -292,3 +309,12 @@ class Service:
 
     def is_major_change(self, other):
         return False
+
+    def prepare_assets_for_metadata(self):
+        metadata_assets = {}
+        for asset in self.assets.keys():
+            if asset in REQUIRED_ASSETS_FOR_METADATA:
+                metadata_assets.update({asset: self.assets[asset].get("ipfs_hash", "")})
+        return metadata_assets
+
+

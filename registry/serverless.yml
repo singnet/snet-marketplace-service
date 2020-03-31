@@ -10,7 +10,7 @@ provider:
   runtime: python3.6
   description: offchain information of organizations and services
   memorySize: 512
-  timeout: 30
+  timeout: 60
   region: ${file(./config.${self:provider.stage}.json):REGION}
   stage: ${opt:stage,'dev'}
   deploymentBucket:
@@ -69,9 +69,9 @@ package:
 
 functions:
 
-  get-org-for_admin:
+  get-org-for-admin:
     warmup: true
-    handler: registry.application.handlers.service_handlers.get_org_for_admin
+    handler: registry.application.handlers.organization_handlers.get_org_for_admin
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -109,6 +109,36 @@ functions:
       - http:
           method: GET
           path: /org
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
+  verify-org-id:
+    handler: registry.application.handlers.organization_handlers.verify_org_id
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /org/verify
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -812,17 +842,6 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-  pre_token_auth_handler:
-    handler: registry.application.access_control.authorization.pre_token_auth_handler
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-
   daemon-config-for-test:
     warmup: true
     handler: registry.application.handlers.service_handlers.get_daemon_config_for_test
@@ -884,6 +903,49 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+  get_service_details_using_org_id_service_id:
+    warmup: true
+    private: true
+    handler: registry.application.handlers.service_handlers.get_service_details_using_org_id_service_id
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+  service_deployment_status_notification_handler:
+    warmup: true
+    private: true
+    handler: registry.application.handlers.service_handlers.service_deployment_status_notification_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+#    events:
+#      - http:
+#          method: GET
+#          path: /service
+#          authorizer:
+#            name: user-authorizer
+#            type: COGNITO_USER_POOLS
+#            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+#            identitySource: method.request.header.Authorization
+#          cors:
+#            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+#            headers:
+#              - Content-Type
+#              - X-Amz-Date
+#              - Authorization
+#              - X-Api-Key
+#              - X-Amz-Security-Token
+#              - X-Amz-User-Agent
+#              - x-requested-with
 
 #  Admin level API needs to be private
 #  list-of-orgs-services-submitted-for-approval:

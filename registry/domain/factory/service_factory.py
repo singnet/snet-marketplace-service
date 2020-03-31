@@ -4,8 +4,9 @@ from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus
 from registry.domain.models.service import Service
 from registry.domain.models.service_group import ServiceGroup
 from registry.domain.models.service_state import ServiceState
+from registry.domain.models.service_comment import ServiceComment
 from registry.infrastructure.models import Service as ServiceDBModel, ServiceGroup as ServiceGroupDBModel, \
-    ServiceReviewHistory, ServiceState as ServiceStateDBModel
+    ServiceReviewHistory, ServiceState as ServiceStateDBModel, ServiceComment as ServiceCommentDBModel
 
 
 class ServiceFactory:
@@ -60,8 +61,9 @@ class ServiceFactory:
             mpe_address=service.mpe_address,
             created_on=dt.utcnow(),
             groups=[ServiceFactory.convert_service_group_entity_model_to_db_model(group) for group in service.groups],
-            service_state=ServiceFactory.convert_service_state_entity_model_to_db_model(username, service.service_state),
-            updated_on = dt.utcnow()
+            service_state=ServiceFactory.convert_service_state_entity_model_to_db_model(username,
+                                                                                        service.service_state),
+            updated_on=dt.utcnow()
         )
 
     @staticmethod
@@ -141,9 +143,9 @@ class ServiceFactory:
             group_id=group["group_id"],
             group_name=group.get("group_name", ""),
             pricing=group.get("pricing", []),
-            endpoints=group.get("endpoints", []),
+            endpoints=group.get("endpoints", {}),
             test_endpoints=group.get("test_endpoints", []),
-            daemon_address=group.get("daemon_address", []),
+            daemon_address=group.get("daemon_adresses", []),
             free_calls=group.get("free_calls", 0),
             free_call_signer_address=group.get("free_call_signer_address", None),
         )
@@ -168,3 +170,48 @@ class ServiceFactory:
             service_metadata.get("mpe_address", ""), service_metadata.get("metadata_ipfs_hash", ""),
             service_group_entity_model_list,
             service_state_entity_model)
+
+    @staticmethod
+    def create_service_comment_entity_model(org_uuid, service_uuid, support_type, user_type, commented_by, comment):
+        return ServiceComment(
+            org_uuid=org_uuid,
+            service_uuid=service_uuid,
+            support_type=support_type,
+            user_type=user_type,
+            commented_by=commented_by,
+            comment=comment
+        )
+
+    @staticmethod
+    def convert_service_comment_db_model_to_entity_model(service_comment):
+        if service_comment is None:
+            return None
+        return ServiceComment(
+            org_uuid=service_comment.org_uuid,
+            service_uuid = service_comment.service_uuid,
+            support_type = service_comment.support_type,
+            user_type = service_comment.user_type,
+            commented_by = service_comment.commented_by,
+            comment = service_comment.comment
+        )
+
+    @staticmethod
+    def parse_service_metadata_assets(assets, existing_assets):
+        if assets is None:
+            assets= {}
+        if existing_assets is None:
+            existing_assets={}
+        url = ""
+        for key, value in assets.items():
+            if existing_assets and key in existing_assets:
+                if existing_assets[key] and 'url' in existing_assets[key]:
+                    url = existing_assets[key]['url']
+            else:
+                url = ""
+
+            assets[key] = {
+                "ipfs_hash": value,
+                "url": url
+            }
+        merged = {**existing_assets, **assets}
+        return merged

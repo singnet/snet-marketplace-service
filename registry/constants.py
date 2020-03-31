@@ -1,7 +1,6 @@
 import os
 from enum import Enum
 
-
 COMMON_CNTRCT_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), 'node_modules', 'singularitynet-platform-contracts'))
 REG_CNTRCT_PATH = COMMON_CNTRCT_PATH + '/abi/Registry.json'
@@ -27,6 +26,10 @@ class OrganizationStatus(Enum):
     FAILED = "FAILED"
     PUBLISHED_UNAPPROVED = "PUBLISHED_UNAPPROVED"
     ONBOARDING_REJECTED = "ONBOARDING_REJECTED"
+    CHANGE_REQUESTED = "CHANGE_REQUESTED"
+
+
+ORG_STATUS_LIST = [OrganizationStatus.APPROVED.value, OrganizationStatus.REJECTED.value]
 
 
 class OrganizationActions(Enum):
@@ -66,12 +69,19 @@ class ServiceAvailabilityStatus(Enum):
     UNAVAILABLE = "UNAVAILABLE"
 
 
+class OrganizationIDAvailabilityStatus(Enum):
+    AVAILABLE = "AVAILABLE"
+    UNAVAILABLE = "UNAVAILABLE"
+
+
 class ServiceStatus(Enum):
     DRAFT = "DRAFT"
     APPROVAL_PENDING = "APPROVAL_PENDING"
     APPROVED = "APPROVED"
     PUBLISH_IN_PROGRESS = "PUBLISH_IN_PROGRESS"
     PUBLISHED = "PUBLISHED"
+    CHANGE_REQUESTED = "CHANGE_REQUESTED"
+    REJECTED = "REJECTED"
     FAILED = "FAILED"
     PUBLISHED_UNAPPROVED = "PUBLISHED_UNAPPROVED"
 
@@ -86,12 +96,22 @@ class OrganizationType(Enum):
     INDIVIDUAL = "individual"
 
 
-ORG_TYPE_VERIFICATION_TYPE_MAPPING = {"JUMIO": OrganizationType.INDIVIDUAL.value, }
+ORG_TYPE_VERIFICATION_TYPE_MAPPING = {"JUMIO": OrganizationType.INDIVIDUAL.value,
+                                      "DUNS": OrganizationType.ORGANIZATION.value}
 
 
 class EnvironmentType(Enum):
     TEST = "TEST"
     MAIN = "MAIN"
+
+
+class ServiceSupportType(Enum):
+    SERVICE_APPROVAL= "SERVICE_APPROVAL"
+
+
+class UserType(Enum):
+    SERVICE_APPROVER = "SERVICE_APPROVER"
+    SERVICE_PROVIDER = "SERVICE_PROVIDER"
 
 
 DEFAULT_SERVICE_RANKING = 1

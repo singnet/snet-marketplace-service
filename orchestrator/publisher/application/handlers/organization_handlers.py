@@ -1,6 +1,7 @@
 import json
 
-from common.constant import StatusCode
+from common.constant import StatusCode, ResponseStatus
+from common.exception_handler import exception_handler
 from common.exceptions import BadRequestException
 from common.logger import get_logger
 from common.utils import validate_dict, generate_lambda_response, handle_exception_with_slack_notification
@@ -20,5 +21,15 @@ def register_org_member(event, context):
     response = OrganizationOrchestratorService().register_org_member(username, payload)
     return generate_lambda_response(
         StatusCode.CREATED,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+        {"status": ResponseStatus.SUCCESS, "data": response, "error": {}}, cors_enabled=True
     )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=())
+def create_org(event, context):
+    payload = json.loads(event["body"])
+    username = event["requestContext"]["authorizer"]["claims"]["email"]
+    response = OrganizationOrchestratorService().create_and_initiate_verification(payload, username)
+    return generate_lambda_response(StatusCode.CREATED,
+                                    {"status": ResponseStatus.SUCCESS, "data": response, "error": {}},
+                                    cors_enabled=True)

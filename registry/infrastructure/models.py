@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import Column, Integer, ForeignKey, UniqueConstraint
-from sqlalchemy.dialects.mysql import JSON, TIMESTAMP, VARCHAR
+from sqlalchemy.dialects.mysql import JSON, TIMESTAMP, VARCHAR, TEXT
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -51,6 +51,7 @@ class OrganizationState(Base):
                       ForeignKey("organization.uuid", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     state = Column("state", VARCHAR(128), nullable=False)
     transaction_hash = Column("transaction_hash", VARCHAR(128))
+    test_transaction_hash = Column("test_transaction_hash", VARCHAR(128))
     wallet_address = Column("user_address", VARCHAR(128))
     created_by = Column("created_by", VARCHAR(128), nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False))
@@ -141,6 +142,7 @@ class ServiceState(Base):
                           unique=True, nullable=False)
     state = Column("state", VARCHAR(128), nullable=False)
     transaction_hash = Column("transaction_hash", VARCHAR(128))
+    test_transaction_hash = Column("test_transaction_hash", VARCHAR(128))
     created_by = Column("created_by", VARCHAR(128), nullable=False)
     updated_by = Column("updated_by", VARCHAR(128), nullable=False)
     approved_by = Column("approved_by", VARCHAR(128))
@@ -178,5 +180,18 @@ class ServiceReviewHistory(Base):
     state = Column("state", VARCHAR(64), nullable=False)
     reviewed_by = Column("reviewed_by", VARCHAR(128))
     reviewed_on = Column("reviewed_on", TIMESTAMP(timezone=False))
+    created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=datetime.utcnow())
+
+
+class ServiceComment(Base):
+    __tablename__ = "service_comment"
+    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
+    org_uuid = Column("org_uuid", VARCHAR(128), nullable=False)
+    service_uuid = Column("service_uuid", VARCHAR(128), nullable=False)
+    support_type = Column("support_type", VARCHAR(128), nullable=False)
+    user_type = Column("user_type", VARCHAR(128), nullable=False)
+    commented_by = Column("commented_by", VARCHAR(128), nullable=False)
+    comment = Column("comment", TEXT, nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
     updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=datetime.utcnow())

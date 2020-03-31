@@ -11,7 +11,7 @@ from registry.infrastructure.repositories.base_repository import BaseRepository
 
 class OrganizationPublisherRepository(BaseRepository):
 
-    def get_org(self, status):
+    def get_org(self, status=None):
         organization_query = self.session.query(Organization)
         if status is not None:
             organization_query = organization_query\
@@ -52,24 +52,34 @@ class OrganizationPublisherRepository(BaseRepository):
         self.session.commit()
         return groups_domain_entity
 
-    def store_ipfs_hash(self, organization, username):
+    def store_ipfs_hash_and_test_transaction_hash(self, organization, username, test_transaction_hash):
         organization_db_model = self.session.query(Organization).filter(Organization.uuid == organization.uuid).first()
         organization_db_model.assets = organization.assets
         organization_db_model.metadata_ipfs_uri = organization.metadata_ipfs_uri
         organization_db_model.org_state[0].updated_on = datetime.utcnow()
         organization_db_model.org_state[0].updated_by = username
+        organization_db_model.org_state[0].test_transaction_hash = test_transaction_hash
         self.session.commit()
 
     def persist_publish_org_transaction_hash(self, org_uuid, transaction_hash, wallet_address, username):
         organization_db_model = self.session.query(Organization).filter(Organization.uuid == org_uuid).first()
-        if organization_db_model is None:
+        org_owner = self.session.query(OrganizationMember).filter(OrganizationMember.role == Role.OWNER.value)\
+            .filter(OrganizationMember.org_uuid == org_uuid).first()
+        if organization_db_model is None or org_owner is None:
             raise OrganizationNotFoundException()
-        organization_db_model.org_state[0].trasaction_hash = transaction_hash
-        organization_db_model.org_state[0].wallet_address = wallet_address
-        organization_db_model.org_state[0].state = OrganizationStatus.PUBLISH_IN_PROGRESS.value
-        organization_db_model.org_state[0].updated_on = datetime.utcnow()
-        organization_db_model.org_state[0].updated_by = username
-        self.session.commit()
+        try:
+            organization_db_model.org_state[0].wallet_address = wallet_address
+            organization_db_model.org_state[0].state = OrganizationStatus.PUBLISH_IN_PROGRESS.value
+            organization_db_model.org_state[0].updated_on = datetime.utcnow()
+            organization_db_model.org_state[0].updated_by = username
+            organization_db_model.org_state[0].transaction_hash = transaction_hash
+            org_owner.address = wallet_address
+            org_owner.transaction_hash = transaction_hash
+            org_owner.status = OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value
+            self.session.commit()
+        except:
+            self.session.rollback()
+            raise
 
     def store_organization(self, organization, username, state):
         organization_db_model = self.session.query(Organization).filter(
@@ -86,6 +96,24 @@ class OrganizationPublisherRepository(BaseRepository):
         if organization_db_model is None:
             raise OrganizationNotFoundException()
         self._update_organization(organization_db_model, organization, username, state)
+
+    def update_organization_status(self, org_uuid, status, updated_by):
+        try:
+            organization = self.session.query(Organization).filter(Organization.uuid == org_uuid).first()
+            if organization.org_state[0].state in [OrganizationStatus.ONBOARDING.value,
+                                                   OrganizationStatus.ONBOARDING_REJECTED,
+                                                   OrganizationStatus.ONBOARDING_APPROVED]:
+                if status == OrganizationStatus.REJECTED.value:
+                    status = OrganizationStatus.ONBOARDING_REJECTED
+                elif status == OrganizationStatus.APPROVED.value:
+                    status = OrganizationStatus.ONBOARDING_APPROVED
+            organization.org_state[0].state = status
+            organization.org_state[0].updated_by = updated_by
+            organization.org_state[0].updated_on = datetime.utcnow()
+            self.session.commit()
+        except:
+            self.session.rollback()
+            raise
 
     def add_organization(self, organization, username, state):
         current_time = datetime.utcnow()
@@ -277,7 +305,7 @@ class OrganizationPublisherRepository(BaseRepository):
         org_member.updated_on = datetime.utcnow()
         self.session.commit()
 
-    def update_all_individual_organization_for_user(self, username, status):
+    def update_all_individual_organization_for_user(self, username, status, updated_by):
         organizations_db = self.session.query(Organization)\
             .join(OrganizationMember, Organization.uuid == OrganizationMember.org_uuid)\
             .filter(OrganizationMember.username == username).all()
@@ -289,5 +317,7 @@ class OrganizationPublisherRepository(BaseRepository):
                     updated_status = OrganizationStatus.ONBOARDING_REJECTED.value
                 else:
                     raise Exception("Invalid verification status")
+                organization.org_state[0].updated_by = updated_by
+                organization.org_state[0].updated_at = datetime.utcnow()
                 organization.org_state[0].state = updated_status
         self.session.commit()

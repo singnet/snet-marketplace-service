@@ -18,7 +18,8 @@ class TestJumioVerification(TestCase):
     def setUp(self):
         pass
 
-    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123")))
+    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123"),
+           invoke_lambda=Mock(return_value={"statusCode": 201})))
     @patch("requests.post", return_value=Mock(
         json=Mock(return_value={
             "timestamp": "2018-07-03T08:23:12.494Z", "transactionReference": "123-13-13-134-1234",
@@ -60,7 +61,30 @@ class TestJumioVerification(TestCase):
         self.assertEqual(jumio_verfication.verification_status, JumioVerificationStatus.PENDING.value)
         self.assertEqual(jumio_verfication.user_reference_id, sha1(username.encode("utf-8")).hexdigest())
 
-    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123")))
+    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123"),
+                                                            invoke_lambda=Mock(return_value={"statusCode": 201})))
+    def test_jumio_initiate_two(self, mock_boto_utils):
+        """ user is from verified domain list """
+        username = "karl@allowed.io"
+        event = {
+            "requestContext": {"authorizer": {"claims": {"email": username}}},
+            "body": json.dumps({
+                "type": "JUMIO",
+                "entity_id": username
+            })
+        }
+        response = initiate(event, None)
+        verification = verification_repository.session.query(VerificationModel).first()
+        if verification is None:
+            assert False
+        self.assertEqual(verification.entity_id, username)
+        self.assertEqual(verification.status, VerificationStatus.APPROVED.value)
+        self.assertEqual(verification.requestee, username)
+        self.assertEqual(verification.verification_type, "JUMIO")
+        assert verification.id is not None or verification.id != ""
+
+    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123"),
+                                                            invoke_lambda=Mock(return_value={"statusCode": 201})))
     def test_jumio_submit_with_success(self, mock_boto_utils):
         test_verification_id = "9f2c90119cb7424b8d69319ce211ddfc"
         verification_type = "JUMIO"
@@ -105,7 +129,8 @@ class TestJumioVerification(TestCase):
         self.assertEqual(jumio_verfication.username, username)
         self.assertEqual(jumio_verfication.user_reference_id, sha1(username.encode("utf-8")).hexdigest())
 
-    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123")))
+    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123"),
+                                                            invoke_lambda=Mock(return_value={"statusCode": 201})))
     def test_jumio_submit_with_error(self, mock_boto_utils):
         test_verification_id = "9f2c90119cb7424b8d69319ce211ddfc"
         verification_type = "JUMIO"
@@ -150,7 +175,8 @@ class TestJumioVerification(TestCase):
         self.assertEqual(jumio_verfication.username, username)
         self.assertEqual(jumio_verfication.user_reference_id, sha1(username.encode("utf-8")).hexdigest())
 
-    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123")))
+    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123"),
+           invoke_lambda=Mock(return_value={"statusCode": 201})))
     def test_jumio_get_status(self, mock_boto_utils):
         test_verification_id = "9f2c90119cb7424b8d69319ce211ddfc"
         verification_type = "JUMIO"
@@ -181,7 +207,8 @@ class TestJumioVerification(TestCase):
         assert (verification["id"] is not None or verification["id"] != "") and verification[
             "id"] == test_verification_id
 
-    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123")))
+    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123"),
+           invoke_lambda=Mock(return_value={"statusCode": 201})))
     def test_jumio_callback_approved(self, mock_boto_utils):
         test_verification_id = "9f2c90119cb7424b8d69319ce211ddfc"
         verification_type = "JUMIO"
@@ -253,7 +280,8 @@ class TestJumioVerification(TestCase):
         self.assertEqual(jumio_verfication.username, username)
         self.assertEqual(jumio_verfication.user_reference_id, sha1(username.encode("utf-8")).hexdigest())
 
-    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123")))
+    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123"),
+           invoke_lambda=Mock(return_value={"statusCode": 201})))
     def test_jumio_callback_rejected_one(self, mock_boto_utils):
         status = JumioVerificationStatus.DENIED_FRAUD.value
         test_verification_id = "9f2c90119cb7424b8d69319ce211ddfc"
@@ -325,7 +353,8 @@ class TestJumioVerification(TestCase):
         self.assertEqual(jumio_verfication.user_reference_id, sha1(username.encode("utf-8")).hexdigest())
         self.assertEqual(json.dumps(jumio_verfication.reject_reason), json.dumps(reject_reason))
 
-    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123")))
+    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123"),
+           invoke_lambda=Mock(return_value={"statusCode": 201})))
     def test_jumio_callback_rejected_two(self, mock_boto_utils):
         status = JumioVerificationStatus.DENIED_UNSUPPORTED_ID_TYPE.value
         test_verification_id = "9f2c90119cb7424b8d69319ce211ddfc"
@@ -396,7 +425,8 @@ class TestJumioVerification(TestCase):
         self.assertEqual(jumio_verfication.username, username)
         self.assertEqual(jumio_verfication.user_reference_id, sha1(username.encode("utf-8")).hexdigest())
 
-    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123")))
+    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123"),
+           invoke_lambda=Mock(return_value={"statusCode": 201})))
     def test_jumio_callback_rejected_three(self, mock_boto_utils):
         status = JumioVerificationStatus.DENIED_UNSUPPORTED_ID_COUNTRY.value
         test_verification_id = "9f2c90119cb7424b8d69319ce211ddfc"
@@ -468,7 +498,8 @@ class TestJumioVerification(TestCase):
         self.assertEqual(jumio_verfication.user_reference_id, sha1(username.encode("utf-8")).hexdigest())
         self.tearDown()
 
-    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123")))
+    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123"),
+           invoke_lambda=Mock(return_value={"statusCode": 201})))
     def test_jumio_callback_failed_one(self, mock_boto_utils):
         test_verification_id = "9f2c90119cb7424b8d69319ce211ddfc"
         verification_type = "JUMIO"
@@ -539,7 +570,8 @@ class TestJumioVerification(TestCase):
         self.assertEqual(jumio_verfication.user_reference_id, sha1(username.encode("utf-8")).hexdigest())
         self.assertEqual(json.dumps(jumio_verfication.reject_reason), json.dumps(reject_reason))
 
-    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123")))
+    @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123"),
+           invoke_lambda=Mock(return_value={"statusCode": 201})))
     def test_jumio_callback_failed_two(self, mock_boto_utils):
         test_verification_id = "9f2c90119cb7424b8d69319ce211ddfc"
         verification_type = "JUMIO"
