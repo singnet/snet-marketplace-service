@@ -942,7 +942,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - http:
-          method: GET
+          method: POST
           path: /services
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
