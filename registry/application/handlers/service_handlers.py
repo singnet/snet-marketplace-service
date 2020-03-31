@@ -3,6 +3,7 @@ import json
 from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.exceptions import BadRequestException
+from registry.exceptions import EnvironmentNotFoundException
 from common.logger import get_logger
 from common.utils import generate_lambda_response
 from registry.application.access_control.authorization import secured
@@ -218,12 +219,18 @@ def get_daemon_config_for_current_network(event, context):
     logger.info(f"event for get_daemon_config_for_current_network:: {event}")
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
-    if "org_uuid" not in path_parameters and "service_uuid" not in path_parameters and "group_id" not in path_parameters:
+    query_parameters = event["queryStringParameters"]
+    if "org_uuid" not in path_parameters and "service_uuid" not in path_parameters and "group_id" not in path_parameters and 'network' not in query_parameters:
         raise BadRequestException()
     org_uuid = path_parameters["org_uuid"]
     service_uuid = path_parameters["service_uuid"]
     group_id = path_parameters["group_id"]
-    response = ServicePublisherService(username, org_uuid, service_uuid).daemon_config(environment=EnvironmentType.MAIN.value)
+    if event["network"] == EnvironmentType.TEST.value:
+        response = ServicePublisherService(username, org_uuid, service_uuid).daemon_config(environment=EnvironmentType.TEST.value)
+    elif event["network"] == EnvironmentType.MAIN.value:
+        response = ServicePublisherService(username, org_uuid, service_uuid).daemon_config(environment=EnvironmentType.MAIN.value)
+    else:
+        raise EnvironmentNotFoundException()
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
