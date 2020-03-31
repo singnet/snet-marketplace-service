@@ -143,7 +143,7 @@ class ServiceFactory:
             group_id=group["group_id"],
             group_name=group.get("group_name", ""),
             pricing=group.get("pricing", []),
-            endpoints=group.get("endpoints", []),
+            endpoints=group.get("endpoints", {}),
             test_endpoints=group.get("test_endpoints", []),
             daemon_address=group.get("daemon_adresses", []),
             free_calls=group.get("free_calls", 0),

@@ -1,6 +1,7 @@
 from cerberus import Validator
-from registry.constants import UserType, ServiceSupportType
+
 from common.logger import get_logger
+from registry.constants import UserType
 
 logger = get_logger(__name__)
 
@@ -46,10 +47,12 @@ SERVICE_METADATA_SCHEMA = {
                     "type": "string",
                     "empty": False
                 },
-                "daemon_address": {
+                "daemon_addresses": {
                     "type": "list",
                     "schema": {
-                        "type": "string"
+                        "type": "string",
+                        "empty":True
+
                     }
                 },
                 "pricing": {
@@ -298,6 +301,7 @@ class Service:
 
     @staticmethod
     def is_metadata_valid(service_metadata):
+        logger.info(f"service_metadata: {service_metadata}")
         validator = Validator()
         is_valid = validator.validate(service_metadata, SERVICE_METADATA_SCHEMA)
         logger.info(validator.errors)
@@ -312,3 +316,5 @@ class Service:
             if asset in REQUIRED_ASSETS_FOR_METADATA:
                 metadata_assets.update({asset: self.assets[asset].get("ipfs_hash", "")})
         return metadata_assets
+
+
