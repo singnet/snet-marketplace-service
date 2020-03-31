@@ -61,6 +61,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
                 org_uuid=org_uuid,
                 service_uuid=service_uuid,
                 state=ServiceStatus.DRAFT.value,
+                transaction_hash='0x1234',
                 created_by="dummy_user",
                 updated_by="dummy_user",
                 created_on=datetime.utcnow(), updated_on=datetime.utcnow()
@@ -72,7 +73,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
                 org_uuid=org_uuid,
                 service_uuid=service_uuid,
                 group_id="test_group_id",
-                endpoints=["https://dummydaemonendpoint.io"],
+                endpoints={"https://dummydaemonendpoint.io": {"verfied": True}},
                 daemon_address=["0xq2w3e4rr5t6y7u8i9"],
                 free_calls=10,
                 free_call_signer_address="0xq2s3e4r5t6y7u8i9o0",
@@ -82,7 +83,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
         event = {"data": {'row_id': 202, 'block_no': 6325625, 'event': 'ServiceCreated',
                           'json_str': "{'orgId': b'test_org_id\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'serviceId': b'test_service_id\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'metadataURI': b'ipfs://QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'}",
                           'processed': b'\x00',
-                          'transactionHash': 'b"\\xa7P*\\xaf\\xfd\\xd5.E\\x8c\\x0bKAF\'\\x15\\x03\\xef\\xdaO\'\\x86/<\\xfb\\xc4\\xf0@\\xf0\\xc1P\\x8c\\xc7"',
+                          'transactionHash': '0x12345',
                           'logIndex': '0', 'error_code': 1, 'error_msg': '',
                           'row_updated': datetime(2019, 10, 21, 9, 59, 37),
                           'row_created': datetime(2019, 10, 21, 9, 59, 37)}, "name": "ServiceCreated"}
@@ -169,7 +170,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
         event = {"data": {'row_id': 202, 'block_no': 6325625, 'event': 'ServiceCreated',
                           'json_str': "{'orgId': b'test_org_id\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'serviceId': b'test_service_id\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'metadataURI': b'ipfs://QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'}",
                           'processed': b'\x00',
-                          'transactionHash': 'b"\\xa7P*\\xaf\\xfd\\xd5.E\\x8c\\x0bKAF\'\\x15\\x03\\xef\\xdaO\'\\x86/<\\xfb\\xc4\\xf0@\\xf0\\xc1P\\x8c\\xc7"',
+                          'transactionHash': '0x12345',
                           'logIndex': '0', 'error_code': 1, 'error_msg': '',
                           'row_updated': datetime(2019, 10, 21, 9, 59, 37),
                           'row_created': datetime(2019, 10, 21, 9, 59, 37)}, "name": "ServiceCreated"}
