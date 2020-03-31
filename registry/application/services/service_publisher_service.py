@@ -110,7 +110,7 @@ class ServicePublisherService:
             org_uuid=self._org_uuid, service_uuid=self._service_uuid,
             support_type=ServiceSupportType.SERVICE_APPROVAL.value, user_type=UserType.SERVICE_APPROVER.value)
         return {
-            UserType.SERVICE_PROVIDER.value: "<div></div>" if not service_provider_comment else f"<div>{service_provider_comment.comment}</div>",
+            UserType.SERVICE_PROVIDER.value: None if not service_provider_comment else f"{service_provider_comment.comment}",
             UserType.SERVICE_APPROVER.value: "<div></div>" if not approver_comment else f"<div>{approver_comment.comment}</div>"
         }
 
@@ -309,3 +309,20 @@ class ServicePublisherService:
         else:
             raise EnvironmentNotFoundException()
         return daemon_config
+
+    @staticmethod
+    def get_list_of_service_pending_for_approval(limit):
+        list_of_services = []
+        services = ServicePublisherRepository().get_list_of_service_pending_for_approval(limit)
+        for service in services:
+            org = OrganizationPublisherRepository().get_org_for_org_uuid(org_uuid=service.org_uuid)
+            list_of_services.append({
+                "org_uuid": service.org_uuid,
+                "org_id": org.id,
+                "service_uuid": service.uuid,
+                "service_id": service.service_id,
+                "display_name": service.display_name,
+                "requested_at": None
+            })
+
+        return list_of_services

@@ -71,4 +71,25 @@ class EnvironmentNotFoundException(CustomException):
         super().__init__({})
 
 
+class InvalidSlackUserException(CustomException):
+    error_message = "Slack User Not Allowed"
+
+    def __init__(self):
+        super().__init__({})
+
+
+class InvalidSlackChannelException(CustomException):
+    error_message = "Slack Channel Not Allowed"
+
+    def __init__(self):
+        super().__init__({})
+
+
+class InvalidSlackSignatureException(CustomException):
+    error_message = "Slack Signature Not Allowed"
+
+    def __init__(self):
+        super().__init__({})
+
+
 EXCEPTIONS = (BadRequestException, OrganizationNotFoundException, MethodNotImplemented)
