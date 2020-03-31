@@ -1,6 +1,8 @@
 import datetime
 import decimal
 import glob
+import hashlib
+import hmac
 import io
 import json
 import os
@@ -285,15 +287,18 @@ def convert_zip_file_to_tar_bytes(file_dir, filename):
 
 def send_email_notification(recipients, notification_subject, notification_message, notification_arn, boto_util):
     for recipient in recipients:
-        if bool(recipient):
-            send_notification_payload = {"body": json.dumps({
-                "message": notification_message,
-                "subject": notification_subject,
-                "notification_type": "support",
-                "recipient": recipient})}
-            boto_util.invoke_lambda(lambda_function_arn=notification_arn, invocation_type="RequestResponse",
-                                    payload=json.dumps(send_notification_payload))
-            logger.info(f"email_sent to {recipient}")
+        try:
+            if bool(recipient):
+                send_notification_payload = {"body": json.dumps({
+                    "message": notification_message,
+                    "subject": notification_subject,
+                    "notification_type": "support",
+                    "recipient": recipient})}
+                boto_util.invoke_lambda(lambda_function_arn=notification_arn, invocation_type="RequestResponse",
+                                        payload=json.dumps(send_notification_payload))
+                logger.info(f"email_sent to {recipient}")
+        except:
+            logger.error(f"Error happened while sending email to recipient {recipient}")
 
 
 def send_slack_notification(slack_msg, slack_url, slack_channel):
@@ -314,3 +319,9 @@ def extract_zip_file(zip_file_path, extracted_path):
 def make_tarfile(output_filename, source_dir):
     with tarfile.open(output_filename, "w:gz") as tar:
         tar.add(source_dir, arcname=os.path.basename(source_dir))
+
+
+def validate_signature(signature, message, key, opt_params):
+    derived_signature = opt_params.get("slack_signature_prefix", "") \
+                        + hmac.new(key.encode(), message.encode(), hashlib.sha256).hexdigest()
+    return hmac.compare_digest(derived_signature, signature)

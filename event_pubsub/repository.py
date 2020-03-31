@@ -63,12 +63,10 @@ class Repository:
             print("DB Error in %s, error: %s" % (str(query), repr(err)))
 
     def begin_transaction(self):
-        self.auto_commit = False
+        self.connection.begin()
 
     def commit_transaction(self):
         self.connection.commit()
-        self.auto_commit = True
 
     def rollback_transaction(self):
         self.connection.rollback()
-        self.auto_commit = True

@@ -30,7 +30,7 @@ class OrganizationService:
 
     def organization_exist_in_blockchain(self, org_id, contract, contract_address):
         method_name = "getOrganizationById"
-        positional_inputs = (web3.Web3.toHex(text=org_id))
+        positional_inputs = (web3.Web3.toHex(text=org_id),)
         contract = self.blockchain_util.contract_instance(contract_abi=contract, address=contract_address)
 
         org_data = self.blockchain_util.call_contract_function(contract=contract, contract_function=method_name,
