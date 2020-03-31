@@ -1,5 +1,3 @@
-from unittest.mock import Mock
-
 import web3
 from common.blockchain_util import BlockChainUtil
 from common.exceptions import MethodNotImplemented
