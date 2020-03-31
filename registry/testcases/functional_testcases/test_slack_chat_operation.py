@@ -3,11 +3,12 @@ from datetime import datetime as dt
 from registry.application.handlers.slack_chat_operation_handler import get_list_of_service_pending_for_approval
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
-from registry.infrastructure.models import Service as ServiceDBModel, ServiceState as ServiceStateDBModel,\
+from registry.infrastructure.models import Service as ServiceDBModel, ServiceState as ServiceStateDBModel, \
     Organization as OrganizationDBModel, OrganizationState as OrganizationStateDBModel
 from registry.domain.models.organization import Organization as OrganizationDomainModel
 from registry.constants import OrganizationStatus, ServiceStatus
 from unittest.mock import patch
+
 org_repo = OrganizationPublisherRepository()
 service_repo = ServicePublisherRepository()
 
@@ -20,11 +21,13 @@ class TestSlackChatOperation(TestCase):
     @patch("registry.application.services.slack_chat_operation.SlackChatOperation.validate_slack_channel_id")
     @patch("registry.application.services.slack_chat_operation.SlackChatOperation.validate_slack_signature")
     @patch("registry.application.services.slack_chat_operation.requests.post")
-    def test_get_list_of_service_pending_for_approval(self, post_request, validate_slack_signature, validate_slack_channel_id, validate_slack_user):
+    def test_get_list_of_service_pending_for_approval(self, post_request, validate_slack_signature,
+                                                      validate_slack_channel_id, validate_slack_user):
         validate_slack_channel_id.return_value = True
         validate_slack_user.return_value = True
         validate_slack_signature.return_value = True
-        post_request.return_value = {}
+        post_request.return_value.status_code = 200
+        post_request.return_value.text = ""
         self.tearDown()
         org_repo.add_organization(
             OrganizationDomainModel(
