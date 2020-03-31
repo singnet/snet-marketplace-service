@@ -1,10 +1,13 @@
 import json
 import requests
 from common.utils import validate_signature
+from common.logger import get_logger
 from registry.config import SIGNING_SECRET
 from registry.application.services.service_publisher_service import ServicePublisherService
 from registry.config import STAGING_URL, ALLOWED_SLACK_USER, SERVICE_REVIEW_API_ENDPOINT, SLACK_APPROVAL_CHANNEL_URL, \
     ALLOWED_SLACK_CHANNEL_ID
+
+logger = get_logger(__name__)
 
 
 class SlackChatOperation:
@@ -38,7 +41,9 @@ class SlackChatOperation:
                 get_list_of_service_pending_for_approval(limit=10)
         slack_blocks = self.generate_service_listing_slack_blocks(list_of_service_pending_for_approval)
         slack_payload = {"blocks": slack_blocks}
-        requests.post(url=SLACK_APPROVAL_CHANNEL_URL, data=json.dumps(slack_payload))
+        logger.info(f"slack_payload: {slack_payload}")
+        response = requests.post(url=SLACK_APPROVAL_CHANNEL_URL, data=json.dumps(slack_payload))
+        logger.info(f"{response.status_code} | {response.text}")
         return ""
 
     def generate_service_listing_slack_blocks(self, services):
