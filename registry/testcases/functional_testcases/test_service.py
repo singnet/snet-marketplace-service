@@ -10,6 +10,7 @@ from registry.application.handlers.service_handlers import verify_service_id, sa
     save_transaction_hash_for_published_service, \
     list_of_orgs_with_services_submitted_for_approval, legal_approval_of_service, get_daemon_config_for_test
 from registry.constants import ServiceAvailabilityStatus, ServiceStatus, OrganizationMemberStatus, Role
+from registry.domain.factory.service_factory import ServiceFactory
 from registry.infrastructure.models import Organization as OrganizationDBModel, OrganizationMember as \
     OrganizationMemberDBModel, Service as ServiceDBModel, \
     ServiceGroup as ServiceGroupDBModel, \
@@ -1073,6 +1074,33 @@ class TestService(TestCase):
         assert (len(response_body["data"]["allowed_user_addresses"]) == 2)
         assert (response_body["data"]["blockchain_enabled"] is False)
         assert (response_body["data"]["passthrough_enabled"] is True)
+
+
+    def test_service_to_metadata(self):
+        payload = payload = {"service_id": "sdfadsfd1", "display_name": "new_service_123",
+                             "short_description": "sadfasd", "description": "dsada", "project_url": "df", "proto": {},
+                             "assets": {"proto_files": {
+                                 "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/9887ec2e099e4afd92c4a052737eaa97/services/7420bf47989e4afdb1797d1bba8090aa/proto/20200327130256_proto_files.zip",
+                                 "ipfs_hash": "QmUfDprFisFeaRnmLEqks1AFN6iam5MmTh49KcomXHEiQY"}, "hero_image": {
+                                 "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/9887ec2e099e4afd92c4a052737eaa97/services/7420bf47989e4afdb1797d1bba8090aa/assets/20200323130126_asset.png",
+                                 "ipfs_hash": ""}, "demo_files": {
+                                 "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/9887ec2e099e4afd92c4a052737eaa97/services/7420bf47989e4afdb1797d1bba8090aa/component/20200401121414_component.zip",
+                                 "ipfs_hash": "QmUfDprFisFeaRnmLEqks1AFN6iam5MmTh49KcomXHEiQY"}},
+                             "contributors": [{"name": "df", "email_id": ""}], "groups": [
+                {"group_name": "default_group", "group_id": "a+8V4tUs+DBnZfxoh2vBHVv1pAt8pkCac8mpuKFltTo=",
+                 "free_calls": 23, "free_call_signer_address": "0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F",
+                 "pricing": [{"default": True, "price_model": "fixed_price", "price_in_cogs": 1}],
+                 "endpoints": {"https://example-service-a.singularitynet.io:8085": {"valid": False}},
+                 "test_endpoints": ["https://example-service-a.singularitynet.io:8085"],
+                 "daemon_addresses": ["https://example-service-a.singularitynet.io:8085"]}], "tags": ["adsf"],
+                             "comments": {"SERVICE_PROVIDER": "", "SERVICE_APPROVER": "<div></div>"},
+                             "mpe_address": "0x8fb1dc8df86b388c7e00689d1ecb533a160b4d0c"}
+
+        service = ServiceFactory.create_service_entity_model("", "", payload, ServiceStatus.APPROVED.value)
+        service_metadata=service.to_metadata()
+        assert service_metadata =={'version': 1, 'display_name': 'new_service_123', 'encoding': '', 'service_type': '', 'model_ipfs_hash': '', 'mpe_address': '0x8fb1dc8df86b388c7e00689d1ecb533a160b4d0c', 'groups': [{'free_calls': 23, 'free_call_signer_address': '0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F', 'daemon_addresses': [], 'pricing': [{'default': True, 'price_model': 'fixed_price', 'price_in_cogs': 1}], 'endpoints': ['https://example-service-a.singularitynet.io:8085'], 'group_id': 'a+8V4tUs+DBnZfxoh2vBHVv1pAt8pkCac8mpuKFltTo=', 'group_name': 'default_group'}], 'service_description': {'url': 'df', 'short_description': 'sadfasd', 'description': 'dsada'}, 'assets': {'hero_image': ''}, 'contributors': [{'name': 'df', 'email_id': ''}]}
+
+
 
     def tearDown(self):
         org_repo.session.query(OrganizationMemberDBModel).delete()
