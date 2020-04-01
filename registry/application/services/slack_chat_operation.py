@@ -1,11 +1,15 @@
 import json
+
 import requests
-from common.utils import validate_signature
+
 from common.logger import get_logger
-from registry.config import SIGNING_SECRET
+from common.utils import validate_signature
+from registry.application.services.organization_publisher_service import OrganizationPublisherService
 from registry.application.services.service_publisher_service import ServicePublisherService
-from registry.config import STAGING_URL, ALLOWED_SLACK_USER, SERVICE_REVIEW_API_ENDPOINT, SLACK_APPROVAL_CHANNEL_URL, \
+from registry.config import SIGNING_SECRET
+from registry.config import STAGING_URL, ALLOWED_SLACK_USER, SLACK_APPROVAL_CHANNEL_URL, \
     ALLOWED_SLACK_CHANNEL_ID, MAX_SERVICES_SLACK_LISTING
+from registry.exceptions import InvalidSlackChannelException, InvalidSlackUserException, InvalidSlackSignatureException
 
 logger = get_logger(__name__)
 
@@ -24,6 +28,20 @@ class SlackChatOperation:
     def validate_slack_signature(signature, message):
         return validate_signature(signature=signature, message=message, key=SIGNING_SECRET,
                                   opt_params={"slack_signature_prefix": "v0="})
+
+    def validate_slack_request(self, headers, payload_raw):
+        if not self.validate_slack_channel_id():
+            raise InvalidSlackChannelException()
+
+        if not self.validate_slack_user():
+            raise InvalidSlackUserException()
+
+        slack_signature_message = self.generate_slack_signature_message(
+            request_timestamp=headers["X-Slack-Request-Timestamp"], event_body=payload_raw)
+
+        if not self.validate_slack_signature(
+                signature=headers["X-Slack-Signature"], message=slack_signature_message):
+            raise InvalidSlackSignatureException()
 
     def validate_slack_user(self):
         if self._username in ALLOWED_SLACK_USER:
@@ -45,6 +63,19 @@ class SlackChatOperation:
         response = requests.post(url=SLACK_APPROVAL_CHANNEL_URL, data=json.dumps(slack_payload))
         logger.info(f"{response.status_code} | {response.text}")
         return ""
+
+    def get_list_of_organizations_pending_for_approval(self):
+        organization_list = OrganizationPublisherService(None, None)\
+            .get_approval_pending_organizations(MAX_SERVICES_SLACK_LISTING)
+        slack_blocks = self.generate_organization_listing_slack_blocks(organization_list)
+        slack_payload = {"blocks": slack_blocks}
+        logger.info(f"slack_payload: {slack_payload}")
+        response = requests.post(url=SLACK_APPROVAL_CHANNEL_URL, data=json.dumps(slack_payload))
+        logger.info(f"{response.status_code} | {response.text}")
+        return ""
+
+    def generate_organization_listing_slack_blocks(self, organizations):
+        pass
 
     def generate_service_listing_slack_blocks(self, services):
         title_block = {
