@@ -259,9 +259,8 @@ class ServicePublisherService:
         service = ServicePublisherRepository().save_service(self._username, service, service.service_state.state)
 
         # publish service on test network
-        response = self.obj_service_publisher_domain_service.publish_service_on_blockchain(org_id=organization.id,
-                                                                                           service=service,
-                                                                                           environment=EnvironmentType.TEST.value)
+        response = self.obj_service_publisher_domain_service.publish_service_on_blockchain(
+            org_id=organization.id, service=service, environment=EnvironmentType.TEST.value)
 
         # notify service contributors via email
         self.notify_service_contributor_when_user_submit_for_approval(organization.id, service.service_id,
