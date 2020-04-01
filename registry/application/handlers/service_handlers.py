@@ -225,9 +225,9 @@ def get_daemon_config_for_current_network(event, context):
     org_uuid = path_parameters["org_uuid"]
     service_uuid = path_parameters["service_uuid"]
     group_id = path_parameters["group_id"]
-    if event["network"] == EnvironmentType.TEST.value:
+    if query_parameters["network"] == EnvironmentType.TEST.value:
         response = ServicePublisherService(username, org_uuid, service_uuid).daemon_config(environment=EnvironmentType.TEST.value)
-    elif event["network"] == EnvironmentType.MAIN.value:
+    elif query_parameters["network"] == EnvironmentType.MAIN.value:
         response = ServicePublisherService(username, org_uuid, service_uuid).daemon_config(environment=EnvironmentType.MAIN.value)
     else:
         raise EnvironmentNotFoundException()
