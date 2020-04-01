@@ -11,7 +11,8 @@ failed_service = []
 
 
 def org_migrate():
-
+    contract_organization = contract_repo.get_all_org()
+    registry_org_id = registry_repo.get_all_org_id()
     for org in contract_organization:
         if org.id not in registry_org_id:
             groups = contract_repo.get_groups(org.id)
@@ -23,7 +24,7 @@ def org_migrate():
 
 
 def migrate_service():
-
+    contract_service = contract_repo.get_all_service()
     for service in contract_service:
         org_id = service.org_id
         service_id = service.service_id
@@ -40,12 +41,11 @@ def migrate_service():
             group.service_uuid = service_uuid
             group_id = group.group_id
             group.endpoints = contract_repo.get_endpoints(org_id, service_id, group_id)
+        service.groups = groups
         delta_service.append(service)
 
 
-contract_organization = contract_repo.get_all_org()
-registry_org_id = registry_repo.get_all_org_id()
-contract_service = contract_repo.get_all_service()
+
 org_migrate()
 migrate_service()
 registry_repo.add_org_service(delta_orgs, "PUBLISHED_UNAPPROVED", delta_service, "PUBLISHED_UNAPPROVED")

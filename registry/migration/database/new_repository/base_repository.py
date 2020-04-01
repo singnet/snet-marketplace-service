@@ -77,6 +77,7 @@ class BaseRepository:
                 metadata_ipfs_uri=organization.metadata_ipfs_uri, org_state=org_state, groups=group_db
             ))
         self.session.add_all(organization_db_list)
+        self.session.flush()
         self.session.add_all(org_member)
         self.session.flush()
 
