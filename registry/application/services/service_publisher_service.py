@@ -293,6 +293,7 @@ class ServicePublisherService:
                 "allowed_user_flag": True,
                 "allowed_user_addresses": [member.address for member in organization_members] + [
                     BLOCKCHAIN_TEST_ENV["executor_address"]],
+                "authentication_address": [member.address for member in organization_members],
                 "blockchain_enabled": False,
                 "passthrough_enabled": True
             }
