@@ -13,7 +13,7 @@ class OrganizationMapper:
         org_uuid = uuid4().hex
         org_id = old_org.org_id
         name = old_org.organization_name
-        org_type = None
+        org_type = ""
         origin = ORIGIN
 
         description = old_org.description

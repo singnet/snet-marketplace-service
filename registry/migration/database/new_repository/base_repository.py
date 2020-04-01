@@ -78,6 +78,7 @@ class BaseRepository:
             ))
         self.session.add_all(organization_db_list)
         self.session.add_all(org_member)
+        self.session.flush()
 
     def get_all_group_ids(self):
         groups = self.session.query(Group.id).all()
@@ -113,6 +114,7 @@ class BaseRepository:
                 )
             )
         self.session.add_all(services_db)
+        self.session.flush()
 
     def add_org_service(self, organizations, org_state, services, service_state):
         try:
