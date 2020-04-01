@@ -44,7 +44,6 @@ class SlackChatOperation:
         logger.info(f"slack_payload: {slack_payload}")
         response = requests.post(url=SLACK_APPROVAL_CHANNEL_URL, data=json.dumps(slack_payload))
         logger.info(f"{response.status_code} | {response.text}")
-        return ""
 
     def generate_service_listing_slack_blocks(self, services):
         title_block = {
