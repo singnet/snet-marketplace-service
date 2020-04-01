@@ -295,7 +295,9 @@ class ServicePublisherService:
                     BLOCKCHAIN_TEST_ENV["executor_address"]],
                 "authentication_address": [member.address for member in organization_members],
                 "blockchain_enabled": False,
-                "passthrough_enabled": True
+                "passthrough_enabled": True,
+                "organization_id": organization.id,
+                "service_id": service.service_id
             }
         elif environment is EnvironmentType.MAIN.value:
             daemon_config = {
