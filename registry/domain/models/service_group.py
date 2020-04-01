@@ -28,7 +28,7 @@ class ServiceGroup:
     def _get_endpoints(self, endpoint_dict):
         endpoints = []
         for endpoint, val in endpoint_dict.items():
-            endpoints.extend(endpoint)
+            endpoints.append(endpoint)
         return endpoints
 
     def to_metadata(self):

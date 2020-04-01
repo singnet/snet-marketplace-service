@@ -3,15 +3,15 @@ from enum import Enum
 
 COMMON_CNTRCT_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), 'node_modules', 'singularitynet-platform-contracts'))
-REG_CNTRCT_PATH = COMMON_CNTRCT_PATH + '/abi/Registry.json'
-MPE_CNTRCT_PATH = COMMON_CNTRCT_PATH + '/abi/MultiPartyEscrow.json'
-REG_ADDR_PATH = COMMON_CNTRCT_PATH + '/networks/Registry.json'
-MPE_ADDR_PATH = COMMON_CNTRCT_PATH + '/networks/MultiPartyEscrow.json'
+REG_CNTRCT_PATH = os.path.join(COMMON_CNTRCT_PATH, 'abi', 'Registry.json')
+MPE_CNTRCT_PATH = os.path.join(COMMON_CNTRCT_PATH, "abi", "MultiPartyEscrow.json")
+REG_ADDR_PATH = os.path.join(COMMON_CNTRCT_PATH, "networks", "Registry.json")
+MPE_ADDR_PATH = os.path.join(COMMON_CNTRCT_PATH, "networks", "MultiPartyEscrow.json")
 
 TEST_COMMON_CNTRCT_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), 'test', 'node_modules', 'singularitynet-platform-contracts'))
-TEST_REG_CNTRCT_PATH = TEST_COMMON_CNTRCT_PATH + '/abi/Registry.json'
-TEST_REG_ADDR_PATH = TEST_COMMON_CNTRCT_PATH + '/networks/Registry.json'
+TEST_REG_CNTRCT_PATH = os.path.join(TEST_COMMON_CNTRCT_PATH, 'abi', 'Registry.json')
+TEST_REG_ADDR_PATH = os.path.join(TEST_COMMON_CNTRCT_PATH, "networks", "Registry.json")
 
 
 class OrganizationStatus(Enum):
@@ -106,7 +106,7 @@ class EnvironmentType(Enum):
 
 
 class ServiceSupportType(Enum):
-    SERVICE_APPROVAL= "SERVICE_APPROVAL"
+    SERVICE_APPROVAL = "SERVICE_APPROVAL"
 
 
 class UserType(Enum):
