@@ -66,7 +66,7 @@ def slack_interaction_handler(event, context):
     data = {}
     if payload["type"] == "block_actions":
         for action in payload["actions"]:
-            if "review" == action.get("action_id"):
+            if "button" == action.get("type"):
                 data = json.loads(action.get("value", {}))
         if not data:
             raise BadRequestException()
