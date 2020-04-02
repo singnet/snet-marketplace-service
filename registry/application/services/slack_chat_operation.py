@@ -87,7 +87,7 @@ class SlackChatOperation:
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": "*Service Approval Request*"
+                "text": "*Org For Approval*"
             }
         }
         org_listing_slack_blocks = [title_block]
