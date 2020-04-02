@@ -27,6 +27,7 @@ ALLOWED_ATTRIBUTES_FOR_SERVICE_ORDER_BY = ["asc", "desc"]
 DEFAULT_ATTRIBUTES_FOR_SERVICE_ORDER_BY = "desc"
 DEFAULT_OFFSET = 0
 DEFAULT_LIMIT = 0
+BUILD_FAILURE_CODE=0
 
 logger = get_logger(__name__)
 service_factory = ServiceFactory()
@@ -51,7 +52,7 @@ class ServicePublisherService:
         ServicePublisherRepository().save_service_comments(service_comment)
         ServicePublisherRepository().save_service(self._username, service, ServiceStatus.CHANGE_REQUESTED.value)
 
-        if build_status == 0:
+        if build_status == BUILD_FAILURE_CODE:
             logger.info(f"Build failed for org_id {org_id}  and service_id {service_id}")
             try:
                 BUILD_STATUS_SUBJECT = "Build failed for your service {}"
