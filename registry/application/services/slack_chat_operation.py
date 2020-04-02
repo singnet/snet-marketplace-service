@@ -3,16 +3,21 @@ import requests
 from urllib.parse import parse_qs
 from common.utils import validate_signature
 from common.logger import get_logger
-from registry.config import SIGNING_SECRET, SLACK_APPROVAL_OAUTH_ACCESS_TOKEN
+from common.utils import send_slack_notification, send_email_notification
+from common.boto_utils import BotoUtils
+from registry.application.services.organization_publisher_service import OrganizationPublisherService
+from registry.config import SIGNING_SECRET, SLACK_APPROVAL_OAUTH_ACCESS_TOKEN, REGION_NAME
 from registry.application.services.service_publisher_service import ServicePublisherService
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
+from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.config import STAGING_URL, ALLOWED_SLACK_USER, SERVICE_REVIEW_API_ENDPOINT, SLACK_APPROVAL_CHANNEL_URL, \
-    ALLOWED_SLACK_CHANNEL_ID, MAX_SERVICES_SLACK_LISTING
+    ALLOWED_SLACK_CHANNEL_ID, MAX_SERVICES_SLACK_LISTING, NOTIFICATION_ARN
 from registry.domain.models.service_comment import ServiceComment
 from registry.constants import UserType, ServiceSupportType, ServiceStatus, OrganizationStatus
 from registry.exceptions import InvalidSlackChannelException, InvalidSlackSignatureException, InvalidSlackUserException
 
 logger = get_logger(__name__)
+boto_util = BotoUtils(region_name=REGION_NAME)
 
 
 class SlackChatOperation:
@@ -57,7 +62,8 @@ class SlackChatOperation:
             raise InvalidSlackSignatureException()
 
     def get_list_of_org_pending_for_approval(self):
-        list_of_org_pending_for_approval = []
+        list_of_org_pending_for_approval = OrganizationPublisherService(None, None) \
+            .get_approval_pending_organizations(MAX_SERVICES_SLACK_LISTING)
         slack_blocks = self.generate_slack_blocks_for_org_listing_template(list_of_org_pending_for_approval)
         slack_payload = {"blocks": slack_blocks}
         logger.info(f"slack_payload: {slack_payload}")
@@ -83,8 +89,8 @@ class SlackChatOperation:
             }
         }
         org_listing_slack_blocks = [title_block]
-        for org in orgs:
-            org_id = ""
+        for org_dict in orgs:
+            org_id = org_dict["org_id"]
             mrkdwn_block = {
                 "type": "section",
                 "fields": [
@@ -184,7 +190,10 @@ class SlackChatOperation:
 
     def process_approval_comment(self, approval_type, state, comment, params):
         if approval_type == "organization":
-            pass
+            org = OrganizationPublisherRepository().get_org_for_org_id(org_id=params["org_id"])
+            if org.org_state.state == OrganizationStatus.APPROVAL_PENDING.value:
+                # verification callback
+                pass
         elif approval_type == "service":
             org_uuid, service = ServicePublisherRepository(). \
                 get_service_for_given_service_id_and_org_id(org_id=params["org_id"], service_id=params["service_id"])
@@ -200,7 +209,20 @@ class SlackChatOperation:
                     comment=comment
                 )
                 ServicePublisherRepository().save_service_comments(service_comment=service_comments)
-                logger.info(f"Reviews for service with {service.service_id} is successfully submitted.")
+                slack_msg = f"Reviews for service with {service.service_id} is successfully submitted."
+                # send_slack_notification(slack_msg=slack_msg, slack_url=SLACK_APPROVAL_CHANNEL_URL,
+                #                         slack_channel="ai-approvals")
+                recipients = [contributor.get("email_id", "") for contributor in service.contributors]
+                if not recipients:
+                    logger.info(
+                        f"Unable to find service contributors for service {service.service_id} under {params['org_id']}")
+                    return
+                notification_subject = f"Your service {service.service_id} is reviewed"
+                notification_message = f"Your service {service.service_id} under {params['org_id']} is reviewed"
+                send_email_notification(
+                    recipients=recipients, notification_subject=notification_subject,
+                    notification_message=notification_message, notification_arn=NOTIFICATION_ARN, boto_util=boto_util)
+                logger.info(slack_msg)
             else:
                 logger.info("Service state is not valid.")
 
@@ -219,7 +241,7 @@ class SlackChatOperation:
         logger.info(f"{response.status_code} | {response.text}")
 
     def create_and_send_view_org_modal(self, org_id, trigger_id):
-        org = {}
+        org = OrganizationPublisherRepository().get_org_for_org_id(org_id=org_id)
         view = self.generate_view_org_modal(org, None)
         slack_payload = {
             "trigger_id": trigger_id,
