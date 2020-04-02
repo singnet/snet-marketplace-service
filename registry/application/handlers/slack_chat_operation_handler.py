@@ -81,7 +81,7 @@ def slack_interaction_handler(event, context):
             raise BadRequestException()
     elif payload["type"] == "view_submission":
         approval_type = "service" if payload["view"]["title"]["text"] == "Service For Approval" else ""
-        approval_type = "org" if payload["view"]["title"]["text"] == "Org For Approval" else approval_type
+        approval_type = "organization" if payload["view"]["title"]["text"] == "Org For Approval" else approval_type
         review_request_state = payload["view"]["state"]["values"]["approval_state"]["selection"]["selected_option"][
             "value"]
         comment = payload["view"]["state"]["values"]["review_comment"]["comment"]["value"]

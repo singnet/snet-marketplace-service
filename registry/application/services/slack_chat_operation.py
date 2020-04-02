@@ -234,6 +234,8 @@ class SlackChatOperation:
                 logger.info(slack_msg)
             else:
                 logger.info("Service state is not valid.")
+        else:
+            logger.info("Approval type is not valid")
 
     def callback_verification_service(self, entity_id, state, reviewed_by, comment):
         verification_callback_payload = {
@@ -247,9 +249,11 @@ class SlackChatOperation:
             },
             "body": json.dumps(verification_callback_payload)
         }
+        logger.info(f"verification_callback_event: {verification_callback_event}")
         verification_callback_response = boto_util.invoke_lambda(
             VERIFICATION_ARN["DUNS_VERIFICATION"], invocation_type="RequestResponse",
             payload=json.dumps(verification_callback_event))
+        logger.info(f"verification_callback_response: {verification_callback_response}")
         if verification_callback_response["statusCode"] != StatusCode.CREATED:
             logger.error(f"callback to verification service for entity_id: {entity_id} state: {state}"
                          f"reviewed_by: {reviewed_by} comment:{comment}")
@@ -258,7 +262,12 @@ class SlackChatOperation:
     def create_and_send_view_service_modal(self, org_id, service_id, trigger_id):
         org_uuid, service = ServicePublisherRepository(). \
             get_service_for_given_service_id_and_org_id(org_id=org_id, service_id=service_id)
-        view = self.generate_view_service_modal(org_id, service, None)
+        service_comment = ServicePublisherRepository(). \
+            get_last_service_comment(
+            org_uuid=org_uuid, service_uuid=service.uuid, support_type=ServiceSupportType.SERVICE_APPROVAL.value,
+            user_type=UserType.SERVICE_PROVIDER.value)
+        service_comment == "--" if not service_comment else service_comment
+        view = self.generate_view_service_modal(org_id, service, None, service_comment)
         slack_payload = {
             "trigger_id": trigger_id,
             "view": view
@@ -282,7 +291,7 @@ class SlackChatOperation:
         response = requests.post(url=OPEN_SLACK_VIEW_URL, data=json.dumps(slack_payload), headers=headers)
         logger.info(f"{response.status_code} | {response.text}")
 
-    def generate_view_service_modal(self, org_id, service, requested_at):
+    def generate_view_service_modal(self, org_id, service, requested_at, comment):
         view = {
             "type": "modal",
             "title": {
@@ -326,6 +335,13 @@ class SlackChatOperation:
                     "text": f"*When:*\n{requested_at}\n"
                 }
             ]
+        }
+        service_provider_comment_block = {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": f"*Comments*\n*{comment}"
+            }
         }
         divider_block = {
             'type': 'divider'
@@ -407,7 +423,7 @@ class SlackChatOperation:
                 "text": "* Comment is mandatory field."
             }
         }
-        blocks = [service_info_display_block, divider_block, select_approval_state_block, comment_block]
+        blocks = [service_info_display_block, divider_block, service_provider_comment_block, select_approval_state_block, comment_block]
         view["blocks"] = blocks
         return view
 
