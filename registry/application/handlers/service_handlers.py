@@ -3,13 +3,13 @@ import json
 from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.exceptions import BadRequestException
-from registry.exceptions import EnvironmentNotFoundException
 from common.logger import get_logger
 from common.utils import generate_lambda_response
 from registry.application.access_control.authorization import secured
 from registry.application.services.service_publisher_service import ServicePublisherService
 from registry.config import NETWORK_ID, SLACK_HOOK
-from registry.constants import EnvironmentType, Action
+from registry.constants import Action, EnvironmentType
+from registry.exceptions import EnvironmentNotFoundException
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 
 logger = get_logger(__name__)
@@ -249,10 +249,15 @@ def get_service_details_using_org_id_service_id(event, context):
     )
 
 
-def service_deployment_status_notification_handler(event,context):
+def service_deployment_status_notification_handler(event, context):
     logger.info(f"Service Build status event {event}")
+    org_id = event['org_id']
+    service_id = event['service_id']
+    build_status = event['build_status']
+
+    ServicePublisherService("BUILD_PROCESS", "", "").service_build_status_notifier(org_id, service_id, build_status)
+
     return generate_lambda_response(
         StatusCode.OK,
-        {"status": "success", "data": "chill", "error": {}}, cors_enabled=True
+        {"status": "success", "data": "Build failure notified", "error": {}}, cors_enabled=True
     )
-
