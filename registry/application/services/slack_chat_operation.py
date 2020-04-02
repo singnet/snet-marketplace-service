@@ -119,7 +119,6 @@ class SlackChatOperation:
                 "elements": [
                     {
                         "type": "button",
-                        "action_id": "review",
                         "text": {
                             "type": "plain_text",
                             "emoji": True,
@@ -177,7 +176,6 @@ class SlackChatOperation:
                 "elements": [
                     {
                         "type": "button",
-                        "action_id": "review",
                         "text": {
                             "type": "plain_text",
                             "emoji": True,
