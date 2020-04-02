@@ -57,8 +57,9 @@ class ServicePublisherService:
             try:
                 BUILD_STATUS_SUBJECT = "Build failed for your service {}"
                 BUILD_STATUS_MESSAGE = "Build failed for your org_id {} and service_id {}"
-                send_email_notification(contacts, BUILD_STATUS_MESSAGE.format(org_id, service_id),
-                                        BUILD_STATUS_SUBJECT.format(service_id), NOTIFICATION_ARN,
+                send_email_notification(contacts,
+                                        BUILD_STATUS_SUBJECT.format(service_id),
+                                        BUILD_STATUS_MESSAGE.format(org_id, service_id), NOTIFICATION_ARN,
                                         boto_util)
             except:
                 logger.info(f"Error happened while sending build_status mail for {org_id} and contacts {contacts}")
