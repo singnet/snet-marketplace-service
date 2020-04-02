@@ -200,7 +200,7 @@ class SlackChatOperation:
     def process_approval_comment(self, approval_type, state, comment, params):
         if approval_type == "organization":
             org = OrganizationPublisherRepository().get_org_for_org_id(org_id=params["org_id"])
-            if org.org_state.state == OrganizationStatus.APPROVAL_PENDING.value:
+            if org.org_state.state in [OrganizationStatus.APPROVAL_PENDING.value, OrganizationStatus.ONBOARDING.value]:
                 self.callback_verification_service(org.uuid, getattr(OrganizationStatus, state).value,
                                                    self._username, comment)
         elif approval_type == "service":
