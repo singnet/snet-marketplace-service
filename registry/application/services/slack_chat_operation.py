@@ -251,7 +251,7 @@ class SlackChatOperation:
         }
         logger.info(f"verification_callback_event: {verification_callback_event}")
         verification_callback_response = boto_util.invoke_lambda(
-            VERIFICATION_ARN["DUNS_VERIFICATION"], invocation_type="RequestResponse",
+            VERIFICATION_ARN["DUNS_CALLBACK"], invocation_type="RequestResponse",
             payload=json.dumps(verification_callback_event))
         logger.info(f"verification_callback_response: {verification_callback_response}")
         if verification_callback_response["statusCode"] != StatusCode.CREATED:
