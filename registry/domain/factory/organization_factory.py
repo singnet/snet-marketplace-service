@@ -191,8 +191,11 @@ class OrganizationFactory:
         org_members = []
         for member in members:
             org_members.append(OrganizationMember(org_uuid, "", status, Role.MEMBER.value, member))
-
         return org_members
+
+    @staticmethod
+    def parser_org_owner_from_metadata(org_uuid, owner, status):
+        return OrganizationMember(org_uuid, "", status, Role.OWNER.value, owner)
 
     @staticmethod
     def parse_organization_metadata_assets(assets, existing_assets):
