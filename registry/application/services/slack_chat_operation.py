@@ -124,7 +124,10 @@ class SlackChatOperation:
                             "text": "Review"
                         },
                         "style": "primary",
-                        "value": "{" + f"'org_id':{org_id},'path':'/org'" + "}"
+                        "value": json.dumps({
+                            "org_id": org_id,
+                            "path": "/service"
+                        })
                     }
                 ]
             }
@@ -179,7 +182,11 @@ class SlackChatOperation:
                             "text": "Review"
                         },
                         "style": "primary",
-                        "value": "{" + f"'service_id':{service_id},'org_id':{org_id},'path':'/service'" + "}"
+                        "value": json.dumps({
+                            "service_id": service_id,
+                            "org_id": org_id,
+                            "path": "/service"
+                        })
                     }
                 ]
             }
