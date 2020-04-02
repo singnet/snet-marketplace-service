@@ -1,20 +1,23 @@
 import json
-import requests
 from urllib.parse import parse_qs
-from common.utils import validate_signature
-from common.logger import get_logger
-from common.utils import send_slack_notification, send_email_notification
+
+import requests
+
 from common.boto_utils import BotoUtils
+from common.constant import StatusCode
+from common.logger import get_logger
+from common.utils import send_email_notification
+from common.utils import validate_signature
 from registry.application.services.organization_publisher_service import OrganizationPublisherService
-from registry.config import SIGNING_SECRET, SLACK_APPROVAL_OAUTH_ACCESS_TOKEN, REGION_NAME
 from registry.application.services.service_publisher_service import ServicePublisherService
-from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
-from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
-from registry.config import STAGING_URL, ALLOWED_SLACK_USER, SERVICE_REVIEW_API_ENDPOINT, SLACK_APPROVAL_CHANNEL_URL, \
-    ALLOWED_SLACK_CHANNEL_ID, MAX_SERVICES_SLACK_LISTING, NOTIFICATION_ARN
-from registry.domain.models.service_comment import ServiceComment
+from registry.config import SIGNING_SECRET, SLACK_APPROVAL_OAUTH_ACCESS_TOKEN, REGION_NAME
+from registry.config import STAGING_URL, ALLOWED_SLACK_USER, SLACK_APPROVAL_CHANNEL_URL, \
+    ALLOWED_SLACK_CHANNEL_ID, MAX_SERVICES_SLACK_LISTING, NOTIFICATION_ARN, VERIFICATION_ARN
 from registry.constants import UserType, ServiceSupportType, ServiceStatus, OrganizationStatus
+from registry.domain.models.service_comment import ServiceComment
 from registry.exceptions import InvalidSlackChannelException, InvalidSlackSignatureException, InvalidSlackUserException
+from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
+from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 
 logger = get_logger(__name__)
 boto_util = BotoUtils(region_name=REGION_NAME)
@@ -114,10 +117,10 @@ class SlackChatOperation:
             }
             review_button_block = {
                 "type": "actions",
-                "action_id": "review",
                 "elements": [
                     {
                         "type": "button",
+                        "action_id": "review",
                         "text": {
                             "type": "plain_text",
                             "emoji": True,
@@ -172,10 +175,10 @@ class SlackChatOperation:
             }
             review_button_block = {
                 "type": "actions",
-                "action_id": "review",
                 "elements": [
                     {
                         "type": "button",
+                        "action_id": "review",
                         "text": {
                             "type": "plain_text",
                             "emoji": True,
@@ -201,8 +204,8 @@ class SlackChatOperation:
         if approval_type == "organization":
             org = OrganizationPublisherRepository().get_org_for_org_id(org_id=params["org_id"])
             if org.org_state.state == OrganizationStatus.APPROVAL_PENDING.value:
-                # verification callback
-                pass
+                self.callback_verification_service(org.uuid, getattr(OrganizationStatus, state).value,
+                                                   self._username, comment)
         elif approval_type == "service":
             org_uuid, service = ServicePublisherRepository(). \
                 get_service_for_given_service_id_and_org_id(org_id=params["org_id"], service_id=params["service_id"])
@@ -234,6 +237,26 @@ class SlackChatOperation:
                 logger.info(slack_msg)
             else:
                 logger.info("Service state is not valid.")
+
+    def callback_verification_service(self, entity_id, state, reviewed_by, comment):
+        verification_callback_payload = {
+            "verificationStatus": state,
+            "comment": comment,
+            "reviewed_by": reviewed_by
+        }
+        verification_callback_event = {
+            "queryStringParameters": {
+                "entity_id": entity_id
+            },
+            "body": json.dumps(verification_callback_payload)
+        }
+        verification_callback_response = boto_util.invoke_lambda(
+            VERIFICATION_ARN["DUNS_VERIFICATION"], invocation_type="RequestResponse",
+            payload=json.dumps(verification_callback_event))
+        if verification_callback_response["statusCode"] != StatusCode.CREATED:
+            logger.error(f"callback to verification service for entity_id: {entity_id} state: {state}"
+                         f"reviewed_by: {reviewed_by} comment:{comment}")
+            raise Exception(f"callback to verification service")
 
     def create_and_send_view_service_modal(self, org_id, service_id, trigger_id):
         org_uuid, service = ServicePublisherRepository(). \

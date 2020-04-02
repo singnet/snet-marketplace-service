@@ -2,7 +2,6 @@ import json
 from datetime import datetime
 from unittest import TestCase
 from unittest.mock import patch, Mock
-from urllib.parse import urlencode
 from uuid import uuid4
 
 from verification.application.handlers.verification_handlers import initiate, callback
@@ -59,7 +58,7 @@ class TestDUNSVerification(TestCase):
         event = {
             "requestContext": {"authorizer": {"claims": {"email": username}}},
             "pathParameters": {"verification_id": test_verification_id},
-            "body": urlencode({
+            "body": json.dumps({
                 "verificationStatus": "APPROVED",
                 "reviewed_by": "admin@dummy.io",
                 "comment": "looks good"
