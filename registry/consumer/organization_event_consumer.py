@@ -78,7 +78,7 @@ class OrganizationEventConsumer(object):
                 existing_members_map[existing_member.address] = existing_member
 
         if not existing_owner or not existing_owner.address:
-            self._organization_repository.add_member(received_owner)
+            self._organization_repository.add_member([received_owner])
         else:
             if existing_owner.address == received_owner.address:
                 existing_owner.set_status(OrganizationMemberStatus.PUBLISHED.value)
