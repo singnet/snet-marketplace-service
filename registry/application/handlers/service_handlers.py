@@ -236,7 +236,7 @@ def get_daemon_config_for_current_network(event, context):
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
-
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def get_service_details_using_org_id_service_id(event, context):
     logger.info(f"event for get_daemon_config_for_current_network:: {event}")
     path_parameters = event["queryStringParameters"]
@@ -248,7 +248,7 @@ def get_service_details_using_org_id_service_id(event, context):
         {"status": "success", "data": service.to_dict(), "error": {}}, cors_enabled=True
     )
 
-
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def service_deployment_status_notification_handler(event, context):
     logger.info(f"Service Build status event {event}")
     org_id = event['org_id']
