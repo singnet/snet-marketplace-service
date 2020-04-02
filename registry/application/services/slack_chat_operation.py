@@ -45,10 +45,9 @@ class SlackChatOperation:
             return True
         return False
 
-    def validate_slack_request(self, headers, payload_raw):
-        payload = parse_qs(payload_raw)
-        if not self.validate_slack_channel_id():
-            if not payload["type"] == "view_submission":
+    def validate_slack_request(self, headers, payload_raw, ignore=False):
+        if not ignore:
+            if not self.validate_slack_channel_id():
                 raise InvalidSlackChannelException()
 
         if not self.validate_slack_user():
@@ -114,10 +113,10 @@ class SlackChatOperation:
             }
             review_button_block = {
                 "type": "actions",
-                "action_id": "review",
                 "elements": [
                     {
                         "type": "button",
+                        "action_id": "review",
                         "text": {
                             "type": "plain_text",
                             "emoji": True,
@@ -172,10 +171,10 @@ class SlackChatOperation:
             }
             review_button_block = {
                 "type": "actions",
-                "action_id": "review",
                 "elements": [
                     {
                         "type": "button",
+                        "action_id": "review",
                         "text": {
                             "type": "plain_text",
                             "emoji": True,
