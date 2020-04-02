@@ -1,5 +1,4 @@
 import json
-from urllib.parse import parse_qs
 
 import requests
 
@@ -282,7 +281,9 @@ class SlackChatOperation:
         org = OrganizationPublisherRepository().get_org_for_org_id(org_id=org_id)
         if not org:
             logger.info("org not found")
-        view = self.generate_view_org_modal(org, None)
+        comment = self.get_verification_latest_comments(org.uuid)
+        comment = "--" if not comment else comment
+        view = self.generate_view_org_modal(org, None, comment)
         slack_payload = {
             "trigger_id": trigger_id,
             "view": view
@@ -292,6 +293,35 @@ class SlackChatOperation:
         logger.info(f"slack_payload: {slack_payload}")
         response = requests.post(url=OPEN_SLACK_VIEW_URL, data=json.dumps(slack_payload), headers=headers)
         logger.info(f"{response.status_code} | {response.text}")
+
+    def get_verification_latest_comments(self, org_uuid):
+        verification_status_event = {
+            "queryStringParameters": {
+                "type": "DUNS",
+                "entity_id": org_uuid
+            },
+            "body": None,
+            "pathParameters": None
+        }
+
+        verification_status_response = boto_util.invoke_lambda(lambda_function_arn=VERIFICATION_ARN["GET_STATUS"],
+                                                               invocation_type="RequestResponse",
+                                                               payload=json.dumps(verification_status_event))
+
+        if verification_status_response["statusCode"] != 200:
+            raise Exception(f"Failed to get verification status for org_uuid: {org_uuid}")
+        verification_status = json.loads(verification_status_response["body"])["data"]
+        if "comments" not in verification_status:
+            raise Exception(f"Failed to get verification status for org_uuid: {org_uuid}")
+
+        comments = verification_status["comments"]
+        if len(comments) == 0:
+            return ""
+        latest_comment = comments[0]
+        for comment in comments:
+            if comment["created_at"] > latest_comment["created_at"]:
+                latest_comment = comment
+        return latest_comment["comment"]
 
     def generate_view_service_modal(self, org_id, service, requested_at, comment):
         view = {
@@ -425,11 +455,12 @@ class SlackChatOperation:
                 "text": "* Comment is mandatory field."
             }
         }
-        blocks = [service_info_display_block, divider_block, service_provider_comment_block, select_approval_state_block, comment_block]
+        blocks = [service_info_display_block, divider_block, service_provider_comment_block,
+                  select_approval_state_block, comment_block]
         view["blocks"] = blocks
         return view
 
-    def generate_view_org_modal(self, org, requested_at):
+    def generate_view_org_modal(self, org, requested_at, comment):
         org_id = "--" if not org.id else org.id
         organization_name = "--" if not org.name else org.name
         view = {
@@ -552,6 +583,13 @@ class SlackChatOperation:
                 "text": "* Comment is mandatory field."
             }
         }
-        blocks = [org_info_display_block, divider_block, select_approval_state_block, comment_block]
+        org_comment_block = {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": f"*Comments*\n*{comment}"
+            }
+        }
+        blocks = [org_info_display_block, divider_block, org_comment_block, select_approval_state_block, comment_block]
         view["blocks"] = blocks
         return view
