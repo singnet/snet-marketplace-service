@@ -117,8 +117,11 @@ class TestSlackChatOperation(TestCase):
     @patch("registry.application.services.slack_chat_operation.SlackChatOperation.validate_slack_channel_id")
     @patch("registry.application.services.slack_chat_operation.SlackChatOperation.validate_slack_signature")
     @patch("registry.application.services.slack_chat_operation.requests.post")
-    def test_slack_interaction_handler_to_view_service_modal(self, post_request, validate_slack_signature,
-                                                             validate_slack_channel_id, validate_slack_user):
+    @patch("common.utils.send_email_notification")
+    @patch("common.utils.send_slack_notification")
+    def test_slack_interaction_handler_to_view_service_modal(
+            self, slack_notification, email_notification, post_request, validate_slack_signature,
+            validate_slack_channel_id, validate_slack_user):
         validate_slack_channel_id.return_value = True
         validate_slack_user.return_value = True
         validate_slack_signature.return_value = True
@@ -191,7 +194,9 @@ class TestSlackChatOperation(TestCase):
     @patch("registry.application.services.slack_chat_operation.SlackChatOperation.validate_slack_user")
     @patch("registry.application.services.slack_chat_operation.SlackChatOperation.validate_slack_channel_id")
     @patch("registry.application.services.slack_chat_operation.SlackChatOperation.validate_slack_signature")
-    def test_view_submission(self, validate_slack_signature, validate_slack_channel_id, validate_slack_user):
+    @patch("common.utils.send_email_notification")
+    @patch("common.utils.send_slack_notification")
+    def test_view_submission(self, slack_notification, email_notification, validate_slack_signature, validate_slack_channel_id, validate_slack_user):
         validate_slack_channel_id.return_value = True
         validate_slack_user.return_value = True
         validate_slack_signature.return_value = True
