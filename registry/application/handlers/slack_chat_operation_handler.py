@@ -95,6 +95,7 @@ def slack_interaction_handler(event, context):
             params = {
                 "org_id": payload["view"]["blocks"][0]["fields"][0]["text"].split("\n")[1]
             }
+        logger.info(f"params: {params}")
         response = slack_chat_operation.process_approval_comment(approval_type=approval_type,
                                                                  state=review_request_state,
                                                                  comment=comment, params=params)

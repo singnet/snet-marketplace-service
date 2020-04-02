@@ -266,7 +266,7 @@ class SlackChatOperation:
             get_last_service_comment(
             org_uuid=org_uuid, service_uuid=service.uuid, support_type=ServiceSupportType.SERVICE_APPROVAL.value,
             user_type=UserType.SERVICE_PROVIDER.value)
-        service_comment == "--" if not service_comment else service_comment
+        service_comment == "--" if not service_comment else service_comment.comment
         view = self.generate_view_service_modal(org_id, service, None, service_comment)
         slack_payload = {
             "trigger_id": trigger_id,
@@ -280,6 +280,8 @@ class SlackChatOperation:
 
     def create_and_send_view_org_modal(self, org_id, trigger_id):
         org = OrganizationPublisherRepository().get_org_for_org_id(org_id=org_id)
+        if not org:
+            logger.info("org not found")
         view = self.generate_view_org_modal(org, None)
         slack_payload = {
             "trigger_id": trigger_id,
@@ -428,8 +430,8 @@ class SlackChatOperation:
         return view
 
     def generate_view_org_modal(self, org, requested_at):
-        org_id = ""
-        organization_name = ""
+        org_id = "--" if not org.id else org.id
+        organization_name = "--" if not org.name else org.name
         view = {
             "type": "modal",
             "title": {
