@@ -126,7 +126,7 @@ class SlackChatOperation:
                         "style": "primary",
                         "value": json.dumps({
                             "org_id": org_id,
-                            "path": "/service"
+                            "path": "/org"
                         })
                     }
                 ]
