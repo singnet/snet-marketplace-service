@@ -94,20 +94,6 @@ class TestOrganizationPublisherService(unittest.TestCase):
             if org_db_model.org_state[0].state == OrganizationStatus.APPROVAL_PENDING.value:
                 assert True
 
-    @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
-    @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
-    def test_get_org_for_admin(self, mock_boto, mock_ipfs):
-        test_org_uuid = uuid4().hex
-        username = "dummy@snet.io"
-        org_repo.add_organization(
-            DomainOrganization(test_org_uuid, "org_id", "org_dummy", "ORGANIZATION", ORIGIN, "", "",
-                               "", [], {}, "", "", [], [], [], []),
-            username, OrganizationStatus.APPROVED.value)
-        org = OrganizationPublisherService(None, None).get_for_admin({"status": OrganizationStatus.APPROVED.value})
-        if len(org) != 1:
-            assert False
-        assert True
-
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q12PWP")))
     @patch("registry.domain.services.registry_blockchain_util."
            "RegistryBlockChainUtil.publish_organization_to_test_network", return_value="0x123")
