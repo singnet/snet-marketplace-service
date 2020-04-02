@@ -259,9 +259,8 @@ class ServicePublisherService:
         service = ServicePublisherRepository().save_service(self._username, service, service.service_state.state)
 
         # publish service on test network
-        response = self.obj_service_publisher_domain_service.publish_service_on_blockchain(org_id=organization.id,
-                                                                                           service=service,
-                                                                                           environment=EnvironmentType.TEST.value)
+        response = self.obj_service_publisher_domain_service.publish_service_on_blockchain(
+            org_id=organization.id, service=service, environment=EnvironmentType.TEST.value)
 
         # notify service contributors via email
         self.notify_service_contributor_when_user_submit_for_approval(organization.id, service.service_id,
@@ -293,8 +292,11 @@ class ServicePublisherService:
                 "allowed_user_flag": True,
                 "allowed_user_addresses": [member.address for member in organization_members] + [
                     BLOCKCHAIN_TEST_ENV["executor_address"]],
+                "authentication_address": [member.address for member in organization_members],
                 "blockchain_enabled": False,
-                "passthrough_enabled": True
+                "passthrough_enabled": True,
+                "organization_id": organization.id,
+                "service_id": service.service_id
             }
         elif environment is EnvironmentType.MAIN.value:
             daemon_config = {

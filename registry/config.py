@@ -38,8 +38,10 @@ PUBLISHER_PORTAL_DAPP_URL = ""
 ORG_ID_FOR_TESTING_AI_SERVICE = ""
 BLOCKCHAIN_TEST_ENV = {
     "network_id": 3,
-    "network_name": "ropsten",
+    "network_name": "test",
     "executor_address": "",
+    "http_provider": "https://ropsten.infura.io",
+    "ws_provider": "wss://ropsten.infura.io/ws",
     "executor_key": "",
     "free_calls": 100
 }
@@ -52,3 +54,4 @@ ALLOWED_SLACK_USER = ['dummy_name']
 SERVICE_REVIEW_API_ENDPOINT = ""
 SLACK_APPROVAL_CHANNEL_URL= ""
 MAX_SERVICES_SLACK_LISTING = 5
+SLACK_APPROVAL_OAUTH_ACCESS_TOKEN=""
