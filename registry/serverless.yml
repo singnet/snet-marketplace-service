@@ -31,7 +31,7 @@ custom:
   prune:
     automatic: true
     includeLayers: true
-    number: 5
+    number: 2
 
 package:
   exclude:
