@@ -61,7 +61,7 @@ def slack_interaction_handler(event, context):
     slack_chat_operation = SlackChatOperation(
         username=payload["user"]["username"], channel_id=payload.get("channel", {}).get("id", None))
     # validate slack request
-    slack_chat_operation.validate_slack_request(headers=headers, payload_raw=event_body)
+    slack_chat_operation.validate_slack_request(headers=headers, payload_raw=event_body, ignore=True)
 
     data = {}
     if payload["type"] == "block_actions":
