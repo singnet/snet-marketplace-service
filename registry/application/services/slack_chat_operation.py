@@ -1,20 +1,23 @@
 import json
-import requests
 from urllib.parse import parse_qs
-from common.utils import validate_signature
-from common.logger import get_logger
-from common.utils import send_slack_notification, send_email_notification
+
+import requests
+
 from common.boto_utils import BotoUtils
+from common.constant import StatusCode
+from common.logger import get_logger
+from common.utils import send_email_notification
+from common.utils import validate_signature
 from registry.application.services.organization_publisher_service import OrganizationPublisherService
-from registry.config import SIGNING_SECRET, SLACK_APPROVAL_OAUTH_ACCESS_TOKEN, REGION_NAME
 from registry.application.services.service_publisher_service import ServicePublisherService
-from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
-from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
-from registry.config import STAGING_URL, ALLOWED_SLACK_USER, SERVICE_REVIEW_API_ENDPOINT, SLACK_APPROVAL_CHANNEL_URL, \
-    ALLOWED_SLACK_CHANNEL_ID, MAX_SERVICES_SLACK_LISTING, NOTIFICATION_ARN
-from registry.domain.models.service_comment import ServiceComment
+from registry.config import SIGNING_SECRET, SLACK_APPROVAL_OAUTH_ACCESS_TOKEN, REGION_NAME
+from registry.config import STAGING_URL, ALLOWED_SLACK_USER, SLACK_APPROVAL_CHANNEL_URL, \
+    ALLOWED_SLACK_CHANNEL_ID, MAX_SERVICES_SLACK_LISTING, NOTIFICATION_ARN, VERIFICATION_ARN
 from registry.constants import UserType, ServiceSupportType, ServiceStatus, OrganizationStatus
+from registry.domain.models.service_comment import ServiceComment
 from registry.exceptions import InvalidSlackChannelException, InvalidSlackSignatureException, InvalidSlackUserException
+from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
+from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 
 logger = get_logger(__name__)
 boto_util = BotoUtils(region_name=REGION_NAME)
@@ -45,10 +48,9 @@ class SlackChatOperation:
             return True
         return False
 
-    def validate_slack_request(self, headers, payload_raw):
-        payload = parse_qs(payload_raw)
-        if not self.validate_slack_channel_id():
-            if not payload["type"] == "view_submission":
+    def validate_slack_request(self, headers, payload_raw, ignore=False):
+        if not ignore:
+            if not self.validate_slack_channel_id():
                 raise InvalidSlackChannelException()
 
         if not self.validate_slack_user():
@@ -85,12 +87,12 @@ class SlackChatOperation:
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": "*Service Approval Request*"
+                "text": "*Org Approval Requests*"
             }
         }
         org_listing_slack_blocks = [title_block]
         for org_dict in orgs:
-            org_id = org_dict["org_id"]
+            org_id = "--" if not org_dict["org_id"] else org_dict["org_id"]
             mrkdwn_block = {
                 "type": "section",
                 "fields": [
@@ -114,7 +116,6 @@ class SlackChatOperation:
             }
             review_button_block = {
                 "type": "actions",
-                "action_id": "review",
                 "elements": [
                     {
                         "type": "button",
@@ -142,13 +143,13 @@ class SlackChatOperation:
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": "*Service Approval Request*"
+                "text": "*Service Approval Requests*"
             }
         }
         service_listing_slack_blocks = [title_block]
         for service_dict in services:
-            org_id = service_dict["org_id"]
-            service_id = service_dict["service_id"]
+            org_id = "--" if not service_dict["org_id"] else service_dict["org_id"]
+            service_id = "--" if not service_dict["service_id"] else service_dict["service_id"]
             mrkdwn_block = {
                 "type": "section",
                 "fields": [
@@ -172,7 +173,6 @@ class SlackChatOperation:
             }
             review_button_block = {
                 "type": "actions",
-                "action_id": "review",
                 "elements": [
                     {
                         "type": "button",
@@ -200,9 +200,9 @@ class SlackChatOperation:
     def process_approval_comment(self, approval_type, state, comment, params):
         if approval_type == "organization":
             org = OrganizationPublisherRepository().get_org_for_org_id(org_id=params["org_id"])
-            if org.org_state.state == OrganizationStatus.APPROVAL_PENDING.value:
-                # verification callback
-                pass
+            if org.org_state.state in [OrganizationStatus.APPROVAL_PENDING.value, OrganizationStatus.ONBOARDING.value]:
+                self.callback_verification_service(org.uuid, getattr(OrganizationStatus, state).value,
+                                                   self._username, comment)
         elif approval_type == "service":
             org_uuid, service = ServicePublisherRepository(). \
                 get_service_for_given_service_id_and_org_id(org_id=params["org_id"], service_id=params["service_id"])
@@ -234,11 +234,40 @@ class SlackChatOperation:
                 logger.info(slack_msg)
             else:
                 logger.info("Service state is not valid.")
+        else:
+            logger.info("Approval type is not valid")
+
+    def callback_verification_service(self, entity_id, state, reviewed_by, comment):
+        verification_callback_payload = {
+            "verificationStatus": state,
+            "comment": comment,
+            "reviewed_by": reviewed_by
+        }
+        verification_callback_event = {
+            "queryStringParameters": {
+                "entity_id": entity_id
+            },
+            "body": json.dumps(verification_callback_payload)
+        }
+        logger.info(f"verification_callback_event: {verification_callback_event}")
+        verification_callback_response = boto_util.invoke_lambda(
+            VERIFICATION_ARN["DUNS_CALLBACK"], invocation_type="RequestResponse",
+            payload=json.dumps(verification_callback_event))
+        logger.info(f"verification_callback_response: {verification_callback_response}")
+        if verification_callback_response["statusCode"] != StatusCode.CREATED:
+            logger.error(f"callback to verification service for entity_id: {entity_id} state: {state}"
+                         f"reviewed_by: {reviewed_by} comment:{comment}")
+            raise Exception(f"callback to verification service")
 
     def create_and_send_view_service_modal(self, org_id, service_id, trigger_id):
         org_uuid, service = ServicePublisherRepository(). \
             get_service_for_given_service_id_and_org_id(org_id=org_id, service_id=service_id)
-        view = self.generate_view_service_modal(org_id, service, None)
+        service_comment = ServicePublisherRepository(). \
+            get_last_service_comment(
+            org_uuid=org_uuid, service_uuid=service.uuid, support_type=ServiceSupportType.SERVICE_APPROVAL.value,
+            user_type=UserType.SERVICE_PROVIDER.value)
+        comment = "--" if not service_comment else service_comment.comment
+        view = self.generate_view_service_modal(org_id, service, None, comment)
         slack_payload = {
             "trigger_id": trigger_id,
             "view": view
@@ -251,6 +280,8 @@ class SlackChatOperation:
 
     def create_and_send_view_org_modal(self, org_id, trigger_id):
         org = OrganizationPublisherRepository().get_org_for_org_id(org_id=org_id)
+        if not org:
+            logger.info("org not found")
         view = self.generate_view_org_modal(org, None)
         slack_payload = {
             "trigger_id": trigger_id,
@@ -262,7 +293,7 @@ class SlackChatOperation:
         response = requests.post(url=OPEN_SLACK_VIEW_URL, data=json.dumps(slack_payload), headers=headers)
         logger.info(f"{response.status_code} | {response.text}")
 
-    def generate_view_service_modal(self, org_id, service, requested_at):
+    def generate_view_service_modal(self, org_id, service, requested_at, comment):
         view = {
             "type": "modal",
             "title": {
@@ -306,6 +337,13 @@ class SlackChatOperation:
                     "text": f"*When:*\n{requested_at}\n"
                 }
             ]
+        }
+        service_provider_comment_block = {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": f"*Comments*\n*{comment}"
+            }
         }
         divider_block = {
             'type': 'divider'
@@ -387,18 +425,18 @@ class SlackChatOperation:
                 "text": "* Comment is mandatory field."
             }
         }
-        blocks = [service_info_display_block, divider_block, select_approval_state_block, comment_block]
+        blocks = [service_info_display_block, divider_block, service_provider_comment_block, select_approval_state_block, comment_block]
         view["blocks"] = blocks
         return view
 
     def generate_view_org_modal(self, org, requested_at):
-        org_id = ""
-        organization_name = ""
+        org_id = "--" if not org.id else org.id
+        organization_name = "--" if not org.name else org.name
         view = {
             "type": "modal",
             "title": {
                 "type": "plain_text",
-                "text": "Service For Approval",
+                "text": "Org For Approval",
                 "emoji": True
             },
             "submit": {

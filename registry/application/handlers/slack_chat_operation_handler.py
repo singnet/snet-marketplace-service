@@ -1,7 +1,6 @@
 import json
 from registry.application.services.slack_chat_operation import SlackChatOperation
-from registry.exceptions import BadRequestException, EXCEPTIONS, InvalidSlackChannelException, \
-    InvalidSlackSignatureException, InvalidSlackUserException
+from registry.exceptions import BadRequestException, EXCEPTIONS
 from registry.config import SLACK_HOOK, NETWORK_ID
 from urllib.parse import parse_qs
 from common.exception_handler import exception_handler
@@ -61,7 +60,7 @@ def slack_interaction_handler(event, context):
     slack_chat_operation = SlackChatOperation(
         username=payload["user"]["username"], channel_id=payload.get("channel", {}).get("id", None))
     # validate slack request
-    slack_chat_operation.validate_slack_request(headers=headers, payload_raw=event_body)
+    slack_chat_operation.validate_slack_request(headers=headers, payload_raw=event_body, ignore=True)
 
     data = {}
     if payload["type"] == "block_actions":
@@ -82,7 +81,7 @@ def slack_interaction_handler(event, context):
             raise BadRequestException()
     elif payload["type"] == "view_submission":
         approval_type = "service" if payload["view"]["title"]["text"] == "Service For Approval" else ""
-        approval_type = "org" if payload["view"]["title"]["text"] == "Org For Approval" else approval_type
+        approval_type = "organization" if payload["view"]["title"]["text"] == "Org For Approval" else approval_type
         review_request_state = payload["view"]["state"]["values"]["approval_state"]["selection"]["selected_option"][
             "value"]
         comment = payload["view"]["state"]["values"]["review_comment"]["comment"]["value"]
@@ -92,10 +91,11 @@ def slack_interaction_handler(event, context):
                 "org_id": payload["view"]["blocks"][0]["fields"][0]["text"].split("\n")[1],
                 "service_id": payload["view"]["blocks"][0]["fields"][2]["text"].split("\n")[1]
             }
-        elif approval_type == "org":
+        elif approval_type == "organization":
             params = {
                 "org_id": payload["view"]["blocks"][0]["fields"][0]["text"].split("\n")[1]
             }
+        logger.info(f"params: {params}")
         response = slack_chat_operation.process_approval_comment(approval_type=approval_type,
                                                                  state=review_request_state,
                                                                  comment=comment, params=params)
