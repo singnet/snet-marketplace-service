@@ -87,12 +87,12 @@ class SlackChatOperation:
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": "*Org For Approval*"
+                "text": "*Org Approval Requests*"
             }
         }
         org_listing_slack_blocks = [title_block]
         for org_dict in orgs:
-            org_id = org_dict["org_id"]
+            org_id = "--" if not org_dict["org_id"] else org_dict["org_id"]
             mrkdwn_block = {
                 "type": "section",
                 "fields": [
@@ -143,13 +143,13 @@ class SlackChatOperation:
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": "*Service Approval Request*"
+                "text": "*Service Approval Requests*"
             }
         }
         service_listing_slack_blocks = [title_block]
         for service_dict in services:
-            org_id = service_dict["org_id"]
-            service_id = service_dict["service_id"]
+            org_id = "--" if not service_dict["org_id"] else service_dict["org_id"]
+            service_id = "--" if not service_dict["service_id"] else service_dict["service_id"]
             mrkdwn_block = {
                 "type": "section",
                 "fields": [
