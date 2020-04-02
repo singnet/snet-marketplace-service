@@ -29,7 +29,7 @@ class OrganizationStatus(Enum):
     CHANGE_REQUESTED = "CHANGE_REQUESTED"
 
 
-ORG_STATUS_LIST = [OrganizationStatus.APPROVED.value, OrganizationStatus.REJECTED.value]
+ORG_STATUS_LIST = [OrganizationStatus.APPROVED.value, OrganizationStatus.REJECTED.value, OrganizationStatus.CHANGE_REQUESTED.value]
 
 
 class OrganizationActions(Enum):
