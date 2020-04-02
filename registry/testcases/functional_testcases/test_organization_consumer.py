@@ -3,7 +3,7 @@ from datetime import datetime
 from unittest.mock import Mock, patch
 from uuid import uuid4
 
-from registry.constants import OrganizationStatus
+from registry.constants import OrganizationStatus, Role
 from registry.consumer.organization_event_consumer import OrganizationCreatedAndModifiedEventConsumer
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.models import Organization, OrganizationState, \
@@ -28,7 +28,6 @@ class TestOrganizationService(unittest.TestCase):
     def test_organization_create_event(self, mock_get_org_details_from_blockchain, mock_blockchain_util , mock_read_bytesio_from_ipfs,
                                        mock_ipfs_read, mock_s3_push,
                                        mock_ipfs_write):
-        username = "karl@dummy.com"
         test_org_uuid = uuid4().hex
         test_org_id = "org_id"
         username = "karl@cryptonian.io"
@@ -99,7 +98,11 @@ class TestOrganizationService(unittest.TestCase):
 
         org_event_consumer.on_event({})
         published_org = self.org_repo.get_org_for_org_id(test_org_id)
-
+        owner = self.org_repo.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == test_org_uuid).filter(OrganizationMember.role == Role.OWNER.value).all()
+        if len(owner) != 1:
+            assert False
+        self.assertEqual(owner[0].address, "0x123")
+        self.assertEqual(owner[0].username, username)
         assert published_org.name == "test_org"
         assert published_org.id == "org_id"
         assert published_org.org_type == "organization"
@@ -267,6 +270,12 @@ class TestOrganizationService(unittest.TestCase):
 
         org_event_consumer.on_event({})
         published_org = self.org_repo.get_org_for_org_id(test_org_id)
+        owner = self.org_repo.session.query(OrganizationMember).filter(
+            OrganizationMember.org_uuid == test_org_uuid).filter(OrganizationMember.role == Role.OWNER.value).all()
+        if len(owner) != 1:
+            assert False
+        self.assertEqual(owner[0].address, "0x1234")
+        self.assertEqual(owner[0].username, "")
 
         assert published_org.name == "test_org"
         assert published_org.id == "org_id"
