@@ -91,7 +91,7 @@ def slack_interaction_handler(event, context):
                 "org_id": payload["view"]["blocks"][0]["fields"][0]["text"].split("\n")[1],
                 "service_id": payload["view"]["blocks"][0]["fields"][2]["text"].split("\n")[1]
             }
-        elif approval_type == "org":
+        elif approval_type == "organization":
             params = {
                 "org_id": payload["view"]["blocks"][0]["fields"][0]["text"].split("\n")[1]
             }
