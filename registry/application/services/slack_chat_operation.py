@@ -418,7 +418,7 @@ class SlackChatOperation:
             "type": "modal",
             "title": {
                 "type": "plain_text",
-                "text": "Service For Approval",
+                "text": "Org For Approval",
                 "emoji": True
             },
             "submit": {
