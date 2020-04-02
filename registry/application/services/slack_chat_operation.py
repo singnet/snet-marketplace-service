@@ -117,10 +117,10 @@ class SlackChatOperation:
             }
             review_button_block = {
                 "type": "actions",
-                "action_id": "review",
                 "elements": [
                     {
                         "type": "button",
+                        "action_id": "review",
                         "text": {
                             "type": "plain_text",
                             "emoji": True,
@@ -175,10 +175,10 @@ class SlackChatOperation:
             }
             review_button_block = {
                 "type": "actions",
-                "action_id": "review",
                 "elements": [
                     {
                         "type": "button",
+                        "action_id": "review",
                         "text": {
                             "type": "plain_text",
                             "emoji": True,
