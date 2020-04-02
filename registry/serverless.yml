@@ -31,7 +31,7 @@ custom:
   prune:
     automatic: true
     includeLayers: true
-    number: 5
+    number: 2
 
 package:
   exclude:
@@ -68,33 +68,6 @@ package:
     - node_modules/singularitynet-platform-contracts/**
 
 functions:
-
-#  get-org-for-admin:
-#    warmup: true
-#    handler: registry.application.handlers.organization_handlers.get_org_for_admin
-#    role: ${file(./config.${self:provider.stage}.json):ROLE}
-#    vpc:
-#      securityGroupIds:
-#        - ${file(./config.${self:provider.stage}.json):SG1}
-#        - ${file(./config.${self:provider.stage}.json):SG2}
-#      subnetIds:
-#        - ${file(./config.${self:provider.stage}.json):VPC1}
-#        - ${file(./config.${self:provider.stage}.json):VPC2}
-#    events:
-#      - http:
-#          method: GET
-#          path: /admin/org
-#          cors:
-#            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-#            headers:
-#              - Content-Type
-#              - X-Amz-Date
-#              - Authorization
-#              - X-Api-Key
-#              - X-Amz-Security-Token
-#              - X-Amz-User-Agent
-#              - x-requested-with
-
   get_all_org:
     handler: registry.application.handlers.organization_handlers.get_all_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -568,7 +541,6 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-
   organization_event_consumer_handler:
     warmup: true
     handler: registry.application.handlers.consumer_handlers.organization_event_consumer_handler
@@ -842,37 +814,6 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-#  daemon-config-for-test:
-#    warmup: true
-#    handler: registry.application.handlers.service_handlers.get_daemon_config_for_test
-#    role: ${file(./config.${self:provider.stage}.json):ROLE}
-#    vpc:
-#      securityGroupIds:
-#        - ${file(./config.${self:provider.stage}.json):SG1}
-#        - ${file(./config.${self:provider.stage}.json):SG2}
-#      subnetIds:
-#        - ${file(./config.${self:provider.stage}.json):VPC1}
-#        - ${file(./config.${self:provider.stage}.json):VPC2}
-#    events:
-#      - http:
-#          method: GET
-#          path: /org/{org_uuid}/service/{service_uuid}/group/{group_id}/daemon/config/test
-#          authorizer:
-#            name: user-authorizer
-#            type: COGNITO_USER_POOLS
-#            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-#            identitySource: method.request.header.Authorization
-#          cors:
-#            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-#            headers:
-#              - Content-Type
-#              - X-Amz-Date
-#              - Authorization
-#              - X-Api-Key
-#              - X-Amz-Security-Token
-#              - X-Amz-User-Agent
-#              - x-requested-with
-
   daemon-config-for-given-network-id:
     warmup: true
     handler: registry.application.handlers.service_handlers.get_daemon_config_for_current_network
@@ -903,6 +844,7 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+
   get_service_details_using_org_id_service_id:
     warmup: true
     private: true
@@ -915,6 +857,7 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+
   service_deployment_status_notification_handler:
     warmup: true
     private: true
@@ -927,131 +870,3 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-
-
-  get-all-service-pending-for-approval:
-    warmup: true
-    handler: registry.application.handlers.slack_chat_operation_handler.get_list_of_service_pending_for_approval
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: POST
-          path: /services
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-
-
-  slack-interaction-for-approval:
-    warmup: true
-    handler: registry.application.handlers.slack_chat_operation_handler.slack_interaction_handler
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: POST
-          path: /slack/interaction/submit
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-#    events:
-#      - http:
-#          method: GET
-#          path: /service
-#          authorizer:
-#            name: user-authorizer
-#            type: COGNITO_USER_POOLS
-#            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-#            identitySource: method.request.header.Authorization
-#          cors:
-#            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-#            headers:
-#              - Content-Type
-#              - X-Amz-Date
-#              - Authorization
-#              - X-Api-Key
-#              - X-Amz-Security-Token
-#              - X-Amz-User-Agent
-#              - x-requested-with
-
-#  Admin level API needs to be private
-#  list-of-orgs-services-submitted-for-approval:
-#    warmup: true
-#    handler: registry.application.handlers.service_handlers.list_of_orgs_with_services_submitted_for_approval
-#    role: ${file(./config.${self:provider.stage}.json):ROLE}
-#    vpc:
-#      securityGroupIds:
-#        - ${file(./config.${self:provider.stage}.json):SG1}
-#        - ${file(./config.${self:provider.stage}.json):SG2}
-#      subnetIds:
-#        - ${file(./config.${self:provider.stage}.json):VPC1}
-#        - ${file(./config.${self:provider.stage}.json):VPC2}
-#    events:
-#      - http:
-#          method: POST
-#          path: /admin/orgs/services
-#          private: true
-#          cors:
-#            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-#            headers:
-#              - Content-Type
-#              - X-Amz-Date
-#              - Authorization
-#              - X-Api-Key
-#              - X-Amz-Security-Token
-#              - X-Amz-User-Agent
-#              - x-requested-with
-#
-#  legal-approval-of-service:
-#    warmup: true
-#    handler: registry.application.handlers.service_handlers.legal_approval_of_service
-#    role: ${file(./config.${self:provider.stage}.json):ROLE}
-#    vpc:
-#      securityGroupIds:
-#        - ${file(./config.${self:provider.stage}.json):SG1}
-#        - ${file(./config.${self:provider.stage}.json):SG2}
-#      subnetIds:
-#        - ${file(./config.${self:provider.stage}.json):VPC1}
-#        - ${file(./config.${self:provider.stage}.json):VPC2}
-#    events:
-#      - http:
-#          method: POST
-#          path: /admin/org/{org_uuid}/service/{service_uuid}
-#          private: true
-#          cors:
-#            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-#            headers:
-#              - Content-Type
-#              - X-Amz-Date
-#              - Authorization
-#              - X-Api-Key
-#              - X-Amz-Security-Token
-#              - X-Amz-User-Agent
-#              - x-requested-with

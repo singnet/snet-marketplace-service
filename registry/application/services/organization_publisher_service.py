@@ -29,9 +29,9 @@ class OrganizationPublisherService:
         self.username = username
         self.boto_utils = BotoUtils(region_name=REGION_NAME)
 
-    def get_for_admin(self, params):
-        status = params["status"]
-        organizations = org_repo.get_org(status)
+    def get_approval_pending_organizations(self, limit):
+        status = OrganizationStatus.ONBOARDING.value
+        organizations = org_repo.get_org(status, limit)
         return [org.to_response() for org in organizations]
 
     def get_all_org_for_user(self):
