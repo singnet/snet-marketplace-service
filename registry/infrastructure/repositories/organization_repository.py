@@ -105,12 +105,12 @@ class OrganizationPublisherRepository(BaseRepository):
         try:
             organization = self.session.query(Organization).filter(Organization.uuid == org_uuid).first()
             if organization.org_state[0].state in [OrganizationStatus.ONBOARDING.value,
-                                                   OrganizationStatus.ONBOARDING_REJECTED,
-                                                   OrganizationStatus.ONBOARDING_APPROVED]:
+                                                   OrganizationStatus.ONBOARDING_REJECTED.value,
+                                                   OrganizationStatus.ONBOARDING_APPROVED.value]:
                 if status == OrganizationStatus.REJECTED.value:
-                    status = OrganizationStatus.ONBOARDING_REJECTED
+                    status = OrganizationStatus.ONBOARDING_REJECTED.value
                 elif status == OrganizationStatus.APPROVED.value:
-                    status = OrganizationStatus.ONBOARDING_APPROVED
+                    status = OrganizationStatus.ONBOARDING_APPROVED.value
             organization.org_state[0].state = status
             organization.org_state[0].updated_by = updated_by
             organization.org_state[0].updated_on = datetime.utcnow()
