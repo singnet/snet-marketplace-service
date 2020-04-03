@@ -91,7 +91,8 @@ class SlackChatOperation:
         }
         org_listing_slack_blocks = [title_block]
         for org_dict in orgs:
-            org_id = "--" if not org_dict["org_id"] else org_dict["org_id"]
+            org_id = "None" if not org_dict["org_id"] else org_dict["org_id"]
+            org_name = "None" if not org_dict.get("org_name", "None") else org_dict.get("org_name", "None")
             mrkdwn_block = {
                 "type": "section",
                 "fields": [
@@ -101,7 +102,7 @@ class SlackChatOperation:
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "*Requested on:*"
+                        "text": "*Organization Name:*"
                     },
                     {
                         "type": "mrkdwn",
@@ -109,7 +110,7 @@ class SlackChatOperation:
                     },
                     {
                         "type": "mrkdwn",
-                        "text": f"requested_at"
+                        "text": f"{org_name}"
                     }
                 ]
             }
@@ -147,8 +148,9 @@ class SlackChatOperation:
         }
         service_listing_slack_blocks = [title_block]
         for service_dict in services:
-            org_id = "--" if not service_dict["org_id"] else service_dict["org_id"]
-            service_id = "--" if not service_dict["service_id"] else service_dict["service_id"]
+            org_id = "None" if not service_dict["org_id"] else service_dict["org_id"]
+            service_id = "None" if not service_dict["service_id"] else service_dict["service_id"]
+            service_name = "None" if not service_dict.get("display_name", "None") else service_dict.get("display_name", "None")
             mrkdwn_block = {
                 "type": "section",
                 "fields": [
@@ -158,7 +160,7 @@ class SlackChatOperation:
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "*Requested on:*"
+                        "text": "*Service Name:*"
                     },
                     {
                         "type": "mrkdwn",
@@ -166,7 +168,7 @@ class SlackChatOperation:
                     },
                     {
                         "type": "mrkdwn",
-                        "text": f"{service_dict['requested_at']}"
+                        "text": f"{service_name}"
                     }
                 ]
             }
@@ -265,7 +267,7 @@ class SlackChatOperation:
             get_last_service_comment(
             org_uuid=org_uuid, service_uuid=service.uuid, support_type=ServiceSupportType.SERVICE_APPROVAL.value,
             user_type=UserType.SERVICE_PROVIDER.value)
-        comment = "--" if not service_comment else service_comment.comment
+        comment = "No Comment" if not service_comment else service_comment.comment
         view = self.generate_view_service_modal(org_id, service, None, comment)
         slack_payload = {
             "trigger_id": trigger_id,
@@ -282,7 +284,7 @@ class SlackChatOperation:
         if not org:
             logger.info("org not found")
         comment = self.get_verification_latest_comments(org.uuid)
-        comment = "--" if not comment else comment
+        comment = "No Comment" if not comment else comment
         view = self.generate_view_org_modal(org, None, comment)
         slack_payload = {
             "trigger_id": trigger_id,
@@ -362,10 +364,6 @@ class SlackChatOperation:
                 {
                     "type": "mrkdwn",
                     "text": f"*Approval Platform:*\n{STAGING_URL}/servicedetails/org/{org_id}/service/{service.service_id}\n"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": f"*When:*\n{requested_at}\n"
                 }
             ]
         }
@@ -393,7 +391,7 @@ class SlackChatOperation:
                     "value": ServiceStatus.CHANGE_REQUESTED.value,
                     "description": {
                         "type": "plain_text",
-                        "text": "Description for option 3"
+                        "text": "Request user for changes."
                     }
                 },
                 "options": [
@@ -405,7 +403,7 @@ class SlackChatOperation:
                         "value": ServiceStatus.APPROVED.value,
                         "description": {
                             "type": "plain_text",
-                            "text": "Description for option 1"
+                            "text": "Allows user to publish service."
                         }
                     },
                     {
@@ -416,7 +414,7 @@ class SlackChatOperation:
                         "value": ServiceStatus.REJECTED.value,
                         "description": {
                             "type": "plain_text",
-                            "text": "Description for option 2"
+                            "text": "Rejects user request."
                         }
                     },
                     {
@@ -427,7 +425,7 @@ class SlackChatOperation:
                         "value": ServiceStatus.CHANGE_REQUESTED.value,
                         "description": {
                             "type": "plain_text",
-                            "text": "Description for option 3"
+                            "text": "Request user for changes."
                         }
                     }
                 ]
@@ -462,8 +460,8 @@ class SlackChatOperation:
         return view
 
     def generate_view_org_modal(self, org, requested_at, comment):
-        org_id = "--" if not org.id else org.id
-        organization_name = "--" if not org.name else org.name
+        org_id = "None" if not org.id else org.id
+        organization_name = "None" if not org.name else org.name
         view = {
             "type": "modal",
             "title": {
@@ -497,10 +495,6 @@ class SlackChatOperation:
                 {
                     "type": "mrkdwn",
                     "text": f"*Approval Platform:*\n{STAGING_URL}/servicedetails/org/{org_id}\n"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": f"*When:*\n{requested_at}\n"
                 }
             ]
         }
@@ -521,7 +515,7 @@ class SlackChatOperation:
                     "value": OrganizationStatus.CHANGE_REQUESTED.value,
                     "description": {
                         "type": "plain_text",
-                        "text": "Description for option 3"
+                        "text": "Request user for changes."
                     }
                 },
                 "options": [
@@ -533,7 +527,7 @@ class SlackChatOperation:
                         "value": OrganizationStatus.APPROVED.value,
                         "description": {
                             "type": "plain_text",
-                            "text": "Description for option 1"
+                            "text": "Allows user to publish org."
                         }
                     },
                     {
@@ -544,7 +538,7 @@ class SlackChatOperation:
                         "value": OrganizationStatus.REJECTED.value,
                         "description": {
                             "type": "plain_text",
-                            "text": "Description for option 2"
+                            "text": "Rejects user request."
                         }
                     },
                     {
@@ -555,7 +549,7 @@ class SlackChatOperation:
                         "value": OrganizationStatus.CHANGE_REQUESTED.value,
                         "description": {
                             "type": "plain_text",
-                            "text": "Description for option 3"
+                            "text": "Request user for changes."
                         }
                     }
                 ]
