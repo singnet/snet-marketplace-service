@@ -267,7 +267,7 @@ class SlackChatOperation:
             get_last_service_comment(
             org_uuid=org_uuid, service_uuid=service.uuid, support_type=ServiceSupportType.SERVICE_APPROVAL.value,
             user_type=UserType.SERVICE_PROVIDER.value)
-        comment = "No Comment" if not service_comment else service_comment.comment
+        comment = "No comment" if not service_comment else service_comment.comment
         view = self.generate_view_service_modal(org_id, service, None, comment)
         slack_payload = {
             "trigger_id": trigger_id,
