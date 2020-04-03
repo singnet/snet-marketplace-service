@@ -275,6 +275,9 @@ class Organization:
         if not current_organization.is_major_change(updated_organization):
             if current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
                 next_state = OrganizationStatus.ONBOARDING_APPROVED.value
+            elif current_organization.get_status() in [OrganizationStatus.ONBOARDING_REJECTED.value,
+                                                       OrganizationStatus.CHANGE_REQUESTED.value]:
+                next_state = OrganizationStatus.ONBOARDING.value
             else:
                 next_state = OrganizationStatus.APPROVED.value
         else:
