@@ -527,7 +527,7 @@ class SlackChatOperation:
                         "value": OrganizationStatus.APPROVED.value,
                         "description": {
                             "type": "plain_text",
-                            "text": "Allows user to publish org."
+                            "text": "Allow user to publish organization."
                         }
                     },
                     {
