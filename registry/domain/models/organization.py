@@ -15,6 +15,7 @@ logger = get_logger(__name__)
 EXCLUDE_PATHS = ["root.uuid", "root._Organization__duns_no", "root.owner",
                  "root.assets['hero_image']['url']", "root.metadata_ipfs_uri", "root.origin"]
 
+
 class Organization:
     def __init__(self, uuid, org_id, name, org_type, origin, description, short_description, url,
                  contacts, assets, metadata_ipfs_uri, duns_no, groups, addresses, org_state, members):
@@ -161,7 +162,6 @@ class Organization:
     def assets(self, val):
         self.__assets = val
 
-
     @property
     def metadata_ipfs_uri(self):
         return self.__metadata_ipfs_uri
@@ -255,7 +255,7 @@ class Organization:
         # if not diff:
         #     return True
         # return False
-        #TODO reanable it once all isue are fixed
+        # TODO reanable it once all isue are fixed
         return False
 
     @staticmethod
@@ -287,10 +287,10 @@ class Organization:
     def _get_all_contact_for_organization(self):
         contacts = set()
         for contact in self.contacts:
-            contacts.add(contact['email_id'])
+            if "email_id" in contacts:
+                contacts.add(contact['email_id'])
 
         return list(contacts)
-
 
 
 class OrganizationState:

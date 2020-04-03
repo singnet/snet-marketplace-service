@@ -42,17 +42,18 @@ class ServicePublisherService:
         self.obj_service_publisher_domain_service = ServicePublisherDomainService(username, org_uuid, service_uuid)
 
     def service_build_status_notifier(self, org_id, service_id, build_status):
-        BUILD_FAIL_MESSAGE = "Build failed please check your components"
-        org_uuid, service = ServicePublisherRepository().get_service_for_given_service_id_and_org_id(org_id, service_id)
-
-        contacts = [contributor.get("email_id", "") for contributor in service.contributors]
-
-        service_comment = ServiceComment(org_uuid, service.uuid, "SERVICE_APPROVAL", "SERVICE_APPROVER",
-                                         self._username, BUILD_FAIL_MESSAGE)
-        ServicePublisherRepository().save_service_comments(service_comment)
-        ServicePublisherRepository().save_service(self._username, service, ServiceStatus.CHANGE_REQUESTED.value)
 
         if build_status == BUILD_FAILURE_CODE:
+            BUILD_FAIL_MESSAGE = "Build failed please check your components"
+            org_uuid, service = ServicePublisherRepository().get_service_for_given_service_id_and_org_id(org_id,
+                                                                                                         service_id)
+
+            contacts = [contributor.get("email_id", "") for contributor in service.contributors]
+
+            service_comment = ServiceComment(org_uuid, service.uuid, "SERVICE_APPROVAL", "SERVICE_APPROVER",
+                                             self._username, BUILD_FAIL_MESSAGE)
+            ServicePublisherRepository().save_service_comments(service_comment)
+            ServicePublisherRepository().save_service(self._username, service, ServiceStatus.CHANGE_REQUESTED.value)
             logger.info(f"Build failed for org_id {org_id}  and service_id {service_id}")
             try:
                 BUILD_STATUS_SUBJECT = "Build failed for your service {}"

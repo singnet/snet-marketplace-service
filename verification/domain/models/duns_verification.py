@@ -44,6 +44,7 @@ class DUNSVerification:
             verification_dict["created_at"] = datetime_to_string(self.created_at)
         if self.updated_at is not None:
             verification_dict["updated_at"] = datetime_to_string(self.updated_at)
+        return verification_dict
 
     def comment_list(self):
         return [comment.to_dict() for comment in self.comments]
