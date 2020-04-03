@@ -414,7 +414,7 @@ class SlackChatOperation:
                         "value": ServiceStatus.REJECTED.value,
                         "description": {
                             "type": "plain_text",
-                            "text": "Rejects user request."
+                            "text": "Reject user request."
                         }
                     },
                     {
