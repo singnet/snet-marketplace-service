@@ -403,7 +403,7 @@ class SlackChatOperation:
                         "value": ServiceStatus.APPROVED.value,
                         "description": {
                             "type": "plain_text",
-                            "text": "Allows user to publish service."
+                            "text": "Allow user to publish service."
                         }
                     },
                     {
