@@ -311,7 +311,7 @@ class SlackChatOperation:
         if verification_status_response["statusCode"] != 200:
             raise Exception(f"Failed to get verification status for org_uuid: {org_uuid}")
         verification_status = json.loads(verification_status_response["body"])["data"]
-        if "duns" not in verification_status and "comments" not in verification_status["duns"]:
+        if "duns" not in verification_status or "comments" not in verification_status["duns"]:
             logger.error(str(verification_status))
             raise Exception(f"Failed to parse verification status for org_uuid: {org_uuid}")
 
