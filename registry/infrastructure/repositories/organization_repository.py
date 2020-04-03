@@ -117,7 +117,7 @@ class OrganizationPublisherRepository(BaseRepository):
             self.session.rollback()
             raise
 
-    def add_organization(self, organization, username, state):
+    def add_organization(self, organization, username, state, address=""):
         current_time = datetime.utcnow()
         org_addresses_domain_entity = organization.addresses
         group_domain_entity = organization.groups
@@ -150,7 +150,7 @@ class OrganizationPublisherRepository(BaseRepository):
         ))
 
         self.add_item(OrganizationMember(
-            invite_code=uuid4().hex, org_uuid=organization.uuid, role=Role.OWNER.value, username=username, address="",
+            invite_code=uuid4().hex, org_uuid=organization.uuid, role=Role.OWNER.value, username=username, address=address,
             status=OrganizationMemberStatus.ACCEPTED.value, transaction_hash="", invited_on=current_time,
             created_on=current_time, updated_on=current_time))
 
