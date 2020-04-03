@@ -19,8 +19,9 @@ class TestOrganizationEventConsumer(unittest.TestCase):
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
     @patch('common.ipfs_util.IPFSUtil.read_file_from_ipfs')
     @patch('common.ipfs_util.IPFSUtil.read_bytesio_from_ipfs')
+    @patch('common.blockchain_util.BlockChainUtil')
     @patch('registry.consumer.service_event_consumer.ServiceEventConsumer._fetch_tags')
-    def test_on_service_created_event(self, mock_fetch_tags, nock_read_bytesio_from_ipfs, mock_ipfs_read, mock_s3_push):
+    def test_on_service_created_event(self, mock_fetch_tags, mock_block_chain_util ,nock_read_bytesio_from_ipfs, mock_ipfs_read, mock_s3_push):
         org_uuid = str(uuid4())
         service_uuid = str(uuid4())
         self.org_repo.add_item(
@@ -147,8 +148,9 @@ class TestOrganizationEventConsumer(unittest.TestCase):
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
     @patch('common.ipfs_util.IPFSUtil.read_file_from_ipfs')
     @patch('common.ipfs_util.IPFSUtil.read_bytesio_from_ipfs')
+    @patch('common.blockchain_util.BlockChainUtil')
     @patch('registry.consumer.service_event_consumer.ServiceEventConsumer._fetch_tags')
-    def test_on_service_created_event_from_snet_cli(self, mock_fetch_tags, nock_read_bytesio_from_ipfs, mock_ipfs_read,
+    def test_on_service_created_event_from_snet_cli(self, mock_fetch_tags, mock_block_chain_util, nock_read_bytesio_from_ipfs, mock_ipfs_read,
                                                     mock_s3_push):
         org_uuid = str(uuid4())
         self.org_repo.add_item(
