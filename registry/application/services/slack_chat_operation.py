@@ -284,7 +284,7 @@ class SlackChatOperation:
         if not org:
             logger.info("org not found")
         comment = self.get_verification_latest_comments(org.uuid)
-        comment = "No Comment" if not comment else comment
+        comment = "No comment" if not comment else comment
         view = self.generate_view_org_modal(org, None, comment)
         slack_payload = {
             "trigger_id": trigger_id,
