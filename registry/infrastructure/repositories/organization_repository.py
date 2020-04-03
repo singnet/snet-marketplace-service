@@ -11,12 +11,14 @@ from registry.infrastructure.repositories.base_repository import BaseRepository
 
 class OrganizationPublisherRepository(BaseRepository):
 
-    def get_org(self, status=None, limit=None):
+    def get_org(self, status=None, limit=None, type=None):
         organization_query = self.session.query(Organization)
         if status is not None:
             organization_query = organization_query\
                 .join(OrganizationState, Organization.uuid == OrganizationState.org_uuid)\
                 .filter(OrganizationState.state == status)
+        if type is not None:
+            organization_query = organization_query.filter(Organization.org_type == type)
         if limit is not None:
             organization_query = organization_query.limit(limit)
         organizations = organization_query.all()
