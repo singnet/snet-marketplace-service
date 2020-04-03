@@ -315,7 +315,7 @@ class SlackChatOperation:
             logger.error(str(verification_status))
             raise Exception(f"Failed to parse verification status for org_uuid: {org_uuid}")
 
-        comments = verification_status["comments"]
+        comments = verification_status["duns"]["comments"]
         if len(comments) == 0:
             return ""
         latest_comment = comments[0]
