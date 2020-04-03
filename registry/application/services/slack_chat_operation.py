@@ -304,7 +304,7 @@ class SlackChatOperation:
             "pathParameters": None
         }
 
-        verification_status_response = boto_util.invoke_lambda(lambda_function_arn=VERIFICATION_ARN["GET_STATUS"],
+        verification_status_response = boto_util.invoke_lambda(lambda_function_arn=VERIFICATION_ARN["GET_VERIFICATION"],
                                                                invocation_type="RequestResponse",
                                                                payload=json.dumps(verification_status_event))
 
