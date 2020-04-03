@@ -391,7 +391,7 @@ class SlackChatOperation:
                     "value": ServiceStatus.CHANGE_REQUESTED.value,
                     "description": {
                         "type": "plain_text",
-                        "text": "Request user for changes."
+                        "text": "Request changes."
                     }
                 },
                 "options": [
