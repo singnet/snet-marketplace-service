@@ -3,7 +3,7 @@ from registry.domain.factory.service_factory import ServiceFactory
 from registry.infrastructure.models import Service, ServiceGroup, ServiceState, ServiceReviewHistory, Organization, \
     ServiceComment
 from registry.infrastructure.repositories.base_repository import BaseRepository
-from registry.constants import ServiceSupportType, UserType
+from registry.constants import ServiceStatus
 from sqlalchemy import func
 
 
@@ -158,11 +158,11 @@ class ServicePublisherRepository(BaseRepository):
 
     def get_last_service_comment(self, org_uuid, service_uuid, support_type, user_type):
         try:
-            service_comment_db = self.session.query(ServiceComment)\
-                .filter(ServiceComment.org_uuid == org_uuid).\
-                filter(ServiceComment.service_uuid == service_uuid).\
-                filter(ServiceComment.support_type == support_type).\
-                filter(ServiceComment.user_type == user_type).\
+            service_comment_db = self.session.query(ServiceComment) \
+                .filter(ServiceComment.org_uuid == org_uuid). \
+                filter(ServiceComment.service_uuid == service_uuid). \
+                filter(ServiceComment.support_type == support_type). \
+                filter(ServiceComment.user_type == user_type). \
                 order_by(ServiceComment.created_on.desc()).first()
             service_comment = ServiceFactory().convert_service_comment_db_model_to_entity_model(service_comment_db)
             self.session.commit()
@@ -170,3 +170,17 @@ class ServicePublisherRepository(BaseRepository):
             self.session.rollback()
             raise e
         return service_comment
+
+    def get_list_of_service_pending_for_approval(self, limit):
+        try:
+            raw_services_data = self.session.query(Service) \
+                .join(ServiceState, Service.uuid == ServiceState.service_uuid).filter(
+                ServiceState.state == ServiceStatus.APPROVAL_PENDING.value).limit(limit)
+            services = []
+            for service in raw_services_data:
+                services.append(ServiceFactory().convert_service_db_model_to_entity_model(service))
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            raise e
+        return services

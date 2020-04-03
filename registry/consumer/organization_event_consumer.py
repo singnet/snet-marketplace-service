@@ -3,8 +3,8 @@ import traceback
 
 from web3 import Web3
 
-from common.blockchain_util import BlockChainUtil
-from common.ipfs_util import IPFSUtil
+from common import blockchain_util
+from common import ipfs_util
 from common.logger import get_logger
 from registry.config import NETWORK_ID
 from registry.constants import OrganizationMemberStatus, OrganizationStatus, Role
@@ -20,8 +20,8 @@ BLOCKCHAIN_USER = "BLOCKCHAIN_EVENT"
 class OrganizationEventConsumer(object):
 
     def __init__(self, ws_provider, ipfs_url, ipfs_port, organization_repository):
-        self._ipfs_util = IPFSUtil(ipfs_url, ipfs_port)
-        self._blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
+        self._ipfs_util = ipfs_util.IPFSUtil(ipfs_url, ipfs_port)
+        self._blockchain_util = blockchain_util.BlockChainUtil("WS_PROVIDER", ws_provider)
         self._organization_repository = organization_repository
 
     def on_event(self, event):
@@ -54,29 +54,41 @@ class OrganizationEventConsumer(object):
         blockchain_org_data = registry_contract.functions.getOrganizationById(org_id.encode('utf-8')).call()
         org_metadata_uri = Web3.toText(blockchain_org_data[2]).rstrip("\x00").lstrip("ipfs://")
         ipfs_org_metadata = self._ipfs_util.read_file_from_ipfs(org_metadata_uri)
+        owner = blockchain_org_data[3]
         members = blockchain_org_data[4]
-        return org_id, ipfs_org_metadata, org_metadata_uri, transaction_hash, members
+        return org_id, ipfs_org_metadata, org_metadata_uri, transaction_hash, owner, members
 
-    def _process_members(self, org_uuid, existing_members, recieved_members):
+    def _process_members(self, org_uuid, received_owner, existing_members, received_members):
 
         added_member = []
         removed_member = []
         updated_members = []
         recieved_members_map = {}
         existing_members_map = {}
-        for recieved_member in recieved_members:
+        for recieved_member in received_members:
             recieved_member.set_status(OrganizationMemberStatus.PUBLISHED.value)
             recieved_members_map[recieved_member.address] = recieved_member
 
+        existing_owner = None
         for existing_member in existing_members:
             existing_member.set_status(OrganizationMemberStatus.PUBLISHED.value)
             if existing_member.role == Role.OWNER.value:
-                self._organization_repository.update_org_member_using_address(org_uuid, existing_member,
-                                                                              existing_member.address)
+                existing_owner = existing_member
             else:
                 existing_members_map[existing_member.address] = existing_member
 
-        for recieved_member in recieved_members:
+        if not existing_owner or not existing_owner.address:
+            self._organization_repository.add_member([received_owner])
+        else:
+            if existing_owner.address == received_owner.address:
+                existing_owner.set_status(OrganizationMemberStatus.PUBLISHED.value)
+                self._organization_repository.update_org_member_using_address(org_uuid, existing_owner,
+                                                                              existing_owner.address)
+            else:
+                self._organization_repository.delete_members([existing_owner])
+                self._organization_repository.add_member([received_owner])
+
+        for recieved_member in received_members:
             if recieved_member.address in existing_members_map:
                 updated_members.append(existing_members_map[recieved_member.address])
             else:
@@ -101,9 +113,9 @@ class OrganizationEventConsumer(object):
 class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
 
     def on_event(self, event):
-        org_id, ipfs_org_metadata, org_metadata_uri, transaction_hash, recieved_members = self._get_org_details_from_blockchain(
+        org_id, ipfs_org_metadata, org_metadata_uri, transaction_hash, owner, recieved_members = self._get_org_details_from_blockchain(
             event)
-        self._process_organization_create_event(org_id, ipfs_org_metadata, org_metadata_uri, transaction_hash,
+        self._process_organization_create_event(org_id, ipfs_org_metadata, org_metadata_uri, transaction_hash, owner,
                                                 recieved_members)
 
     def _get_existing_organization_records(self, org_id):
@@ -127,7 +139,7 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                                                          OrganizationStatus.PUBLISHED_UNAPPROVED.value
                                                          )
 
-    def _process_organization_create_event(self, org_id, ipfs_org_metadata, org_metadata_uri, transaction_hash,
+    def _process_organization_create_event(self, org_id, ipfs_org_metadata, org_metadata_uri, transaction_hash, owner,
                                            recieved_members_list):
         try:
 
@@ -149,7 +161,6 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
             assets = OrganizationFactory.parse_organization_metadata_assets(ipfs_org_metadata.get("assets", None),
                                                                             None)
 
-            owner = ""
             groups = OrganizationFactory.group_domain_entity_from_group_list_metadata(
                 ipfs_org_metadata.get("groups", []))
 
@@ -196,17 +207,18 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                                                                                 existing_publish_in_progress_organization.uuid)
                 self._organization_repository.store_organization(existing_publish_in_progress_organization,
                                                                  BLOCKCHAIN_USER,
-                                                                 OrganizationStatus.APPROVAL_PENDING)
+                                                                 OrganizationStatus.APPROVAL_PENDING.value)
             else:
                 org_uuid = existing_publish_in_progress_organization.uuid
                 existing_members = self._organization_repository.get_org_member(
                     org_uuid=existing_publish_in_progress_organization.uuid)
                 self._mark_existing_publish_in_progress_as_published(existing_publish_in_progress_organization)
 
+            owner = OrganizationFactory.parser_org_owner_from_metadata(org_uuid, owner, OrganizationMemberStatus.PUBLISHED.value)
             recieved_members = OrganizationFactory.parser_org_members_from_metadata(org_uuid, recieved_members_list,
                                                                                     OrganizationMemberStatus.PUBLISHED.value)
 
-            self._process_members(org_uuid, existing_members, recieved_members)
+            self._process_members(org_uuid, owner, existing_members, recieved_members)
         except Exception as e:
             traceback.print_exc()
             logger.exception(e)

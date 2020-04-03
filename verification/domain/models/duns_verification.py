@@ -1,5 +1,5 @@
+import json
 from datetime import datetime
-from urllib.parse import parse_qsl
 
 from common.utils import datetime_to_string
 from verification.constants import DUNSVerificationStatus
@@ -21,7 +21,7 @@ class DUNSVerification:
         self.updated_at = current_time
 
     def update_callback(self, verification_payload):
-        verification_details = dict(parse_qsl(verification_payload))
+        verification_details = json.loads(verification_payload)
         self.add_comment(verification_details["comment"], verification_details["reviewed_by"])
         status = verification_details["verificationStatus"]
         if status not in [DUNSVerificationStatus.PENDING.value, DUNSVerificationStatus.APPROVED.value,
@@ -44,6 +44,7 @@ class DUNSVerification:
             verification_dict["created_at"] = datetime_to_string(self.created_at)
         if self.updated_at is not None:
             verification_dict["updated_at"] = datetime_to_string(self.updated_at)
+        return verification_dict
 
     def comment_list(self):
         return [comment.to_dict() for comment in self.comments]
