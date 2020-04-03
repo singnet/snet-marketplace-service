@@ -272,7 +272,7 @@ class Organization:
 
     @staticmethod
     def next_state_for_update(current_organization, updated_organization):
-        if current_organization.get_statue() in [OrganizationStatus.ONBOARDING_REJECTED.value,
+        if current_organization.get_status() in [OrganizationStatus.ONBOARDING_REJECTED.value,
                                                  OrganizationStatus.REJECTED.value]:
             raise Exception("Action Not Allowed")
 
