@@ -10,6 +10,6 @@
     "serverless-prune-plugin": "1.4.1",
     "serverless-python-requirements": "5.0.0",
     "singularitynet-rfai-contracts": "^0.2.7",
-    "singularitynet-stake-contracts": "0.1.0-beta.1"
+    "singularitynet-stake-contracts": "0.1.1"
   }
 }
