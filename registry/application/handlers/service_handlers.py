@@ -253,7 +253,7 @@ def service_deployment_status_notification_handler(event, context):
     logger.info(f"Service Build status event {event}")
     org_id = event['org_id']
     service_id = event['service_id']
-    build_status = event['build_status']
+    build_status = int(event['build_status'])
 
     ServicePublisherService("BUILD_PROCESS", "", "").service_build_status_notifier(org_id, service_id, build_status)
 
