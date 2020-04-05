@@ -280,6 +280,9 @@ class Organization:
         else:
             if current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
                 next_state = OrganizationStatus.ONBOARDING_APPROVED.value
+            elif current_organization.get_status() in [OrganizationStatus.ONBOARDING_REJECTED.value,
+                                                       OrganizationStatus.CHANGE_REQUESTED.value]:
+                next_state = OrganizationStatus.ONBOARDING.value
             else:
                 raise MethodNotImplemented()
         return next_state
