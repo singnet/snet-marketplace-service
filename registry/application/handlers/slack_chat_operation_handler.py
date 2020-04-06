@@ -50,12 +50,11 @@ def get_list_of_service_pending_for_approval(event, context):
 
 
 def slack_interaction_handler(event, context):
+    logger.info(f"event:: {event}")
     event_body = event["body"]
     event_body_dict = parse_qs(event_body)
     payload = json.loads(event_body_dict["payload"][0])
     headers = event["headers"]
-    logger.info(f"payload:: {event_body_dict}")
-    logger.info(f"headers:: {headers}")
 
     slack_chat_operation = SlackChatOperation(
         username=payload["user"]["username"], channel_id=payload.get("channel", {}).get("id", None))
@@ -72,8 +71,8 @@ def slack_interaction_handler(event, context):
         if data["path"] == "/service":
             org_id = data["org_id"]
             service_id = data["service_id"]
-            slack_chat_operation.create_and_send_view_service_modal(org_id=org_id, service_id=service_id,
-                                                                    trigger_id=payload["trigger_id"])
+            slack_chat_operation.\
+                create_and_send_view_service_modal(org_id=org_id, service_id=service_id, trigger_id=payload["trigger_id"])
         elif data["path"] == "/org":
             org_id = data["org_id"]
             slack_chat_operation.create_and_send_view_org_modal(org_id=org_id, trigger_id=payload["trigger_id"])
@@ -82,8 +81,8 @@ def slack_interaction_handler(event, context):
     elif payload["type"] == "view_submission":
         approval_type = "service" if payload["view"]["title"]["text"] == "Service For Approval" else ""
         approval_type = "organization" if payload["view"]["title"]["text"] == "Org For Approval" else approval_type
-        review_request_state = payload["view"]["state"]["values"]["approval_state"]["selection"]["selected_option"][
-            "value"]
+        review_request_state = \
+            payload["view"]["state"]["values"]["approval_state"]["selection"]["selected_option"]["value"]
         comment = payload["view"]["state"]["values"]["review_comment"]["comment"]["value"]
         params = {}
         if approval_type == "service":
@@ -92,14 +91,10 @@ def slack_interaction_handler(event, context):
                 "service_id": payload["view"]["blocks"][0]["fields"][1]["text"].split("\n")[1]
             }
         elif approval_type == "organization":
-            params = {
-                "org_id": payload["view"]["blocks"][0]["fields"][0]["text"].split("\n")[1]
-            }
-        logger.info(f"params: {params}")
+            params = {"org_id": payload["view"]["blocks"][0]["fields"][0]["text"].split("\n")[1]}
         response = slack_chat_operation.process_approval_comment(approval_type=approval_type,
                                                                  state=review_request_state,
                                                                  comment=comment, params=params)
-        logger.info(f"response: {response}")
     return {
         'statusCode': 200,
         'body': ""
