@@ -329,7 +329,8 @@ class ServicePublisherService:
                 "service_id": service.service_id,
                 "metering_end_point": f"https://{network_name}-marketplace.singularitynet.io",
                 "authentication_addresses": [member.address for member in organization_members],
-                "blockchain_enabled": True
+                "blockchain_enabled": True,
+                "passthrough_enabled": True
             }
         else:
             raise EnvironmentNotFoundException()
