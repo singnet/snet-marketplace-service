@@ -150,7 +150,7 @@ class ServiceRepository(CommonRepository):
                        "pricing,free_call_signer_address,free_calls,row_updated, row_created)" \
                        "VALUES(%s, %s, %s, %s, %s, %s, %s, %s ,%s ,%s)"
         insert_group_param = [service_row_id, org_id, service_id, grp_data['group_id'], grp_data['group_name'],
-                              grp_data['pricing'],grp_data['free_call_signer_address'] ,grp_data['free_calls'],datetime.utcnow(), datetime.utcnow()]
+                              grp_data['pricing'],grp_data.get("free_call_signer_address","") ,grp_data.get("free_calls",0),datetime.utcnow(), datetime.utcnow()]
 
         return self.connection.execute(insert_group, insert_group_param)
 
