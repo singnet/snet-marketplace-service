@@ -277,7 +277,8 @@ class Organization:
             raise Exception("Action Not Allowed")
 
         if not current_organization.is_major_change(updated_organization):
-            if current_organization.get_status() == OrganizationStatus.CHANGE_REQUESTED.value:
+            if current_organization.get_status() in [OrganizationStatus.CHANGE_REQUESTED.value,
+                                                     OrganizationStatus.ONBOARDING.value]:
                 next_state = OrganizationStatus.ONBOARDING.value
             elif current_organization.get_status() in \
                     [OrganizationStatus.ONBOARDING_APPROVED.value,
