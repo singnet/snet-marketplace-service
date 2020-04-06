@@ -135,6 +135,8 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                 service_group_data = self._service_repository.create_group(service_row_id=service_row_id, org_id=org_id,
                                                                            service_id=service_id,
                                                                            grp_data={
+                                                                               'free_calls':group.get("free_calls",0),
+                                                                               'free_call_signer_address':group.get("free_call_signer_address",""),
                                                                                'group_id': group['group_id'],
                                                                                'group_name': group['group_name'],
                                                                                'pricing': json.dumps(group['pricing'])

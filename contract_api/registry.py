@@ -351,7 +351,7 @@ class Registry:
             is_available = 0
             # Hard Coded Free calls in group data
             for rec in service_group_data:
-                rec["free_calls"] = 15
+                rec["free_calls"] = rec.get("free_calls",0)
                 if is_available == 0:
                     endpoints = rec['endpoints']
                     for endpoint in endpoints:
