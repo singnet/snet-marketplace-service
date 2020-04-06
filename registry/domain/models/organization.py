@@ -272,19 +272,22 @@ class Organization:
 
     @staticmethod
     def next_state_for_update(current_organization, updated_organization):
+        if current_organization.get_status() in [OrganizationStatus.ONBOARDING_REJECTED.value,
+                                                 OrganizationStatus.REJECTED.value]:
+            raise Exception("Action Not Allowed")
+
         if not current_organization.is_major_change(updated_organization):
-            if current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
-                next_state = OrganizationStatus.ONBOARDING_APPROVED.value
-            else:
-                next_state = OrganizationStatus.APPROVED.value
-        else:
-            if current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
-                next_state = OrganizationStatus.ONBOARDING_APPROVED.value
-            elif current_organization.get_status() in [OrganizationStatus.ONBOARDING_REJECTED.value,
-                                                       OrganizationStatus.CHANGE_REQUESTED.value]:
+            if current_organization.get_status() in [OrganizationStatus.CHANGE_REQUESTED.value,
+                                                     OrganizationStatus.ONBOARDING.value]:
                 next_state = OrganizationStatus.ONBOARDING.value
+            elif current_organization.get_status() in \
+                    [OrganizationStatus.ONBOARDING_APPROVED.value,
+                     OrganizationStatus.APPROVED.value, OrganizationStatus.PUBLISHED.value]:
+                next_state = OrganizationStatus.APPROVED.value
             else:
                 raise MethodNotImplemented()
+        else:
+            raise MethodNotImplemented()
         return next_state
 
     def _get_all_contact_for_organization(self):
