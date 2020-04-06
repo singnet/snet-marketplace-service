@@ -315,7 +315,7 @@ class ServicePublisherService:
                 "allowed_user_flag": True,
                 "allowed_user_addresses": [member.address for member in organization_members] + [
                     BLOCKCHAIN_TEST_ENV["executor_address"]],
-                "authentication_address": [member.address for member in organization_members],
+                "authentication_addresses": [member.address for member in organization_members],
                 "blockchain_enabled": False,
                 "passthrough_enabled": True,
                 "organization_id": organization.id,
@@ -328,7 +328,7 @@ class ServicePublisherService:
                 "organization_id": organization.id,
                 "service_id": service.service_id,
                 "metering_end_point": f"https://{network_name}-marketplace.singularitynet.io",
-                "authentication_address": [member.address for member in organization_members],
+                "authentication_addresses": [member.address for member in organization_members],
                 "blockchain_enabled": True
             }
         else:
