@@ -64,9 +64,9 @@ class Organization:
         mail_address = None
         mail_address_same_hq_address = False
         for address in self.addresses:
-            if address.address_type == OrganizationAddressType.MAIL_ADDRESS:
+            if address.address_type == OrganizationAddressType.MAIL_ADDRESS.value:
                 mail_address = address
-            if address.address_type == OrganizationAddressType.HEAD_QUARTER_ADDRESS:
+            if address.address_type == OrganizationAddressType.HEAD_QUARTER_ADDRESS.value:
                 head_quarter_address = address
         if mail_address is not None and head_quarter_address is not None and mail_address == head_quarter_address:
             mail_address_same_hq_address = True
