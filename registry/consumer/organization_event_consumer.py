@@ -117,7 +117,7 @@ class OrganizationEventConsumer(object):
 
 class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
 
-    def n_event(self, event):
+    def on_event(self, event):
         org_id, ipfs_org_metadata, org_metadata_uri, transaction_hash, owner, recieved_members = self._get_org_details_from_blockchain(
             event)
         self._process_organization_create_event(org_id, ipfs_org_metadata, org_metadata_uri, transaction_hash, owner,
