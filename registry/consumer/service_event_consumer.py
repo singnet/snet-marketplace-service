@@ -3,8 +3,8 @@ from uuid import uuid4
 
 from web3 import Web3
 
-from common.blockchain_util import BlockChainUtil
-from common.ipfs_util import IPFSUtil
+from common import blockchain_util
+from common import ipfs_util
 from common.logger import get_logger
 from registry.config import NETWORK_ID
 from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus
@@ -18,10 +18,10 @@ BLOCKCHAIN_USER = "BLOCKCHAIN_USER"
 class ServiceEventConsumer(object):
 
     def __init__(self, ws_provider, ipfs_url, ipfs_port, service_repository, organiztion_repository):
-        self._blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
+        self._blockchain_util = blockchain_util.BlockChainUtil("WS_PROVIDER", ws_provider)
         self._service_repository = service_repository
         self._organiztion_repository = organiztion_repository
-        self._ipfs_util = IPFSUtil(ipfs_url, ipfs_port)
+        self._ipfs_util = ipfs_util.IPFSUtil(ipfs_url, ipfs_port)
 
     def on_event(self, event):
         pass

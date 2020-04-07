@@ -64,9 +64,9 @@ class Organization:
         mail_address = None
         mail_address_same_hq_address = False
         for address in self.addresses:
-            if address.address_type == OrganizationAddressType.MAIL_ADDRESS:
+            if address.address_type == OrganizationAddressType.MAIL_ADDRESS.value:
                 mail_address = address
-            if address.address_type == OrganizationAddressType.HEAD_QUARTER_ADDRESS:
+            if address.address_type == OrganizationAddressType.HEAD_QUARTER_ADDRESS.value:
                 head_quarter_address = address
         if mail_address is not None and head_quarter_address is not None and mail_address == head_quarter_address:
             mail_address_same_hq_address = True
@@ -272,16 +272,22 @@ class Organization:
 
     @staticmethod
     def next_state_for_update(current_organization, updated_organization):
+        if current_organization.get_status() in [OrganizationStatus.ONBOARDING_REJECTED.value,
+                                                 OrganizationStatus.REJECTED.value]:
+            raise Exception("Action Not Allowed")
+
         if not current_organization.is_major_change(updated_organization):
-            if current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
-                next_state = OrganizationStatus.ONBOARDING_APPROVED.value
-            else:
+            if current_organization.get_status() in [OrganizationStatus.CHANGE_REQUESTED.value,
+                                                     OrganizationStatus.ONBOARDING.value]:
+                next_state = OrganizationStatus.ONBOARDING.value
+            elif current_organization.get_status() in \
+                    [OrganizationStatus.ONBOARDING_APPROVED.value,
+                     OrganizationStatus.APPROVED.value, OrganizationStatus.PUBLISHED.value]:
                 next_state = OrganizationStatus.APPROVED.value
-        else:
-            if current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
-                next_state = OrganizationStatus.ONBOARDING_APPROVED.value
             else:
                 raise MethodNotImplemented()
+        else:
+            raise MethodNotImplemented()
         return next_state
 
     def _get_all_contact_for_organization(self):

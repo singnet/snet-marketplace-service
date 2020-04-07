@@ -16,7 +16,7 @@ class OrganizationNotFoundException(CustomException):
 
 
 class InvalidOriginException(CustomException):
-    error_message = "SERVICE_PROTO_NOT_FOUND"
+    error_message = "INVALID_ORIGIN"
 
     def __init__(self):
         super().__init__({})
