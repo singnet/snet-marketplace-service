@@ -67,7 +67,6 @@ class SlackChatOperation:
             .get_approval_pending_organizations(MAX_SERVICES_SLACK_LISTING, type=OrganizationType.ORGANIZATION.value)
         slack_blocks = self.generate_slack_blocks_for_org_listing_template(list_of_org_pending_for_approval)
         slack_payload = {"blocks": slack_blocks}
-        logger.info(f"slack_payload: {slack_payload}")
         response = requests.post(url=SLACK_APPROVAL_CHANNEL_URL, data=json.dumps(slack_payload))
         logger.info(f"{response.status_code} | {response.text}")
 
@@ -77,7 +76,6 @@ class SlackChatOperation:
                 get_list_of_service_pending_for_approval(limit=MAX_SERVICES_SLACK_LISTING)
         slack_blocks = self.generate_slack_blocks_for_service_listing_template(list_of_service_pending_for_approval)
         slack_payload = {"blocks": slack_blocks}
-        logger.info(f"slack_payload: {slack_payload}")
         response = requests.post(url=SLACK_APPROVAL_CHANNEL_URL, data=json.dumps(slack_payload))
         logger.info(f"{response.status_code} | {response.text}")
 
@@ -232,7 +230,6 @@ class SlackChatOperation:
                 send_email_notification(
                     recipients=recipients, notification_subject=notification_subject,
                     notification_message=notification_message, notification_arn=NOTIFICATION_ARN, boto_util=boto_util)
-                logger.info(slack_msg)
             else:
                 logger.info("Service state is not valid.")
         else:
@@ -250,11 +247,9 @@ class SlackChatOperation:
             },
             "body": json.dumps(verification_callback_payload)
         }
-        logger.info(f"verification_callback_event: {verification_callback_event}")
         verification_callback_response = boto_util.invoke_lambda(
             VERIFICATION_ARN["DUNS_CALLBACK"], invocation_type="RequestResponse",
             payload=json.dumps(verification_callback_event))
-        logger.info(f"verification_callback_response: {verification_callback_response}")
         if verification_callback_response["statusCode"] != StatusCode.CREATED:
             logger.error(f"callback to verification service for entity_id: {entity_id} state: {state}"
                          f"reviewed_by: {reviewed_by} comment:{comment}")
@@ -275,7 +270,6 @@ class SlackChatOperation:
         }
         OPEN_SLACK_VIEW_URL = "https://slack.com/api/views.open"
         headers = {"Authorization": SLACK_APPROVAL_OAUTH_ACCESS_TOKEN, "content-type": "application/json"}
-        logger.info(f"slack_payload: {slack_payload}")
         response = requests.post(url=OPEN_SLACK_VIEW_URL, data=json.dumps(slack_payload), headers=headers)
         logger.info(f"{response.status_code} | {response.text}")
 
@@ -292,7 +286,6 @@ class SlackChatOperation:
         }
         OPEN_SLACK_VIEW_URL = "https://slack.com/api/views.open"
         headers = {"Authorization": SLACK_APPROVAL_OAUTH_ACCESS_TOKEN, "content-type": "application/json"}
-        logger.info(f"slack_payload: {slack_payload}")
         response = requests.post(url=OPEN_SLACK_VIEW_URL, data=json.dumps(slack_payload), headers=headers)
         logger.info(f"{response.status_code} | {response.text}")
 
