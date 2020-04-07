@@ -12,7 +12,7 @@ from registry.application.services.service_publisher_service import ServicePubli
 from registry.config import SIGNING_SECRET, SLACK_APPROVAL_OAUTH_ACCESS_TOKEN, REGION_NAME
 from registry.config import STAGING_URL, ALLOWED_SLACK_USER, SLACK_APPROVAL_CHANNEL_URL, \
     ALLOWED_SLACK_CHANNEL_ID, MAX_SERVICES_SLACK_LISTING, NOTIFICATION_ARN, VERIFICATION_ARN
-from registry.constants import UserType, ServiceSupportType, ServiceStatus, OrganizationStatus
+from registry.constants import UserType, ServiceSupportType, ServiceStatus, OrganizationStatus, OrganizationType
 from registry.domain.models.service_comment import ServiceComment
 from registry.exceptions import InvalidSlackChannelException, InvalidSlackSignatureException, InvalidSlackUserException
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
@@ -64,10 +64,9 @@ class SlackChatOperation:
 
     def get_list_of_org_pending_for_approval(self):
         list_of_org_pending_for_approval = OrganizationPublisherService(None, None) \
-            .get_approval_pending_organizations(MAX_SERVICES_SLACK_LISTING)
+            .get_approval_pending_organizations(MAX_SERVICES_SLACK_LISTING, type=OrganizationType.ORGANIZATION.value)
         slack_blocks = self.generate_slack_blocks_for_org_listing_template(list_of_org_pending_for_approval)
         slack_payload = {"blocks": slack_blocks}
-        logger.info(f"slack_payload: {slack_payload}")
         response = requests.post(url=SLACK_APPROVAL_CHANNEL_URL, data=json.dumps(slack_payload))
         logger.info(f"{response.status_code} | {response.text}")
 
@@ -77,7 +76,6 @@ class SlackChatOperation:
                 get_list_of_service_pending_for_approval(limit=MAX_SERVICES_SLACK_LISTING)
         slack_blocks = self.generate_slack_blocks_for_service_listing_template(list_of_service_pending_for_approval)
         slack_payload = {"blocks": slack_blocks}
-        logger.info(f"slack_payload: {slack_payload}")
         response = requests.post(url=SLACK_APPROVAL_CHANNEL_URL, data=json.dumps(slack_payload))
         logger.info(f"{response.status_code} | {response.text}")
 
@@ -91,7 +89,8 @@ class SlackChatOperation:
         }
         org_listing_slack_blocks = [title_block]
         for org_dict in orgs:
-            org_id = "--" if not org_dict["org_id"] else org_dict["org_id"]
+            org_id = "None" if not org_dict["org_id"] else org_dict["org_id"]
+            org_name = "None" if not org_dict.get("org_name", "None") else org_dict.get("org_name", "None")
             mrkdwn_block = {
                 "type": "section",
                 "fields": [
@@ -101,7 +100,7 @@ class SlackChatOperation:
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "*Requested on:*"
+                        "text": "*Organization Name:*"
                     },
                     {
                         "type": "mrkdwn",
@@ -109,7 +108,7 @@ class SlackChatOperation:
                     },
                     {
                         "type": "mrkdwn",
-                        "text": f"requested_at"
+                        "text": f"{org_name}"
                     }
                 ]
             }
@@ -147,8 +146,9 @@ class SlackChatOperation:
         }
         service_listing_slack_blocks = [title_block]
         for service_dict in services:
-            org_id = "--" if not service_dict["org_id"] else service_dict["org_id"]
-            service_id = "--" if not service_dict["service_id"] else service_dict["service_id"]
+            org_id = "None" if not service_dict["org_id"] else service_dict["org_id"]
+            service_id = "None" if not service_dict["service_id"] else service_dict["service_id"]
+            service_name = "None" if not service_dict.get("display_name", "None") else service_dict.get("display_name", "None")
             mrkdwn_block = {
                 "type": "section",
                 "fields": [
@@ -158,7 +158,7 @@ class SlackChatOperation:
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "*Requested on:*"
+                        "text": "*Service Name:*"
                     },
                     {
                         "type": "mrkdwn",
@@ -166,7 +166,7 @@ class SlackChatOperation:
                     },
                     {
                         "type": "mrkdwn",
-                        "text": f"{service_dict['requested_at']}"
+                        "text": f"{service_name}"
                     }
                 ]
             }
@@ -230,7 +230,6 @@ class SlackChatOperation:
                 send_email_notification(
                     recipients=recipients, notification_subject=notification_subject,
                     notification_message=notification_message, notification_arn=NOTIFICATION_ARN, boto_util=boto_util)
-                logger.info(slack_msg)
             else:
                 logger.info("Service state is not valid.")
         else:
@@ -248,11 +247,9 @@ class SlackChatOperation:
             },
             "body": json.dumps(verification_callback_payload)
         }
-        logger.info(f"verification_callback_event: {verification_callback_event}")
         verification_callback_response = boto_util.invoke_lambda(
             VERIFICATION_ARN["DUNS_CALLBACK"], invocation_type="RequestResponse",
             payload=json.dumps(verification_callback_event))
-        logger.info(f"verification_callback_response: {verification_callback_response}")
         if verification_callback_response["statusCode"] != StatusCode.CREATED:
             logger.error(f"callback to verification service for entity_id: {entity_id} state: {state}"
                          f"reviewed_by: {reviewed_by} comment:{comment}")
@@ -265,7 +262,7 @@ class SlackChatOperation:
             get_last_service_comment(
             org_uuid=org_uuid, service_uuid=service.uuid, support_type=ServiceSupportType.SERVICE_APPROVAL.value,
             user_type=UserType.SERVICE_PROVIDER.value)
-        comment = "--" if not service_comment else service_comment.comment
+        comment = "No comment" if not service_comment else service_comment.comment
         view = self.generate_view_service_modal(org_id, service, None, comment)
         slack_payload = {
             "trigger_id": trigger_id,
@@ -273,7 +270,6 @@ class SlackChatOperation:
         }
         OPEN_SLACK_VIEW_URL = "https://slack.com/api/views.open"
         headers = {"Authorization": SLACK_APPROVAL_OAUTH_ACCESS_TOKEN, "content-type": "application/json"}
-        logger.info(f"slack_payload: {slack_payload}")
         response = requests.post(url=OPEN_SLACK_VIEW_URL, data=json.dumps(slack_payload), headers=headers)
         logger.info(f"{response.status_code} | {response.text}")
 
@@ -282,7 +278,7 @@ class SlackChatOperation:
         if not org:
             logger.info("org not found")
         comment = self.get_verification_latest_comments(org.uuid)
-        comment = "--" if not comment else comment
+        comment = "No comment" if not comment else comment
         view = self.generate_view_org_modal(org, None, comment)
         slack_payload = {
             "trigger_id": trigger_id,
@@ -290,7 +286,6 @@ class SlackChatOperation:
         }
         OPEN_SLACK_VIEW_URL = "https://slack.com/api/views.open"
         headers = {"Authorization": SLACK_APPROVAL_OAUTH_ACCESS_TOKEN, "content-type": "application/json"}
-        logger.info(f"slack_payload: {slack_payload}")
         response = requests.post(url=OPEN_SLACK_VIEW_URL, data=json.dumps(slack_payload), headers=headers)
         logger.info(f"{response.status_code} | {response.text}")
 
@@ -304,17 +299,18 @@ class SlackChatOperation:
             "pathParameters": None
         }
 
-        verification_status_response = boto_util.invoke_lambda(lambda_function_arn=VERIFICATION_ARN["GET_STATUS"],
+        verification_status_response = boto_util.invoke_lambda(lambda_function_arn=VERIFICATION_ARN["GET_VERIFICATION"],
                                                                invocation_type="RequestResponse",
                                                                payload=json.dumps(verification_status_event))
 
         if verification_status_response["statusCode"] != 200:
             raise Exception(f"Failed to get verification status for org_uuid: {org_uuid}")
         verification_status = json.loads(verification_status_response["body"])["data"]
-        if "comments" not in verification_status:
-            raise Exception(f"Failed to get verification status for org_uuid: {org_uuid}")
+        if "duns" not in verification_status or "comments" not in verification_status["duns"]:
+            logger.error(str(verification_status))
+            raise Exception(f"Failed to parse verification status for org_uuid: {org_uuid}")
 
-        comments = verification_status["comments"]
+        comments = verification_status["duns"]["comments"]
         if len(comments) == 0:
             return ""
         latest_comment = comments[0]
@@ -361,10 +357,6 @@ class SlackChatOperation:
                 {
                     "type": "mrkdwn",
                     "text": f"*Approval Platform:*\n{STAGING_URL}/servicedetails/org/{org_id}/service/{service.service_id}\n"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": f"*When:*\n{requested_at}\n"
                 }
             ]
         }
@@ -392,7 +384,7 @@ class SlackChatOperation:
                     "value": ServiceStatus.CHANGE_REQUESTED.value,
                     "description": {
                         "type": "plain_text",
-                        "text": "Description for option 3"
+                        "text": "Request changes."
                     }
                 },
                 "options": [
@@ -404,7 +396,7 @@ class SlackChatOperation:
                         "value": ServiceStatus.APPROVED.value,
                         "description": {
                             "type": "plain_text",
-                            "text": "Description for option 1"
+                            "text": "Allow user to publish service."
                         }
                     },
                     {
@@ -415,7 +407,7 @@ class SlackChatOperation:
                         "value": ServiceStatus.REJECTED.value,
                         "description": {
                             "type": "plain_text",
-                            "text": "Description for option 2"
+                            "text": "Reject user request."
                         }
                     },
                     {
@@ -426,7 +418,7 @@ class SlackChatOperation:
                         "value": ServiceStatus.CHANGE_REQUESTED.value,
                         "description": {
                             "type": "plain_text",
-                            "text": "Description for option 3"
+                            "text": "Request changes."
                         }
                     }
                 ]
@@ -461,8 +453,8 @@ class SlackChatOperation:
         return view
 
     def generate_view_org_modal(self, org, requested_at, comment):
-        org_id = "--" if not org.id else org.id
-        organization_name = "--" if not org.name else org.name
+        org_id = "None" if not org.id else org.id
+        organization_name = "None" if not org.name else org.name
         view = {
             "type": "modal",
             "title": {
@@ -496,10 +488,6 @@ class SlackChatOperation:
                 {
                     "type": "mrkdwn",
                     "text": f"*Approval Platform:*\n{STAGING_URL}/servicedetails/org/{org_id}\n"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": f"*When:*\n{requested_at}\n"
                 }
             ]
         }
@@ -520,7 +508,7 @@ class SlackChatOperation:
                     "value": OrganizationStatus.CHANGE_REQUESTED.value,
                     "description": {
                         "type": "plain_text",
-                        "text": "Description for option 3"
+                        "text": "Request changes."
                     }
                 },
                 "options": [
@@ -532,7 +520,7 @@ class SlackChatOperation:
                         "value": OrganizationStatus.APPROVED.value,
                         "description": {
                             "type": "plain_text",
-                            "text": "Description for option 1"
+                            "text": "Allow user to publish organization."
                         }
                     },
                     {
@@ -543,7 +531,7 @@ class SlackChatOperation:
                         "value": OrganizationStatus.REJECTED.value,
                         "description": {
                             "type": "plain_text",
-                            "text": "Description for option 2"
+                            "text": "Rejects user request."
                         }
                     },
                     {
@@ -554,7 +542,7 @@ class SlackChatOperation:
                         "value": OrganizationStatus.CHANGE_REQUESTED.value,
                         "description": {
                             "type": "plain_text",
-                            "text": "Description for option 3"
+                            "text": "Request changes."
                         }
                     }
                 ]

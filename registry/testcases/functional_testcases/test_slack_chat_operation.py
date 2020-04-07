@@ -260,10 +260,6 @@ class TestSlackChatOperation(TestCase):
                                                     'verbatim': False
                                                 },
                                                 {
-                                                    'type': 'mrkdwn', 'text': '*Organization Name:*\norg_dummy',
-                                                    'verbatim': False
-                                                },
-                                                {
                                                     'type': 'mrkdwn', 'text': '*Service Id:*\ntest_service_id_1',
                                                     'verbatim': False
                                                 },
