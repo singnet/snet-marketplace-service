@@ -213,7 +213,7 @@ class Registry:
                                          "group_name": rec['group_name'],
                                          "pricing": json.loads(rec['pricing']),
                                          "endpoints": [],
-                                         "free_calls": rec.get("free_calls", 15),
+                                         "free_calls": rec.get("free_calls", 0),
                                          "free_call_signer_address": rec.get("free_call_signer_address", "")
                                          }
                               }
