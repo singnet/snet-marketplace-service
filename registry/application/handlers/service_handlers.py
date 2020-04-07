@@ -3,13 +3,13 @@ import json
 from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.exceptions import BadRequestException
-from registry.exceptions import EnvironmentNotFoundException
 from common.logger import get_logger
 from common.utils import generate_lambda_response
 from registry.application.access_control.authorization import secured
 from registry.application.services.service_publisher_service import ServicePublisherService
 from registry.config import NETWORK_ID, SLACK_HOOK
-from registry.constants import EnvironmentType, Action
+from registry.constants import Action, EnvironmentType
+from registry.exceptions import EnvironmentNotFoundException
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 
 logger = get_logger(__name__)
@@ -196,25 +196,6 @@ def list_of_orgs_with_services_submitted_for_approval(event, context):
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
-def get_daemon_config_for_test(event, context):
-    logger.info(f"event for get_daemon_config_for_test:: {event}")
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    path_parameters = event["pathParameters"]
-    if "org_uuid" not in path_parameters and "service_uuid" not in path_parameters and "group_id" not in path_parameters:
-        raise BadRequestException()
-    org_uuid = path_parameters["org_uuid"]
-    service_uuid = path_parameters["service_uuid"]
-    group_id = path_parameters["group_id"]
-    response = ServicePublisherService(username, org_uuid, service_uuid).daemon_config(environment=EnvironmentType.TEST.value)
-    return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
-    )
-
-
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
-@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
-         username_path=("requestContext", "authorizer", "claims", "email"))
 def get_daemon_config_for_current_network(event, context):
     logger.info(f"event for get_daemon_config_for_current_network:: {event}")
     username = event["requestContext"]["authorizer"]["claims"]["email"]
@@ -236,7 +217,7 @@ def get_daemon_config_for_current_network(event, context):
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
-
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def get_service_details_using_org_id_service_id(event, context):
     logger.info(f"event for get_daemon_config_for_current_network:: {event}")
     path_parameters = event["queryStringParameters"]
@@ -248,11 +229,16 @@ def get_service_details_using_org_id_service_id(event, context):
         {"status": "success", "data": service.to_dict(), "error": {}}, cors_enabled=True
     )
 
-
-def service_deployment_status_notification_handler(event,context):
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def service_deployment_status_notification_handler(event, context):
     logger.info(f"Service Build status event {event}")
+    org_id = event['org_id']
+    service_id = event['service_id']
+    build_status = int(event['build_status'])
+
+    ServicePublisherService("BUILD_PROCESS", "", "").service_build_status_notifier(org_id, service_id, build_status)
+
     return generate_lambda_response(
         StatusCode.OK,
-        {"status": "success", "data": "chill", "error": {}}, cors_enabled=True
+        {"status": "success", "data": "Build failure notified", "error": {}}, cors_enabled=True
     )
-

@@ -29,19 +29,14 @@ class OrganizationPublisherService:
         self.username = username
         self.boto_utils = BotoUtils(region_name=REGION_NAME)
 
-    def get_for_admin(self, params):
-        status = params["status"]
-        organizations = org_repo.get_org(status)
+    def get_approval_pending_organizations(self, limit, type=None):
+        status = OrganizationStatus.ONBOARDING.value
+        organizations = org_repo.get_org(status, limit, type)
         return [org.to_response() for org in organizations]
 
     def get_all_org_for_user(self):
         logger.info(f"get organization for user: {self.username}")
         organizations = org_repo.get_org_for_user(username=self.username)
-        return [org.to_response() for org in organizations]
-
-    def get_org_list(self, parameters):
-        org_uuid_list = parameters["org_uuid"].split(",")
-        organizations = org_repo.get_org_for_org_uuid_list(org_uuid_list)
         return [org.to_response() for org in organizations]
 
     def get_all_org_id(self):

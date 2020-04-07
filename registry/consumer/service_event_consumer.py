@@ -3,8 +3,8 @@ from uuid import uuid4
 
 from web3 import Web3
 
-from common.blockchain_util import BlockChainUtil
-from common.ipfs_util import IPFSUtil
+from common import blockchain_util
+from common import ipfs_util
 from common.logger import get_logger
 from registry.config import NETWORK_ID
 from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus
@@ -18,10 +18,10 @@ BLOCKCHAIN_USER = "BLOCKCHAIN_USER"
 class ServiceEventConsumer(object):
 
     def __init__(self, ws_provider, ipfs_url, ipfs_port, service_repository, organiztion_repository):
-        self._blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
+        self._blockchain_util = blockchain_util.BlockChainUtil("WS_PROVIDER", ws_provider)
         self._service_repository = service_repository
         self._organiztion_repository = organiztion_repository
-        self._ipfs_util = IPFSUtil(ipfs_url, ipfs_port)
+        self._ipfs_util = ipfs_util.IPFSUtil(ipfs_url, ipfs_port)
 
     def on_event(self, event):
         pass
@@ -98,6 +98,17 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
     def _is_same_transaction(self):
         pass
 
+    def _add_validation_attribute_to_endpoint(self, groups):
+
+        for group in groups:
+            changed_endpoints = {}
+            for index in range(len(group['endpoints'])):
+                changed_endpoints[group['endpoints'][index]] = {'valid': False}
+            group['endpoints'] = changed_endpoints
+
+
+
+
     def _process_service_data(self, org_id, service_id, service_metadata, tags_data,transaction_hash):
 
         org_uuid, existing_service = self._get_existing_service_details(org_id, service_id)
@@ -115,6 +126,8 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         state = \
             ServiceFactory.create_service_state_entity_model(org_uuid, service_uuid,
                                                              getattr(ServiceStatus, "PUBLISHED_UNAPPROVED").value)
+
+        self._add_validation_attribute_to_endpoint(service_metadata.get("groups", []))
         groups = [
             ServiceFactory.create_service_group_entity_model(org_uuid, service_uuid, group) for group in
             service_metadata.get("groups", [])]
@@ -133,6 +146,8 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             existing_service.groups = [
                 ServiceFactory.create_service_group_entity_model(org_uuid, existing_service.uuid, group) for group in
                 service_metadata.get("groups", [])]
+
+
 
         recieved_service = Service(
             org_uuid, str(uuid4()), service_id, display_name, short_description,

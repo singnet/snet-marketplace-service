@@ -69,7 +69,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
-    def test_submit_organization_for_approval(self, mock_boto, mock_ipfs):
+    def test_submit_organization_for_approval_after_published(self, mock_boto, mock_ipfs):
         username = "karl@dummy.com"
         test_org_uuid = uuid4().hex
         test_org_id = "org_id"
@@ -84,34 +84,82 @@ class TestOrganizationPublisherService(unittest.TestCase):
             "state": {}
         }
         organization = OrganizationFactory.org_domain_entity_from_payload(payload)
-        org_repo.add_organization(organization, username, OrganizationStatus.DRAFT.value)
+        org_repo.add_organization(organization, username, OrganizationStatus.PUBLISHED.value)
         OrganizationPublisherService(test_org_uuid, username) \
             .update_organization(payload, OrganizationActions.SUBMIT.value)
         org_db_model = org_repo.session.query(Organization).first()
         if org_db_model is None:
             assert False
         else:
-            if org_db_model.org_state[0].state == OrganizationStatus.APPROVAL_PENDING.value:
+            if org_db_model.org_state[0].state == OrganizationStatus.APPROVED.value:
                 assert True
+            else:
+                assert False
+
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
-    def test_get_org_for_admin(self, mock_boto, mock_ipfs):
+    def test_submit_organization_for_approval_after_approved(self, mock_boto, mock_ipfs):
+        username = "karl@dummy.com"
         test_org_uuid = uuid4().hex
-        username = "dummy@snet.io"
-        org_repo.add_organization(
-            DomainOrganization(test_org_uuid, "org_id", "org_dummy", "ORGANIZATION", ORIGIN, "", "",
-                               "", [], {}, "", "", [], [], [], []),
-            username, OrganizationStatus.APPROVED.value)
-        org = OrganizationPublisherService(None, None).get_for_admin({"status": OrganizationStatus.APPROVED.value})
-        if len(org) != 1:
+        test_org_id = "org_id"
+        username = "karl@cryptonian.io"
+        payload = {
+            "org_id": test_org_id, "org_uuid": test_org_uuid, "org_name": "test_org", "org_type": "organization",
+            "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN,
+            "description": "this is description", "short_description": "this is short description",
+            "url": "https://dummy.dummy", "contacts": "",
+            "assets": {"hero_image": {"url": "", "ipfs_uri": ""}},
+            "org_address": ORG_ADDRESS, "groups": json.loads(ORG_GROUPS),
+            "state": {}
+        }
+        organization = OrganizationFactory.org_domain_entity_from_payload(payload)
+        org_repo.add_organization(organization, username, OrganizationStatus.APPROVED.value)
+        OrganizationPublisherService(test_org_uuid, username) \
+            .update_organization(payload, OrganizationActions.SUBMIT.value)
+        org_db_model = org_repo.session.query(Organization).first()
+        if org_db_model is None:
             assert False
-        assert True
+        else:
+            if org_db_model.org_state[0].state == OrganizationStatus.APPROVED.value:
+                assert True
+            else:
+                assert False
+
+    @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
+    @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
+    def test_submit_organization_for_approval_after_onboarding_approved(self, mock_boto, mock_ipfs):
+        username = "karl@dummy.com"
+        test_org_uuid = uuid4().hex
+        test_org_id = "org_id"
+        username = "karl@cryptonian.io"
+        payload = {
+            "org_id": test_org_id, "org_uuid": test_org_uuid, "org_name": "test_org", "org_type": "organization",
+            "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN,
+            "description": "this is description", "short_description": "this is short description",
+            "url": "https://dummy.dummy", "contacts": "",
+            "assets": {"hero_image": {"url": "", "ipfs_uri": ""}},
+            "org_address": ORG_ADDRESS, "groups": json.loads(ORG_GROUPS),
+            "state": {}
+        }
+        organization = OrganizationFactory.org_domain_entity_from_payload(payload)
+        org_repo.add_organization(organization, username, OrganizationStatus.ONBOARDING_APPROVED.value)
+        OrganizationPublisherService(test_org_uuid, username) \
+            .update_organization(payload, OrganizationActions.SUBMIT.value)
+        org_db_model = org_repo.session.query(Organization).first()
+        if org_db_model is None:
+            assert False
+        else:
+            if org_db_model.org_state[0].state == OrganizationStatus.APPROVED.value:
+                assert True
+            else:
+                assert False
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q12PWP")))
     @patch("registry.domain.services.registry_blockchain_util."
            "RegistryBlockChainUtil.publish_organization_to_test_network", return_value="0x123")
-    def test_org_publish_to_ipfs(self, mock_test_network_publish, mock_ipfs_utils):
+    @patch("registry.domain.models.organization.json_to_file")
+    def test_org_publish_to_ipfs(self, mock_json_to_file_util, mock_test_network_publish, mock_ipfs_utils):
         test_org_id = uuid4().hex
         username = "dummy@snet.io"
         org_repo.add_organization(

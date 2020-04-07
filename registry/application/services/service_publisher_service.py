@@ -5,19 +5,17 @@ from common.boto_utils import BotoUtils
 from common.constant import StatusCode
 from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
-from common.utils import json_to_file, publish_zip_file_in_ipfs, publish_file_in_ipfs, \
-    download_file_from_url
-from registry.config import IPFS_URL, METADATA_FILE_PATH, ASSET_DIR, SLACK_HOOK, BLOCKCHAIN_TEST_ENV, NETWORKS, \
-    NETWORK_ID
-from registry.config import REGION_NAME, NOTIFICATION_ARN, SLACK_CHANNEL_FOR_APPROVAL_TEAM
-from registry.constants import EnvironmentType
-from registry.constants import ServiceAvailabilityStatus, ServiceStatus, OrganizationStatus, ServiceSupportType, \
-    UserType
+from common.utils import download_file_from_url, json_to_file, publish_zip_file_in_ipfs, send_email_notification
+from registry.config import ASSET_DIR, BLOCKCHAIN_TEST_ENV, IPFS_URL, METADATA_FILE_PATH, NETWORKS, NETWORK_ID, \
+    NOTIFICATION_ARN, REGION_NAME, SLACK_CHANNEL_FOR_APPROVAL_TEAM, SLACK_HOOK
+from registry.constants import EnvironmentType, OrganizationStatus, ServiceAvailabilityStatus, ServiceStatus, \
+    ServiceSupportType, UserType
 from registry.domain.factory.service_factory import ServiceFactory
+from registry.domain.models.service_comment import ServiceComment
 from registry.domain.services.service_publisher_domain_service import ServicePublisherDomainService
-from registry.exceptions import InvalidOrganizationStateException, InvalidServiceStateException, \
-    ServiceProtoNotFoundException, OrganizationNotFoundException, \
-    OrganizationNotPublishedException, ServiceNotFoundException, EnvironmentNotFoundException
+from registry.exceptions import EnvironmentNotFoundException, InvalidOrganizationStateException, \
+    InvalidServiceStateException, OrganizationNotFoundException, OrganizationNotPublishedException, \
+    ServiceNotFoundException, ServiceProtoNotFoundException
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 
@@ -29,6 +27,7 @@ ALLOWED_ATTRIBUTES_FOR_SERVICE_ORDER_BY = ["asc", "desc"]
 DEFAULT_ATTRIBUTES_FOR_SERVICE_ORDER_BY = "desc"
 DEFAULT_OFFSET = 0
 DEFAULT_LIMIT = 0
+BUILD_FAILURE_CODE=0
 
 logger = get_logger(__name__)
 service_factory = ServiceFactory()
@@ -41,6 +40,30 @@ class ServicePublisherService:
         self._org_uuid = org_uuid
         self._service_uuid = service_uuid
         self.obj_service_publisher_domain_service = ServicePublisherDomainService(username, org_uuid, service_uuid)
+
+    def service_build_status_notifier(self, org_id, service_id, build_status):
+
+        if build_status == BUILD_FAILURE_CODE:
+            BUILD_FAIL_MESSAGE = "Build failed please check your components"
+            org_uuid, service = ServicePublisherRepository().get_service_for_given_service_id_and_org_id(org_id,
+                                                                                                         service_id)
+
+            contacts = [contributor.get("email_id", "") for contributor in service.contributors]
+
+            service_comment = ServiceComment(org_uuid, service.uuid, "SERVICE_APPROVAL", "SERVICE_APPROVER",
+                                             self._username, BUILD_FAIL_MESSAGE)
+            ServicePublisherRepository().save_service_comments(service_comment)
+            ServicePublisherRepository().save_service(self._username, service, ServiceStatus.CHANGE_REQUESTED.value)
+            logger.info(f"Build failed for org_id {org_id}  and service_id {service_id}")
+            try:
+                BUILD_STATUS_SUBJECT = "Build failed for your service {}"
+                BUILD_STATUS_MESSAGE = "Build failed for your org_id {} and service_id {}"
+                send_email_notification(contacts,
+                                        BUILD_STATUS_SUBJECT.format(service_id),
+                                        BUILD_STATUS_MESSAGE.format(org_id, service_id), NOTIFICATION_ARN,
+                                        boto_util)
+            except:
+                logger.info(f"Error happened while sending build_status mail for {org_id} and contacts {contacts}")
 
     def get_service_id_availability_status(self, service_id):
         record_exist = ServicePublisherRepository().check_service_id_within_organization(self._org_uuid, service_id)
@@ -292,7 +315,7 @@ class ServicePublisherService:
                 "allowed_user_flag": True,
                 "allowed_user_addresses": [member.address for member in organization_members] + [
                     BLOCKCHAIN_TEST_ENV["executor_address"]],
-                "authentication_address": [member.address for member in organization_members],
+                "authentication_addresses": [member.address for member in organization_members],
                 "blockchain_enabled": False,
                 "passthrough_enabled": True,
                 "organization_id": organization.id,
@@ -305,8 +328,9 @@ class ServicePublisherService:
                 "organization_id": organization.id,
                 "service_id": service.service_id,
                 "metering_end_point": f"https://{network_name}-marketplace.singularitynet.io",
-                "authentication_address": [member.address for member in organization_members],
-                "blockchain_enabled": True
+                "authentication_addresses": [member.address for member in organization_members],
+                "blockchain_enabled": True,
+                "passthrough_enabled": True
             }
         else:
             raise EnvironmentNotFoundException()
