@@ -102,12 +102,9 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
 
         for group in groups:
             changed_endpoints = {}
-            for index in range(len(group['endpoints'])):
-                changed_endpoints[group['endpoints'][index]] = {'valid': False}
+            for endpoint in group['endpoints']:
+                changed_endpoints[endpoint] = {'valid': False}
             group['endpoints'] = changed_endpoints
-
-
-
 
     def _process_service_data(self, org_id, service_id, service_metadata, tags_data,transaction_hash):
 

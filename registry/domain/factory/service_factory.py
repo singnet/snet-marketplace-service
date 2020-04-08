@@ -2,11 +2,11 @@ from datetime import datetime as dt
 
 from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus
 from registry.domain.models.service import Service
+from registry.domain.models.service_comment import ServiceComment
 from registry.domain.models.service_group import ServiceGroup
 from registry.domain.models.service_state import ServiceState
-from registry.domain.models.service_comment import ServiceComment
 from registry.infrastructure.models import Service as ServiceDBModel, ServiceGroup as ServiceGroupDBModel, \
-    ServiceReviewHistory, ServiceState as ServiceStateDBModel, ServiceComment as ServiceCommentDBModel
+    ServiceReviewHistory, ServiceState as ServiceStateDBModel
 
 
 class ServiceFactory:
@@ -188,19 +188,19 @@ class ServiceFactory:
             return None
         return ServiceComment(
             org_uuid=service_comment.org_uuid,
-            service_uuid = service_comment.service_uuid,
-            support_type = service_comment.support_type,
-            user_type = service_comment.user_type,
-            commented_by = service_comment.commented_by,
-            comment = service_comment.comment
+            service_uuid=service_comment.service_uuid,
+            support_type=service_comment.support_type,
+            user_type=service_comment.user_type,
+            commented_by=service_comment.commented_by,
+            comment=service_comment.comment
         )
 
     @staticmethod
     def parse_service_metadata_assets(assets, existing_assets):
         if assets is None:
-            assets= {}
+            assets = {}
         if existing_assets is None:
-            existing_assets={}
+            existing_assets = {}
         url = ""
         for key, value in assets.items():
             if existing_assets and key in existing_assets:
