@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime
 from random import randrange
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 from uuid import uuid4
 
 from registry.constants import ServiceStatus
@@ -9,19 +9,22 @@ from registry.consumer.service_event_consumer import ServiceCreatedEventConsumer
 from registry.infrastructure.models import Organization, Service, ServiceGroup, ServiceReviewHistory, ServiceState
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
+from registry.testcases.functional_testcases.test_variables import service_metadata
 
 
-class TestOrganizationEventConsumer(unittest.TestCase):
+class TestServiceEventConsumer(unittest.TestCase):
     def setUp(self):
         self.org_repo = OrganizationPublisherRepository()
         self.service_repo = ServicePublisherRepository()
 
+    @patch("common.ipfs_util.IPFSUtil", return_value=Mock(
+        read_bytesio_from_ipfs=Mock(return_value=""),
+        read_file_from_ipfs=Mock(return_value=service_metadata),
+        write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
-    @patch('common.ipfs_util.IPFSUtil.read_file_from_ipfs')
-    @patch('common.ipfs_util.IPFSUtil.read_bytesio_from_ipfs')
     @patch('common.blockchain_util.BlockChainUtil')
     @patch('registry.consumer.service_event_consumer.ServiceEventConsumer._fetch_tags')
-    def test_on_service_created_event(self, mock_fetch_tags, mock_block_chain_util ,nock_read_bytesio_from_ipfs, mock_ipfs_read, mock_s3_push):
+    def test_on_service_created_event(self, mock_fetch_tags, mock_block_chain_util, mock_s3_push, mock_ipfs):
         org_uuid = str(uuid4())
         service_uuid = str(uuid4())
         self.org_repo.add_item(
@@ -89,45 +92,6 @@ class TestOrganizationEventConsumer(unittest.TestCase):
                           'row_updated': datetime(2019, 10, 21, 9, 59, 37),
                           'row_created': datetime(2019, 10, 21, 9, 59, 37)}, "name": "ServiceCreated"}
 
-        nock_read_bytesio_from_ipfs.return_value = "some_value to_be_pushed_to_s3_whic_is_mocked"
-        mock_ipfs_read.return_value = {
-            "version": 1,
-            "display_name": "Annotation Service",
-            "encoding": "proto",
-            "service_type": "grpc",
-            "model_ipfs_hash": "QmXqonxB9EvNBe11J8oCYXMQAtPKAb2x8CyFLmQpkvVaLf",
-            "mpe_address": "0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C",
-            "groups": [
-                {
-                    "group_name": "default_group",
-                    "pricing": [
-                        {
-                            "price_model": "fixed_price",
-                            "price_in_cogs": 1,
-                            "default": True
-                        }
-                    ],
-                    "endpoints": [
-                        "https://mozi.ai:8000"
-                    ],
-                    "group_id": "m5FKWq4hW0foGW5qSbzGSjgZRuKs7A1ZwbIrJ9e96rc="
-                }
-            ],
-            "assets": {
-                "hero_image": "QmVcE6fEDP764ibadXTjZHk251Lmt5xAxdc4P9mPA4kksk/hero_gene-annotation-2b.png"
-            },
-            "service_description": {
-                "url": "https://mozi-ai.github.io/annotation-service/",
-                "description": "Use this service to annotate a humane genome with uniform terms, Reactome pathway memberships, and BioGrid protein interactions.",
-                "short_description": "short description"
-            },
-            "contributors": [
-                {
-                    "name": "dummy dummy",
-                    "email_id": "dummy@dummy.io"
-                }
-            ]
-        }
         mock_fetch_tags.return_value = ["tag1", "tag2"]
         mock_s3_push.return_value = "https://test-s3-push"
         service_event_consumer = ServiceCreatedEventConsumer("wss://ropsten.infura.io/ws",
@@ -144,14 +108,15 @@ class TestOrganizationEventConsumer(unittest.TestCase):
         assert published_service.groups[0].endpoints =={'https://mozi.ai:8000': {'valid': False}}
         assert published_service.display_name == 'Annotation Service'
 
-
+    @patch("common.ipfs_util.IPFSUtil", return_value=Mock(
+        read_bytesio_from_ipfs=Mock(return_value=""),
+        read_file_from_ipfs=Mock(return_value=service_metadata),
+        write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
-    @patch('common.ipfs_util.IPFSUtil.read_file_from_ipfs')
-    @patch('common.ipfs_util.IPFSUtil.read_bytesio_from_ipfs')
     @patch('common.blockchain_util.BlockChainUtil')
     @patch('registry.consumer.service_event_consumer.ServiceEventConsumer._fetch_tags')
-    def test_on_service_created_event_from_snet_cli(self, mock_fetch_tags, mock_block_chain_util, nock_read_bytesio_from_ipfs, mock_ipfs_read,
-                                                    mock_s3_push):
+    def test_on_service_created_event_from_snet_cli(self, mock_fetch_tags, mock_block_chain_util,
+                                                    mock_s3_push, mock_ipfs):
         org_uuid = str(uuid4())
         self.org_repo.add_item(
             Organization(
@@ -180,45 +145,6 @@ class TestOrganizationEventConsumer(unittest.TestCase):
                           'row_updated': datetime(2019, 10, 21, 9, 59, 37),
                           'row_created': datetime(2019, 10, 21, 9, 59, 37)}, "name": "ServiceCreated"}
 
-        nock_read_bytesio_from_ipfs.return_value = "some_value to_be_pushed_to_s3_whic_is_mocked"
-        mock_ipfs_read.return_value = {
-            "version": 1,
-            "display_name": "Annotation Service",
-            "encoding": "proto",
-            "service_type": "grpc",
-            "model_ipfs_hash": "QmXqonxB9EvNBe11J8oCYXMQAtPKAb2x8CyFLmQpkvVaLf",
-            "mpe_address": "0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C",
-            "groups": [
-                {
-                    "group_name": "default_group",
-                    "pricing": [
-                        {
-                            "price_model": "fixed_price",
-                            "price_in_cogs": 1,
-                            "default": True
-                        }
-                    ],
-                    "endpoints": [
-                        "https://mozi.ai:8000"
-                    ],
-                    "group_id": "m5FKWq4hW0foGW5qSbzGSjgZRuKs7A1ZwbIrJ9e96rc="
-                }
-            ],
-            "assets": {
-                "hero_image": "QmVcE6fEDP764ibadXTjZHk251Lmt5xAxdc4P9mPA4kksk/hero_gene-annotation-2b.png"
-            },
-            "service_description": {
-                "url": "https://mozi-ai.github.io/annotation-service/",
-                "description": "Use this service to annotate a humane genome with uniform terms, Reactome pathway memberships, and BioGrid protein interactions.",
-                "short_description": "short description"
-            },
-            "contributors": [
-                {
-                    "name": "dummy dummy",
-                    "email_id": "dummy@dummy.io"
-                }
-            ]
-        }
         mock_fetch_tags.return_value = ["tag1", "tag2"]
         mock_s3_push.return_value = "https://test-s3-push"
         service_event_consumer = ServiceCreatedEventConsumer("wss://ropsten.infura.io/ws",
@@ -239,8 +165,5 @@ class TestOrganizationEventConsumer(unittest.TestCase):
         self.org_repo.session.query(Service).delete()
         self.org_repo.session.query(ServiceGroup).delete()
         self.org_repo.session.query(ServiceState).delete()
+        self.org_repo.session.query(ServiceReviewHistory).delete()
         self.org_repo.session.commit()
-        self.service_repo.session.query(Service).delete()
-        self.service_repo.session.query(ServiceState).delete()
-        self.service_repo.session.query(ServiceGroup).delete()
-        self.service_repo.session.query(ServiceReviewHistory).delete()
