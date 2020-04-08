@@ -38,8 +38,11 @@ class TestOrganizationEventConsumer(unittest.TestCase):
             "service_type": "grpc",
             "model_ipfs_hash": "QmXqonxB9EvNBe11J8oCYXMQAtPKAb2x8CyFLmQpkvVaLf",
             "mpe_address": "0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C",
+
             "groups": [
                 {
+                    "free_calls": 12,
+                    "free_call_signer_address": "0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F",
                     "group_name": "default_group",
                     "pricing": [
                         {
@@ -82,6 +85,8 @@ class TestOrganizationEventConsumer(unittest.TestCase):
                                                                      service_id='gene-annotation-service')
         service_tags = service_repository.get_service_tags(org_id='snet', service_id='gene-annotation-service')
 
+        service_groups=service_repository.get_service_group(org_id='snet',service_id='gene-annotation-service')
+
         assert service == {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'service_path': None,
                            'ipfs_hash': 'QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf', 'is_curated': 0}
         assert service_metadata == {'org_id': 'snet', 'service_id': 'gene-annotation-service',
@@ -102,3 +107,5 @@ class TestOrganizationEventConsumer(unittest.TestCase):
         assert service_tags == [{'org_id': 'snet', 'service_id': 'gene-annotation-service', 'tag_name': 'atomese'},
                                 {'org_id': 'snet', 'service_id': 'gene-annotation-service',
                                  'tag_name': 'bioinformatics'}]
+
+        assert service_groups == {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'group_id': 'm5FKWq4hW0foGW5qSbzGSjgZRuKs7A1ZwbIrJ9e96rc=', 'group_name': 'default_group', 'pricing': '[{"default": true, "price_model": "fixed_price", "price_in_cogs": 1}]', 'free_call_signer_address': '0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F', 'free_calls': 12}
