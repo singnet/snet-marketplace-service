@@ -22,7 +22,7 @@ class ServiceGroup:
             "pricing": self._pricing,
             "free_calls": self._free_calls,
             "free_call_signer_address": self._free_call_signer_address,
-            "daemon_addresses ": self._daemon_address
+            "daemon_addresses": self._daemon_address
         }
 
     def _get_endpoints(self, endpoint_dict):
