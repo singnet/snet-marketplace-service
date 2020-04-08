@@ -29,13 +29,6 @@ class InvalidOrganizationStateException(CustomException):
         super().__init__({})
 
 
-class InvalidMetadataException(CustomException):
-    error_message = "INVALID_METADATA_EXCEPTION"
-
-    def __init__(self):
-        super().__init__({})
-
-
 class InvalidServiceStateException(CustomException):
     error_message = "INVALID_SERVICE_STATE"
 
@@ -72,35 +65,31 @@ class ServiceGroupNotFoundException(CustomException):
 
 
 class EnvironmentNotFoundException(CustomException):
-    error_message = "ENVIRONMENT_NOT_FOUND"
+    error_message = "Environment Not Found"
 
     def __init__(self):
         super().__init__({})
 
 
 class InvalidSlackUserException(CustomException):
-    error_message = "SLACK_USER_NOT_ALLOWED"
+    error_message = "Slack User Not Allowed"
 
     def __init__(self):
         super().__init__({})
 
 
 class InvalidSlackChannelException(CustomException):
-    error_message = "SLACK_CHANNEL_NOT_ALLOWED"
+    error_message = "Slack Channel Not Allowed"
 
     def __init__(self):
         super().__init__({})
 
 
 class InvalidSlackSignatureException(CustomException):
-    error_message = "SLACK_SIGN_NOT_ALLOWED"
+    error_message = "Slack Signature Not Allowed"
 
     def __init__(self):
         super().__init__({})
 
 
-EXCEPTIONS = (BadRequestException, OrganizationNotFoundException, InvalidOriginException, MethodNotImplemented,
-              InvalidOrganizationStateException, InvalidMetadataException, InvalidServiceStateException,
-              ServiceProtoNotFoundException, ServiceProtoNotFoundException, OrganizationNotPublishedException,
-              ServiceNotFoundException, ServiceGroupNotFoundException, EnvironmentNotFoundException,
-              InvalidSlackUserException, InvalidSlackChannelException,InvalidSlackSignatureException)
+EXCEPTIONS = (BadRequestException, OrganizationNotFoundException, MethodNotImplemented)
