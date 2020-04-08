@@ -1,6 +1,6 @@
 service_metadata = {
     "version": 1,
-    "display_name": "Annotation Service",
+    "display_name": "Service",
     "encoding": "proto",
     "service_type": "grpc",
     "model_ipfs_hash": "QmXqonxB9EvNBe11J8oCYXMQAtPKAb2x8CyFLmQpkvVaLf",
@@ -18,7 +18,13 @@ service_metadata = {
             "endpoints": [
                 "https://mozi.ai:8000"
             ],
-            "group_id": "m5FKWq4hW0foGW5qSbzGSjgZRuKs7A1ZwbIrJ9e96rc="
+            "free_calls": 45,
+            "free_call_signer_address": "0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F",
+            "group_id": "m5FKWq4hW0foGW5qSbzGSjgZRuKs7A1ZwbIrJ9e96rc=",
+            "daemon_addresses": [
+                "0x94d04332C4f5273feF69c4a52D24f42a3aF1F207",
+                "0x765C9E1BCa00002e294c9aa9dC3F96C2a022025C"
+            ]
         }
     ],
     "assets": {
