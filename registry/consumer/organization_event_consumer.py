@@ -56,7 +56,12 @@ class OrganizationEventConsumer(object):
         ipfs_org_metadata = self._ipfs_util.read_file_from_ipfs(org_metadata_uri)
         owner = blockchain_org_data[3]
         members = blockchain_org_data[4]
+        self._remove_owner_from_members(members, owner)
         return org_id, ipfs_org_metadata, org_metadata_uri, transaction_hash, owner, members
+
+    def _remove_owner_from_members(self, members, owner):
+        if owner in members:
+            members.remove(owner)
 
     def _process_members(self, org_uuid, received_owner, existing_members, received_members):
 
