@@ -130,6 +130,8 @@ def upgrade():
               `service_row_id` int(11) NOT NULL,
               `org_id` varchar(128) NOT NULL,
               `service_id` varchar(128) NOT NULL,
+              `free_call_signer_address` varchar(256),
+              `free_calls` int(11),
               `group_id` varchar(256) NOT NULL,
               `group_name` varchar(128) NOT NULL,
               `pricing` json DEFAULT NULL,

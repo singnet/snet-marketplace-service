@@ -147,9 +147,22 @@ class ServiceRepository(CommonRepository):
 
     def create_group(self, service_row_id, org_id, service_id, grp_data):
         insert_group = "INSERT INTO service_group (service_row_id, org_id, service_id, group_id, group_name," \
-                       "pricing, row_updated, row_created)" \
-                       "VALUES(%s, %s, %s, %s, %s, %s, %s, %s)"
+                       "pricing,free_call_signer_address,free_calls,row_updated, row_created)" \
+                       "VALUES(%s, %s, %s, %s, %s, %s, %s, %s ,%s ,%s)"
         insert_group_param = [service_row_id, org_id, service_id, grp_data['group_id'], grp_data['group_name'],
-                              grp_data['pricing'], datetime.utcnow(), datetime.utcnow()]
+                              grp_data['pricing'],grp_data.get("free_call_signer_address","") ,grp_data.get("free_calls",0),datetime.utcnow(), datetime.utcnow()]
 
         return self.connection.execute(insert_group, insert_group_param)
+
+    def get_service_group(self,org_id, service_id):
+        select_group_query = """
+        SELECT  org_id, service_id, group_id, group_name, pricing,free_call_signer_address,free_calls
+            FROM service_group WHERE service_id = %s AND org_id = %s;
+        """
+
+        query_response = self.connection.execute(select_group_query, [service_id, org_id])
+
+        return query_response[0]
+
+
+
