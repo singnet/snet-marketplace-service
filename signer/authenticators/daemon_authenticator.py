@@ -1,10 +1,11 @@
-import web3
 import base64
+import json
+
+import web3
 from eth_account.messages import defunct_hash_message
 
 from common.blockchain_util import BlockChainUtil
-from common.repository import Repository
-from signer.config import NETWORKS, NET_ID
+from signer.config import GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_REGISTRY_ARN
 
 
 class SignatureAuthenticator(object):
@@ -56,19 +57,39 @@ class DaemonAuthenticator(SignatureAuthenticator):
                                          ['_usage', username, organization_id, service_id, group_id, int(block_number)])
         return defunct_hash_message(message)
 
+
+    def _get_daemon_addresses(self,org_id,service_id,group_id):
+        lambda_payload = {
+            "httpMethod": "GET",
+            "pathParameters": {
+                "orgId": org_id,
+                "serviceId": service_id
+            },
+        }
+        response = self.lambda_client.invoke(
+            FunctionName=GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_REGISTRY_ARN,
+            InvocationType="RequestResponse",
+            Payload=json.dumps(lambda_payload),
+        )
+        response_body_raw = json.loads(response.get("Payload").read())["body"]
+        get_service_response = json.loads(response_body_raw)
+        if get_service_response["status"] == "success":
+            groups_data = get_service_response["data"].get("groups", [])
+            for group_data in groups_data:
+                if group_data["group_id"] == group_id:
+                    return group_data["daemon_addresses"]
+        raise Exception(
+            "Unable to fetch daemon Addresses information for service %s under organization %s for %s group.",
+            service_id, org_id, group_id)
+
+
     def get_public_keys(self):
         organization_id = self.event['headers']['x-organizationid']
         group_id = self.event['headers']['x-groupid']
         service_id = self.event['headers']['x-serviceid']
 
-        query = 'SELECT public_key FROM demon_auth_keys WHERE org_id = %s AND service_id = %s AND group_id = %s '
-        stored_public_keys = Repository(net_id=NET_ID, NETWORKS=NETWORKS).execute(
-            query, [organization_id, service_id, group_id])
-        public_keys = []
-        if stored_public_keys:
-            for stored_public_key in stored_public_keys:
-                public_keys.append(stored_public_key['public_key'])
-        return public_keys
+        stored_public_keys = self._get_daemon_addresses(organization_id, service_id, group_id)
+        return stored_public_keys
 
     def get_signature(self):
         base64_sign = self.event['headers']['x-signature']
