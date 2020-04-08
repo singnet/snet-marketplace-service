@@ -26,8 +26,6 @@ class BaseRepository:
             self.session.rollback()
             raise e
 
-        self.session.commit()
-
     def add_all_items(self, items):
         try:
             self.session.add_all(items)
