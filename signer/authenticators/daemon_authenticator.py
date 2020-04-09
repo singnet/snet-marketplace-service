@@ -6,9 +6,10 @@ import web3
 from eth_account.messages import defunct_hash_message
 
 from common.blockchain_util import BlockChainUtil
+from common.logger import get_logger
 from signer.config import GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_REGISTRY_ARN, REGION_NAME
 
-
+logger = get_logger(__name__)
 class SignatureAuthenticator(object):
     BLOCK_LIMIT = 10
 
@@ -92,6 +93,7 @@ class DaemonAuthenticator(SignatureAuthenticator):
         service_id = self.event['headers']['x-serviceid']
 
         stored_public_keys = self._get_daemon_addresses(organization_id, service_id, group_id)
+        logger.info(f"Got stored daemon addresses {stored_public_keys} for {organization_id} {service_id} {group_id}")
         return stored_public_keys
 
     def get_signature(self):
