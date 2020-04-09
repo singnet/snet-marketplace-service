@@ -16,7 +16,7 @@ def main(event, context):
     body = json.loads(event['body'])
     body['username'] = username
     requests.post(slack_hook, data=json.dumps(body))
-    generate_lambda_response(
+    return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": {"message": "ok" }, "error": {}}, cors_enabled=True
     )
