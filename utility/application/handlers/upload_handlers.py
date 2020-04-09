@@ -50,14 +50,13 @@ def upload_file(event, context):
 
 
 def get_content_type(headers):
-    if "content-type" not in headers:
-        if "Content-Type" not in headers:
-            logger.error(f"Content type not found content type")
-            raise InvalidContentType()
-        else:
-            content_type = headers["Content-Type"]
+    modified_headers = {}
+    for key in headers:
+        modified_headers[key.lower()] = headers[key]
+    if "content-type" not in modified_headers:
+        raise InvalidContentType()
     else:
-        content_type = headers["content-type"]
+        content_type = modified_headers["content-type"]
 
     if content_type not in ALLOWED_CONTENT_TYPE:
         logger.error(f"Invalid Content type {content_type}")
