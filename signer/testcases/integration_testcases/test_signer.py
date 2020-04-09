@@ -152,7 +152,7 @@ class TestSignUPAPI(unittest.TestCase):
 
 
     @patch("signer.signers.Signer._get_no_of_free_calls_from_daemon")
-    @patch("signer.signers.Signer._get_daemon_endpoint_for_group")
+    @patch("signer.signers.Signer._get_daemon_endpoint_and_free_call_for_group")
     @patch("common.blockchain_util.BlockChainUtil.read_contract_address")
     @patch("common.blockchain_util.BlockChainUtil.get_current_block_no")
     @patch("boto3.client")
@@ -161,7 +161,7 @@ class TestSignUPAPI(unittest.TestCase):
 
         mock_read_contract_address.return_value = "0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C"
         mock_current_block_no.return_value = 6521925
-        mock_endpoint.return_value = "1.2.3.4"
+        mock_endpoint.return_value = "1.2.3.4",15
         mock_daemon_free_call.return_value=10
 
         event = {
