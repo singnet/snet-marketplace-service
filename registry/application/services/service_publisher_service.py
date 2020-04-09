@@ -237,9 +237,9 @@ class ServicePublisherService:
             logger.info(f"Unable to find service contributors for service {service_id} under {org_id}")
             return
         notification_subject = f"Your service {service_id} has successfully submitted for approval"
-        notification_message = f"Your service {service_id} under {org_id} has successfully submitted for approval. " \
-                               f"We will notify you once it is approved/rejected from our approval team. Usually it " \
-                               f"takes {5} - {10} days for approval."
+        notification_message = f"Your service {service_id} under organization {org_id} has successfully been submitted " \
+                               f"for approval. We will notify you once it is reviewed by our approval team. It usually " \
+                               f"takes around five to ten business days for approval."
         utils.send_email_notification(recipients, notification_subject, notification_message, NOTIFICATION_ARN,
                                       boto_util)
 

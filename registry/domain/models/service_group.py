@@ -25,9 +25,9 @@ class ServiceGroup:
             "daemon_addresses": self._daemon_address
         }
 
-    def _get_endpoints(self, endpoint_dict):
+    def _get_endpoints(self):
         endpoints = []
-        for endpoint, val in endpoint_dict.items():
+        for endpoint, val in self._endpoints.items():
             endpoints.append(endpoint)
         return endpoints
 
@@ -37,7 +37,7 @@ class ServiceGroup:
             "free_call_signer_address": self._free_call_signer_address,
             "daemon_addresses": self._daemon_address,
             "pricing": self._pricing,
-            "endpoints": self._get_endpoints(self._endpoints),
+            "endpoints": self._get_endpoints(),
             "group_id": self._group_id,
             "group_name": self._group_name
         }
