@@ -2,6 +2,7 @@ import json
 
 import requests
 
+from common.constant import StatusCode
 from common.utils import generate_lambda_response
 from utility.config import SLACK_FEEDBACK_HOOK
 
@@ -15,5 +16,8 @@ def main(event, context):
     body = json.loads(event['body'])
     body['username'] = username
     requests.post(slack_hook, data=json.dumps(body))
-    generate_lambda_response(200, "OK")
+    generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": {"message": "ok" }, "error": {}}, cors_enabled=True
+    )
 
