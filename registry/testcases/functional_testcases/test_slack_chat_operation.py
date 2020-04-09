@@ -420,6 +420,7 @@ class TestSlackChatOperation(TestCase):
             }),"isBase64Encoded": False
         }
         response = slack_interaction_handler(event=event, context=None)
+        assert (response["statusCode"] == 200)
 
     def tearDown(self):
         org_repo.session.query(OrganizationDBModel).delete()
