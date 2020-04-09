@@ -1,13 +1,16 @@
 import base64
 import json
+import boto3
 
 import web3
 from eth_account.messages import defunct_hash_message
 
 from common.blockchain_util import BlockChainUtil
-from signer.config import GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_REGISTRY_ARN
+from common.boto_utils import BotoUtils
+from common.logger import get_logger
+from signer.config import GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_REGISTRY_ARN, REGION_NAME
 
-
+logger = get_logger(__name__)
 class SignatureAuthenticator(object):
     BLOCK_LIMIT = 10
 
@@ -15,6 +18,8 @@ class SignatureAuthenticator(object):
         self.event = event
         self.networks = networks
         self.net_id = net_id
+        self.boto_utils=BotoUtils(REGION_NAME)
+
 
     def get_signature_message(self):
         pass
@@ -61,17 +66,18 @@ class DaemonAuthenticator(SignatureAuthenticator):
     def _get_daemon_addresses(self,org_id,service_id,group_id):
         lambda_payload = {
             "httpMethod": "GET",
-            "pathParameters": {
-                "orgId": org_id,
-                "serviceId": service_id
+            "queryStringParameters": {
+                "org_id": org_id,
+                "service_id": service_id
             },
         }
-        response = self.lambda_client.invoke(
-            FunctionName=GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_REGISTRY_ARN,
-            InvocationType="RequestResponse",
-            Payload=json.dumps(lambda_payload),
+        response = self.boto_utils.invoke_lambda(
+            lambda_function_arn=GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_REGISTRY_ARN,
+            invocation_type="RequestResponse",
+            payload=json.dumps(lambda_payload),
         )
-        response_body_raw = json.loads(response.get("Payload").read())["body"]
+
+        response_body_raw = response["body"]
         get_service_response = json.loads(response_body_raw)
         if get_service_response["status"] == "success":
             groups_data = get_service_response["data"].get("groups", [])
@@ -89,6 +95,7 @@ class DaemonAuthenticator(SignatureAuthenticator):
         service_id = self.event['headers']['x-serviceid']
 
         stored_public_keys = self._get_daemon_addresses(organization_id, service_id, group_id)
+        logger.info(f"Got stored daemon addresses {stored_public_keys} for {organization_id} {service_id} {group_id}")
         return stored_public_keys
 
     def get_signature(self):
