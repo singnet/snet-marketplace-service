@@ -321,7 +321,7 @@ class TestSlackChatOperation(TestCase):
         validate_slack_user.return_value = True
         validate_slack_channel_id.return_value = True
         validate_slack_signature.return_value = True
-        lambda_response.return_value = {"statusCode": 202}
+        lambda_response.return_value = {"StatusCode": 202}
         self.tearDown()
         org_repo.add_organization(
             OrganizationDomainModel(
