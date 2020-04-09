@@ -6,7 +6,7 @@ from registry.config import ASSET_DIR, METADATA_FILE_PATH, IPFS_URL
 from registry.constants import EnvironmentType
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.services.registry_blockchain_util import RegistryBlockChainUtil
-from registry.exceptions import ServiceProtoNotFoundException
+from registry.exceptions import ServiceProtoNotFoundException, InvalidMetadataException
 
 service_factory = ServiceFactory()
 ipfs_client = IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
@@ -85,7 +85,7 @@ class ServicePublisherDomainService:
 
         if not service.is_metadata_valid(service_metadata):
             logger.info("Service metadata is not valid")
-            raise Exception("INVALID_METADATA")
+            raise InvalidMetadataException()
         service_metadata_filename = f"{METADATA_FILE_PATH}/{service.uuid}_service_metadata.json"
         json_to_file(service_metadata, service_metadata_filename)
         service.metadata_uri = METADATA_URI_PREFIX + self.publish_file_to_ipfs(service_metadata_filename)
