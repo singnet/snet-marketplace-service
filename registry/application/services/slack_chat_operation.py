@@ -248,9 +248,9 @@ class SlackChatOperation:
             "body": json.dumps(verification_callback_payload)
         }
         verification_callback_response = boto_util.invoke_lambda(
-            VERIFICATION_ARN["DUNS_CALLBACK"], invocation_type="RequestResponse",
+            VERIFICATION_ARN["DUNS_CALLBACK"], invocation_type="Event",
             payload=json.dumps(verification_callback_event))
-        if verification_callback_response["statusCode"] != StatusCode.CREATED:
+        if verification_callback_response["statusCode"] != StatusCode.ACCEPTED:
             logger.error(f"callback to verification service for entity_id: {entity_id} state: {state}"
                          f"reviewed_by: {reviewed_by} comment:{comment}")
             raise Exception(f"callback to verification service")
