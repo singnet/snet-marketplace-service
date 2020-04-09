@@ -16,9 +16,6 @@ from dapp_user.exceptions import EmailNotVerifiedException
 
 logger = get_logger(__name__)
 
-FREE_CALL_AVAILABLE = 15
-
-
 class UserService:
     def __init__(self):
         self.user_factory = UserFactory()
@@ -134,6 +131,7 @@ class UserService:
                 signature = signature_response["data"].get("signature", "")
                 current_block_number = signature_response["data"].get("current_block_number", "")
                 daemon_endpoint = signature_response["data"].get("daemon_endpoint", "")
+                free_calls_allowed= signature_response["data"].get("free_calls_allowed",0)
                 free_call_available = self._get_no_of_free_calls_from_daemon(email,
                                                                              bytes.fromhex(token_to_get_free_call),
                                                                              expiry_date_block,
@@ -142,8 +140,8 @@ class UserService:
 
                 response = {"username": email, "org_id": org_id,
                             "service_id": service_id,
-                            "total_calls_made": FREE_CALL_AVAILABLE - free_call_available,
-                            "free_calls_allowed": FREE_CALL_AVAILABLE}
+                            "total_calls_made": free_calls_allowed - free_call_available,
+                            "free_calls_allowed": free_calls_allowed}
 
                 return generate_lambda_response(200, response, cors_enabled=True)
             else:
