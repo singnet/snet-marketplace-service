@@ -1,11 +1,12 @@
 import base64
 import json
+import boto3
 
 import web3
 from eth_account.messages import defunct_hash_message
 
 from common.blockchain_util import BlockChainUtil
-from signer.config import GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_REGISTRY_ARN
+from signer.config import GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_REGISTRY_ARN, REGION_NAME
 
 
 class SignatureAuthenticator(object):
@@ -15,6 +16,7 @@ class SignatureAuthenticator(object):
         self.event = event
         self.networks = networks
         self.net_id = net_id
+        self.lambda_client = boto3.client("lambda", region_name=REGION_NAME)
 
     def get_signature_message(self):
         pass
@@ -61,9 +63,9 @@ class DaemonAuthenticator(SignatureAuthenticator):
     def _get_daemon_addresses(self,org_id,service_id,group_id):
         lambda_payload = {
             "httpMethod": "GET",
-            "pathParameters": {
-                "orgId": org_id,
-                "serviceId": service_id
+            "queryStringParameters": {
+                "org_id": org_id,
+                "service_id": service_id
             },
         }
         response = self.lambda_client.invoke(
@@ -71,6 +73,7 @@ class DaemonAuthenticator(SignatureAuthenticator):
             InvocationType="RequestResponse",
             Payload=json.dumps(lambda_payload),
         )
+
         response_body_raw = json.loads(response.get("Payload").read())["body"]
         get_service_response = json.loads(response_body_raw)
         if get_service_response["status"] == "success":
