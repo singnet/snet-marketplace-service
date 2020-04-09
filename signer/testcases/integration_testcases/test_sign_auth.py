@@ -11,7 +11,7 @@ from signer.signature_authenticator import main
 class TestSignAuth(unittest.TestCase):
     @patch("boto3.client")
     def test_generate_sign(self,mock_boto_client):
-        mock_boto_client.retur_value=None
+        mock_boto_client.return_value=None
         username = 'test-user'
         org_id = 'snet'
         group_id = 'cOyJHJdvvig73r+o8pijgMDcXOX+bt8LkvIeQbufP7g='

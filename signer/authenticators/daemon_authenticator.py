@@ -6,6 +6,7 @@ import web3
 from eth_account.messages import defunct_hash_message
 
 from common.blockchain_util import BlockChainUtil
+from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from signer.config import GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_REGISTRY_ARN, REGION_NAME
 
@@ -17,7 +18,8 @@ class SignatureAuthenticator(object):
         self.event = event
         self.networks = networks
         self.net_id = net_id
-        self.lambda_client = boto3.client("lambda", region_name=REGION_NAME)
+        self.boto_utils=BotoUtils(REGION_NAME)
+
 
     def get_signature_message(self):
         pass
@@ -69,13 +71,13 @@ class DaemonAuthenticator(SignatureAuthenticator):
                 "service_id": service_id
             },
         }
-        response = self.lambda_client.invoke(
-            FunctionName=GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_REGISTRY_ARN,
-            InvocationType="RequestResponse",
-            Payload=json.dumps(lambda_payload),
+        response = self.boto_utils.invoke_lambda(
+            lambda_function_arn=GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_REGISTRY_ARN,
+            invocation_type="RequestResponse",
+            payload=json.dumps(lambda_payload),
         )
 
-        response_body_raw = json.loads(response.get("Payload").read())["body"]
+        response_body_raw = response["body"]
         get_service_response = json.loads(response_body_raw)
         if get_service_response["status"] == "success":
             groups_data = get_service_response["data"].get("groups", [])
