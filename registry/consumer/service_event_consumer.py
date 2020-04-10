@@ -102,24 +102,25 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
 
         for group in groups:
             changed_endpoints = {}
-            for index in range(len(group['endpoints'])):
-                changed_endpoints[group['endpoints'][index]] = {'valid': False}
+            for endpoint in group['endpoints']:
+                changed_endpoints[endpoint] = {'valid': False}
             group['endpoints'] = changed_endpoints
-
-
-
 
     def _process_service_data(self, org_id, service_id, service_metadata, tags_data,transaction_hash):
 
         org_uuid, existing_service = self._get_existing_service_details(org_id, service_id)
         service_uuid = str(uuid4())
         display_name = service_metadata.get("display_name", "")
-        short_description = service_metadata.get("short_description", "")
-        description = service_metadata.get("description", "")
-        project_url = service_metadata.get("project_url", "")
-        proto = service_metadata.get("project_url", "")
-        assets = ServiceFactory.parse_service_metadata_assets(
-            service_metadata.get("assets", {}), None)
+        description_dict = service_metadata.get("service_description", {})
+        short_description = description_dict.get("short_description", "")
+        description = description_dict.get("description", "")
+        project_url = description_dict.get("url", "")
+        proto = {
+            "encoding": service_metadata.get("encoding", ""),
+            "service_type": service_metadata.get("service_type", ""),
+            "model_ipfs_hash": service_metadata.get("model_ipfs_hash", "")
+        }
+        assets = service_metadata.get("assets", {})
         mpe_address = service_metadata.get("mpe_address", "")
         metadata_ipfs_hash = service_metadata.get("metadata_ipfs_hash", "")
         contributors = service_metadata.get("contributors", [])

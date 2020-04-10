@@ -1,8 +1,9 @@
 import json
 from collections import defaultdict
+
 from common.utils import Utils
+from contract_api.constant import GET_ALL_SERVICE_LIMIT, GET_ALL_SERVICE_OFFSET_LIMIT
 from contract_api.filter import Filter
-from contract_api.constant import GET_ALL_SERVICE_OFFSET_LIMIT, GET_ALL_SERVICE_LIMIT
 
 
 class Registry:
@@ -211,7 +212,9 @@ class Registry:
                     groups = {group_id: {"group_id": rec['group_id'],
                                          "group_name": rec['group_name'],
                                          "pricing": json.loads(rec['pricing']),
-                                         "endpoints": []
+                                         "endpoints": [],
+                                         "free_calls": rec.get("free_calls", 0),
+                                         "free_call_signer_address": rec.get("free_call_signer_address", "")
                                          }
                               }
                     groups[group_id]['endpoints'].append({"endpoint": rec['endpoint'], "is_available":
@@ -351,7 +354,7 @@ class Registry:
             is_available = 0
             # Hard Coded Free calls in group data
             for rec in service_group_data:
-                rec["free_calls"] = 15
+                rec["free_calls"] = rec.get("free_calls",0)
                 if is_available == 0:
                     endpoints = rec['endpoints']
                     for endpoint in endpoints:

@@ -81,7 +81,7 @@ class Signer:
 
     def _get_no_of_free_call_available(self, username, org_id, service_id, group_id):
 
-        token_to_get_free_call, expiry_date_block, signature, current_block_number, daemon_endpoint = self.token_to_get_free_call(
+        token_to_get_free_call, expiry_date_block, signature, current_block_number, daemon_endpoint,free_calls_allowed = self.token_to_get_free_call(
             username, org_id, service_id, group_id)
         total_free_call_available = 0
         try:
@@ -92,7 +92,6 @@ class Signer:
         except Exception as e:
             logger.info(
                 f"Free call from daemon not available switching to metering {org_id} {service_id} {group_id} {username}")
-            free_calls_allowed = self._get_free_calls_allowed(org_id, service_id, group_id)
             total_free_call_made = self._get_total_calls_made(username, org_id, service_id, group_id)
 
             total_free_call_available=free_calls_allowed-total_free_call_made
@@ -257,7 +256,7 @@ class Signer:
         return False
 
 
-    def _get_daemon_endpoint_for_group(self,org_id,service_id,group_id):
+    def _get_daemon_endpoint_and_free_call_for_group(self,org_id,service_id,group_id):
         lambda_payload = {
             "httpMethod": "GET",
             "pathParameters": {
@@ -276,7 +275,7 @@ class Signer:
             groups_data = get_service_response["data"].get("groups", [])
             for group_data in groups_data:
                 if group_data["group_id"] == group_id:
-                    return group_data["endpoints"][0]["endpoint"]
+                    return group_data["endpoints"][0]["endpoint"],group_data.get("free_calls",0)
         raise Exception("Unable to fetch daemon Endpoint information for service %s under organization %s for %s group.",
                         service_id, org_id, group_id)
 
@@ -295,13 +294,13 @@ class Signer:
              current_block_number, token_to_get_free_call],
             SIGNER_KEY)
 
-        daemon_endpoint = self._get_daemon_endpoint_for_group(org_id, service_id, group_id)
+        daemon_endpoint ,free_calls_allowed = self._get_daemon_endpoint_and_free_call_for_group(org_id, service_id, group_id)
         logger.info(f"Got daemon endpoint {daemon_endpoint} for org {org_id} service {service_id} group {group_id}")
 
-        return token_to_get_free_call, expiry_date_block, signature, current_block_number, daemon_endpoint
+        return token_to_get_free_call, expiry_date_block, signature, current_block_number, daemon_endpoint,free_calls_allowed
 
     def token_to_make_free_call(self, email, org_id, service_id, group_id, user_public_key):
-        token_to_get_free_call, expiry_date_block, signature, current_block_number, daemon_endpoint = self.token_to_get_free_call(
+        token_to_get_free_call, expiry_date_block, signature, current_block_number, daemon_endpoint,free_calls_allowed = self.token_to_get_free_call(
             email, org_id, service_id, group_id)
 
         token_with_expiry_to_make_free_call=""

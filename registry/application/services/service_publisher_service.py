@@ -237,9 +237,9 @@ class ServicePublisherService:
             logger.info(f"Unable to find service contributors for service {service_id} under {org_id}")
             return
         notification_subject = f"Your service {service_id} has successfully submitted for approval"
-        notification_message = f"Your service {service_id} under {org_id} has successfully submitted for approval. " \
-                               f"We will notify you once it is approved/rejected from our approval team. Usually it " \
-                               f"takes {5} - {10} days for approval."
+        notification_message = f"Your service {service_id} under organization {org_id} has successfully been submitted " \
+                               f"for approval. We will notify you once it is reviewed by our approval team. It usually " \
+                               f"takes around five to ten business days for approval."
         utils.send_email_notification(recipients, notification_subject, notification_message, NOTIFICATION_ARN,
                                       boto_util)
 
@@ -252,7 +252,7 @@ class ServicePublisherService:
     def submit_service_for_approval(self, payload):
 
         user_as_contributor = [{"email_id": self._username}]
-        payload["contributor"] = payload.get("contributor", user_as_contributor) + user_as_contributor
+        payload["contributors"] = payload.get("contributors", user_as_contributor) + user_as_contributor
 
         organization = OrganizationPublisherRepository().get_org_for_org_uuid(self._org_uuid)
         if not organization:
@@ -315,7 +315,7 @@ class ServicePublisherService:
                 "allowed_user_flag": True,
                 "allowed_user_addresses": [member.address for member in organization_members] + [
                     BLOCKCHAIN_TEST_ENV["executor_address"]],
-                "authentication_address": [member.address for member in organization_members],
+                "authentication_addresses": [member.address for member in organization_members],
                 "blockchain_enabled": False,
                 "passthrough_enabled": True,
                 "organization_id": organization.id,
@@ -328,8 +328,9 @@ class ServicePublisherService:
                 "organization_id": organization.id,
                 "service_id": service.service_id,
                 "metering_end_point": f"https://{network_name}-marketplace.singularitynet.io",
-                "authentication_address": [member.address for member in organization_members],
-                "blockchain_enabled": True
+                "authentication_addresses": [member.address for member in organization_members],
+                "blockchain_enabled": True,
+                "passthrough_enabled": True
             }
         else:
             raise EnvironmentNotFoundException()
