@@ -13,6 +13,7 @@ from registry.config import SIGNING_SECRET, SLACK_APPROVAL_OAUTH_ACCESS_TOKEN, R
 from registry.config import STAGING_URL, ALLOWED_SLACK_USER, SLACK_APPROVAL_CHANNEL_URL, \
     ALLOWED_SLACK_CHANNEL_ID, MAX_SERVICES_SLACK_LISTING, NOTIFICATION_ARN, VERIFICATION_ARN
 from registry.constants import UserType, ServiceSupportType, ServiceStatus, OrganizationStatus, OrganizationType
+from registry.constants import OrganizationAddressType
 from registry.domain.models.service_comment import ServiceComment
 from registry.exceptions import InvalidSlackChannelException, InvalidSlackSignatureException, InvalidSlackUserException
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
@@ -148,7 +149,8 @@ class SlackChatOperation:
         for service_dict in services:
             org_id = "None" if not service_dict["org_id"] else service_dict["org_id"]
             service_id = "None" if not service_dict["service_id"] else service_dict["service_id"]
-            service_name = "None" if not service_dict.get("display_name", "None") else service_dict.get("display_name", "None")
+            service_name = "None" if not service_dict.get("display_name", "None") else service_dict.get("display_name",
+                                                                                                        "None")
             mrkdwn_block = {
                 "type": "section",
                 "fields": [
@@ -455,6 +457,20 @@ class SlackChatOperation:
     def generate_view_org_modal(self, org, requested_at, comment):
         org_id = "None" if not org.id else org.id
         organization_name = "None" if not org.name else org.name
+        duns_no = "None" if not org.duns_no else org.duns_no
+        phone_no = "None"
+        for contact in org.contacts:
+            if contact.get("contact_type") == "general":
+                phone_no = contact.get("phone", None)
+        url = "None" if not org.url else org.url
+        headquater_address = {}
+        mailing_address = {}
+        for address in org.addresses:
+            if address.address_type == OrganizationAddressType.HEAD_QUARTER_ADDRESS.value:
+                headquater_address = address.to_response()
+            if address.address_type == OrganizationAddressType.MAIL_ADDRESS.value:
+                mailing_address = address.to_response()
+
         view = {
             "type": "modal",
             "title": {
@@ -474,7 +490,7 @@ class SlackChatOperation:
             }
         }
         blocks = []
-        org_info_display_block = {
+        org_top_info_display_block = {
             "type": "section",
             "fields": [
                 {
@@ -487,10 +503,47 @@ class SlackChatOperation:
                 },
                 {
                     "type": "mrkdwn",
-                    "text": f"*Approval Platform:*\n{STAGING_URL}/servicedetails/org/{org_id}\n"
+                    "text": f"*Duns Number.:*\n{duns_no}\n"
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": f"*Website URL:*\n{url}\n"
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": f"*Phone Number:*\n{phone_no}\n"
                 }
             ]
         }
+        org_headquater_address_block = {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": f"*Headquarter Address:*\n\tApartment: {headquater_address.get('apartment', '')}\n\t"
+                            f"Street Address: {headquater_address.get('street_address', '')}\n\t"
+                            f"City: {headquater_address.get('city', '')}\n\t"
+                            f"State: {headquater_address.get('state', '')}\n\t"
+                            f"Pincode: {headquater_address.get('pincode', '')}\n\t"
+                            f"Country: {headquater_address.get('country', '')}\n"
+                }
+            ]
+        }
+        org_mailing_address_block = {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": f"*Mailing Address:*\n\tApartment: {mailing_address.get('apartment', '')}\n\t"
+                            f"Street Address: {mailing_address.get('street_address', '')}\n\t"
+                            f"City: {mailing_address.get('city', '')}\n\t"
+                            f"State: {mailing_address.get('state', '')}\n\t"
+                            f"Pincode: {mailing_address.get('pincode', '')}\n\t"
+                            f"Country: {mailing_address.get('country', '')}\n"
+                }
+            ]
+        }
+        org_info_display_blocks = org_top_info_display_block + org_headquater_address_block + org_mailing_address_block
         divider_block = {
             'type': 'divider'
         }
@@ -578,6 +631,6 @@ class SlackChatOperation:
                 "text": f"*Comments*\n*{comment}"
             }
         }
-        blocks = [org_info_display_block, divider_block, org_comment_block, select_approval_state_block, comment_block]
+        blocks = org_info_display_blocks + [divider_block, org_comment_block, select_approval_state_block, comment_block]
         view["blocks"] = blocks
         return view
