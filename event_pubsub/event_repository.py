@@ -200,13 +200,13 @@ class EventRepository(object):
             raise e
 
     def update_last_read_block_number_for_event(self, event_type, last_block_number):
-        self.connection.begin_transaction()
+        #self.connection.begin_transaction()
         try:
             update_query = "update event_blocknumber_marker set last_block_number = %s , row_updated = %s where event_type =%s "
 
             update_params = [last_block_number, datetime.utcnow(), event_type]
             result = self.connection.execute(update_query, update_params)
-            self.connection.commit_transaction()
+            #self.connection.commit_transaction()
         except Exception as e:
             self.connection.rollback_transaction()
             raise e
