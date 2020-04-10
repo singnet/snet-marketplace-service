@@ -1,3 +1,4 @@
+import json
 from uuid import uuid4
 
 from common import utils
@@ -7,7 +8,7 @@ from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
 from common.utils import download_file_from_url, json_to_file, publish_zip_file_in_ipfs, send_email_notification
 from registry.config import ASSET_DIR, BLOCKCHAIN_TEST_ENV, IPFS_URL, METADATA_FILE_PATH, NETWORKS, NETWORK_ID, \
-    NOTIFICATION_ARN, REGION_NAME, SLACK_CHANNEL_FOR_APPROVAL_TEAM, SLACK_HOOK
+    NOTIFICATION_ARN, REGION_NAME, SLACK_CHANNEL_FOR_APPROVAL_TEAM, SLACK_HOOK, EMAILS
 from registry.constants import EnvironmentType, OrganizationStatus, ServiceAvailabilityStatus, ServiceStatus, \
     ServiceSupportType, UserType
 from registry.domain.factory.service_factory import ServiceFactory
@@ -18,6 +19,7 @@ from registry.exceptions import EnvironmentNotFoundException, InvalidOrganizatio
     ServiceNotFoundException, ServiceProtoNotFoundException
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
+from registry.mail_templates import get_service_approval_mail_template
 
 ALLOWED_ATTRIBUTES_FOR_SERVICE_SEARCH = ["display_name"]
 DEFAULT_ATTRIBUTE_FOR_SERVICE_SEARCH = "display_name"
@@ -27,7 +29,7 @@ ALLOWED_ATTRIBUTES_FOR_SERVICE_ORDER_BY = ["asc", "desc"]
 DEFAULT_ATTRIBUTES_FOR_SERVICE_ORDER_BY = "desc"
 DEFAULT_OFFSET = 0
 DEFAULT_LIMIT = 0
-BUILD_FAILURE_CODE=0
+BUILD_FAILURE_CODE = 0
 
 logger = get_logger(__name__)
 service_factory = ServiceFactory()
@@ -243,11 +245,21 @@ class ServicePublisherService:
         utils.send_email_notification(recipients, notification_subject, notification_message, NOTIFICATION_ARN,
                                       boto_util)
 
-    @staticmethod
-    def notify_approval_team_when_user_submit_for_approval(slack_msg):
-        slack_url = SLACK_HOOK['hostname'] + SLACK_HOOK['path']
-        utils.send_slack_notification(slack_msg=slack_msg, slack_url=slack_url,
+    def notify_approval_team(self, service_id, service_name, org_id, org_name):
+        slack_msg = f"Service {service_id} under org_id {org_id} is submitted for approval"
+        utils.send_slack_notification(slack_msg=slack_msg, slack_url=SLACK_HOOK['hostname'] + SLACK_HOOK['path'],
                                       slack_channel=SLACK_CHANNEL_FOR_APPROVAL_TEAM)
+        mail = get_service_approval_mail_template(service_id, service_name, org_id, org_name)
+        self.send_email(mail, EMAILS["SERVICE_APPROVERS_DLIST"])
+
+    def send_email(self, mail, recipient):
+        send_notification_payload = {"body": json.dumps({
+            "message": mail["body"],
+            "subject": mail["subject"],
+            "notification_type": "support",
+            "recipient": recipient})}
+        boto_util.invoke_lambda(lambda_function_arn=NOTIFICATION_ARN, invocation_type="RequestResponse",
+                                payload=json.dumps(send_notification_payload))
 
     def submit_service_for_approval(self, payload):
 
@@ -290,8 +302,7 @@ class ServicePublisherService:
                                                                       service.contributors)
 
         # notify approval team via slack
-        slack_msg = f"Service {service.service_id} under org_id {organization.id} is submitted for approval"
-        self.notify_approval_team_when_user_submit_for_approval(slack_msg=slack_msg)
+        self.notify_approval_team(service.service_id, service.display_name, organization.id, organization.name)
         return response
 
     @staticmethod

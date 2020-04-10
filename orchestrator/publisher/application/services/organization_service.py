@@ -4,8 +4,9 @@ from common import utils
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from orchestrator.config import REGION_NAME, REGISTRY_ARN, WALLETS_SERVICE_ARN, VERIFICATION_ARN, SLACK_HOOK, \
-    SLACK_CHANNEL_FOR_APPROVAL_TEAM
+    SLACK_CHANNEL_FOR_APPROVAL_TEAM, NOTIFICATION_ARN, ORG_APPROVERS_DLIST
 from orchestrator.constant import VerificationType, OrganizationType
+from orchestrator.publisher.mail_templates import get_org_approval_mail
 
 logger = get_logger(__name__)
 
@@ -78,15 +79,28 @@ class OrganizationOrchestratorService:
         else:
             raise Exception(f"Verification initiate failed for Invalid org type {org_type}")
 
-        slack_msg = f"Organization with org_id {org_details['org_id']} is submitted for approval"
-        OrganizationOrchestratorService.notify_approval_team(slack_msg)
+        self.notify_approval_team(org_details['org_id'], org_details['org_name'])
         return org_details
 
-    @staticmethod
-    def notify_approval_team(slack_msg):
+    def notify_approval_team(self, org_id, org_name):
+        slack_msg = f"Organization with org_id {org_id} is submitted for approval"
+        mail_template = get_org_approval_mail(org_id, org_name)
+        self.send_slack_message(slack_msg)
+        self.send_email(mail_template, ORG_APPROVERS_DLIST)
+
+    def send_slack_message(self, slack_msg):
         slack_url = SLACK_HOOK['hostname'] + SLACK_HOOK['path']
         utils.send_slack_notification(slack_msg=slack_msg, slack_url=slack_url,
                                       slack_channel=SLACK_CHANNEL_FOR_APPROVAL_TEAM)
+
+    def send_email(self, mail, recipient):
+        send_notification_payload = {"body": json.dumps({
+            "message": mail["body"],
+            "subject": mail["subject"],
+            "notification_type": "support",
+            "recipient": recipient})}
+        self.boto_client.invoke_lambda(lambda_function_arn=NOTIFICATION_ARN, invocation_type="RequestResponse",
+                                       payload=json.dumps(send_notification_payload))
 
     def initiate_verification(self, entity_id, verification_type, username):
         if verification_type == VerificationType.JUMIO.value:
