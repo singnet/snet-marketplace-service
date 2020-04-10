@@ -1,11 +1,10 @@
-from registry.config import PUBLISHER_PORTAL_DAPP_URL, EMAIL
+from registry.config import PUBLISHER_PORTAL_DAPP_URL, EMAILS
 
 
 def get_org_member_invite_mail(org_name, invite_code):
     invite_member_template = {
         "subject": """Membership Invitation from  Organization {org_name}""",
-        "body": f"""\
-<html>
+        "body": f"""<html>
     <head></head>
     <body>
         <div>
@@ -17,14 +16,13 @@ def get_org_member_invite_mail(org_name, invite_code):
             <p>{PUBLISHER_PORTAL_DAPP_URL}</p><br /><br />
             <p>
                 <em>Please do not reply to the email for any enquiries for any queries please email at
-                    {EMAIL["PUBLISHER_PORTAL_SUPPORT_MAIL"]}.</em></p>
+                    {EMAILS["PUBLISHER_PORTAL_SUPPORT_MAIL"]}.</em></p>
             <p>Warmest regards,<br/>SingularityNET Publisher Portal
                 Team</p>
         </div>
     </body>
     
-</html>\
-"""
+</html>"""
     }
     return invite_member_template
 

@@ -250,7 +250,8 @@ class ServicePublisherService:
         utils.send_slack_notification(slack_msg=slack_msg, slack_url=SLACK_HOOK['hostname'] + SLACK_HOOK['path'],
                                       slack_channel=SLACK_CHANNEL_FOR_APPROVAL_TEAM)
         mail = get_service_approval_mail_template(service_id, service_name, org_id, org_name)
-        self.send_email(mail, EMAILS["SERVICE_APPROVERS_DLIST"])
+        send_email_notification([EMAILS["SERVICE_APPROVERS_DLIST"]], mail["subject"],
+                                mail["body"], NOTIFICATION_ARN, boto_util)
 
     def send_email(self, mail, recipient):
         send_notification_payload = {"body": json.dumps({

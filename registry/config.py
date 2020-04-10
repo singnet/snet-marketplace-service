@@ -46,7 +46,6 @@ BLOCKCHAIN_TEST_ENV = {
     "free_calls": 100
 }
 SLACK_CHANNEL_FOR_APPROVAL_TEAM = ""
-EMAIL = ""
 SIGNING_SECRET = ""
 STAGING_URL = ""
 ALLOWED_SLACK_CHANNEL_ID = ["dummy_channel_id"]
