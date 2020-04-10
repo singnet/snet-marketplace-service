@@ -455,6 +455,12 @@ class SlackChatOperation:
     def generate_view_org_modal(self, org, requested_at, comment):
         org_id = "None" if not org.id else org.id
         organization_name = "None" if not org.name else org.name
+        duns_no = "None" if not org.duns_no else org.duns_no
+        phone_no = "None"
+        for contact in org.contacts:
+            if contact.get("contact_type") == "general":
+                phone_no = contact.get("phone", None)
+        url = "None" if not org.url else org.url
         view = {
             "type": "modal",
             "title": {
@@ -487,7 +493,15 @@ class SlackChatOperation:
                 },
                 {
                     "type": "mrkdwn",
-                    "text": f"*Approval Platform:*\n{STAGING_URL}/servicedetails/org/{org_id}\n"
+                    "text": f"*Duns Number.:*\n{duns_no}\n"
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": f"*Website URL:*\n{url}\n"
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": f"*Phone Number:*\n{phone_no}\n"
                 }
             ]
         }
