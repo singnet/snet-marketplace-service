@@ -543,7 +543,7 @@ class SlackChatOperation:
                 }
             ]
         }
-        org_info_display_blocks = org_top_info_display_block + org_headquater_address_block + org_mailing_address_block
+        org_info_display_blocks = [org_top_info_display_block, org_headquater_address_block, org_mailing_address_block]
         divider_block = {
             'type': 'divider'
         }
@@ -631,6 +631,7 @@ class SlackChatOperation:
                 "text": f"*Comments*\n*{comment}"
             }
         }
-        blocks = org_info_display_blocks + [divider_block, org_comment_block, select_approval_state_block, comment_block]
+        blocks = org_info_display_blocks + [divider_block, org_comment_block, select_approval_state_block,
+                                            comment_block]
         view["blocks"] = blocks
         return view
