@@ -7,11 +7,12 @@ from registry.infrastructure.repositories.organization_repository import Organiz
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 from registry.infrastructure.models import Service as ServiceDBModel
 from registry.infrastructure.models import ServiceState as ServiceStateDBModel
+from registry.infrastructure.models import ServiceComment as ServiceCommentDBModel
 from registry.infrastructure.models import Organization as OrganizationDBModel
 from registry.infrastructure.models import OrganizationState as OrganizationStateDBModel
-from registry.infrastructure.models import ServiceComment as ServiceCommentDBModel
+from registry.infrastructure.models import OrganizationAddress as OrganizationAddressDBModel
 from registry.domain.models.organization import Organization as OrganizationDomainModel
-from registry.constants import OrganizationStatus, ServiceStatus
+from registry.constants import OrganizationStatus, ServiceStatus, OrganizationAddressType
 from unittest.mock import patch
 from urllib.parse import urlencode
 
@@ -419,6 +420,75 @@ class TestSlackChatOperation(TestCase):
                     "response_urls": []})
             }),"isBase64Encoded": False
         }
+        response = slack_interaction_handler(event=event, context=None)
+        assert (response["statusCode"] == 200)
+
+    @patch("registry.application.services.slack_chat_operation.SlackChatOperation.validate_slack_user")
+    @patch("registry.application.services.slack_chat_operation.SlackChatOperation.validate_slack_channel_id")
+    @patch("registry.application.services.slack_chat_operation.SlackChatOperation.validate_slack_signature")
+    @patch("registry.application.services.slack_chat_operation.requests.post")
+    @patch("registry.application.services.slack_chat_operation.SlackChatOperation.get_verification_latest_comments")
+    def test_slack_interaction_handler_to_view_org_modal(
+            self, verification_latest_comments, post_request, validate_slack_signature,
+            validate_slack_channel_id, validate_slack_user):
+        validate_slack_channel_id.return_value = True
+        validate_slack_user.return_value = True
+        validate_slack_signature.return_value = True
+        verification_latest_comments.return_value = None
+        post_request.return_value.status_code = 200
+        self.tearDown()
+        org_repo.add_organization(
+            OrganizationDomainModel(
+                "test_org_uuid", "test_org_id", "org_dummy", "ORGANIZATION", "PUBLISHER", "description",
+                "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], []),
+            "dummy", OrganizationStatus.PUBLISHED.value)
+        org_repo.add_item(
+            OrganizationAddressDBModel(
+                org_uuid="test_org_uuid",
+                address_type=OrganizationAddressType.HEAD_QUARTER_ADDRESS.value,
+                street_address="Dummy Street",
+                apartment="Dummy Apartment",
+                city="Dummy City",
+                pincode=000000,
+                state="Dummy State",
+                country="Dummy Country",
+                created_on=dt.utcnow(),
+                updated_on=dt.utcnow()
+            )
+        )
+        event = {"resource": "/submit",
+                 "path": "/submit",
+                 "httpMethod": "POST",
+                 "headers": {"Accept": "application/json,*/*",
+                             "Content-Type": "application/x-www-form-urlencoded",
+                             "X-Slack-Request-Timestamp": "1585742597",
+                             "X-Slack-Signature": "v0=5096314f4b78b0b75366d8429a5195ea01c7e67f5618ee05f8e94a94953e05fd"},
+                 "body": urlencode(
+                     {
+                         "payload": json.dumps(
+                             {
+                                 "type": "block_actions", "team": {"id": "T996H7VS8", "domain": "snet"},
+                                 "user": {"username": "dummy"},
+                                 "trigger_id": "1028338009186.315221267892.83550c5f247eb73b0ad743511e8698a6",
+                                 "channel": {"id": "Q2W3E4R5T6"},
+                                 "response_url": "https://hooks.slack.com/actions",
+                                 "actions": [
+                                     {"action_id": "review", "block_id": "NJ0wG",
+                                      "text": {"type": "plain_text", "text": "Review",
+                                               "emoji": True},
+                                      "value": json.dumps(
+                                          {"org_id": "test_org_id",
+                                           "path": "/org"}
+                                      ),
+                                      "style": "primary", "type": "button",
+                                      "action_ts": "1585742597.398302"
+                                      }
+                                 ]
+                             }
+                         )
+                     }
+                 ),
+                 "isBase64Encoded": False}
         response = slack_interaction_handler(event=event, context=None)
         assert (response["statusCode"] == 200)
 

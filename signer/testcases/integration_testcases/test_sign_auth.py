@@ -1,6 +1,7 @@
 import unittest
 
 from eth_account.messages import defunct_hash_message
+from unittest.mock import patch
 from web3.auto import w3
 import web3
 
@@ -8,8 +9,9 @@ from signer.signature_authenticator import main
 
 
 class TestSignAuth(unittest.TestCase):
-
-    def test_generate_sign(self):
+    @patch("boto3.client")
+    def test_generate_sign(self,mock_boto_client):
+        mock_boto_client.return_value=None
         username = 'test-user'
         org_id = 'snet'
         group_id = 'cOyJHJdvvig73r+o8pijgMDcXOX+bt8LkvIeQbufP7g='
