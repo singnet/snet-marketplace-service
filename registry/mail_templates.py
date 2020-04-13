@@ -3,7 +3,7 @@ from registry.config import PUBLISHER_PORTAL_DAPP_URL, EMAILS
 
 def get_org_member_invite_mail(org_name, invite_code):
     invite_member_template = {
-        "subject": """Membership Invitation from  Organization {org_name}""",
+        "subject": f"""Membership Invitation from  Organization {org_name}""",
         "body": f"""<div>
                 <p>Hello,</p>
                 <p>Organization <em>{org_name}</em> has sent you membership invite.
@@ -23,7 +23,7 @@ def get_org_member_invite_mail(org_name, invite_code):
 
 def get_service_approval_mail_template(service_id, service_name, org_id, org_name):
     service_approval_mail = {
-        "subject": f"""Service Approval: service ({service_id}, {service_name}) organization ({org_id, org_name})""",
+        "subject": f"""Service Approval: service ({service_id}, {service_name}) organization ({org_id}, {org_name})""",
         "body": f"""\
 <div>
     <p>Hello,</p>
@@ -53,7 +53,7 @@ def get_service_approval_mail_template(service_id, service_name, org_id, org_nam
 
 def get_org_approval_mail(org_id, org_name):
     org_approval_mail = {
-        "subject": f"""Organization Approval: organization ({org_id, org_name})""",
+        "subject": f"""Organization Approval: organization ({org_id}, {org_name})""",
         "body": f"""\
 <div>
     <p>Hello,</p>
