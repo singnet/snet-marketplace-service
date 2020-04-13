@@ -88,7 +88,7 @@ class ServiceStatus(Enum):
 
 class OrganizationAddressType(Enum):
     MAIL_ADDRESS = "mailing_address"
-    HEAD_QUARTER_ADDRESS = "headquarter_address"
+    HEAD_QUARTER_ADDRESS = "headquarters_address"
 
 
 class OrganizationType(Enum):
