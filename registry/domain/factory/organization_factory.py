@@ -1,10 +1,10 @@
 from registry.config import ALLOWED_ORIGIN
-from registry.constants import OrganizationStatus, Role
+from registry.constants import OrganizationStatus, Role, OrganizationAddressType
 from registry.domain.models.group import Group
 from registry.domain.models.organization import Organization, OrganizationState
 from registry.domain.models.organization_address import OrganizationAddress
 from registry.domain.models.organization_member import OrganizationMember
-from registry.exceptions import InvalidOriginException
+from registry.exceptions import InvalidOriginException, BadRequestException
 
 
 class OrganizationFactory:
@@ -54,6 +54,9 @@ class OrganizationFactory:
     @staticmethod
     def domain_address_entity_from_payload(payload):
         address_type = payload.get("address_type", None)
+        if address_type not in [OrganizationAddressType.HEAD_QUARTER_ADDRESS.value,
+                                OrganizationAddressType.MAIL_ADDRESS.value]:
+            raise BadRequestException()
         street_address = payload.get("street_address", None)
         apartment = payload.get("apartment", None)
         city = payload.get("city", None)
@@ -200,13 +203,13 @@ class OrganizationFactory:
     @staticmethod
     def parse_organization_metadata_assets(assets, existing_assets):
         if assets is None:
-            assets= {}
+            assets = {}
         if existing_assets is None:
-            existing_assets={}
+            existing_assets = {}
         url = ""
         for key, value in assets.items():
             if existing_assets and key in existing_assets:
-                if  existing_assets[key] and 'url' in existing_assets[key]:
+                if existing_assets[key] and 'url' in existing_assets[key]:
                     url = existing_assets[key]['url']
             else:
                 url = ""
@@ -216,10 +219,11 @@ class OrganizationFactory:
                 "url": url
             }
         merged = {**existing_assets, **assets}
-        return  merged
+        return merged
 
     @staticmethod
-    def parse_organization_metadata(org_uuid, ipfs_org_metadata, origin, duns_no, addresses, metadata_uri,existing_assets,transaction_hash,members):
+    def parse_organization_metadata(org_uuid, ipfs_org_metadata, origin, duns_no, addresses, metadata_uri,
+                                    existing_assets, transaction_hash, members):
         org_id = ipfs_org_metadata.get("org_id", None)
         org_name = ipfs_org_metadata.get("org_name", None)
         org_type = ipfs_org_metadata.get("org_type", None)
@@ -234,7 +238,8 @@ class OrganizationFactory:
             url = description.get("url", None)
 
         contacts = ipfs_org_metadata.get("contacts", None)
-        assets = OrganizationFactory.parse_organization_metadata_assets(ipfs_org_metadata.get("assets", None),existing_assets)
+        assets = OrganizationFactory.parse_organization_metadata_assets(ipfs_org_metadata.get("assets", None),
+                                                                        existing_assets)
         metadata_ipfs_hash = metadata_uri
         owner = ""
         groups = OrganizationFactory.group_domain_entity_from_group_list_metadata(ipfs_org_metadata.get("groups", []))
