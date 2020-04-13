@@ -4,7 +4,7 @@ ORG_ADDRESS = {
     "mail_address_same_hq_address": True,
     "addresses": [
         {
-            "address_type": "headquarter_address",
+            "address_type": "headquarters_address",
             "street_address": "F102",
             "apartment": "ABC Apartment",
             "city": "TestCity",

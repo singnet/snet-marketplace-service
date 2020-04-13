@@ -17,17 +17,6 @@ logger = get_logger(__name__)
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-def get_org_for_admin(event, context):
-    logger.info(event)
-    query_parameters = event["queryStringParameters"]
-    response = OrganizationPublisherService(None, None).get_for_admin(query_parameters)
-    return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
-    )
-
-
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def get_all_org(event, context):
     logger.info(event)
     username = event["requestContext"]["authorizer"]["claims"]["email"]

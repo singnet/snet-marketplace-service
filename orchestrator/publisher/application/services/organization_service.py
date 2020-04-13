@@ -3,9 +3,11 @@ import json
 from common import utils
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
+from common.utils import send_email_notification
 from orchestrator.config import REGION_NAME, REGISTRY_ARN, WALLETS_SERVICE_ARN, VERIFICATION_ARN, SLACK_HOOK, \
-    SLACK_CHANNEL_FOR_APPROVAL_TEAM
+    SLACK_CHANNEL_FOR_APPROVAL_TEAM, NOTIFICATION_ARN, ORG_APPROVERS_DLIST
 from orchestrator.constant import VerificationType, OrganizationType
+from orchestrator.publisher.mail_templates import get_org_approval_mail
 
 logger = get_logger(__name__)
 
@@ -78,12 +80,17 @@ class OrganizationOrchestratorService:
         else:
             raise Exception(f"Verification initiate failed for Invalid org type {org_type}")
 
-        slack_msg = f"Organization with org_id {org_details['org_id']} is submitted for approval"
-        OrganizationOrchestratorService.notify_approval_team(slack_msg)
+        self.notify_approval_team(org_details['org_id'], org_details['org_name'])
         return org_details
 
-    @staticmethod
-    def notify_approval_team(slack_msg):
+    def notify_approval_team(self, org_id, org_name):
+        slack_msg = f"Organization with org_id {org_id} is submitted for approval"
+        mail_template = get_org_approval_mail(org_id, org_name)
+        self.send_slack_message(slack_msg)
+        send_email_notification([ORG_APPROVERS_DLIST], mail_template["subject"],
+                                mail_template["body"], NOTIFICATION_ARN, self.boto_client)
+
+    def send_slack_message(self, slack_msg):
         slack_url = SLACK_HOOK['hostname'] + SLACK_HOOK['path']
         utils.send_slack_notification(slack_msg=slack_msg, slack_url=slack_url,
                                       slack_channel=SLACK_CHANNEL_FOR_APPROVAL_TEAM)
