@@ -14,6 +14,7 @@ class FileService:
         s3 = boto3.resource('s3')
         bucket = s3.Bucket(bucket)
         bucket.objects.filter(Prefix=prefix).delete()
+        return "OK"
 
     def get_s3_bucket_and_prefix(self, file_details):
         file_type = file_details.get("type", None)
