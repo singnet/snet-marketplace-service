@@ -1,7 +1,7 @@
 def get_org_approval_mail(org_id, org_name):
     org_approval_mail = {
-        "subject": f"""Organization Approval: organization ({org_id, org_name})""",
-        "body": """\
+        "subject": f"""Organization Approval: organization ({org_id}, {org_name})""",
+        "body": f"""\
 <html>
     <head></head>
     <body>
