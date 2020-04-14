@@ -12,7 +12,7 @@ logger = get_logger(__name__)
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-@secured(action=Action.CREATE, org_uuid_path=("queryStringParameters", "org_uuid"),
+@secured(action=Action.UPDATE, org_uuid_path=("queryStringParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def delete(event, context):
     query_parameters = event["queryStringParameters"]
