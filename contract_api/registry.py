@@ -135,7 +135,7 @@ class Registry:
             print("qry_part::", qry_part)
             sort_by = sort_by.replace("org_id", "M.org_id")
             services = self.repo.execute(
-                "SELECT M.*,O.organization_name,O.org_assets_url FROM service_endpoint E, service_metadata M, service S "
+                "SELECT DISTINCT M.*,O.organization_name,O.org_assets_url FROM service_endpoint E, service_metadata M, service S "
                 ", organization O WHERE O.org_id = S.org_id AND S.row_id = M.service_row_id AND "
                 "S.row_id = E.service_row_id " + qry_part + "ORDER BY E.is_available DESC, " + sort_by + " " + order_by)
             obj_utils = Utils()
