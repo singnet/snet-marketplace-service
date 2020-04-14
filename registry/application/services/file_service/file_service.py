@@ -20,33 +20,37 @@ class FileService:
         if file_type is None:
             raise InvalidFileTypeException()
 
-        if file_type == FileType.ORG_ASSETS.value:
+        if file_type == FileType.ORG_ASSETS.value and "org_uuid" in file_details:
             org_uuid = file_details["org_uuid"]
             bucket = FileType.ORG_ASSETS.value["bucket"]
             prefix = FileType.ORG_ASSETS.value["bucket_path"].format(org_uuid=org_uuid)
 
-        elif file_type == FileType.SERVICE_ASSETS.value:
+        elif file_type == FileType.SERVICE_ASSETS.value and "org_uuid" in file_details \
+                and "service_uuid" in file_details:
             org_uuid = file_details["org_uuid"]
             service_uuid = file_details["service_uuid"]
             bucket = FileType.SERVICE_ASSETS.value["bucket"]
             prefix = FileType.SERVICE_ASSETS.value["bucket_path"] \
                 .format(org_uuid=org_uuid, service_uuid=service_uuid)
 
-        elif file_type == FileType.SERVICE_PROTO_FILES.value:
+        elif file_type == FileType.SERVICE_PROTO_FILES.value and "org_uuid" in file_details \
+                and "service_uuid" in file_details:
             org_uuid = file_details["org_uuid"]
             service_uuid = file_details["service_uuid"]
             bucket = FileType.SERVICE_PROTO_FILES.value["bucket"]
             prefix = FileType.SERVICE_PROTO_FILES.value["bucket_path"] \
                 .format(org_uuid=org_uuid, service_uuid=service_uuid)
 
-        elif file_type == FileType.SERVICE_PAGE_COMPONENTS.value:
+        elif file_type == FileType.SERVICE_PAGE_COMPONENTS.value and "org_uuid" in file_details \
+                and "service_uuid" in file_details:
             org_uuid = file_details["org_uuid"]
             service_uuid = file_details["service_uuid"]
             bucket = FileType.SERVICE_PAGE_COMPONENTS.value["bucket"]
             prefix = FileType.SERVICE_PAGE_COMPONENTS.value["bucket_path"] \
                 .format(org_uuid=org_uuid, service_uuid=service_uuid)
 
-        elif file_type == FileType.SERVICE_GALLERY_IMAGES.value:
+        elif file_type == FileType.SERVICE_GALLERY_IMAGES.value and "org_uuid" in file_details \
+                and "service_uuid" in file_details:
             org_uuid = file_details["org_uuid"]
             service_uuid = file_details["service_uuid"]
             bucket = FileType.SERVICE_GALLERY_IMAGES.value["bucket"]
