@@ -3,11 +3,11 @@ from datetime import datetime
 
 from web3 import Web3
 
+from common import utils
 from common.boto_utils import BotoUtils
 from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
-from common.utils import send_email_notification
-from registry.config import NOTIFICATION_ARN, PUBLISHER_PORTAL_DAPP_URL, PUBLISHER_PORTAL_SUPPORT_MAIL, REGION_NAME
+from registry.config import NOTIFICATION_ARN, REGION_NAME, SLACK_HOOK, SLACK_CHANNEL_FOR_APPROVAL_TEAM, EMAILS
 from registry.constants import EnvironmentType, ORG_STATUS_LIST, ORG_TYPE_VERIFICATION_TYPE_MAPPING, \
     OrganizationActions, OrganizationIDAvailabilityStatus, OrganizationMemberStatus, OrganizationStatus, \
     OrganizationType, Role
@@ -15,6 +15,7 @@ from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization
 from registry.domain.services.registry_blockchain_util import RegistryBlockChainUtil
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
+from registry.mail_templates import get_org_member_invite_mail, get_org_approval_mail
 
 org_repo = OrganizationPublisherRepository()
 
@@ -79,8 +80,18 @@ class OrganizationPublisherService:
 
         self._archive_current_organization(current_organization)
         updated_state = Organization.next_state(current_organization, updated_organization, action)
+        if updated_state == OrganizationStatus.ONBOARDING.value:
+            self.notify_approval_team(updated_organization.id, updated_organization.name)
         org_repo.update_organization(updated_organization, self.username, updated_state)
         return "OK"
+
+    def notify_approval_team(self, org_id, org_name):
+        slack_msg = f"Organization with org_id {org_id} is submitted for approval"
+        mail_template = get_org_approval_mail(org_id, org_name)
+        utils.send_slack_notification(slack_msg=slack_msg, slack_url=SLACK_HOOK['hostname'] + SLACK_HOOK['path'],
+                                      slack_channel=SLACK_CHANNEL_FOR_APPROVAL_TEAM)
+        utils.send_email_notification([EMAILS["ORG_APPROVERS_DLIST"]], mail_template["subject"],
+                                      mail_template["body"], NOTIFICATION_ARN, self.boto_utils)
 
     def _archive_current_organization(self, organization):
         if organization.get_status() == OrganizationStatus.PUBLISHED.value:
@@ -90,7 +101,7 @@ class OrganizationPublisherService:
         logger.info(f"publish organization to ipfs org_uuid: {self.org_uuid}")
         organization = org_repo.get_org_for_org_uuid(self.org_uuid)
         organization.publish_to_ipfs()
-        test_transaction_hash = RegistryBlockChainUtil(EnvironmentType.TEST.value)\
+        test_transaction_hash = RegistryBlockChainUtil(EnvironmentType.TEST.value) \
             .publish_organization_to_test_network(organization)
         org_repo.store_ipfs_hash_and_test_transaction_hash(organization, self.username, test_transaction_hash)
         return organization.to_response()
@@ -171,30 +182,15 @@ class OrganizationPublisherService:
     def _send_email_notification_for_inviting_organization_member(self, org_members_list, org_name):
         for org_member in org_members_list:
             recipient = org_member.username
-            org_member_notification_subject = self._get_org_member_notification_subject(org_name)
-            org_member_notification_message = self._get_org_member_notification_message(org_member.invite_code,
-                                                                                        org_name)
+            mail_template = get_org_member_invite_mail(org_name, org_member.invite_code)
             send_notification_payload = {"body": json.dumps({
-                "message": org_member_notification_message,
-                "subject": org_member_notification_subject,
+                "message": mail_template["body"],
+                "subject": mail_template["subject"],
                 "notification_type": "support",
                 "recipient": recipient})}
             self.boto_utils.invoke_lambda(lambda_function_arn=NOTIFICATION_ARN, invocation_type="RequestResponse",
                                           payload=json.dumps(send_notification_payload))
             logger.info(f"Org Membership Invite sent to {recipient}")
-
-    @staticmethod
-    def _get_org_member_notification_message(invite_code, org_name):
-        return f"<html><head></head><body><div><p>Hello,</p><p>Organization <em>{org_name}</em> has sent you membership invite. " \
-               f"Your invite code is <strong>{invite_code}</strong>.</p><br/><p>Please click on the link below to " \
-               f"accept the invitation.</p><p>{PUBLISHER_PORTAL_DAPP_URL}</p><br/><br/><p>" \
-               f"<em>Please do not reply to the email for any enquiries for any queries please email at " \
-               f"{PUBLISHER_PORTAL_SUPPORT_MAIL}.</em></p><p>Warmest regards, <br />SingularityNET Publisher Portal " \
-               f"Team</p></div></body></html>"
-
-    @staticmethod
-    def _get_org_member_notification_subject(org_name):
-        return f"Membership Invitation from  Organization {org_name}"
 
     def _get_org_contacts_for_all_organization_for_given_user(self, username):
         organizations = org_repo.get_org_for_user(username)
@@ -238,9 +234,9 @@ class OrganizationPublisherService:
         # TODO send_email should not have boto_utils
         try:
             for org_name, contacts in org_contacts.items():
-                send_email_notification(contacts, ORG_APPROVE_SUBJECT.format(org_name),
-                                        ORG_APPROVE_MESSAGE.format(org_name), NOTIFICATION_ARN,
-                                        self.boto_utils)
+                utils.send_email_notification(contacts, ORG_APPROVE_SUBJECT.format(org_name),
+                                              ORG_APPROVE_MESSAGE.format(org_name), NOTIFICATION_ARN,
+                                              self.boto_utils)
         except:
             logger.info(f"Error happened while sending approval mail for {organization.name} and contacts {contacts}")
 
