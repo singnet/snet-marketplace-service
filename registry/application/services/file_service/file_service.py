@@ -1,7 +1,9 @@
 import boto3
 
+from common import utils
 from common.logger import get_logger
 from registry.application.services.file_service.constants import FileType
+from registry.config import SLACK_HOOK, ALERTS_SLACK_CHANNEL
 from registry.exceptions import InvalidFileTypeException
 
 logger = get_logger(__name__)
@@ -40,17 +42,25 @@ class FileService:
             successful_deletes.extend(s3_response.get("Deleted", []))
             unsuccessful_deletes.extend(s3_response.get('Errors', []))
 
+        unsuccessful_files = [s3_file_details.get("Key", "") for s3_file_details in unsuccessful_deletes]
         response = {
             "deleted": [s3_file_details.get("Key", "") for s3_file_details in successful_deletes],
-            "errors": [s3_file_details.get("Key", "") for s3_file_details in unsuccessful_deletes]
+            "errors": unsuccessful_files
         }
 
         if not unsuccessful_deletes:
             return response
         if not successful_deletes:
             raise Exception("Failed to delete files")
-        logger.error(f"Error occurred while deleting Errors: {unsuccessful_deletes}")
+
+        self.send_slack_alert(unsuccessful_files)
         return response
+
+    def send_slack_alert(self, unsuccessful_files):
+        slack_msg = f"Failed to delete files\n```{unsuccessful_files}```"
+        return utils.send_slack_notification(
+            slack_msg=slack_msg, slack_url=SLACK_HOOK['hostname'] + SLACK_HOOK['path'],
+            slack_channel=ALERTS_SLACK_CHANNEL)
 
     def get_s3_bucket_and_prefix(self, file_details):
         file_type = file_details.get("type", None)
