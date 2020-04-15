@@ -16,10 +16,10 @@ class FileService:
         bucket, prefix = self.get_s3_bucket_and_prefix(file_details)
         s3 = boto3.resource('s3')
         bucket = s3.Bucket(bucket)
-        response = bucket.objects.filter(Prefix=prefix).delete()
+        s3_delete_response = bucket.objects.filter(Prefix=prefix).delete()
         """
         boto==1.10.9 
-        response = [{
+        s3_delete_response = [{
             'Deleted': [
                 {
                     'Key': 'string'
@@ -34,10 +34,23 @@ class FileService:
                 },
             ]
         }]"""
-        for s3_delete_response in response:
-            if "Errors" in s3_delete_response:
-                logger.error(f"Error occurred while deleting Errors: {s3_delete_response['Errors']}")
-        return "OK"
+        successful_deletes = []
+        unsuccessful_deletes = []
+        for s3_response in s3_delete_response:
+            successful_deletes.extend(s3_response.get("Deleted", []))
+            unsuccessful_deletes.extend(s3_response.get('Errors', []))
+
+        response = {
+            "deleted": [s3_file_details.get("Key", "") for s3_file_details in successful_deletes],
+            "errors": [s3_file_details.get("Key", "") for s3_file_details in unsuccessful_deletes]
+        }
+
+        if not unsuccessful_deletes:
+            return response
+        if not successful_deletes:
+            raise Exception("Failed to delete files")
+        logger.error(f"Error occurred while deleting Errors: {unsuccessful_deletes}")
+        return response
 
     def get_s3_bucket_and_prefix(self, file_details):
         file_type = file_details.get("type", None)
