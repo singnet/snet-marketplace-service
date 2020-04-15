@@ -217,7 +217,7 @@ class Registry:
                                          "free_call_signer_address": rec.get("free_call_signer_address", "")
                                          }
                               }
-                    groups[group_id]['endpoints'].append({"endpoint": rec['endpoint'], "is_available":
+                groups[group_id]['endpoints'].append({"endpoint": rec['endpoint'], "is_available":
                                                           rec['is_available'], "last_check_timestamp": rec["last_check_timestamp"]})
             return list(groups.values())
         except Exception as e:
