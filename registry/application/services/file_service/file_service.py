@@ -1,7 +1,10 @@
 import boto3
 
+from common.logger import get_logger
 from registry.application.services.file_service.constants import FileType
 from registry.exceptions import InvalidFileTypeException
+
+logger = get_logger(__name__)
 
 
 class FileService:
@@ -13,7 +16,27 @@ class FileService:
         bucket, prefix = self.get_s3_bucket_and_prefix(file_details)
         s3 = boto3.resource('s3')
         bucket = s3.Bucket(bucket)
-        bucket.objects.filter(Prefix=prefix).delete()
+        response = bucket.objects.filter(Prefix=prefix).delete()
+        """
+        boto==1.10.9 
+        response = [{
+            'Deleted': [
+                {
+                    'Key': 'string'
+                },
+            ],
+            'Errors': [
+                {
+                    'Key': 'string',
+                    'VersionId': 'string',
+                    'Code': 'string',
+                    'Message': 'string'
+                },
+            ]
+        }]"""
+        for s3_delete_response in response:
+            if "Errors" in s3_delete_response:
+                logger.error(f"Error occurred while deleting Errors: {s3_delete_response['Errors']}")
         return "OK"
 
     def get_s3_bucket_and_prefix(self, file_details):
