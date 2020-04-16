@@ -18,25 +18,25 @@ class TestFileService(TestCase):
         org_uuid = "test_org_uuid"
         service_uuid = "test_service_uuid"
         bucket, prefix = FileService().get_s3_bucket_and_prefix({"org_uuid": org_uuid, "type": "ORG_ASSETS"})
-        self.assertEqual("some_bucket", bucket)
+        self.assertEqual("org_bucket", bucket)
         self.assertEqual("test_org_uuid/assets", prefix)
 
         bucket, prefix = FileService().get_s3_bucket_and_prefix({"org_uuid": org_uuid, "service_uuid": service_uuid,
                                                                  "type": "SERVICE_ASSETS"})
-        self.assertEqual("some_bucket", bucket)
+        self.assertEqual("org_bucket", bucket)
         self.assertEqual('test_org_uuid/services/test_service_uuid/assets', prefix)
 
         bucket, prefix = FileService().get_s3_bucket_and_prefix({"org_uuid": org_uuid, "service_uuid": service_uuid,
                                                                  "type": "SERVICE_PAGE_COMPONENTS"})
-        self.assertEqual("some_bucket", bucket)
+        self.assertEqual("org_bucket", bucket)
         self.assertEqual('test_org_uuid/services/test_service_uuid/component', prefix)
 
         bucket, prefix = FileService().get_s3_bucket_and_prefix({"org_uuid": org_uuid, "service_uuid": service_uuid,
                                                                  "type": "SERVICE_GALLERY_IMAGES"})
-        self.assertEqual("some_bucket", bucket)
+        self.assertEqual("org_bucket", bucket)
         self.assertEqual('test_org_uuid/services/test_service_uuid/assets', prefix)
 
         bucket, prefix = FileService().get_s3_bucket_and_prefix({"org_uuid": org_uuid, "service_uuid": service_uuid,
                                                                  "type": "SERVICE_PROTO_FILES"})
-        self.assertEqual("some_bucket", bucket)
+        self.assertEqual("org_bucket", bucket)
         self.assertEqual('test_org_uuid/services/test_service_uuid/proto', prefix)
