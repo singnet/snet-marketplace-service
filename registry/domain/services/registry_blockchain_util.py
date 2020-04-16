@@ -1,14 +1,12 @@
-from unittest.mock import Mock
-
 import web3
 
 from common.blockchain_util import BlockChainUtil
+from common.boto_utils import BotoUtils
 from common.exceptions import MethodNotImplemented
-from common.utils import ipfsuri_to_bytesuri
-from registry.config import NETWORK_ID, NETWORKS, BLOCKCHAIN_TEST_ENV
-from registry.constants import EnvironmentType, REG_CNTRCT_PATH, REG_ADDR_PATH, TEST_REG_CNTRCT_PATH, TEST_REG_ADDR_PATH
-
 from common.logger import get_logger
+from common.utils import ipfsuri_to_bytesuri
+from registry.config import NETWORK_ID, NETWORKS, BLOCKCHAIN_TEST_ENV, REGION_NAME
+from registry.constants import EnvironmentType, REG_CNTRCT_PATH, REG_ADDR_PATH, TEST_REG_CNTRCT_PATH, TEST_REG_ADDR_PATH
 from registry.exceptions import OrganizationNotFoundException, EnvironmentNotFoundException
 
 logger = get_logger(__name__)
@@ -28,7 +26,7 @@ class RegistryBlockChainUtil:
         elif env_type == EnvironmentType.TEST.value:
             self.__contract_path = TEST_REG_CNTRCT_PATH
             self.__contract_address_path = TEST_REG_ADDR_PATH
-            self.__executor_address = BLOCKCHAIN_TEST_ENV["executor_address"]
+            self.__executor_address = BLOCKCHAIN_TEST_ENV["publisher_address"]
             self.__network_id = BLOCKCHAIN_TEST_ENV["network_id"]
             self.__blockchain_util = BlockChainUtil(provider_type="HTTP_PROVIDER",
                                                     provider=BLOCKCHAIN_TEST_ENV['http_provider'])
@@ -62,7 +60,7 @@ class RegistryBlockChainUtil:
 
     def __make_trasaction(self, *positional_inputs, method_name):
         if self.__env_type == EnvironmentType.TEST.value:
-            executor_key = BLOCKCHAIN_TEST_ENV["executor_key"]
+            executor_key = BotoUtils(REGION_NAME).get_ssm_parameter(BLOCKCHAIN_TEST_ENV["publisher_private_key"])
             transaction_object = self.__generate_blockchain_transaction_for_test_environment(
                 *positional_inputs, method_name=method_name)
         else:
