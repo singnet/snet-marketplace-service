@@ -7,8 +7,8 @@ from common.constant import StatusCode
 from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
 from common.utils import download_file_from_url, json_to_file, publish_zip_file_in_ipfs, send_email_notification
-from registry.config import ASSET_DIR, BLOCKCHAIN_TEST_ENV, IPFS_URL, METADATA_FILE_PATH, NETWORKS, NETWORK_ID, \
-    NOTIFICATION_ARN, REGION_NAME, SLACK_CHANNEL_FOR_APPROVAL_TEAM, SLACK_HOOK, EMAILS
+from registry.config import ASSET_DIR, BLOCKCHAIN_TEST_ENV, EMAILS, IPFS_URL, METADATA_FILE_PATH, NETWORKS, NETWORK_ID, \
+    NOTIFICATION_ARN, REGION_NAME, SLACK_CHANNEL_FOR_APPROVAL_TEAM, SLACK_HOOK
 from registry.constants import EnvironmentType, OrganizationStatus, ServiceAvailabilityStatus, ServiceStatus, \
     ServiceSupportType, UserType
 from registry.domain.factory.service_factory import ServiceFactory
@@ -89,6 +89,23 @@ class ServicePublisherService:
             ServicePublisherRepository().save_service_comments(service_provider_comment)
             service.comments = self.get_service_comments()
         return service.to_dict()
+
+    def save_service_attributes(self, payload):
+        VALID_PATCH_ATTRIBUTE = ["groups"]
+        service_db = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid,
+                                                                                     self._service_uuid)
+        service = ServiceFactory.convert_service_db_model_to_entity_model(service_db)
+
+        for attribute, value in payload.items():
+            if attribute in VALID_PATCH_ATTRIBUTE:
+                if attribute == "groups":
+                    service.groups =[ServiceFactory.create_service_group_entity_model(self._org_uuid, self._service_uuid, group) for group in payload.get("groups", [])]
+            else:
+                raise Exception("Patching of other attributes not allowed as of now")
+
+        saved_service = ServicePublisherRepository().save_service(self._username, service, service.service_state.state)
+
+        return saved_service.to_dict()
 
     def save_transaction_hash_for_published_service(self, payload):
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
