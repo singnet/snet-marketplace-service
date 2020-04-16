@@ -107,26 +107,6 @@ class ServicePublisherService:
 
         return saved_service.to_dict()
 
-
-
-
-
-        service = ServiceFactory().create_service_entity_model(self._org_uuid, self._service_uuid, payload,
-                                                               ServiceStatus.DRAFT.value)
-        service = ServicePublisherRepository().save_service(self._username, service, ServiceStatus.DRAFT.value)
-        comments = payload.get("comments", {}).get(UserType.SERVICE_PROVIDER.value, "")
-        if bool(comments):
-            service_provider_comment = service_factory. \
-                create_service_comment_entity_model(org_uuid=self._org_uuid,
-                                                    service_uuid=self._service_uuid,
-                                                    support_type="SERVICE_APPROVAL",
-                                                    user_type="SERVICE_PROVIDER",
-                                                    commented_by=self._username,
-                                                    comment=comments)
-            ServicePublisherRepository().save_service_comments(service_provider_comment)
-            service.comments = self.get_service_comments()
-        return service.to_dict()
-
     def save_transaction_hash_for_published_service(self, payload):
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
         if service.service_state.state == ServiceStatus.APPROVED.value:
