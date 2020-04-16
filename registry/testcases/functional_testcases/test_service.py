@@ -1241,7 +1241,7 @@ class TestService(TestCase):
                 row_id=1000,
                 org_uuid="test_org_uuid",
                 service_uuid="test_service_uuid",
-                state=ServiceStatus.DRAFT.value,
+                state=ServiceStatus.APPROVAL_PENDING.value,
                 created_by="dummy_user",
                 updated_by="dummy_user",
                 created_on=dt.utcnow()
@@ -1305,7 +1305,7 @@ class TestService(TestCase):
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
         assert (response_body["data"]["service_uuid"] == "test_service_uuid")
-        assert (response_body["data"]["service_state"]["state"] == ServiceStatus.DRAFT.value)
+        assert (response_body["data"]["service_state"]["state"] == ServiceStatus.APPROVAL_PENDING.value)
         assert (response_body["data"]['groups'] == [{'group_id': 'l/hp6f1RXFPANeLWFZYwTB93Xi42S8NpZHfnceS6eUw=', 'group_name': 'defaultGroup', 'endpoints': {'https://example-service-a.singularitynet.io:8010': {'valid': False}, 'https://example-service-a.singularitynet.io:8013': {'valid': False}, 'https://example-service-a.singularitynet.io:8011': {'valid': True}}, 'test_endpoints': [], 'pricing': [{'default': True, 'price_model': 'fixed_price', 'price_in_cogs': 1}], 'free_calls': 15, 'free_call_signer_address': '0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F', 'daemon_addresses': []}])
 
 
