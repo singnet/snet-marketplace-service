@@ -37,7 +37,6 @@ class Utils:
         url = SLACK_HOOK['hostname'] + SLACK_HOOK['path']
         prefix = self.msg_type.get(type, "")
         slack_channel = SLACK_HOOK.get("channel", "contract-index-alerts")
-        print(url)
         payload = {"channel": f"#{slack_channel}",
                    "username": "webhookbot",
                    "text": prefix + slack_msg,
@@ -45,7 +44,6 @@ class Utils:
                    }
 
         resp = requests.post(url=url, data=json.dumps(payload))
-        print(resp.status_code, resp.text)
 
     def clean(self, value_list):
         for value in value_list:
