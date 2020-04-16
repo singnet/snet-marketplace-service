@@ -4,7 +4,7 @@ from common import utils
 from common.logger import get_logger
 from registry.application.services.file_service.constants import FileType
 from registry.config import SLACK_HOOK, ALERTS_SLACK_CHANNEL
-from registry.exceptions import InvalidFileTypeException
+from registry.exceptions import InvalidFileTypeException, FileNotFoundException
 
 logger = get_logger(__name__)
 
@@ -45,10 +45,13 @@ class FileService:
             "errors": unsuccessful_files
         }
 
+        if not successful_deletes:
+            if not unsuccessful_deletes:
+                raise FileNotFoundException()
+            raise Exception("Failed to delete files")
+
         if not unsuccessful_deletes:
             return response
-        if not successful_deletes:
-            raise Exception("Failed to delete files")
 
         self.send_slack_alert(unsuccessful_files)
         return response
