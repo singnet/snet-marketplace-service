@@ -150,11 +150,12 @@ class ServiceStatus:
         return slack_message
 
     def _send_email_notification(self, org_id, service_id, recipient, endpoint):
+        network_name = NETWORKS[NETWORK_ID]["name"]
         send_notification_payload = {"body": json.dumps({
             "message": f"<html><head></head><body><div><p>Hello,</p><p>Your service {service_id} under organization "
                        f"{org_id} is down.</p><p>Please click the below URL to update service status on priority. <br/> "
-                       f"<a href='https://ropsten-marketplace.singularitynet.io/service-status/org/{org_id}/service/{service_id}/health/reset'>"
-                       f"https://ropsten-marketplace.singularitynet.io/service-status/org/{org_id}/service/{service_id}/health/reset"
+                       f"<a href='https://{network_name}-marketplace.singularitynet.io/service-status/org/{org_id}/service/{service_id}/health/reset'>"
+                       f"https://{network_name}-marketplace.singularitynet.io/service-status/org/{org_id}/service/{service_id}/health/reset"
                        f"</a></p><br /><p><em>Please do not reply to the email for any enquiries for any queries please "
                        f"email at cs-marketplace@singularitynet.io. </em></p><p>Warmest regards, <br />"
                        f"SingularityNET Marketplace Team</p></div></body></html>",
