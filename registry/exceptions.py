@@ -99,8 +99,23 @@ class InvalidSlackSignatureException(CustomException):
         super().__init__({})
 
 
+class InvalidFileTypeException(CustomException):
+    error_message = "INVALID_FILE_TYPE_EXCEPTION"
+
+    def __init__(self):
+        super().__init__({})
+
+
+class FileNotFoundException(CustomException):
+    error_message = "FILE_NOT_FOUNT_EXCEPTION"
+
+    def __init__(self):
+        super().__init__({})
+
+
 EXCEPTIONS = (BadRequestException, OrganizationNotFoundException, InvalidOriginException, MethodNotImplemented,
               InvalidOrganizationStateException, InvalidMetadataException, InvalidServiceStateException,
-              ServiceProtoNotFoundException, ServiceProtoNotFoundException, OrganizationNotPublishedException,
+              ServiceProtoNotFoundException, OrganizationNotPublishedException,
               ServiceNotFoundException, ServiceGroupNotFoundException, EnvironmentNotFoundException,
-              InvalidSlackUserException, InvalidSlackChannelException,InvalidSlackSignatureException)
+              InvalidSlackUserException, InvalidSlackChannelException, InvalidSlackSignatureException,
+              InvalidFileTypeException, FileNotFoundException)
