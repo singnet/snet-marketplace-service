@@ -107,7 +107,7 @@ class InvalidFileTypeException(CustomException):
 
 
 class FileNotFoundException(CustomException):
-    error_message = "FILE_NOT_FOUNT_EXCEPTION"
+    error_message = "FILE_NOT_FOUND"
 
     def __init__(self):
         super().__init__({})
