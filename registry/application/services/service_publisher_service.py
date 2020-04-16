@@ -100,8 +100,8 @@ class ServicePublisherService:
             if attribute in VALID_PATCH_ATTRIBUTE:
                 if attribute == "groups":
                     service.groups =[ServiceFactory.create_service_group_entity_model(self._org_uuid, self._service_uuid, group) for group in payload.get("groups", [])]
-                else:
-                    raise Exception("Patching of other attributes not allowed as of now")
+            else:
+                raise Exception("Patching of other attributes not allowed as of now")
 
         saved_service = ServicePublisherRepository().save_service(self._username, service, service.service_state.state)
 
