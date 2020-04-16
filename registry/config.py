@@ -15,6 +15,7 @@ NETWORKS = {
 }
 NETWORK_ID = 3
 SLACK_HOOK = {
+    "channel": "",
     'hostname': '',
     'port': 443,
     'path': '',
