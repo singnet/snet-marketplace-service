@@ -39,10 +39,10 @@ ORG_ID_FOR_TESTING_AI_SERVICE = ""
 BLOCKCHAIN_TEST_ENV = {
     "network_id": 3,
     "network_name": "test",
-    "executor_address": "",
     "http_provider": "https://ropsten.infura.io",
     "ws_provider": "wss://ropsten.infura.io/ws",
-    "executor_key": "",
+    "publisher_private_key": "",
+    "publisher_address": "",
     "free_calls": 100
 }
 SLACK_CHANNEL_FOR_APPROVAL_TEAM = ""
