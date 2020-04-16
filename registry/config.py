@@ -15,6 +15,7 @@ NETWORKS = {
 }
 NETWORK_ID = 3
 SLACK_HOOK = {
+    "channel": "",
     'hostname': '',
     'port': 443,
     'path': '',
@@ -66,4 +67,3 @@ EMAILS = {
     "ORG_APPROVERS_DLIST": "",
     "SERVICE_APPROVERS_DLIST": ""
 }
-ALERTS_SLACK_CHANNEL = ""
