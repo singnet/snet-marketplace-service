@@ -151,7 +151,7 @@ class ServiceFactory:
     @staticmethod
     def is_valid_contributor(contributor):
         if (contributor["email_id"] is None or len(contributor["email_id"]) == 0) and \
-                (contributor["name"] is None and len(contributor["name"]) == 0):
+                (contributor["name"] is None or len(contributor["name"]) == 0):
             return False
         return True
 
