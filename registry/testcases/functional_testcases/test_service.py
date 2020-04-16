@@ -3,23 +3,24 @@ from datetime import datetime as dt
 from unittest import TestCase
 from unittest.mock import patch
 from uuid import uuid4
+
 from common.constant import StatusCode
-from registry.application.handlers.service_handlers import save_service_attributes, verify_service_id
-from registry.application.handlers.service_handlers import save_service
 from registry.application.handlers.service_handlers import create_service
-from registry.application.handlers.service_handlers import get_services_for_organization
-from registry.application.handlers.service_handlers import get_service_for_service_uuid
-from registry.application.handlers.service_handlers import publish_service_metadata_to_ipfs
-from registry.application.handlers.service_handlers import save_transaction_hash_for_published_service
-from registry.application.handlers.service_handlers import list_of_orgs_with_services_submitted_for_approval
-from registry.application.handlers.service_handlers import legal_approval_of_service
 from registry.application.handlers.service_handlers import get_daemon_config_for_current_network
+from registry.application.handlers.service_handlers import get_service_for_service_uuid
+from registry.application.handlers.service_handlers import get_services_for_organization
+from registry.application.handlers.service_handlers import legal_approval_of_service
+from registry.application.handlers.service_handlers import list_of_orgs_with_services_submitted_for_approval
+from registry.application.handlers.service_handlers import publish_service_metadata_to_ipfs
+from registry.application.handlers.service_handlers import save_service
+from registry.application.handlers.service_handlers import save_service_attributes, verify_service_id
+from registry.application.handlers.service_handlers import save_transaction_hash_for_published_service
 from registry.application.handlers.service_handlers import submit_service_for_approval
-from registry.constants import ServiceAvailabilityStatus
-from registry.constants import ServiceStatus
+from registry.constants import EnvironmentType
 from registry.constants import OrganizationMemberStatus
 from registry.constants import Role
-from registry.constants import EnvironmentType
+from registry.constants import ServiceAvailabilityStatus
+from registry.constants import ServiceStatus
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.infrastructure.models import Organization as OrganizationDBModel
 from registry.infrastructure.models import OrganizationMember as OrganizationMemberDBModel
@@ -948,7 +949,7 @@ class TestService(TestCase):
                 ranking=1,
                 proto={"proto_files": {
                     "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/test_org_uuid/services/test_service_uuid/assets/20200212111248_proto_files.zip"}},
-                contributors={"email_id": "prashant@singularitynet.io"},
+                contributors=[{"email_id": "dev@dummy.io", "name": "contributor"}],
                 created_on=dt.utcnow()
             )
         )
@@ -999,7 +1000,7 @@ class TestService(TestCase):
                                "_service_uuid/assets/20200212111248_proto_files.zip"
                     }
                 },
-                "contributors": [{"name": "dummy"}],
+                "contributors": [{"name": "dummy", "email_id": "dev@dummy.io"}],
                 "groups": [{"group_name": "default_group",
                             "free_calls": 12,
                             "free_call_signer_address": "0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F",
@@ -1029,7 +1030,9 @@ class TestService(TestCase):
         assert (response_body["status"] == "success")
         assert (response_body["data"]["service_uuid"] == test_service_uuid)
         assert (response_body["data"]["service_state"]["state"] == ServiceStatus.APPROVAL_PENDING.value)
-        assert (response_body["data"]["contributors"] == [{'name': 'dummy'}, {'email_id': test_user}])
+        self.assertListEqual(
+            [{"name": "dummy", "email_id": "dev@dummy.io"}, {"name": "", "email_id": test_user}],
+            response_body["data"]["contributors"])
 
         def test_daemon_config_for_test_and_main_environment(self):
             org_repo.add_item(

@@ -281,7 +281,7 @@ class ServicePublisherService:
 
     def submit_service_for_approval(self, payload):
 
-        user_as_contributor = [{"email_id": self._username}]
+        user_as_contributor = [{"email_id": self._username, "name": ""}]
         payload["contributors"] = payload.get("contributors", user_as_contributor) + user_as_contributor
 
         organization = OrganizationPublisherRepository().get_org_for_org_uuid(self._org_uuid)
