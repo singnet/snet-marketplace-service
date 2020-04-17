@@ -221,6 +221,12 @@ class TestOrganizationPublisherService(unittest.TestCase):
         organization = org_repo.get_org(OrganizationStatus.ONBOARDING_APPROVED.value)
         self.assertEqual(len(organization), 3)
 
+    @patch("common.boto_utils.BotoUtils.invoke_lambda")
+    def test_notify_user_on_start_of_onboarding_process(self, mock_invoke_lambda):
+        recipients = ["dummy@dummy.com"]
+        org_publisher_service = OrganizationPublisherService(username=None, org_uuid=None)
+        org_publisher_service.notify_user_on_start_of_onboarding_process(org_id="dummy", recipients=recipients)
+
     def tearDown(self):
         org_repo.session.query(Group).delete()
         org_repo.session.query(OrganizationMember).delete()
