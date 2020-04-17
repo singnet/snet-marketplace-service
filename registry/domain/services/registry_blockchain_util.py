@@ -55,7 +55,7 @@ class RegistryBlockChainUtil:
         transaction_object = self.__blockchain_util.create_transaction_object(
             *positional_inputs, method_name=method_name, address=self.__executor_address,
             contract_path=self.__contract_path, contract_address_path=self.__contract_address_path,
-            net_id=self.__network_id)
+            net_id=BLOCKCHAIN_TEST_ENV["network_id"])
         return transaction_object
 
     def __make_trasaction(self, *positional_inputs, method_name):
