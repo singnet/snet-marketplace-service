@@ -35,11 +35,11 @@ def get_org_approval_mail(org_id, org_name):
 def get_mail_template_to_user_for_org_onboarding(org_id):
     mail_template = {
         "subject": f"Your organization {org_id} has successfully submitted for approval",
-        "body": f"""Your organization {org_id} has successfully been submitted for approval. We will notify you once it 
+        "body": f"""<div>Your organization {org_id} has successfully been submitted for approval. We will notify you once it 
         is reviewed by our approval team. It usually takes around five to ten business days for approval.
         <br/>
         <p>Regards,<br/>SingularityNET Publisher Portal Team</p>
-        <div>
+        </div>
         """
     }
     return mail_template
