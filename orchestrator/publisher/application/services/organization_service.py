@@ -7,8 +7,8 @@ from common.utils import send_email_notification
 from orchestrator.config import REGION_NAME, REGISTRY_ARN, WALLETS_SERVICE_ARN, VERIFICATION_ARN, SLACK_HOOK, \
     SLACK_CHANNEL_FOR_APPROVAL_TEAM, NOTIFICATION_ARN, ORG_APPROVERS_DLIST
 from orchestrator.constant import VerificationType, OrganizationType
+from orchestrator.publisher.mail_templates import get_mail_template_to_user_for_org_onboarding
 from orchestrator.publisher.mail_templates import get_org_approval_mail
-from orchestrator.publisher.mail_templates import get_notification_mail_template_for_service_provider_when_org_is_submitted_for_onboarding
 
 logger = get_logger(__name__)
 
@@ -96,15 +96,15 @@ class OrganizationOrchestratorService:
         if not recipients:
             logger.info(f"Unable to find recipients for organization with org_id {org_id}")
             return
-        mail_template = get_notification_mail_template_for_service_provider_when_org_is_submitted_for_onboarding(org_id)
+        mail_template = get_mail_template_to_user_for_org_onboarding(org_id)
         for recipient in recipients:
             send_notification_payload = {"body": json.dumps({
                 "message": mail_template["body"],
                 "subject": mail_template["subject"],
                 "notification_type": "support",
                 "recipient": recipient})}
-            self.boto_utils.invoke_lambda(lambda_function_arn=NOTIFICATION_ARN, invocation_type="RequestResponse",
-                                          payload=json.dumps(send_notification_payload))
+            self.boto_client.invoke_lambda(lambda_function_arn=NOTIFICATION_ARN, invocation_type="RequestResponse",
+                                           payload=json.dumps(send_notification_payload))
             logger.info(f"Recipient {recipient} notified for successfully starting onboarding process.")
 
     def send_slack_message(self, slack_msg):
