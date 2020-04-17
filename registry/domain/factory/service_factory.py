@@ -5,6 +5,7 @@ from registry.domain.models.service import Service
 from registry.domain.models.service_comment import ServiceComment
 from registry.domain.models.service_group import ServiceGroup
 from registry.domain.models.service_state import ServiceState
+from registry.exceptions import InvalidServiceStateException
 from registry.infrastructure.models import Service as ServiceDBModel, ServiceGroup as ServiceGroupDBModel, \
     ServiceReviewHistory, ServiceState as ServiceStateDBModel
 
@@ -112,19 +113,47 @@ class ServiceFactory:
 
     @staticmethod
     def create_service_entity_model(org_uuid, service_uuid, payload, status):
-        service_state_entity_model = \
-            ServiceFactory.create_service_state_entity_model(org_uuid, service_uuid,
-                                                             getattr(ServiceStatus, status).value)
+        try:
+            service_state = getattr(ServiceStatus, status).value
+        except:
+            raise InvalidServiceStateException()
+
+        service_state_entity_model = ServiceFactory.create_service_state_entity_model(
+            org_uuid, service_uuid, service_state)
+
         service_group_entity_model_list = [
             ServiceFactory.create_service_group_entity_model(org_uuid, service_uuid, group) for group in
             payload.get("groups", [])]
+
+        service_id = payload.get("service_id", "")
+        display_name = payload.get("display_name", "")
+        short_description = payload.get("short_description", "")
+        description = payload.get("description", "")
+        project_url = payload.get("project_url", "")
+        proto = payload.get("proto", {})
+        assets = payload.get("assets", {})
+        ranking = payload.get("ranking", DEFAULT_SERVICE_RANKING)
+        rating = payload.get("rating", {})
+        payload_contributors = payload.get("contributors", [])
+        contributors = []
+        for contributor in payload_contributors:
+            if ServiceFactory.is_valid_contributor(contributor):
+                contributors.append(contributor)
+
+        tags = payload.get("tags", [])
+        mpe_address = payload.get("mpe_address", "")
+        metadata_uri = payload.get("metadata_uri", "")
         return Service(
-            org_uuid, service_uuid, payload.get("service_id", ""), payload.get("display_name", ""),
-            payload.get("short_description", ""), payload.get("description", ""), payload.get("project_url", ""),
-            payload.get("proto", {}), payload.get("assets", {}), payload.get("ranking", DEFAULT_SERVICE_RANKING),
-            payload.get("rating", {}), payload.get("contributors", []), payload.get("tags", []),
-            payload.get("mpe_address", ""), payload.get("metadata_uri", ""), service_group_entity_model_list,
+            org_uuid, service_uuid, service_id, display_name, short_description, description, project_url, proto,
+            assets, ranking, rating, contributors, tags, mpe_address, metadata_uri, service_group_entity_model_list,
             service_state_entity_model)
+
+    @staticmethod
+    def is_valid_contributor(contributor):
+        if (contributor["email_id"] is None or len(contributor["email_id"]) == 0) and \
+                (contributor["name"] is None or len(contributor["name"]) == 0):
+            return False
+        return True
 
     @staticmethod
     def create_service_state_entity_model(org_uuid, service_uuid, state, transaction_hash=None):

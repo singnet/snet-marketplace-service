@@ -281,7 +281,7 @@ class ServicePublisherService:
 
     def submit_service_for_approval(self, payload):
 
-        user_as_contributor = [{"email_id": self._username}]
+        user_as_contributor = [{"email_id": self._username, "name": ""}]
         payload["contributors"] = payload.get("contributors", user_as_contributor) + user_as_contributor
 
         organization = OrganizationPublisherRepository().get_org_for_org_uuid(self._org_uuid)
@@ -339,6 +339,8 @@ class ServicePublisherService:
             raise ServiceNotFoundException()
         organization_members = OrganizationPublisherRepository().get_org_member(org_uuid=self._org_uuid)
         network_name = NETWORKS[NETWORK_ID]["name"].lower()
+        # this is how network name is set in daemon for mainnet
+        network_name = "main" if network_name == "mainnet" else network_name
         if environment is EnvironmentType.TEST.value:
             daemon_config = {
                 "allowed_user_flag": True,

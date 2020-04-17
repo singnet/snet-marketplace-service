@@ -16,6 +16,8 @@ from registry.domain.models.organization import Organization
 from registry.domain.services.registry_blockchain_util import RegistryBlockChainUtil
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.mail_templates import get_org_member_invite_mail, get_org_approval_mail
+from registry.mail_templates import \
+    get_notification_mail_template_for_service_provider_when_org_is_submitted_for_onboarding
 
 org_repo = OrganizationPublisherRepository()
 
@@ -82,6 +84,7 @@ class OrganizationPublisherService:
         updated_state = Organization.next_state(current_organization, updated_organization, action)
         if updated_state == OrganizationStatus.ONBOARDING.value:
             self.notify_approval_team(updated_organization.id, updated_organization.name)
+            self.notify_user_on_start_of_onboarding_process(updated_organization.id, recipients=[self.username])
         org_repo.update_organization(updated_organization, self.username, updated_state)
         return "OK"
 
@@ -92,6 +95,21 @@ class OrganizationPublisherService:
                                       slack_channel=SLACK_CHANNEL_FOR_APPROVAL_TEAM)
         utils.send_email_notification([EMAILS["ORG_APPROVERS_DLIST"]], mail_template["subject"],
                                       mail_template["body"], NOTIFICATION_ARN, self.boto_utils)
+
+    def notify_user_on_start_of_onboarding_process(self, org_id, recipients):
+        if not recipients:
+            logger.info(f"Unable to find recipients for organization with org_id {org_id}")
+            return
+        mail_template = get_notification_mail_template_for_service_provider_when_org_is_submitted_for_onboarding(org_id)
+        for recipient in recipients:
+            send_notification_payload = {"body": json.dumps({
+                "message": mail_template["body"],
+                "subject": mail_template["subject"],
+                "notification_type": "support",
+                "recipient": recipient})}
+            self.boto_utils.invoke_lambda(lambda_function_arn=NOTIFICATION_ARN, invocation_type="RequestResponse",
+                                          payload=json.dumps(send_notification_payload))
+            logger.info(f"Recipient {recipient} notified for successfully starting onboarding process.")
 
     def _archive_current_organization(self, organization):
         if organization.get_status() == OrganizationStatus.PUBLISHED.value:
