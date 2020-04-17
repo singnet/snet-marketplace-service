@@ -106,9 +106,16 @@ class InvalidFileTypeException(CustomException):
         super().__init__({})
 
 
+class FileNotFoundException(CustomException):
+    error_message = "FILE_NOT_FOUND"
+
+    def __init__(self):
+        super().__init__({})
+
+
 EXCEPTIONS = (BadRequestException, OrganizationNotFoundException, InvalidOriginException, MethodNotImplemented,
               InvalidOrganizationStateException, InvalidMetadataException, InvalidServiceStateException,
               ServiceProtoNotFoundException, OrganizationNotPublishedException,
               ServiceNotFoundException, ServiceGroupNotFoundException, EnvironmentNotFoundException,
               InvalidSlackUserException, InvalidSlackChannelException, InvalidSlackSignatureException,
-              InvalidFileTypeException)
+              InvalidFileTypeException, FileNotFoundException)

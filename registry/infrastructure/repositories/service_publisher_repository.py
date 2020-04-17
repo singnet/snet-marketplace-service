@@ -1,10 +1,12 @@
 from datetime import datetime as dt
+
+from sqlalchemy import func
+
+from registry.constants import ServiceStatus
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.infrastructure.models import Service, ServiceGroup, ServiceState, ServiceReviewHistory, Organization, \
     ServiceComment
 from registry.infrastructure.repositories.base_repository import BaseRepository
-from registry.constants import ServiceStatus
-from sqlalchemy import func
 
 
 class ServicePublisherRepository(BaseRepository):
@@ -71,7 +73,7 @@ class ServicePublisherRepository(BaseRepository):
             service_record.description = service.description
             service_record.project_url = service.project_url
             service_record.assets = service.assets
-            service_record.rating = service.assets
+            service_record.rating = service.rating
             service_record.ranking = service.ranking
             service_record.contributors = service.contributors
             service_record.tags = service.tags
