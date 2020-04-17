@@ -15,6 +15,7 @@ NETWORKS = {
 }
 NETWORK_ID = 3
 SLACK_HOOK = {
+    "channel": "",
     'hostname': '',
     'port': 443,
     'path': '',
@@ -55,7 +56,7 @@ SLACK_APPROVAL_CHANNEL_URL = ""
 MAX_SERVICES_SLACK_LISTING = 5
 SLACK_APPROVAL_OAUTH_ACCESS_TOKEN = ""
 UPLOAD_BUCKET = {
-    "ORG_BUCKET": ""
+    "ORG_BUCKET": "org_bucket"
 }
 VERIFICATION_ARN = {
     "DUNS_CALLBACK": "",
@@ -66,4 +67,3 @@ EMAILS = {
     "ORG_APPROVERS_DLIST": "",
     "SERVICE_APPROVERS_DLIST": ""
 }
-ALERTS_SLACK_CHANNEL = ""
