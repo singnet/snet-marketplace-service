@@ -3,23 +3,24 @@ from datetime import datetime as dt
 from unittest import TestCase
 from unittest.mock import patch
 from uuid import uuid4
+
 from common.constant import StatusCode
-from registry.application.handlers.service_handlers import save_service_attributes, verify_service_id
-from registry.application.handlers.service_handlers import save_service
 from registry.application.handlers.service_handlers import create_service
-from registry.application.handlers.service_handlers import get_services_for_organization
-from registry.application.handlers.service_handlers import get_service_for_service_uuid
-from registry.application.handlers.service_handlers import publish_service_metadata_to_ipfs
-from registry.application.handlers.service_handlers import save_transaction_hash_for_published_service
-from registry.application.handlers.service_handlers import list_of_orgs_with_services_submitted_for_approval
-from registry.application.handlers.service_handlers import legal_approval_of_service
 from registry.application.handlers.service_handlers import get_daemon_config_for_current_network
+from registry.application.handlers.service_handlers import get_service_for_service_uuid
+from registry.application.handlers.service_handlers import get_services_for_organization
+from registry.application.handlers.service_handlers import legal_approval_of_service
+from registry.application.handlers.service_handlers import list_of_orgs_with_services_submitted_for_approval
+from registry.application.handlers.service_handlers import publish_service_metadata_to_ipfs
+from registry.application.handlers.service_handlers import save_service
+from registry.application.handlers.service_handlers import save_service_attributes, verify_service_id
+from registry.application.handlers.service_handlers import save_transaction_hash_for_published_service
 from registry.application.handlers.service_handlers import submit_service_for_approval
-from registry.constants import ServiceAvailabilityStatus
-from registry.constants import ServiceStatus
+from registry.constants import EnvironmentType
 from registry.constants import OrganizationMemberStatus
 from registry.constants import Role
-from registry.constants import EnvironmentType
+from registry.constants import ServiceAvailabilityStatus
+from registry.constants import ServiceStatus
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.infrastructure.models import Organization as OrganizationDBModel
 from registry.infrastructure.models import OrganizationMember as OrganizationMemberDBModel
@@ -948,7 +949,7 @@ class TestService(TestCase):
                 ranking=1,
                 proto={"proto_files": {
                     "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/test_org_uuid/services/test_service_uuid/assets/20200212111248_proto_files.zip"}},
-                contributors={"email_id": "prashant@singularitynet.io"},
+                contributors=[{"email_id": "dev@dummy.io", "name": "contributor"}],
                 created_on=dt.utcnow()
             )
         )
@@ -999,7 +1000,7 @@ class TestService(TestCase):
                                "_service_uuid/assets/20200212111248_proto_files.zip"
                     }
                 },
-                "contributors": [{"name": "dummy"}],
+                "contributors": [{"name": "dummy", "email_id": "dev@dummy.io"}],
                 "groups": [{"group_name": "default_group",
                             "free_calls": 12,
                             "free_call_signer_address": "0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F",
@@ -1029,118 +1030,121 @@ class TestService(TestCase):
         assert (response_body["status"] == "success")
         assert (response_body["data"]["service_uuid"] == test_service_uuid)
         assert (response_body["data"]["service_state"]["state"] == ServiceStatus.APPROVAL_PENDING.value)
-        assert (response_body["data"]["contributors"] == [{'name': 'dummy'}, {'email_id': test_user}])
+        self.assertListEqual(
+            [{"name": "dummy", "email_id": "dev@dummy.io"}, {"name": "", "email_id": test_user}],
+            response_body["data"]["contributors"])
 
-        def test_daemon_config_for_test_and_main_environment(self):
-            org_repo.add_item(
-                OrganizationDBModel(
-                    name="test_org",
-                    org_id="test_org_id",
-                    uuid="test_org_uuid",
-                    org_type="organization",
-                    description="that is the dummy org for testcases",
-                    short_description="that is the short description",
-                    url="https://dummy.url",
-                    contacts=[],
-                    assets={},
-                    duns_no=12345678,
-                    origin="PUBLISHER_DAPP",
-                    groups=[],
-                    addresses=[],
-                    metadata_ipfs_uri="#dummyhashdummyhash"
-                )
+    def test_daemon_config_for_test_and_main_environment(self):
+        org_repo.add_item(
+            OrganizationDBModel(
+                name="test_org",
+                org_id="test_org_id",
+                uuid="test_org_uuid",
+                org_type="organization",
+                description="that is the dummy org for testcases",
+                short_description="that is the short description",
+                url="https://dummy.url",
+                contacts=[],
+                assets={},
+                duns_no=12345678,
+                origin="PUBLISHER_DAPP",
+                groups=[],
+                addresses=[],
+                metadata_ipfs_uri="#dummyhashdummyhash"
             )
-            new_org_members = [
+        )
+        new_org_members = [
 
-                {
-                    "username": "dummy_user1@dummy.io",
-                    "address": "0x345"
-                }
+            {
+                "username": "dummy_user1@dummy.io",
+                "address": "0x345"
+            }
 
+        ]
+        org_repo.add_all_items(
+            [
+                OrganizationMemberDBModel(
+                    username=member["username"],
+                    org_uuid="test_org_uuid",
+                    role=Role.MEMBER.value,
+                    address=member["address"],
+                    status=OrganizationMemberStatus.ACCEPTED.value,
+                    transaction_hash="0x123",
+                    invite_code=str(uuid4()),
+                    invited_on=dt.utcnow(),
+                    updated_on=dt.utcnow()
+                ) for member in new_org_members
             ]
-            org_repo.add_all_items(
-                [
-                    OrganizationMemberDBModel(
-                        username=member["username"],
-                        org_uuid="test_org_uuid",
-                        role=Role.MEMBER.value,
-                        address=member["address"],
-                        status=OrganizationMemberStatus.ACCEPTED.value,
-                        transaction_hash="0x123",
-                        invite_code=str(uuid4()),
-                        invited_on=dt.utcnow(),
-                        updated_on=dt.utcnow()
-                    ) for member in new_org_members
-                ]
+        )
+        service_repo.add_item(
+            ServiceDBModel(
+                org_uuid="test_org_uuid",
+                uuid="test_service_uuid",
+                display_name="test_display_name",
+                service_id="test_service_id",
+                metadata_uri="Qasdfghjklqwertyuiopzxcvbnm",
+                short_description="test_short_description",
+                description="test_description",
+                project_url="https://dummy.io",
+                ranking=1,
+                proto={"proto_files": {
+                    "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/test_org_uuid/services/test_service_uuid/assets/20200212111248_proto_files.zip"}},
+                contributors={"email_id": "prashant@singularitynet.io"},
+                created_on=dt.utcnow()
             )
-            service_repo.add_item(
-                ServiceDBModel(
-                    org_uuid="test_org_uuid",
-                    uuid="test_service_uuid",
-                    display_name="test_display_name",
-                    service_id="test_service_id",
-                    metadata_uri="Qasdfghjklqwertyuiopzxcvbnm",
-                    short_description="test_short_description",
-                    description="test_description",
-                    project_url="https://dummy.io",
-                    ranking=1,
-                    proto={"proto_files": {
-                        "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/test_org_uuid/services/test_service_uuid/assets/20200212111248_proto_files.zip"}},
-                    contributors={"email_id": "prashant@singularitynet.io"},
-                    created_on=dt.utcnow()
-                )
+        )
+        service_repo.add_item(
+            ServiceStateDBModel(
+                row_id=1000,
+                org_uuid="test_org_uuid",
+                service_uuid="test_service_uuid",
+                state=ServiceStatus.DRAFT.value,
+                created_by="dummy_user",
+                updated_by="dummy_user",
+                created_on=dt.utcnow()
             )
-            service_repo.add_item(
-                ServiceStateDBModel(
-                    row_id=1000,
-                    org_uuid="test_org_uuid",
-                    service_uuid="test_service_uuid",
-                    state=ServiceStatus.DRAFT.value,
-                    created_by="dummy_user",
-                    updated_by="dummy_user",
-                    created_on=dt.utcnow()
-                )
-            )
-            event = {"path": "/org/test_org_uuid/service/test_service_uuid/group_id/test_group_id/daemon/config",
-                     "requestContext": {
-                         "authorizer": {
-                             "claims": {
-                                 "email": "dummy_user1@dummy.io"
-                             }
+        )
+        event = {"path": "/org/test_org_uuid/service/test_service_uuid/group_id/test_group_id/daemon/config",
+                 "requestContext": {
+                     "authorizer": {
+                         "claims": {
+                             "email": "dummy_user1@dummy.io"
                          }
-                     }, "httpMethod": "GET",
-                     "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid",
-                                        "group_id": "test_group_id"},
-                     "queryStringParameters": {"network": EnvironmentType.TEST.value}}
-            response = get_daemon_config_for_current_network(event, "")
-            assert (response["statusCode"] == 200)
-            response_body = json.loads(response["body"])
-            assert (response_body["status"] == "success")
-            assert (response_body["data"]["allowed_user_flag"] is True)
-            assert (len(response_body["data"]["allowed_user_addresses"]) == 2)
-            assert (response_body["data"]["blockchain_enabled"] is False)
-            assert (response_body["data"]["passthrough_enabled"] is True)
-            event = {"path": "/org/test_org_uuid/service/test_service_uuid/group_id/test_group_id/daemon/config",
-                     "requestContext": {
-                         "authorizer": {
-                             "claims": {
-                                 "email": "dummy_user1@dummy.io"
-                             }
+                     }
+                 }, "httpMethod": "GET",
+                 "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid",
+                                    "group_id": "test_group_id"},
+                 "queryStringParameters": {"network": EnvironmentType.TEST.value}}
+        response = get_daemon_config_for_current_network(event, "")
+        assert (response["statusCode"] == 200)
+        response_body = json.loads(response["body"])
+        assert (response_body["status"] == "success")
+        assert (response_body["data"]["allowed_user_flag"] is True)
+        assert (len(response_body["data"]["allowed_user_addresses"]) == 2)
+        assert (response_body["data"]["blockchain_enabled"] is False)
+        assert (response_body["data"]["passthrough_enabled"] is True)
+        event = {"path": "/org/test_org_uuid/service/test_service_uuid/group_id/test_group_id/daemon/config",
+                 "requestContext": {
+                     "authorizer": {
+                         "claims": {
+                             "email": "dummy_user1@dummy.io"
                          }
-                     }, "httpMethod": "GET",
-                     "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid",
-                                        "group_id": "test_group_id"},
-                     "queryStringParameters": {"network": EnvironmentType.MAIN.value}}
-            response = get_daemon_config_for_current_network(event, "")
-            assert (response["statusCode"] == 200)
-            response_body = json.loads(response["body"])
-            assert (response_body["status"] == "success")
-            assert (response_body["data"]["blockchain_enabled"] is True)
-            assert (response_body["data"]["passthrough_enabled"] is True)
+                     }
+                 }, "httpMethod": "GET",
+                 "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid",
+                                    "group_id": "test_group_id"},
+                 "queryStringParameters": {"network": EnvironmentType.MAIN.value}}
+        response = get_daemon_config_for_current_network(event, "")
+        assert (response["statusCode"] == 200)
+        response_body = json.loads(response["body"])
+        assert (response_body["status"] == "success")
+        assert (response_body["data"]["blockchain_enabled"] is True)
+        assert (response_body["data"]["passthrough_enabled"] is True)
 
         def test_service_to_metadata(self):
             payload = payload = {"service_id": "sdfadsfd1", "display_name": "new_service_123",
-                                 "short_description": "sadfasd", "description": "dsada", "project_url": "df", "proto": {},
+                                 "short_description": "sadfasd", "description": "dsada", "project_url": "df",
+                                 "proto": {},
                                  "assets": {"proto_files": {
                                      "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/9887ec2e099e4afd92c4a052737eaa97/services/7420bf47989e4afdb1797d1bba8090aa/proto/20200327130256_proto_files.zip",
                                      "ipfs_hash": "QmUfDprFisFeaRnmLEqks1AFN6iam5MmTh49KcomXHEiQY"}, "hero_image": {

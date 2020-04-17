@@ -7,6 +7,7 @@ from common.utils import send_email_notification
 from orchestrator.config import REGION_NAME, REGISTRY_ARN, WALLETS_SERVICE_ARN, VERIFICATION_ARN, SLACK_HOOK, \
     SLACK_CHANNEL_FOR_APPROVAL_TEAM, NOTIFICATION_ARN, ORG_APPROVERS_DLIST
 from orchestrator.constant import VerificationType, OrganizationType
+from orchestrator.publisher.mail_templates import get_mail_template_to_user_for_org_onboarding
 from orchestrator.publisher.mail_templates import get_org_approval_mail
 
 logger = get_logger(__name__)
@@ -81,6 +82,7 @@ class OrganizationOrchestratorService:
             raise Exception(f"Verification initiate failed for Invalid org type {org_type}")
 
         self.notify_approval_team(org_details['org_id'], org_details['org_name'])
+        self.notify_user_on_start_of_onboarding_process(org_id=org_details["org_id"], recipients=[username])
         return org_details
 
     def notify_approval_team(self, org_id, org_name):
@@ -89,6 +91,21 @@ class OrganizationOrchestratorService:
         self.send_slack_message(slack_msg)
         send_email_notification([ORG_APPROVERS_DLIST], mail_template["subject"],
                                 mail_template["body"], NOTIFICATION_ARN, self.boto_client)
+
+    def notify_user_on_start_of_onboarding_process(self, org_id, recipients):
+        if not recipients:
+            logger.info(f"Unable to find recipients for organization with org_id {org_id}")
+            return
+        mail_template = get_mail_template_to_user_for_org_onboarding(org_id)
+        for recipient in recipients:
+            send_notification_payload = {"body": json.dumps({
+                "message": mail_template["body"],
+                "subject": mail_template["subject"],
+                "notification_type": "support",
+                "recipient": recipient})}
+            self.boto_client.invoke_lambda(lambda_function_arn=NOTIFICATION_ARN, invocation_type="RequestResponse",
+                                           payload=json.dumps(send_notification_payload))
+            logger.info(f"Recipient {recipient} notified for successfully starting onboarding process.")
 
     def send_slack_message(self, slack_msg):
         slack_url = SLACK_HOOK['hostname'] + SLACK_HOOK['path']
