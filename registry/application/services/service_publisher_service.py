@@ -339,6 +339,8 @@ class ServicePublisherService:
             raise ServiceNotFoundException()
         organization_members = OrganizationPublisherRepository().get_org_member(org_uuid=self._org_uuid)
         network_name = NETWORKS[NETWORK_ID]["name"].lower()
+        # this is how network name is set in daemon for mainnet
+        network_name = "main" if network_name == "mainnet" else network_name
         if environment is EnvironmentType.TEST.value:
             daemon_config = {
                 "allowed_user_flag": True,
