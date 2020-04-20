@@ -149,6 +149,14 @@ class VerificationManager:
 
     def _ack_verification(self, verification):
         VERIFICATION_SERVICE = "VERIFICATION_SERVICE"
+        verification_status = verification.status
+
+        if verification_status in [VerificationStatus.ERROR.value, VerificationStatus.FAILED.value]:
+            verification_status = VerificationStatus.REJECTED.value
+
+        if verification_status == VerificationStatus.PENDING.value:
+            return
+
         if verification.type == VerificationType.JUMIO.value:
             payload = {
                 "path": "/org/verification",
