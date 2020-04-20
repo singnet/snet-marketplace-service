@@ -154,14 +154,11 @@ class VerificationManager:
         if verification_status in [VerificationStatus.ERROR.value, VerificationStatus.FAILED.value]:
             verification_status = VerificationStatus.REJECTED.value
 
-        if verification_status == VerificationStatus.PENDING.value:
-            return
-
         if verification.type == VerificationType.JUMIO.value:
             payload = {
                 "path": "/org/verification",
                 "queryStringParameters": {
-                    "status": verification.status,
+                    "status": verification_status,
                     "username": verification.entity_id,
                     "verification_type": verification.type,
                     "updated_by": VERIFICATION_SERVICE
@@ -177,7 +174,7 @@ class VerificationManager:
             payload = {
                 "path": "/org/verification",
                 "queryStringParameters": {
-                    "status": verification.status,
+                    "status": verification_status,
                     "org_uuid": verification.entity_id,
                     "verification_type": verification.type,
                     "updated_by": VERIFICATION_SERVICE
