@@ -4,13 +4,12 @@ from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.exceptions import BadRequestException
 from common.logger import get_logger
-from common.utils import generate_lambda_response
+from common.utils import generate_lambda_response, validate_dict
 from registry.application.access_control.authorization import secured
 from registry.application.services.service_publisher_service import ServicePublisherService
 from registry.config import NETWORK_ID, SLACK_HOOK
 from registry.constants import Action, EnvironmentType
 from registry.exceptions import EnvironmentNotFoundException, EXCEPTIONS
-from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 
 logger = get_logger(__name__)
 
@@ -88,6 +87,7 @@ def save_service(event, context):
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
+
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
@@ -105,9 +105,6 @@ def save_service_attributes(event, context):
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
-
-
-
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
@@ -247,10 +244,10 @@ def get_service_details_using_org_id_service_id(event, context):
     path_parameters = event["queryStringParameters"]
     org_id = path_parameters["org_id"]
     service_id = path_parameters["service_id"]
-    org_uuid, service = ServicePublisherRepository().get_service_for_given_service_id_and_org_id(org_id, service_id)
+    response = ServicePublisherService("", "", "").get_service_for_org_id_and_service_id(org_id, service_id)
     return generate_lambda_response(
         StatusCode.OK,
-        {"status": "success", "data": service.to_dict(), "error": {}}, cors_enabled=True
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
 
