@@ -73,7 +73,8 @@ class ServicePublisherService:
             return ServiceAvailabilityStatus.UNAVAILABLE.value
         return ServiceAvailabilityStatus.AVAILABLE.value
 
-    def get_service_for_org_id_and_service_id(self, org_id, service_id):
+    @staticmethod
+    def get_service_for_org_id_and_service_id(org_id, service_id):
         org_uuid, service = ServicePublisherRepository().get_service_for_given_service_id_and_org_id(org_id, service_id)
         if not service:
             return {}

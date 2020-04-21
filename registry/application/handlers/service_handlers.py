@@ -244,7 +244,7 @@ def get_service_details_using_org_id_service_id(event, context):
     path_parameters = event["queryStringParameters"]
     org_id = path_parameters["org_id"]
     service_id = path_parameters["service_id"]
-    response = ServicePublisherService("", "", "").get_service_for_org_id_and_service_id(org_id, service_id)
+    response = ServicePublisherService.get_service_for_org_id_and_service_id(org_id, service_id)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
