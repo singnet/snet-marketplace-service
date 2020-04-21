@@ -240,7 +240,7 @@ def get_daemon_config_for_current_network(event, context):
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def get_service_details_using_org_id_service_id(event, context):
-    logger.info(f"event for get_daemon_config_for_current_network:: {event}")
+    logger.info(f"event: {event}")
     path_parameters = event["queryStringParameters"]
     org_id = path_parameters["org_id"]
     service_id = path_parameters["service_id"]
