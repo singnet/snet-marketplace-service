@@ -4,13 +4,12 @@ from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.exceptions import BadRequestException
 from common.logger import get_logger
-from common.utils import generate_lambda_response
+from common.utils import generate_lambda_response, validate_dict
 from registry.application.access_control.authorization import secured
 from registry.application.services.service_publisher_service import ServicePublisherService
 from registry.config import NETWORK_ID, SLACK_HOOK
 from registry.constants import Action, EnvironmentType
 from registry.exceptions import EnvironmentNotFoundException, EXCEPTIONS
-from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 
 logger = get_logger(__name__)
 
@@ -88,6 +87,7 @@ def save_service(event, context):
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
+
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
@@ -105,9 +105,6 @@ def save_service_attributes(event, context):
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
-
-
-
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
@@ -222,7 +219,7 @@ def get_daemon_config_for_current_network(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
     query_parameters = event["queryStringParameters"]
-    if "org_uuid" not in path_parameters and "service_uuid" not in path_parameters and "group_id" not in path_parameters and 'network' not in query_parameters:
+    if validate_dict(path_parameters, ["org_uuid", "service_uuid", "group_id"]) and 'network' not in query_parameters:
         raise BadRequestException()
     org_uuid = path_parameters["org_uuid"]
     service_uuid = path_parameters["service_uuid"]
@@ -243,14 +240,14 @@ def get_daemon_config_for_current_network(event, context):
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def get_service_details_using_org_id_service_id(event, context):
-    logger.info(f"event for get_daemon_config_for_current_network:: {event}")
+    logger.info(f"event: {event}")
     path_parameters = event["queryStringParameters"]
     org_id = path_parameters["org_id"]
     service_id = path_parameters["service_id"]
-    org_uuid, service = ServicePublisherRepository().get_service_for_given_service_id_and_org_id(org_id, service_id)
+    response = ServicePublisherService.get_service_for_org_id_and_service_id(org_id, service_id)
     return generate_lambda_response(
         StatusCode.OK,
-        {"status": "success", "data": service.to_dict(), "error": {}}, cors_enabled=True
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
 
