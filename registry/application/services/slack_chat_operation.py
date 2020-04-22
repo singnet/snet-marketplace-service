@@ -1,6 +1,7 @@
 import json
 
 import requests
+from aws_xray_sdk.core import patch_all
 
 from common.boto_utils import BotoUtils
 from common.constant import StatusCode
@@ -12,13 +13,14 @@ from registry.application.services.service_publisher_service import ServicePubli
 from registry.config import SIGNING_SECRET, SLACK_APPROVAL_OAUTH_ACCESS_TOKEN, REGION_NAME
 from registry.config import STAGING_URL, ALLOWED_SLACK_USER, SLACK_APPROVAL_CHANNEL_URL, \
     ALLOWED_SLACK_CHANNEL_ID, MAX_SERVICES_SLACK_LISTING, NOTIFICATION_ARN, VERIFICATION_ARN
-from registry.constants import UserType, ServiceSupportType, ServiceStatus, OrganizationStatus, OrganizationType
 from registry.constants import OrganizationAddressType
+from registry.constants import UserType, ServiceSupportType, ServiceStatus, OrganizationStatus, OrganizationType
 from registry.domain.models.service_comment import ServiceComment
 from registry.exceptions import InvalidSlackChannelException, InvalidSlackSignatureException, InvalidSlackUserException
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 
+patch_all()
 logger = get_logger(__name__)
 boto_util = BotoUtils(region_name=REGION_NAME)
 

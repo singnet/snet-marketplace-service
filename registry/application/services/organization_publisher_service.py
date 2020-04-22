@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 
+from aws_xray_sdk.core import patch_all
 from web3 import Web3
 
 from common import utils
@@ -15,10 +16,11 @@ from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization
 from registry.domain.services.registry_blockchain_util import RegistryBlockChainUtil
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
-from registry.mail_templates import get_org_member_invite_mail, get_org_approval_mail
 from registry.mail_templates import \
     get_notification_mail_template_for_service_provider_when_org_is_submitted_for_onboarding
+from registry.mail_templates import get_org_member_invite_mail, get_org_approval_mail
 
+patch_all()
 org_repo = OrganizationPublisherRepository()
 
 logger = get_logger(__name__)

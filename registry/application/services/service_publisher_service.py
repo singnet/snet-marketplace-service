@@ -1,6 +1,8 @@
 import json
 from uuid import uuid4
 
+from aws_xray_sdk.core import patch_all
+
 from common import utils
 from common.boto_utils import BotoUtils
 from common.constant import StatusCode
@@ -21,6 +23,7 @@ from registry.infrastructure.repositories.organization_repository import Organiz
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 from registry.mail_templates import get_service_approval_mail_template
 
+patch_all()
 ALLOWED_ATTRIBUTES_FOR_SERVICE_SEARCH = ["display_name"]
 DEFAULT_ATTRIBUTE_FOR_SERVICE_SEARCH = "display_name"
 ALLOWED_ATTRIBUTES_FOR_SERVICE_SORT_BY = ["ranking", "service_id"]
