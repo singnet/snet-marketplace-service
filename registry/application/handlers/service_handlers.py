@@ -219,7 +219,8 @@ def get_daemon_config_for_current_network(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
     query_parameters = event["queryStringParameters"]
-    if validate_dict(path_parameters, ["org_uuid", "service_uuid", "group_id"]) and 'network' not in query_parameters:
+    if not validate_dict(path_parameters,
+                         ["org_uuid", "service_uuid", "group_id"]) or 'network' not in query_parameters:
         raise BadRequestException()
     org_uuid = path_parameters["org_uuid"]
     service_uuid = path_parameters["service_uuid"]
