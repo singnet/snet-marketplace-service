@@ -243,7 +243,7 @@ def get_daemon_config_for_current_network(event, context):
 def get_service_details_using_org_id_service_id(event, context):
     logger.info(f"event: {event}")
     query_parameters = event["queryStringParameters"]
-    if not validate_dict(query_parameters):
+    if not validate_dict(query_parameters, ["org_id", "service_id"]):
         raise BadRequestException()
     org_id = query_parameters["org_id"]
     service_id = query_parameters["service_id"]
