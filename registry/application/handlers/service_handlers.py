@@ -242,9 +242,11 @@ def get_daemon_config_for_current_network(event, context):
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def get_service_details_using_org_id_service_id(event, context):
     logger.info(f"event: {event}")
-    path_parameters = event["queryStringParameters"]
-    org_id = path_parameters["org_id"]
-    service_id = path_parameters["service_id"]
+    query_parameters = event["queryStringParameters"]
+    if not validate_dict(query_parameters):
+        raise BadRequestException()
+    org_id = query_parameters["org_id"]
+    service_id = query_parameters["service_id"]
     response = ServicePublisherService.get_service_for_org_id_and_service_id(org_id, service_id)
     return generate_lambda_response(
         StatusCode.OK,
