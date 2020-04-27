@@ -3,6 +3,7 @@ from collections import defaultdict
 
 from common.utils import Utils
 from contract_api.constant import GET_ALL_SERVICE_LIMIT, GET_ALL_SERVICE_OFFSET_LIMIT
+from contract_api.dao.service_repository import ServiceRepository
 from contract_api.filter import Filter
 
 
@@ -403,3 +404,12 @@ class Registry:
         except Exception as e:
             print(repr(e))
             raise e
+
+    def curate_service(self, org_id, service_id, curate):
+        service_repo = ServiceRepository(self.repo)
+        if curate.lower() == "true":
+            service_repo.curate_service(org_id, service_id, 1)
+        elif curate.lower() == "false":
+            service_repo.curate_service(org_id, service_id, 0)
+        else:
+            Exception("Invalid curation flag")

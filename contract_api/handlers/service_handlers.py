@@ -1,12 +1,14 @@
 import json
 
-from contract_api.config import NETWORKS, NETWORK_ID, SLACK_HOOK
+from aws_xray_sdk.core import patch_all
+
+from common.exception_handler import exception_handler
+from common.logger import get_logger
 from common.repository import Repository
 from common.utils import Utils, generate_lambda_response
-from contract_api.registry import Registry
 from common.utils import handle_exception_with_slack_notification
-from common.logger import get_logger
-from aws_xray_sdk.core import patch_all
+from contract_api.config import NETWORKS, NETWORK_ID, SLACK_HOOK
+from contract_api.registry import Registry
 
 patch_all()
 
@@ -64,3 +66,15 @@ def post_rating_for_given_service(event, context):
     response_data = obj_reg.update_service_rating(org_id=org_id, service_id=service_id)
     return generate_lambda_response(
         200, {"status": "success", "data": response_data}, cors_enabled=True)
+
+
+@exception_handler(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
+def service_curation(event, context):
+    registry = Registry(obj_repo=db)
+    org_id = event['pathParameters']['orgId']
+    service_id = event['pathParameters']['serviceId']
+    curate = event['queryParameters']['curate']
+    response = registry.curate_service(
+        org_id=org_id, service_id=service_id, curate=curate)
+    return generate_lambda_response(
+        200, {"status": "success", "data": response}, cors_enabled=True)
