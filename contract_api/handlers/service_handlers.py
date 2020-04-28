@@ -2,6 +2,7 @@ import json
 
 from aws_xray_sdk.core import patch_all
 
+from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.logger import get_logger
 from common.repository import Repository
@@ -73,8 +74,21 @@ def service_curation(event, context):
     registry = Registry(obj_repo=db)
     org_id = event['pathParameters']['orgId']
     service_id = event['pathParameters']['serviceId']
-    curate = event['queryParameters']['curate']
+    curate = event['queryStringParameters']['curate']
     response = registry.curate_service(
-        org_id=org_id, service_id=service_id, curate=curate)
+        org_id=org_id, service_id=service_id, curated=curate)
     return generate_lambda_response(
         200, {"status": "success", "data": response}, cors_enabled=True)
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def service_deployment_status_notification_handler(event, context):
+    logger.info(f"Service Build status event {event}")
+    org_id = event['org_id']
+    service_id = event['service_id']
+    build_status = int(event['build_status'])
+    Registry.service_build_status_notifier(org_id, service_id, build_status)
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": "Build failure notified", "error": {}}, cors_enabled=True
+    )

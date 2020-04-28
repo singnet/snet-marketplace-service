@@ -135,8 +135,9 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                 service_group_data = self._service_repository.create_group(service_row_id=service_row_id, org_id=org_id,
                                                                            service_id=service_id,
                                                                            grp_data={
-                                                                               'free_calls':group.get("free_calls",0),
-                                                                               'free_call_signer_address':group.get("free_call_signer_address",""),
+                                                                               'free_calls': group.get("free_calls", 0),
+                                                                               'free_call_signer_address': group.get(
+                                                                                   "free_call_signer_address", ""),
                                                                                'group_id': group['group_id'],
                                                                                'group_name': group['group_name'],
                                                                                'pricing': json.dumps(group['pricing'])
@@ -174,9 +175,12 @@ class ServiceTagsModifiedEventConsumer(ServiceEventConsumer):
 
     def on_event(self, event):
         org_id, service_id, tags_data = self._get_service_details_from_blockchain(event)
-        self._service_repository.update_tags(org_id=org_id, service_id=service_id,
-                                             tags_data=self._fetch_tags(org_id_hex=org_id,
-                                                                        service_id_hex=service_id))
+        registry_contract = self._get_registry_contract()
+        self._service_repository.update_tags(
+            org_id=org_id, service_id=service_id,
+            tags_data=self._fetch_tags(
+                registry_contract=registry_contract, org_id_hex=org_id,
+                service_id_hex=service_id))
 
 
 class ServiceMetadataModifiedConsumer(ServiceCreatedEventConsumer):
@@ -204,7 +208,7 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
 
     def _extract_zip_and_and_tar(self, org_id, service_id, s3_url):
         root_directory = ASSET_TEMP_EXTRACT_DIRECTORY
-        zip_directory = root_directory + org_id  + "/" + service_id
+        zip_directory = root_directory + org_id + "/" + service_id
         extracted_zip_directory = root_directory + "extracted/" + org_id + "/" + service_id
 
         zip_file_name = download_file_from_url(s3_url, zip_directory)
@@ -278,7 +282,6 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
         component_files_tar_path = self._extract_zip_and_and_tar(org_id, service_id,
                                                                  component_files_s3_path)
 
-
         self._s3_util.push_file_to_s3(proto_file_tar_path, ASSETS_COMPONENT_BUCKET_NAME,
                                       f"assets/{org_id}/{service_id}/{proto_file_tar_path.split('/')[-1]}")
 
@@ -286,7 +289,3 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
                                       f"assets/{org_id}/{service_id}/{component_files_tar_path.split('/')[-1]}")
 
         self._trigger_code_build_for_marketplace_dapp(org_id, service_id)
-
-
-
-
