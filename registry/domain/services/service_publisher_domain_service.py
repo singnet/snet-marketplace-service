@@ -88,9 +88,12 @@ class ServicePublisherDomainService:
     def get_service_metadata(service, environment):
         service_metadata = service.to_metadata()
         if environment == EnvironmentType.TEST.value:
-            for group_number in range(len(service.groups)):
-                service_metadata["groups"][group_number]["endpoints"] = service.groups[group_number].test_endpoints
-                service_metadata["groups"][group_number]["free_calls"] = BLOCKCHAIN_TEST_ENV["free_calls"]
+            service_test_endpoints = {}
+            for group in service.groups:
+                service_test_endpoints[group.group_id] = group.test_endpoints
+            for group in service_metadata["groups"]:
+                group["endpoints"] = service_test_endpoints[group["group_id"]]
+                group["free_calls"] = BLOCKCHAIN_TEST_ENV["free_calls"]
         if not service.is_metadata_valid(service_metadata):
             logger.info("Service metadata is not valid")
             raise InvalidMetadataException()
