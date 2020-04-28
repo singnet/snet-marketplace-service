@@ -78,11 +78,11 @@ class ServicePublisherDomainService:
         # publish assets
         service = self.publish_service_proto_to_ipfs(service)
         self.publish_assets(service)
+        service_metadata = service.to_metadata()
         if environment == EnvironmentType.TEST.value:
-            for group in service.groups:
+            for group in service_metadata["groups"]:
                 group["endpoints"] = group.test_endpoints
                 group["free_calls"] = BLOCKCHAIN_TEST_ENV["free_calls"]
-        service_metadata = service.to_metadata()
         if not service.is_metadata_valid(service_metadata):
             logger.info("Service metadata is not valid")
             raise InvalidMetadataException()
