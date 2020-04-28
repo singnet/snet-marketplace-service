@@ -87,7 +87,7 @@ def service_deployment_status_notification_handler(event, context):
     org_id = event['org_id']
     service_id = event['service_id']
     build_status = int(event['build_status'])
-    Registry.service_build_status_notifier(org_id, service_id, build_status)
+    Registry(obj_repo=db).service_build_status_notifier(org_id, service_id, build_status)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": "Build failure notified", "error": {}}, cors_enabled=True

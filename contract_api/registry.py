@@ -1,11 +1,8 @@
 import json
 from collections import defaultdict
 
-from common import boto_utils
-from common.constant import StatusCode
 from common.logger import get_logger
 from common.utils import Utils
-from contract_api.config import REGION_NAME, SERVICE_CURATE_ARN
 from contract_api.constant import GET_ALL_SERVICE_LIMIT, GET_ALL_SERVICE_OFFSET_LIMIT
 from contract_api.dao.service_repository import ServiceRepository
 from contract_api.filter import Filter
@@ -19,31 +16,10 @@ class Registry:
         self.repo = obj_repo
         self.obj_utils = Utils()
 
-    @staticmethod
-    def service_build_status_notifier(org_id, service_id, build_status):
+    def service_build_status_notifier(self, org_id, service_id, build_status):
         logger.info("received event for service_id: {service_id} org_id:{org_id}")
         if build_status == BUILD_FAILURE_CODE:
-            Registry.curate_service(org_id, service_id, curated=False)
-
-    @staticmethod
-    def curate_service(org_id, service_id, curated):
-        curate_service_payload = {
-            "pathParameters": {
-                "org_id": org_id,
-                "service_id": service_id
-            },
-            "queryStringParameters": {
-                "curate": str(curated)
-            },
-            "body": None
-        }
-        curate_service_response = boto_utils.BotoUtils(region_name=REGION_NAME) \
-            .invoke_lambda(lambda_function_arn=SERVICE_CURATE_ARN,
-                           invocation_type="RequestResponse",
-                           payload=json.dumps(curate_service_payload))
-        if curate_service_response["StatusCode"] != StatusCode.ACCEPTED:
-            logger.info(f"failed to update service ({service_id}, {org_id}) curation {curate_service_response}")
-            raise Exception("failed to update service curation")
+            self.curate_service(org_id, service_id, curated=False)
 
     def _get_all_service(self):
         """ Method to generate org_id and service mapping."""
@@ -443,11 +419,11 @@ class Registry:
             print(repr(e))
             raise e
 
-    def curate_service(self, org_id, service_id, curate):
+    def curate_service(self, org_id, service_id, curated):
         service_repo = ServiceRepository(self.repo)
-        if curate.lower() == "true":
+        if str(curated).lower() == "true":
             service_repo.curate_service(org_id, service_id, 1)
-        elif curate.lower() == "false":
+        elif str(curated).lower() == "false":
             service_repo.curate_service(org_id, service_id, 0)
         else:
             Exception("Invalid curation flag")
