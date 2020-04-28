@@ -93,7 +93,6 @@ class ServicePublisherDomainService:
 
     def publish_service_on_blockchain(self, org_id, service, environment):
         # deploy service on testing blockchain environment for verification
-        service.set_free_call(BLOCKCHAIN_TEST_ENV["free_calls"])
         transaction_hash = RegistryBlockChainUtil(environment).register_or_update_service_in_blockchain(
             org_id=org_id, service_id=service.service_id,
             metadata_uri=service.metadata_uri, tags=service.tags)
