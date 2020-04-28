@@ -78,7 +78,7 @@ def service_curation(event, context):
     response = registry.curate_service(
         org_id=org_id, service_id=service_id, curated=curate)
     return generate_lambda_response(
-        200, {"status": "success", "data": response}, cors_enabled=True)
+        StatusCode.CREATED, {"status": "success", "data": response}, cors_enabled=True)
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
@@ -89,6 +89,6 @@ def service_deployment_status_notification_handler(event, context):
     build_status = int(event['build_status'])
     Registry(obj_repo=db).service_build_status_notifier(org_id, service_id, build_status)
     return generate_lambda_response(
-        StatusCode.OK,
+        StatusCode.CREATED,
         {"status": "success", "data": "Build failure notified", "error": {}}, cors_enabled=True
     )

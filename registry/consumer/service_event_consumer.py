@@ -188,6 +188,6 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             .invoke_lambda(lambda_function_arn=SERVICE_CURATE_ARN,
                            invocation_type="RequestResponse",
                            payload=json.dumps(curate_service_payload))
-        if curate_service_response["StatusCode"] != StatusCode.ACCEPTED:
+        if curate_service_response["statusCode"] != StatusCode.CREATED:
             logger.info(f"failed to update service ({service_id}, {org_id}) curation {curate_service_response}")
             raise Exception("failed to update service curation")
