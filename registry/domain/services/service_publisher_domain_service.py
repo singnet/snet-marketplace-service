@@ -78,6 +78,14 @@ class ServicePublisherDomainService:
         # publish assets
         service = self.publish_service_proto_to_ipfs(service)
         self.publish_assets(service)
+        service_metadata = self.get_service_metadata(service, environment)
+        service_metadata_filename = f"{METADATA_FILE_PATH}/{service.uuid}_service_metadata.json"
+        json_to_file(service_metadata, service_metadata_filename)
+        service.metadata_uri = METADATA_URI_PREFIX + self.publish_file_to_ipfs(service_metadata_filename)
+        return service
+
+    @staticmethod
+    def get_service_metadata(service, environment):
         service_metadata = service.to_metadata()
         if environment == EnvironmentType.TEST.value:
             for group_number in range(len(service.groups)):
@@ -86,10 +94,7 @@ class ServicePublisherDomainService:
         if not service.is_metadata_valid(service_metadata):
             logger.info("Service metadata is not valid")
             raise InvalidMetadataException()
-        service_metadata_filename = f"{METADATA_FILE_PATH}/{service.uuid}_service_metadata.json"
-        json_to_file(service_metadata, service_metadata_filename)
-        service.metadata_uri = METADATA_URI_PREFIX + self.publish_file_to_ipfs(service_metadata_filename)
-        return service
+        return service_metadata
 
     def publish_service_on_blockchain(self, org_id, service, environment):
         # deploy service on testing blockchain environment for verification
