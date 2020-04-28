@@ -2,7 +2,7 @@ from common import utils
 from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
 from common.utils import json_to_file, publish_zip_file_in_ipfs, publish_file_in_ipfs
-from registry.config import ASSET_DIR, METADATA_FILE_PATH, IPFS_URL
+from registry.config import ASSET_DIR, METADATA_FILE_PATH, IPFS_URL, BLOCKCHAIN_TEST_ENV
 from registry.constants import EnvironmentType
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.services.registry_blockchain_util import RegistryBlockChainUtil
@@ -78,18 +78,26 @@ class ServicePublisherDomainService:
         # publish assets
         service = self.publish_service_proto_to_ipfs(service)
         self.publish_assets(service)
-        service_metadata = service.to_metadata()
-        if environment == EnvironmentType.TEST.value:
-            for group in service.groups:
-                service_metadata["groups"][0]["endpoints"] = group.test_endpoints
-
-        if not service.is_metadata_valid(service_metadata):
-            logger.info("Service metadata is not valid")
-            raise InvalidMetadataException()
+        service_metadata = self.get_service_metadata(service, environment)
         service_metadata_filename = f"{METADATA_FILE_PATH}/{service.uuid}_service_metadata.json"
         json_to_file(service_metadata, service_metadata_filename)
         service.metadata_uri = METADATA_URI_PREFIX + self.publish_file_to_ipfs(service_metadata_filename)
         return service
+
+    @staticmethod
+    def get_service_metadata(service, environment):
+        service_metadata = service.to_metadata()
+        if environment == EnvironmentType.TEST.value:
+            service_test_endpoints = {}
+            for group in service.groups:
+                service_test_endpoints[group.group_id] = group.test_endpoints
+            for group in service_metadata["groups"]:
+                group["endpoints"] = service_test_endpoints[group["group_id"]]
+                group["free_calls"] = BLOCKCHAIN_TEST_ENV["free_calls"]
+        if not service.is_metadata_valid(service_metadata):
+            logger.info("Service metadata is not valid")
+            raise InvalidMetadataException()
+        return service_metadata
 
     def publish_service_on_blockchain(self, org_id, service, environment):
         # deploy service on testing blockchain environment for verification
