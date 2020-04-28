@@ -40,7 +40,8 @@ class TestServicePublisherDomainService(TestCase):
                     free_calls=10, daemon_address=["0xq2w3e4rr5t6y7u8i9"],
                     free_call_signer_address="0xq2s3e4r5t6y7u8i9o0")], service_state=None
         )
-        x = ServicePublisherDomainService("", "", "").get_service_metadata(service, EnvironmentType.TEST.value)
+        service_metadata = ServicePublisherDomainService("", "", "").get_service_metadata(service,
+                                                                                          EnvironmentType.TEST.value)
         self.assertDictEqual(
             {'version': 1, 'display_name': 'test_display_name', 'encoding': 'proto', 'service_type': 'grpc',
              'model_ipfs_hash': 'test_model_ipfs_hash', 'mpe_address': '0x123', 'groups': [
@@ -51,4 +52,4 @@ class TestServicePublisherDomainService(TestCase):
              'service_description': {'url': 'https://dummy.io', 'short_description': 'test_short_description',
                                      'description': 'test_description'},
              'assets': {'hero_image': 'QmUfDprFisFeaRnmLEqks1AFN6iam5MmTh49KcomXHEiQY'},
-             'contributors': [{'name': 'df', 'email_id': '123@mail.io'}]}, x)
+             'contributors': [{'name': 'df', 'email_id': '123@mail.io'}]}, service_metadata)
