@@ -2,7 +2,7 @@ from common import utils
 from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
 from common.utils import json_to_file, publish_zip_file_in_ipfs, publish_file_in_ipfs
-from registry.config import ASSET_DIR, METADATA_FILE_PATH, IPFS_URL
+from registry.config import ASSET_DIR, METADATA_FILE_PATH, IPFS_URL, BLOCKCHAIN_TEST_ENV
 from registry.constants import EnvironmentType
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.services.registry_blockchain_util import RegistryBlockChainUtil
@@ -78,11 +78,11 @@ class ServicePublisherDomainService:
         # publish assets
         service = self.publish_service_proto_to_ipfs(service)
         self.publish_assets(service)
-        service_metadata = service.to_metadata()
         if environment == EnvironmentType.TEST.value:
             for group in service.groups:
-                service_metadata["groups"][0]["endpoints"] = group.test_endpoints
-
+                group["endpoints"] = group.test_endpoints
+                group["free_calls"] = BLOCKCHAIN_TEST_ENV["free_calls"]
+        service_metadata = service.to_metadata()
         if not service.is_metadata_valid(service_metadata):
             logger.info("Service metadata is not valid")
             raise InvalidMetadataException()
