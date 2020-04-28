@@ -80,9 +80,9 @@ class ServicePublisherDomainService:
         self.publish_assets(service)
         service_metadata = service.to_metadata()
         if environment == EnvironmentType.TEST.value:
-            for group in service_metadata["groups"]:
-                group["endpoints"] = group.test_endpoints
-                group["free_calls"] = BLOCKCHAIN_TEST_ENV["free_calls"]
+            for group_number in range(len(service.groups)):
+                service_metadata["groups"][group_number]["endpoints"] = service.groups[group_number].test_endpoints
+                service_metadata["groups"][group_number]["free_calls"] = BLOCKCHAIN_TEST_ENV["free_calls"]
         if not service.is_metadata_valid(service_metadata):
             logger.info("Service metadata is not valid")
             raise InvalidMetadataException()
@@ -93,6 +93,7 @@ class ServicePublisherDomainService:
 
     def publish_service_on_blockchain(self, org_id, service, environment):
         # deploy service on testing blockchain environment for verification
+        service.set_free_call(BLOCKCHAIN_TEST_ENV["free_calls"])
         transaction_hash = RegistryBlockChainUtil(environment).register_or_update_service_in_blockchain(
             org_id=org_id, service_id=service.service_id,
             metadata_uri=service.metadata_uri, tags=service.tags)
