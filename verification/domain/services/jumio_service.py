@@ -8,8 +8,8 @@ import requests
 
 from common import boto_utils
 from common.constant import TransactionStatus
-from verification.config import JUMIO_CALLBACK_URL, JUMIO_SUBMIT_URL, REGION_NAME, \
-    JUMIO_API_SECRET_SSM_KEY, JUMIO_API_TOKEN_SSM_KEY, JUMIO_INITIATE_URL
+from verification.config import JUMIO_CALLBACK_URL, REGION_NAME, \
+    JUMIO_API_SECRET_SSM_KEY, JUMIO_API_TOKEN_SSM_KEY, JUMIO_INITIATE_URL, DAPP_POST_JUMIO_URL
 from verification.constants import JumioVerificationStatus, JumioTransactionStatus
 from verification.domain.models.jumio import JumioVerification
 from verification.exceptions import UnableToInitiateException
@@ -42,8 +42,8 @@ class JumioService:
         payload = {
             "customerInternalReference": jumio_verification.verification_id,
             "userReference": jumio_verification.user_reference_id,
-            "successUrl": JUMIO_SUBMIT_URL.format(jumio_verification.verification_id),
-            "errorUrl": JUMIO_SUBMIT_URL.format(jumio_verification.verification_id),
+            "successUrl": DAPP_POST_JUMIO_URL,
+            "errorUrl": DAPP_POST_JUMIO_URL,
             "callbackUrl": JUMIO_CALLBACK_URL.format(jumio_verification.verification_id),
             "workflowId": 200,
         }
