@@ -124,9 +124,9 @@ class VerificationManager:
         elif verification.type == VerificationType.DUNS.value:
             duns_verification = duns_repository.get_verification(verification_id)
             duns_verification.update_callback(verification_details)
-
+            comment_list = duns_verification.comment_sorted_dict_list()
+            verification.reject_reason = comment_list[0]["comment"]
             verification.status = duns_verification.status
-
             verification_repository.update_verification(verification)
             duns_repository.update_verification(duns_verification)
         else:
@@ -139,6 +139,8 @@ class VerificationManager:
         if verification.type == VerificationType.DUNS.value:
             duns_verification = duns_repository.get_verification(verification.id)
             duns_verification.update_callback(verification_details)
+            comment_list = duns_verification.comment_sorted_dict_list()
+            verification.reject_reason = comment_list[0]["comment"]
             verification.status = duns_verification.status
             verification_repository.update_verification(verification)
             duns_repository.update_verification(duns_verification)
@@ -177,6 +179,7 @@ class VerificationManager:
                     "status": verification_status,
                     "org_uuid": verification.entity_id,
                     "verification_type": verification.type,
+                    "comment": verification.reject_reason,
                     "updated_by": VERIFICATION_SERVICE
                 }
             }
