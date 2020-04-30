@@ -15,6 +15,7 @@ from registry.constants import EnvironmentType, ORG_STATUS_LIST, ORG_TYPE_VERIFI
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization
 from registry.domain.services.registry_blockchain_util import RegistryBlockChainUtil
+from registry.exceptions import InvalidOrganizationStateException
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.mail_templates import \
     get_notification_mail_template_for_service_provider_when_org_is_submitted_for_onboarding, \
@@ -250,7 +251,8 @@ class OrganizationPublisherService:
         elif status == OrganizationStatus.APPROVED.value:
             mail_template = get_owner_mail_for_org_approved(org_id)
         else:
-            return
+            logger.info(f"Organization status: {status}")
+            raise InvalidOrganizationStateException()
 
         utils.send_email_notification([owner_email_address], mail_template["subject"],
                                       mail_template["body"], NOTIFICATION_ARN, self.boto_utils)
