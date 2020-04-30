@@ -36,7 +36,7 @@ class DUNSVerification:
             "verification_id": self.verification_id,
             "org_uuid": self.org_uuid,
             "status": self.status,
-            "comments": self.comment_sorted_dict_list(),
+            "comments": self.comment_dict_list(),
             "created_at": "",
             "updated_at": ""
         }
@@ -46,7 +46,7 @@ class DUNSVerification:
             verification_dict["updated_at"] = datetime_to_string(self.updated_at)
         return verification_dict
 
-    def comment_sorted_dict_list(self):
+    def comment_dict_list(self):
         self.sort_comments()
         return [comment.to_dict() for comment in self.comments]
 
