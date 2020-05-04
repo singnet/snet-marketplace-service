@@ -1,5 +1,5 @@
-from datetime import datetime
 import json
+from datetime import datetime
 
 from contract_api.dao.common_repository import CommonRepository
 
@@ -154,7 +154,7 @@ class ServiceRepository(CommonRepository):
 
         return self.connection.execute(insert_group, insert_group_param)
 
-    def get_service_group(self,org_id, service_id):
+    def get_service_group(self, org_id, service_id):
         select_group_query = """
         SELECT  org_id, service_id, group_id, group_name, pricing,free_call_signer_address,free_calls
             FROM service_group WHERE service_id = %s AND org_id = %s;
@@ -164,5 +164,11 @@ class ServiceRepository(CommonRepository):
 
         return query_response[0]
 
-
-
+    def curate_service(self, org_id, service_id, curate):
+        update_curation_query = "UPDATE TABLE service SET is_curated = %s where org_id = %s service_id = %s"
+        try:
+            self.connection.execute(update_curation_query, [curate, org_id, service_id])
+            self.commit_transaction()
+        except:
+            self.rollback_transaction()
+            raise
