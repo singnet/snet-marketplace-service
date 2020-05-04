@@ -264,6 +264,6 @@ def service_deployment_status_notification_handler(event, context):
     ServicePublisherService("BUILD_PROCESS", "", "").service_build_status_notifier(org_id, service_id, build_status)
 
     return generate_lambda_response(
-        StatusCode.OK,
+        StatusCode.CREATED,
         {"status": "success", "data": "Build failure notified", "error": {}}, cors_enabled=True
     )
