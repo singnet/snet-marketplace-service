@@ -15,9 +15,11 @@ from registry.constants import EnvironmentType, ORG_STATUS_LIST, ORG_TYPE_VERIFI
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization
 from registry.domain.services.registry_blockchain_util import RegistryBlockChainUtil
+from registry.exceptions import InvalidOrganizationStateException
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.mail_templates import \
-    get_notification_mail_template_for_service_provider_when_org_is_submitted_for_onboarding
+    get_notification_mail_template_for_service_provider_when_org_is_submitted_for_onboarding, \
+    get_owner_mail_for_org_rejected, get_owner_mail_for_org_changes_requested, get_owner_mail_for_org_approved
 from registry.mail_templates import get_org_member_invite_mail, get_org_approval_mail
 
 patch_all()
@@ -121,9 +123,7 @@ class OrganizationPublisherService:
         logger.info(f"publish organization to ipfs org_uuid: {self.org_uuid}")
         organization = org_repo.get_org_for_org_uuid(self.org_uuid)
         organization.publish_to_ipfs()
-        test_transaction_hash = RegistryBlockChainUtil(EnvironmentType.TEST.value) \
-            .publish_organization_to_test_network(organization)
-        org_repo.store_ipfs_hash_and_test_transaction_hash(organization, self.username, test_transaction_hash)
+        org_repo.store_ipfs_hash(organization, self.username)
         return organization.to_response()
 
     def save_transaction_hash_for_publish_org(self, payload):
@@ -212,52 +212,45 @@ class OrganizationPublisherService:
                                           payload=json.dumps(send_notification_payload))
             logger.info(f"Org Membership Invite sent to {recipient}")
 
-    def _get_org_contacts_for_all_organization_for_given_user(self, username):
-        organizations = org_repo.get_org_for_user(username)
-        org_contacts = {}
-        for organization in organizations:
-            org_contacts[organization.name] = organization._get_all_contact_for_organization()
-
-        return org_contacts
-
     def update_verification(self, verification_type, verification_details):
-        org_contacts = {}
         if verification_type in ORG_TYPE_VERIFICATION_TYPE_MAPPING:
             if ORG_TYPE_VERIFICATION_TYPE_MAPPING[verification_type] == OrganizationType.INDIVIDUAL.value:
                 owner_username = verification_details["username"]
                 status = verification_details["status"]
                 updated_by = verification_details["updated_by"]
                 org_repo.update_all_individual_organization_for_user(owner_username, status, updated_by)
-                contacts = self._get_org_contacts_for_all_organization_for_given_user(owner_username)
 
             elif ORG_TYPE_VERIFICATION_TYPE_MAPPING[verification_type] == OrganizationType.ORGANIZATION.value:
                 status = verification_details["status"]
                 org_uuid = verification_details["org_uuid"]
                 updated_by = verification_details["updated_by"]
+                comment = verification_details["comment"]
                 if status in ORG_STATUS_LIST:
                     org_repo.update_organization_status(org_uuid, status, updated_by)
                     organization = org_repo.get_org_for_org_uuid(org_uuid)
-                    contacts_mail = organization._get_all_contact_for_organization()
-                    org_contacts[organization.name] = contacts_mail
-
-
+                    owner_username = org_repo.get_org_member(org_uuid=org_uuid, role=Role.OWNER.value)
+                    self.send_mail_to_owner(owner_username, comment, organization.id, status)
                 else:
                     logger.error(f"Invalid status {status}")
                     raise MethodNotImplemented()
             else:
-                logger.error(f"Invalid verification type {verification_type}")
+                logger.error(f"Invalid organization type with verification type {verification_type}")
                 raise MethodNotImplemented()
         else:
             logger.error(f"Invalid verification type {verification_type}")
             raise MethodNotImplemented()
-
-        # TODO send_email should not have boto_utils
-        try:
-            for org_name, contacts in org_contacts.items():
-                utils.send_email_notification(contacts, ORG_APPROVE_SUBJECT.format(org_name),
-                                              ORG_APPROVE_MESSAGE.format(org_name), NOTIFICATION_ARN,
-                                              self.boto_utils)
-        except:
-            logger.info(f"Error happened while sending approval mail for {organization.name} and contacts {contacts}")
-
         return {}
+
+    def send_mail_to_owner(self, owner_email_address, comment, org_id, status):
+        if status == OrganizationStatus.REJECTED.value:
+            mail_template = get_owner_mail_for_org_rejected(org_id, comment)
+        elif status == OrganizationStatus.CHANGE_REQUESTED.value:
+            mail_template = get_owner_mail_for_org_changes_requested(org_id, comment)
+        elif status == OrganizationStatus.APPROVED.value:
+            mail_template = get_owner_mail_for_org_approved(org_id)
+        else:
+            logger.info(f"Organization status: {status}")
+            raise InvalidOrganizationStateException()
+
+        utils.send_email_notification([owner_email_address], mail_template["subject"],
+                                      mail_template["body"], NOTIFICATION_ARN, self.boto_utils)

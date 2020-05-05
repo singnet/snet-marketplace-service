@@ -11,7 +11,7 @@ class DUNSRepository(BaseRepository):
     def add_verification(self, verification):
         verification_db = DUNSVerificationModel(
             verification_id=verification.verification_id, org_uuid=verification.org_uuid,
-            comments=verification.comment_list(),
+            comments=verification.comment_dict_list(),
             status=verification.status, created_at=verification.created_at, updated_at=verification.updated_at)
         self.add_item(verification_db)
 
@@ -40,5 +40,5 @@ class DUNSRepository(BaseRepository):
             raise Exception("verification not found")
         verification_db.status = verification.status
         verification_db.updated_at = verification.updated_at,
-        verification_db.comments = verification.comment_list()
+        verification_db.comments = verification.comment_dict_list()
         self.session.commit()
