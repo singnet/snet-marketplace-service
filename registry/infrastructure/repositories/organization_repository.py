@@ -313,9 +313,9 @@ class OrganizationPublisherRepository(BaseRepository):
         self.session.commit()
 
     def update_all_individual_organization_for_user(self, username, status, updated_by):
-        organizations_db = self.session.query(Organization)\
-            .join(OrganizationMember, Organization.uuid == OrganizationMember.org_uuid)\
-            .filter(OrganizationMember.username == username).all()
+        organizations_db = self.session.query(Organization) \
+            .join(OrganizationMember, Organization.uuid == OrganizationMember.org_uuid) \
+            .filter(OrganizationMember.username == username).filter(OrganizationMember.role == Role.OWNER.value).all()
         for organization in organizations_db:
             if organization.org_state[0].state == OrganizationStatus.ONBOARDING.value:
                 if status == VerificationStatus.APPROVED.value:
