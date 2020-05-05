@@ -19,15 +19,18 @@ class TestOrganizationService(unittest.TestCase):
     def setUp(self):
         self.org_repo = OrganizationPublisherRepository()
 
+    @patch("registry.domain.services.registry_blockchain_util."
+           "RegistryBlockChainUtil.publish_organization_to_test_network", return_value="0x123")
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
     @patch('common.ipfs_util.IPFSUtil.read_file_from_ipfs')
     @patch('common.ipfs_util.IPFSUtil.read_bytesio_from_ipfs')
     @patch('common.blockchain_util.BlockChainUtil')
     @patch('registry.consumer.organization_event_consumer.OrganizationEventConsumer._get_org_details_from_blockchain')
-    def test_organization_create_event(self, mock_get_org_details_from_blockchain, mock_blockchain_util , mock_read_bytesio_from_ipfs,
+    def test_organization_create_event(self, mock_get_org_details_from_blockchain, mock_blockchain_util,
+                                       mock_read_bytesio_from_ipfs,
                                        mock_ipfs_read, mock_s3_push,
-                                       mock_ipfs_write):
+                                       mock_ipfs_write, mock_org_test_publish):
         test_org_uuid = uuid4().hex
         test_org_id = "org_id"
         username = "karl@cryptonian.io"
@@ -47,7 +50,8 @@ class TestOrganizationService(unittest.TestCase):
         }
         organization = OrganizationFactory.org_domain_entity_from_payload(payload)
 
-        self.org_repo.add_organization(organization, username, OrganizationStatus.PUBLISH_IN_PROGRESS.value, address="0x123")
+        self.org_repo.add_organization(organization, username, OrganizationStatus.PUBLISH_IN_PROGRESS.value,
+                                       address="0x123")
         event = {"data": {'row_id': 2, 'block_no': 6243627, 'event': 'OrganizationCreated',
                           'json_str': "{'orgId': b'org_id\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'}",
                           'processed': b'\x00',
@@ -98,7 +102,8 @@ class TestOrganizationService(unittest.TestCase):
 
         org_event_consumer.on_event({})
         published_org = self.org_repo.get_org_for_org_id(test_org_id)
-        owner = self.org_repo.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == test_org_uuid).filter(OrganizationMember.role == Role.OWNER.value).all()
+        owner = self.org_repo.session.query(OrganizationMember).filter(
+            OrganizationMember.org_uuid == test_org_uuid).filter(OrganizationMember.role == Role.OWNER.value).all()
         if len(owner) != 1:
             assert False
         self.assertEqual(owner[0].address, "0x123")
@@ -113,6 +118,8 @@ class TestOrganizationService(unittest.TestCase):
         assert published_org.duns_no == '123456789'
         assert published_org.org_state.state == "PUBLISHED"
 
+    @patch("registry.domain.services.registry_blockchain_util."
+           "RegistryBlockChainUtil.publish_organization_to_test_network", return_value="0x123")
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
     @patch('common.ipfs_util.IPFSUtil.read_file_from_ipfs')
@@ -122,7 +129,7 @@ class TestOrganizationService(unittest.TestCase):
     def test_organization_create_event_from_snet_cli(self, mock_get_org_details_from_blockchain, mock_block_chain_util,
                                                      mock_read_bytesio_from_ipfs,
                                                      mock_ipfs_read, mock_s3_push,
-                                                     mock_ipfs_write):
+                                                     mock_ipfs_write, mock_org_test_publish):
         username = "karl@dummy.com"
         test_org_uuid = uuid4().hex
         test_org_id = "org_id"
@@ -190,15 +197,18 @@ class TestOrganizationService(unittest.TestCase):
         assert published_org.groups[0].payment_address == "0x123"
         assert published_org.org_state.state == 'PUBLISHED_UNAPPROVED'
 
+    @patch("registry.domain.services.registry_blockchain_util."
+           "RegistryBlockChainUtil.publish_organization_to_test_network", return_value="0x123")
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
     @patch('common.ipfs_util.IPFSUtil.read_file_from_ipfs')
     @patch('common.ipfs_util.IPFSUtil.read_bytesio_from_ipfs')
     @patch('common.blockchain_util.BlockChainUtil')
     @patch('registry.consumer.organization_event_consumer.OrganizationEventConsumer._get_org_details_from_blockchain')
-    def test_organization_owner_change_event(self, mock_get_org_details_from_blockchain, mock_blockchain_util , mock_read_bytesio_from_ipfs,
-                                       mock_ipfs_read, mock_s3_push,
-                                       mock_ipfs_write):
+    def test_organization_owner_change_event(self, mock_get_org_details_from_blockchain, mock_blockchain_util,
+                                             mock_read_bytesio_from_ipfs,
+                                             mock_ipfs_read, mock_s3_push,
+                                             mock_ipfs_write, mock_org_test_publish):
         username = "karl@dummy.com"
         test_org_uuid = uuid4().hex
         test_org_id = "org_id"
@@ -219,7 +229,8 @@ class TestOrganizationService(unittest.TestCase):
         }
         organization = OrganizationFactory.org_domain_entity_from_payload(payload)
 
-        self.org_repo.add_organization(organization, username, OrganizationStatus.PUBLISH_IN_PROGRESS.value, address="0x123")
+        self.org_repo.add_organization(organization, username, OrganizationStatus.PUBLISH_IN_PROGRESS.value,
+                                       address="0x123")
         event = {"data": {'row_id': 2, 'block_no': 6243627, 'event': 'OrganizationCreated',
                           'json_str': "{'orgId': b'org_id\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'}",
                           'processed': b'\x00',
@@ -286,7 +297,6 @@ class TestOrganizationService(unittest.TestCase):
         assert published_org.groups[0].payment_address == "0x123"
         assert published_org.duns_no == '123456789'
         assert published_org.org_state.state == "PUBLISHED"
-
 
     def tearDown(self):
         self.org_repo.session.query(Organization).delete()

@@ -224,7 +224,8 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                 org_uuid = existing_publish_in_progress_organization.uuid
                 existing_members = self._organization_repository.get_org_member(
                     org_uuid=existing_publish_in_progress_organization.uuid)
-                self._mark_existing_publish_in_progress_as_published(existing_publish_in_progress_organization)
+                self._mark_existing_publish_in_progress_as_published(existing_publish_in_progress_organization,
+                                                                     test_transaction_hash)
             owner = OrganizationFactory.parser_org_owner_from_metadata(org_uuid, owner,
                                                                        OrganizationMemberStatus.PUBLISHED.value)
             recieved_members = OrganizationFactory.parser_org_members_from_metadata(org_uuid, recieved_members_list,
