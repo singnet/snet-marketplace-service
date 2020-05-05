@@ -7,9 +7,10 @@ from common import blockchain_util
 from common import ipfs_util
 from common.logger import get_logger
 from registry.config import NETWORK_ID
-from registry.constants import OrganizationMemberStatus, OrganizationStatus, Role
+from registry.constants import OrganizationMemberStatus, OrganizationStatus, Role, EnvironmentType
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization
+from registry.domain.services.registry_blockchain_util import RegistryBlockChainUtil
 from registry.exceptions import OrganizationNotFoundException
 
 logger = get_logger(__name__)
@@ -134,15 +135,17 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
 
         return existing_publish_in_progress_organization
 
-    def _mark_existing_publish_in_progress_as_published(self, existing_publish_in_progress_organization):
-        self._organization_repository.update_organization(existing_publish_in_progress_organization,
-                                                          BLOCKCHAIN_USER,
-                                                          OrganizationStatus.PUBLISHED.value)
+    def _mark_existing_publish_in_progress_as_published(self, existing_publish_in_progress_organization,
+                                                        test_transaction_hash):
+        self._organization_repository.update_organization(
+            existing_publish_in_progress_organization, BLOCKCHAIN_USER, OrganizationStatus.PUBLISHED.value,
+            test_transaction_hash=test_transaction_hash)
 
-    def _create_event_outside_publisher_portal(self, received_organization_event):
-        self._organization_repository.store_organization(received_organization_event, BLOCKCHAIN_USER,
-                                                         OrganizationStatus.PUBLISHED_UNAPPROVED.value
-                                                         )
+    def _create_event_outside_publisher_portal(self, received_organization_event, test_transaction_hash):
+        self._organization_repository.store_organization(
+            received_organization_event, BLOCKCHAIN_USER, OrganizationStatus.PUBLISHED_UNAPPROVED.value,
+            test_transaction_hash=test_transaction_hash
+        )
 
     def _process_organization_create_event(self, org_id, ipfs_org_metadata, org_metadata_uri, transaction_hash, owner,
                                            recieved_members_list):
@@ -183,6 +186,9 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                                                        OrganizationStatus.DRAFT.value,
                                                        members)
 
+            test_transaction_hash = RegistryBlockChainUtil(EnvironmentType.TEST.value) \
+                .publish_organization_to_test_network(received_organization_event)
+
             if existing_publish_in_progress_organization:
                 existing_publish_in_progress_organization.org_name = org_name
                 existing_publish_in_progress_organization.org_type = org_type
@@ -201,25 +207,26 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
 
                 received_organization_event.setup_id()
                 org_uuid = received_organization_event.uuid
-                self._create_event_outside_publisher_portal(received_organization_event)
+                self._create_event_outside_publisher_portal(received_organization_event, test_transaction_hash)
 
-            elif existing_publish_in_progress_organization.org_state.transaction_hash != transaction_hash and existing_publish_in_progress_organization.is_major_change(
+            elif existing_publish_in_progress_organization.org_state.transaction_hash != transaction_hash \
+                    and existing_publish_in_progress_organization.is_major_change(
                 received_organization_event):
 
                 org_uuid = existing_publish_in_progress_organization.uuid
                 logger.info(f"Detected Major change for {org_uuid}")
                 existing_members = self._organization_repository.get_org_member(org_uuid=
                                                                                 existing_publish_in_progress_organization.uuid)
-                self._organization_repository.store_organization(existing_publish_in_progress_organization,
-                                                                 BLOCKCHAIN_USER,
-                                                                 OrganizationStatus.APPROVAL_PENDING.value)
+                self._organization_repository.store_organization(
+                    existing_publish_in_progress_organization, BLOCKCHAIN_USER,
+                    OrganizationStatus.APPROVAL_PENDING.value, test_transaction_hash=test_transaction_hash)
             else:
                 org_uuid = existing_publish_in_progress_organization.uuid
                 existing_members = self._organization_repository.get_org_member(
                     org_uuid=existing_publish_in_progress_organization.uuid)
                 self._mark_existing_publish_in_progress_as_published(existing_publish_in_progress_organization)
-
-            owner = OrganizationFactory.parser_org_owner_from_metadata(org_uuid, owner, OrganizationMemberStatus.PUBLISHED.value)
+            owner = OrganizationFactory.parser_org_owner_from_metadata(org_uuid, owner,
+                                                                       OrganizationMemberStatus.PUBLISHED.value)
             recieved_members = OrganizationFactory.parser_org_members_from_metadata(org_uuid, recieved_members_list,
                                                                                     OrganizationMemberStatus.PUBLISHED.value)
 
