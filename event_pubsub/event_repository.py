@@ -120,11 +120,12 @@ class EventRepository(object):
         self.connection.begin_transaction()
         try:
 
-            insert_query = "INSERT INTO registry_events_raw (block_no, event, json_str, processed, transactionHash, logIndex ,error_code,error_msg,row_updated,row_created) " \
+            insert_query = "INSERT INTO registry_events_raw (block_no, event, json_str, processed, transactionHash, logIndex, error_code, error_msg, row_updated, row_created) " \
                            "VALUES ( %s, %s, %s, %s, %s , %s, %s, %s, %s, %s ) " \
-                           "ON DUPLICATE KEY UPDATE row_updated=%s "
+                           "ON DUPLICATE KEY UPDATE logIndex=%s,  error_code=%s, error_msg=%s, row_updated=%s "
             insert_params = [block_number, event_name, json_str, processed, transaction_hash, log_index, error_code,
-                             error_message, datetime.utcnow(), datetime.utcnow(), datetime.utcnow()]
+                             error_message, datetime.utcnow(), datetime.utcnow(), log_index, error_code,
+                             error_message, datetime.utcnow()]
 
             query_response = self.connection.execute(insert_query, insert_params)
             self.connection.commit_transaction()
@@ -137,11 +138,12 @@ class EventRepository(object):
         # insert into database here
         self.connection.begin_transaction()
         try:
-            insert_query = "Insert into mpe_events_raw (block_no, event, json_str, processed, transactionHash, logIndex ,error_code,error_msg,row_updated,row_created) " \
+            insert_query = "Insert into mpe_events_raw (block_no, event, json_str, processed, transactionHash, logIndex, error_code, error_msg, row_updated, row_created) " \
                            "VALUES ( %s, %s, %s, %s, %s , %s, %s, %s, %s, %s ) " \
-                           "ON DUPLICATE KEY UPDATE row_updated=%s "
+                           "ON DUPLICATE KEY UPDATE logIndex=%s,  error_code=%s, error_msg=%s, row_updated=%s "
             insert_params = [block_number, event_name, json_str, processed, transaction_hash, log_index, error_code,
-                             error_message, datetime.utcnow(), datetime.utcnow(), datetime.utcnow()]
+                             error_message, datetime.utcnow(), datetime.utcnow(), log_index, error_code,
+                             error_message, datetime.utcnow()]
 
             query_response = self.connection.execute(insert_query, insert_params)
             self.connection.commit_transaction()
@@ -154,11 +156,12 @@ class EventRepository(object):
         # insert into database here
         try:
             self.connection.begin_transaction()
-            insert_query = "Insert into rfai_events_raw (block_no, event, json_str, processed, transactionHash, logIndex ,error_code,error_msg,row_updated,row_created) " \
+            insert_query = "Insert into rfai_events_raw (block_no, event, json_str, processed, transactionHash, logIndex, error_code, error_msg, row_updated, row_created) " \
                            "VALUES ( %s, %s, %s, %s, %s , %s, %s, %s, %s, %s ) " \
-                           "ON DUPLICATE KEY UPDATE row_updated=%s "
+                           "ON DUPLICATE KEY UPDATE logIndex=%s,  error_code=%s, error_msg=%s, row_updated=%s "
             insert_params = [block_number, event_name, json_str, processed, transaction_hash, log_index, error_code,
-                             error_message, datetime.utcnow(), datetime.utcnow(), datetime.utcnow()]
+                             error_message, datetime.utcnow(), datetime.utcnow(), log_index, error_code,
+                             error_message, datetime.utcnow()]
 
             query_response = self.connection.execute(insert_query, insert_params)
             self.connection.commit_transaction()
@@ -171,11 +174,12 @@ class EventRepository(object):
         # insert into database here
         self.connection.begin_transaction()
         try:
-            insert_query = "Insert into token_stake_events_raw (block_no, event, json_str, processed, transactionHash, logIndex ,error_code,error_msg,row_updated,row_created) " \
+            insert_query = "Insert into token_stake_events_raw (block_no, event, json_str, processed, transactionHash, logIndex, error_code, error_msg, row_updated, row_created) " \
                            "VALUES ( %s, %s, %s, %s, %s , %s, %s, %s, %s, %s ) " \
-                           "ON DUPLICATE KEY UPDATE row_updated=%s "
+                           "ON DUPLICATE KEY UPDATE logIndex=%s,  error_code=%s, error_msg=%s, row_updated=%s "
             insert_params = [block_number, event_name, json_str, processed, transaction_hash, log_index, error_code,
-                             error_message, datetime.utcnow(), datetime.utcnow(), datetime.utcnow()]
+                             error_message, datetime.utcnow(), datetime.utcnow(), log_index, error_code,
+                             error_message, datetime.utcnow()]
 
             query_response = self.connection.execute(insert_query, insert_params)
             self.connection.commit_transaction()
