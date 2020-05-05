@@ -128,10 +128,9 @@ class ServicePublisherRepository(BaseRepository):
 
     def get_service_for_given_service_id_and_org_id(self, org_id, service_id):
         try:
-
             organization = self.session.query(Organization).filter(Organization.org_id == org_id).first()
             if not organization:
-                raise Exception(f"No organization found for this service {service_id}")
+                raise Exception(f"No organization found for org_id:{org_id} service_id:{service_id}")
             org_uuid = organization.uuid
             service_db = self.session.query(Service).filter(Service.org_uuid == org_uuid).filter(
                 Service.service_id == service_id).first()

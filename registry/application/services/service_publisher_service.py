@@ -1,6 +1,8 @@
 import json
 from uuid import uuid4
 
+from aws_xray_sdk.core import patch_all
+
 from common import utils
 from common.boto_utils import BotoUtils
 from common.constant import StatusCode
@@ -21,6 +23,7 @@ from registry.infrastructure.repositories.organization_repository import Organiz
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 from registry.mail_templates import get_service_approval_mail_template
 
+patch_all()
 ALLOWED_ATTRIBUTES_FOR_SERVICE_SEARCH = ["display_name"]
 DEFAULT_ATTRIBUTE_FOR_SERVICE_SEARCH = "display_name"
 ALLOWED_ATTRIBUTES_FOR_SERVICE_SORT_BY = ["ranking", "service_id"]
@@ -73,6 +76,13 @@ class ServicePublisherService:
             return ServiceAvailabilityStatus.UNAVAILABLE.value
         return ServiceAvailabilityStatus.AVAILABLE.value
 
+    @staticmethod
+    def get_service_for_org_id_and_service_id(org_id, service_id):
+        org_uuid, service = ServicePublisherRepository().get_service_for_given_service_id_and_org_id(org_id, service_id)
+        if not service:
+            return {}
+        return service.to_dict()
+
     def save_service(self, payload):
         service = ServiceFactory().create_service_entity_model(self._org_uuid, self._service_uuid, payload,
                                                                ServiceStatus.DRAFT.value)
@@ -99,7 +109,9 @@ class ServicePublisherService:
         for attribute, value in payload.items():
             if attribute in VALID_PATCH_ATTRIBUTE:
                 if attribute == "groups":
-                    service.groups =[ServiceFactory.create_service_group_entity_model(self._org_uuid, self._service_uuid, group) for group in payload.get("groups", [])]
+                    service.groups = [
+                        ServiceFactory.create_service_group_entity_model(self._org_uuid, self._service_uuid, group) for
+                        group in payload.get("groups", [])]
             else:
                 raise Exception("Patching of other attributes not allowed as of now")
 
