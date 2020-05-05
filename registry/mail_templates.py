@@ -90,3 +90,49 @@ def get_notification_mail_template_for_service_provider_when_org_is_submitted_fo
         """
     }
     return mail_template
+
+
+def get_owner_mail_for_org_rejected(org_id, comment):
+    mail_template = {
+        "subject": f"Your organization {org_id} has been reviewed",
+        "body": f"""
+<div>
+    <p>Hello!</p>
+    Your organization {org_id} has been reviewed and does not pass our acceptance criteria due to the 
+following reasons,<br/>
+    {comment}
+    
+    <p>Regards,<br/>SingularityNET Publisher Portal Team</p>
+</div>"""
+    }
+    return mail_template
+
+
+def get_owner_mail_for_org_approved(org_id):
+    mail_template = {
+        "subject": f"Your organization {org_id} has been reviewed",
+        "body": f"""
+<div>
+    <p>Hello!</p>
+    Your organization {org_id} has been reviewed, and it is approved by our approval team.<br/>
+    
+    <p>Regards,<br/>SingularityNET Publisher Portal Team</p>
+</div>"""
+    }
+    return mail_template
+
+
+def get_owner_mail_for_org_changes_requested(org_id, comment):
+    mail_template = {
+        "subject": f"Your organization {org_id} has been reviewed",
+        "body": f"""
+<div>
+    <p>Hello!</p>
+    Your organization {org_id} has been reviewed, and changes are requested by our approval 
+team with following comment in review,<br/>
+    <strong>Comment:</strong> {comment}
+    
+    <p>Regards,<br/>SingularityNET Publisher Portal Team</p>
+</div>"""
+    }
+    return mail_template
