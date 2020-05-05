@@ -88,7 +88,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         service_ipfs_data = self._ipfs_util.read_file_from_ipfs(metadata_uri)
         self._process_service_data(
             org_id=org_id, service_id=service_id, service_metadata=service_ipfs_data,
-            tags_data=tags_data, transaction_hash=transaction_hash)
+            tags_data=tags_data, transaction_hash=transaction_hash, metadata_uri=metadata_uri)
 
     def _get_existing_service_details(self, org_id, service_id):
         org_uuid, existing_service = self._service_repository.get_service_for_given_service_id_and_org_id(org_id,
@@ -107,7 +107,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                 changed_endpoints[endpoint] = {'valid': False}
             group['endpoints'] = changed_endpoints
 
-    def _process_service_data(self, org_id, service_id, service_metadata, tags_data, transaction_hash):
+    def _process_service_data(self, org_id, service_id, service_metadata, tags_data, transaction_hash, metadata_uri):
 
         org_uuid, existing_service = self._get_existing_service_details(org_id, service_id)
         service_uuid = str(uuid4())
@@ -123,7 +123,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         }
         assets = service_metadata.get("assets", {})
         mpe_address = service_metadata.get("mpe_address", "")
-        metadata_ipfs_hash = service_metadata.get("metadata_ipfs_hash", "")
+        metadata_uri = "ipfs://" + metadata_uri
         contributors = service_metadata.get("contributors", [])
         state = \
             ServiceFactory.create_service_state_entity_model(org_uuid, service_uuid,
@@ -142,7 +142,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             existing_service.proto = proto
             existing_service.assets = ServiceFactory.parse_service_metadata_assets(assets, existing_service.assets)
             existing_service.mpe_address = mpe_address
-            existing_service.metadata_ipfs_hash = metadata_ipfs_hash
+            existing_service.metadata_uri = metadata_uri
             existing_service.contributors = contributors
             existing_service.tags = tags_data
             existing_service.groups = [
@@ -156,7 +156,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             DEFAULT_SERVICE_RANKING,
             {}, contributors,
             tags_data,
-            mpe_address, metadata_ipfs_hash,
+            mpe_address, metadata_uri,
             groups,
             state)
 

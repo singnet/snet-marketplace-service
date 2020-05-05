@@ -116,6 +116,7 @@ class TestServiceEventConsumer(unittest.TestCase):
             published_service.proto
         )
         self.assertEqual(service_metadata["mpe_address"], published_service.mpe_address)
+        self.assertEqual("ipfs://QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf", published_service.metadata_uri)
         self.assertDictEqual(service_metadata["contributors"][0], published_service.contributors[0])
 
         group = published_service.groups[0]
