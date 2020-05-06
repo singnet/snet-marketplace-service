@@ -4,6 +4,7 @@ from common.blockchain_util import BlockChainUtil, ContractType
 from common.logger import get_logger
 from event_pubsub.event_repository import EventRepository
 from event_pubsub.producers.event_producer import EventProducer
+from event_pubsub.constants import EventType
 
 logger = get_logger(__name__)
 
@@ -83,12 +84,10 @@ class RegistryEventProducer(BlockchainEventProducer):
         log_index = event.logIndex
         error_code = 0
         error_message = ""
+        event_type = EventType.REGISTRY.value
 
-        # insert into database here
-
-        self._event_repository.insert_registry_event(block_number, event_name, json_str, processed, transaction_hash,
-                                                     log_index,
-                                                     error_code, error_message)
+        self._event_repository.insert_raw_event(event_type, block_number, event_name, json_str, processed,
+                                                transaction_hash, log_index, error_code, error_message)
 
     def _push_events_to_repository(self, events):
         for event in events:
@@ -142,12 +141,10 @@ class MPEEventProducer(BlockchainEventProducer):
         log_index = event.logIndex
         error_code = 0
         error_message = ""
+        event_type = EventType.MPE.value
 
-        # insert into database here
-
-        self._event_repository.insert_mpe_event(block_number, event_name, json_str, processed, transaction_hash,
-                                                log_index,
-                                                error_code, error_message)
+        self._event_repository.insert_raw_event(event_type, block_number, event_name, json_str, processed,
+                                                transaction_hash, log_index, error_code, error_message)
 
     def _get_base_contract_path(self):
         return os.path.abspath(
@@ -199,12 +196,10 @@ class RFAIEventProducer(BlockchainEventProducer):
         log_index = event.logIndex
         error_code = 0
         error_message = ""
+        event_type = EventType.RFAI.value
 
-        # insert into database here
-
-        self._event_repository.insert_rfai_event(block_number, event_name, json_str, processed, transaction_hash,
-                                                 log_index,
-                                                 error_code, error_message)
+        self._event_repository.insert_raw_event(event_type, block_number, event_name, json_str, processed,
+                                                transaction_hash, log_index, error_code, error_message)
 
     def _get_base_contract_path(self):
         return os.path.abspath(
@@ -256,9 +251,10 @@ class TokenStakeEventProducer(BlockchainEventProducer):
         log_index = event.logIndex
         error_code = 0
         error_message = ""
+        event_type = EventType.TOKEN_STAKE.value
 
-        self._event_repository.insert_token_stake_event(
-            block_number, event_name, json_str, processed, transaction_hash, log_index, error_code, error_message)
+        self._event_repository.insert_raw_event(event_type, block_number, event_name, json_str, processed,
+                                                transaction_hash, log_index, error_code, error_message)
 
     def _push_events_to_repository(self, events):
         for event in events:

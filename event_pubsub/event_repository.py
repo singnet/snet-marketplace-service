@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from event_pubsub.constants import EventType
 from common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -114,74 +114,28 @@ class EventRepository(object):
             self.connection.rollback_transaction()
             raise e
 
-    def insert_registry_event(self, block_number, event_name, json_str, processed, transaction_hash, log_index,
-                              error_code, error_message):
-        # insert into database here
+    def insert_raw_event(self, event_type, block_number, event_name, json_str, processed, transaction_hash,
+                         log_index, error_code, error_message):
+        insert_query = "INSERT INTO {} (block_no, event, json_str, processed, transactionHash, logIndex, error_code, error_msg, row_updated, row_created) " \
+                       "VALUES ( %s, %s, %s, %s, %s , %s, %s, %s, %s, %s ) " \
+                       "ON DUPLICATE KEY UPDATE logIndex=%s,  error_code=%s, error_msg=%s, row_updated=%s "
+        if event_type == EventType.REGISTRY.value:
+            insert_query = insert_query.format("registry_events_raw")
+        elif event_type == EventType.MPE.value:
+            insert_query = insert_query.format("mpe_events_raw")
+        elif event_type == EventType.RFAI.value:
+            insert_query = insert_query.format("rfai_events_raw")
+        elif event_type == EventType.TOKEN_STAKE.value:
+            insert_query = insert_query.format("token_stake_events_raw")
+        else:
+            logger.info(f"No such event type {event_type}")
+
+        insert_params = [block_number, event_name, json_str, processed, transaction_hash, log_index, error_code,
+                         error_message, datetime.utcnow(), datetime.utcnow(), log_index, error_code, error_message,
+                         datetime.utcnow()]
         self.connection.begin_transaction()
         try:
-
-            insert_query = "INSERT INTO registry_events_raw (block_no, event, json_str, processed, transactionHash, logIndex, error_code, error_msg, row_updated, row_created) " \
-                           "VALUES ( %s, %s, %s, %s, %s , %s, %s, %s, %s, %s ) " \
-                           "ON DUPLICATE KEY UPDATE logIndex=%s,  error_code=%s, error_msg=%s, row_updated=%s "
-            insert_params = [block_number, event_name, json_str, processed, transaction_hash, log_index, error_code,
-                             error_message, datetime.utcnow(), datetime.utcnow(), log_index, error_code,
-                             error_message, datetime.utcnow()]
-
-            query_response = self.connection.execute(insert_query, insert_params)
-            self.connection.commit_transaction()
-        except Exception as e:
-            self.connection.rollback_transaction()
-            raise e
-
-    def insert_mpe_event(self, block_number, event_name, json_str, processed, transaction_hash, log_index, error_code,
-                         error_message):
-        # insert into database here
-        self.connection.begin_transaction()
-        try:
-            insert_query = "Insert into mpe_events_raw (block_no, event, json_str, processed, transactionHash, logIndex, error_code, error_msg, row_updated, row_created) " \
-                           "VALUES ( %s, %s, %s, %s, %s , %s, %s, %s, %s, %s ) " \
-                           "ON DUPLICATE KEY UPDATE logIndex=%s,  error_code=%s, error_msg=%s, row_updated=%s "
-            insert_params = [block_number, event_name, json_str, processed, transaction_hash, log_index, error_code,
-                             error_message, datetime.utcnow(), datetime.utcnow(), log_index, error_code,
-                             error_message, datetime.utcnow()]
-
-            query_response = self.connection.execute(insert_query, insert_params)
-            self.connection.commit_transaction()
-        except Exception as e:
-            self.connection.rollback_transaction()
-            raise e
-
-    def insert_rfai_event(self, block_number, event_name, json_str, processed, transaction_hash, log_index, error_code,
-                          error_message):
-        # insert into database here
-        try:
-            self.connection.begin_transaction()
-            insert_query = "Insert into rfai_events_raw (block_no, event, json_str, processed, transactionHash, logIndex, error_code, error_msg, row_updated, row_created) " \
-                           "VALUES ( %s, %s, %s, %s, %s , %s, %s, %s, %s, %s ) " \
-                           "ON DUPLICATE KEY UPDATE logIndex=%s,  error_code=%s, error_msg=%s, row_updated=%s "
-            insert_params = [block_number, event_name, json_str, processed, transaction_hash, log_index, error_code,
-                             error_message, datetime.utcnow(), datetime.utcnow(), log_index, error_code,
-                             error_message, datetime.utcnow()]
-
-            query_response = self.connection.execute(insert_query, insert_params)
-            self.connection.commit_transaction()
-        except Exception as e:
-            self.connection.rollback_transaction()
-            raise e
-
-    def insert_token_stake_event(self, block_number, event_name, json_str, processed, transaction_hash, log_index,
-                                 error_code, error_message):
-        # insert into database here
-        self.connection.begin_transaction()
-        try:
-            insert_query = "Insert into token_stake_events_raw (block_no, event, json_str, processed, transactionHash, logIndex, error_code, error_msg, row_updated, row_created) " \
-                           "VALUES ( %s, %s, %s, %s, %s , %s, %s, %s, %s, %s ) " \
-                           "ON DUPLICATE KEY UPDATE logIndex=%s,  error_code=%s, error_msg=%s, row_updated=%s "
-            insert_params = [block_number, event_name, json_str, processed, transaction_hash, log_index, error_code,
-                             error_message, datetime.utcnow(), datetime.utcnow(), log_index, error_code,
-                             error_message, datetime.utcnow()]
-
-            query_response = self.connection.execute(insert_query, insert_params)
+            self.connection.execute(insert_query, insert_params)
             self.connection.commit_transaction()
         except Exception as e:
             self.connection.rollback_transaction()
