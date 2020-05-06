@@ -1,7 +1,7 @@
 from datetime import datetime
 from event_pubsub.constants import EventType
 from common.logger import get_logger
-
+from event_pubsub.exceptions import EventTypeNotFoundException
 logger = get_logger(__name__)
 
 
@@ -129,6 +129,7 @@ class EventRepository(object):
             insert_query = insert_query.format("token_stake_events_raw")
         else:
             logger.info(f"Invalid event type {event_type}")
+            raise EventTypeNotFoundException()
 
         insert_params = [block_number, block_number, event_name, json_str, processed, transaction_hash, log_index,
                          error_code, error_message, datetime.utcnow(), datetime.utcnow(), block_number, log_index,
