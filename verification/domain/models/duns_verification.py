@@ -51,7 +51,7 @@ class DUNSVerification:
         return [comment.to_dict() for comment in self.comments]
 
     def sort_comments(self):
-        self.comments.sort(key=lambda x: x.created_at)
+        self.comments.sort(key=lambda x: x.created_at, reverse=True)
 
     def add_comment(self, comment, username):
         self.comments.append(
