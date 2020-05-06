@@ -50,6 +50,22 @@ def upgrade():
         ALTER TABLE rfai_events_raw
         ADD CONSTRAINT uq_rf_ev UNIQUE (`transactionHash`);
     """)
+    conn.execute("""
+        ALTER TABLE token_stake_events_raw
+        ADD COLUMN uncle_block_no INT DEFAULT NULL AFTER block_no;
+    """)
+    conn.execute("""
+        ALTER TABLE registry_events_raw
+        ADD COLUMN uncle_block_no INT DEFAULT NULL AFTER block_no;
+    """)
+    conn.execute("""
+        ALTER TABLE mpe_events_raw
+        ADD COLUMN uncle_block_no INT DEFAULT NULL AFTER block_no;
+    """)
+    conn.execute("""
+        ALTER TABLE rfai_events_raw
+        ADD COLUMN uncle_block_no INT DEFAULT NULL AFTER block_no;
+    """)
 
 
 def downgrade():
@@ -85,4 +101,20 @@ def downgrade():
     conn.execute("""
         ALTER TABLE rfai_events_raw
         ADD CONSTRAINT uq_rf_ev UNIQUE (`block_no`,`transactionHash`);
+    """)
+    conn.execute("""
+        ALTER TABLE token_stake_events_raw
+        DROP COLUMN uncle_block_no;
+    """)
+    conn.execute("""
+        ALTER TABLE registry_events_raw
+        DROP COLUMN uncle_block_no;
+    """)
+    conn.execute("""
+        ALTER TABLE mpe_events_raw
+        DROP COLUMN uncle_block_no;
+    """)
+    conn.execute("""
+        ALTER TABLE rfai_events_raw
+        DROP COLUMN uncle_block_no;
     """)

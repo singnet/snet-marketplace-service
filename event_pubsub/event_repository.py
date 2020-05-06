@@ -116,8 +116,8 @@ class EventRepository(object):
 
     def insert_raw_event(self, event_type, block_number, event_name, json_str, processed, transaction_hash,
                          log_index, error_code, error_message):
-        insert_query = "INSERT INTO {} (block_no, event, json_str, processed, transactionHash, logIndex, error_code, error_msg, row_updated, row_created) " \
-                       "VALUES ( %s, %s, %s, %s, %s , %s, %s, %s, %s, %s ) " \
+        insert_query = "INSERT INTO {} (block_no, uncle_block_no, event, json_str, processed, transactionHash, logIndex, error_code, error_msg, row_updated, row_created) " \
+                       "VALUES ( %s, %s, %s, %s, %s , %s, %s, %s, %s, %s, %s ) " \
                        "ON DUPLICATE KEY UPDATE block_no=%s, logIndex=%s,  error_code=%s, error_msg=%s, row_updated=%s "
         if event_type == EventType.REGISTRY.value:
             insert_query = insert_query.format("registry_events_raw")
@@ -130,9 +130,9 @@ class EventRepository(object):
         else:
             logger.info(f"Invalid event type {event_type}")
 
-        insert_params = [block_number, event_name, json_str, processed, transaction_hash, log_index, error_code,
-                         error_message, datetime.utcnow(), datetime.utcnow(), block_number, log_index, error_code,
-                         error_message, datetime.utcnow()]
+        insert_params = [block_number, block_number, event_name, json_str, processed, transaction_hash, log_index,
+                         error_code, error_message, datetime.utcnow(), datetime.utcnow(), block_number, log_index,
+                         error_code, error_message, datetime.utcnow()]
         self.connection.begin_transaction()
         try:
             self.connection.execute(insert_query, insert_params)
