@@ -1,12 +1,14 @@
+import json
 import os
 from uuid import uuid4
 
 from web3 import Web3
 
-from common import blockchain_util
+from common import blockchain_util, boto_utils
 from common import ipfs_util
+from common.constant import StatusCode
 from common.logger import get_logger
-from registry.config import NETWORK_ID
+from registry.config import NETWORK_ID, SERVICE_CURATE_ARN, REGION_NAME
 from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.models.service import Service
@@ -88,7 +90,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         service_ipfs_data = self._ipfs_util.read_file_from_ipfs(metadata_uri)
         self._process_service_data(
             org_id=org_id, service_id=service_id, service_metadata=service_ipfs_data,
-            tags_data=tags_data, transaction_hash=transaction_hash)
+            tags_data=tags_data, transaction_hash=transaction_hash, metadata_uri=metadata_uri)
 
     def _get_existing_service_details(self, org_id, service_id):
         org_uuid, existing_service = self._service_repository.get_service_for_given_service_id_and_org_id(org_id,
@@ -107,7 +109,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                 changed_endpoints[endpoint] = {'valid': False}
             group['endpoints'] = changed_endpoints
 
-    def _process_service_data(self, org_id, service_id, service_metadata, tags_data, transaction_hash):
+    def _process_service_data(self, org_id, service_id, service_metadata, tags_data, transaction_hash, metadata_uri):
 
         org_uuid, existing_service = self._get_existing_service_details(org_id, service_id)
         service_uuid = str(uuid4())
@@ -123,7 +125,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         }
         assets = service_metadata.get("assets", {})
         mpe_address = service_metadata.get("mpe_address", "")
-        metadata_ipfs_hash = service_metadata.get("metadata_ipfs_hash", "")
+        metadata_uri = "ipfs://" + metadata_uri
         contributors = service_metadata.get("contributors", [])
         state = \
             ServiceFactory.create_service_state_entity_model(org_uuid, service_uuid,
@@ -142,7 +144,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             existing_service.proto = proto
             existing_service.assets = ServiceFactory.parse_service_metadata_assets(assets, existing_service.assets)
             existing_service.mpe_address = mpe_address
-            existing_service.metadata_ipfs_hash = metadata_ipfs_hash
+            existing_service.metadata_uri = metadata_uri
             existing_service.contributors = contributors
             existing_service.tags = tags_data
             existing_service.groups = [
@@ -156,7 +158,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             DEFAULT_SERVICE_RANKING,
             {}, contributors,
             tags_data,
-            mpe_address, metadata_ipfs_hash,
+            mpe_address, metadata_uri,
             groups,
             state)
 
@@ -167,4 +169,25 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                 recieved_service):
             self._service_repository.save_service(BLOCKCHAIN_USER, existing_service, ServiceStatus.DRAFT.value)
         else:
+            self.___curate_service_in_marketplace(service_id, org_id, curated=True)
             self._service_repository.save_service(BLOCKCHAIN_USER, existing_service, ServiceStatus.PUBLISHED.value)
+
+    @staticmethod
+    def ___curate_service_in_marketplace(service_id, org_id, curated):
+        curate_service_payload = {
+            "pathParameters": {
+                "org_id": org_id,
+                "service_id": service_id
+            },
+            "queryStringParameters": {
+                "curate": str(curated)
+            },
+            "body": None
+        }
+        curate_service_response = boto_utils.BotoUtils(region_name=REGION_NAME) \
+            .invoke_lambda(lambda_function_arn=SERVICE_CURATE_ARN,
+                           invocation_type="RequestResponse",
+                           payload=json.dumps(curate_service_payload))
+        if curate_service_response["statusCode"] != StatusCode.CREATED:
+            logger.info(f"failed to update service ({service_id}, {org_id}) curation {curate_service_response}")
+            raise Exception("failed to update service curation")

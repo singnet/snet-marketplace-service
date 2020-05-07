@@ -5,6 +5,7 @@ from random import randrange
 from unittest.mock import patch, Mock
 from uuid import uuid4
 
+from common.constant import StatusCode
 from registry.constants import ServiceStatus
 from registry.consumer.service_event_consumer import ServiceCreatedEventConsumer
 from registry.infrastructure.models import Organization, Service, ServiceGroup, ServiceReviewHistory, ServiceState
@@ -22,10 +23,11 @@ class TestServiceEventConsumer(unittest.TestCase):
         read_bytesio_from_ipfs=Mock(return_value=""),
         read_file_from_ipfs=Mock(return_value=json.loads(json.dumps(service_metadata))),
         write_file_in_ipfs=Mock(return_value="Q3E12")))
+    @patch("common.boto_utils.BotoUtils.invoke_lambda", return_value={"statusCode": StatusCode.CREATED})
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
     @patch('common.blockchain_util.BlockChainUtil')
     @patch('registry.consumer.service_event_consumer.ServiceEventConsumer._fetch_tags')
-    def test_on_service_created_event(self, mock_fetch_tags, mock_block_chain_util, mock_s3_push, mock_ipfs):
+    def test_on_service_created_event(self, mock_fetch_tags, mock_block_chain_util, mock_s3_push, mock_boto, mock_ipfs):
         org_uuid = str(uuid4())
         service_uuid = str(uuid4())
         self.org_repo.add_item(
@@ -116,6 +118,7 @@ class TestServiceEventConsumer(unittest.TestCase):
             published_service.proto
         )
         self.assertEqual(service_metadata["mpe_address"], published_service.mpe_address)
+        self.assertEqual("ipfs://QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf", published_service.metadata_uri)
         self.assertDictEqual(service_metadata["contributors"][0], published_service.contributors[0])
 
         group = published_service.groups[0]
