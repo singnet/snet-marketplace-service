@@ -228,7 +228,8 @@ class OrganizationPublisherService:
                 if status in ORG_STATUS_LIST:
                     org_repo.update_organization_status(org_uuid, status, updated_by)
                     organization = org_repo.get_org_for_org_uuid(org_uuid)
-                    owner_username = org_repo.get_org_member(org_uuid=org_uuid, role=Role.OWNER.value)
+                    owner = org_repo.get_org_member(org_uuid=org_uuid, role=Role.OWNER.value)
+                    owner_username = owner[0].username
                     self.send_mail_to_owner(owner_username, comment, organization.id, status)
                 else:
                     logger.error(f"Invalid status {status}")

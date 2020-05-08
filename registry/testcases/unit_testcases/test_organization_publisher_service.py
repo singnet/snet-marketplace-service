@@ -42,7 +42,8 @@ class TestOrganizationPublisherService(unittest.TestCase):
     @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
     @patch("common.utils.send_slack_notification")
     @patch("common.boto_utils.BotoUtils.invoke_lambda")
-    def test_edit_organization_after_change_requested(self, mock_invoke_lambda, mock_slack_notification, mock_boto, mock_ipfs):
+    def test_edit_organization_after_change_requested(self, mock_invoke_lambda, mock_slack_notification, mock_boto,
+                                                      mock_ipfs):
         username = "karl@dummy.com"
         test_org_uuid = uuid4().hex
         test_org_id = "org_id"
@@ -128,7 +129,6 @@ class TestOrganizationPublisherService(unittest.TestCase):
             else:
                 assert False
 
-
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
     def test_submit_organization_for_approval_after_approved(self, mock_boto, mock_ipfs):
@@ -203,7 +203,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q12PWP")))
     @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
-    def test_org_verification(self, mock_boto_utils, mock_ipfs_utils):
+    def test_org_verification_individual(self, mock_boto_utils, mock_ipfs_utils):
         username = "karl@dummy.in"
         for count in range(0, 3):
             org_id = uuid4().hex
@@ -221,6 +221,24 @@ class TestOrganizationPublisherService(unittest.TestCase):
             "JUMIO", verification_details={"updated_by": "TEST_CASES", "status": "APPROVED", "username": username})
         organization = org_repo.get_org(OrganizationStatus.ONBOARDING_APPROVED.value)
         self.assertEqual(len(organization), 3)
+
+    @patch("common.utils.send_email_notification")
+    @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q12PWP")))
+    @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
+    def test_org_verification_organization(self, mock_boto_utils, mock_ipfs_utils, mock_email):
+        username = "karl@dummy.in"
+        org_id = "test_org_id"
+        org_uuid = "test_org_uuid"
+        org_repo.add_organization(DomainOrganization(org_uuid, org_id, f"org_{org_id}",
+                                                     OrganizationType.ORGANIZATION.value, ORIGIN, "",
+                                                     "", "", [], {}, "", "", [], [], [], []),
+                                  username, OrganizationStatus.ONBOARDING.value)
+
+        OrganizationPublisherService(None, None).update_verification(
+            "DUNS", verification_details={"updated_by": "TEST_CASES", "comment": "approved",
+                                          "status": "APPROVED", "org_uuid": org_uuid})
+        organization = org_repo.get_org(OrganizationStatus.ONBOARDING_APPROVED.value)
+        self.assertEqual(len(organization), 1)
 
     @patch("common.boto_utils.BotoUtils.invoke_lambda")
     def test_notify_user_on_start_of_onboarding_process(self, mock_invoke_lambda):
