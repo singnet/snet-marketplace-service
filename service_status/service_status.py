@@ -131,7 +131,7 @@ class ServiceStatus:
         return False
 
     def _send_notification(self, org_id, service_id, recipients, endpoint):
-        slack_message = self._get_slack_message(org_id=org_id, service_id=service_id, endpoint=endpoint)
+        slack_message = self._get_slack_message(org_id=org_id, service_id=service_id, endpoint=endpoint, recipients=recipients)
         util.report_slack(type=0, slack_msg=slack_message, SLACK_HOOK=SLACK_HOOK)
         for recipient in recipients:
             if recipient is None:
@@ -143,9 +143,9 @@ class ServiceStatus:
                 else:
                     logger.info(f"Invalid email_id: {recipient}")
 
-    def _get_slack_message(self, org_id, service_id, endpoint):
+    def _get_slack_message(self, org_id, service_id, endpoint, recipients):
         slack_message = f"```Alert!\n\nService {service_id} under organization {org_id} is down for {NETWORK_NAME} " \
-                        f"network.\nEndpoint: {endpoint} \n\nFor any queries please email at " \
+                        f"network.\nEndpoint: {endpoint}\nContributors: {recipients}  \n\nFor any queries please email at " \
                         f"cs-marketplace@singularitynet.io. \n\nWarmest regards, \nSingularityNET Marketplace Team```"
         return slack_message
 
