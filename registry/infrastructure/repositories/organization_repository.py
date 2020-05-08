@@ -14,8 +14,8 @@ class OrganizationPublisherRepository(BaseRepository):
     def get_org(self, status=None, limit=None, type=None):
         organization_query = self.session.query(Organization)
         if status is not None:
-            organization_query = organization_query\
-                .join(OrganizationState, Organization.uuid == OrganizationState.org_uuid)\
+            organization_query = organization_query \
+                .join(OrganizationState, Organization.uuid == OrganizationState.org_uuid) \
                 .filter(OrganizationState.state == status)
         if type is not None:
             organization_query = organization_query.filter(Organization.org_type == type)
@@ -66,7 +66,7 @@ class OrganizationPublisherRepository(BaseRepository):
 
     def persist_publish_org_transaction_hash(self, org_uuid, transaction_hash, wallet_address, username):
         organization_db_model = self.session.query(Organization).filter(Organization.uuid == org_uuid).first()
-        org_owner = self.session.query(OrganizationMember).filter(OrganizationMember.role == Role.OWNER.value)\
+        org_owner = self.session.query(OrganizationMember).filter(OrganizationMember.role == Role.OWNER.value) \
             .filter(OrganizationMember.org_uuid == org_uuid).first()
         if organization_db_model is None or org_owner is None:
             raise OrganizationNotFoundException()
@@ -87,7 +87,8 @@ class OrganizationPublisherRepository(BaseRepository):
     def store_organization(self, organization, username, state, test_transaction_hash=None):
         organization_db_model = self.session.query(Organization).filter(
             Organization.uuid == organization.uuid).first()
-        if state in [OrganizationStatus.DRAFT.value, OrganizationStatus.APPROVAL_PENDING.value,OrganizationStatus.PUBLISHED_UNAPPROVED.value]:
+        if state in [OrganizationStatus.DRAFT.value, OrganizationStatus.APPROVAL_PENDING.value,
+                     OrganizationStatus.PUBLISHED_UNAPPROVED.value]:
             if organization_db_model is None:
                 self.add_organization(organization, username, state, test_transaction_hash=test_transaction_hash)
             else:
@@ -140,8 +141,8 @@ class OrganizationPublisherRepository(BaseRepository):
 
         org_state = [
             OrganizationState(
-                org_uuid=organization.uuid, state=state, transaction_hash="",
-                wallet_address="", created_by=username, created_on=current_time, test_transaction_hash=test_transaction_hash,
+                org_uuid=organization.uuid, state=state, transaction_hash="", wallet_address="",
+                created_by=username, created_on=current_time, test_transaction_hash=test_transaction_hash,
                 updated_by=username, updated_on=current_time, reviewed_by="")]
 
         self.add_item(Organization(
@@ -153,14 +154,14 @@ class OrganizationPublisherRepository(BaseRepository):
         ))
 
         self.add_item(OrganizationMember(
-            invite_code=uuid4().hex, org_uuid=organization.uuid, role=Role.OWNER.value, username=username, address=address,
-            status=OrganizationMemberStatus.ACCEPTED.value, transaction_hash="", invited_on=current_time,
-            created_on=current_time, updated_on=current_time))
+            invite_code=uuid4().hex, org_uuid=organization.uuid, role=Role.OWNER.value, username=username,
+            address=address, status=OrganizationMemberStatus.ACCEPTED.value, transaction_hash="",
+            invited_on=current_time, created_on=current_time, updated_on=current_time))
 
     def _update_organization(self, organization_db_model, organization, username, state, test_transaction_hash=None):
         current_time = datetime.utcnow()
         organization_db_model.name = organization.name
-        organization_db_model.id = organization.id
+        organization_db_model.org_id = organization.id
         organization_db_model.org_type = organization.org_type
         organization_db_model.origin = organization.origin
         organization_db_model.description = organization.description
@@ -192,7 +193,8 @@ class OrganizationPublisherRepository(BaseRepository):
                   payment_address=group.payment_address, payment_config=group.payment_config, status=group.status)
             for group in group_domain_entity]
 
-        self.session.query(OrganizationAddress).filter(OrganizationAddress.org_uuid == organization.uuid).delete(synchronize_session='fetch')
+        self.session.query(OrganizationAddress).filter(OrganizationAddress.org_uuid == organization.uuid) \
+            .delete(synchronize_session='fetch')
         self.session.query(Group).filter(Group.org_uuid == organization.uuid).delete(synchronize_session='fetch')
         self.session.commit()
 
@@ -273,8 +275,8 @@ class OrganizationPublisherRepository(BaseRepository):
     def persist_publish_org_member_transaction_hash(self, org_member, transaction_hash, org_uuid):
         member_username_list = [member.username for member in org_member]
         org_members_db_items = self.session.query(OrganizationMember) \
-            .filter(OrganizationMember.username.in_(member_username_list))\
-            .filter(OrganizationMember.status == OrganizationMemberStatus.ACCEPTED.value)\
+            .filter(OrganizationMember.username.in_(member_username_list)) \
+            .filter(OrganizationMember.status == OrganizationMemberStatus.ACCEPTED.value) \
             .filter(OrganizationMember.org_uuid == org_uuid)
         for org_member in org_members_db_items:
             org_member.status = OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value
@@ -283,7 +285,7 @@ class OrganizationPublisherRepository(BaseRepository):
         self.session.commit()
 
     def update_org_member(self, username, wallet_address, invite_code):
-        org_member = self.session.query(OrganizationMember)\
+        org_member = self.session.query(OrganizationMember) \
             .filter(OrganizationMember.invite_code == invite_code) \
             .filter(OrganizationMember.username == username) \
             .filter(OrganizationMember.status == OrganizationMemberStatus.PENDING.value) \
@@ -298,7 +300,6 @@ class OrganizationPublisherRepository(BaseRepository):
             org_member.status = OrganizationMemberStatus.ACCEPTED.value
         org_member.updated_on = datetime.utcnow()
         self.session.commit()
-
 
     def update_org_member_using_address(self, org_uuid, member, wallet_address):
         org_member = self.session.query(OrganizationMember) \

@@ -95,7 +95,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         org_dict["groups"] = []
         org_dict["assets"]["hero_image"]["url"] = ""
         expected_organization = json.loads(ORG_RESPONSE_MODEL)
-        expected_organization["org_id"] = test_org_id
+        expected_organization["org_id"] = ""
         expected_organization["groups"] = []
         expected_organization["org_uuid"] = test_org_uuid
         self.assertDictEqual(expected_organization, org_dict)
