@@ -82,8 +82,9 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
-      - schedule: rate(2 minutes)
-      - enabled: ${file(./config.${self:provider.stage}.json):rfai_cron_status}
+      - schedule:
+        rate: rate(2 minutes)
+        enabled: ${file(./config.${self:provider.stage}.json):rfai_cron_status}
 
   mpe_event_publisher:
     warmup: true
@@ -101,8 +102,9 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
-      - schedule: rate(2 minutes)
-      - enabled: ${file(./config.${self:provider.stage}.json):mpe_cron_status}
+      - schedule:
+        rate: rate(2 minutes)
+        enabled: ${file(./config.${self:provider.stage}.json):mpe_cron_status}
 
   registry_event_publisher:
     warmup: true
@@ -120,8 +122,9 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
-      - schedule: rate(2 minutes)
-      - enabled: ${file(./config.${self:provider.stage}.json):registry_cron_status}
+      - schedule:
+        rate: rate(2 minutes)
+        enabled: ${file(./config.${self:provider.stage}.json):registry_cron_status}
 
   mpe_event_listener:
     warmup: true
@@ -139,8 +142,9 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
-      - schedule: rate(2 minutes)
-      - enabled: ${file(./config.${self:provider.stage}.json):mpe_cron_status}
+      - schedule:
+        rate: rate(2 minutes)
+        enabled: ${file(./config.${self:provider.stage}.json):mpe_cron_status}
 
   registry_event_listener:
     warmup: true
@@ -158,8 +162,9 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
-      - schedule: rate(2 minutes)
-      - enabled: ${file(./config.${self:provider.stage}.json):registry_cron_status}
+      - schedule:
+        rate: rate(2 minutes)
+        enabled: ${file(./config.${self:provider.stage}.json):registry_cron_status}
 
   rfai_event_listener:
     warmup: true
@@ -177,8 +182,9 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
-      - schedule: rate(2 minutes)
-      - enabled: ${file(./config.${self:provider.stage}.json):rfai_cron_status}
+      - schedule:
+        rate: rate(2 minutes)
+        enabled: ${file(./config.${self:provider.stage}.json):rfai_cron_status}
 
   token_stake_event_listener:
     warmup: true
@@ -196,8 +202,9 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
-      - schedule: rate(2 minutes)
-      - enabled: ${file(./config.${self:provider.stage}.json):token_stake_cron_status}
+      - schedule:
+        rate: rate(2 minutes)
+        enabled: ${file(./config.${self:provider.stage}.json):token_stake_cron_status}
 
   token_stake_event_publisher:
     warmup: true
@@ -215,8 +222,9 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
-      - schedule: rate(2 minutes)
-      - enabled: ${file(./config.${self:provider.stage}.json):token_stake_cron_status}
+      - schedule:
+        rate: rate(2 minutes)
+        enabled: ${file(./config.${self:provider.stage}.json):token_stake_cron_status}
 
 
 
