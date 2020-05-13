@@ -53,8 +53,7 @@ class SlackChatOperation:
     def validate_slack_request(self, headers, payload_raw, ignore=False):
         if not ignore:
             if not self.validate_slack_channel_id():
-                logger.info("Invalid Slack Channel")
-                # raise InvalidSlackChannelException()
+                raise InvalidSlackChannelException()
 
         if not self.validate_slack_user():
             raise InvalidSlackUserException()
