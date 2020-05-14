@@ -208,7 +208,7 @@ class TestOrganizationService(unittest.TestCase):
         assert published_org.groups[0].group_id == "group_id"
         assert published_org.groups[0].name == "my-group"
         assert published_org.groups[0].payment_address == "0x123"
-        assert published_org.org_state.state == 'PUBLISHED_UNAPPROVED'
+        assert published_org.org_state.state == OrganizationStatus.PUBLISHED_UNAPPROVED.value
 
     @patch("registry.domain.services.registry_blockchain_util."
            "RegistryBlockChainUtil.publish_organization_to_test_network", return_value="0x123")
