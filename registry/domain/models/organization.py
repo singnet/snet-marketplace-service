@@ -15,8 +15,10 @@ from registry.exceptions import UpdateOrganizationIDException
 
 logger = get_logger(__name__)
 
-EXCLUDE_PATHS = ["root.uuid", "root._Organization__duns_no", "root.owner",
-                 "root.assets['hero_image']['url']", "root.metadata_ipfs_uri", "root.origin"]
+BLOCKCHAIN_EXCLUDE_PATHS = [
+    "root._Organization__uuid", "root._Organization__duns_no", "root._Organization__origin", "root._Organization__state"
+    "root._Organization__addresses", "root._Organization__assets['hero_image']['url']"]
+BLOCKCHAIN_EXCLUDE_REGEX_PATH = ["root\._Organization__groups\[.*\]\.status"]
 
 
 class Organization:
@@ -250,9 +252,17 @@ class Organization:
             return False
         return True
 
-    def is_major_change(self, updated_organization):
-        diff = DeepDiff(self, updated_organization, exclude_types=[OrganizationAddress],
-                        exclude_paths=EXCLUDE_PATHS)
+    def is_blockchain_major_change(self, updated_organization, consumer=False):
+        diff = DeepDiff(self, updated_organization, exclude_types=[OrganizationAddress, OrganizationState],
+                        exclude_paths=BLOCKCHAIN_EXCLUDE_PATHS, exclude_regex_paths=BLOCKCHAIN_EXCLUDE_REGEX_PATH)
+
+        logger.info(f"DIff for metadata organization {diff}")
+        if not diff:
+            return False, None
+        return True, diff
+
+    def is_major_change(self, updated_organization, consumer=False):
+        diff = DeepDiff(self, updated_organization, exclude_types=[OrganizationState])
 
         logger.info(f"DIff for metadata organization {diff}")
         if not diff:
@@ -289,7 +299,7 @@ class Organization:
             else:
                 raise MethodNotImplemented()
         else:
-            if "root._Organization__id" in diff["values_changed"]:
+            if "values_changed" in diff and "root._Organization__id" in diff["values_changed"]:
                 if current_organization.get_status() in [OrganizationStatus.CHANGE_REQUESTED.value,
                                                          OrganizationStatus.ONBOARDING.value]:
                     next_state = OrganizationStatus.ONBOARDING.value

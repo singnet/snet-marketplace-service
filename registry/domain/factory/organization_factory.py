@@ -215,7 +215,7 @@ class OrganizationFactory:
                 url = ""
 
             assets[key] = {
-                "ipfs_hash": value,
+                "ipfs_uri": value,
                 "url": url
             }
         merged = {**existing_assets, **assets}
