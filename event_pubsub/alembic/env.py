@@ -71,7 +71,7 @@ def run_migrations_online():
     with connectable.connect() as connection:
         context.configure(
             connection=connection, target_metadata=target_metadata,
-            version_table="pubsub_alembic_version"
+            version_table="alembic_version_event_pubsub"
         )
 
         with context.begin_transaction():
