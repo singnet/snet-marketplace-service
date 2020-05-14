@@ -7,7 +7,7 @@ def get_org_member_invite_mail(org_name, invite_code):
         "body": f"""<div>
                 <p>Hello,</p>
                 <p>Organization <em>{org_name}</em> has sent you membership invite.
-                    Your invite code is <strong>{invite_code}</strong>.</p><br />
+                    Your invite code is <strong>{invite_code}</strong></p><br />
                 <p>Please click on the link below to
                     accept the invitation.</p>
                 <p>{PUBLISHER_PORTAL_DAPP_URL}</p><br /><br />
