@@ -264,12 +264,17 @@ class OrganizationPublisherRepository(BaseRepository):
         self.session.commit()
         return True
 
-    def delete_members(self, org_member_list):
-        allowed_delete_member_status = [OrganizationMemberStatus.PENDING.value,
-                                        OrganizationMemberStatus.ACCEPTED.value]
+    def delete_members(self, org_member_list, member_status):
         member_username_list = [member.username for member in org_member_list]
         self.session.query(OrganizationMember).filter(OrganizationMember.username.in_(member_username_list)) \
-            .filter(OrganizationMember.status.in_(allowed_delete_member_status)).delete(synchronize_session='fetch')
+            .filter(OrganizationMember.status.in_(member_status)).delete(synchronize_session='fetch')
+        self.session.commit()
+
+    def delete_published_members(self, member_list):
+        member_address_list = [member.address for member in member_list]
+        self.session.query(OrganizationMember).filter(OrganizationMember.address.in_(member_address_list)) \
+            .filter(OrganizationMember.status == OrganizationMemberStatus.PUBLISHED.value)\
+            .delete(synchronize_session='fetch')
         self.session.commit()
 
     def persist_publish_org_member_transaction_hash(self, org_member, transaction_hash, org_uuid):

@@ -80,6 +80,7 @@ class OrganizationEventConsumer(object):
             existing_member.set_status(OrganizationMemberStatus.PUBLISHED.value)
             if existing_member.role == Role.OWNER.value:
                 existing_owner = existing_member
+                existing_members.remove(existing_member)
             else:
                 existing_members_map[existing_member.address] = existing_member
 
@@ -91,7 +92,7 @@ class OrganizationEventConsumer(object):
                 self._organization_repository.update_org_member_using_address(org_uuid, existing_owner,
                                                                               existing_owner.address)
             else:
-                self._organization_repository.delete_members([existing_owner])
+                self._organization_repository.delete_published_members([existing_owner])
                 self._organization_repository.add_member([received_owner])
 
         for recieved_member in received_members:
@@ -108,7 +109,7 @@ class OrganizationEventConsumer(object):
             else:
                 removed_member.append(existing_member)
         if len(removed_member) > 0:
-            self._organization_repository.delete_members(removed_member)
+            self._organization_repository.delete_published_members(removed_member)
         if len(added_member) > 0:
             self._organization_repository.add_member(added_member)
 

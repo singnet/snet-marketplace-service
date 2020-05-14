@@ -3,7 +3,7 @@ from datetime import datetime
 from unittest.mock import Mock, patch
 from uuid import uuid4
 
-from registry.constants import OrganizationStatus, Role
+from registry.constants import OrganizationStatus, Role, OrganizationMemberStatus
 from registry.consumer.organization_event_consumer import OrganizationCreatedAndModifiedEventConsumer
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.models import Organization, OrganizationState, \
@@ -34,20 +34,6 @@ class TestOrganizationService(unittest.TestCase):
         test_org_uuid = uuid4().hex
         test_org_id = "org_id"
         username = "karl@cryptonian.io"
-        payload = {
-            "org_id": test_org_id, "org_uuid": test_org_uuid, "org_name": "test_org", "org_type": "organization",
-            "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN,
-            "description": "this is description", "short_description": "this is short description",
-            "url": "https://dummy.dummy", "contacts": "",
-            "assets": {"hero_image": {"url": "", "ipfs_uri": ""}},
-            "org_address": ORG_ADDRESS, "groups": [{
-                "name": "my-group",
-                "id": "group_id",
-                "payment_address": "0x123",
-                "payment_config": {},
-                "status": ""}],
-            "state": {}
-        }
         current_time = datetime.now()
         org_state = OrganizationState(
             org_uuid=test_org_uuid, state=OrganizationStatus.PUBLISH_IN_PROGRESS.value, transaction_hash="0x123",
@@ -71,7 +57,8 @@ class TestOrganizationService(unittest.TestCase):
             metadata_ipfs_uri="Q3E12", org_state=[org_state], groups=[group])
         owner = OrganizationMember(
             invite_code="123", org_uuid=test_org_uuid, role=Role.OWNER.value, username=username,
-            address="0x123", created_on=current_time, updated_on=current_time, invited_on=current_time)
+            status=OrganizationMemberStatus.ACCEPTED.value, address="0x123", created_on=current_time,
+            updated_on=current_time, invited_on=current_time)
         self.org_repo.add_item(organization)
         self.org_repo.add_item(owner)
         mock_read_bytesio_from_ipfs.return_value = ""
@@ -108,19 +95,19 @@ class TestOrganizationService(unittest.TestCase):
             }]
         }
         mock_ipfs_read.return_value = ipfs_mock_value
-        mock_get_org_details_from_blockchain.return_value = "org_id", ipfs_mock_value, "Q3E12", "79345c7861342442792f6d5a5c7831375c7831645c7866325c7831385c78623661615c7830325c7831635c783838505c7838355c783138775c7831395c7863395c7839315c786563585c786437455c78393821", "0x123", []
+        mock_get_org_details_from_blockchain.return_value = "org_id", ipfs_mock_value, "Q3E12", "0x123", "0x123", []
         org_event_consumer = OrganizationCreatedAndModifiedEventConsumer("wss://ropsten.infura.io/ws",
                                                                          "http://ipfs.singularitynet.io",
                                                                          80, self.org_repo)
 
         org_event_consumer.on_event({})
         published_org = self.org_repo.get_org_for_org_id(test_org_id)
-        owner = self.org_repo.session.query(OrganizationMember).filter(
+        org_owner = self.org_repo.session.query(OrganizationMember).filter(
             OrganizationMember.org_uuid == test_org_uuid).filter(OrganizationMember.role == Role.OWNER.value).all()
-        if len(owner) != 1:
+        if len(org_owner) != 1:
             assert False
-        self.assertEqual(owner[0].address, "0x123")
-        self.assertEqual(owner[0].username, username)
+        self.assertEqual(org_owner[0].address, "0x123")
+        self.assertEqual(org_owner[0].username, username)
         assert published_org.name == "test_org"
         assert published_org.id == "org_id"
         assert published_org.org_type == "organization"
@@ -226,24 +213,33 @@ class TestOrganizationService(unittest.TestCase):
         test_org_uuid = uuid4().hex
         test_org_id = "org_id"
         username = "karl@cryptonian.io"
-        payload = {
-            "org_id": test_org_id, "org_uuid": test_org_uuid, "org_name": "test_org", "org_type": "organization",
-            "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN,
-            "description": "this is description", "short_description": "this is short description",
-            "url": "https://dummy.dummy", "contacts": "",
-            "assets": {"hero_image": {"url": "", "ipfs_uri": ""}},
-            "org_address": ORG_ADDRESS, "groups": [{
-                "name": "my-group",
-                "id": "group_id",
-                "payment_address": "0x123",
-                "payment_config": {},
-                "status": ""}],
-            "state": {}
-        }
-        organization = OrganizationFactory.org_domain_entity_from_payload(payload)
+        current_time = datetime.now()
+        org_state = OrganizationState(
+            org_uuid=test_org_uuid, state=OrganizationStatus.PUBLISH_IN_PROGRESS.value, transaction_hash="0x123",
+            test_transaction_hash="0x456", wallet_address="0x987", created_by=username, created_on=current_time,
+            updated_by=username, updated_on=current_time, reviewed_by="admin", reviewed_on=current_time)
 
-        self.org_repo.add_organization(organization, username, OrganizationStatus.PUBLISH_IN_PROGRESS.value,
-                                       address="0x123")
+        group = Group(
+            name="default_group", id="group_id", org_uuid=test_org_uuid, payment_address="0x123",
+            payment_config={
+                "payment_expiration_threshold": 40320,
+                "payment_channel_storage_type": "etcd",
+                "payment_channel_storage_client": {
+                    "connection_timeout": "5s",
+                    "request_timeout": "3s", "endpoints": ["http://127.0.0.1:2379"]}}, status="0")
+
+        organization = Organization(
+            uuid=test_org_uuid, name="test_org", org_id=test_org_id, org_type="organization",
+            origin="PUBLISHER_PORTAL", description="this is long description",
+            short_description="this is short description", url="https://dummy.com", duns_no="123456789", contacts=[],
+            assets={"hero_image": {"url": "some_url", "ipfs_uri": "Q123"}},
+            metadata_ipfs_uri="Q3E12", org_state=[org_state], groups=[group])
+        owner = OrganizationMember(
+            invite_code="123", org_uuid=test_org_uuid, role=Role.OWNER.value, username=username,
+            status=OrganizationMemberStatus.PUBLISHED.value, address="0x123", created_on=current_time,
+            updated_on=current_time, invited_on=current_time)
+        self.org_repo.add_item(organization)
+        self.org_repo.add_item(owner)
         event = {"data": {'row_id': 2, 'block_no': 6243627, 'event': 'OrganizationCreated',
                           'json_str': "{'orgId': b'org_id\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'}",
                           'processed': b'\x00',
@@ -256,20 +252,18 @@ class TestOrganizationService(unittest.TestCase):
         ipfs_mock_value = {
             "org_name": "test_org",
             "org_id": "org_id",
-            "metadata_ipfs_hash": "Q3E12",
             "org_type": "organization",
-
             "contacts": [
             ],
             "description": {
-                "description": "that is the dummy org for testcases",
-                "short_description": "that is the short description",
-                "url": "dummy.com"
+                "description": "this is long description",
+                "short_description": "this is short description",
+                "url": "https://dummy.com"
             },
             "assets": {
-                'hero_image': 'QmagaSbQAdEtFkwc9ZQUDdYgUtXz93MPByngbx1b4cPidj/484b38d1c1fe4717ad4acab99394ea82-hero_image-20200107083215.png'},
+                'hero_image': 'Q123'},
             "groups": [{
-                "group_name": "my-group",
+                "group_name": "default_group",
                 "group_id": "group_id",
                 "payment": {
                     "payment_address": "0x123",
@@ -306,7 +300,7 @@ class TestOrganizationService(unittest.TestCase):
         assert published_org.org_type == "organization"
         assert published_org.metadata_ipfs_uri == "Q3E12"
         assert published_org.groups[0].group_id == "group_id"
-        assert published_org.groups[0].name == "my-group"
+        assert published_org.groups[0].name == "default_group"
         assert published_org.groups[0].payment_address == "0x123"
         assert published_org.duns_no == '123456789'
         assert published_org.org_state.state == "PUBLISHED"
