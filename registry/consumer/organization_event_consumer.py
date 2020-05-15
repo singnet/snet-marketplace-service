@@ -190,19 +190,6 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
             test_transaction_hash = RegistryBlockChainUtil(EnvironmentType.TEST.value) \
                 .publish_organization_to_test_network(received_organization_event)
 
-            # if existing_publish_in_progress_organization:
-            #     existing_publish_in_progress_organization.org_name = org_name
-            #     existing_publish_in_progress_organization.org_type = org_type
-            #     existing_publish_in_progress_organization.short_description = short_description
-            #     existing_publish_in_progress_organization.long_description = long_description
-            #     existing_publish_in_progress_organization.url = url
-            #     existing_publish_in_progress_organization.contacts = contacts
-            #     existing_publish_in_progress_organization.assets = OrganizationFactory.parse_organization_metadata_assets(
-            #         ipfs_org_metadata.get("assets", None),
-            #         existing_publish_in_progress_organization.assets)
-            #     existing_publish_in_progress_organization.groups = groups
-            #     existing_publish_in_progress_organization.metadata_ipfs_uri = org_metadata_uri
-
             if not existing_publish_in_progress_organization:
                 existing_members = []
 
