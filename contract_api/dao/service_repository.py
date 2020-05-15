@@ -165,7 +165,7 @@ class ServiceRepository(CommonRepository):
         return query_response[0]
 
     def curate_service(self, org_id, service_id, curate):
-        update_curation_query = "UPDATE TABLE service SET is_curated = %s where org_id = %s and service_id = %s"
+        update_curation_query = "UPDATE service SET is_curated = %s where org_id = %s and service_id = %s"
         try:
             self.connection.execute(update_curation_query, [curate, org_id, service_id])
             self.commit_transaction()
