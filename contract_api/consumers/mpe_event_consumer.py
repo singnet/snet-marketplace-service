@@ -31,8 +31,9 @@ class MPEEventConsumer(EventConsumer):
 
         if event_name == 'ChannelOpen':
             self._mpe_repository.create_channel(mpe_data)
+        elif event_name == 'DepositFunds':
+            pass
         else:
-
             channel_data = mpe_contract.functions.channels(
                 channel_id).call()
             group_id = base64.b64encode(channel_data[4]).decode('utf8')
