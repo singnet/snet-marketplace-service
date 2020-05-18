@@ -544,7 +544,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
   service_deploy_status_notify:
-    handler: contract_api.handlers.service_handlers.service_deployment_status_notification_handler
+    handler: contract_api/handlers.service_handlers.service_deployment_status_notification_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
