@@ -169,15 +169,15 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                 recieved_service):
             self._service_repository.save_service(BLOCKCHAIN_USER, existing_service, ServiceStatus.DRAFT.value)
         else:
-            self.___curate_service_in_marketplace(service_id, org_id, curated=True)
+            self.__curate_service_in_marketplace(service_id, org_id, curated=True)
             self._service_repository.save_service(BLOCKCHAIN_USER, existing_service, ServiceStatus.PUBLISHED.value)
 
     @staticmethod
-    def ___curate_service_in_marketplace(service_id, org_id, curated):
+    def __curate_service_in_marketplace(service_id, org_id, curated):
         curate_service_payload = {
             "pathParameters": {
-                "org_id": org_id,
-                "service_id": service_id
+                "orgId": org_id,
+                "serviceId": service_id
             },
             "queryStringParameters": {
                 "curate": str(curated)
