@@ -233,10 +233,10 @@ class TestOrganizationPublisherService(unittest.TestCase):
                         "payment_expiration_threshold": 40320,
                         "payment_channel_storage_type": "etcd",
                         "payment_channel_storage_client": {
-                            "connection_timeout": "5s",
-                            "request_timeout": "3s",
+                            "connection_timeout": "1s",
+                            "request_timeout": "1s",
                             "endpoints": [
-                                "http://127.0.0.1:2379"
+                                "123"
                             ]
                         }
                     }
@@ -263,7 +263,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
-    def test_publish_organization_after_published(self, mock_boto, mock_ipfs):
+    def test_publish_organization_after_published_with_error(self, mock_boto, mock_ipfs):
         test_org_uuid = uuid4().hex
         test_org_id = "org_id"
         username = "karl@cryptonian.io"

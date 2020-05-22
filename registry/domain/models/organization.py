@@ -20,12 +20,21 @@ BLOCKCHAIN_EXCLUDE_PATHS = [
                                                                                              "root._Organization__addresses",
     "root._Organization__assets['hero_image']['url']"]
 
-GROUP_STATUS_EXCLUDE_REGEX_PATH = "root\._Organization__groups\[.*\]\.status"
+BLOCKCHAIN_EXCLUDE_REGEX_PATH = ["root\._Organization__groups\[.*\]\.status"]
 
-ORGANIZATION_MINOR_CHANGES = ["root._Organization__state", "root._Organization__assets['hero_image']['url']",
-                              "root._Organization__assets['hero_image']['ipfs_uri']",
-                              "root._Organization__metadata_ipfs_uri"]
+ORGANIZATION_MINOR_CHANGES = [
+    "root._Organization__state", "root._Organization__assets['hero_image']['url']",
+    "root._Organization__assets['hero_image']['ipfs_uri']", "root._Organization__metadata_ipfs_uri",
+    "root._Organization__contacts"]
 
+GROUP_MINOR_CHANGES = [
+    "root\._Organization__groups\[.*\]\.status",
+    "root\._Organization__groups\[.*\]\.name",
+    "root\._Organization__groups\[.*\]\.payment_config",
+    "root\._Organization__groups\[.*\]\.payment_config\[\'payment_channel_storage_type\'\]",
+    "root\._Organization__groups\[.*\]\.payment_config\[\'payment_channel_storage_client\'\]\[\'connection_timeout\'\]",
+    "root\._Organization__groups\[.*\]\.payment_config\[\'payment_channel_storage_client\'\]\[\'request_timeout\'\]",
+    "root\._Organization__groups\[.*\]\.payment_config\[\'payment_channel_storage_client\'\]\[\'endpoints\'\]"]
 
 class Organization:
     def __init__(self, uuid, org_id, name, org_type, origin, description, short_description, url,
@@ -260,7 +269,7 @@ class Organization:
 
     def is_blockchain_major_change(self, updated_organization, consumer=False):
         diff = DeepDiff(self, updated_organization, exclude_types=[OrganizationAddress, OrganizationState],
-                        exclude_paths=BLOCKCHAIN_EXCLUDE_PATHS, exclude_regex_paths=[GROUP_STATUS_EXCLUDE_REGEX_PATH])
+                        exclude_paths=BLOCKCHAIN_EXCLUDE_PATHS, exclude_regex_paths=[BLOCKCHAIN_EXCLUDE_REGEX_PATH])
 
         logger.info(f"DIff for metadata organization {diff}")
         if not diff:
@@ -269,7 +278,7 @@ class Organization:
 
     def is_major_change(self, updated_organization, consumer=False):
         diff = DeepDiff(self, updated_organization, exclude_types=[OrganizationState],
-                        exclude_paths=ORGANIZATION_MINOR_CHANGES, exclude_regex_paths=[GROUP_STATUS_EXCLUDE_REGEX_PATH])
+                        exclude_paths=ORGANIZATION_MINOR_CHANGES, exclude_regex_paths=GROUP_MINOR_CHANGES)
         logger.info(f"DIff for metadata organization {diff}")
         if not diff:
             return False, None
