@@ -24,7 +24,7 @@ BLOCKCHAIN_EXCLUDE_REGEX_PATH = ["root\._Organization__groups\[.*\]\.status"]
 
 ORGANIZATION_MINOR_CHANGES = [
     "root._Organization__state", "root._Organization__assets['hero_image']['url']",
-    "root._Organization__assets['hero_image']['ipfs_uri']", "root._Organization__metadata_ipfs_uri",
+    "root._Organization__assets['hero_image']['ipfs_hash']", "root._Organization__metadata_ipfs_uri",
     "root._Organization__contacts"]
 
 GROUP_MINOR_CHANGES = [
@@ -60,7 +60,7 @@ class Organization:
         assets = {}
         for key in self.__assets:
             ipfs_hash = ""
-            ipfs_uri = self.__assets[key]["ipfs_uri"]
+            ipfs_uri = self.__assets[key]["ipfs_hash"]
             uri_prefix = "ipfs://"
             if ipfs_uri.startswith(uri_prefix):
                 ipfs_hash = ipfs_uri[len(uri_prefix):]
@@ -226,7 +226,7 @@ class Organization:
                 with open(filepath, 'wb') as asset_file:
                     asset_file.write(response.content)
                 asset_ipfs_hash = ipfs_utils.write_file_in_ipfs(filepath)
-                self.__assets[asset_type]["ipfs_uri"] = f"ipfs://{asset_ipfs_hash}"
+                self.__assets[asset_type]["ipfs_hash"] = f"ipfs://{asset_ipfs_hash}"
 
     def publish_to_ipfs(self):
         self.publish_assets()

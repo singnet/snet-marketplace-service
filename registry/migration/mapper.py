@@ -51,12 +51,12 @@ class OrganizationMapper:
         for key in assets_hash.keys():
             if key not in assets:
                 assets[key] = {}
-            assets[key]["ipfs_uri"] = assets_hash[key]
+            assets[key]["ipfs_hash"] = assets_hash[key]
 
         if "hero_image" not in assets:
-            assets["hero_imcage"] = {
+            assets["hero_image"] = {
                 "url": "",
-                "ipfs_uri": ""
+                "ipfs_hash": ""
             }
         return assets
 
