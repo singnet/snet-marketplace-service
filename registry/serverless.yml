@@ -204,7 +204,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /org
+          path: /org/{org_uuid}/update
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS

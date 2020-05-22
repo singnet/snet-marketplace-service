@@ -62,12 +62,13 @@ def create_organization(event, context):
          username_path=("requestContext", "authorizer", "claims", "email"))
 def update_org(event, context):
     payload = json.loads(event["body"])
+    path_parameters = event["pathParameters"]
     required_keys = []
     action = event["queryStringParameters"].get("action", None)
     username = event["requestContext"]["authorizer"]["claims"]["email"]
+    org_uuid = path_parameters["org_uuid"]
     if not validate_dict(payload, required_keys):
         raise BadRequestException()
-    org_uuid = payload.get("org_uuid", None)
     org_service = OrganizationPublisherService(org_uuid, username)
     if action in [OrganizationActions.DRAFT.value, OrganizationActions.SUBMIT.value]:
         response = org_service.update_organization(payload, action)
