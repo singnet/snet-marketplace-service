@@ -269,7 +269,7 @@ class Organization:
 
     def is_blockchain_major_change(self, updated_organization, consumer=False):
         diff = DeepDiff(self, updated_organization, exclude_types=[OrganizationAddress, OrganizationState],
-                        exclude_paths=BLOCKCHAIN_EXCLUDE_PATHS, exclude_regex_paths=[BLOCKCHAIN_EXCLUDE_REGEX_PATH])
+                        exclude_paths=BLOCKCHAIN_EXCLUDE_PATHS, exclude_regex_paths=BLOCKCHAIN_EXCLUDE_REGEX_PATH)
 
         logger.info(f"DIff for metadata organization {diff}")
         if not diff:
