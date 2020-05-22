@@ -58,8 +58,8 @@ def create_organization(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-# TODO change this api to  pathParameters  @secured(action=Action.CREATE, org_uuid_path=("body", "org_uuid"),
-#          username_path=("requestContext", "authorizer", "claims", "email"))
+@secured(action=Action.UPDATE, org_uuid_path=("body", "org_uuid"),
+         username_path=("requestContext", "authorizer", "claims", "email"))
 def update_org(event, context):
     payload = json.loads(event["body"])
     required_keys = []

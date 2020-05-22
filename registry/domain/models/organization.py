@@ -2,6 +2,7 @@ from urllib.parse import urlparse
 from uuid import uuid4
 
 import requests
+from deepdiff import DeepDiff
 
 from common import ipfs_util
 from common.exceptions import MethodNotImplemented
@@ -9,11 +10,15 @@ from common.logger import get_logger
 from common.utils import datetime_to_string, json_to_file
 from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH
 from registry.constants import OrganizationActions, OrganizationAddressType, OrganizationStatus, OrganizationType
+from registry.domain.models.organization_address import OrganizationAddress
+from registry.exceptions import UpdateOrganizationIDException
 
 logger = get_logger(__name__)
 
-EXCLUDE_PATHS = ["root.uuid", "root._Organization__duns_no", "root.owner",
-                 "root.assets['hero_image']['url']", "root.metadata_ipfs_uri", "root.origin"]
+BLOCKCHAIN_EXCLUDE_PATHS = [
+    "root._Organization__uuid", "root._Organization__duns_no", "root._Organization__origin", "root._Organization__state"
+    "root._Organization__addresses", "root._Organization__assets['hero_image']['url']"]
+BLOCKCHAIN_EXCLUDE_REGEX_PATH = ["root\._Organization__groups\[.*\]\.status"]
 
 
 class Organization:
@@ -247,16 +252,22 @@ class Organization:
             return False
         return True
 
-    def is_major_change(self, updated_organization):
-        # diff = DeepDiff(self, updated_organization, exclude_types=[OrganizationAddress],
-        #                 exclude_paths=EXCLUDE_PATHS)
-        #
-        # logger.info(f"DIff for metadata organization {diff}")
-        # if not diff:
-        #     return True
-        # return False
-        # TODO reanable it once all isue are fixed
-        return False
+    def is_blockchain_major_change(self, updated_organization, consumer=False):
+        diff = DeepDiff(self, updated_organization, exclude_types=[OrganizationAddress, OrganizationState],
+                        exclude_paths=BLOCKCHAIN_EXCLUDE_PATHS, exclude_regex_paths=BLOCKCHAIN_EXCLUDE_REGEX_PATH)
+
+        logger.info(f"DIff for metadata organization {diff}")
+        if not diff:
+            return False, None
+        return True, diff
+
+    def is_major_change(self, updated_organization, consumer=False):
+        diff = DeepDiff(self, updated_organization, exclude_types=[OrganizationState])
+
+        logger.info(f"DIff for metadata organization {diff}")
+        if not diff:
+            return False, None
+        return True, diff
 
     @staticmethod
     def next_state(current_organization, updated_organization, action):
@@ -276,7 +287,8 @@ class Organization:
                                                  OrganizationStatus.REJECTED.value]:
             raise Exception("Action Not Allowed")
 
-        if not current_organization.is_major_change(updated_organization):
+        is_major_update, diff = current_organization.is_major_change(updated_organization)
+        if not is_major_update:
             if current_organization.get_status() in [OrganizationStatus.CHANGE_REQUESTED.value,
                                                      OrganizationStatus.ONBOARDING.value]:
                 next_state = OrganizationStatus.ONBOARDING.value
@@ -287,7 +299,18 @@ class Organization:
             else:
                 raise MethodNotImplemented()
         else:
-            raise MethodNotImplemented()
+            if "values_changed" in diff and "root._Organization__id" in diff["values_changed"]:
+                if current_organization.get_status() in [OrganizationStatus.CHANGE_REQUESTED.value,
+                                                         OrganizationStatus.ONBOARDING.value]:
+                    next_state = OrganizationStatus.ONBOARDING.value
+                else:
+                    raise UpdateOrganizationIDException()
+            else:
+                if current_organization.get_status() in [OrganizationStatus.CHANGE_REQUESTED.value,
+                                                         OrganizationStatus.ONBOARDING.value]:
+                    next_state = OrganizationStatus.ONBOARDING.value
+                else:
+                    raise MethodNotImplemented()
         return next_state
 
     def _get_all_contact_for_organization(self):

@@ -43,6 +43,13 @@ class InvalidServiceStateException(CustomException):
         super().__init__({})
 
 
+class UpdateOrganizationIDException(CustomException):
+    error_message = "UPDATE_ORG_ID_NOT_ALLOWED"
+
+    def __init__(self):
+        super().__init__({})
+
+
 class ServiceProtoNotFoundException(CustomException):
     error_message = "SERVICE_PROTO_NOT_FOUND"
 
@@ -118,4 +125,4 @@ EXCEPTIONS = (BadRequestException, OrganizationNotFoundException, InvalidOriginE
               ServiceProtoNotFoundException, OrganizationNotPublishedException,
               ServiceNotFoundException, ServiceGroupNotFoundException, EnvironmentNotFoundException,
               InvalidSlackUserException, InvalidSlackChannelException, InvalidSlackSignatureException,
-              InvalidFileTypeException, FileNotFoundException)
+              InvalidFileTypeException, FileNotFoundException, UpdateOrganizationIDException)

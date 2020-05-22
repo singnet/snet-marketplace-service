@@ -9,7 +9,7 @@ ORG_ADDRESS = {
             "apartment": "ABC Apartment",
             "city": "TestCity",
             "state": "state",
-            "pincode": 123456,
+            "pincode": "123456",
             "country": "TestCountry"
         },
         {
@@ -18,7 +18,7 @@ ORG_ADDRESS = {
             "apartment": "ABC Apartment",
             "city": "TestCity",
             "state": "state",
-            "pincode": 123456,
+            "pincode": "123456",
             "country": "TestCountry"
         }
     ]
