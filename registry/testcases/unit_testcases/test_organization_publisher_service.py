@@ -226,7 +226,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
                 "url": "https://dummy.com", "contacts": [],
                 "assets": {"hero_image": {"url": "https://my_image", "ipfs_uri": ""}},
                 "org_address": ORG_ADDRESS, "groups": [{
-                    "name": "default_group",
+                    "name": "default",
                     "id": "group_id",
                     "payment_address": "0x123",
                     "payment_config": {
@@ -255,7 +255,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         assert updated_org.org_type == "organization"
         assert updated_org.metadata_ipfs_uri == ""
         assert updated_org.groups[0].group_id == "group_id"
-        assert updated_org.groups[0].name == "default_group"
+        assert updated_org.groups[0].name == "default"
         assert updated_org.groups[0].payment_address == "0x123"
         assert updated_org.duns_no == '123456789'
         assert updated_org.org_state.state == OrganizationStatus.APPROVED.value
