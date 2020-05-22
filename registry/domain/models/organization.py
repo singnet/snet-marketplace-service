@@ -322,7 +322,8 @@ class Organization:
                     raise UpdateOrganizationIDException()
             else:
                 if current_organization.get_status() in [OrganizationStatus.CHANGE_REQUESTED.value,
-                                                         OrganizationStatus.ONBOARDING.value]:
+                                                         OrganizationStatus.ONBOARDING.value,
+                                                         OrganizationStatus.ONBOARDING_APPROVED]:
                     next_state = OrganizationStatus.ONBOARDING.value
                 else:
                     raise MethodNotImplemented()
