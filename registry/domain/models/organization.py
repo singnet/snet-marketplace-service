@@ -17,9 +17,24 @@ logger = get_logger(__name__)
 
 BLOCKCHAIN_EXCLUDE_PATHS = [
     "root._Organization__uuid", "root._Organization__duns_no", "root._Organization__origin", "root._Organization__state"
-    "root._Organization__addresses", "root._Organization__assets['hero_image']['url']"]
+                                                                                             "root._Organization__addresses",
+    "root._Organization__assets['hero_image']['url']"]
+
 BLOCKCHAIN_EXCLUDE_REGEX_PATH = ["root\._Organization__groups\[.*\]\.status"]
 
+ORGANIZATION_MINOR_CHANGES = [
+    "root._Organization__state", "root._Organization__assets['hero_image']['url']",
+    "root._Organization__assets['hero_image']['ipfs_uri']", "root._Organization__metadata_ipfs_uri",
+    "root._Organization__contacts"]
+
+GROUP_MINOR_CHANGES = [
+    "root\._Organization__groups\[.*\]\.status",
+    "root\._Organization__groups\[.*\]\.name",
+    "root\._Organization__groups\[.*\]\.payment_config",
+    "root\._Organization__groups\[.*\]\.payment_config\[\'payment_channel_storage_type\'\]",
+    "root\._Organization__groups\[.*\]\.payment_config\[\'payment_channel_storage_client\'\]\[\'connection_timeout\'\]",
+    "root\._Organization__groups\[.*\]\.payment_config\[\'payment_channel_storage_client\'\]\[\'request_timeout\'\]",
+    "root\._Organization__groups\[.*\]\.payment_config\[\'payment_channel_storage_client\'\]\[\'endpoints\'\]"]
 
 class Organization:
     def __init__(self, uuid, org_id, name, org_type, origin, description, short_description, url,
@@ -262,8 +277,8 @@ class Organization:
         return True, diff
 
     def is_major_change(self, updated_organization, consumer=False):
-        diff = DeepDiff(self, updated_organization, exclude_types=[OrganizationState])
-
+        diff = DeepDiff(self, updated_organization, exclude_types=[OrganizationState],
+                        exclude_paths=ORGANIZATION_MINOR_CHANGES, exclude_regex_paths=GROUP_MINOR_CHANGES)
         logger.info(f"DIff for metadata organization {diff}")
         if not diff:
             return False, None
