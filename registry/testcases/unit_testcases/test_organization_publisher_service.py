@@ -31,7 +31,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
             "org_id": "", "org_uuid": "", "org_name": "test_org", "org_type": "organization",
             "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN,
             "description": "", "short_description": "", "url": "https://dummy.dummy", "contacts": "",
-            "assets": {"hero_image": {"url": "", "ipfs_uri": ""}},
+            "assets": {"hero_image": {"url": "", "ipfs_hash": ""}},
             "org_address": ORG_ADDRESS, "groups": json.loads(ORG_GROUPS),
             "state": {}
         }
@@ -155,7 +155,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
             "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN,
             "description": "this is description", "short_description": "this is short description",
             "url": "https://dummy.dummy", "contacts": "",
-            "assets": {"hero_image": {"url": "", "ipfs_uri": ""}},
+            "assets": {"hero_image": {"url": "", "ipfs_hash": ""}},
             "org_address": ORG_ADDRESS, "groups": json.loads(ORG_GROUPS),
             "state": {}
         }
@@ -206,7 +206,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
             uuid=test_org_uuid, name="test_org", org_id=test_org_id, org_type="organization",
             origin=ORIGIN, description="this is long description",
             short_description="this is short description", url="https://dummy.com", duns_no="123456789", contacts=[],
-            assets={"hero_image": {"url": "some_url", "ipfs_uri": "Q123"}},
+            assets={"hero_image": {"url": "some_url", "ipfs_hash": "Q123"}},
             metadata_ipfs_uri="Q3E12", org_state=[org_state], groups=[group], addresses=org_address)
 
         owner = OrganizationMember(
@@ -224,7 +224,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
                 "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN,
                 "description": "this is long description", "short_description": "this is short description",
                 "url": "https://dummy.com", "contacts": [],
-                "assets": {"hero_image": {"url": "https://my_image", "ipfs_uri": ""}},
+                "assets": {"hero_image": {"url": "https://my_image", "ipfs_hash": ""}},
                 "org_address": ORG_ADDRESS, "groups": [{
                     "name": "default",
                     "id": "group_id",
@@ -272,7 +272,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
             "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN,
             "description": "this is description", "short_description": "this is short description",
             "url": "https://dummy.dummy", "contacts": "",
-            "assets": {"hero_image": {"url": "", "ipfs_uri": ""}},
+            "assets": {"hero_image": {"url": "", "ipfs_hash": ""}},
             "org_address": ORG_ADDRESS, "groups": json.loads(ORG_GROUPS),
             "state": {}
         }
@@ -301,7 +301,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
             "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN,
             "description": "this is description", "short_description": "this is short description",
             "url": "https://dummy.dummy", "contacts": "",
-            "assets": {"hero_image": {"url": "", "ipfs_uri": ""}},
+            "assets": {"hero_image": {"url": "", "ipfs_hash": ""}},
             "org_address": ORG_ADDRESS, "groups": json.loads(ORG_GROUPS),
             "state": {}
         }

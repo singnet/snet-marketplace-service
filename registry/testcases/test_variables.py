@@ -80,7 +80,7 @@ ORG_PAYLOAD_MODEL = json.dumps({
     "assets": {
         "hero_image": {
             "url": "",
-            "ipfs_uri": ""
+            "ipfs_hash": ""
         }
     },
     "org_address": {
@@ -116,7 +116,7 @@ ORG_RESPONSE_MODEL = json.dumps({
     "assets": {
         "hero_image": {
             "url": "",
-            "ipfs_uri": ""
+            "ipfs_hash": ""
         }
     },
     "metadata_ipfs_uri": "ipfs://Q12PWP",
