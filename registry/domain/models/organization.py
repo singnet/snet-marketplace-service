@@ -5,7 +5,7 @@ import requests
 from deepdiff import DeepDiff
 
 from common import ipfs_util
-from common.exceptions import MethodNotImplemented, OperationNotAllowed
+from common.exceptions import OperationNotAllowed
 from common.logger import get_logger
 from common.utils import datetime_to_string, json_to_file
 from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH
