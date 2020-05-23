@@ -36,6 +36,7 @@ GROUP_MINOR_CHANGES = [
     "root\._Organization__groups\[.*\]\.payment_config\[\'payment_channel_storage_client\'\]\[\'request_timeout\'\]",
     "root\._Organization__groups\[.*\]\.payment_config\[\'payment_channel_storage_client\'\]\[\'endpoints\'\]"]
 
+
 class Organization:
     def __init__(self, uuid, org_id, name, org_type, origin, description, short_description, url,
                  contacts, assets, metadata_ipfs_uri, duns_no, groups, addresses, org_state, members):
@@ -302,31 +303,28 @@ class Organization:
                                                  OrganizationStatus.REJECTED.value]:
             raise Exception("Action Not Allowed")
 
+        if current_organization.get_status() in [OrganizationStatus.CHANGE_REQUESTED.value,
+                                                 OrganizationStatus.ONBOARDING.value]:
+            next_state = OrganizationStatus.ONBOARDING.value
+            return next_state
+
         is_major_update, diff = current_organization.is_major_change(updated_organization)
         if not is_major_update:
-            if current_organization.get_status() in [OrganizationStatus.CHANGE_REQUESTED.value,
-                                                     OrganizationStatus.ONBOARDING.value]:
-                next_state = OrganizationStatus.ONBOARDING.value
-            elif current_organization.get_status() in \
-                    [OrganizationStatus.ONBOARDING_APPROVED.value,
-                     OrganizationStatus.APPROVED.value, OrganizationStatus.PUBLISHED.value]:
+            if current_organization.get_status() in \
+                    [OrganizationStatus.APPROVED.value, OrganizationStatus.PUBLISHED.value]:
                 next_state = OrganizationStatus.APPROVED.value
+            elif current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
+                next_state = OrganizationStatus.ONBOARDING_APPROVED.value
             else:
                 raise MethodNotImplemented()
         else:
             if "values_changed" in diff and "root._Organization__id" in diff["values_changed"]:
-                if current_organization.get_status() in [OrganizationStatus.CHANGE_REQUESTED.value,
-                                                         OrganizationStatus.ONBOARDING.value]:
-                    next_state = OrganizationStatus.ONBOARDING.value
-                else:
-                    raise UpdateOrganizationIDException()
+                raise MethodNotImplemented()
+            elif current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
+                next_state = OrganizationStatus.ONBOARDING_APPROVED.value
+                return next_state
             else:
-                if current_organization.get_status() in [OrganizationStatus.CHANGE_REQUESTED.value,
-                                                         OrganizationStatus.ONBOARDING.value,
-                                                         OrganizationStatus.ONBOARDING_APPROVED]:
-                    next_state = OrganizationStatus.ONBOARDING.value
-                else:
-                    raise MethodNotImplemented()
+                raise MethodNotImplemented()
         return next_state
 
     def _get_all_contact_for_organization(self):
