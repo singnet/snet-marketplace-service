@@ -10,7 +10,6 @@ from registry.constants import OrganizationStatus, OrganizationActions, Organiza
     Role, OrganizationAddressType
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization as DomainOrganization
-from registry.exceptions import UpdateOrganizationIDException
 from registry.infrastructure.models import Organization, OrganizationMember, OrganizationState, Group, \
     OrganizationAddress
 from registry.testcases.test_variables import ORG_GROUPS, ORG_PAYLOAD_MODEL, \

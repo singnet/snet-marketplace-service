@@ -11,7 +11,6 @@ from common.utils import datetime_to_string, json_to_file
 from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH
 from registry.constants import OrganizationActions, OrganizationAddressType, OrganizationStatus, OrganizationType
 from registry.domain.models.organization_address import OrganizationAddress
-from registry.exceptions import UpdateOrganizationIDException
 
 logger = get_logger(__name__)
 
