@@ -88,7 +88,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
             username, OrganizationStatus.PUBLISHED.value)
         payload = json.loads(ORG_PAYLOAD_MODEL)
         payload["org_uuid"] = test_org_uuid
-        self.assertRaises(UpdateOrganizationIDException, OrganizationPublisherService(test_org_uuid, username)
+        self.assertRaises(MethodNotImplemented, OrganizationPublisherService(test_org_uuid, username)
                           .update_organization, payload, OrganizationActions.DRAFT.value)
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
@@ -313,7 +313,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         if org_db_model is None:
             assert False
         else:
-            if org_db_model.org_state[0].state == OrganizationStatus.APPROVED.value:
+            if org_db_model.org_state[0].state == OrganizationStatus.ONBOARDING_APPROVED.value:
                 assert True
             else:
                 assert False
