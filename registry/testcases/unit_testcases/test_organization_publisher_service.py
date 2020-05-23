@@ -3,7 +3,7 @@ import unittest
 from datetime import datetime
 from unittest.mock import Mock, patch
 from uuid import uuid4
-from common.exceptions import MethodNotImplemented
+from common.exceptions import OperationNotAllowed
 from registry.application.handlers.organization_handlers import update_org
 from registry.application.services.organization_publisher_service import OrganizationPublisherService, org_repo
 from registry.constants import OrganizationStatus, OrganizationActions, OrganizationType, OrganizationMemberStatus, \
@@ -87,7 +87,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
             username, OrganizationStatus.PUBLISHED.value)
         payload = json.loads(ORG_PAYLOAD_MODEL)
         payload["org_uuid"] = test_org_uuid
-        self.assertRaises(MethodNotImplemented, OrganizationPublisherService(test_org_uuid, username)
+        self.assertRaises(OperationNotAllowed, OrganizationPublisherService(test_org_uuid, username)
                           .update_organization, payload, OrganizationActions.DRAFT.value)
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
@@ -139,7 +139,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         payload = json.loads(ORG_PAYLOAD_MODEL)
         payload["org_uuid"] = test_org_uuid
         payload["org_id"] = test_org_id
-        self.assertRaises(MethodNotImplemented, OrganizationPublisherService(test_org_uuid, username)
+        self.assertRaises(OperationNotAllowed, OrganizationPublisherService(test_org_uuid, username)
                           .update_organization, payload, OrganizationActions.DRAFT.value)
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
