@@ -288,9 +288,9 @@ class Organization:
     @staticmethod
     def next_state(current_organization, updated_organization, action):
         if action == OrganizationActions.DRAFT.value:
-            next_state = current_organization.next_state_for_update(current_organization, updated_organization)
+            next_state = Organization.next_state_for_update(current_organization, updated_organization)
         elif action == OrganizationActions.SUBMIT.value:
-            next_state = current_organization.next_state_for_update(current_organization, updated_organization)
+            next_state = Organization.next_state_for_update(current_organization, updated_organization)
         elif action == OrganizationActions.CREATE.value:
             next_state = OrganizationStatus.ONBOARDING.value
         else:
@@ -301,7 +301,7 @@ class Organization:
     def next_state_for_update(current_organization, updated_organization):
         if current_organization.get_status() in [OrganizationStatus.ONBOARDING_REJECTED.value,
                                                  OrganizationStatus.REJECTED.value]:
-            raise Exception("Action Not Allowed")
+            raise MethodNotImplemented()
 
         if current_organization.get_status() in [OrganizationStatus.CHANGE_REQUESTED.value,
                                                  OrganizationStatus.ONBOARDING.value]:
@@ -319,6 +319,7 @@ class Organization:
                 raise MethodNotImplemented()
         else:
             if "values_changed" in diff and "root._Organization__id" in diff["values_changed"]:
+                logger.error("org_id update not allowed")
                 raise MethodNotImplemented()
             elif current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
                 next_state = OrganizationStatus.ONBOARDING_APPROVED.value
