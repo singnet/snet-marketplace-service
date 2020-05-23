@@ -5,7 +5,7 @@ import requests
 from deepdiff import DeepDiff
 
 from common import ipfs_util
-from common.exceptions import MethodNotImplemented
+from common.exceptions import MethodNotImplemented, OperationNotAllowed
 from common.logger import get_logger
 from common.utils import datetime_to_string, json_to_file
 from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH
@@ -267,7 +267,7 @@ class Organization:
             return False
         return True
 
-    def is_blockchain_major_change(self, updated_organization, consumer=False):
+    def is_blockchain_major_change(self, updated_organization):
         diff = DeepDiff(self, updated_organization, exclude_types=[OrganizationAddress, OrganizationState],
                         exclude_paths=BLOCKCHAIN_EXCLUDE_PATHS, exclude_regex_paths=BLOCKCHAIN_EXCLUDE_REGEX_PATH)
 
@@ -276,7 +276,7 @@ class Organization:
             return False, None
         return True, diff
 
-    def is_major_change(self, updated_organization, consumer=False):
+    def is_major_change(self, updated_organization):
         diff = DeepDiff(self, updated_organization, exclude_types=[OrganizationState],
                         exclude_paths=ORGANIZATION_MINOR_CHANGES, exclude_regex_paths=GROUP_MINOR_CHANGES)
         logger.info(f"DIff for metadata organization {diff}")
@@ -300,7 +300,7 @@ class Organization:
     def next_state_for_update(current_organization, updated_organization):
         if current_organization.get_status() in [OrganizationStatus.ONBOARDING_REJECTED.value,
                                                  OrganizationStatus.REJECTED.value]:
-            raise MethodNotImplemented()
+            raise OperationNotAllowed()
 
         if current_organization.get_status() in [OrganizationStatus.CHANGE_REQUESTED.value,
                                                  OrganizationStatus.ONBOARDING.value]:
@@ -315,16 +315,16 @@ class Organization:
             elif current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
                 next_state = OrganizationStatus.ONBOARDING_APPROVED.value
             else:
-                raise MethodNotImplemented()
+                raise OperationNotAllowed()
         else:
             if "values_changed" in diff and "root._Organization__id" in diff["values_changed"]:
                 logger.error("org_id update not allowed")
-                raise MethodNotImplemented()
+                raise OperationNotAllowed()
             elif current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
                 next_state = OrganizationStatus.ONBOARDING_APPROVED.value
                 return next_state
             else:
-                raise MethodNotImplemented()
+                raise OperationNotAllowed()
         return next_state
 
     def _get_all_contact_for_organization(self):
