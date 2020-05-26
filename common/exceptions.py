@@ -17,3 +17,10 @@ class MethodNotImplemented(CustomException):
 
     def __init__(self):
         super().__init__({})
+
+
+class OperationNotAllowed(CustomException):
+    error_message = "OPERATION_NOT_ALLOWED"
+
+    def __init__(self):
+        super().__init__({})

@@ -80,6 +80,7 @@ class OrganizationEventConsumer(object):
             existing_member.set_status(OrganizationMemberStatus.PUBLISHED.value)
             if existing_member.role == Role.OWNER.value:
                 existing_owner = existing_member
+                existing_members.remove(existing_member)
             else:
                 existing_members_map[existing_member.address] = existing_member
 
@@ -91,7 +92,7 @@ class OrganizationEventConsumer(object):
                 self._organization_repository.update_org_member_using_address(org_uuid, existing_owner,
                                                                               existing_owner.address)
             else:
-                self._organization_repository.delete_members([existing_owner])
+                self._organization_repository.delete_published_members([existing_owner])
                 self._organization_repository.add_member([received_owner])
 
         for recieved_member in received_members:
@@ -108,7 +109,7 @@ class OrganizationEventConsumer(object):
             else:
                 removed_member.append(existing_member)
         if len(removed_member) > 0:
-            self._organization_repository.delete_members(removed_member)
+            self._organization_repository.delete_published_members(removed_member)
         if len(added_member) > 0:
             self._organization_repository.add_member(added_member)
 
@@ -189,19 +190,6 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
             test_transaction_hash = RegistryBlockChainUtil(EnvironmentType.TEST.value) \
                 .publish_organization_to_test_network(received_organization_event)
 
-            if existing_publish_in_progress_organization:
-                existing_publish_in_progress_organization.org_name = org_name
-                existing_publish_in_progress_organization.org_type = org_type
-                existing_publish_in_progress_organization.short_description = short_description
-                existing_publish_in_progress_organization.long_description = long_description
-                existing_publish_in_progress_organization.url = url
-                existing_publish_in_progress_organization.contacts = contacts
-                existing_publish_in_progress_organization.assets = OrganizationFactory.parse_organization_metadata_assets(
-                    ipfs_org_metadata.get("assets", None),
-                    existing_publish_in_progress_organization.assets)
-                existing_publish_in_progress_organization.groups = groups
-                existing_publish_in_progress_organization.metadata_ipfs_uri = org_metadata_uri
-
             if not existing_publish_in_progress_organization:
                 existing_members = []
 
@@ -210,13 +198,12 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                 self._create_event_outside_publisher_portal(received_organization_event, test_transaction_hash)
 
             elif existing_publish_in_progress_organization.org_state.transaction_hash != transaction_hash \
-                    and existing_publish_in_progress_organization.is_major_change(
-                received_organization_event):
+                    and existing_publish_in_progress_organization.is_blockchain_major_change(received_organization_event)[0]:
 
                 org_uuid = existing_publish_in_progress_organization.uuid
                 logger.info(f"Detected Major change for {org_uuid}")
-                existing_members = self._organization_repository.get_org_member(org_uuid=
-                                                                                existing_publish_in_progress_organization.uuid)
+                existing_members = self._organization_repository.get_org_member(
+                    org_uuid=existing_publish_in_progress_organization.uuid)
                 self._organization_repository.store_organization(
                     existing_publish_in_progress_organization, BLOCKCHAIN_USER,
                     OrganizationStatus.APPROVAL_PENDING.value, test_transaction_hash=test_transaction_hash)

@@ -72,7 +72,7 @@ functions:
     events:
       - schedule:
           rate: rate(5 minutes)
-          enabled: true
+          enabled: ${file(./config.${self:provider.stage}.json):service_status_cron_status}
 
   monitor-service-cert-expiry:
     warmup: true
@@ -88,35 +88,7 @@ functions:
     events:
       - schedule:
           rate: rate(3 days)
-          enabled: true
-
-  monitor-service-health:
-    warmup: true
-    handler: service_status/handlers/monitor_service_handlers.monitor_service_health
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-
-  manage-monitor-service-health:
-    warmup: true
-    handler: service_status/handlers/monitor_service_handlers.manage_monitor_service_health
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - schedule:
-          rate: rate(30 minutes)
-          enabled: false
+          enabled: ${file(./config.${self:provider.stage}.json):monitor_service_cert_expiry_cron_status}
 
   reset-service-health-next-check-time:
     warmup: true

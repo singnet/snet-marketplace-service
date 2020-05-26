@@ -27,12 +27,14 @@ class MPEEventConsumer(EventConsumer):
         event_name = event["name"]
         event_data = event["data"]
         mpe_data = eval(event_data['json_str'])
-        channel_id = int(mpe_data['channelId'])
 
         if event_name == 'ChannelOpen':
+            channel_id = int(mpe_data['channelId'])
             self._mpe_repository.create_channel(mpe_data)
+        elif event_name == 'DepositFunds':
+            pass
         else:
-
+            channel_id = int(mpe_data['channelId'])
             channel_data = mpe_contract.functions.channels(
                 channel_id).call()
             group_id = base64.b64encode(channel_data[4]).decode('utf8')
