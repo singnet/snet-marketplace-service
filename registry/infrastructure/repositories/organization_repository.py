@@ -64,7 +64,7 @@ class OrganizationPublisherRepository(BaseRepository):
         organization_db_model.org_state[0].updated_by = username
         self.session.commit()
 
-    def persist_publish_org_transaction_hash(self, org_uuid, transaction_hash, wallet_address, username):
+    def persist_publish_org_transaction_hash(self, org_uuid, transaction_hash, wallet_address, nonce, username):
         organization_db_model = self.session.query(Organization).filter(Organization.uuid == org_uuid).first()
         org_owner = self.session.query(OrganizationMember).filter(OrganizationMember.role == Role.OWNER.value) \
             .filter(OrganizationMember.org_uuid == org_uuid).first()
