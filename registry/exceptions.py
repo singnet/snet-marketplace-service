@@ -1,4 +1,4 @@
-from common.exceptions import CustomException, MethodNotImplemented
+from common.exceptions import CustomException, MethodNotImplemented, OperationNotAllowed
 
 
 class BadRequestException(CustomException):
@@ -38,13 +38,6 @@ class InvalidMetadataException(CustomException):
 
 class InvalidServiceStateException(CustomException):
     error_message = "INVALID_SERVICE_STATE"
-
-    def __init__(self):
-        super().__init__({})
-
-
-class UpdateOrganizationIDException(CustomException):
-    error_message = "UPDATE_ORG_ID_NOT_ALLOWED"
 
     def __init__(self):
         super().__init__({})
@@ -125,4 +118,4 @@ EXCEPTIONS = (BadRequestException, OrganizationNotFoundException, InvalidOriginE
               ServiceProtoNotFoundException, OrganizationNotPublishedException,
               ServiceNotFoundException, ServiceGroupNotFoundException, EnvironmentNotFoundException,
               InvalidSlackUserException, InvalidSlackChannelException, InvalidSlackSignatureException,
-              InvalidFileTypeException, FileNotFoundException, UpdateOrganizationIDException)
+              InvalidFileTypeException, FileNotFoundException, OperationNotAllowed)
