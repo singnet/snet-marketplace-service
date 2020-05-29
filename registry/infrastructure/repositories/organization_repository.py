@@ -64,7 +64,7 @@ class OrganizationPublisherRepository(BaseRepository):
         organization_db_model.org_state[0].updated_by = username
         self.session.commit()
 
-    def persist_publish_org_transaction_hash(self, org_uuid, transaction_hash, wallet_address, username):
+    def persist_publish_org_transaction_hash(self, org_uuid, transaction_hash, wallet_address, nonce, username):
         organization_db_model = self.session.query(Organization).filter(Organization.uuid == org_uuid).first()
         org_owner = self.session.query(OrganizationMember).filter(OrganizationMember.role == Role.OWNER.value) \
             .filter(OrganizationMember.org_uuid == org_uuid).first()
@@ -76,9 +76,11 @@ class OrganizationPublisherRepository(BaseRepository):
             organization_db_model.org_state[0].updated_on = datetime.utcnow()
             organization_db_model.org_state[0].updated_by = username
             organization_db_model.org_state[0].transaction_hash = transaction_hash
+            organization_db_model.org_state[0].nonce = nonce
             org_owner.address = wallet_address
             org_owner.transaction_hash = transaction_hash
-            org_owner.status = OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value
+            if org_owner != OrganizationMemberStatus.PUBLISHED.value:
+                org_owner.status = OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value
             self.session.commit()
         except:
             self.session.rollback()
