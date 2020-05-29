@@ -76,9 +76,11 @@ class OrganizationPublisherRepository(BaseRepository):
             organization_db_model.org_state[0].updated_on = datetime.utcnow()
             organization_db_model.org_state[0].updated_by = username
             organization_db_model.org_state[0].transaction_hash = transaction_hash
+            organization_db_model.org_state[0].nonce = nonce
             org_owner.address = wallet_address
             org_owner.transaction_hash = transaction_hash
-            org_owner.status = OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value
+            if org_owner != OrganizationMemberStatus.PUBLISHED.value:
+                org_owner.status = OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value
             self.session.commit()
         except:
             self.session.rollback()
