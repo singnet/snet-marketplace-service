@@ -157,7 +157,8 @@ class OrganizationPublisherService:
     def delete_members(self, org_members):
         logger.info(f"user: {self.username} requested to delete members: {org_members} of org_uuid: {self.org_uuid}")
         org_member_list = OrganizationFactory.org_member_domain_entity_from_payload_list(org_members, self.org_uuid)
-        org_repo.delete_members(org_member_list)
+        org_repo.delete_members(org_member_list, member_status=[OrganizationMemberStatus.PENDING.value,
+                                                                OrganizationMemberStatus.ACCEPTED.value])
         return "OK"
 
     def publish_members(self, transaction_hash, org_members):
