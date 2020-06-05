@@ -17,7 +17,7 @@ class Registry:
         self.obj_utils = Utils()
 
     def service_build_status_notifier(self, org_id, service_id, build_status):
-        logger.info("received event for service_id: {service_id} org_id:{org_id}")
+        logger.info(f"received event for service_id: {service_id} org_id:{org_id}")
         if build_status == BUILD_CODE['FAILED']:
             self.curate_service(org_id, service_id, curated=False)
         elif build_status == BUILD_CODE['SUCCESS']:
