@@ -33,12 +33,11 @@ custom:
     automatic: true
     includeLayers: true
     number: 2
-  custom:
-    splitStacks:
-      nestedStackCount: 1
-      perFunction: false
-      perType: false
-      perGroupFunction: true
+  splitStacks:
+    nestedStackCount: 3
+    perFunction: false
+    perType: false
+    perGroupFunction: true
 
 package:
   exclude:
