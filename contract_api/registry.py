@@ -8,7 +8,7 @@ from contract_api.dao.service_repository import ServiceRepository
 from contract_api.filter import Filter
 
 logger = get_logger(__name__)
-BUILD_FAILURE_CODE = 0
+BUILD_CODE = {"SUCCESS": 1, "FAILED": 0}
 
 
 class Registry:
@@ -18,8 +18,12 @@ class Registry:
 
     def service_build_status_notifier(self, org_id, service_id, build_status):
         logger.info("received event for service_id: {service_id} org_id:{org_id}")
-        if build_status == BUILD_FAILURE_CODE:
+        if build_status == BUILD_CODE['FAILED']:
             self.curate_service(org_id, service_id, curated=False)
+        elif build_status == BUILD_CODE['SUCCESS']:
+            self.curate_service(org_id, service_id, curated=True)
+        else:
+            raise Exception("invalid build status")
 
     def _get_all_service(self):
         """ Method to generate org_id and service mapping."""
