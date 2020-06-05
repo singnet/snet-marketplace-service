@@ -35,7 +35,7 @@ custom:
     number: 2
   custom:
     splitStacks:
-      nestedStackCount: 5
+      nestedStackCount: 1
       perFunction: false
       perType: false
       perGroupFunction: true
