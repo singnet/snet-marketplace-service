@@ -2,18 +2,38 @@ from urllib.parse import urlparse
 from uuid import uuid4
 
 import requests
+from deepdiff import DeepDiff
 
 from common import ipfs_util
-from common.exceptions import MethodNotImplemented
+from common.exceptions import OperationNotAllowed
 from common.logger import get_logger
 from common.utils import datetime_to_string, json_to_file
 from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH
 from registry.constants import OrganizationActions, OrganizationAddressType, OrganizationStatus, OrganizationType
+from registry.domain.models.organization_address import OrganizationAddress
 
 logger = get_logger(__name__)
 
-EXCLUDE_PATHS = ["root.uuid", "root._Organization__duns_no", "root.owner",
-                 "root.assets['hero_image']['url']", "root.metadata_ipfs_uri", "root.origin"]
+BLOCKCHAIN_EXCLUDE_PATHS = [
+    "root._Organization__uuid", "root._Organization__duns_no", "root._Organization__origin", "root._Organization__state"
+                                                                                             "root._Organization__addresses",
+    "root._Organization__assets['hero_image']['url']"]
+
+BLOCKCHAIN_EXCLUDE_REGEX_PATH = ["root\._Organization__groups\[.*\]\.status"]
+
+ORGANIZATION_MINOR_CHANGES = [
+    "root._Organization__state", "root._Organization__assets['hero_image']['url']",
+    "root._Organization__assets['hero_image']['ipfs_hash']", "root._Organization__metadata_ipfs_uri",
+    "root._Organization__contacts"]
+
+GROUP_MINOR_CHANGES = [
+    "root\._Organization__groups\[.*\]\.status",
+    "root\._Organization__groups\[.*\]\.name",
+    "root\._Organization__groups\[.*\]\.payment_config",
+    "root\._Organization__groups\[.*\]\.payment_config\[\'payment_channel_storage_type\'\]",
+    "root\._Organization__groups\[.*\]\.payment_config\[\'payment_channel_storage_client\'\]\[\'connection_timeout\'\]",
+    "root\._Organization__groups\[.*\]\.payment_config\[\'payment_channel_storage_client\'\]\[\'request_timeout\'\]",
+    "root\._Organization__groups\[.*\]\.payment_config\[\'payment_channel_storage_client\'\]\[\'endpoints\'\]"]
 
 
 class Organization:
@@ -40,7 +60,7 @@ class Organization:
         assets = {}
         for key in self.__assets:
             ipfs_hash = ""
-            ipfs_uri = self.__assets[key]["ipfs_uri"]
+            ipfs_uri = self.__assets[key]["ipfs_hash"]
             uri_prefix = "ipfs://"
             if ipfs_uri.startswith(uri_prefix):
                 ipfs_hash = ipfs_uri[len(uri_prefix):]
@@ -206,7 +226,7 @@ class Organization:
                 with open(filepath, 'wb') as asset_file:
                     asset_file.write(response.content)
                 asset_ipfs_hash = ipfs_utils.write_file_in_ipfs(filepath)
-                self.__assets[asset_type]["ipfs_uri"] = f"ipfs://{asset_ipfs_hash}"
+                self.__assets[asset_type]["ipfs_hash"] = f"ipfs://{asset_ipfs_hash}"
 
     def publish_to_ipfs(self):
         self.publish_assets()
@@ -247,23 +267,29 @@ class Organization:
             return False
         return True
 
+    def is_blockchain_major_change(self, updated_organization):
+        diff = DeepDiff(self, updated_organization, exclude_types=[OrganizationAddress, OrganizationState],
+                        exclude_paths=BLOCKCHAIN_EXCLUDE_PATHS, exclude_regex_paths=BLOCKCHAIN_EXCLUDE_REGEX_PATH)
+
+        logger.info(f"DIff for metadata organization {diff}")
+        if not diff:
+            return False, None
+        return True, diff
+
     def is_major_change(self, updated_organization):
-        # diff = DeepDiff(self, updated_organization, exclude_types=[OrganizationAddress],
-        #                 exclude_paths=EXCLUDE_PATHS)
-        #
-        # logger.info(f"DIff for metadata organization {diff}")
-        # if not diff:
-        #     return True
-        # return False
-        # TODO reanable it once all isue are fixed
-        return False
+        diff = DeepDiff(self, updated_organization, exclude_types=[OrganizationState],
+                        exclude_paths=ORGANIZATION_MINOR_CHANGES, exclude_regex_paths=GROUP_MINOR_CHANGES)
+        logger.info(f"DIff for metadata organization {diff}")
+        if not diff:
+            return False, None
+        return True, diff
 
     @staticmethod
     def next_state(current_organization, updated_organization, action):
         if action == OrganizationActions.DRAFT.value:
-            next_state = current_organization.next_state_for_update(current_organization, updated_organization)
+            next_state = Organization.next_state_for_update(current_organization, updated_organization)
         elif action == OrganizationActions.SUBMIT.value:
-            next_state = current_organization.next_state_for_update(current_organization, updated_organization)
+            next_state = Organization.next_state_for_update(current_organization, updated_organization)
         elif action == OrganizationActions.CREATE.value:
             next_state = OrganizationStatus.ONBOARDING.value
         else:
@@ -274,20 +300,31 @@ class Organization:
     def next_state_for_update(current_organization, updated_organization):
         if current_organization.get_status() in [OrganizationStatus.ONBOARDING_REJECTED.value,
                                                  OrganizationStatus.REJECTED.value]:
-            raise Exception("Action Not Allowed")
+            raise OperationNotAllowed()
 
-        if not current_organization.is_major_change(updated_organization):
-            if current_organization.get_status() in [OrganizationStatus.CHANGE_REQUESTED.value,
-                                                     OrganizationStatus.ONBOARDING.value]:
-                next_state = OrganizationStatus.ONBOARDING.value
-            elif current_organization.get_status() in \
-                    [OrganizationStatus.ONBOARDING_APPROVED.value,
-                     OrganizationStatus.APPROVED.value, OrganizationStatus.PUBLISHED.value]:
+        if current_organization.get_status() in [OrganizationStatus.CHANGE_REQUESTED.value,
+                                                 OrganizationStatus.ONBOARDING.value]:
+            next_state = OrganizationStatus.ONBOARDING.value
+            return next_state
+
+        is_major_update, diff = current_organization.is_major_change(updated_organization)
+        if not is_major_update:
+            if current_organization.get_status() in \
+                    [OrganizationStatus.APPROVED.value, OrganizationStatus.PUBLISHED.value]:
                 next_state = OrganizationStatus.APPROVED.value
+            elif current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
+                next_state = OrganizationStatus.ONBOARDING_APPROVED.value
             else:
-                raise MethodNotImplemented()
+                raise OperationNotAllowed()
         else:
-            raise MethodNotImplemented()
+            if "values_changed" in diff and "root._Organization__id" in diff["values_changed"]:
+                logger.error("org_id update not allowed")
+                raise OperationNotAllowed()
+            elif current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
+                next_state = OrganizationStatus.ONBOARDING_APPROVED.value
+                return next_state
+            else:
+                raise OperationNotAllowed()
         return next_state
 
     def _get_all_contact_for_organization(self):

@@ -1,4 +1,4 @@
-from common.exceptions import CustomException, MethodNotImplemented
+from common.exceptions import CustomException, MethodNotImplemented, OperationNotAllowed
 
 
 class BadRequestException(CustomException):
@@ -118,4 +118,4 @@ EXCEPTIONS = (BadRequestException, OrganizationNotFoundException, InvalidOriginE
               ServiceProtoNotFoundException, OrganizationNotPublishedException,
               ServiceNotFoundException, ServiceGroupNotFoundException, EnvironmentNotFoundException,
               InvalidSlackUserException, InvalidSlackChannelException, InvalidSlackSignatureException,
-              InvalidFileTypeException, FileNotFoundException)
+              InvalidFileTypeException, FileNotFoundException, OperationNotAllowed)

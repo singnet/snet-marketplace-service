@@ -58,16 +58,17 @@ def create_organization(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-# TODO change this api to  pathParameters  @secured(action=Action.CREATE, org_uuid_path=("body", "org_uuid"),
-#          username_path=("requestContext", "authorizer", "claims", "email"))
+@secured(action=Action.UPDATE, org_uuid_path=("pathParameters", "org_uuid"),
+         username_path=("requestContext", "authorizer", "claims", "email"))
 def update_org(event, context):
     payload = json.loads(event["body"])
+    path_parameters = event["pathParameters"]
     required_keys = []
     action = event["queryStringParameters"].get("action", None)
     username = event["requestContext"]["authorizer"]["claims"]["email"]
+    org_uuid = path_parameters["org_uuid"]
     if not validate_dict(payload, required_keys):
         raise BadRequestException()
-    org_uuid = payload.get("org_uuid", None)
     org_service = OrganizationPublisherService(org_uuid, username)
     if action in [OrganizationActions.DRAFT.value, OrganizationActions.SUBMIT.value]:
         response = org_service.update_organization(payload, action)
