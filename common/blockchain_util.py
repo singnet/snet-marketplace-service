@@ -108,6 +108,9 @@ class BlockChainUtil(object):
         return account.address, account.privateKey.hex()
 
     def get_current_block_no(self):
+        logger.info(self.web3_object.isConnected())
+        if not self.web3_object.isConnected():
+            self.reset_web3_connection()
         return self.web3_object.eth.blockNumber
 
     def get_transaction_receipt_from_blockchain(self, transaction_hash):
@@ -137,3 +140,12 @@ class BlockChainUtil(object):
         function = getattr(contract.functions, contract_function)
         result = function(*positional_inputs).call()
         return result
+
+    def reset_web3_connection(self):
+        if self._provider_type == "HTTP_PROVIDER":
+            provider = Web3.HTTPProvider(self._provider_url)
+        elif self._provider_type == "WS_PROVIDER":
+            provider = web3.providers.WebsocketProvider(self._provider_url)
+        web3_object = Web3(provider)
+        self.provider = provider
+        self.web3_object = web3_object
