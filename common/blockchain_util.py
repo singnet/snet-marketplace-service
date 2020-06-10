@@ -108,7 +108,6 @@ class BlockChainUtil(object):
         return account.address, account.privateKey.hex()
 
     def get_current_block_no(self):
-        logger.info(self.web3_object.isConnected())
         try:
             connected = self.web3_object.isConnected()
         except ConnectionClosed as e:
