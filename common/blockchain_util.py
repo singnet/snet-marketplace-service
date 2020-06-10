@@ -5,7 +5,7 @@ from enum import Enum
 import web3
 from eth_account.messages import defunct_hash_message
 from web3 import Web3
-
+from websockets.exceptions import ConnectionClosed
 from common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -109,7 +109,12 @@ class BlockChainUtil(object):
 
     def get_current_block_no(self):
         logger.info(self.web3_object.isConnected())
-        if not self.web3_object.isConnected():
+        try:
+            connected = self.web3_object.isConnected()
+        except ConnectionClosed as e:
+            logger.info(f"Connection is closed:: {repr(e)}")
+            connected = False
+        if not connected:
             self.reset_web3_connection()
         return self.web3_object.eth.blockNumber
 
