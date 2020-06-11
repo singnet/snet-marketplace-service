@@ -15,7 +15,7 @@ from registry.constants import EnvironmentType, ORG_STATUS_LIST, ORG_TYPE_VERIFI
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization
 from registry.domain.services.registry_blockchain_util import RegistryBlockChainUtil
-from registry.exceptions import InvalidOrganizationStateException
+from registry.exceptions import InvalidOrganizationStateException, BadRequestException
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.mail_templates import \
     get_notification_mail_template_for_service_provider_when_org_is_submitted_for_onboarding, \
@@ -127,11 +127,15 @@ class OrganizationPublisherService:
         return organization.to_response()
 
     def save_transaction_hash_for_publish_org(self, payload):
-        transaction_hash = payload["transaction_hash"]
-        user_address = payload["wallet_address"]
+        transaction_hash = payload.get("transaction_hash")
+        if transaction_hash is None:
+            raise BadRequestException()
+        user_address = payload.get("wallet_address")
+        nonce = payload.get("nonce")
         logger.info(f"save transaction hash for publish organization org_uuid: {self.org_uuid} "
-                    f"transaction_hash: {transaction_hash} user_address: {user_address}")
-        org_repo.persist_publish_org_transaction_hash(self.org_uuid, transaction_hash, user_address, self.username)
+                    f"transaction_hash: {transaction_hash} user_address: {user_address} nonce: {nonce}")
+        org_repo.persist_publish_org_transaction_hash(self.org_uuid, transaction_hash, user_address, nonce,
+                                                      self.username)
         return "OK"
 
     def get_all_member(self, status, role, pagination_details):

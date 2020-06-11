@@ -20,6 +20,7 @@ logger = get_logger(__name__)
 
 @handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
 def get_service_get(event, context):
+    logger.info(f"get_service_get:: {event}")
     obj_reg = Registry(obj_repo=db)
     payload_dict = event.get('queryStringParameters')
     response_data = obj_reg.get_filter_attribute(

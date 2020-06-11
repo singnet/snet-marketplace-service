@@ -20,6 +20,7 @@ class TestOrganizationPublisher(TestCase):
         username = "karl@dummy.io"
         wallet_address = "0x321"
         transaction_hash = "0x123"
+        nonce = 12
         org_repo.add_organization(
             DomainOrganization(
                 test_org_uuid, "org_id", "org_dummy",
@@ -33,7 +34,8 @@ class TestOrganizationPublisher(TestCase):
             },
             "body": json.dumps({
                 "transaction_hash": transaction_hash,
-                "wallet_address": wallet_address
+                "wallet_address": wallet_address,
+                "nonce": nonce
             })
         }
         save_transaction_hash_for_publish_org(event, None)
@@ -44,6 +46,7 @@ class TestOrganizationPublisher(TestCase):
             assert False
         self.assertEqual(transaction_hash, organization.org_state[0].transaction_hash)
         self.assertEqual(wallet_address, owner.address)
+        self.assertEqual(nonce, organization.org_state[0].nonce)
 
     def tearDown(self):
         org_repo.session.query(Group).delete()
