@@ -336,3 +336,15 @@ class OrganizationPublisherRepository(BaseRepository):
                 organization.org_state[0].updated_at = datetime.utcnow()
                 organization.org_state[0].state = updated_status
         self.session.commit()
+
+    def get_org_state_with_status(self, status):
+        organization_state_db = self.session.query(OrganizationState).filter(OrganizationState.state == status).all()
+        organization_state = OrganizationFactory.parse_organization_state_from_db_list(organization_state_db)
+        self.session.commit()
+        return organization_state
+
+    def update_org_status(self, org_uuid_list, prev_state, next_state):
+        self.session.query(OrganizationState).filter(OrganizationState.org_uuid.in_(org_uuid_list)).filter(
+            OrganizationState.state == prev_state).update({OrganizationState.state: next_state},
+                                                          synchronize_session='fetch')
+        self.session.commit()
