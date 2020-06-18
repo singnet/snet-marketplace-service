@@ -346,5 +346,5 @@ class OrganizationPublisherRepository(BaseRepository):
     def update_org_status(self, org_uuid_list, prev_state, next_state):
         self.session.query(OrganizationState).filter(OrganizationState.org_uuid.in_(org_uuid_list)).filter(
             OrganizationState.state == prev_state).update({OrganizationState.state: next_state},
-                                                          synchronize_session='fetch')
+                                                          synchronize_session=False)
         self.session.commit()

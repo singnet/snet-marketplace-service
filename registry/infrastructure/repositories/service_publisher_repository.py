@@ -195,5 +195,5 @@ class ServicePublisherRepository(BaseRepository):
     def update_service_status(self, service_uuid_list, prev_state, next_state):
         self.session.query(ServiceState).filter(ServiceState.service_uuid.in_(service_uuid_list))\
             .filter(ServiceState.state == prev_state).update({ServiceState.state: next_state},
-                                                             synchronize_session='fetch')
+                                                             synchronize_session=False)
         self.session.commit()
