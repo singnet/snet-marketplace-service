@@ -3,6 +3,7 @@ plugins:
   - serverless-python-requirements
   - serverless-plugin-tracing
   - serverless-prune-plugin
+  - serverless-plugin-split-stacks
 
 service: registry
 provider:
@@ -32,6 +33,10 @@ custom:
     automatic: true
     includeLayers: true
     number: 2
+  splitStacks:
+    perFunction: false
+    perType: true
+    perGroupFunction: false
 
 package:
   exclude:
