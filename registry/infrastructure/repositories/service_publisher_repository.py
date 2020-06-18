@@ -185,3 +185,15 @@ class ServicePublisherRepository(BaseRepository):
             self.session.rollback()
             raise e
         return services
+
+    def get_service_state_with_status(self, status):
+        service_state_db = self.session.query(ServiceState).filter(ServiceState.state == status).all()
+        service_state = ServiceFactory.convert_service_state_from_db_list(service_state_db)
+        self.session.commit()
+        return service_state
+
+    def update_service_status(self, service_uuid_list, prev_state, next_state):
+        self.session.query(ServiceState).filter(ServiceState.service_uuid.in_(service_uuid_list))\
+            .filter(ServiceState.state == prev_state).update({ServiceState.state: next_state},
+                                                             synchronize_session=False)
+        self.session.commit()

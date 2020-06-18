@@ -32,8 +32,7 @@ class ServiceFactory:
             contributors=service.contributors,
             tags=service.tags,
             mpe_address=service.mpe_address,
-            service_state=ServiceState(service.service_state.org_uuid, service.service_state.service_uuid,
-                                       service.service_state.state, service.service_state.transaction_hash),
+            service_state=ServiceFactory.convert_service_state_from_db(service.service_state),
             groups=[ServiceGroup(org_uuid=group.org_uuid, service_uuid=group.service_uuid, group_id=group.group_id,
                                  group_name=group.group_name, endpoints=group.endpoints,
                                  test_endpoints=group.test_endpoints, pricing=group.pricing,
@@ -41,6 +40,15 @@ class ServiceFactory:
                                  free_call_signer_address=group.free_call_signer_address)
                     for group in service.groups]
         )
+
+    @staticmethod
+    def convert_service_state_from_db_list(service_state_list):
+        return [ServiceFactory.convert_service_state_from_db(service_state) for service_state in service_state_list]
+
+    @staticmethod
+    def convert_service_state_from_db(service_state):
+        return ServiceState(service_state.org_uuid, service_state.service_uuid, service_state.state,
+                            service_state.transaction_hash)
 
     @staticmethod
     def convert_service_entity_model_to_db_model(username, service):
