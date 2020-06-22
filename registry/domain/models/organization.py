@@ -338,7 +338,8 @@ class Organization:
 
 class OrganizationState:
     def __init__(self, state, transaction_hash, wallet_address, created_by,
-                 created_on, updated_on, updated_by, reviewed_by, reviewed_on):
+                 created_on, updated_on, updated_by, reviewed_by, reviewed_on, org_uuid=""):
+        self.__org_uuid = org_uuid
         self.__state = state
         self.__transaction_hash = transaction_hash
         self.__wallet_address = wallet_address
@@ -422,3 +423,8 @@ class OrganizationState:
     @property
     def reviewed_on(self):
         return self.__reviewed_on
+
+    @property
+    def org_uuid(self):
+        return self.__org_uuid
+
