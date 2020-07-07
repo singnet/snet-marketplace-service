@@ -7,6 +7,7 @@ from common.exception_handler import exception_handler
 from common.logger import get_logger
 from common.utils import generate_lambda_response, validate_dict
 from registry.application.access_control.authorization import secured
+from registry.application.services.org_transaction_status import OrganizationTransactionStatus
 from registry.application.services.organization_publisher_service import OrganizationPublisherService
 from registry.config import NETWORK_ID, SLACK_HOOK
 from registry.constants import Action, OrganizationActions
@@ -256,3 +257,10 @@ def verify_org_id(event, context):
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+def update_transaction(event, context):
+    logger.info(event)
+    OrganizationTransactionStatus().update_transaction_status()
+    return generate_lambda_response(StatusCode.OK, "OK")

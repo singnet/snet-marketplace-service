@@ -123,9 +123,21 @@ class OrganizationFactory:
         if len(item) == 0:
             return []
         item = item[0]
-        return OrganizationState(state=item.state, transaction_hash=item.transaction_hash, wallet_address="0x123",
+        return OrganizationState(state=item.state, transaction_hash=item.transaction_hash,
+                                 wallet_address=item.wallet_address,
                                  created_on=item.created_on, updated_on=item.updated_on, updated_by=item.updated_by,
                                  reviewed_by=item.reviewed_by, reviewed_on=item.reviewed_on, created_by=item.created_by)
+
+    @staticmethod
+    def parse_organization_state_from_db(item):
+        return OrganizationState(state=item.state, transaction_hash=item.transaction_hash, org_uuid=item.org_uuid,
+                                 wallet_address=item.wallet_address,
+                                 created_on=item.created_on, updated_on=item.updated_on, updated_by=item.updated_by,
+                                 reviewed_by=item.reviewed_by, reviewed_on=item.reviewed_on, created_by=item.created_by)
+
+    @staticmethod
+    def parse_organization_state_from_db_list(org_state_db_list):
+        return [OrganizationFactory.parse_organization_state_from_db(org_state) for org_state in org_state_db_list]
 
     @staticmethod
     def org_domain_entity_from_repo_model_list(organization_repo_model_list):

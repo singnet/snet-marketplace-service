@@ -7,6 +7,7 @@ from common.logger import get_logger
 from common.utils import generate_lambda_response, validate_dict
 from registry.application.access_control.authorization import secured
 from registry.application.services.service_publisher_service import ServicePublisherService
+from registry.application.services.service_transaction_status import ServiceTransactionStatus
 from registry.config import NETWORK_ID, SLACK_HOOK
 from registry.constants import Action, EnvironmentType
 from registry.exceptions import EnvironmentNotFoundException, EXCEPTIONS
@@ -267,3 +268,10 @@ def service_deployment_status_notification_handler(event, context):
         StatusCode.CREATED,
         {"status": "success", "data": "Build failure notified", "error": {}}, cors_enabled=True
     )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+def update_transaction(event, context):
+    logger.info(event)
+    ServiceTransactionStatus().update_transaction_status()
+    return generate_lambda_response(StatusCode.OK, "OK")
