@@ -63,6 +63,7 @@ package:
   include:
     - node_modules/singularitynet-platform-contracts/**
     - node_modules/singularitynet-rfai-contracts/**
+    - node_modules/singularitynet-stake-contracts/**
 
 functions:
   rfai_event_publisher:
@@ -81,7 +82,9 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
-      - schedule: rate(2 minutes)
+      - schedule:
+          rate: rate(2 minutes)
+          enabled: ${file(./config.${self:provider.stage}.json):rfai_cron_status}
 
   mpe_event_publisher:
     warmup: true
@@ -99,7 +102,10 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
-      - schedule: rate(2 minutes)
+      - schedule:
+          rate: rate(2 minutes)
+          enabled: ${file(./config.${self:provider.stage}.json):mpe_cron_status}
+
   registry_event_publisher:
     warmup: true
     handler:  event_pubsub/handlers/event_producer_handlers.registry_event_producer_handler
@@ -116,7 +122,10 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
-      - schedule: rate(2 minutes)
+      - schedule:
+          rate: rate(2 minutes)
+          enabled: ${file(./config.${self:provider.stage}.json):registry_cron_status}
+
   mpe_event_listener:
     warmup: true
     handler: event_pubsub/handlers/event_listener_handlers.mpe_event_listener_handler
@@ -133,7 +142,10 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
-      - schedule: rate(2 minutes)
+      - schedule:
+          rate: rate(2 minutes)
+          enabled: ${file(./config.${self:provider.stage}.json):mpe_cron_status}
+
   registry_event_listener:
     warmup: true
     handler: event_pubsub/handlers/event_listener_handlers.registry_event_listener_handler
@@ -150,7 +162,9 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
-      - schedule: rate(2 minutes)
+      - schedule:
+          rate: rate(2 minutes)
+          enabled: ${file(./config.${self:provider.stage}.json):registry_cron_status}
 
   rfai_event_listener:
     warmup: true
@@ -168,7 +182,49 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
-      - schedule: rate(2 minutes)
+      - schedule:
+          rate: rate(2 minutes)
+          enabled: ${file(./config.${self:provider.stage}.json):rfai_cron_status}
+
+  token_stake_event_listener:
+    warmup: true
+    handler: event_pubsub/handlers/event_listener_handlers.token_stake_event_listener_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - schedule:
+          rate: rate(2 minutes)
+          enabled: ${file(./config.${self:provider.stage}.json):token_stake_cron_status}
+
+  token_stake_event_publisher:
+    warmup: true
+    handler:  event_pubsub/handlers/event_producer_handlers.token_stake_event_producer_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - schedule:
+          rate: rate(2 minutes)
+          enabled: ${file(./config.${self:provider.stage}.json):token_stake_cron_status}
 
 
 

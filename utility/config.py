@@ -24,6 +24,14 @@ SLACK_HOOK = {
     }
 }
 REGION_NAME = ""
-ORG_BUCKET = ""
+UPLOAD_BUCKET = {
+    "FEEDBACK_BUCKET": "",
+    "ORG_BUCKET": ""
+}
 ALLOWED_CONTENT_TYPE = []
 FILE_EXTENSION = {}
+SLACK_FEEDBACK_HOOK = {
+    "MARKETPLACE": "",
+    "RFAI": "",
+    "STAKING": ""
+}

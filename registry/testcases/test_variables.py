@@ -4,12 +4,12 @@ ORG_ADDRESS = {
     "mail_address_same_hq_address": True,
     "addresses": [
         {
-            "address_type": "headquarter_address",
+            "address_type": "headquarters_address",
             "street_address": "F102",
             "apartment": "ABC Apartment",
             "city": "TestCity",
             "state": "state",
-            "pincode": 123456,
+            "pincode": "123456",
             "country": "TestCountry"
         },
         {
@@ -18,7 +18,7 @@ ORG_ADDRESS = {
             "apartment": "ABC Apartment",
             "city": "TestCity",
             "state": "state",
-            "pincode": 123456,
+            "pincode": "123456",
             "country": "TestCountry"
         }
     ]
@@ -80,7 +80,7 @@ ORG_PAYLOAD_MODEL = json.dumps({
     "assets": {
         "hero_image": {
             "url": "",
-            "ipfs_uri": ""
+            "ipfs_hash": ""
         }
     },
     "org_address": {
@@ -116,7 +116,7 @@ ORG_RESPONSE_MODEL = json.dumps({
     "assets": {
         "hero_image": {
             "url": "",
-            "ipfs_uri": ""
+            "ipfs_hash": ""
         }
     },
     "metadata_ipfs_uri": "ipfs://Q12PWP",

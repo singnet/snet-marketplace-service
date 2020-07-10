@@ -8,7 +8,7 @@ class OrganizationAddress:
         self.__country = country
         self.__state = state
 
-    def to_dict(self):
+    def to_response(self):
         return {"address_type": self.__address_type,
                 "street_address": self.__street_address,
                 "apartment": self.__apartment,

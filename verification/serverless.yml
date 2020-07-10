@@ -7,7 +7,7 @@ plugins:
 service: verification
 custom:
   pythonRequirements:
-    fileName: verification/requirement.txt
+    fileName: verification/requirements.txt
     dockerizePip: true
     useDownloadCache: true
     useStaticCache: true
@@ -57,80 +57,14 @@ package:
     - log_setup.py
     - heath_check.sh
     - node_modules/**
+    - registry/**
+  include:
+    - node_modules/singularitynet-platform-contracts/**
 
 functions:
-  get-verification-fields:
-    warmup: true
-    handler: verification/handlers.verification_handler.get_verification_fields
+  initiate:
+    handler: verification/application/handlers/verification_handlers.initiate
     role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    tags:
-      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
-    events:
-      - http:
-          method: GET
-          path: /verification/getFields/{configurationName}/{countryCode}
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            header:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-
-  get-verification-document-types:
-    warmup: true
-    handler: verification/handlers.verification_handler.get_document_types_handler
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    tags:
-      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
-    events:
-      - http:
-          method: GET
-          path: /verification/getDocumentTypes/{countryCode}
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            header:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-
-  get-verification-transaction-data:
-    warmup: true
-    handler: verification/handlers.verification_handler.get_verification_transaction_data
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    tags:
-      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
@@ -141,7 +75,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /verification/verify
+          path: /initiate
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -156,13 +90,11 @@ functions:
               - X-Api-Key
               - X-Amz-Security-Token
               - X-Amz-User-Agent
-              - x-requested-with
 
-  dummy_for_redirection:
-    handler: verification/handlers.verification_handler.dummy_for_redirection
+  duns-callback:
+    warmup: true
+    handler: verification/application/handlers/duns_verification_handlers.callback
     role: ${file(./config.${self:provider.stage}.json):ROLE}
-    tags:
-      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
@@ -170,10 +102,12 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+      tags:
+        Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
     events:
       - http:
-          method: GET
-          path: /dummy/redirect
+          method: POST
+          path: /callback
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             header:
@@ -183,4 +117,36 @@ functions:
               - X-Api-Key
               - X-Amz-Security-Token
               - X-Amz-User-Agent
-              - x-requested-with
+
+
+  status:
+    warmup: true
+    handler: verification/application/handlers/verification_handlers.get_status
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+      tags:
+        Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+    events:
+      - http:
+          method: GET
+          path: /status
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            header:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent

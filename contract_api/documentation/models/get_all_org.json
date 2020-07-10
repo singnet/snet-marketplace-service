@@ -1,0 +1,25 @@
+{
+  "GetAllOrgInput": {},
+  "GetAllOrgOutput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "GetAllOrgOutput",
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "data": {},
+      "error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

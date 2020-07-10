@@ -1,18 +1,17 @@
 import json
 import re
-import traceback
-import boto3
-from dapp_user.config import NETWORKS, GET_FREE_CALLS_METERING_ARN, SLACK_HOOK, NETWORK_ID
-from common.repository import Repository
-from common.utils import Utils
-from common.utils import handle_exception_with_slack_notification
-from common.logger import get_logger
 
-from dapp_user.user import User
 from aws_xray_sdk.core import patch_all
 
-patch_all()
+from common.logger import get_logger
+from common.repository import Repository
+from common.utils import Utils, handle_exception_with_slack_notification
+from dapp_user.config import NETWORKS, NETWORK_ID, SLACK_HOOK
+from dapp_user.constant import SourceDApp
+from dapp_user.domain.services.user_service import UserService
+from dapp_user.user import User
 
+patch_all()
 
 db = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
 logger = get_logger(__name__)
@@ -38,12 +37,22 @@ def request_handler(event, context):
         return get_response(405, "Method Not Allowed")
 
     if "/signup" == path:
+        if not payload_dict:
+            payload_dict= {}
+        origin_from_payload = payload_dict.get("origin", "")
+        try:
+            origin = getattr(SourceDApp, origin_from_payload).value
+        except AttributeError as e:
+            logger.info("Source is not defined.")
+            origin = ""
+
         response_data = usr_obj.user_signup(
-            user_data=event['requestContext'])
+            user_data=event['requestContext'], origin=origin)
 
     elif "/profile" == path and event['httpMethod'] == 'POST':
         response_data = usr_obj.update_user_profile(
-            user_data=event['requestContext'], email_alerts=payload_dict['email_alerts'], is_terms_accepted=payload_dict['is_terms_accepted'])
+            user_data=event['requestContext'], email_alerts=payload_dict['email_alerts'],
+            is_terms_accepted=payload_dict['is_terms_accepted'])
 
     elif "/profile" == path and event['httpMethod'] == 'GET':
         response_data = usr_obj.get_user_profile(
@@ -54,18 +63,16 @@ def request_handler(event, context):
         response_data = []
 
     elif "/feedback" == path and event['httpMethod'] == 'GET':
-        response_data = usr_obj.get_user_feedback(user_data=event['requestContext'], org_id=payload_dict.get("org_id", None),
+        response_data = usr_obj.get_user_feedback(user_data=event['requestContext'],
+                                                  org_id=payload_dict.get("org_id", None),
                                                   service_id=payload_dict.get("service_id", None))
     elif "/feedback" == path and event['httpMethod'] == 'POST':
         response_data = usr_obj.validate_and_set_user_feedback(
             feedback_data=payload_dict['feedback'], user_data=event['requestContext'])
 
     elif "/usage/freecalls" == path:
-        lambda_client = boto3.client('lambda')
-        response = lambda_client.invoke(FunctionName=GET_FREE_CALLS_METERING_ARN, InvocationType='RequestResponse',
-                                        Payload=json.dumps(event))
-        result = json.loads(response.get('Payload').read())
-        return result
+        user_service = UserService()
+        return user_service.get_free_call(event)
 
     elif "/wallet/register" == path:
         """ Deprecated """

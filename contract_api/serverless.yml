@@ -32,7 +32,68 @@ custom:
     automatic: true
     includeLayers: true
     number: 5
-
+  documentation:
+    models:
+      -
+        name: "ErrorMessage"
+        contentType: "application/json"
+        schema: ${file(contract_api/documentation/models/error.json)}
+      -
+        name: "GetAllGroupForOrgOutput"
+        contentType: "application/json"
+        schema: ${file(contract_api/documentation/models/get_all_group_for_org.json):GetAllGroupForOrgOutput}
+      -
+        name: "GetAllOrgOutput"
+        contentType: "application/json"
+        schema: ${file(contract_api/documentation/models/get_all_org.json):GetAllOrgOutput}
+      -
+        name: "GetChannelOutput"
+        contentType: "application/json"
+        schema: ${file(contract_api/documentation/models/get_channel.json):GetChannelOutput}
+      -
+        name: "GetChannelsForGroupOutput"
+        contentType: "application/json"
+        schema: ${file(contract_api/documentation/models/get_channels_for_group.json):GetChannelsForGroupOutput)}
+      -
+        name: "GetChannelsOldApiOutput"
+        contentType: "application/json"
+        schema: ${file(contract_api/documentation/models/get_channels_old_api.json):GetChannelsOldApiOutput)}
+      -
+        name: "GetGroupForOrgIdOutput"
+        contentType: "application/json"
+        schema: ${file(contract_api/documentation/models/get_group_for_org_id.json):GetGroupForOrgIdOutput)}
+      -
+        name: "GetGroupForServiceOutput"
+        contentType: "application/json"
+        schema: ${file(contract_api/documentation/models/get_group_for_service.json):GetGroupForServiceOutput}
+      -
+        name: "GetOrgForOrgIdOutput"
+        contentType: "application/json"
+        schema: ${file(contract_api/documentation/models/get_org_for_org_id.json):GetOrgForOrgIdOutput}
+      -
+        name: "GetServiceForGivenOrgOutput"
+        contentType: "application/json"
+        schema: ${file(contract_api/documentation/models/get_service_for_given_org.json):GetServiceForGivenOrgOutput}
+      -
+        name: "GetServiceGetOutput"
+        contentType: "application/json"
+        schema: ${file(contract_api/documentation/models/get_service_get.json):GetServiceGetOutput}
+      -
+        name: "GetServicePostOutput"
+        contentType: "application/json"
+        schema: ${file(contract_api/documentation/models/get_service_post.json):GetServicePostOutput}
+      -
+        name: "PostRatingForGivenServiceOutput"
+        contentType: "application/json"
+        schema: ${file(contract_api/documentation/models/post_rating_for_given_service.json):PostRatingForGivenServiceOutput}
+      -
+        name: "ServiceCurationOutput"
+        contentType: "application/json"
+        schema: ${file(contract_api/documentation/models/service_curation.json):ServiceCurationOutput}
+      -
+        name: "UpdateConsumedBalanceOutput"
+        contentType: "application/json"
+        schema: ${file(contract_api/documentation/models/update_consumed_balance.json):UpdateConsumedBalanceOutput}
 package:
   exclude:
     - .circleci/**
@@ -423,6 +484,17 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
+  service-curation:
+    handler: contract_api.handlers.service_handlers.service_curation
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+
   organization_event_consumer:
     warmup: true
     handler: contract_api/handlers.consumer_handlers.organization_event_consumer_handler
@@ -450,6 +522,29 @@ functions:
   mpe_event_consumer:
     warmup: true
     handler: contract_api/handlers.consumer_handlers.mpe_event_consumer_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+
+  service_create_deployment_handler:
+    warmup: true
+    handler: contract_api/handlers.consumer_handlers.service_create_deployment_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE1}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+
+  service_deploy_status_notify:
+    handler: contract_api/handlers.service_handlers.service_deployment_status_notification_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:

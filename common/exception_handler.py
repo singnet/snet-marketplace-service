@@ -12,6 +12,15 @@ def exception_handler(*decorator_args, **decorator_kwargs):
     EXCEPTIONS = decorator_kwargs.get("EXCEPTIONS", ())
 
     def decorator(func):
+
+        def get_exec_info():
+            exec_info = sys.exc_info()
+            formatted_exec_info = traceback.format_exception(*exec_info)
+            exception_info = ""
+            for exc_lines in formatted_exec_info:
+                exception_info = exception_info + exc_lines
+            return exception_info
+
         def wrapper(*args, **kwargs):
             handler_name = decorator_kwargs.get("handler_name", func.__name__)
             path = kwargs.get("event", {}).get("path", None)
@@ -32,15 +41,9 @@ def exception_handler(*decorator_args, **decorator_kwargs):
             try:
                 return func(*args, **kwargs)
             except EXCEPTIONS as e:
-                exc_type, exc_obj, exc_tb = sys.exc_info()
-                exc_tb_lines = traceback.format_tb(exc_tb)
-                error_message = error_message + e.error_message + "\n"
-                logger.exception(error_message)
-
-                slack_message = error_message
-                for exc_lines in exc_tb_lines:
-                    slack_message = slack_message + exc_lines
-                slack_message = f"```{slack_message}```"
+                exec_info = get_exec_info()
+                slack_message = f"```{error_message}{exec_info}```"
+                logger.exception(exec_info)
                 Utils().report_slack(type=0, slack_msg=slack_message, SLACK_HOOK=SLACK_HOOK)
 
                 return generate_lambda_response(
@@ -49,6 +52,7 @@ def exception_handler(*decorator_args, **decorator_kwargs):
                         "status": "failed",
                         "data": "",
                         "error": {
+                            "code": 0,
                             "message": e.error_message,
                             "details": e.error_details
                         }
@@ -56,14 +60,9 @@ def exception_handler(*decorator_args, **decorator_kwargs):
                     cors_enabled=True
                 )
             except Exception as e:
-                exc_type, exc_obj, exc_tb = sys.exc_info()
-                exc_tb_lines = traceback.format_tb(exc_tb)
-                logger.exception(error_message)
-
-                slack_message = error_message
-                for exc_lines in exc_tb_lines:
-                    slack_message = slack_message + exc_lines
-                slack_message = f"```{slack_message}```"
+                exec_info = get_exec_info()
+                slack_message = f"```{error_message}{exec_info}```"
+                logger.exception(exec_info)
                 Utils().report_slack(type=0, slack_msg=slack_message, SLACK_HOOK=SLACK_HOOK)
 
                 return generate_lambda_response(

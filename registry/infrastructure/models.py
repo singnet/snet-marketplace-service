@@ -1,6 +1,7 @@
+from datetime import datetime
+
 from sqlalchemy import Column, Integer, ForeignKey, UniqueConstraint
-from sqlalchemy import func
-from sqlalchemy.dialects.mysql import JSON, TIMESTAMP, VARCHAR
+from sqlalchemy.dialects.mysql import JSON, TIMESTAMP, VARCHAR, TEXT
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -50,6 +51,8 @@ class OrganizationState(Base):
                       ForeignKey("organization.uuid", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     state = Column("state", VARCHAR(128), nullable=False)
     transaction_hash = Column("transaction_hash", VARCHAR(128))
+    nonce = Column("nonce", Integer)
+    test_transaction_hash = Column("test_transaction_hash", VARCHAR(128))
     wallet_address = Column("user_address", VARCHAR(128))
     created_by = Column("created_by", VARCHAR(128), nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False))
@@ -61,8 +64,8 @@ class OrganizationState(Base):
 
 class OrganizationMember(Base):
     __tablename__ = "org_member"
-    row_id = Column("row_id", Integer, autoincrement=True)
-    invite_code = Column("invite_code", VARCHAR(128), primary_key=True)
+    row_id = Column("row_id", Integer, autoincrement=True, primary_key=True)
+    invite_code = Column("invite_code", VARCHAR(128))
     org_uuid = Column("org_uuid", VARCHAR(128),
                       ForeignKey("organization.uuid", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     role = Column("role", VARCHAR(128))
@@ -87,6 +90,25 @@ class Group(Base):
     status = Column("status", VARCHAR(128))
 
 
+class OrganizationArchive(Base):
+    __tablename__ = "organization_archive"
+    row_id = Column("row_id", Integer, autoincrement=True, primary_key=True)
+    uuid = Column("uuid", VARCHAR(128))
+    name = Column("name", VARCHAR(128))
+    org_id = Column("org_id", VARCHAR(128))
+    org_type = Column("org_type", VARCHAR(128))
+    origin = Column("origin", VARCHAR(128))
+    description = Column("description", VARCHAR(1024))
+    short_description = Column("short_description", VARCHAR(1024))
+    url = Column("url", VARCHAR(512))
+    duns_no = Column("duns_no", VARCHAR(36))
+    contacts = Column("contacts", JSON, nullable=False)
+    assets = Column("assets", JSON, nullable=False)
+    metadata_ipfs_uri = Column("metadata_ipfs_uri", VARCHAR(255))
+    groups = Column("groups", JSON, nullable=False)
+    org_state = Column("org_state", JSON, nullable=False)
+
+
 class Service(Base):
     __tablename__ = "service"
     org_uuid = Column("org_uuid", VARCHAR(128),
@@ -95,7 +117,7 @@ class Service(Base):
     uuid = Column("uuid", VARCHAR(128), primary_key=True, nullable=False)
     display_name = Column("display_name", VARCHAR(128), nullable=False)
     service_id = Column("service_id", VARCHAR(128))
-    metadata_ipfs_hash = Column("metadata_ipfs_hash", VARCHAR(255))
+    metadata_uri = Column("metadata_uri", VARCHAR(255))
     proto = Column("proto", JSON, nullable=False, default={})
     short_description = Column("short_description", VARCHAR(1024), nullable=False, default="")
     description = Column("description", VARCHAR(1024), nullable=False, default="")
@@ -107,7 +129,7 @@ class Service(Base):
     tags = Column("tags", JSON, nullable=False, default=[])
     mpe_address = Column("mpe_address", VARCHAR(128), nullable=False, default="")
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
-    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=func.utc_timestamp())
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=datetime.utcnow())
     groups = relationship("ServiceGroup", uselist=True)
     service_state = relationship("ServiceState", uselist=False)
 
@@ -121,11 +143,12 @@ class ServiceState(Base):
                           unique=True, nullable=False)
     state = Column("state", VARCHAR(128), nullable=False)
     transaction_hash = Column("transaction_hash", VARCHAR(128))
+    test_transaction_hash = Column("test_transaction_hash", VARCHAR(128))
     created_by = Column("created_by", VARCHAR(128), nullable=False)
     updated_by = Column("updated_by", VARCHAR(128), nullable=False)
     approved_by = Column("approved_by", VARCHAR(128))
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
-    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=func.utc_timestamp())
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=datetime.utcnow())
     UniqueConstraint(org_uuid, service_uuid, name="uq_org_srvc")
 
 
@@ -140,11 +163,12 @@ class ServiceGroup(Base):
     group_name = Column("group_name", VARCHAR(128), nullable=False, default="")
     pricing = Column("pricing", JSON, nullable=False, default=[])
     endpoints = Column("endpoints", JSON, nullable=False, default=[])
+    test_endpoints = Column("test_endpoints", JSON, nullable=False, default=[])
     daemon_address = Column("daemon_address", JSON, nullable=False, default=[])
     free_calls = Column("free_calls", Integer, nullable=False, default=0)
     free_call_signer_address = Column("free_call_signer_address", VARCHAR(128))
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
-    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=func.utc_timestamp())
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=datetime.utcnow())
     UniqueConstraint(org_uuid, service_uuid, group_id, name="uq_org_srvc_grp")
 
 
@@ -153,9 +177,22 @@ class ServiceReviewHistory(Base):
     row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
     org_uuid = Column("org_uuid", VARCHAR(128), nullable=False)
     service_uuid = Column("service_uuid", VARCHAR(128), nullable=False)
-    reviewed_service_data = Column("reviewed_service_data", JSON, nullable=False)
+    service_metadata = Column("service_metadata", JSON, nullable=False)
     state = Column("state", VARCHAR(64), nullable=False)
-    reviewed_by = Column("reviewed_by", VARCHAR(128), nullable=False)
-    reviewed_on = Column("reviewed_on", TIMESTAMP(timezone=False), nullable=False)
+    reviewed_by = Column("reviewed_by", VARCHAR(128))
+    reviewed_on = Column("reviewed_on", TIMESTAMP(timezone=False))
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
-    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=func.utc_timestamp())
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=datetime.utcnow())
+
+
+class ServiceComment(Base):
+    __tablename__ = "service_comment"
+    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
+    org_uuid = Column("org_uuid", VARCHAR(128), nullable=False)
+    service_uuid = Column("service_uuid", VARCHAR(128), nullable=False)
+    support_type = Column("support_type", VARCHAR(128), nullable=False)
+    user_type = Column("user_type", VARCHAR(128), nullable=False)
+    commented_by = Column("commented_by", VARCHAR(128), nullable=False)
+    comment = Column("comment", TEXT, nullable=False)
+    created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=datetime.utcnow())

@@ -1,9 +1,10 @@
 from registry.config import ALLOWED_ORIGIN
+from registry.constants import OrganizationStatus, Role, OrganizationAddressType
 from registry.domain.models.group import Group
 from registry.domain.models.organization import Organization, OrganizationState
 from registry.domain.models.organization_address import OrganizationAddress
 from registry.domain.models.organization_member import OrganizationMember
-from registry.exceptions import InvalidOrigin
+from registry.exceptions import InvalidOriginException, BadRequestException
 
 
 class OrganizationFactory:
@@ -21,16 +22,16 @@ class OrganizationFactory:
         duns_no = payload["duns_no"]
         origin = payload["origin"]
         if origin not in ALLOWED_ORIGIN:
-            raise InvalidOrigin()
+            raise InvalidOriginException()
         contacts = payload["contacts"]
         assets = payload["assets"]
         metadata_ipfs_uri = payload["metadata_ipfs_uri"]
         groups = OrganizationFactory.group_domain_entity_from_group_list_payload(payload["groups"])
-        addresses = OrganizationFactory\
+        addresses = OrganizationFactory \
             .domain_address_entity_from_address_list_payload(payload["org_address"]["addresses"])
         organization = Organization(
             org_uuid, org_id, org_name, org_type, origin, description, short_description, url, contacts,
-            assets, metadata_ipfs_uri, duns_no, groups, addresses, [], [])
+            assets, metadata_ipfs_uri, duns_no, groups, addresses, None, [])
         return organization
 
     @staticmethod
@@ -53,6 +54,9 @@ class OrganizationFactory:
     @staticmethod
     def domain_address_entity_from_payload(payload):
         address_type = payload.get("address_type", None)
+        if address_type not in [OrganizationAddressType.HEAD_QUARTER_ADDRESS.value,
+                                OrganizationAddressType.MAIL_ADDRESS.value]:
+            raise BadRequestException()
         street_address = payload.get("street_address", None)
         apartment = payload.get("apartment", None)
         city = payload.get("city", None)
@@ -119,9 +123,21 @@ class OrganizationFactory:
         if len(item) == 0:
             return []
         item = item[0]
-        return OrganizationState(state=item.state, transaction_hash=item.transaction_hash, wallet_address="0x123",
+        return OrganizationState(state=item.state, transaction_hash=item.transaction_hash,
+                                 wallet_address=item.wallet_address,
                                  created_on=item.created_on, updated_on=item.updated_on, updated_by=item.updated_by,
                                  reviewed_by=item.reviewed_by, reviewed_on=item.reviewed_on, created_by=item.created_by)
+
+    @staticmethod
+    def parse_organization_state_from_db(item):
+        return OrganizationState(state=item.state, transaction_hash=item.transaction_hash, org_uuid=item.org_uuid,
+                                 wallet_address=item.wallet_address,
+                                 created_on=item.created_on, updated_on=item.updated_on, updated_by=item.updated_by,
+                                 reviewed_by=item.reviewed_by, reviewed_on=item.reviewed_on, created_by=item.created_by)
+
+    @staticmethod
+    def parse_organization_state_from_db_list(org_state_db_list):
+        return [OrganizationFactory.parse_organization_state_from_db(org_state) for org_state in org_state_db_list]
 
     @staticmethod
     def org_domain_entity_from_repo_model_list(organization_repo_model_list):
@@ -164,3 +180,88 @@ class OrganizationFactory:
         transaction_hash = payload.get("transaction_hash", "")
         org_member = OrganizationMember(org_uuid, username, status, role, address, invite_code, transaction_hash)
         return org_member
+
+    @staticmethod
+    def parse_group_domain_entity_from_metadata(payload):
+        group_id = payload["group_id"]
+        group_name = payload["group_name"]
+        payment_address = payload['payment']["payment_address"]
+        payment_config = {"payment_expiration_threshold": payload['payment']["payment_expiration_threshold"],
+                          "payment_channel_storage_type": payload['payment']["payment_channel_storage_type"],
+                          "payment_channel_storage_client": payload['payment']["payment_channel_storage_client"]}
+        group = Group(group_name, group_id, payment_address, payment_config, '')
+        group.setup_id()
+        return group
+
+    @staticmethod
+    def group_domain_entity_from_group_list_metadata(payload):
+        domain_group_entity = []
+        for group in payload:
+            domain_group_entity.append(OrganizationFactory.parse_group_domain_entity_from_metadata(group))
+        return domain_group_entity
+
+    @staticmethod
+    def parser_org_members_from_metadata(org_uuid, members, status):
+
+        org_members = []
+        for member in members:
+            org_members.append(OrganizationMember(org_uuid, "", status, Role.MEMBER.value, member))
+        return org_members
+
+    @staticmethod
+    def parser_org_owner_from_metadata(org_uuid, owner, status):
+        return OrganizationMember(org_uuid, "", status, Role.OWNER.value, owner)
+
+    @staticmethod
+    def parse_organization_metadata_assets(assets, existing_assets):
+        if assets is None:
+            assets = {}
+        if existing_assets is None:
+            existing_assets = {}
+        url = ""
+        for key, value in assets.items():
+            if existing_assets and key in existing_assets:
+                if existing_assets[key] and 'url' in existing_assets[key]:
+                    url = existing_assets[key]['url']
+            else:
+                url = ""
+
+            assets[key] = {
+                "ipfs_hash": value,
+                "url": url
+            }
+        merged = {**existing_assets, **assets}
+        return merged
+
+    @staticmethod
+    def parse_organization_metadata(org_uuid, ipfs_org_metadata, origin, duns_no, addresses, metadata_uri,
+                                    existing_assets, transaction_hash, members):
+        org_id = ipfs_org_metadata.get("org_id", None)
+        org_name = ipfs_org_metadata.get("org_name", None)
+        org_type = ipfs_org_metadata.get("org_type", None)
+        description = ipfs_org_metadata.get("description", None)
+        short_description = ""
+        url = ""
+        long_description = ""
+
+        if description:
+            short_description = description.get("short_description", None)
+            long_description = description.get("description", None)
+            url = description.get("url", None)
+
+        contacts = ipfs_org_metadata.get("contacts", None)
+        assets = OrganizationFactory.parse_organization_metadata_assets(ipfs_org_metadata.get("assets", None),
+                                                                        existing_assets)
+        metadata_ipfs_hash = metadata_uri
+        owner = ""
+        groups = OrganizationFactory.group_domain_entity_from_group_list_metadata(ipfs_org_metadata.get("groups", []))
+
+        organization = Organization(org_uuid, org_id, org_name, org_type,
+                                    origin, long_description,
+                                    short_description, url, contacts, assets, metadata_ipfs_hash,
+                                    duns_no, groups,
+                                    addresses,
+                                    OrganizationStatus.PUBLISHED.value,
+                                    members)
+
+        return organization

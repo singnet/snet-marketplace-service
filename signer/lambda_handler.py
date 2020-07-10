@@ -20,7 +20,7 @@ logger = get_logger(__name__)
 
 @handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def request_handler(event, context):
-    logger.info("Signer::event: ", event)
+    logger.info(f"Signer::event: {event}")
     if "path" not in event:
         return generate_lambda_response(400, "Bad Request", cors_enabled=True)
     try:
@@ -114,7 +114,8 @@ def free_call_token_handler(event, context):
     logger.info(
         f"Free call token generation for email:{email} org_id:{org_id} service_id:{service_id} group_id:{group_id} public_key:{public_key}")
 
-    token_data = signer.token_for_free_call(email, org_id, service_id, group_id, public_key)
+    token_data = signer.token_to_make_free_call(email, org_id, service_id, group_id, public_key)
+
 
     return generate_lambda_response(200, {
         "status": "success",
@@ -133,3 +134,31 @@ def get_free_call_signer_address(event, context):
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
+
+
+@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def signature_to_get_free_call_from_daemon_handler(event, context):
+    logger.info(f"Request for freecall token event {event}")
+    signer = Signer(net_id=NET_ID)
+    payload_dict = event.get("queryStringParameters")
+    email = payload_dict["username"]
+    org_id = payload_dict["org_id"]
+    service_id = payload_dict["service_id"]
+    group_id = unquote(payload_dict["group_id"])
+    #public_key = payload_dict["public_key"]
+    logger.info(
+        f"Free call signature for daemon  generation for email:{email} org_id:{org_id} service_id:{service_id} group_id:{group_id}")
+
+    token_to_get_free_call, expiry_date_block, signature, current_block_number, daemon_endpoint ,free_calls_allowed= signer.token_to_get_free_call(email, org_id, service_id, group_id)
+    signature_data = {
+        "token_to_get_free_call": token_to_get_free_call.hex(),
+        "expiry_date_block": expiry_date_block,
+        "signature": signature.hex(),
+        "current_block_number": current_block_number, "daemon_endpoint": daemon_endpoint ,"free_calls_allowed": free_calls_allowed
+    }
+
+
+    return generate_lambda_response(200, {
+        "status": "success",
+        "data": signature_data
+    }, cors_enabled=True)

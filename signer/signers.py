@@ -79,15 +79,36 @@ class Signer:
         raise Exception("Unable to fetch total calls made for service %s under organization %s for %s group.",
                         service_id, org_id, group_id)
 
+    def _get_no_of_free_call_available(self, username, org_id, service_id, group_id):
+
+        token_to_get_free_call, expiry_date_block, signature, current_block_number, daemon_endpoint,free_calls_allowed = self.token_to_get_free_call(
+            username, org_id, service_id, group_id)
+        total_free_call_available = 0
+        try:
+
+            total_free_call_available = self._get_no_of_free_calls_from_daemon(username, token_to_get_free_call,
+                                                                          expiry_date_block, signature,
+                                                                          current_block_number, daemon_endpoint)
+        except Exception as e:
+            logger.info(
+                f"Free call from daemon not available switching to metering {org_id} {service_id} {group_id} {username}")
+            total_free_call_made = self._get_total_calls_made(username, org_id, service_id, group_id)
+
+            total_free_call_available=free_calls_allowed-total_free_call_made
+
+        return total_free_call_available
+
     def _free_calls_allowed(self, username, org_id, service_id, group_id):
         """
             Method to check free calls exists for given user or not.
             Call monitoring service to get the details
         """
-        free_calls_allowed = self._get_free_calls_allowed(org_id, service_id, group_id)
-        total_calls_made = self._get_total_calls_made(username, org_id, service_id, group_id)
-        is_free_calls_allowed = (True if ((free_calls_allowed - total_calls_made) > 0) else False)
-        return is_free_calls_allowed
+
+        free_calls_available = self._get_no_of_free_call_available(username, org_id, service_id, group_id)
+        if free_calls_available > 0:
+            return True;
+
+        return False
 
     def signature_for_free_call(self, user_data, org_id, service_id, group_id):
         """
@@ -199,12 +220,12 @@ class Signer:
         v, r, s = Web3.toInt(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
         return {"r": r, "s": s, "v": v, "signature": signature}
 
-    def _is_free_call_available(self, email, token_for_free_call, expiry_date_block, signature,
-                               current_block_number,daemon_endpoint):
+    def _get_no_of_free_calls_from_daemon(self, email, token_to_get_free_call, expiry_date_block, signature,
+                                          current_block_number, daemon_endpoint):
 
         request = state_service_pb2.FreeCallStateRequest()
         request.user_id = email
-        request.token_for_free_call = token_for_free_call
+        request.token_for_free_call = token_to_get_free_call
         request.token_expiry_date_block = expiry_date_block
         request.signature = signature
         request.current_block = current_block_number
@@ -224,12 +245,18 @@ class Signer:
 
         stub = state_service_pb2_grpc.FreeCallStateServiceStub(channel)
         response = stub.GetFreeCallsAvailable(request)
-        if response.free_calls_available >0:
+
+        return response.free_calls_available
+
+    def _is_free_call_available(self, email, token_for_free_call, expiry_date_block, signature,
+                                current_block_number, daemon_endpoint):
+        if self._get_no_of_free_calls_from_daemon(email, token_for_free_call, expiry_date_block, signature,
+                                                  current_block_number, daemon_endpoint) > 0:
             return True
         return False
 
 
-    def _get_daemon_endpoint_for_group(self,org_id,service_id,group_id):
+    def _get_daemon_endpoint_and_free_call_for_group(self,org_id,service_id,group_id):
         lambda_payload = {
             "httpMethod": "GET",
             "pathParameters": {
@@ -248,15 +275,15 @@ class Signer:
             groups_data = get_service_response["data"].get("groups", [])
             for group_data in groups_data:
                 if group_data["group_id"] == group_id:
-                    return group_data["endpoints"][0]["endpoint"]
+                    return group_data["endpoints"][0]["endpoint"],group_data.get("free_calls",0)
         raise Exception("Unable to fetch daemon Endpoint information for service %s under organization %s for %s group.",
                         service_id, org_id, group_id)
 
-    def token_for_free_call(self, email, org_id, service_id, group_id,user_public_key):
+    def token_to_get_free_call(self, email, org_id, service_id, group_id):
         signer_public_key_checksum = Web3.toChecksumAddress(SIGNER_ADDRESS)
         current_block_number = self.obj_blockchain_utils.get_current_block_no()
         expiry_date_block = current_block_number + FREE_CALL_EXPIRY
-        token_for_free_call = self.obj_blockchain_utils.generate_signature_bytes(["string", "address", "uint256"],
+        token_to_get_free_call = self.obj_blockchain_utils.generate_signature_bytes(["string", "address", "uint256"],
                                                                                  [email, signer_public_key_checksum,
                                                                                   expiry_date_block],
                                                                                  SIGNER_KEY)
@@ -264,21 +291,26 @@ class Signer:
         signature = self.obj_blockchain_utils.generate_signature_bytes(
             ["string", "string", "string", "string", "string", "uint256", "bytes32"],
             ["__prefix_free_trial", email, org_id, service_id, group_id,
-             current_block_number, token_for_free_call],
+             current_block_number, token_to_get_free_call],
             SIGNER_KEY)
 
-        token_with_expiry_for_free_call = ""
-        daemon_endpoint = self._get_daemon_endpoint_for_group(org_id, service_id, group_id)
+        daemon_endpoint ,free_calls_allowed = self._get_daemon_endpoint_and_free_call_for_group(org_id, service_id, group_id)
         logger.info(f"Got daemon endpoint {daemon_endpoint} for org {org_id} service {service_id} group {group_id}")
 
-        if self._is_free_call_available(email, token_for_free_call, expiry_date_block, signature,
-                                        current_block_number, daemon_endpoint):
+        return token_to_get_free_call, expiry_date_block, signature, current_block_number, daemon_endpoint,free_calls_allowed
 
-            token_with_expiry_for_free_call = self.obj_blockchain_utils.generate_signature_bytes(
+    def token_to_make_free_call(self, email, org_id, service_id, group_id, user_public_key):
+        token_to_get_free_call, expiry_date_block, signature, current_block_number, daemon_endpoint,free_calls_allowed = self.token_to_get_free_call(
+            email, org_id, service_id, group_id)
+
+        token_with_expiry_to_make_free_call=""
+        if self._is_free_call_available(email, token_to_get_free_call, expiry_date_block, signature,
+                                        current_block_number, daemon_endpoint):
+            token_with_expiry_to_make_free_call = self.obj_blockchain_utils.generate_signature_bytes(
                 ["string", "address", "uint256"],
                 [email, Web3.toChecksumAddress(user_public_key),
                  expiry_date_block],
                 SIGNER_KEY)
 
-        return {"token_for_free_call": str(token_with_expiry_for_free_call),
-                "token_issue_date_block": expiry_date_block}
+        return {"token_to_make_free_call": token_with_expiry_to_make_free_call.hex(),
+                "token_expiration_block": expiry_date_block}

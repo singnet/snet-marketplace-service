@@ -1,8 +1,14 @@
 import json
 from collections import defaultdict
+
+from common.logger import get_logger
 from common.utils import Utils
+from contract_api.constant import GET_ALL_SERVICE_LIMIT, GET_ALL_SERVICE_OFFSET_LIMIT
+from contract_api.dao.service_repository import ServiceRepository
 from contract_api.filter import Filter
-from contract_api.constant import GET_ALL_SERVICE_OFFSET_LIMIT, GET_ALL_SERVICE_LIMIT
+
+logger = get_logger(__name__)
+BUILD_CODE = {"SUCCESS": 1, "FAILED": 0}
 
 
 class Registry:
@@ -10,11 +16,21 @@ class Registry:
         self.repo = obj_repo
         self.obj_utils = Utils()
 
+    def service_build_status_notifier(self, org_id, service_id, build_status):
+        logger.info(f"received event for service_id: {service_id} org_id:{org_id}")
+        if build_status == BUILD_CODE['FAILED']:
+            self.curate_service(org_id, service_id, curated=False)
+        elif build_status == BUILD_CODE['SUCCESS']:
+            self.curate_service(org_id, service_id, curated=True)
+        else:
+            raise Exception("invalid build status")
+
     def _get_all_service(self):
         """ Method to generate org_id and service mapping."""
         try:
-            all_orgs_srvcs_raw = self.repo.execute("SELECT O.org_id, O.organization_name,O.org_assets_url, O.owner_address, S.service_id  FROM service S, "
-                                                   "organization O WHERE S.org_id = O.org_id AND S.is_curated = 1")
+            all_orgs_srvcs_raw = self.repo.execute(
+                "SELECT O.org_id, O.organization_name,O.org_assets_url, O.owner_address, S.service_id  FROM service S, "
+                "organization O WHERE S.org_id = O.org_id AND S.is_curated = 1")
             all_orgs_srvcs = {}
             for rec in all_orgs_srvcs_raw:
                 if rec['org_id'] not in all_orgs_srvcs.keys():
@@ -83,8 +99,9 @@ class Registry:
                 filter_query = " AND " + filter_query
             search_count_query = "SELECT count(*) as search_count FROM service A, (SELECT DISTINCT M.org_id, M.service_id FROM " \
                                  "service_metadata M LEFT JOIN service_tags T ON M.service_row_id = T.service_row_id WHERE (" \
-                                 + sub_qry.replace('%', '%%') + ")" + filter_query + ") B WHERE A.service_id = B.service_id " \
-                                 "AND A.org_id = B.org_id AND A.is_curated = 1 "
+                                 + sub_qry.replace('%',
+                                                   '%%') + ")" + filter_query + ") B WHERE A.service_id = B.service_id " \
+                                                                                "AND A.org_id = B.org_id AND A.is_curated = 1 "
 
             res = self.repo.execute(search_count_query, values)
             return res[0].get("search_count", 0)
@@ -130,11 +147,11 @@ class Registry:
                     rslt[org_id][service_id] = {}
                 rslt[org_id][service_id]["tags"] = tags
             qry_part = " AND (S.org_id, S.service_id) IN " + \
-                str(org_srvc_tuple).replace(',)', ')')
+                       str(org_srvc_tuple).replace(',)', ')')
             print("qry_part::", qry_part)
             sort_by = sort_by.replace("org_id", "M.org_id")
             services = self.repo.execute(
-                "SELECT M.*,O.organization_name,O.org_assets_url FROM service_endpoint E, service_metadata M, service S "
+                "SELECT DISTINCT M.*,O.organization_name,O.org_assets_url FROM service_endpoint E, service_metadata M, service S "
                 ", organization O WHERE O.org_id = S.org_id AND S.row_id = M.service_row_id AND "
                 "S.row_id = E.service_row_id " + qry_part + "ORDER BY E.is_available DESC, " + sort_by + " " + order_by)
             obj_utils = Utils()
@@ -211,11 +228,13 @@ class Registry:
                     groups = {group_id: {"group_id": rec['group_id'],
                                          "group_name": rec['group_name'],
                                          "pricing": json.loads(rec['pricing']),
-                                         "endpoints": []
+                                         "endpoints": [],
+                                         "free_calls": rec.get("free_calls", 0),
+                                         "free_call_signer_address": rec.get("free_call_signer_address", "")
                                          }
                               }
-                    groups[group_id]['endpoints'].append({"endpoint": rec['endpoint'], "is_available":
-                                                          rec['is_available'], "last_check_timestamp": rec["last_check_timestamp"]})
+                groups[group_id]['endpoints'].append({"endpoint": rec['endpoint'], "is_available":
+                    rec['is_available'], "last_check_timestamp": rec["last_check_timestamp"]})
             return list(groups.values())
         except Exception as e:
             print(repr(e))
@@ -242,7 +261,8 @@ class Registry:
             return '%s %s"%s"' % (filter_condition.attr, filter_condition.operator, "%s"), value
         if filter_condition.operator == "IN":
             value = filter_condition.value
-            return '%s %s %s' % (filter_condition.attr, filter_condition.operator, "(" + (("%s,")*len(value))[:-1] + ")"), value
+            return '%s %s %s' % (
+                filter_condition.attr, filter_condition.operator, "(" + (("%s,") * len(value))[:-1] + ")"), value
         if filter_condition.operator == "BETWEEN":
             value = filter_condition.value
             return '%s %s %s AND %s' % (filter_condition.attr, filter_condition.operator, "%s", "%s"), value
@@ -272,14 +292,17 @@ class Registry:
         try:
             filter_attribute = {"attribute": attribute, "values": []}
             if attribute == "tag_name":
-                filter_data = self.repo.execute("SELECT DISTINCT tag_name AS 'key', tag_name AS 'value' FROM service_tags T, service S "
-                                                "WHERE S.row_id = T.service_row_id AND S.is_curated = 1")
+                filter_data = self.repo.execute(
+                    "SELECT DISTINCT tag_name AS 'key', tag_name AS 'value' FROM service_tags T, service S "
+                    "WHERE S.row_id = T.service_row_id AND S.is_curated = 1")
             elif attribute == "display_name":
-                filter_data = self.repo.execute("SELECT DISTINCT S.service_id AS 'key',display_name AS 'value' FROM service_metadata M, service S "
-                                                "WHERE S.row_id = M.service_row_id AND S.is_curated = 1")
+                filter_data = self.repo.execute(
+                    "SELECT DISTINCT S.service_id AS 'key',display_name AS 'value' FROM service_metadata M, service S "
+                    "WHERE S.row_id = M.service_row_id AND S.is_curated = 1")
             elif attribute == "org_id":
-                filter_data = self.repo.execute("SELECT DISTINCT O.org_id AS 'key' ,O.organization_name AS 'value' from organization O, service S "
-                                                "WHERE S.org_id = O.org_id AND S.is_curated = 1")
+                filter_data = self.repo.execute(
+                    "SELECT DISTINCT O.org_id AS 'key' ,O.organization_name AS 'value' from organization O, service S "
+                    "WHERE S.org_id = O.org_id AND S.is_curated = 1")
             else:
                 return filter_attribute
             for rec in filter_data:
@@ -329,7 +352,6 @@ class Registry:
                 return []
             self.obj_utils.clean(basic_service_data)
 
-
             org_group_data = self.repo.execute(
                 "SELECT * FROM org_group WHERE org_id = %s", [org_id])
             self.obj_utils.clean(org_group_data)
@@ -351,7 +373,7 @@ class Registry:
             is_available = 0
             # Hard Coded Free calls in group data
             for rec in service_group_data:
-                rec["free_calls"] = 15
+                rec["free_calls"] = rec.get("free_calls", 0)
                 if is_available == 0:
                     endpoints = rec['endpoints']
                     for endpoint in endpoints:
@@ -400,3 +422,12 @@ class Registry:
         except Exception as e:
             print(repr(e))
             raise e
+
+    def curate_service(self, org_id, service_id, curated):
+        service_repo = ServiceRepository(self.repo)
+        if str(curated).lower() == "true":
+            service_repo.curate_service(org_id, service_id, 1)
+        elif str(curated).lower() == "false":
+            service_repo.curate_service(org_id, service_id, 0)
+        else:
+            Exception("Invalid curation flag")

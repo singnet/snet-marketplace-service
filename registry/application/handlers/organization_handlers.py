@@ -1,26 +1,20 @@
 import json
 
+from aws_xray_sdk.core import patch_all
+
 from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.logger import get_logger
 from common.utils import generate_lambda_response, validate_dict
+from registry.application.access_control.authorization import secured
+from registry.application.services.org_transaction_status import OrganizationTransactionStatus
 from registry.application.services.organization_publisher_service import OrganizationPublisherService
-from registry.config import SLACK_HOOK, NETWORK_ID
-from registry.constants import AddOrganizationActions
-from registry.exceptions import EXCEPTIONS, BadRequestException
+from registry.config import NETWORK_ID, SLACK_HOOK
+from registry.constants import Action, OrganizationActions
+from registry.exceptions import BadRequestException, EXCEPTIONS
 
+patch_all()
 logger = get_logger(__name__)
-
-
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-def get_org_for_admin(event, context):
-    logger.info(event)
-    query_parameters = event["queryParameters"]
-    response = OrganizationPublisherService(None, None).get_for_admin(query_parameters)
-    return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
-    )
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
@@ -35,6 +29,8 @@ def get_all_org(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
+         username_path=("requestContext", "authorizer", "claims", "email"))
 def get_group_for_org(event, context):
     path_parameters = event["pathParameters"]
     username = event["requestContext"]["authorizer"]["claims"]["email"]
@@ -63,19 +59,20 @@ def create_organization(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@secured(action=Action.UPDATE, org_uuid_path=("pathParameters", "org_uuid"),
+         username_path=("requestContext", "authorizer", "claims", "email"))
 def update_org(event, context):
     payload = json.loads(event["body"])
+    path_parameters = event["pathParameters"]
     required_keys = []
     action = event["queryStringParameters"].get("action", None)
     username = event["requestContext"]["authorizer"]["claims"]["email"]
+    org_uuid = path_parameters["org_uuid"]
     if not validate_dict(payload, required_keys):
         raise BadRequestException()
-    org_uuid = payload.get("org_uuid", None)
     org_service = OrganizationPublisherService(org_uuid, username)
-    if action == AddOrganizationActions.DRAFT.value:
-        response = org_service.save_organization_draft(payload)
-    elif action == AddOrganizationActions.SUBMIT.value:
-        response = org_service.submit_organization_for_approval(payload)
+    if action in [OrganizationActions.DRAFT.value, OrganizationActions.SUBMIT.value]:
+        response = org_service.update_organization(payload, action)
     else:
         raise Exception("Invalid action")
     return generate_lambda_response(
@@ -85,6 +82,8 @@ def update_org(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
+         username_path=("requestContext", "authorizer", "claims", "email"))
 def publish_org_on_ipfs(event, context):
     path_parameters = event["pathParameters"]
     username = event["requestContext"]["authorizer"]["claims"]["email"]
@@ -100,6 +99,8 @@ def publish_org_on_ipfs(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
+         username_path=("requestContext", "authorizer", "claims", "email"))
 def save_transaction_hash_for_publish_org(event, context):
     payload = json.loads(event["body"])
     path_parameters = event["pathParameters"]
@@ -115,6 +116,8 @@ def save_transaction_hash_for_publish_org(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
+         username_path=("requestContext", "authorizer", "claims", "email"))
 def get_all_members(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
@@ -132,6 +135,8 @@ def get_all_members(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
+         username_path=("requestContext", "authorizer", "claims", "email"))
 def get_member(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
@@ -145,6 +150,8 @@ def get_member(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
+         username_path=("requestContext", "authorizer", "claims", "email"))
 def invite_members(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     payload = json.loads(event["body"])
@@ -175,6 +182,8 @@ def verify_code(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
+         username_path=("requestContext", "authorizer", "claims", "email"))
 def publish_members(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     payload = json.loads(event["body"])
@@ -221,3 +230,37 @@ def register_member(event, context):
         StatusCode.CREATED,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+def org_verification(event, context):
+    query_parameters = event["queryStringParameters"]
+    if "verification_type" not in query_parameters:
+        raise BadRequestException()
+    verification_type = query_parameters["verification_type"]
+    response = OrganizationPublisherService(None, None).update_verification(verification_type, query_parameters)
+    return generate_lambda_response(
+        StatusCode.CREATED,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=False
+    )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+def verify_org_id(event, context):
+    logger.info(event)
+    query_parameters = event["queryStringParameters"]
+    if "org_id" not in query_parameters:
+        raise BadRequestException()
+    org_id = query_parameters["org_id"]
+    response = OrganizationPublisherService(None, None).get_org_id_availability_status(org_id)
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+def update_transaction(event, context):
+    logger.info(event)
+    OrganizationTransactionStatus().update_transaction_status()
+    return generate_lambda_response(StatusCode.OK, "OK")

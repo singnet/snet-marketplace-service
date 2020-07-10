@@ -13,7 +13,14 @@ class CustomException(Exception):
 
 
 class MethodNotImplemented(CustomException):
-    error_message = "SERVICE_PROTO_NOT_FOUND"
+    error_message = "METHOD_NOT_IMPLEMENTED"
+
+    def __init__(self):
+        super().__init__({})
+
+
+class OperationNotAllowed(CustomException):
+    error_message = "OPERATION_NOT_ALLOWED"
 
     def __init__(self):
         super().__init__({})
