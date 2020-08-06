@@ -3,16 +3,17 @@ from datetime import datetime
 
 from common.utils import datetime_to_string
 from verification.constants import DUNSVerificationStatus
+from verification.domain.models.comment import Comment
 
 
 class DUNSVerification:
-    def __init__(self, verification_id, org_uuid, status, comments, created_at, update_at):
+    def __init__(self, verification_id, org_uuid, status, comments, created_at, updated_at):
         self.verification_id = verification_id
         self.org_uuid = org_uuid
         self.status = status
         self.comments = comments
         self.created_at = created_at
-        self.updated_at = update_at
+        self.updated_at = updated_at
 
     def initiate(self):
         self.status = DUNSVerificationStatus.PENDING.value
@@ -57,18 +58,3 @@ class DUNSVerification:
         self.comments.append(
             Comment(comment, username, datetime_to_string(datetime.utcnow()))
         )
-
-
-class Comment:
-    def __init__(self, comment, created_by, created_at):
-        self.comment = comment
-        self.created_by = created_by
-        self.created_at = created_at
-
-    def to_dict(self):
-        comment_dict = {
-            "comment": self.comment,
-            "created_by": self.created_by,
-            "created_at": self.created_at
-        }
-        return comment_dict
