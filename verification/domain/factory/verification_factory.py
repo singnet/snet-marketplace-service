@@ -1,7 +1,6 @@
 from verification.domain.models.duns_verification import DUNSVerification
 from verification.domain.models.comment import Comment
 from verification.domain.models.individual_verification import IndividualVerification
-from verification.domain.models.jumio import JumioVerification
 from verification.domain.models.verfication import Verification
 
 
