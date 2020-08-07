@@ -96,7 +96,7 @@ class OrganizationType(Enum):
     INDIVIDUAL = "individual"
 
 
-ORG_TYPE_VERIFICATION_TYPE_MAPPING = {"JUMIO": OrganizationType.INDIVIDUAL.value,
+ORG_TYPE_VERIFICATION_TYPE_MAPPING = {"INDIVIDUAL": OrganizationType.INDIVIDUAL.value,
                                       "DUNS": OrganizationType.ORGANIZATION.value}
 
 
