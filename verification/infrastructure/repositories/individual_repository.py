@@ -29,19 +29,26 @@ class IndividualRepository(BaseRepository):
         return verification_db
 
     def get_verification(self, verification_id=None, username=None):
-        verification_db = self.__get_verification(verification_id=verification_id, username=username)
-        if verification_db is None:
-            return None
-        verification = VerificationFactory.individual_verification_entity_from_db(verification_db)
-        self.session.commit()
+        try:
+            verification_db = self.__get_verification(verification_id=verification_id, username=username)
+            verification = None
+            if verification_db is not None:
+                verification = VerificationFactory.individual_verification_entity_from_db(verification_db)
+        except:
+            self.session.rollback()
+            raise
         return verification
 
     def update_verification(self, verification):
-        verification_db = self.__get_verification(verification_id=verification.verification_id)
-        if verification_db is None:
-            logger.error(f"Verification not found with id {verification.verification_id}")
-            raise Exception("verification not found")
-        verification_db.status = verification.status
-        verification_db.updated_at = verification.updated_at,
-        verification_db.comments = verification.comment_dict_list()
-        self.session.commit()
+        try:
+            verification_db = self.__get_verification(verification_id=verification.verification_id)
+            if verification_db is None:
+                logger.error(f"Verification not found with id {verification.verification_id}")
+                raise Exception("verification not found")
+            verification_db.status = verification.status
+            verification_db.updated_at = verification.updated_at,
+            verification_db.comments = verification.comment_dict_list()
+            self.session.commit()
+        except:
+            self.session.rollback()
+            raise

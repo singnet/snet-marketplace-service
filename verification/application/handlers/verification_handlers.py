@@ -30,7 +30,7 @@ def initiate(event, context):
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def callback(event, context):
-    logger.info(f"received event from jumio for callback {event}")
+    logger.info(f"received event from verification for callback {event}")
     payload = event["body"]
     path_parameters = event["pathParameters"]
     if "verification_id" not in path_parameters and "entity_id" not in path_parameters:
@@ -49,7 +49,7 @@ def get_status(event, context):
     if "type" not in query_parameters:
         raise BadRequestException()
     verification_type = query_parameters["type"]
-    if verification_type == VerificationType.JUMIO.value:
+    if verification_type == VerificationType.INDIVIDUAL.value:
         entity_id = event["requestContext"]["authorizer"]["claims"]["email"]
     elif verification_type == VerificationType.DUNS.value:
         entity_id = query_parameters["entity_id"]

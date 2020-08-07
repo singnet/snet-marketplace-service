@@ -14,11 +14,9 @@ from verification.domain.models.verfication import Verification
 from verification.exceptions import NotAllowedToInitiateException, BadRequestException
 from verification.infrastructure.repositories.duns_repository import DUNSRepository
 from verification.infrastructure.repositories.individual_repository import IndividualRepository
-from verification.infrastructure.repositories.jumio_repository import JumioRepository
 from verification.infrastructure.repositories.verification_repository import VerificationRepository
 
 verification_repository = VerificationRepository()
-jumio_repository = JumioRepository()
 duns_repository = DUNSRepository()
 individual_repository = IndividualRepository()
 logger = get_logger(__name__)
@@ -56,7 +54,7 @@ class VerificationManager:
         return False
 
     def __get_verification_status_for_entity(self, entity_id):
-        verification = verification_repository.get_verification_by_entity(entity_id)
+        verification = verification_repository.get_verification(entity_id=entity_id)
         if verification is None:
             return None
         return verification.status
@@ -112,21 +110,6 @@ class VerificationManager:
         self._ack_verification(verification)
         return {}
 
-    def slack_callback(self, entity_id, verification_details):
-        verification = verification_repository.get_latest_verification_for_entity(entity_id)
-        if verification.type == VerificationType.DUNS.value:
-            duns_verification = duns_repository.get_verification(verification.id)
-            duns_verification.update_callback(verification_details)
-            comment_list = duns_verification.comment_dict_list()
-            verification.reject_reason = comment_list[0]["comment"]
-            verification.status = duns_verification.status
-            verification_repository.update_verification(verification)
-            duns_repository.update_verification(duns_verification)
-        else:
-            raise MethodNotImplemented()
-        self._ack_verification(verification)
-        return {}
-
     def _ack_verification(self, verification):
         VERIFICATION_SERVICE = "VERIFICATION_SERVICE"
         verification_status = verification.status
@@ -172,13 +155,13 @@ class VerificationManager:
             raise MethodNotImplemented()
 
     def get_status_for_entity(self, entity_id):
-        verification = verification_repository.get_latest_verification_for_entity(entity_id)
+        verification = verification_repository.get_verification(entity_id=entity_id)
         if verification is None:
             return {}
         response = verification.to_response()
-        if verification.type == VerificationType.JUMIO.value:
-            jumio_verification = jumio_repository.get_verification(verification.id)
-            response["jumio"] = jumio_verification.to_dict()
+        if verification.type == VerificationType.INDIVIDUAL.value:
+            jumio_verification = individual_repository.get_verification(verification.id)
+            response["individual"] = jumio_verification.to_dict()
         elif verification.type == VerificationType.DUNS.value:
             duns_verification = duns_repository.get_verification(org_uuid=entity_id)
             response["duns"] = duns_verification.to_dict()

@@ -29,18 +29,22 @@ class DUNSRepository(BaseRepository):
 
     def get_verification(self, verification_id=None, org_uuid=None):
         verification_db = self.__get_verification(verification_id=verification_id, org_uuid=org_uuid)
-        if verification_db is None:
-            return None
-        verification = VerificationFactory.duns_verification_entity_from_db(verification_db)
+        verification = None
+        if verification_db is not None:
+            verification = VerificationFactory.duns_verification_entity_from_db(verification_db)
         self.session.commit()
         return verification
 
     def update_verification(self, verification):
-        verification_db = self.__get_verification(verification_id=verification.verification_id)
-        if verification_db is None:
-            logger.error(f"Verification not found with id {verification.verification_id}")
-            raise Exception("verification not found")
-        verification_db.status = verification.status
-        verification_db.updated_at = verification.updated_at,
-        verification_db.comments = verification.comment_dict_list()
-        self.session.commit()
+        try:
+            verification_db = self.__get_verification(verification_id=verification.verification_id)
+            if verification_db is None:
+                logger.error(f"Verification not found with id {verification.verification_id}")
+                raise Exception("verification not found")
+            verification_db.status = verification.status
+            verification_db.updated_at = verification.updated_at,
+            verification_db.comments = verification.comment_dict_list()
+            self.session.commit()
+        except:
+            self.session.rollback()
+            raise
