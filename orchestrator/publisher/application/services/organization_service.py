@@ -77,7 +77,7 @@ class OrganizationOrchestratorService:
         if org_type == OrganizationType.ORGANIZATION.value:
             self.initiate_verification(org_uuid, VerificationType.DUNS.value, username)
         elif org_type == OrganizationType.INDIVIDUAL.value:
-            self.initiate_verification(username, VerificationType.JUMIO.value, username)
+            self.initiate_verification(username, VerificationType.INDIVIDUAL.value, username)
         else:
             raise Exception(f"Verification initiate failed for Invalid org type {org_type}")
 
@@ -113,7 +113,7 @@ class OrganizationOrchestratorService:
                                       slack_channel=SLACK_CHANNEL_FOR_APPROVAL_TEAM)
 
     def initiate_verification(self, entity_id, verification_type, username):
-        if verification_type == VerificationType.JUMIO.value:
+        if verification_type == VerificationType.INDIVIDUAL.value:
             initiate_verification_payload = {
                 "requestContext": {"authorizer": {"claims": {"email": entity_id}}},
                 "body": json.dumps({
