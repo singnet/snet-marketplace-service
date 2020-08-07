@@ -11,3 +11,4 @@ class OrganizationType(Enum):
 class VerificationType(Enum):
     DUNS = "DUNS"
     JUMIO = "JUMIO"
+    INDIVIDUAL = "INDIVIDUAL"

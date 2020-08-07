@@ -2,40 +2,32 @@ import json
 from datetime import datetime
 
 from common.utils import datetime_to_string
-from verification.constants import DUNSVerificationStatus
+from verification.constants import IndividualVerificationStatus
 from verification.domain.models.comment import Comment
 
 
-class DUNSVerification:
-    def __init__(self, verification_id, org_uuid, status, comments, created_at, updated_at):
+class IndividualVerification:
+    def __init__(self, verification_id, username, status, comments, created_at, updated_at):
         self.verification_id = verification_id
-        self.org_uuid = org_uuid
+        self.username = username
         self.status = status
         self.comments = comments
         self.created_at = created_at
         self.updated_at = updated_at
 
-    def initiate(self):
-        self.status = DUNSVerificationStatus.PENDING.value
+    @classmethod
+    def initiate(cls, verification_id, username):
         current_time = datetime.utcnow()
-        self.created_at = current_time
-        self.updated_at = current_time
+        return cls(verification_id, username, IndividualVerificationStatus.PENDING.value,
+                   [], current_time, current_time)
 
-    def update_callback(self, verification_payload):
-        verification_details = json.loads(verification_payload)
-        self.add_comment(verification_details["comment"], verification_details["reviewed_by"])
-        status = verification_details["verificationStatus"]
-        if status not in [DUNSVerificationStatus.PENDING.value, DUNSVerificationStatus.APPROVED.value,
-                          DUNSVerificationStatus.REJECTED.value, DUNSVerificationStatus.CHANGE_REQUESTED.value]:
-            raise Exception("Invalid status for verification")
-
-        self.status = status
-        self.updated_at = datetime.utcnow()
+    def approve(self):
+        self.status = IndividualVerificationStatus.APPROVED.value
 
     def to_dict(self):
         verification_dict = {
             "verification_id": self.verification_id,
-            "org_uuid": self.org_uuid,
+            "username": self.username,
             "status": self.status,
             "comments": self.comment_dict_list(),
             "created_at": "",
@@ -58,3 +50,14 @@ class DUNSVerification:
         self.comments.append(
             Comment(comment, username, datetime_to_string(datetime.utcnow()))
         )
+
+    def update_callback(self, verification_payload):
+        verification_details = json.loads(verification_payload)
+        self.add_comment(verification_details["comment"], verification_details["reviewed_by"])
+        status = verification_details["verificationStatus"]
+        if status not in [IndividualVerificationStatus.PENDING.value, IndividualVerificationStatus.APPROVED.value,
+                          IndividualVerificationStatus.REJECTED.value, IndividualVerificationStatus.CHANGE_REQUESTED.value]:
+            raise Exception("Invalid status for verification")
+
+        self.status = status
+        self.updated_at = datetime.utcnow()
