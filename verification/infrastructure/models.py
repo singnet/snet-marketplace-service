@@ -47,7 +47,7 @@ class DUNSVerificationModel(Base):
 class IndividualVerificationModel(Base):
     __tablename__ = "individual_verification"
     row_id = Column("row_id", Integer, autoincrement=True, primary_key=True)
-    verification_id = Column("verification_id", VARCHAR(255), nullable=False)
+    verification_id = Column("verification_id", VARCHAR(255), nullable=False, unique=True)
     username = Column("username", VARCHAR(255), nullable=False)
     comments = Column("comments", JSON, default=[])
     status = Column("status", VARCHAR(255), nullable=False)

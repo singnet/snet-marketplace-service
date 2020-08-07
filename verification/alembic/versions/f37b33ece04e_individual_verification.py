@@ -1,8 +1,8 @@
 """individual verification
 
-Revision ID: 7ebbe2f5498f
+Revision ID: f37b33ece04e
 Revises: f1aacfcca989
-Create Date: 2020-08-07 17:28:56.733315
+Create Date: 2020-08-07 17:34:00.576732
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = '7ebbe2f5498f'
+revision = 'f37b33ece04e'
 down_revision = 'f1aacfcca989'
 branch_labels = None
 depends_on = None
@@ -26,7 +26,8 @@ def upgrade():
     sa.Column('status', mysql.VARCHAR(length=255), nullable=False),
     sa.Column('created_at', mysql.TIMESTAMP(), nullable=True),
     sa.Column('updated_at', mysql.TIMESTAMP(), nullable=True),
-    sa.PrimaryKeyConstraint('row_id')
+    sa.PrimaryKeyConstraint('row_id'),
+    sa.UniqueConstraint('verification_id')
     )
     # ### end Alembic commands ###
 
