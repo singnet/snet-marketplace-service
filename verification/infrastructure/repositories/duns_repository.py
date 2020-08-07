@@ -28,11 +28,15 @@ class DUNSRepository(BaseRepository):
         return verification_db
 
     def get_verification(self, verification_id=None, org_uuid=None):
-        verification_db = self.__get_verification(verification_id=verification_id, org_uuid=org_uuid)
-        verification = None
-        if verification_db is not None:
-            verification = VerificationFactory.duns_verification_entity_from_db(verification_db)
-        self.session.commit()
+        try:
+            verification_db = self.__get_verification(verification_id=verification_id, org_uuid=org_uuid)
+            verification = None
+            if verification_db is not None:
+                verification = VerificationFactory.duns_verification_entity_from_db(verification_db)
+            self.session.commit()
+        except:
+            self.session.rollback()
+            raise
         return verification
 
     def update_verification(self, verification):

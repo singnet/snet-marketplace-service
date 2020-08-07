@@ -20,7 +20,6 @@ class VerificationRepository(BaseRepository):
         except:
             self.session.rollback()
             raise
-        self.session.close()
         return verifications
 
     def __get_verification(self, verification_id=None, entity_id=None):

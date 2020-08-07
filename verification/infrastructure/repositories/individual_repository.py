@@ -34,6 +34,7 @@ class IndividualRepository(BaseRepository):
             verification = None
             if verification_db is not None:
                 verification = VerificationFactory.individual_verification_entity_from_db(verification_db)
+            self.session.commit()
         except:
             self.session.rollback()
             raise
