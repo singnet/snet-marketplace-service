@@ -15,7 +15,7 @@ class DUNSRepository(BaseRepository):
             status=verification.status, created_at=verification.created_at, updated_at=verification.updated_at)
         self.add_item(verification_db)
 
-    def __get_verification(self, verification_id=None, org_uuid=None):
+    def __get_verification_db(self, verification_id=None, org_uuid=None):
         verification_query = self.session.query(DUNSVerificationModel)
         if org_uuid is not None:
             verification_query = verification_query.filter(DUNSVerificationModel.org_uuid == org_uuid) \
@@ -29,7 +29,7 @@ class DUNSRepository(BaseRepository):
 
     def get_verification(self, verification_id=None, org_uuid=None):
         try:
-            verification_db = self.__get_verification(verification_id=verification_id, org_uuid=org_uuid)
+            verification_db = self.__get_verification_db(verification_id=verification_id, org_uuid=org_uuid)
             verification = None
             if verification_db is not None:
                 verification = VerificationFactory.duns_verification_entity_from_db(verification_db)
@@ -41,7 +41,7 @@ class DUNSRepository(BaseRepository):
 
     def update_verification(self, verification):
         try:
-            verification_db = self.__get_verification(verification_id=verification.verification_id)
+            verification_db = self.__get_verification_db(verification_id=verification.verification_id)
             if verification_db is None:
                 logger.error(f"Verification not found with id {verification.verification_id}")
                 raise Exception("verification not found")

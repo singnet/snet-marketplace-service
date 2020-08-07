@@ -22,7 +22,7 @@ class VerificationRepository(BaseRepository):
             raise
         return verifications
 
-    def __get_verification(self, verification_id=None, entity_id=None):
+    def __get_verification_db(self, verification_id=None, entity_id=None):
         verification_db_query = self.session.query(VerificationModel)
         if entity_id is not None:
             verification_db_query = verification_db_query.filter(VerificationModel.entity_id == entity_id)\
@@ -42,7 +42,7 @@ class VerificationRepository(BaseRepository):
 
     def get_verification(self, verification_id=None, entity_id=None):
         try:
-            verification_db = self.__get_verification(verification_id, entity_id)
+            verification_db = self.__get_verification_db(verification_id, entity_id)
             verification = None
             if verification_db is not None:
                 verification = VerificationFactory.verification_entity_from_db(verification_db)
@@ -54,7 +54,7 @@ class VerificationRepository(BaseRepository):
 
     def update_verification(self, verification):
         try:
-            verification_db = self.__get_verification(verification_id=verification.id)
+            verification_db = self.__get_verification_db(verification_id=verification.id)
             if verification_db is None:
                 logger.error(f"Verification not found with id {verification.verification_id}")
                 raise Exception(f"No verification found for {verification.id}")
