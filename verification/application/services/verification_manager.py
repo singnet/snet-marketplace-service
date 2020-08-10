@@ -100,7 +100,7 @@ class VerificationManager:
         else:
             raise MethodNotImplemented()
 
-        current_verification = current_verification_repo.get_verification(verification_id)
+        current_verification = current_verification_repo.get_verification(verification.id)
         current_verification.update_callback(verification_details)
         comment_list = current_verification.comment_dict_list()
         verification.reject_reason = comment_list[0]["comment"]
