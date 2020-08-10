@@ -45,6 +45,7 @@ class ServiceStatus:
             return 0, "", ""
         except Exception as e:
             logger.info(f"error in making grpc call::url: {url}, |error: {e}")
+            logger.info(f"error : {e.args}")
             return 0, e.args[0].details, e.args[0].debug_error_string
 
     def _ping_url(self, url):
@@ -91,6 +92,8 @@ class ServiceStatus:
         rows_updated = 0
         for record in service_endpoint_data:
             status, error_details, debug_error_string = self._ping_url(record["endpoint"])
+            logger.info(f"error_details: {error_details}")
+            logger.info(f"debug_error_string: {debug_error_string}")
             old_status = int.from_bytes(record["is_available"], "big")
             failed_status_count = self._calculate_failed_status_count(
                 current_status=status, old_status=old_status,
