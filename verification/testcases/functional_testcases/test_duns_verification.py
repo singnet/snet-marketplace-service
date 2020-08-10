@@ -57,7 +57,7 @@ class TestDUNSVerification(TestCase):
 
         event = {
             "requestContext": {"authorizer": {"claims": {"email": username}}},
-            "pathParameters": {"verification_id": test_verification_id},
+            "queryStringParameters": {"verification_id": test_verification_id},
             "body": json.dumps({
                 "verificationStatus": "APPROVED",
                 "reviewed_by": "admin@dummy.io",
