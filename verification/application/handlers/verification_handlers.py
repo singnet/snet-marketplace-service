@@ -32,7 +32,7 @@ def initiate(event, context):
 def callback(event, context):
     logger.info(f"received event from verification for callback {event}")
     payload = event["body"]
-    path_parameters = event["pathParameters"]
+    path_parameters = event["queryStringParameters"]
     if "verification_id" not in path_parameters and "entity_id" not in path_parameters:
         raise BadRequestException()
     entity_id = path_parameters.get("entity_id")
