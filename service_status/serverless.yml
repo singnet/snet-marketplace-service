@@ -20,7 +20,7 @@ custom:
 
 provider:
   name: aws
-  runtime: python3.6
+  runtime: python3.7
   description: Service status service # optional, Description to publish to AWS
   memorySize: 128
   timeout: 60
