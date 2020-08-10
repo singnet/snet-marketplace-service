@@ -42,3 +42,14 @@ class DUNSVerificationModel(Base):
     status = Column("status", VARCHAR(255))
     created_at = Column("created_at", TIMESTAMP(timezone=False))
     updated_at = Column("updated_at", TIMESTAMP(timezone=False))
+
+
+class IndividualVerificationModel(Base):
+    __tablename__ = "individual_verification"
+    row_id = Column("row_id", Integer, autoincrement=True, primary_key=True)
+    verification_id = Column("verification_id", VARCHAR(255), nullable=False, unique=True)
+    username = Column("username", VARCHAR(255), nullable=False)
+    comments = Column("comments", JSON, default=[])
+    status = Column("status", VARCHAR(255), nullable=False)
+    created_at = Column("created_at", TIMESTAMP(timezone=False))
+    updated_at = Column("updated_at", TIMESTAMP(timezone=False))

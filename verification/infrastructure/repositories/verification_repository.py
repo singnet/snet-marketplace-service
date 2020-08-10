@@ -1,8 +1,11 @@
 from datetime import datetime
 
+from common.logger import get_logger
 from verification.domain.factory.verification_factory import VerificationFactory
 from verification.infrastructure.models import VerificationModel
 from verification.infrastructure.repositories.base_repository import BaseRepository
+
+logger = get_logger(__name__)
 
 
 class VerificationRepository(BaseRepository):
@@ -17,14 +20,18 @@ class VerificationRepository(BaseRepository):
         except:
             self.session.rollback()
             raise
-        self.session.close()
         return verifications
 
-    def _get_verification(self, verification_id):
-        verification_db = self.session.query(VerificationModel) \
-                .filter(VerificationModel.id == verification_id).first()
-        if verification_db is None:
-            raise Exception("no data found")
+    def __get_verification_db(self, verification_id=None, entity_id=None):
+        verification_db_query = self.session.query(VerificationModel)
+        if entity_id is not None:
+            verification_db_query = verification_db_query.filter(VerificationModel.entity_id == entity_id)\
+                .order_by(VerificationModel.created_at.desc())
+        elif verification_id is not None:
+            verification_db_query = verification_db_query.filter(VerificationModel.id == verification_id)
+        else:
+            return None
+        verification_db = verification_db_query.first()
         return verification_db
 
     def add_verification(self, verification):
@@ -33,53 +40,43 @@ class VerificationRepository(BaseRepository):
             status=verification.status, requestee=verification.requestee, created_at=verification.created_at,
             updated_at=verification.updated_at))
 
-    def get_verification(self, verification_id):
+    def get_verification(self, verification_id=None, entity_id=None):
         try:
-            verification_db = self._get_verification(verification_id)
-            verification = VerificationFactory.verification_entity_from_db(verification_db)
+            verification_db = self.__get_verification_db(verification_id, entity_id)
+            verification = None
+            if verification_db is not None:
+                verification = VerificationFactory.verification_entity_from_db(verification_db)
             self.session.commit()
         except:
             self.session.rollback()
             raise
-        self.session.close()
         return verification
 
     def update_verification(self, verification):
         try:
-            verification_db = self._get_verification(verification.id)
+            verification_db = self.__get_verification_db(verification_id=verification.id)
+            if verification_db is None:
+                logger.error(f"Verification not found with id {verification.verification_id}")
+                raise Exception(f"No verification found for {verification.id}")
             verification_db.status = verification.status
             verification_db.reject_reason = verification.reject_reason
             verification_db.updated_at = datetime.utcnow()
-            verification = VerificationFactory.verification_entity_from_db(verification_db)
             self.session.commit()
         except:
             self.session.rollback()
             raise
-        self.session.close()
-        return verification
-
-    def get_latest_verification_for_entity(self, entity_id):
-        try:
-            verification_db = self.session.query(VerificationModel).filter(VerificationModel.entity_id == entity_id)\
-                .order_by(VerificationModel.created_at.desc()).first()
-            if verification_db is None:
-                self.session.commit()
-                return None
-            verification = VerificationFactory.verification_entity_from_db(verification_db)
-            self.session.commit()
-        except:
-            self.session.rollback()
-            raise
-        self.session.close()
-        return verification
 
     def get_verification_list(self, verification_type, status):
-        verification_query = self.session.query(VerificationModel)
-        if verification_type is not None:
-            verification_query = verification_query.filter(VerificationModel.verification_type == verification_type)
-        if status is not None:
-            verification_query = verification_query.filter(VerificationModel.status == status)
-        verification_db = verification_query.all()
-        verification = VerificationFactory.verification_entity_from_db_list(verification_db)
-        self.session.commit()
+        try:
+            verification_query = self.session.query(VerificationModel)
+            if verification_type is not None:
+                verification_query = verification_query.filter(VerificationModel.verification_type == verification_type)
+            if status is not None:
+                verification_query = verification_query.filter(VerificationModel.status == status)
+            verification_db = verification_query.all()
+            verification = VerificationFactory.verification_entity_from_db_list(verification_db)
+            self.session.commit()
+        except:
+            self.session.rollback()
+            raise
         return verification

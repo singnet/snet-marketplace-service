@@ -41,11 +41,12 @@ class ServiceStatus:
                 service=""), timeout=SRVC_STATUS_GRPC_TIMEOUT)
             if response is not None and response.status == 1:
                 logger.info(response.status)
-                return 1
-            return 0
+                return 1, "", ""
+            return 0, "", ""
         except Exception as e:
             logger.info(f"error in making grpc call::url: {url}, |error: {e}")
-            return 0
+            logger.info(f"error : {e.args}")
+            return 0, e.args[0].details, e.args[0].debug_error_string
 
     def _ping_url(self, url):
         search_count = re.subn(self.rex_for_pb_ip, "", url)[1]
@@ -55,7 +56,7 @@ class ServiceStatus:
                 secure = False
             url = self.obj_util.remove_http_https_prefix(url=url)
             return self._get_service_status(url=url, secure=secure)
-        return 0
+        return 0, "", ""
 
     def _get_service_endpoint_data(self):
         query = "SELECT row_id, org_id, service_id, endpoint, is_available, failed_status_count FROM service_endpoint WHERE " \
@@ -90,7 +91,9 @@ class ServiceStatus:
         service_endpoint_data = self._get_service_endpoint_data()
         rows_updated = 0
         for record in service_endpoint_data:
-            status = self._ping_url(record["endpoint"])
+            status, error_details, debug_error_string = self._ping_url(record["endpoint"])
+            logger.info(f"error_details: {error_details}")
+            logger.info(f"debug_error_string: {debug_error_string}")
             old_status = int.from_bytes(record["is_available"], "big")
             failed_status_count = self._calculate_failed_status_count(
                 current_status=status, old_status=old_status,
@@ -108,7 +111,8 @@ class ServiceStatus:
                 service_id = record["service_id"]
                 recipients = self._get_service_provider_email(org_id=org_id, service_id=service_id)
                 self._send_notification(org_id=org_id, service_id=service_id, recipients=recipients,
-                                        endpoint=record["endpoint"])
+                                        endpoint=record["endpoint"], error_details=error_details,
+                                        debug_error_string=debug_error_string)
             rows_updated = rows_updated + query_data[0]
         logger.info(f"no of rows updated: {rows_updated}")
 
@@ -130,8 +134,10 @@ class ServiceStatus:
             return True
         return False
 
-    def _send_notification(self, org_id, service_id, recipients, endpoint):
-        slack_message = self._get_slack_message(org_id=org_id, service_id=service_id, endpoint=endpoint, recipients=recipients)
+    def _send_notification(self, org_id, service_id, recipients, endpoint, error_details, debug_error_string):
+        slack_message = self._get_slack_message(org_id=org_id, service_id=service_id, endpoint=endpoint,
+                                                recipients=recipients, error_details=error_details,
+                                                debug_error_string=debug_error_string)
         util.report_slack(type=0, slack_msg=slack_message, SLACK_HOOK=SLACK_HOOK)
         for recipient in recipients:
             if recipient is None:
@@ -143,9 +149,10 @@ class ServiceStatus:
                 else:
                     logger.info(f"Invalid email_id: {recipient}")
 
-    def _get_slack_message(self, org_id, service_id, endpoint, recipients):
+    def _get_slack_message(self, org_id, service_id, endpoint, recipients, error_details, debug_error_string):
         slack_message = f"```Alert!\n\nService {service_id} under organization {org_id} is down for {NETWORK_NAME} " \
-                        f"network.\nEndpoint: {endpoint}\nContributors: {recipients}  \n\nFor any queries please email at " \
+                        f"network.\nEndpoint: {endpoint}\nError Details: {error_details}\nDebug Error String: " \
+                        f"{debug_error_string}\nContributors: {recipients}  \n\nFor any queries please email at " \
                         f"cs-marketplace@singularitynet.io. \n\nWarmest regards, \nSingularityNET Marketplace Team```"
         return slack_message
 
@@ -178,4 +185,3 @@ class ServiceStatus:
             if email_id is not None:
                 emails.append(email_id)
         return emails
-

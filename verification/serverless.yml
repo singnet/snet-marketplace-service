@@ -91,9 +91,9 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
 
-  duns-callback:
+  callback:
     warmup: true
-    handler: verification/application/handlers/duns_verification_handlers.callback
+    handler: verification/application/handlers/verification_handlers.callback
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -117,7 +117,6 @@ functions:
               - X-Api-Key
               - X-Amz-Security-Token
               - X-Amz-User-Agent
-
 
   status:
     warmup: true
