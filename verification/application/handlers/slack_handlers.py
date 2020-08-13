@@ -21,7 +21,7 @@ def get_pending_individual_verification(event, context):
     slack_chat_operation.validate_slack_request(headers, payload_raw)
     slack_chat_operation.get_pending_individual_verification()
     return {
-        'statusCode': StatusCode.OK.value,
+        'statusCode': StatusCode.OK,
         'body': ""
     }
 
@@ -38,7 +38,7 @@ def slack_interaction_handler(event, context):
     slack_chat_operation.validate_slack_request(headers=headers, payload_raw=event_body, ignore=True)
     slack_chat_operation.process_interaction(payload)
     return {
-        'statusCode': StatusCode.OK.value,
+        'statusCode': StatusCode.OK,
         'body': ""
     }
 
