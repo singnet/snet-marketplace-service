@@ -178,7 +178,7 @@ functions:
               - X-Amz-User-Agent
 
 
- slack-get-individual:
+  slack-get-individual:
     warmup: true
     handler: verification.application.handlers.slack_handlers.get_pending_individual_verification
     role: ${file(./config.${self:provider.stage}.json):ROLE}
