@@ -83,7 +83,7 @@ class VerificationManager:
         verification_repository.add_verification(verification)
         duns_repository.add_verification(duns_verification)
 
-    def callback(self, verification_details, verification_id, entity_id):
+    def callback(self, verification_details, verification_id=None, entity_id=None):
         logger.info(f"received callback for verification_id:{verification_id} with details {verification_details}")
         if entity_id is not None:
             verification = verification_repository.get_verification(entity_id=entity_id)
@@ -100,14 +100,19 @@ class VerificationManager:
         else:
             raise MethodNotImplemented()
 
-        current_verification = current_verification_repo.get_verification(verification.id)
-        current_verification.update_callback(verification_details)
-        comment_list = current_verification.comment_dict_list()
-        verification.reject_reason = comment_list[0]["comment"]
-        verification.status = current_verification.status
-        verification_repository.update_verification(verification)
-        current_verification_repo.update_verification(current_verification)
-        self._ack_verification(verification)
+        if verification.status != VerificationStatus.APPROVED.value:
+            current_verification = current_verification_repo.get_verification(verification.id)
+            if current_verification is None:
+                raise Exception(f"Verification not found with {verification_id} {entity_id}")
+            current_verification.update_callback(verification_details)
+            comment_list = current_verification.comment_dict_list()
+            verification.reject_reason = comment_list[0]["comment"]
+            verification.status = current_verification.status
+            verification_repository.update_verification(verification)
+            current_verification_repo.update_verification(current_verification)
+            self._ack_verification(verification)
+        else:
+            raise MethodNotImplemented()
         return {}
 
     def _ack_verification(self, verification):
