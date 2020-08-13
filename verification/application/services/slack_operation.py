@@ -56,8 +56,8 @@ class SlackOperation:
             raise InvalidSlackSignatureException()
 
     def get_pending_individual_verification(self):
-        individual_verirfication_list = VerificationManager().get_pending_individual_verification(limit=MAX_INDIVIDUAL_SLACK_LISTING)
-        slack_blocks = self.generate_slack_listing_blocks(individual_verirfication_list)
+        individual_verification_list = VerificationManager().get_pending_individual_verification(limit=MAX_INDIVIDUAL_SLACK_LISTING)
+        slack_blocks = self.generate_slack_listing_blocks(individual_verification_list)
         slack_payload = {"blocks": slack_blocks}
         response = requests.post(url=SLACK_APPROVAL_CHANNEL_URL, data=json.dumps(slack_payload))
         logger.info(f"{response.status_code} | {response.text}")
