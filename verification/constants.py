@@ -27,3 +27,5 @@ class VerificationType(Enum):
     JUMIO = "JUMIO"
     DUNS = "DUNS"
     INDIVIDUAL = "INDIVIDUAL"
+
+OPEN_SLACK_VIEW_URL = "https://slack.com/api/views.open"

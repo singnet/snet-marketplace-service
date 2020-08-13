@@ -57,7 +57,7 @@ class IndividualRepository(BaseRepository):
     def get_verification_with_status(self, status, limit):
         try:
             verification_db = self.session.query(IndividualVerificationModel) \
-                .filter(IndividualVerificationModel.status == status).limit(limit)
+                .filter(IndividualVerificationModel.status == status).limit(limit).all()
             verification = VerificationFactory.individual_verification_entity_list_from_db(verification_db)
             self.session.commit()
         except Exception as e:

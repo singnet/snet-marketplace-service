@@ -8,7 +8,7 @@ from common.utils import validate_signature
 from verification.application.services.verification_manager import individual_repository, VerificationManager
 from verification.config import ALLOWED_SLACK_USER, SIGNING_SECRET, ALLOWED_SLACK_CHANNEL_ID, \
     SLACK_APPROVAL_OAUTH_ACCESS_TOKEN, MAX_INDIVIDUAL_SLACK_LISTING, SLACK_APPROVAL_CHANNEL_URL
-from verification.constants import IndividualVerificationStatus
+from verification.constants import IndividualVerificationStatus, OPEN_SLACK_VIEW_URL
 from verification.exceptions import InvalidSlackUserException, InvalidSlackChannelException, \
     InvalidSlackSignatureException
 
@@ -92,7 +92,7 @@ class SlackOperation:
             "trigger_id": trigger_id,
             "view": view
         }
-        OPEN_SLACK_VIEW_URL = "https://slack.com/api/views.open"
+
         headers = {"Authorization": SLACK_APPROVAL_OAUTH_ACCESS_TOKEN, "content-type": "application/json"}
         response = requests.post(url=OPEN_SLACK_VIEW_URL, data=json.dumps(slack_payload), headers=headers)
         logger.info(f"{response.status_code} | {response.text}")
