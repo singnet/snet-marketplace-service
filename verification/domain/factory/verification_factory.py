@@ -32,6 +32,10 @@ class VerificationFactory:
         )
 
     @staticmethod
+    def individual_verification_entity_list_from_db(verification_list):
+        return [VerificationFactory.individual_verification_entity_from_db(item) for item in verification_list]
+
+    @staticmethod
     def individual_verification_entity_from_db(verification_db):
         return IndividualVerification(
             verification_id=verification_db.verification_id, username=verification_db.username,

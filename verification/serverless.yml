@@ -149,3 +149,59 @@ functions:
               - X-Api-Key
               - X-Amz-Security-Token
               - X-Amz-User-Agent
+
+  slack-operation:
+    warmup: true
+    handler: verification.application.handlers.slack_handlers.slack_interaction_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+      tags:
+        Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+    events:
+      - http:
+          method: POST
+          path: /slack/interaction/submit
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            header:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+
+
+ slack-get-individual:
+    warmup: true
+    handler: verification.application.handlers.slack_handlers.get_pending_individual_verification
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+      tags:
+        Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+    events:
+      - http:
+          method: POST
+          path: /slack/interaction/individual
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            header:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+
