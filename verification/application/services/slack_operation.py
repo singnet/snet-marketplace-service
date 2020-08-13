@@ -7,7 +7,7 @@ from common.logger import get_logger
 from common.utils import validate_signature
 from verification.application.services.verification_manager import individual_repository, VerificationManager
 from verification.config import ALLOWED_SLACK_USER, SIGNING_SECRET, ALLOWED_SLACK_CHANNEL_ID, \
-    SLACK_APPROVAL_OAUTH_ACCESS_TOKEN
+    SLACK_APPROVAL_OAUTH_ACCESS_TOKEN, MAX_INDIVIDUAL_SLACK_LISTING, SLACK_APPROVAL_CHANNEL_URL
 from verification.constants import IndividualVerificationStatus
 from verification.exceptions import InvalidSlackUserException, InvalidSlackChannelException, \
     InvalidSlackSignatureException
@@ -56,7 +56,11 @@ class SlackOperation:
             raise InvalidSlackSignatureException()
 
     def get_pending_individual_verification(self):
-        pass
+        individual_verirfication_list = VerificationManager().get_pending_individual_verification(limit=MAX_INDIVIDUAL_SLACK_LISTING)
+        slack_blocks = self.generate_slack_listing_blocks(individual_verirfication_list)
+        slack_payload = {"blocks": slack_blocks}
+        response = requests.post(url=SLACK_APPROVAL_CHANNEL_URL, data=json.dumps(slack_payload))
+        logger.info(f"{response.status_code} | {response.text}")
 
     def process_interaction(self, payload):
         data = {}

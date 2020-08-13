@@ -7,7 +7,7 @@ from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
 from verification.config import REGION_NAME, REGISTRY_ARN, \
     VERIFIED_MAIL_DOMAIN
-from verification.constants import VerificationType, VerificationStatus
+from verification.constants import VerificationType, VerificationStatus, IndividualVerificationStatus
 from verification.domain.models.duns_verification import DUNSVerification
 from verification.domain.models.individual_verification import IndividualVerification
 from verification.domain.models.verfication import Verification
@@ -186,3 +186,7 @@ class VerificationManager:
                 dun_verification = duns_repository.get_verification(verification["id"])
                 verification["duns"] = dun_verification.to_dict()
         return response
+
+    def get_pending_individual_verification(self, limit):
+        verification_list = individual_repository.get_verification_with_status(IndividualVerificationStatus.PENDING, limit)
+        return [verification.to_dict() for verification in verification_list]
