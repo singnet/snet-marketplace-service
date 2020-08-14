@@ -12,8 +12,9 @@ from verification.constants import IndividualVerificationStatus, VerificationTyp
 from verification.infrastructure.models import IndividualVerificationModel, VerificationModel
 
 
-# @patch("verification.application.services.slack_operation.requests.post")
 class TestSlackOperation(TestCase):
+
+    @patch("verification.application.services.slack_operation.requests.post")
     def test_get_list_of_service_pending_for_approval(self, post_request):
         post_request.return_value.status_code = 200
         verification_id = uuid4().hex
@@ -46,7 +47,8 @@ class TestSlackOperation(TestCase):
         response = get_pending_individual_verification(event, None)
         self.assertEqual(response["statusCode"], 200)
 
-    def test_review_individual(self):
+    @patch("verification.application.services.slack_operation.requests.post")
+    def test_review_get_modal(self, mock_post):
         verification_id = uuid4().hex
         reviewer = "dummy.dummy"
         individual_username = "dummy@user.io"
@@ -59,7 +61,7 @@ class TestSlackOperation(TestCase):
         event = {
             "headers": {
                 "X-Slack-Request-Timestamp": "1586262180",
-                "X-Slack-Signature": 'v0=48523e240e017d13467c98a3c28611835aeabc14f071f5888748b06f01837bf8'
+                "X-Slack-Signature": 'v0=b7eca566046d2a93eaf70f7824b7ed73c99cf443aefebd9a96541201038a63c5'
             },
             "body": urlencode({
                 "payload": json.dumps({
@@ -86,8 +88,8 @@ class TestSlackOperation(TestCase):
         self.assertEqual(response["statusCode"], 200)
 
     @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123"),
-           invoke_lambda=Mock(return_value={"statusCode": 201})))
-    def test_individual_review(self, mock_boto):
+                                                            invoke_lambda=Mock(return_value={"statusCode": 201})))
+    def test_individual_review_submit(self, mock_boto):
         verification_id = uuid4().hex
         reviewer = "dummy.dummy"
         individual_username = "dummy@user.io"
@@ -181,11 +183,13 @@ class TestSlackOperation(TestCase):
             })
         }
         slack_interaction_handler(event, None)
-        individual_verification = individual_repository.session.query(IndividualVerificationModel).filter(IndividualVerificationModel.verification_id == verification_id).all()
+        individual_verification = individual_repository.session.query(IndividualVerificationModel).filter(
+            IndividualVerificationModel.verification_id == verification_id).all()
         if len(individual_verification) != 1:
             assert False
         self.assertEqual(individual_verification[0].status, IndividualVerificationStatus.CHANGE_REQUESTED.value)
 
     def tearDown(self):
         individual_repository.session.query(IndividualVerificationModel).delete()
+        individual_repository.session.query(VerificationModel).delete()
         individual_repository.session.commit()
