@@ -73,7 +73,7 @@ class SlackOperation:
                 individual_username = data["username"]
                 self.create_and_send_view_individual_modal(individual_username, payload["trigger_id"])
         elif payload["type"] == "view_submission":
-            individual_username = payload["view"]["blocks"][0]["fields"][0]["text"].split("\n")[1]
+            individual_username = payload["view"]["blocks"][0]["fields"][1]["text"]
             comment = payload["view"]["state"]["values"]["review_comment"]["comment"]["value"]
             review_request_state = \
                 payload["view"]["state"]["values"]["approval_state"]["selection"]["selected_option"]["value"]
@@ -134,8 +134,12 @@ class SlackOperation:
             "fields": [
                 {
                     "type": "mrkdwn",
-                    "text": f"*Username:*\n{individual_username}"
-                }
+                    "text": f"*Username:*"
+                },
+                {
+                    "type": "plain_text",
+                    "text": f"{individual_username}"
+                },
             ]
         }
         approver_comment_block = {
