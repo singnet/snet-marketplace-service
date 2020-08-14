@@ -188,5 +188,5 @@ class VerificationManager:
         return response
 
     def get_pending_individual_verification(self, limit):
-        verification_list = individual_repository.get_verification_with_status(IndividualVerificationStatus.PENDING, limit)
+        verification_list = individual_repository.get_verification_with_status(IndividualVerificationStatus.PENDING.value, limit)
         return [verification.to_dict() for verification in verification_list]
