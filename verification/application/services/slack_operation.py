@@ -71,7 +71,7 @@ class SlackOperation:
                 if not data:
                     raise BadRequestException()
                 individual_username = data["username"]
-                self.create_and_send_view_individual_modal(individual_username, trigger_id=payload["trigger_id"])
+                self.create_and_send_view_individual_modal(individual_username, payload["trigger_id"])
         elif payload["type"] == "view_submission":
             individual_username = payload["view"]["blocks"][0]["fields"][0]["text"].split("\n")[1]
             comment = payload["view"]["state"]["values"]["review_comment"]["comment"]["value"]
@@ -81,6 +81,8 @@ class SlackOperation:
 
     def create_and_send_view_individual_modal(self, username, trigger_id):
         verification = individual_repository.get_verification(username=username)
+        if verification is None:
+            raise Exception(f"No verification found with username: {username}")
         comments = verification.comment_dict_list()
         comment = "No comment"
         comment_by = "-"
@@ -103,7 +105,7 @@ class SlackOperation:
                                    IndividualVerificationStatus.REJECTED.value,
                                    IndividualVerificationStatus.CHANGE_REQUESTED.value]:
             VerificationManager().callback(
-                {"verificationStatus": state, "comment": comment, "reviewed_by": self._username},
+                json.dumps({"verificationStatus": state, "comment": comment, "reviewed_by": self._username}),
                 entity_id=individual_username)
         else:
             logger.info("Approval type is not valid")
@@ -237,7 +239,7 @@ class SlackOperation:
         }
         listing_slack_blocks = [title_block]
         for verification in verifications:
-            individual_username = verification.username
+            individual_username = verification["username"]
             mrkdwn_block = {
                 "type": "section",
                 "fields": [
