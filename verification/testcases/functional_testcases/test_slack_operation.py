@@ -40,7 +40,7 @@ class TestSlackOperation(TestCase):
             })
         }
         response = get_pending_individual_verification(event, None)
-        self.assertEquals(response["statusCode"], 200)
+        self.assertEqual(response["statusCode"], 200)
 
     def test_review_individual(self, post_request):
         verification_id = uuid4().hex
@@ -76,7 +76,7 @@ class TestSlackOperation(TestCase):
             })
         }
         response = slack_interaction_handler(event, None)
-        self.assertEquals(response["statusCode"], 200)
+        self.assertEqual(response["statusCode"], 200)
 
     def tearDown(self):
         individual_repository.session.query(IndividualVerificationModel).delete()
