@@ -100,7 +100,7 @@ class SlackOperation:
         logger.info(f"{response.status_code} | {response.text}")
 
     def process_approval_comment(self, state, comment, individual_username):
-        verification = individual_repository.get_verification(username=self._username)
+        verification = individual_repository.get_verification(username=individual_username)
         if verification.status in [IndividualVerificationStatus.PENDING.value,
                                    IndividualVerificationStatus.REJECTED.value,
                                    IndividualVerificationStatus.CHANGE_REQUESTED.value]:
