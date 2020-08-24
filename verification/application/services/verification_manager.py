@@ -7,7 +7,7 @@ from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
 from verification.config import REGION_NAME, REGISTRY_ARN, \
     VERIFIED_MAIL_DOMAIN
-from verification.constants import VerificationType, VerificationStatus
+from verification.constants import VerificationType, VerificationStatus, IndividualVerificationStatus
 from verification.domain.models.duns_verification import DUNSVerification
 from verification.domain.models.individual_verification import IndividualVerification
 from verification.domain.models.verfication import Verification
@@ -83,7 +83,7 @@ class VerificationManager:
         verification_repository.add_verification(verification)
         duns_repository.add_verification(duns_verification)
 
-    def callback(self, verification_details, verification_id, entity_id):
+    def callback(self, verification_details, verification_id=None, entity_id=None):
         logger.info(f"received callback for verification_id:{verification_id} with details {verification_details}")
         if entity_id is not None:
             verification = verification_repository.get_verification(entity_id=entity_id)
@@ -100,14 +100,19 @@ class VerificationManager:
         else:
             raise MethodNotImplemented()
 
-        current_verification = current_verification_repo.get_verification(verification_id)
-        current_verification.update_callback(verification_details)
-        comment_list = current_verification.comment_dict_list()
-        verification.reject_reason = comment_list[0]["comment"]
-        verification.status = current_verification.status
-        verification_repository.update_verification(verification)
-        current_verification_repo.update_verification(current_verification)
-        self._ack_verification(verification)
+        if verification.status != VerificationStatus.APPROVED.value:
+            current_verification = current_verification_repo.get_verification(verification.id)
+            if current_verification is None:
+                raise Exception(f"Verification not found with {verification_id} {entity_id}")
+            current_verification.update_callback(verification_details)
+            comment_list = current_verification.comment_dict_list()
+            verification.reject_reason = comment_list[0]["comment"]
+            verification.status = current_verification.status
+            verification_repository.update_verification(verification)
+            current_verification_repo.update_verification(current_verification)
+            self._ack_verification(verification)
+        else:
+            raise MethodNotImplemented()
         return {}
 
     def _ack_verification(self, verification):
@@ -181,3 +186,7 @@ class VerificationManager:
                 dun_verification = duns_repository.get_verification(verification["id"])
                 verification["duns"] = dun_verification.to_dict()
         return response
+
+    def get_pending_individual_verification(self, limit):
+        verification_list = individual_repository.get_verification_with_status(IndividualVerificationStatus.PENDING.value, limit)
+        return [verification.to_dict() for verification in verification_list]
