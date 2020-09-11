@@ -6,47 +6,37 @@
 This is the mono-repo for services of DApps, SingularityNET Marketplace and SingularityNET Publisher Portal.
 
 Consists of following services:
-* [DApp User Service](dapp_user)
-* [Notification Service](notification)
+
+#### Marketplace Services
 * [Contract API Service](contract_api)
 * [Signer Service](signer)
-* [Payment Service](payments)
-* [Wallet Service](wallets)
-* [Orchestrator Service](orchestrator)
-* [Event PubSub Service](event_pubsub)
-* [Registry Service](registry)
 * [Service Status](service_status)
-* [Verification Service](verification)
-* [Utility Service](utility)
-
-#### Service Architecture
-Service is divided into mainly three parts
-* <b>Application</b>: Contains the interface for clients to communicate with service.
-* <b>Domain</b>: Contains core logic of service, and interacts with other services as well
-* <b>Infrastructure</b>: Contains the interface for clients to communicate with service
-
-### Marketplace Services
-* [Contract API Service](contract_api)
-* [Signer Service](signer)
 * [Payment Service](payments)
 * [Wallet Service](wallets)
 * [Orchestrator Service](orchestrator)
 
-### Publisher Portal Services
+#### Publisher Portal Services
 * [Registry Service](registry)
 * [Verification Service](verification)
 * [Utility Service](utility)
 
-### Common Services
+#### Common Services
 Services which are part of both DApps
 * [DApp User Service](dapp_user)
 * [Notification Service](notification)
+* [Event PubSub Service](event_pubsub)
 
 
-##### Database management
+### Service Architecture
+Service is divided into mainly three parts
+* <b>Application</b>: Contains the interface for clients to communicate with service.
+* <b>Domain</b>: Contains core logic of service, and interacts with other services.
+* <b>Infrastructure</b>: Contains the interface for clients to communicate with services.
+
+#### Database management
 [Alembic](https://github.com/alembic/alembic) is being used to maintain the database versions and automate the database upgrade process.
 
-##### Application infrastructure:
+#### Application infrastructure:
 All services are serverless applications compatible with AWS serverless architecture.
 
 
