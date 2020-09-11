@@ -2,22 +2,64 @@
 
 [![CircleCI](https://circleci.com/gh/singnet/snet-cli.svg?style=svg)](https://circleci.com/gh/singnet/snet-marketplace-service)
 [![Coverage Status](https://coveralls.io/repos/github/singnet/snet-marketplace-service/badge.svg?branch=master)](https://coveralls.io/github/singnet/snet-marketplace-service?branch=master)
-## Getting Started  
-#### SingularityNET Marketplace Service  
-The Marketplace Service serves as an index to display curated services on the SingularityNet DApp.
+
+This is the mono-repo for services of DApps, SingularityNET Marketplace and SingularityNET Publisher Portal.
+
+Consists of following services:
+* [DApp User Service](dapp_user)
+* [Notification Service](notification)
+* [Contract API Service](contract_api)
+* [Signer Service](signer)
+* [Payment Service](payments)
+* [Wallet Service](wallets)
+* [Orchestrator Service](orchestrator)
+* [Event PubSub Service](event_pubsub)
+* [Registry Service](registry)
+* [Service Status](service_status)
+* [Verification Service](verification)
+* [Utility Service](utility)
+
+#### Service Architecture
+Service is divided into mainly three parts
+* <b>Application</b>: Contains the interface for clients to communicate with service.
+* <b>Domain</b>: Contains core logic of service, and interacts with other services as well
+* <b>Infrastructure</b>: Contains the interface for clients to communicate with service
+
+### Marketplace Services
+* [Contract API Service](contract_api)
+* [Signer Service](signer)
+* [Payment Service](payments)
+* [Wallet Service](wallets)
+* [Orchestrator Service](orchestrator)
+
+### Publisher Portal Services
+* [Registry Service](registry)
+* [Verification Service](verification)
+* [Utility Service](utility)
+
+### Common Services
+Services which are part of both DApps
+* [DApp User Service](dapp_user)
+* [Notification Service](notification)
+
+
+##### Database management
+[Alembic](https://github.com/alembic/alembic) is being used to maintain the database versions and automate the database upgrade process.
+
+##### Application infrastructure:
+All services are serverless applications compatible with AWS serverless architecture.
+
+
 ### Development
-These instructions are intended to facilitate the development and testing of SingularityNET Marketplace Service.
+These instructions are intended to facilitate the development and testing of services.
 
 ### Prerequisites
 
-* [python 3.6.5+](https://www.python.org/downloads/)
-* pip 9.0.1+
-* Additionally you should install the python dependency package present in requirement.txt.
-* [npm 3.5.2+](#)
-* Additionally you should install the external dependency package present in package.json.
+* [python 3.6.5+](https://www.python.org/downloads) and [python-pip](https://www.python.org/downloads)
+* Additionally you should install the python dependency packages present in requirements.txt per service
+* nodejs's npm 3.5.2+
+* Additionally you should install the external dependency packages present in package.json per service.
 
-### Installation
-If you use Ubuntu (or any Linux distribution with APT package support) you should do the following:
 
 #### Clone the git repository
 ```bash
@@ -27,47 +69,10 @@ $ cd snet-marketplace-service
 
 #### Install snet-marketplace-service dependency using pip
 ```bash
+$ cd <service_name>
 $ pip install -r requirements.txt
 $ npm install
 ```
-#### Environment variables
-Provide following environment variable in repository.py
 
-environment variables|value
------|-----
-DB_HOST|
-DB_USER|
-DB_PASSWORD|
-DB_NAME|
-DB_PORT|
-
-#### Deployment
-We use AWS Lambda(serverless architecture) for deployment.
-
-### Using the Service with Docker
-
-#### Installation
-In order to use the service with docker, the docker should be up and running in the host.
-Please follow the instruction from the [docker link](https://docs.docker.com/install/linux/docker-ce/ubuntu/) for installation.
-
-#### Prerequisites
-1. Download the snet-marketplace-service and then snet-contract-event-consumer in the root directory.
-```console
-$ git clone https://github.com/singnet/snet-marketplace-service.git
-$ cd snet-marketplace-service
-$ git clone https://github.com/singnet/snet-contract-event-consumer.git
-```
-
-2. Fill up the DB values in the### Installation    ```snet-marketplace-service/snet-contract-event-consumer/config.js``` and ```snet-marketplace-service/common/constant.py```
-
-#### Building the Docker Image and Running the Container
- 1. Build the Docker image.
- ```console
- $ cd snet-marketplace-service
- $ docker build -t marketplace-event-consumer .
- ```
-
- 2. Once the image is built, run the container with the below command.
- ```console
- $ docker run marketplace-event-consumer:latest
- ```
+#### Deployment Configuration
+Need to fill up all appropriate variables in `<service>/config.py`
