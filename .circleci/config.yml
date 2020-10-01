@@ -3,7 +3,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/python:3.6.6-node
+      - image: circleci/python:3.7.5-node
       - image: circleci/mysql:8.0.4
         command: [--default-authentication-plugin=mysql_native_password]
         environment:
