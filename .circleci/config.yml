@@ -3,7 +3,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/python:3.7.5-node
+      - image: circleci/python:3.7-node
       - image: circleci/mysql:8.0.21
         command: [--default-authentication-plugin=mysql_native_password]
         environment:
@@ -45,6 +45,8 @@ jobs:
       - run:
           name: Install required packages.
           command: |
+            sudo apt update
+            sudo apt install default-mysql-client
             sudo pip install coverage coveralls pytest alembic
             mysql -h 127.0.0.1 -u root -punittest_pwd -e "create database registry_unittest_db"
             mysql -h 127.0.0.1 -u root -punittest_pwd -e "create database verification_unittest_db"
