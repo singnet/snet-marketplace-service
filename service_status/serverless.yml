@@ -8,7 +8,7 @@ service: service-status
 custom:
   pythonRequirements:
     fileName: service_status/requirements.txt
-    dockerizePip: non-linux
+    dockerizePip: true
     useDownloadCache: true
     useStaticCache: true
     cacheLocation: '/var/cache/serverless'

@@ -24,7 +24,7 @@ provider:
 custom:
   pythonRequirements:
     fileName: utility/requirements.txt
-    dockerizePip: non-linux
+    dockerizePip: true
     useDownloadCache: true
     useStaticCache: true
     cacheLocation: "/var/cache/serverless"
