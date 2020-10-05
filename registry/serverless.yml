@@ -25,7 +25,7 @@ provider:
 custom:
   pythonRequirements:
     fileName: registry/requirements.txt
-    dockerizePip: true
+    dockerizePip: non-linux
     useDownloadCache: true
     useStaticCache: true
     cacheLocation: "/var/cache/serverless"
@@ -43,7 +43,7 @@ package:
     - .circleci/**
     - .gitignore/**
     - .serverless/**
-    - requirement.txt
+    - requirements.txt
     - venv/**
     - config.ropsten.json
     - sls_deploy.sh

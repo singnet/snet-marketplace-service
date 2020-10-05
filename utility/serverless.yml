@@ -7,7 +7,7 @@ plugins:
 service: common-utility
 provider:
   name: aws
-  runtime: python3.6
+  runtime: python3.7
   description: utility operations for snet
   memorySize: 512
   timeout: 30
@@ -24,7 +24,7 @@ provider:
 custom:
   pythonRequirements:
     fileName: utility/requirements.txt
-    dockerizePip: true
+    dockerizePip: non-linux
     useDownloadCache: true
     useStaticCache: true
     cacheLocation: "/var/cache/serverless"

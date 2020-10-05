@@ -1,5 +1,6 @@
-web3==4.9.2
+rlp==1.2.0
+web3==5.10.0
 requests==2.22.0
-PyMySQL==0.9.2
-boto3==1.10.9
+PyMySQL==0.10.1
+boto3==1.15.9
 ipfsapi==0.4.3
