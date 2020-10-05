@@ -7,7 +7,7 @@ plugins:
 service: service-status
 custom:
   pythonRequirements:
-    fileName: service_status/requirement.txt
+    fileName: service_status/requirements.txt
     dockerizePip: true
     useDownloadCache: true
     useStaticCache: true
@@ -38,7 +38,7 @@ package:
     - .circleci/**
     - .gitignore/**
     - .serverless/**
-    - requirement.txt
+    - requirements.txt
     - venv/**
     - config.ropsten.json
     - serverless.yml

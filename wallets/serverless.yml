@@ -7,7 +7,7 @@ plugins:
 service: wallets
 custom:
   pythonRequirements:
-    fileName: wallets/requirement.txt
+    fileName: wallets/requirements.txt
     dockerizePip: true
     useDownloadCache: true
     useStaticCache: true
@@ -20,7 +20,7 @@ custom:
 
 provider:
   name: aws
-  runtime: python3.6
+  runtime: python3.7
   description: Dapp user service# optional, Description to publish to AWS
   memorySize: 128
   timeout: 30
@@ -40,7 +40,7 @@ package:
     - .circleci/**
     - .gitignore/**
     - .serverless/**
-    - requirement.txt
+    - requirements.txt
     - venv/**
     - config.ropsten.json
     - test/**

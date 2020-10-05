@@ -43,7 +43,7 @@ package:
     - .circleci/**
     - .gitignore/**
     - .serverless/**
-    - requirement.txt
+    - requirements.txt
     - venv/**
     - config.ropsten.json
     - sls_deploy.sh
