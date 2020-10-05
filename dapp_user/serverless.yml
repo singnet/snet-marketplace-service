@@ -8,7 +8,7 @@ service: dapp-user
 custom:
   pythonRequirements:
     fileName: dapp_user/requirements.txt
-    dockerizePip: non-linux
+    dockerizePip: true
     useDownloadCache: true
     useStaticCache: true
     cacheLocation: '/var/cache/serverless'

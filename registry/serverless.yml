@@ -25,7 +25,7 @@ provider:
 custom:
   pythonRequirements:
     fileName: registry/requirements.txt
-    dockerizePip: non-linux
+    dockerizePip: true
     useDownloadCache: true
     useStaticCache: true
     cacheLocation: "/var/cache/serverless"
