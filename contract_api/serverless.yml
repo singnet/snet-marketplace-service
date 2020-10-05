@@ -24,7 +24,7 @@ provider:
 custom:
   pythonRequirements:
     fileName: contract_api/requirements.txt
-    dockerizePip: non-linux
+    dockerizePip: true
     useDownloadCache: true
     useStaticCache: true
     cacheLocation: "/var/cache/serverless"
