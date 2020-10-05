@@ -8,7 +8,7 @@ service: orchestrator
 custom:
   pythonRequirements:
     fileName: orchestrator/requirements.txt
-    dockerizePip: true
+    dockerizePip: non-linux
     useDownloadCache: true
     useStaticCache: true
     cacheLocation: "/var/cache/serverless"

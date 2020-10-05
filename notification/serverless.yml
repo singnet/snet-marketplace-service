@@ -8,7 +8,7 @@ service: notifcation
 custom:
   pythonRequirements:
     fileName: event_pubsub/requirements.txt
-    dockerizePip: true
+    dockerizePip: non-linux
     useDownloadCache: true
     useStaticCache: true
     cacheLocation: '/var/cache/serverless'
