@@ -67,7 +67,7 @@ class SlackChatOperation:
 
     def get_list_of_org_pending_for_approval(self):
         list_of_org_pending_for_approval = OrganizationPublisherService(None, None) \
-            .get_approval_pending_organizations(MAX_SERVICES_SLACK_LISTING, type=OrganizationType.ORGANIZATION.value)
+            .get_approval_pending_organizations(MAX_SERVICES_SLACK_LISTING)
         slack_blocks = self.generate_slack_blocks_for_org_listing_template(list_of_org_pending_for_approval)
         slack_payload = {"blocks": slack_blocks}
         response = requests.post(url=SLACK_APPROVAL_CHANNEL_URL, data=json.dumps(slack_payload))
