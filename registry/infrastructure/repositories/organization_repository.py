@@ -11,14 +11,14 @@ from registry.infrastructure.repositories.base_repository import BaseRepository
 
 class OrganizationPublisherRepository(BaseRepository):
 
-    def get_org(self, status=None, limit=None, type=None):
+    def get_org(self, status=None, limit=None, org_type=None):
         organization_query = self.session.query(Organization)
         if status is not None:
             organization_query = organization_query \
                 .join(OrganizationState, Organization.uuid == OrganizationState.org_uuid) \
                 .filter(OrganizationState.state == status)
-        if type is not None:
-            organization_query = organization_query.filter(Organization.org_type == type)
+        if org_type is not None:
+            organization_query = organization_query.filter(Organization.org_type == org_type)
         if limit is not None:
             organization_query = organization_query.limit(limit)
         organizations = organization_query.all()
@@ -82,7 +82,7 @@ class OrganizationPublisherRepository(BaseRepository):
             if org_owner != OrganizationMemberStatus.PUBLISHED.value:
                 org_owner.status = OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value
             self.session.commit()
-        except:
+        except Exception:
             self.session.rollback()
             raise
 
@@ -105,7 +105,7 @@ class OrganizationPublisherRepository(BaseRepository):
         self._update_organization(organization_db_model, organization, username, state,
                                   test_transaction_hash=test_transaction_hash)
 
-    def update_organization_status(self, org_uuid, status, updated_by):
+    def update_organization_status(self, org_uuid, status, updated_by, comment=None):
         try:
             organization = self.session.query(Organization).filter(Organization.uuid == org_uuid).first()
             if organization.org_state[0].state in [OrganizationStatus.ONBOARDING.value,
@@ -118,8 +118,12 @@ class OrganizationPublisherRepository(BaseRepository):
             organization.org_state[0].state = status
             organization.org_state[0].updated_by = updated_by
             organization.org_state[0].updated_on = datetime.utcnow()
+            if comment is not None:
+                comments = list(organization.org_state[0].comments)
+                comments.append(comment.to_dict())
+                organization.org_state[0].comments = comments
             self.session.commit()
-        except:
+        except Exception:
             self.session.rollback()
             raise
 

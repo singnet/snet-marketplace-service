@@ -60,6 +60,7 @@ class OrganizationState(Base):
     updated_on = Column("updated_on", TIMESTAMP(timezone=False))
     reviewed_by = Column("approved_by", VARCHAR(128))
     reviewed_on = Column("approved_on", TIMESTAMP(timezone=False))
+    comments = Column("comments", JSON, default=[])
 
 
 class OrganizationMember(Base):
