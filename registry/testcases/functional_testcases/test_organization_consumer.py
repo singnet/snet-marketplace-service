@@ -5,11 +5,9 @@ from uuid import uuid4
 
 from registry.constants import OrganizationStatus, Role, OrganizationMemberStatus
 from registry.consumer.organization_event_consumer import OrganizationCreatedAndModifiedEventConsumer
-from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.infrastructure.models import Organization, OrganizationState, \
     OrganizationMember, OrganizationAddress, Group
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
-from registry.testcases.test_variables import ORG_ADDRESS
 
 ORIGIN = "PUBLISHER"
 

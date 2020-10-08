@@ -14,7 +14,7 @@ from registry.config import SIGNING_SECRET, SLACK_APPROVAL_OAUTH_ACCESS_TOKEN, R
 from registry.config import STAGING_URL, ALLOWED_SLACK_USER, SLACK_APPROVAL_CHANNEL_URL, \
     ALLOWED_SLACK_CHANNEL_ID, MAX_SERVICES_SLACK_LISTING, NOTIFICATION_ARN, VERIFICATION_ARN
 from registry.constants import OrganizationAddressType
-from registry.constants import UserType, ServiceSupportType, ServiceStatus, OrganizationStatus, OrganizationType
+from registry.constants import UserType, ServiceSupportType, ServiceStatus, OrganizationStatus
 from registry.domain.models.service_comment import ServiceComment
 from registry.exceptions import InvalidSlackChannelException, InvalidSlackSignatureException, InvalidSlackUserException
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
@@ -67,7 +67,7 @@ class SlackChatOperation:
 
     def get_list_of_org_pending_for_approval(self):
         list_of_org_pending_for_approval = OrganizationPublisherService(None, None) \
-            .get_approval_pending_organizations(MAX_SERVICES_SLACK_LISTING, type=OrganizationType.ORGANIZATION.value)
+            .get_approval_pending_organizations(MAX_SERVICES_SLACK_LISTING)
         slack_blocks = self.generate_slack_blocks_for_org_listing_template(list_of_org_pending_for_approval)
         slack_payload = {"blocks": slack_blocks}
         response = requests.post(url=SLACK_APPROVAL_CHANNEL_URL, data=json.dumps(slack_payload))

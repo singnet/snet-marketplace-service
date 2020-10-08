@@ -3,6 +3,7 @@ import unittest
 from datetime import datetime
 from unittest.mock import Mock, patch
 from uuid import uuid4
+
 from common.exceptions import OperationNotAllowed
 from registry.application.handlers.organization_handlers import update_org
 from registry.application.services.organization_publisher_service import OrganizationPublisherService, org_repo
