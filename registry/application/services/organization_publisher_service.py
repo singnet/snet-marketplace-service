@@ -22,7 +22,6 @@ from registry.mail_templates import \
     get_owner_mail_for_org_rejected, get_owner_mail_for_org_changes_requested, get_owner_mail_for_org_approved
 from registry.mail_templates import get_org_member_invite_mail, get_org_approval_mail
 
-patch_all()
 org_repo = OrganizationPublisherRepository()
 
 logger = get_logger(__name__)

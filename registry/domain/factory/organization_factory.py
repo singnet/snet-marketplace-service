@@ -1,5 +1,6 @@
 from registry.config import ALLOWED_ORIGIN
 from registry.constants import OrganizationStatus, Role, OrganizationAddressType
+from registry.domain.models.comment import Comment
 from registry.domain.models.group import Group
 from registry.domain.models.organization import Organization, OrganizationState
 from registry.domain.models.organization_address import OrganizationAddress
@@ -75,6 +76,10 @@ class OrganizationFactory:
         return addresses
 
     @staticmethod
+    def get_comment_from_db(comments):
+        return [Comment(comment['comment'], comment['created_by'], comment['created_at']) for comment in comments]
+
+    @staticmethod
     def org_domain_entity_from_repo_model(organization_repo_model):
         return Organization(
             uuid=organization_repo_model.uuid,
@@ -123,17 +128,19 @@ class OrganizationFactory:
         if len(item) == 0:
             return []
         item = item[0]
-        return OrganizationState(state=item.state, transaction_hash=item.transaction_hash,
-                                 wallet_address=item.wallet_address,
-                                 created_on=item.created_on, updated_on=item.updated_on, updated_by=item.updated_by,
-                                 reviewed_by=item.reviewed_by, reviewed_on=item.reviewed_on, created_by=item.created_by)
+        return OrganizationState(
+            state=item.state, transaction_hash=item.transaction_hash, wallet_address=item.wallet_address,
+            created_on=item.created_on, updated_on=item.updated_on, updated_by=item.updated_by,
+            reviewed_by=item.reviewed_by, reviewed_on=item.reviewed_on,
+            comments=OrganizationFactory.get_comment_from_db(item.comments), created_by=item.created_by)
 
     @staticmethod
     def parse_organization_state_from_db(item):
-        return OrganizationState(state=item.state, transaction_hash=item.transaction_hash, org_uuid=item.org_uuid,
-                                 wallet_address=item.wallet_address,
-                                 created_on=item.created_on, updated_on=item.updated_on, updated_by=item.updated_by,
-                                 reviewed_by=item.reviewed_by, reviewed_on=item.reviewed_on, created_by=item.created_by)
+        return OrganizationState(
+            state=item.state, transaction_hash=item.transaction_hash, wallet_address=item.wallet_address,
+            created_on=item.created_on, updated_on=item.updated_on, updated_by=item.updated_by,
+            reviewed_by=item.reviewed_by, reviewed_on=item.reviewed_on,
+            comments=OrganizationFactory.get_comment_from_db(item.comments), created_by=item.created_by)
 
     @staticmethod
     def parse_organization_state_from_db_list(org_state_db_list):
