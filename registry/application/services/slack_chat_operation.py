@@ -6,7 +6,7 @@ import requests
 from common import boto_utils
 from common.constant import StatusCode
 from common.logger import get_logger
-from common.utils import send_email_notification
+from common.utils import send_email_notification, datetime_to_string
 from common.utils import validate_signature
 from registry.application.services.organization_publisher_service import OrganizationPublisherService
 from registry.application.services.service_publisher_service import ServicePublisherService
@@ -210,7 +210,7 @@ class SlackChatOperation:
                 elif org.org_type == OrganizationType.INDIVIDUAL.value:
                     OrganizationPublisherRepository().update_organization_status(
                         org.uuid, getattr(OrganizationStatus, state).value, self._username,
-                        Comment(comment, self._username, datetime.now()))
+                        Comment(comment, self._username, datetime_to_string(datetime.now())))
 
         elif approval_type == "service":
             org_uuid, service = ServicePublisherRepository(). \
