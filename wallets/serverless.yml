@@ -196,3 +196,17 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - schedule: rate(2 minutes)
+
+  open-channel-by-third-party:
+    warmup: true
+    handler: wallets/handlers/channel_handler.open_channel_by_third_party
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - schedule: rate(2 minutes)

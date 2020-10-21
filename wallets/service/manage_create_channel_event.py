@@ -51,9 +51,3 @@ def create_channel_event_consumer():
         traceback.print_exc()
         channel_dao.update_create_channel_event(create_channel_event_details, TransactionStatus.FAILED)
     logger.info("done getting events")
-
-
-if __name__ == "__main__":
-    while True:
-        create_channel_event_consumer()
-        sleep(300)
