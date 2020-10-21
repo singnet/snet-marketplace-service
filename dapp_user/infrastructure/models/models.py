@@ -38,4 +38,4 @@ class UserPreference(Base):
     status = Column("status", BOOLEAN, nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
     updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=dt.utcnow())
-    UniqueConstraint(preference_type, communication_type, source, name="uq_usr_pref")
+    UniqueConstraint(user_row_id, preference_type, communication_type, source, name="user_preference_UN")

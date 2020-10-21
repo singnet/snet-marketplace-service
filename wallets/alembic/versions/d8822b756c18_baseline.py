@@ -26,7 +26,7 @@ def upgrade():
           `row_created` timestamp NULL DEFAULT NULL,
           `row_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
           PRIMARY KEY (`row_id`),
-          UNIQUE KEY `uq_wallet` (`address`)
+          UNIQUE KEY `uq_wallet` (`username`, `address`)
        );
     """)
     conn.execute("""
