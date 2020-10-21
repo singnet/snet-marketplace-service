@@ -17,37 +17,22 @@ utils = Utils()
 logger = get_logger(__name__)
 
 
-def create_channel_event_consumer():
-    logger.info("Getting events")
-    try:
-        create_channel_event_details = channel_dao.get_one_create_channel_event(TransactionStatus.PENDING)
-        if create_channel_event_details is None:
+class ManageCreateChannelEvent:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def create_channel_event_consumer():
+        create_channel_event_from_orchestrator = channel_dao.get_one_create_channel_event(TransactionStatus.PENDING)
+        if not bool(create_channel_event_from_orchestrator):
             return
         wallet_manager = WalletService(connection)
-        payload = json.loads(create_channel_event_details["payload"])
-    except Exception as e:
-        logger.error(f"Failed to get record for create channel, error:{repr(e)}")
-        traceback.print_exc()
-        utils.report_slack(1, f"Failed to get record for create channel, module: create_channel_consumer, "
-                              f"NETWORK_ID:{NETWORK_ID}, error: {(repr(e))}", SLACK_HOOK)
-        return
-
-    try:
-        logger.info(f"fetched event:{create_channel_event_details}")
-        response = wallet_manager.open_channel_by_third_party(
-            order_id=payload['order_id'], sender=payload['sender'], signature=payload['signature'],
-            r=payload['r'], s=payload['s'], v=payload['v'], current_block_no=payload['current_block_no'],
-            group_id=payload['group_id'], org_id=payload["org_id"], recipient=payload['recipient'],
-            amount=payload['amount'], currency=payload['currency'],
-            amount_in_cogs=payload['amount_in_cogs']
-        )
-        channel_dao.update_create_channel_event(create_channel_event_details, TransactionStatus.SUCCESS)
-
-    except Exception as e:
-        logger.error(f"Exception occurred while create channel, event: {create_channel_event_details}, error:{repr(e)}")
-        utils.report_slack(1, f"Exception occurred while create channel, module: create_channel_consumer, "
-                              f"event_id: {create_channel_event_details['row_id']} "
-                              f"NETWORK_ID:{NETWORK_ID}, error: {(repr(e))}", SLACK_HOOK)
-        traceback.print_exc()
-        channel_dao.update_create_channel_event(create_channel_event_details, TransactionStatus.FAILED)
-    logger.info("done getting events")
+        payload = json.loads(create_channel_event_from_orchestrator["payload"])
+        wallet_manager.open_channel_by_third_party(
+                order_id=payload['order_id'], sender=payload['sender'], signature=payload['signature'],
+                r=payload['r'], s=payload['s'], v=payload['v'], current_block_no=payload['current_block_no'],
+                group_id=payload['group_id'], org_id=payload["org_id"], recipient=payload['recipient'],
+                amount=payload['amount'], currency=payload['currency'],
+                amount_in_cogs=payload['amount_in_cogs']
+            )
+        channel_dao.update_create_channel_event(create_channel_event_from_orchestrator, TransactionStatus.SUCCESS)
