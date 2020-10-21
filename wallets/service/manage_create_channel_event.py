@@ -22,7 +22,7 @@ class ManageCreateChannelEvent:
         pass
 
     @staticmethod
-    def create_channel_event_consumer():
+    def manage_create_channel_event():
         create_channel_event_from_orchestrator = channel_dao.get_one_create_channel_event(TransactionStatus.PENDING)
         if not bool(create_channel_event_from_orchestrator):
             return

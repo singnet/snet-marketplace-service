@@ -89,7 +89,7 @@ def record_create_channel_event(event, context):
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def open_channel_by_third_party(event, context):
     logger.info(f"Open channel by third party {event}")
-    response = ManageCreateChannelEvent().create_channel_event_consumer()
+    response = ManageCreateChannelEvent().manage_create_channel_event()
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True

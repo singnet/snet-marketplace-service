@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from common.constant import TransactionStatus
 from common.repository import Repository
-from wallets.create_channel_event_consumer import create_channel_event_consumer
+from wallets.service.manage_create_channel_event import ManageCreateChannelEvent
 from wallets.config import NETWORKS, NETWORK_ID
 from wallets.dao.channel_dao import ChannelDAO
 
@@ -28,7 +28,7 @@ class TestCreateChannelConsumer(TestCase):
             "signature": "0x7be1502b09f5997339571f4885194417d6ca84ca65f98a9a2883d981d071ba6255bcc83399b93bc60d70d4b10e33db626eac0dafd863b91e00a6b4b2c3586eb61b",
             "amount_in_cogs": 4000, "current_block_no": 6780504
         }, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        create_channel_event_consumer()
+        ManageCreateChannelEvent().manage_create_channel_event()
         channel_create_events = channel_dao.get_one_create_channel_event(TransactionStatus.PENDING)
         if channel_create_events is None:
             assert True
@@ -48,13 +48,13 @@ class TestCreateChannelConsumer(TestCase):
             "signature": "0x7be1502b09f5997339571f4885194417d6ca84ca65f98a9a2883d981d071ba6255bcc83399b93bc60d70d4b10e33db626eac0dafd863b91e00a6b4b2c3586eb61b",
             "amount_in_cogs": 4000, "current_block_no": 6780504
         }, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        create_channel_event_consumer()
+        ManageCreateChannelEvent().manage_create_channel_event()
         channel_create_events = channel_dao.get_one_create_channel_event(TransactionStatus.FAILED)
         if channel_create_events is not None:
             assert True
 
     def test_create_channel_even_consumer_no_data(self):
-        create_channel_event_consumer()
+        ManageCreateChannelEvent().manage_create_channel_event()
 
     def tearDown(self):
         self.connection.execute("DELETE FROM create_channel_event")
