@@ -3,6 +3,7 @@ plugins:
   - serverless-python-requirements
   - serverless-plugin-tracing
   - serverless-prune-plugin
+  - serverless-plugin-warmup
 
 service: wallets
 custom:
@@ -198,7 +199,6 @@ functions:
       - schedule: rate(2 minutes)
 
   open-channel-by-third-party:
-    warmup: true
     handler: wallets/handlers/channel_handler.open_channel_by_third_party
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
