@@ -338,7 +338,7 @@ class Organization:
 
 class OrganizationState:
     def __init__(self, state, transaction_hash, wallet_address, created_by,
-                 created_on, updated_on, updated_by, reviewed_by, reviewed_on, org_uuid=""):
+                 created_on, updated_on, updated_by, reviewed_by, reviewed_on, comments, org_uuid=""):
         self.__org_uuid = org_uuid
         self.__state = state
         self.__transaction_hash = transaction_hash
@@ -349,6 +349,7 @@ class OrganizationState:
         self.__updated_by = updated_by
         self.__reviewed_by = reviewed_by
         self.__reviewed_on = reviewed_on
+        self.__comments = comments
 
     def to_response(self):
         state_dict = {
@@ -357,6 +358,7 @@ class OrganizationState:
             "updated_by": self.__updated_by,
             "reviewed_by": self.__reviewed_by,
             "reviewed_on": "",
+            "comments": self.comment_dict_list()
         }
 
         if self.__updated_on is not None:
@@ -365,6 +367,16 @@ class OrganizationState:
             state_dict["reviewed_on"] = datetime_to_string(self.__reviewed_on)
 
         return state_dict
+
+    def comment_dict_list(self):
+        self.__comments.sort(key=lambda x: x.created_at, reverse=True)
+        return [comment.to_dict() for comment in self.comments]
+
+    def get_latest_comment(self):
+        if len(self.__comments) == 0:
+            return None
+        self.__comments.sort(key=lambda x: x.created_at, reverse=True)
+        return self.__comments[0].comment
 
     def to_dict(self):
         state_dict = {
@@ -428,3 +440,6 @@ class OrganizationState:
     def org_uuid(self):
         return self.__org_uuid
 
+    @property
+    def comments(self):
+        return self.__comments

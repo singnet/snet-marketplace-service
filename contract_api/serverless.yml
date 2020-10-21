@@ -7,7 +7,7 @@ plugins:
 service: contract-api
 provider:
   name: aws
-  runtime: python3.6
+  runtime: python3.7
   description: Description of what the lambda function does # optional, Description to publish to AWS
   memorySize: 512
   timeout: 30
@@ -23,7 +23,7 @@ provider:
 
 custom:
   pythonRequirements:
-    fileName: contract_api/requirement.txt
+    fileName: contract_api/requirements.txt
     dockerizePip: true
     useDownloadCache: true
     useStaticCache: true
@@ -99,7 +99,7 @@ package:
     - .circleci/**
     - .gitignore/**
     - .serverless/**
-    - requirement.txt
+    - requirements.txt
     - venv/**
     - config.ropsten.json
     - sls_deploy.sh

@@ -3,8 +3,8 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/python:3.6.6-node
-      - image: circleci/mysql:8.0.4
+      - image: circleci/python:3.7-node
+      - image: circleci/mysql:8.0.21
         command: [--default-authentication-plugin=mysql_native_password]
         environment:
           MYSQL_ROOT_PASSWORD: unittest_pwd
@@ -20,12 +20,12 @@ jobs:
           command: |
             shasum */requirement*.txt > /tmp/checksum_files_list
             sudo chown -R circleci:circleci /usr/local/bin
-            sudo chown circleci:circleci -R /usr/local/lib/python3.6
+            sudo chown circleci:circleci -R /usr/local/lib/python3.7
       - run:
           name: Revert the permissions
           command: |
             sudo chown root:root -R /usr/local/bin
-            sudo chown root:root -R /usr/local/lib/python3.6
+            sudo chown root:root -R /usr/local/lib/python3.7
       - run:
       # Our primary container isn't MYSQL so run a sleep command until it's ready.
           name: Waiting for MySQL to be ready
@@ -45,9 +45,9 @@ jobs:
       - run:
           name: Install required packages.
           command: |
-            sudo apt-get update
-            sudo apt-get install mysql-client -y
-            sudo pip install coverage coveralls pytest boto3 alembic
+            sudo apt update
+            sudo apt install default-mysql-client
+            sudo pip install coverage coveralls pytest alembic
             mysql -h 127.0.0.1 -u root -punittest_pwd -e "create database registry_unittest_db"
             mysql -h 127.0.0.1 -u root -punittest_pwd -e "create database verification_unittest_db"
             mysql -h 127.0.0.1 -u root -punittest_pwd -e "GRANT ALL PRIVILEGES ON *.* TO 'unittest_root'@'%';"
@@ -63,4 +63,4 @@ jobs:
       - save_cache:
           key: dependency-cache-{{ checksum "/tmp/checksum_files_list" }}
           paths:
-            - /usr/local/lib/python3.6/site-packages
+            - /usr/local/lib/python3.7/site-packages
