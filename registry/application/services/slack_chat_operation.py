@@ -1,28 +1,28 @@
 import json
+from datetime import datetime
 
 import requests
-from aws_xray_sdk.core import patch_all
 
-from common.boto_utils import BotoUtils
+from common import boto_utils
 from common.constant import StatusCode
 from common.logger import get_logger
-from common.utils import send_email_notification
+from common.utils import send_email_notification, datetime_to_string
 from common.utils import validate_signature
 from registry.application.services.organization_publisher_service import OrganizationPublisherService
 from registry.application.services.service_publisher_service import ServicePublisherService
 from registry.config import SIGNING_SECRET, SLACK_APPROVAL_OAUTH_ACCESS_TOKEN, REGION_NAME
 from registry.config import STAGING_URL, ALLOWED_SLACK_USER, SLACK_APPROVAL_CHANNEL_URL, \
     ALLOWED_SLACK_CHANNEL_ID, MAX_SERVICES_SLACK_LISTING, NOTIFICATION_ARN, VERIFICATION_ARN
-from registry.constants import OrganizationAddressType
-from registry.constants import UserType, ServiceSupportType, ServiceStatus, OrganizationStatus, OrganizationType
+from registry.constants import OrganizationAddressType, OrganizationType
+from registry.constants import UserType, ServiceSupportType, ServiceStatus, OrganizationStatus
+from registry.domain.models.comment import Comment
 from registry.domain.models.service_comment import ServiceComment
 from registry.exceptions import InvalidSlackChannelException, InvalidSlackSignatureException, InvalidSlackUserException
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 
-patch_all()
 logger = get_logger(__name__)
-boto_util = BotoUtils(region_name=REGION_NAME)
+boto_util = boto_utils.BotoUtils(region_name=REGION_NAME)
 
 
 class SlackChatOperation:
@@ -67,7 +67,7 @@ class SlackChatOperation:
 
     def get_list_of_org_pending_for_approval(self):
         list_of_org_pending_for_approval = OrganizationPublisherService(None, None) \
-            .get_approval_pending_organizations(MAX_SERVICES_SLACK_LISTING, type=OrganizationType.ORGANIZATION.value)
+            .get_approval_pending_organizations(MAX_SERVICES_SLACK_LISTING)
         slack_blocks = self.generate_slack_blocks_for_org_listing_template(list_of_org_pending_for_approval)
         slack_payload = {"blocks": slack_blocks}
         response = requests.post(url=SLACK_APPROVAL_CHANNEL_URL, data=json.dumps(slack_payload))
@@ -204,8 +204,14 @@ class SlackChatOperation:
         if approval_type == "organization":
             org = OrganizationPublisherRepository().get_org_for_org_id(org_id=params["org_id"])
             if org.org_state.state in [OrganizationStatus.APPROVAL_PENDING.value, OrganizationStatus.ONBOARDING.value]:
-                self.callback_verification_service(org.uuid, getattr(OrganizationStatus, state).value,
-                                                   self._username, comment)
+                if org.org_type == OrganizationType.ORGANIZATION.value:
+                    self.callback_verification_service(org.uuid, getattr(OrganizationStatus, state).value,
+                                                       self._username, comment)
+                elif org.org_type == OrganizationType.INDIVIDUAL.value:
+                    OrganizationPublisherRepository().update_organization_status(
+                        org.uuid, getattr(OrganizationStatus, state).value, self._username,
+                        Comment(comment, self._username, datetime_to_string(datetime.now())))
+
         elif approval_type == "service":
             org_uuid, service = ServicePublisherRepository(). \
                 get_service_for_given_service_id_and_org_id(org_id=params["org_id"], service_id=params["service_id"])
@@ -281,7 +287,11 @@ class SlackChatOperation:
         org = OrganizationPublisherRepository().get_org_for_org_id(org_id=org_id)
         if not org:
             logger.info("org not found")
-        comment = self.get_verification_latest_comments(org.uuid)
+        comment = "No comment"
+        if org.org_type == OrganizationType.ORGANIZATION.value:
+            comment = self.get_verification_latest_comments(org.uuid)
+        elif org.org_type == OrganizationType.INDIVIDUAL.value:
+            comment = org.org_state.get_latest_comment()
         comment = "No comment" if not comment else comment
         view = self.generate_view_org_modal(org, None, comment)
         slack_payload = {
@@ -552,7 +562,8 @@ class SlackChatOperation:
                 }
             ]
         }
-        org_info_display_blocks = [org_top_info_display_block, org_address_title_block, org_headquater_address_block, org_mailing_address_block]
+        org_info_display_blocks = [org_top_info_display_block, org_address_title_block, org_headquater_address_block,
+                                   org_mailing_address_block]
         divider_block = {
             'type': 'divider'
         }

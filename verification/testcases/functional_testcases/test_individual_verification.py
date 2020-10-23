@@ -4,10 +4,11 @@ from unittest import TestCase
 from unittest.mock import patch, Mock
 from uuid import uuid4
 
+from common.exceptions import MethodNotImplemented
 from verification.application.handlers.verification_handlers import initiate, callback
-from verification.application.services.verification_manager import verification_repository, individual_repository
+from verification.application.services.verification_manager import verification_repository
 from verification.constants import VerificationStatus, DUNSVerificationStatus
-from verification.infrastructure.models import IndividualVerificationModel, VerificationModel
+from verification.infrastructure.models import VerificationModel
 
 
 class TestIndividualVerification(TestCase):
@@ -20,21 +21,14 @@ class TestIndividualVerification(TestCase):
                 "type": "INDIVIDUAL"
             })
         }
-        response = initiate(event, None)
+        initiate(event, None)
         verification = verification_repository.session.query(VerificationModel) \
             .filter(VerificationModel.entity_id == username) \
             .order_by(VerificationModel.created_at.desc()).first()
         if verification is None:
             assert False
-        self.assertEqual(VerificationStatus.PENDING.value, verification.status)
-        verification_id = verification.id
-
-        individual_verification = individual_repository.session.query(IndividualVerificationModel) \
-            .filter(IndividualVerificationModel.verification_id == verification_id).first()
-        if individual_verification is None:
-            assert False
-        self.assertEqual(DUNSVerificationStatus.PENDING.value, individual_verification.status)
-        self.assertEqual(username, individual_verification.username)
+        self.assertEqual(VerificationStatus.APPROVED.value, verification.status)
+        self.assertEqual(username, verification.entity_id)
 
     @patch("common.boto_utils.BotoUtils", return_value=Mock(get_ssm_parameter=Mock(return_value="123"),
            invoke_lambda=Mock(return_value={"statusCode": 201})))
@@ -49,10 +43,6 @@ class TestIndividualVerification(TestCase):
             requestee=username, created_at=current_time, updated_at=current_time
         ))
 
-        individual_repository.add_item(IndividualVerificationModel(
-            verification_id=test_verification_id, username=username, comments=[],
-            status=DUNSVerificationStatus.PENDING.value, created_at=current_time, updated_at=current_time))
-
         event = {
             "requestContext": {"authorizer": {"claims": {"email": username}}},
             "queryStringParameters": {"verification_id": test_verification_id},
@@ -62,22 +52,8 @@ class TestIndividualVerification(TestCase):
                 "comment": "looks good"
             })
         }
-        callback(event, None)
-        verification = verification_repository.session.query(VerificationModel) \
-            .filter(VerificationModel.entity_id == org_uuid) \
-            .order_by(VerificationModel.created_at.desc()).first()
-        if verification is None:
-            assert False
-        self.assertEqual(VerificationStatus.APPROVED.value, verification.status)
-        duns_verification = individual_repository.session.query(IndividualVerificationModel) \
-            .filter(IndividualVerificationModel.verification_id == test_verification_id).first()
-        if duns_verification is None:
-            assert False
-        self.assertEqual(DUNSVerificationStatus.APPROVED.value, duns_verification.status)
-        self.assertEqual(username, duns_verification.username)
-        self.assertEqual(1, len(duns_verification.comments))
+        self.assertRaises(Exception, callback, event, None)
 
     def tearDown(self):
-        individual_repository.session.query(IndividualVerificationModel).delete()
         verification_repository.session.query(VerificationModel).delete()
         verification_repository.session.commit()

@@ -1,20 +1,21 @@
 import json
-from unittest import TestCase
 from datetime import datetime as dt
-from registry.application.handlers.slack_chat_operation_handler import get_list_of_service_pending_for_approval
-from registry.application.handlers.slack_chat_operation_handler import slack_interaction_handler
-from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
-from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
-from registry.infrastructure.models import Service as ServiceDBModel
-from registry.infrastructure.models import ServiceState as ServiceStateDBModel
-from registry.infrastructure.models import ServiceComment as ServiceCommentDBModel
-from registry.infrastructure.models import Organization as OrganizationDBModel
-from registry.infrastructure.models import OrganizationState as OrganizationStateDBModel
-from registry.infrastructure.models import OrganizationAddress as OrganizationAddressDBModel
-from registry.domain.models.organization import Organization as OrganizationDomainModel
-from registry.constants import OrganizationStatus, ServiceStatus, OrganizationAddressType
+from unittest import TestCase
 from unittest.mock import patch
 from urllib.parse import urlencode
+
+from registry.application.handlers.slack_chat_operation_handler import get_list_of_service_pending_for_approval
+from registry.application.handlers.slack_chat_operation_handler import slack_interaction_handler
+from registry.constants import OrganizationStatus, ServiceStatus, OrganizationAddressType
+from registry.domain.models.organization import Organization as OrganizationDomainModel
+from registry.infrastructure.models import Organization as OrganizationDBModel
+from registry.infrastructure.models import OrganizationAddress as OrganizationAddressDBModel
+from registry.infrastructure.models import OrganizationState as OrganizationStateDBModel
+from registry.infrastructure.models import Service as ServiceDBModel
+from registry.infrastructure.models import ServiceComment as ServiceCommentDBModel
+from registry.infrastructure.models import ServiceState as ServiceStateDBModel
+from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
+from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 
 org_repo = OrganizationPublisherRepository()
 service_repo = ServicePublisherRepository()
