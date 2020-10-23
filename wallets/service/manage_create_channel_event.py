@@ -28,11 +28,15 @@ class ManageCreateChannelEvent:
             return
         wallet_manager = WalletService(connection)
         payload = json.loads(create_channel_event_from_orchestrator["payload"])
-        wallet_manager.open_channel_by_third_party(
-                order_id=payload['order_id'], sender=payload['sender'], signature=payload['signature'],
-                r=payload['r'], s=payload['s'], v=payload['v'], current_block_no=payload['current_block_no'],
-                group_id=payload['group_id'], org_id=payload["org_id"], recipient=payload['recipient'],
-                amount=payload['amount'], currency=payload['currency'],
-                amount_in_cogs=payload['amount_in_cogs']
-            )
-        channel_dao.update_create_channel_event(create_channel_event_from_orchestrator, TransactionStatus.SUCCESS)
+        try:
+            wallet_manager.open_channel_by_third_party(
+                    order_id=payload['order_id'], sender=payload['sender'], signature=payload['signature'],
+                    r=payload['r'], s=payload['s'], v=payload['v'], current_block_no=payload['current_block_no'],
+                    group_id=payload['group_id'], org_id=payload["org_id"], recipient=payload['recipient'],
+                    amount=payload['amount'], currency=payload['currency'],
+                    amount_in_cogs=payload['amount_in_cogs']
+                )
+            channel_dao.update_create_channel_event(create_channel_event_from_orchestrator, TransactionStatus.SUCCESS)
+        except Exception as e:
+            channel_dao.update_create_channel_event(create_channel_event_from_orchestrator, TransactionStatus.FAILED)
+            utils.report_slack(type=1, slack_msg=f"Error while submitting blockchain transaction |method_name:: 'open_channel_by_third_party' |network_id: {NETWORK_ID} |error: {repr(e)}", SLACK_HOOK=SLACK_HOOK)

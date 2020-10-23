@@ -82,7 +82,7 @@ class BlockChainUtil(object):
         return self.web3_object.eth.account.signTransaction(transaction_object, private_key).rawTransaction
 
     def create_transaction_object(self, *positional_inputs, method_name, address, contract_path, contract_address_path,
-                                  net_id):
+                                  net_id, gas=None):
         nonce = self.get_nonce(address=address)
         self.contract = self.load_contract(path=contract_path)
         self.contract_address = self.read_contract_address(net_id=net_id, path=contract_address_path, key='address')
@@ -91,13 +91,16 @@ class BlockChainUtil(object):
         logger.info(f"nonce :: {nonce}")
         logger.info(f"positional_inputs :: {positional_inputs}")
         gas_price = 3 * (self.web3_object.eth.gasPrice)
-        transaction_object = getattr(self.contract_instance.functions, method_name)(
-            *positional_inputs).buildTransaction({
+        options = {
             "from": address,
             "nonce": nonce,
             "gasPrice": gas_price,
             "chainId": net_id
-        })
+        }
+        if bool(gas):
+            options.update({"gas": gas})
+        transaction_object = getattr(self.contract_instance.functions, method_name)(
+            *positional_inputs).buildTransaction(options)
         return transaction_object
 
     def process_raw_transaction(self, raw_transaction):
