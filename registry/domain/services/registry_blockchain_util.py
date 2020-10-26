@@ -4,7 +4,7 @@ from common.blockchain_util import BlockChainUtil
 from common.boto_utils import BotoUtils
 from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
-from common.utils import ipfsuri_to_bytesuri
+from common.utils import ipfsuri_to_bytesuri, hash_to_bytesuri
 from registry.config import NETWORK_ID, NETWORKS, BLOCKCHAIN_TEST_ENV, REGION_NAME
 from registry.constants import EnvironmentType, REG_CNTRCT_PATH, REG_ADDR_PATH, TEST_REG_CNTRCT_PATH, TEST_REG_ADDR_PATH
 from registry.exceptions import OrganizationNotFoundException, EnvironmentNotFoundException
@@ -73,7 +73,7 @@ class RegistryBlockChainUtil:
 
     def __update_organization_in_blockchain(self, org_id, metadata_uri):
         method_name = "changeOrganizationMetadataURI"
-        positional_inputs = (web3.Web3.toHex(text=org_id), ipfsuri_to_bytesuri(metadata_uri))
+        positional_inputs = (web3.Web3.toHex(text=org_id), hash_to_bytesuri(metadata_uri))
         transaction_hash = self.__make_trasaction(*positional_inputs, method_name=method_name)
         logger.info(
             f"transaction hash {transaction_hash} generated while registering organization "
@@ -82,7 +82,7 @@ class RegistryBlockChainUtil:
 
     def __register_organization_in_blockchain(self, org_id, metadata_uri, members):
         method_name = "createOrganization"
-        positional_inputs = (web3.Web3.toHex(text=org_id), ipfsuri_to_bytesuri(metadata_uri), members)
+        positional_inputs = (web3.Web3.toHex(text=org_id), hash_to_bytesuri(metadata_uri), members)
         transaction_hash = self.__make_trasaction(*positional_inputs, method_name=method_name)
         logger.info(
             f"transaction hash {transaction_hash} generated while registering organization "
