@@ -97,7 +97,7 @@ class BlockChainUtil(object):
             "gasPrice": gas_price,
             "chainId": net_id
         }
-        if bool(gas):
+        if gas is not None:
             options.update({"gas": gas})
         transaction_object = getattr(self.contract_instance.functions, method_name)(
             *positional_inputs).buildTransaction(options)
