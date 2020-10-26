@@ -87,8 +87,8 @@ class WalletService:
 
     def open_channel_by_third_party(self, order_id, sender, signature, r, s, v, group_id,
                                     org_id, amount, currency, recipient, current_block_no, amount_in_cogs):
-        self.EXECUTOR_WALLET_ADDRESS = EXECUTOR_ADDRESS
-        self.EXECUTOR_WALLET_KEY = EXECUTOR_KEY
+        self.EXECUTOR_WALLET_ADDRESS = self.boto_utils.get_ssm_parameter(EXECUTOR_ADDRESS)
+        self.EXECUTOR_WALLET_KEY = self.boto_utils.get_ssm_parameter(EXECUTOR_KEY)
         method_name = "openChannelByThirdParty"
         self.mpe_address = self.blockchain_util.read_contract_address(
             net_id=NETWORK_ID, path=MPE_ADDR_PATH,
