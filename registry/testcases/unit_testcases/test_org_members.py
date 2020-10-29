@@ -1,4 +1,3 @@
-import json
 from datetime import datetime
 from unittest import TestCase
 from unittest.mock import patch
@@ -6,13 +5,11 @@ from uuid import uuid4
 
 from registry.application.services.organization_publisher_service import org_repo, OrganizationPublisherService
 from registry.constants import OrganizationMemberStatus, OrganizationStatus, Role
-from registry.domain.models.group import Group as DomainGroup
 from registry.domain.models.organization import Organization as DomainOrganization
 from registry.infrastructure.models import Group, OrganizationMember, OrganizationState, OrganizationAddress, \
     Organization
-from registry.testcases.test_variables import ORIGIN
-
 from registry.testcases.test_variables import ORG_CONTACTS
+from registry.testcases.test_variables import ORIGIN
 
 
 class TestOrganizationMember(TestCase):

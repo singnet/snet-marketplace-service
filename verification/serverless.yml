@@ -19,7 +19,7 @@ custom:
 
 provider:
   name: aws
-  runtime: python3.6
+  runtime: python3.7
   description: verification # optional, Description to publish to AWS
   memorySize: 512
   timeout: 60
@@ -39,7 +39,7 @@ package:
     - .circleci/**
     - .gitignore/**
     - .serverless/**
-    - requirement.txt
+    - requirements.txt
     - venv/**
     - config.ropsten.json
     - test/**

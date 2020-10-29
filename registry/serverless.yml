@@ -8,7 +8,7 @@ plugins:
 service: registry
 provider:
   name: aws
-  runtime: python3.6
+  runtime: python3.7
   description: offchain information of organizations and services
   memorySize: 512
   timeout: 60
@@ -43,7 +43,7 @@ package:
     - .circleci/**
     - .gitignore/**
     - .serverless/**
-    - requirement.txt
+    - requirements.txt
     - venv/**
     - config.ropsten.json
     - sls_deploy.sh
@@ -236,11 +236,7 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: POST
-          path: /org/verification
-          private: true
+
 
 
   publish-org-ipfs:

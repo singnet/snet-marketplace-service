@@ -24,4 +24,26 @@ class NotAllowedToInitiateException(CustomException):
         })
 
 
-EXCEPTIONS = (UnableToInitiateException, BadRequestException, NotAllowedToInitiateException)
+class InvalidSlackUserException(CustomException):
+    error_message = "SLACK_USER"
+
+    def __init__(self):
+        super().__init__({})
+
+
+class InvalidSlackChannelException(CustomException):
+    error_message = "SLACK_CHANNEL_NOT_ALLOWED"
+
+    def __init__(self):
+        super().__init__({})
+
+
+class InvalidSlackSignatureException(CustomException):
+    error_message = "SLACK_SIGN_NOT_ALLOWED"
+
+    def __init__(self):
+        super().__init__({})
+
+
+EXCEPTIONS = (UnableToInitiateException, BadRequestException, NotAllowedToInitiateException,
+              InvalidSlackChannelException, InvalidSlackUserException, InvalidSlackSignatureException)

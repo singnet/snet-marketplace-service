@@ -18,7 +18,7 @@ class WebHookHandler(ListenersHandlers):
 
     def push_event(self, data):
         try:
-            requests.post(self.url, data)
+            requests.post(self.url, json.dumps(data))
         except Exception as e:
             print(e)
             raise e

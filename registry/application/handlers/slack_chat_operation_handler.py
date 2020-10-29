@@ -1,10 +1,12 @@
 import json
-from registry.application.services.slack_chat_operation import SlackChatOperation
-from registry.exceptions import BadRequestException, EXCEPTIONS
-from registry.config import SLACK_HOOK, NETWORK_ID
 from urllib.parse import parse_qs
+
+from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.logger import get_logger
+from registry.application.services.slack_chat_operation import SlackChatOperation
+from registry.config import SLACK_HOOK, NETWORK_ID
+from registry.exceptions import BadRequestException, EXCEPTIONS
 
 logger = get_logger(__name__)
 
@@ -24,7 +26,7 @@ def get_list_of_org_pending_for_approval(event, context):
     # get services for given org_id
     slack_chat_operation.get_list_of_org_pending_for_approval()
     return {
-        'statusCode': 200,
+        'statusCode': StatusCode.OK,
         'body': ""
     }
 
@@ -44,7 +46,7 @@ def get_list_of_service_pending_for_approval(event, context):
     # get services for given org_id
     slack_chat_operation.get_list_of_service_pending_for_approval()
     return {
-        'statusCode': 200,
+        'statusCode': StatusCode.OK,
         'body': ""
     }
 
@@ -96,6 +98,6 @@ def slack_interaction_handler(event, context):
                                                                  state=review_request_state,
                                                                  comment=comment, params=params)
     return {
-        'statusCode': 200,
+        'statusCode': StatusCode.OK,
         'body': ""
     }

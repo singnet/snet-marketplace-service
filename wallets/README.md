@@ -36,7 +36,7 @@ These instructions are intended to facilitate the development and testing of Wal
 
 * [python 3.6.5+](https://www.python.org/downloads/)
 * pip 9.0.1+
-* Additionally you should install the python dependency package present in requirement.txt.
+* Additionally you should install the python dependency package present in requirements.txt.
 * [npm 3.5.2+](#)
 * Additionally you should install the external dependency package present in package.json.
 

@@ -7,7 +7,7 @@ plugins:
 service: event-publisher-subscriber
 custom:
   pythonRequirements:
-    fileName: event_pubsub/requirement.txt
+    fileName: event_pubsub/requirements.txt
     dockerizePip: true
     useDownloadCache: true
     useStaticCache: true
@@ -19,7 +19,7 @@ custom:
 
 provider:
   name: aws
-  runtime: python3.6
+  runtime: python3.7
   description: event_publisher # optional, Description to publish to AWS
   memorySize: 512
   timeout: 60
@@ -39,7 +39,7 @@ package:
     - .circleci/**
     - .gitignore/**
     - .serverless/**
-    - requirement.txt
+    - requirements.txt
     - venv/**
     - config.ropsten.json
     - test/**
