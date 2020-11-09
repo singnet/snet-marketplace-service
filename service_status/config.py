@@ -13,13 +13,7 @@ NETWORKS = {
 }
 SLACK_HOOK = {
     'hostname': '',
-    'port': 443,
-    'path': '',
-    'method': 'POST',
-    'headers': {
-        'Content-Type': 'application/json'
-    },
-    'channel': ''
+    'path': ''
 }
 NETWORK_ID = 0
 REGION_NAME="us-east-2"
