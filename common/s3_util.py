@@ -1,5 +1,7 @@
-import boto3
 from urllib.parse import urlparse
+
+import boto3
+
 
 # create an STS client object that represents a live connection to the
 # STS service
@@ -63,7 +65,6 @@ class S3Util(object):
         return s3_url
 
     def get_bucket_and_key_from_url(self, url):
-
         parsed_url = urlparse(url)
         return parsed_url.hostname.split(".")[0], parsed_url.path[1:]
 
@@ -72,3 +73,7 @@ class S3Util(object):
         bucket, key = self.get_bucket_and_key_from_url(url)
         result = s3_resource.Object(bucket, key).delete()
         return result
+
+    def push_file_to_s3(self, file_path, bucket, key):
+        s3_resource = self.get_s3_resource_from_key()
+        s3_resource.meta.client.upload_file(file_path, bucket, key)

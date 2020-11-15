@@ -70,6 +70,21 @@ class TestUtils(unittest.TestCase):
         transaction_hash = self.obj_utils.process_raw_transaction(raw_transaction=raw_transaction)
         print("channelAddFunds::transaction_hash", transaction_hash)
 
+    def test_generate_signature_for_state_service(self):
+        channel_id = 1
+        data_types = ["string", "address", "uint256", "uint256"]
+        self.current_block_no = 6487832
+        values = ["__get_channel_state", self.mpe_address, channel_id, self.current_block_no]
+        signature = self.obj_utils.generate_signature(data_types=data_types, values=values, signer_key=SIGNER_KEY)
+        v, r, s = Web3.toInt(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
+        assert(signature == "0x0b9bb258a0f975328fd9cd9608bd9b570e7b68cad8d337c940e32b9413e348437dd3614f9c6f776b1eb62d521a5794204a010f581721f167c5b26de0928b139d1c")
 
-if __name__ == '__main__':
-    unittest.main()
+    def test_generate_signature_for_daemon_call(self):
+        channel_id = 1
+        amount = 10
+        nonce = 1
+        data_types = ["string", "address", "uint256", "uint256", "uint256"]
+        values = ["__MPE_claim_message", self.mpe_address, channel_id, nonce, amount]
+        signature = self.obj_utils.generate_signature(data_types=data_types, values=values, signer_key=SIGNER_KEY)
+        v, r, s = Web3.toInt(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
+        assert(signature == "0x7e50ac20909da29f72ed2ab9cf6c6375f853d8eddfcf3ce33806a4e27b30bcbd5366c41a59647467f0519b0bfc89a50d890b683cd797d5566ba03937f82819c41b")

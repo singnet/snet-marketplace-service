@@ -1,6 +1,6 @@
 import uuid
-from datetime import datetime
 
+from datetime import datetime
 from common.logger import get_logger
 from common.constant import PaymentStatus, PAYMENT_METHOD_PAYPAL
 from payments.domain.paypal_payment import PaypalPayment
@@ -52,11 +52,11 @@ class Order(object):
                 payment_details={
                     "payment_method": payment_method
                 },
-                payment_status="pending",
+                payment_status=PaymentStatus.PENDING,
                 created_at=datetime.utcnow()
             )
 
-            payment_response = payment.initiate_payment(self.get_order_id())
+            payment_response = payment.initiate_payment(self.get_order_id(), self.get_item_details())
             self._payments.append(payment)
         else:
             raise Exception(f"Invalid payment method: {payment_method}")

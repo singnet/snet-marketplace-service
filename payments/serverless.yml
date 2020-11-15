@@ -1,19 +1,29 @@
 plugins:
   - serverless-offline
   - serverless-python-requirements
+  - serverless-plugin-tracing
+  - serverless-prune-plugin
 
 service: payment-service
 custom:
   pythonRequirements:
     fileName: payments/requirements.txt
     dockerizePip: true
+    useDownloadCache: true
+    useStaticCache: true
+    cacheLocation: '/var/cache/serverless'
+  prune:
+    automatic: true
+    includeLayers: true
+    number: 5
+
 
 provider:
   name: aws
-  runtime: python3.6
+  runtime: python3.7
   description: Payment Service #optional, Description to publish to AWS
-  memorySize: 128
-  timeout: 30
+  memorySize: 512
+  timeout: 60
   region: ${file(./config.${self:provider.stage}.json):REGION}
   stage: ${opt:stage,'dev'}
   deploymentBucket:
@@ -22,13 +32,14 @@ provider:
     tags: # Tags that will be added to each of the deployment resources
       key1: payment-service
   deploymentPrefix: serverless
+  tracing: true
 
 package:
   exclude:
     - .circleci/**
     - .gitignore/**
     - .serverless/**
-    - requirement.txt
+    - requirements.txt
     - venv/**
     - config.ropsten.json
     - sls_deploy.sh
@@ -63,6 +74,26 @@ functions:
       - http:
           path: order/create
           method: post
+          private: true
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+
+  get-order-from-order-id:
+    handler: payments/handlers/order_handler.get_order_from_order_id
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    events:
+      - http:
+          path: order/{order_id}
+          method: get
           private: true
     vpc:
       securityGroupIds:

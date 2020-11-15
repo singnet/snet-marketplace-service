@@ -9,13 +9,28 @@ PAYMENT_METHOD_PAYPAL = "paypal"
 
 
 class PaymentStatus:
-    PENDING = "pending"
-    SUCCESS = "success"
-    FAILED = "failed"
+    PENDING = "PENDING"
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
+
+
+class TransactionStatus:
+    PENDING = "PENDING"
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
 
 
 class StatusCode:
     BAD_REQUEST = 400
     INTERNAL_SERVER_ERROR = 500
     CREATED = 201
+    ACCEPTED = 202
     OK = 200
+    FOUND = 302
+
+
+class ResponseStatus:
+    FAILED = "failed"
+    SUCCESS = "success"
+
+COGS_TO_AGI = "0.00000001"

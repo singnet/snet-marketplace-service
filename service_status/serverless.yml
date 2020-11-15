@@ -2,16 +2,25 @@ plugins:
   - serverless-offline
   - serverless-python-requirements
   - serverless-graph
+  - serverless-prune-plugin
 
 service: service-status
 custom:
   pythonRequirements:
-    fileName: service_status/requirement.txt
+    fileName: service_status/requirements.txt
     dockerizePip: true
+    useDownloadCache: true
+    useStaticCache: true
+    cacheLocation: '/var/cache/serverless'
+  prune:
+    automatic: true
+    includeLayers: true
+    number: 5
+
 
 provider:
   name: aws
-  runtime: python3.6
+  runtime: python3.7
   description: Service status service # optional, Description to publish to AWS
   memorySize: 128
   timeout: 60
@@ -29,7 +38,7 @@ package:
     - .circleci/**
     - .gitignore/**
     - .serverless/**
-    - requirement.txt
+    - requirements.txt
     - venv/**
     - config.ropsten.json
     - serverless.yml
@@ -51,7 +60,7 @@ package:
 functions:
   service-status:
     warmup: true
-    handler: service_status/lambda_handler.request_handler
+    handler: service_status/handlers/monitor_service_handlers.request_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -63,4 +72,46 @@ functions:
     events:
       - schedule:
           rate: rate(5 minutes)
-          enabled: true
+          enabled: ${file(./config.${self:provider.stage}.json):service_status_cron_status}
+
+  monitor-service-cert-expiry:
+    warmup: true
+    handler: service_status/handlers/monitor_service_handlers.monitor_service_certificates_expiry_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - schedule:
+          rate: rate(3 days)
+          enabled: ${file(./config.${self:provider.stage}.json):monitor_service_cert_expiry_cron_status}
+
+  reset-service-health-next-check-time:
+    warmup: true
+    handler: service_status/handlers/monitor_service_handlers.reset_service_health_next_check_time
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /org/{org_id}/service/{service_id}/health/reset
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
