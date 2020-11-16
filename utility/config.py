@@ -16,12 +16,7 @@ NETWORKS = {
 NETWORK_ID = 3
 SLACK_HOOK = {
     'hostname': '',
-    'port': 443,
-    'path': '',
-    'method': 'POST',
-    'headers': {
-        'Content-Type': 'application/json'
-    }
+    'path': ''
 }
 REGION_NAME = ""
 UPLOAD_BUCKET = {

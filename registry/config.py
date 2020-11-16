@@ -15,14 +15,8 @@ NETWORKS = {
 }
 NETWORK_ID = 3
 SLACK_HOOK = {
-    "channel": "",
-    'hostname': '',
-    'port': 443,
-    'path': '',
-    'method': 'POST',
-    'headers': {
-        'Content-Type': 'application/json'
-    }
+    'hostname': 'https://hooks.slack.com',
+    'path': ''
 }
 IPFS_URL = {
     'url': 'ipfs.singularitynet.io',
