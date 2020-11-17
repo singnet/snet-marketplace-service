@@ -294,11 +294,7 @@ def send_email_notification(recipients, notification_subject, notification_messa
 
 
 def send_slack_notification(slack_msg, slack_url, slack_channel):
-    payload = {"channel": f"#{slack_channel}",
-               "username": "webhookbot",
-               "text": slack_msg,
-               "icon_emoji": ":ghost:"
-               }
+    payload = {"username": "webhookbot", "text": slack_msg, "icon_emoji": ":ghost:"}
     slack_response = requests.post(url=slack_url, data=json.dumps(payload))
     logger.info(f"slack response :: {slack_response.status_code}, {slack_response.text}")
 
