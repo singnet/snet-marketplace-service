@@ -27,17 +27,12 @@ logger = get_logger(__name__)
 
 
 class Utils:
-    def __init__(self):
-        self.msg_type = {
-            0: 'info:: ',
-            1: 'err:: '
-        }
 
     def report_slack(self, type, slack_msg, SLACK_HOOK):
         url = SLACK_HOOK['hostname'] + SLACK_HOOK['path']
-        prefix = self.msg_type.get(type, "")
-        payload = {"username": "webhookbot", "text": prefix + slack_msg, "icon_emoji": ":ghost:"}
-        resp = requests.post(url=url, data=json.dumps(payload))
+        payload = {"username": "webhookbot", "text": slack_msg, "icon_emoji": ":ghost:"}
+        slack_response = requests.post(url=url, data=json.dumps(payload))
+        logger.info(f"slack response :: {slack_response.status_code}, {slack_response.text}")
 
     def clean(self, value_list):
         for value in value_list:
