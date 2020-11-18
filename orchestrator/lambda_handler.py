@@ -96,7 +96,7 @@ def request_handler(event, context):
                 payload=payload_dict,
                 net_id=NETWORK_ID,
             )
-            obj_util.report_slack(1, error_message, SLACK_HOOK)
+            obj_util.report_slack(error_message, SLACK_HOOK)
             response = generate_lambda_response(500, error_message, cors_enabled=True)
         else:
             response = generate_lambda_response(200, {
@@ -111,7 +111,7 @@ def request_handler(event, context):
             payload=payload_dict,
             net_id=NETWORK_ID,
         )
-        obj_util.report_slack(1, error_message, SLACK_HOOK)
+        obj_util.report_slack(error_message, SLACK_HOOK)
         response = generate_lambda_response(500, error_message, cors_enabled=True)
         traceback.print_exc()
     return response

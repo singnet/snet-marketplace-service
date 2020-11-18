@@ -22,6 +22,6 @@ def request_handler(event, context):
         error_message = "Error in updating channel transaction status \n"
         "NETWORK ID:" + str(NETWORK_ID) + "\n"
         "Error:" + repr(e)
-        obj_util.report_slack(1, error_message)
+        obj_util.report_slack(error_message, )
         traceback.print_exc()
     return

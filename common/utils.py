@@ -28,7 +28,7 @@ logger = get_logger(__name__)
 
 class Utils:
 
-    def report_slack(self, type, slack_msg, SLACK_HOOK):
+    def report_slack(self, slack_msg, SLACK_HOOK):
         url = SLACK_HOOK['hostname'] + SLACK_HOOK['path']
         payload = {"username": "webhookbot", "text": slack_msg, "icon_emoji": ":ghost:"}
         slack_response = requests.post(url=url, data=json.dumps(payload))
@@ -191,7 +191,7 @@ def handle_exception_with_slack_notification(*decorator_args, **decorator_kwargs
                             f"error_description: {repr(traceback.format_tb(tb=exc_tb))}```"
 
                 logger.exception(f"{slack_msg}")
-                Utils().report_slack(type=0, slack_msg=slack_msg, SLACK_HOOK=SLACK_HOOK)
+                Utils().report_slack(slack_msg=slack_msg, SLACK_HOOK=SLACK_HOOK)
                 return generate_lambda_response(
                     status_code=500,
                     message=format_error_message(
@@ -289,7 +289,11 @@ def send_email_notification(recipients, notification_subject, notification_messa
 
 
 def send_slack_notification(slack_msg, slack_url, slack_channel):
-    payload = {"username": "webhookbot", "text": slack_msg, "icon_emoji": ":ghost:"}
+    payload = {"channel": f"#{slack_channel}",
+               "username": "webhookbot",
+               "text": slack_msg,
+               "icon_emoji": ":ghost:"
+               }
     slack_response = requests.post(url=slack_url, data=json.dumps(payload))
     logger.info(f"slack response :: {slack_response.status_code}, {slack_response.text}")
 

@@ -2,6 +2,7 @@ import boto3
 
 from common import utils
 from common.logger import get_logger
+from common.utils import Utils
 from registry.application.services.file_service.constants import FileType
 from registry.config import SLACK_HOOK
 from registry.exceptions import InvalidFileTypeException, FileNotFoundException
@@ -58,9 +59,7 @@ class FileService:
 
     def send_slack_alert(self, unsuccessful_files):
         slack_msg = f"Failed to delete files\n```{unsuccessful_files}```"
-        return utils.send_slack_notification(
-            slack_msg=slack_msg, slack_url=SLACK_HOOK['hostname'] + SLACK_HOOK['path'],
-            slack_channel=SLACK_HOOK["channel"])
+        return Utils().report_slack(slack_msg=slack_msg, SLACK_HOOK=SLACK_HOOK)
 
     def get_s3_bucket_and_prefix(self, file_details):
         file_type = file_details.get("type", None)
