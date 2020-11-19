@@ -99,7 +99,9 @@ class OrganizationFactory:
             groups=OrganizationFactory.parse_group_data_model(organization_repo_model.groups),
             addresses=OrganizationFactory.parse_organization_address_data_model(organization_repo_model.addresses),
             org_state=OrganizationFactory.parse_organization_state_data_model(organization_repo_model.org_state),
-            members=[]
+            members=[],
+            registration_id=organization_repo_model.registration_id,
+            registration_type=organization_repo_model.registration_type
         )
 
     @staticmethod
@@ -266,6 +268,8 @@ class OrganizationFactory:
                                                                         existing_assets)
         metadata_ipfs_hash = metadata_uri
         owner = ""
+        registration_id = ""
+        registration_type = ""
         groups = OrganizationFactory.group_domain_entity_from_group_list_metadata(ipfs_org_metadata.get("groups", []))
 
         organization = Organization(org_uuid, org_id, org_name, org_type,
@@ -274,6 +278,5 @@ class OrganizationFactory:
                                     duns_no, groups,
                                     addresses,
                                     OrganizationStatus.PUBLISHED.value,
-                                    members)
-
+                                    members, registration_id, registration_type)
         return organization

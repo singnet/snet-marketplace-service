@@ -15,8 +15,9 @@ from registry.domain.models.organization_address import OrganizationAddress
 logger = get_logger(__name__)
 
 BLOCKCHAIN_EXCLUDE_PATHS = [
-    "root._Organization__uuid", "root._Organization__duns_no", "root._Organization__origin", "root._Organization__state"
-                                                                                             "root._Organization__addresses",
+    "root._Organization__uuid", "root._Organization__duns_no",
+    "root._Organization__registration_id", "root._Organization__registration_type", "root._Organization__origin",
+    "root._Organization__state", "root._Organization__addresses",
     "root._Organization__assets['hero_image']['url']"]
 
 BLOCKCHAIN_EXCLUDE_REGEX_PATH = ["root\._Organization__groups\[.*\]\.status"]
@@ -102,6 +103,8 @@ class Organization:
             "short_description": self.__short_description,
             "url": self.__url,
             "duns_no": self.__duns_no,
+            "registration_id": self.__registration_id,
+            "registration_type": self.__registration_type,
             "origin": self.__origin,
             "contacts": self.__contacts,
             "assets": self.__assets,
@@ -160,6 +163,14 @@ class Organization:
     @property
     def duns_no(self):
         return self.__duns_no
+
+    @property
+    def registration_id(self):
+        return self.__registration_id
+
+    @property
+    def registration_type(self):
+        return self.__registration_type
 
     @property
     def origin(self):
