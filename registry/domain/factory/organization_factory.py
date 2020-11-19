@@ -21,6 +21,8 @@ class OrganizationFactory:
         short_description = payload["short_description"]
         url = payload["url"]
         duns_no = payload["duns_no"]
+        registration_id = payload["registration_id"]
+        registration_type = payload["registration_type"]
         origin = payload["origin"]
         if origin not in ALLOWED_ORIGIN:
             raise InvalidOriginException()
@@ -32,7 +34,7 @@ class OrganizationFactory:
             .domain_address_entity_from_address_list_payload(payload["org_address"]["addresses"])
         organization = Organization(
             org_uuid, org_id, org_name, org_type, origin, description, short_description, url, contacts,
-            assets, metadata_ipfs_uri, duns_no, groups, addresses, None, [])
+            assets, metadata_ipfs_uri, duns_no, groups, addresses, None, [], registration_id, registration_type)
         return organization
 
     @staticmethod

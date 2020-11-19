@@ -38,7 +38,8 @@ GROUP_MINOR_CHANGES = [
 
 class Organization:
     def __init__(self, uuid, org_id, name, org_type, origin, description, short_description, url,
-                 contacts, assets, metadata_ipfs_uri, duns_no, groups, addresses, org_state, members):
+                 contacts, assets, metadata_ipfs_uri, duns_no, groups, addresses, org_state, members, registration_id,
+                 registration_type):
         self.__name = name
         self.__id = org_id
         self.__uuid = uuid
@@ -55,6 +56,8 @@ class Organization:
         self.__addresses = addresses
         self.__state = org_state
         self.__members = members
+        self.__registration_id = registration_id
+        self.__registration_type = registration_type
 
     def to_metadata(self):
         assets = {}
@@ -242,6 +245,12 @@ class Organization:
         self.__uuid = org_uuid
         if self.__org_type == OrganizationType.INDIVIDUAL.value:
             self.__id = org_uuid
+
+    def create_setup(self):
+        if self.__org_type == OrganizationType.INDIVIDUAL.value:
+            if len(self.__registration_type) == 0 or len(self.__registration_id) == 0:
+                return False
+        return True
 
     def is_org_id_set(self):
         return self.__id is None or len(self.__id) == 0
