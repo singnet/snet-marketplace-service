@@ -1,6 +1,5 @@
 import boto3
 
-from common import utils
 from common.logger import get_logger
 from common.utils import Utils
 from registry.application.services.file_service.constants import FileType

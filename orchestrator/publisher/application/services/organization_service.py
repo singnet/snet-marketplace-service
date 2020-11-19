@@ -1,15 +1,13 @@
 import json
 
-from common import utils
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from common.utils import send_email_notification, Utils
-from orchestrator.config import REGION_NAME, REGISTRY_ARN, WALLETS_SERVICE_ARN, VERIFICATION_ARN, SLACK_HOOK, \
-    SLACK_CHANNEL_FOR_APPROVAL_TEAM, NOTIFICATION_ARN, ORG_APPROVERS_DLIST
+from orchestrator.config import REGION_NAME, REGISTRY_ARN, WALLETS_SERVICE_ARN, VERIFICATION_ARN, NOTIFICATION_ARN, ORG_APPROVERS_DLIST
 from orchestrator.constant import VerificationType, OrganizationType
 from orchestrator.publisher.mail_templates import get_mail_template_to_user_for_org_onboarding
 from orchestrator.publisher.mail_templates import get_org_approval_mail
-from registry.config import APPROVAL_SLACK_URL, APPROVAL_SLACK_HOOK
+from registry.config import APPROVAL_SLACK_HOOK
 
 logger = get_logger(__name__)
 
