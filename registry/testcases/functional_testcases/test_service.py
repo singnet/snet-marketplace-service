@@ -878,8 +878,7 @@ class TestService(TestCase):
     @patch("common.utils.publish_zip_file_in_ipfs")
     @patch("common.ipfs_util.IPFSUtil.write_file_in_ipfs")
     @patch("common.utils.send_email_notification")
-    @patch("common.utils.send_slack_notification")
-    def test_submit_service_for_approval(self, slack_notification, email_notification, file_ipfs_hash,
+    def test_submit_service_for_approval(self, email_notification, file_ipfs_hash,
                                          zip_file_ipfs_hash, blockchain_transaction):
         blockchain_transaction.return_value = "0x2w3e4r5t6y7u8i9o0oi8u7y6t5r4e3w2"
         zip_file_ipfs_hash.return_value = "Qwertyuiopasdfghjklzxcvbnm"
