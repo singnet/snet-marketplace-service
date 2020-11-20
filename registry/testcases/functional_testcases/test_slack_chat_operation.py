@@ -40,7 +40,7 @@ class TestSlackChatOperation(TestCase):
         org_repo.add_organization(
             OrganizationDomainModel(
                 "test_org_uuid", "test_org_id", "org_dummy", "ORGANIZATION", "PUBLISHER", "description",
-                "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], []
+                "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], [], "", ""
             ),
             "dummy", OrganizationStatus.PUBLISHED.value
         )
@@ -135,7 +135,7 @@ class TestSlackChatOperation(TestCase):
         org_repo.add_organization(
             OrganizationDomainModel(
                 "test_org_uuid", "test_org_id", "org_dummy", "ORGANIZATION", "PUBLISHER", "description",
-                "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], []),
+                "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], [], "", ""),
             "dummy", OrganizationStatus.PUBLISHED.value)
         service_repo.add_item(
             ServiceDBModel(
@@ -213,7 +213,7 @@ class TestSlackChatOperation(TestCase):
         org_repo.add_organization(
             OrganizationDomainModel(
                 "test_org_uuid", "test_org_id", "org_dummy", "ORGANIZATION", "PUBLISHER", "description",
-                "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], []),
+                "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], [], "", ""),
             "dummy", OrganizationStatus.PUBLISHED.value)
         service_repo.add_item(
             ServiceDBModel(
@@ -326,7 +326,7 @@ class TestSlackChatOperation(TestCase):
         org_repo.add_organization(
             OrganizationDomainModel(
                 "test_org_uuid", "test_org_id", "org_dummy", "ORGANIZATION", "PUBLISHER", "description",
-                "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], []),
+                "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], [], "", ""),
             "dummy", OrganizationStatus.ONBOARDING.value)
         event = {
             "resource": "/slack/interaction/submit",
@@ -439,7 +439,7 @@ class TestSlackChatOperation(TestCase):
         org_repo.add_organization(
             OrganizationDomainModel(
                 "test_org_uuid", "test_org_id", "org_dummy", "ORGANIZATION", "PUBLISHER", "description",
-                "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], []),
+                "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], [], "", ""),
             "dummy", OrganizationStatus.PUBLISHED.value)
         org_repo.add_item(
             OrganizationAddressDBModel(

@@ -15,8 +15,9 @@ from registry.domain.models.organization_address import OrganizationAddress
 logger = get_logger(__name__)
 
 BLOCKCHAIN_EXCLUDE_PATHS = [
-    "root._Organization__uuid", "root._Organization__duns_no", "root._Organization__origin", "root._Organization__state"
-                                                                                             "root._Organization__addresses",
+    "root._Organization__uuid", "root._Organization__duns_no",
+    "root._Organization__registration_id", "root._Organization__registration_type", "root._Organization__origin",
+    "root._Organization__state", "root._Organization__addresses",
     "root._Organization__assets['hero_image']['url']"]
 
 BLOCKCHAIN_EXCLUDE_REGEX_PATH = ["root\._Organization__groups\[.*\]\.status"]
@@ -38,7 +39,8 @@ GROUP_MINOR_CHANGES = [
 
 class Organization:
     def __init__(self, uuid, org_id, name, org_type, origin, description, short_description, url,
-                 contacts, assets, metadata_ipfs_uri, duns_no, groups, addresses, org_state, members):
+                 contacts, assets, metadata_ipfs_uri, duns_no, groups, addresses, org_state, members, registration_id,
+                 registration_type):
         self.__name = name
         self.__id = org_id
         self.__uuid = uuid
@@ -55,6 +57,8 @@ class Organization:
         self.__addresses = addresses
         self.__state = org_state
         self.__members = members
+        self.__registration_id = registration_id
+        self.__registration_type = registration_type
 
     def to_metadata(self):
         assets = {}
@@ -99,6 +103,8 @@ class Organization:
             "short_description": self.__short_description,
             "url": self.__url,
             "duns_no": self.__duns_no,
+            "registration_id": self.__registration_id,
+            "registration_type": self.__registration_type,
             "origin": self.__origin,
             "contacts": self.__contacts,
             "assets": self.__assets,
@@ -157,6 +163,14 @@ class Organization:
     @property
     def duns_no(self):
         return self.__duns_no
+
+    @property
+    def registration_id(self):
+        return self.__registration_id
+
+    @property
+    def registration_type(self):
+        return self.__registration_type
 
     @property
     def origin(self):
@@ -242,6 +256,12 @@ class Organization:
         self.__uuid = org_uuid
         if self.__org_type == OrganizationType.INDIVIDUAL.value:
             self.__id = org_uuid
+
+    def create_setup(self):
+        if self.__org_type == OrganizationType.INDIVIDUAL.value:
+            if len(self.__registration_type) == 0 or len(self.__registration_id) == 0:
+                return False
+        return True
 
     def is_org_id_set(self):
         return self.__id is None or len(self.__id) == 0
