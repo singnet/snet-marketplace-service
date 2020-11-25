@@ -138,7 +138,7 @@ class ServiceStatus:
         slack_message = self._get_slack_message(org_id=org_id, service_id=service_id, endpoint=endpoint,
                                                 recipients=recipients, error_details=error_details,
                                                 debug_error_string=debug_error_string)
-        util.report_slack(type=0, slack_msg=slack_message, SLACK_HOOK=SLACK_HOOK)
+        util.report_slack(slack_msg=slack_message, SLACK_HOOK=SLACK_HOOK)
         for recipient in recipients:
             if recipient is None:
                 logger.info(f"Email Id is not present for Org Id: {org_id} and Service Id: {service_id}")

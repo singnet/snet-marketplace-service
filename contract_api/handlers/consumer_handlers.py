@@ -19,7 +19,7 @@ def organization_event_consumer_handler(event, context):
         return generate_lambda_response(200, StatusCode.OK)
     except Exception as e:
         logger.exception(f"error  {str(e)} while processing event {event}")
-        util.report_slack("ERROR",f"got error : {str(e)} \n for event : {event}",SLACK_HOOK)
+        util.report_slack(f"got error : {str(e)} \n for event : {event}", SLACK_HOOK)
 
         return generate_lambda_response(500, str(e))
 
@@ -32,7 +32,7 @@ def service_event_consumer_handler(event, context):
         return generate_lambda_response(200, StatusCode.OK)
     except Exception as e:
         logger.exception(f"error  {str(e)} while processing event {event}")
-        util.report_slack("ERROR", f"got error :  {str(e)} \n for event : {event}", SLACK_HOOK)
+        util.report_slack(f"got error :  {str(e)} \n for event : {event}", SLACK_HOOK)
         return generate_lambda_response(500, str(e))
 
 
@@ -44,7 +44,7 @@ def mpe_event_consumer_handler(event, context):
 
     except Exception as e:
         logger.exception(f"error  {str(e)} while processing event {event}")
-        util.report_slack("ERROR", f"got error :  {str(e)} \n for event : {event}", SLACK_HOOK)
+        util.report_slack(f"got error :  {str(e)} \n for event : {event}", SLACK_HOOK)
         return generate_lambda_response(500, str(e))
 
 
