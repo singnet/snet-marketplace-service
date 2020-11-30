@@ -17,7 +17,8 @@ from registry.constants import OrganizationAddressType, OrganizationType
 from registry.constants import UserType, ServiceSupportType, ServiceStatus, OrganizationStatus
 from registry.domain.models.comment import Comment
 from registry.domain.models.service_comment import ServiceComment
-from registry.exceptions import InvalidSlackChannelException, InvalidSlackSignatureException, InvalidSlackUserException
+from registry.exceptions import InvalidSlackChannelException, InvalidSlackSignatureException, InvalidSlackUserException, \
+    InvalidOrganizationType
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 
@@ -558,6 +559,9 @@ class SlackChatOperation:
                     }
                 ]
             }
+        else:
+            raise InvalidOrganizationType()
+
         org_address_title_block = {
             "type": "section",
             "text": {
