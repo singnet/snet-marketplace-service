@@ -502,31 +502,62 @@ class SlackChatOperation:
             }
         }
         blocks = []
-        org_top_info_display_block = {
-            "type": "section",
-            "fields": [
-                {
-                    "type": "mrkdwn",
-                    "text": f"*Organization Id:*\n{org_id}"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": f"*Organization Name:*\n{organization_name}"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": f"*Duns Number:*\n{duns_no}\n"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": f"*Website URL:*\n{url}\n"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": f"*Phone Number:*\n{phone_no}\n"
-                }
-            ]
-        }
+        if org.org_type == OrganizationType.ORGANIZATION.value:
+            org_top_info_display_block = {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Organization Id:*\n{org_id}"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Organization Name:*\n{organization_name}"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Duns Number:*\n{duns_no}\n"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Website URL:*\n{url}\n"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Phone Number:*\n{phone_no}\n"
+                    }
+                ]
+            }
+        elif org.org_type == OrganizationType.INDIVIDUAL.value:
+            org_top_info_display_block = {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Organization Id:*\n{org_id}"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Organization Name:*\n{organization_name}"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Registration ID:*\n{'None' if not org.registration_id else org.registration_id}\n"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Registration Type:*\n{'None' if not org.registration_type else org.registration_type}\n"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Website URL:*\n{url}\n"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Phone Number:*\n{phone_no}\n"
+                    }
+                ]
+            }
         org_address_title_block = {
             "type": "section",
             "text": {
