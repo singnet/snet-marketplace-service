@@ -6,7 +6,7 @@ from urllib.parse import urlencode
 
 from registry.application.handlers.slack_chat_operation_handler import get_list_of_service_pending_for_approval
 from registry.application.handlers.slack_chat_operation_handler import slack_interaction_handler
-from registry.constants import OrganizationStatus, ServiceStatus, OrganizationAddressType
+from registry.constants import OrganizationStatus, ServiceStatus, OrganizationAddressType, OrganizationType
 from registry.domain.models.organization import Organization as OrganizationDomainModel
 from registry.infrastructure.models import Organization as OrganizationDBModel
 from registry.infrastructure.models import OrganizationAddress as OrganizationAddressDBModel
@@ -39,7 +39,7 @@ class TestSlackChatOperation(TestCase):
         self.tearDown()
         org_repo.add_organization(
             OrganizationDomainModel(
-                "test_org_uuid", "test_org_id", "org_dummy", "ORGANIZATION", "PUBLISHER", "description",
+                "test_org_uuid", "test_org_id", "org_dummy", OrganizationType.ORGANIZATION.value, "PUBLISHER", "description",
                 "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], [], "", ""
             ),
             "dummy", OrganizationStatus.PUBLISHED.value
@@ -134,7 +134,7 @@ class TestSlackChatOperation(TestCase):
         self.tearDown()
         org_repo.add_organization(
             OrganizationDomainModel(
-                "test_org_uuid", "test_org_id", "org_dummy", "ORGANIZATION", "PUBLISHER", "description",
+                "test_org_uuid", "test_org_id", "org_dummy", OrganizationType.ORGANIZATION.value, "PUBLISHER", "description",
                 "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], [], "", ""),
             "dummy", OrganizationStatus.PUBLISHED.value)
         service_repo.add_item(
@@ -212,7 +212,7 @@ class TestSlackChatOperation(TestCase):
         self.tearDown()
         org_repo.add_organization(
             OrganizationDomainModel(
-                "test_org_uuid", "test_org_id", "org_dummy", "ORGANIZATION", "PUBLISHER", "description",
+                "test_org_uuid", "test_org_id", "org_dummy", OrganizationType.ORGANIZATION.value, "PUBLISHER", "description",
                 "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], [], "", ""),
             "dummy", OrganizationStatus.PUBLISHED.value)
         service_repo.add_item(
@@ -325,7 +325,7 @@ class TestSlackChatOperation(TestCase):
         self.tearDown()
         org_repo.add_organization(
             OrganizationDomainModel(
-                "test_org_uuid", "test_org_id", "org_dummy", "ORGANIZATION", "PUBLISHER", "description",
+                "test_org_uuid", "test_org_id", "org_dummy", OrganizationType.ORGANIZATION.value, "PUBLISHER", "description",
                 "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], [], "", ""),
             "dummy", OrganizationStatus.ONBOARDING.value)
         event = {
@@ -438,7 +438,7 @@ class TestSlackChatOperation(TestCase):
         self.tearDown()
         org_repo.add_organization(
             OrganizationDomainModel(
-                "test_org_uuid", "test_org_id", "org_dummy", "ORGANIZATION", "PUBLISHER", "description",
+                "test_org_uuid", "test_org_id", "org_dummy", OrganizationType.ORGANIZATION.value, "PUBLISHER", "description",
                 "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], [], "", ""),
             "dummy", OrganizationStatus.PUBLISHED.value)
         org_repo.add_item(
@@ -448,7 +448,7 @@ class TestSlackChatOperation(TestCase):
                 street_address="Dummy Street",
                 apartment="Dummy Apartment",
                 city="Dummy City",
-                pincode=000000,
+                pincode="000000",
                 state="Dummy State",
                 country="Dummy Country",
                 created_on=dt.utcnow(),
