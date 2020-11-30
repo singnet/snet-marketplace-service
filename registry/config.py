@@ -62,3 +62,7 @@ EMAILS = {
     "SERVICE_APPROVERS_DLIST": ""
 }
 SERVICE_CURATE_ARN = ""
+APPROVAL_SLACK_HOOK = {
+    'hostname': 'https://hooks.slack.com',
+    'path': ''
+}

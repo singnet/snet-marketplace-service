@@ -8,9 +8,9 @@ from common.boto_utils import BotoUtils
 from common.constant import StatusCode
 from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
-from common.utils import download_file_from_url, json_to_file, publish_zip_file_in_ipfs, send_email_notification
+from common.utils import download_file_from_url, json_to_file, publish_zip_file_in_ipfs, send_email_notification, Utils
 from registry.config import ASSET_DIR, BLOCKCHAIN_TEST_ENV, EMAILS, IPFS_URL, METADATA_FILE_PATH, NETWORKS, NETWORK_ID, \
-    NOTIFICATION_ARN, REGION_NAME, SLACK_CHANNEL_FOR_APPROVAL_TEAM, SLACK_HOOK
+    NOTIFICATION_ARN, REGION_NAME, APPROVAL_SLACK_HOOK
 from registry.constants import EnvironmentType, OrganizationStatus, ServiceAvailabilityStatus, ServiceStatus, \
     ServiceSupportType, UserType
 from registry.domain.factory.service_factory import ServiceFactory
@@ -276,8 +276,7 @@ class ServicePublisherService:
 
     def notify_approval_team(self, service_id, service_name, org_id, org_name):
         slack_msg = f"Service {service_id} under org_id {org_id} is submitted for approval"
-        utils.send_slack_notification(slack_msg=slack_msg, slack_url=SLACK_HOOK['hostname'] + SLACK_HOOK['path'],
-                                      slack_channel=SLACK_CHANNEL_FOR_APPROVAL_TEAM)
+        Utils().report_slack(slack_msg, APPROVAL_SLACK_HOOK)
         mail = get_service_approval_mail_template(service_id, service_name, org_id, org_name)
         send_email_notification([EMAILS["SERVICE_APPROVERS_DLIST"]], mail["subject"],
                                 mail["body"], NOTIFICATION_ARN, boto_util)

@@ -1,14 +1,15 @@
 import json
 from datetime import datetime
 
-from aws_xray_sdk.core import patch_all
 from web3 import Web3
 
 from common import utils
 from common.boto_utils import BotoUtils
 from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
-from registry.config import NOTIFICATION_ARN, REGION_NAME, SLACK_HOOK, SLACK_CHANNEL_FOR_APPROVAL_TEAM, EMAILS
+from common.utils import Utils
+from registry.config import NOTIFICATION_ARN, REGION_NAME, EMAILS, \
+    APPROVAL_SLACK_HOOK
 from registry.constants import EnvironmentType, ORG_STATUS_LIST, ORG_TYPE_VERIFICATION_TYPE_MAPPING, \
     OrganizationActions, OrganizationIDAvailabilityStatus, OrganizationMemberStatus, OrganizationStatus, \
     OrganizationType, Role
@@ -99,8 +100,7 @@ class OrganizationPublisherService:
     def notify_approval_team(self, org_id, org_name):
         slack_msg = f"Organization with org_id {org_id} is submitted for approval"
         mail_template = get_org_approval_mail(org_id, org_name)
-        utils.send_slack_notification(slack_msg=slack_msg, slack_url=SLACK_HOOK['hostname'] + SLACK_HOOK['path'],
-                                      slack_channel=SLACK_CHANNEL_FOR_APPROVAL_TEAM)
+        Utils().report_slack(slack_msg, APPROVAL_SLACK_HOOK)
         utils.send_email_notification([EMAILS["ORG_APPROVERS_DLIST"]], mail_template["subject"],
                                       mail_template["body"], NOTIFICATION_ARN, self.boto_utils)
 

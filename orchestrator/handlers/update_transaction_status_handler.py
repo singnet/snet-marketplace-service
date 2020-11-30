@@ -5,7 +5,7 @@ from aws_xray_sdk.core import patch_all
 from common.logger import get_logger
 from common.repository import Repository
 from common.utils import Utils
-from orchestrator.config import NETWORKS, NETWORK_ID
+from orchestrator.config import NETWORKS, NETWORK_ID, SLACK_HOOK
 from orchestrator.services.order_service import OrderService
 
 patch_all()
@@ -24,5 +24,5 @@ def request_handler(event, context):
         error_message = "Error in updating channel transaction status \n"
         "NETWORK ID:" + str(NETWORK_ID) + "\n"
         "Error:" + repr(e)
-        obj_util.report_slack(1, error_message)
+        obj_util.report_slack(error_message, SLACK_HOOK)
         traceback.print_exc()

@@ -1,14 +1,13 @@
 import json
 
-from common import utils
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
-from common.utils import send_email_notification
-from orchestrator.config import REGION_NAME, REGISTRY_ARN, WALLETS_SERVICE_ARN, VERIFICATION_ARN, SLACK_HOOK, \
-    SLACK_CHANNEL_FOR_APPROVAL_TEAM, NOTIFICATION_ARN, ORG_APPROVERS_DLIST
+from common.utils import send_email_notification, Utils
+from orchestrator.config import REGION_NAME, REGISTRY_ARN, WALLETS_SERVICE_ARN, VERIFICATION_ARN, NOTIFICATION_ARN, ORG_APPROVERS_DLIST
 from orchestrator.constant import VerificationType, OrganizationType
 from orchestrator.publisher.mail_templates import get_mail_template_to_user_for_org_onboarding
 from orchestrator.publisher.mail_templates import get_org_approval_mail
+from registry.config import APPROVAL_SLACK_HOOK
 
 logger = get_logger(__name__)
 
@@ -108,9 +107,7 @@ class OrganizationOrchestratorService:
             logger.info(f"Recipient {recipient} notified for successfully starting onboarding process.")
 
     def send_slack_message(self, slack_msg):
-        slack_url = SLACK_HOOK['hostname'] + SLACK_HOOK['path']
-        utils.send_slack_notification(slack_msg=slack_msg, slack_url=slack_url,
-                                      slack_channel=SLACK_CHANNEL_FOR_APPROVAL_TEAM)
+        Utils().report_slack(slack_msg, APPROVAL_SLACK_HOOK)
 
     def initiate_verification(self, entity_id, verification_type, username):
         if verification_type == VerificationType.INDIVIDUAL.value:
