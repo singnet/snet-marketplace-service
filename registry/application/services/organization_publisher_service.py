@@ -78,6 +78,8 @@ class OrganizationPublisherService:
         if organization.id in org_ids:
             raise Exception("Org_id already exists")
         updated_state = Organization.next_state(None, None, OrganizationActions.CREATE.value)
+        self.notify_approval_team(organization.id, organization.name)
+        self.notify_user_on_start_of_onboarding_process(organization.id, recipients=[self.username])
         org_repo.add_organization(organization, self.username, updated_state)
         return organization.to_response()
 
