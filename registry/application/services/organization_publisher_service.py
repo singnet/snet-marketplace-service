@@ -85,10 +85,6 @@ class OrganizationPublisherService:
         logger.info(f"update organization for user: {self.username} org_uuid: {self.org_uuid} action: {action}")
         updated_organization = OrganizationFactory.org_domain_entity_from_payload(payload)
         current_organization = org_repo.get_org_for_org_uuid(self.org_uuid)
-
-        if not updated_organization.create_setup():
-            raise Exception("Invalid Organization information")
-
         self._archive_current_organization(current_organization)
         updated_state = Organization.next_state(current_organization, updated_organization, action)
         if updated_state == OrganizationStatus.ONBOARDING.value:
