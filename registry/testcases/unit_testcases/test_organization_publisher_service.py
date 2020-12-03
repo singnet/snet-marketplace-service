@@ -26,7 +26,11 @@ class TestOrganizationPublisherService(unittest.TestCase):
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
-    def test_create_organization(self, mock_boto, mock_ipfs):
+    @patch(
+        "registry.application.services.organization_publisher_service.OrganizationPublisherService.notify_approval_team")
+    @patch(
+        "registry.application.services.organization_publisher_service.OrganizationPublisherService.notify_user_on_start_of_onboarding_process")
+    def test_create_organization(self, mock_user_mail, mock_approval_team, mock_boto, mock_ipfs):
         username = "karl@cryptonian.io"
         payload = {
             "org_id": "", "org_uuid": "", "org_name": "test_org", "org_type": "organization",
