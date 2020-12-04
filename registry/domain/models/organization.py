@@ -25,7 +25,7 @@ BLOCKCHAIN_EXCLUDE_REGEX_PATH = ["root\._Organization__groups\[.*\]\.status"]
 ORGANIZATION_MINOR_CHANGES = [
     "root._Organization__state", "root._Organization__assets['hero_image']['url']",
     "root._Organization__assets['hero_image']['ipfs_hash']", "root._Organization__metadata_ipfs_uri",
-    "root._Organization__contacts"]
+    "root._Organization__contacts", "root._Organization__registration_id", "root._Organization__registration_type"]
 
 GROUP_MINOR_CHANGES = [
     "root\._Organization__groups\[.*\]\.status",
