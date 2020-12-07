@@ -70,7 +70,7 @@ class MonitorService:
 
     @staticmethod
     def _send_slack_notification(slack_message):
-        util.report_slack(type=0, slack_msg=slack_message, SLACK_HOOK=SLACK_HOOK)
+        util.report_slack(slack_msg=slack_message, SLACK_HOOK=SLACK_HOOK)
 
     def _get_service_provider_email(self, org_id, service_id=None):
         emails = []

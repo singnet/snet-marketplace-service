@@ -84,7 +84,7 @@ def request_handler(event, context):
     if response_data is None:
         err_msg = {'status': 'failed', 'error': 'Bad Request',
                    'api': event['path'], 'payload': payload_dict, 'network_id': NETWORK_ID}
-        obj_util.report_slack(1, str(err_msg), SLACK_HOOK)
+        obj_util.report_slack(str(err_msg), SLACK_HOOK)
         response = get_response(500, err_msg)
     else:
         response = get_response(

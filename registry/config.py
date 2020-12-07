@@ -15,14 +15,8 @@ NETWORKS = {
 }
 NETWORK_ID = 3
 SLACK_HOOK = {
-    "channel": "",
-    'hostname': '',
-    'port': 443,
-    'path': '',
-    'method': 'POST',
-    'headers': {
-        'Content-Type': 'application/json'
-    }
+    'hostname': 'https://hooks.slack.com',
+    'path': ''
 }
 IPFS_URL = {
     'url': 'ipfs.singularitynet.io',
@@ -68,3 +62,7 @@ EMAILS = {
     "SERVICE_APPROVERS_DLIST": ""
 }
 SERVICE_CURATE_ARN = ""
+APPROVAL_SLACK_HOOK = {
+    'hostname': 'https://hooks.slack.com',
+    'path': ''
+}

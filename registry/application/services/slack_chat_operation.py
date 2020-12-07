@@ -17,7 +17,8 @@ from registry.constants import OrganizationAddressType, OrganizationType
 from registry.constants import UserType, ServiceSupportType, ServiceStatus, OrganizationStatus
 from registry.domain.models.comment import Comment
 from registry.domain.models.service_comment import ServiceComment
-from registry.exceptions import InvalidSlackChannelException, InvalidSlackSignatureException, InvalidSlackUserException
+from registry.exceptions import InvalidSlackChannelException, InvalidSlackSignatureException, InvalidSlackUserException, \
+    InvalidOrganizationType
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 
@@ -502,31 +503,65 @@ class SlackChatOperation:
             }
         }
         blocks = []
-        org_top_info_display_block = {
-            "type": "section",
-            "fields": [
-                {
-                    "type": "mrkdwn",
-                    "text": f"*Organization Id:*\n{org_id}"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": f"*Organization Name:*\n{organization_name}"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": f"*Duns Number:*\n{duns_no}\n"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": f"*Website URL:*\n{url}\n"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": f"*Phone Number:*\n{phone_no}\n"
-                }
-            ]
-        }
+        if org.org_type == OrganizationType.ORGANIZATION.value:
+            org_top_info_display_block = {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Organization Id:*\n{org_id}"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Organization Name:*\n{organization_name}"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Duns Number:*\n{duns_no}\n"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Website URL:*\n{url}\n"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Phone Number:*\n{phone_no}\n"
+                    }
+                ]
+            }
+        elif org.org_type == OrganizationType.INDIVIDUAL.value:
+            org_top_info_display_block = {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Organization Id:*\n{org_id}"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Organization Name:*\n{organization_name}"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Registration ID:*\n{'None' if not org.registration_id else org.registration_id}\n"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Registration Type:*\n{'None' if not org.registration_type else org.registration_type}\n"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Website URL:*\n{url}\n"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Phone Number:*\n{phone_no}\n"
+                    }
+                ]
+            }
+        else:
+            raise InvalidOrganizationType()
+
         org_address_title_block = {
             "type": "section",
             "text": {
