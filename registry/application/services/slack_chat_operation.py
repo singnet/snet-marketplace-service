@@ -21,6 +21,7 @@ from registry.exceptions import InvalidSlackChannelException, InvalidSlackSignat
     InvalidOrganizationType
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
+from registry.application.services.organization_publisher_service import OrganizationPublisherService
 
 logger = get_logger(__name__)
 boto_util = boto_utils.BotoUtils(region_name=REGION_NAME)
@@ -204,6 +205,7 @@ class SlackChatOperation:
     def process_approval_comment(self, approval_type, state, comment, params):
         if approval_type == "organization":
             org = OrganizationPublisherRepository().get_org_for_org_id(org_id=params["org_id"])
+            orgservice = OrganizationPublisherService(org_uuid=org.uuid, username=org.name)
             if org.org_state.state in [OrganizationStatus.APPROVAL_PENDING.value, OrganizationStatus.ONBOARDING.value]:
                 if org.org_type == OrganizationType.ORGANIZATION.value:
                     self.callback_verification_service(org.uuid, getattr(OrganizationStatus, state).value,
@@ -212,6 +214,9 @@ class SlackChatOperation:
                     OrganizationPublisherRepository().update_organization_status(
                         org.uuid, getattr(OrganizationStatus, state).value, self._username,
                         Comment(comment, self._username, datetime_to_string(datetime.now())))
+
+                    orgservice.send_mail_to_owner(owner_email_address=org.name, comment=comment,
+                                                  org_id=org.id, status=state)
 
         elif approval_type == "service":
             org_uuid, service = ServicePublisherRepository(). \
