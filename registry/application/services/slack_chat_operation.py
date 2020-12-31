@@ -14,7 +14,7 @@ from registry.config import SIGNING_SECRET, SLACK_APPROVAL_OAUTH_ACCESS_TOKEN, R
 from registry.config import STAGING_URL, ALLOWED_SLACK_USER, SLACK_APPROVAL_CHANNEL_URL, \
     ALLOWED_SLACK_CHANNEL_ID, MAX_SERVICES_SLACK_LISTING, NOTIFICATION_ARN, VERIFICATION_ARN
 from registry.constants import OrganizationAddressType, OrganizationType
-from registry.constants import UserType, ServiceSupportType, ServiceStatus, OrganizationStatus
+from registry.constants import UserType, ServiceSupportType, ServiceStatus, OrganizationStatus,Role
 from registry.domain.models.comment import Comment
 from registry.domain.models.service_comment import ServiceComment
 from registry.exceptions import InvalidSlackChannelException, InvalidSlackSignatureException, InvalidSlackUserException, \
@@ -215,8 +215,13 @@ class SlackChatOperation:
                         org.uuid, getattr(OrganizationStatus, state).value, self._username,
                         Comment(comment, self._username, datetime_to_string(datetime.now())))
 
-                    OrganizationPublisherService(org_uuid=org.uuid, username="").\
-                        send_mail_to_owner(owner_email_address=org.name, comment=comment, org_id=org.id, status=state)
+                    org_member_details = OrganizationPublisherRepository().\
+                                            get_org_member(org_uuid=org.uuid, role=Role.OWNER.value)
+
+                    if len(org_member_details)>0:
+                        user_name = org_member_details[0].username
+                        OrganizationPublisherService(org_uuid=org.uuid, username="").\
+                            send_mail_to_owner(owner_email_address=user_name , comment=comment, org_id=org.id, status=state)
 
         elif approval_type == "service":
             org_uuid, service = ServicePublisherRepository(). \
