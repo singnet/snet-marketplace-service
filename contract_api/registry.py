@@ -243,12 +243,11 @@ class Registry:
     def get_service_media(self,org_id,service_id):
         try:
             query = """select `row_id`,url,`order`,file_type,asset_type,alt_text from service_media 
-            where service_id = %s and org_id = %s
-            order by `order` """
+            where service_id = %s and org_id = %s """
             query_response = self.repo.execute(query,[service_id,org_id])
             media = []
             if len(query_response)==0:
-                return None
+               return []
             for response_item in query_response:
                 media.append({
                     "row_id":response_item['row_id'],
@@ -384,9 +383,6 @@ class Registry:
                                      [org_id, service_id])
 
             media = self.get_service_media(org_id=org_id,service_id=service_id)
-            if media == None:
-                media = []
-
             result = basic_service_data[0]
 
             self._convert_service_metadata_str_to_json(result)

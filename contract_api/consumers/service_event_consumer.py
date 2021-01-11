@@ -112,22 +112,13 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                                                                  service_id)
         return assets_url_mapping
 
-    def create_service_media(self,org_id,service_id,service_media,service_row_id,assets_url):
+    def create_service_media(self,org_id,service_id,service_media,service_row_id):
         count = 0;
-        if(service_media!=None):
-            #get existing media data
-            existing_service_media_data = self._service_repository.get_service_media(service_id=service_id,org_id=org_id)
-
-            #delete existing media files if present form s3 bucket except video which is not saved
-            if existing_service_media_data!=None:
-                for media in existing_service_media_data:
-                    if(len(media['url'])>0 and media('file_type')!="video"):
-                        self._s3_util.delete_file_from_s3(url=media('url'))
-
+        if len(service_media)>0:
             #clear the existing values from db
             self._service_repository.delete_service_media(org_id=org_id,service_id=service_id)
 
-            #for media other that video save to s3 and store the link details in db
+            #for media other than video save to s3 and store the link details in db
             for service_media_item in service_media:
                 if service_media_item["file_type"] == "video":
                     updated_url = service_media_item["url"]
@@ -135,38 +126,43 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                 else:
                     updated_url = self._push_asset_to_s3_using_hash(org_id=org_id,service_id=service_id,hash=service_media_item["url"])
                     ipfs_url = service_media_item["url"]
-                self._service_repository.create_service_media(org_id=org_id,
-                                                          service_id=service_id,
-                                                          file_type=service_media_item['file_type'],
-                                                          url=updated_url,
-                                                          asset_type=service_media_item['asset_type'],
-                                                          order=service_media_item['order'],
-                                                          alt_text=service_media_item['alt_text'],
-                                                          ipfs_url=ipfs_url,
-                                                          service_row_id=service_row_id)
+
+                #insert service media data
+                service_media_data = {
+                    "url":updated_url,
+                    "file_type":service_media_item['file_type'],
+                    "order":service_media_item['order'],
+                    "asset_type":service_media_item['asset_type'],
+                    "alt_text":service_media_item['alt_text'],
+                    "ipfs_url":ipfs_url
+                }
+                self._service_repository.create_service_media(org_id=org_id,service_id=service_id,service_row_id=service_row_id,media_data=service_media_data)
 
                 if service_media_item['order'] > count:
                     count = service_media_item['order']
 
-        #add asset as last order in media table / asset already has updated url
-        #take order as greatest of media + 1
+        #Take assets from updated metadata and store them in service_media table
+        #Take order as greatest of media + 1
+        #Will be removed later as new format is used
+        service_metadata = self._service_repository.get_service_metadata(org_id=org_id,service_id=service_id)
+
+        if service_metadata is not None:
+            assets_url = json.loads(service_metadata.get('assets_url',{}))
+            assets_hash = json.loads(service_metadata.get('assets_hash',{}))
+
         if len(assets_url)>0:
-            keys = assets_url.keys()
-            for key in keys:
-                url = assets_url[key]
-                self._service_repository.create_service_media(org_id=org_id,
-                                                          service_id=service_id,
-                                                          file_type='asset',
-                                                          url=url,
-                                                          asset_type=key,
-                                                          order=count+1,
-                                                          alt_text='',
-                                                          ipfs_url='',
-                                                          service_row_id=service_row_id)
-
-
-
-
+            for key in assets_url.keys():
+                url = assets_url.get(key,"")
+                hash = assets_hash.get(key,"")
+                service_media_data = {
+                    "url":url,
+                    "file_type":"asset",
+                    "order":count+1,
+                     "asset_type":key,
+                     "alt_text":"",
+                     "ipfs_url":hash,
+                   }
+                self._service_repository.create_service_media(org_id=org_id,service_id=service_id,service_row_id=service_row_id,media_data=service_media_data)
 
     def _process_service_data(self, org_id, service_id, new_ipfs_hash, new_ipfs_data, tags_data):
         try:
@@ -188,7 +184,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
 
             service_media = new_ipfs_data.get('media', [])
             self.create_service_media(org_id=org_id,service_id=service_id,
-                                      service_media=service_media,service_row_id=service_row_id,assets_url=assets_url)
+                                      service_media=service_media,service_row_id=service_row_id)
 
             groups = new_ipfs_data.get('groups', [])
             group_insert_count = 0
