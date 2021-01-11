@@ -54,7 +54,7 @@ class TestRegistry(TestCase):
 
         insert_service_media = """INSERT INTO service_media
         (row_id,org_id, service_id, url, `order`, file_type, asset_type, alt_text, created_on, updated_on, ipfs_url, service_row_id)
-        VALUES(10,'snet', 'gene-annotation-service', 'https://test-s3-push', 5, 'text', 'text updated','data is missing', '2021-01-08 13:31:50', '2021-01-08 13:31:50', 'Qmbb7tmKZX2TSxDKsK6DEAbp3tPgNUYP11CC93Cft7EkFb/hero_fbprophet_forecast1', 10);"""
+        VALUES(10,'snet', 'gene-annotation-service', 'https://test-s3-push', 5, 'text', 'hero_image','data is missing', '2021-01-08 13:31:50', '2021-01-08 13:31:50', 'Qmbb7tmKZX2TSxDKsK6DEAbp3tPgNUYP11CC93Cft7EkFb/hero_fbprophet_forecast1', 10);"""
         db.execute(insert_service_media)
 
         response = registry.get_service_data_by_org_id_and_service_id('snet','gene-annotation-service')
@@ -87,7 +87,7 @@ class TestRegistry(TestCase):
                              'is_available': 0,
                              'groups': [],
                              'tags': [],
-                             'media': [{'row_id': 10, 'url': 'https://test-s3-push', 'file_type': 'text', 'order': 5, 'alt_text': 'data is missing'}]
+                             'media': [{'row_id': 10, 'url': 'https://test-s3-push', 'file_type': 'text', 'order': 5, 'alt_text': 'data is missing',"asset_type":"hero_image"}]
                              }
 
     def test_get_service_data_by_org_id_and_service_id_without_media(self):

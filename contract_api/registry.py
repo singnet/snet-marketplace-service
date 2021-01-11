@@ -447,7 +447,8 @@ class Registry:
                     "url":response_item['url'],
                     "file_type":response_item['file_type'],
                     "order":response_item['order'],
-                    "alt_text":response_item['alt_text']
+                    "alt_text":response_item['alt_text'],
+                    "asset_type":response_item['asset_type']
                 })
             return media
         except Exception as e:
