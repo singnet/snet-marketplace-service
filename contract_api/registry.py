@@ -240,6 +240,27 @@ class Registry:
             print(repr(e))
             raise e
 
+    def get_service_media(self,org_id,service_id):
+        try:
+            query = """select `row_id`,url,`order`,file_type,asset_type,alt_text from service_media 
+            where service_id = %s and org_id = %s
+            order by `order` """
+            query_response = self.repo.execute(query,[service_id,org_id])
+            media = []
+            if len(query_response)==0:
+                return None
+            for response_item in query_response:
+                media.append({
+                    "row_id":response_item['row_id'],
+                    "url":response_item['url'],
+                    "file_type":response_item['file_type'],
+                    "order":response_item['order'],
+                    "alt_text":response_item['alt_text']
+                })
+            return media
+        except Exception as e:
+            raise e
+
     def _get_is_available_service(self):
         try:
             available_service = []
@@ -362,6 +383,10 @@ class Registry:
             tags = self.repo.execute("SELECT tag_name FROM service_tags WHERE org_id = %s AND service_id = %s",
                                      [org_id, service_id])
 
+            media = self.get_service_media(org_id=org_id,service_id=service_id)
+            if media == None:
+                media = []
+
             result = basic_service_data[0]
 
             self._convert_service_metadata_str_to_json(result)
@@ -382,7 +407,7 @@ class Registry:
                             break
                 rec.update(org_groups_dict.get(rec['group_id'], {}))
 
-            result.update({"is_available": is_available, "groups": service_group_data, "tags": tags})
+            result.update({"is_available": is_available, "groups": service_group_data, "tags": tags,"media":media})
             return result
         except Exception as e:
             print(repr(e))
