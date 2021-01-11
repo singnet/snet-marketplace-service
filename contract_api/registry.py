@@ -436,8 +436,7 @@ class Registry:
     def get_service_media(self,org_id,service_id):
         try:
             query = """select `row_id`,url,`order`,file_type,asset_type,alt_text from service_media 
-            where service_id = %s and org_id = %s
-            order by `order` """
+            where service_id = %s and org_id = %s """
             query_response = self.repo.execute(query,[service_id,org_id])
             media = []
             if len(query_response)==0:
