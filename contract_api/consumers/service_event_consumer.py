@@ -118,13 +118,15 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             #clear the existing values from db
             self._service_repository.delete_service_media(org_id=org_id,service_id=service_id)
 
-            #for media other than video save to s3 and store the link details in db
+            #for video -> if ipfs_url store in s3 and update url else store url
             for service_media_item in service_media:
-                if service_media_item["file_type"] == "video":
-                    updated_url = service_media_item["url"]
-                    ipfs_url = ""
+
+                url = service_media_item.get("url",{})
+                if service_media_item.get("file_type",{}) == "video" and ("http" in url or "https" in url):
+                    updated_url = url
+                    ipfs_url = ''
                 else:
-                    updated_url = self._push_asset_to_s3_using_hash(org_id=org_id,service_id=service_id,hash=service_media_item["url"])
+                    updated_url = self._push_asset_to_s3_using_hash(org_id=org_id,service_id=service_id,hash=url)
                     ipfs_url = service_media_item["url"]
 
                 #insert service media data
