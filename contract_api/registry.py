@@ -452,5 +452,5 @@ class Registry:
                 })
             return media
         except Exception as e:
-            logger.error("Error in getting service media data for org_id = " + org_id + " service_id = " + service_id)
+            logger.error(f'Error in getting service media data for org_id = {org_id} service_id = {service_id}')
             raise e
