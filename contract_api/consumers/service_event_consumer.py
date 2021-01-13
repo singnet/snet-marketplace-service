@@ -117,18 +117,15 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         if len(service_media)>0:
             #clear the existing values from db
             self._service_repository.delete_service_media(org_id=org_id,service_id=service_id)
-
-            #for video -> if ipfs_url store in s3 and update url else store url
+            #fif ipfs_url store in s3 and update url else store url
             for service_media_item in service_media:
-
                 url = service_media_item.get("url",{})
-                if service_media_item.get("file_type",{}) == "video" and ("http" in url or "https" in url):
+                if "http" in url or "https" in url:
                     updated_url = url
                     ipfs_url = ''
                 else:
                     updated_url = self._push_asset_to_s3_using_hash(org_id=org_id,service_id=service_id,hash=url)
                     ipfs_url = service_media_item["url"]
-
                 #insert service media data
                 service_media_data = {
                     "url":updated_url,
@@ -139,7 +136,6 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                     "ipfs_url":ipfs_url
                 }
                 self._service_repository.create_service_media(org_id=org_id,service_id=service_id,service_row_id=service_row_id,media_data=service_media_data)
-
                 if service_media_item['order'] > count:
                     count = service_media_item['order']
 
@@ -147,11 +143,9 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         #Take order as greatest of media + 1
         #Will be removed later as new format is used
         service_metadata = self._service_repository.get_service_metadata(org_id=org_id,service_id=service_id)
-
         if service_metadata is not None:
             assets_url = json.loads(service_metadata.get('assets_url',{}))
             assets_hash = json.loads(service_metadata.get('assets_hash',{}))
-
         if len(assets_url)>0:
             for key in assets_url.keys():
                 url = assets_url.get(key,"")
