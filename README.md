@@ -6,7 +6,7 @@
 ### SingularityNET Marketplace Services
 The best way to get started is by understanding the marketplace services that powers the decentralized Blockchain marketplace. Here is a high level view on how SingularityNet's services works.
 #### Event Publisher Subscriber
-This service read all actionable events from blockchain on near real time basis, persist event data into the mysql database and invokes all the subscribers of the event.
+This service reads all actionable events i.e events from Registry/MPE/RFAI/TokenStake contract deployed on the blockchain on near real time basis, persist event data into the mysql database and invokes all the subscribers of the event.
 #### DApp User
 This is a central service which stores user information across all the DApp.
 #### Registry
