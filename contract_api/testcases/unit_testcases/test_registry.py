@@ -138,7 +138,6 @@ class TestRegistry(TestCase):
                              'media': []
                              }
 
-
     def clear_dependencies(self):
         db.execute("DELETE FROM service WHERE 1")
         db.execute("DELETE FROM organization WHERE 1")

@@ -238,6 +238,26 @@ class Registry:
             print(repr(e))
             raise e
 
+    def get_service_media(self,org_id,service_id):
+        try:
+            query = """select `row_id`,url,`order`,file_type,asset_type,alt_text from service_media 
+            where service_id = %s and org_id = %s """
+            query_response = self.repo.execute(query,[service_id,org_id])
+            media = []
+            if len(query_response)==0:
+               return []
+            for response_item in query_response:
+                media.append({
+                    "row_id":response_item['row_id'],
+                    "url":response_item['url'],
+                    "file_type":response_item['file_type'],
+                    "order":response_item['order'],
+                    "alt_text":response_item['alt_text']
+                })
+            return media
+        except Exception as e:
+            raise e
+
     def _get_is_available_service(self):
         try:
             available_service = []
