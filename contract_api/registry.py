@@ -110,9 +110,7 @@ class Registry:
 
     def _convert_service_metadata_str_to_json(self, record):
         record["service_rating"] = json.loads(record["service_rating"])
-        record["assets_url"] = json.loads(record["assets_url"])
         record["org_assets_url"] = json.loads(record["org_assets_url"])
-        record["assets_hash"] = json.loads(record["assets_hash"])
         record["contributors"] = json.loads(record.get("contributors", "[]"))
         record["contacts"] = json.loads(record.get("contacts", "[]"))
 
@@ -363,8 +361,10 @@ class Registry:
             tags = []
             org_groups_dict = {}
             basic_service_data = self.repo.execute(
-                "SELECT M.*, S.*, O.org_id, O.organization_name, O.owner_address, O.org_metadata_uri, O.org_email, "
-                "O.org_assets_url, O.assets_hash, O.description as org_description, O.contacts "
+                "SELECT M.row_id, M.service_row_id, M.org_id, M.service_id, M.display_name, M.description, M.url, M.json, M.model_ipfs_hash, M.encoding, M.`type`," 
+				" M.mpe_address,M.service_rating, M.ranking, M.contributors, M.short_description,"
+                " S.*, O.org_id, O.organization_name, O.owner_address, O.org_metadata_uri, O.org_email, "
+                "O.org_assets_url, O.description as org_description, O.contacts "
                 "FROM service_metadata M, service S, organization O "
                 "WHERE O.org_id = S.org_id AND S.row_id = M.service_row_id AND S.org_id = %s "
                 "AND S.service_id = %s AND S.is_curated = 1", [org_id, service_id])
@@ -452,3 +452,25 @@ class Registry:
             service_repo.curate_service(org_id, service_id, 0)
         else:
             Exception("Invalid curation flag")
+
+    def get_service_media(self,org_id,service_id):
+        try:
+            query = """select `row_id`,url,`order`,file_type,asset_type,alt_text from service_media 
+            where service_id = %s and org_id = %s """
+            query_response = self.repo.execute(query,[service_id,org_id])
+            media = []
+            if len(query_response)==0:
+                return media
+            for response_item in query_response:
+                media.append({
+                    "row_id":response_item['row_id'],
+                    "url":response_item['url'],
+                    "file_type":response_item['file_type'],
+                    "order":response_item['order'],
+                    "alt_text":response_item['alt_text'],
+                    "asset_type":response_item['asset_type']
+                })
+            return media
+        except Exception as e:
+            logger.error(f'Error in getting service media data for org_id = {org_id} service_id = {service_id}')
+            raise e
