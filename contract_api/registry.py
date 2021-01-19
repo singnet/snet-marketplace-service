@@ -174,7 +174,7 @@ class Registry:
                 asset_media = []
                 if len(services_media)>0:
                     asset_media = [x for x in services_media if x['service_id'] == service_id]
-                    if asset_media !=None:
+                    if len(asset_media)>0:
                         asset_media = asset_media[0]
                 rec.update({"tags": tags})
                 rec.update({"is_available": is_available})
