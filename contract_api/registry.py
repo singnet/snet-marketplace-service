@@ -146,12 +146,17 @@ class Registry:
                 rslt[org_id][service_id]["tags"] = tags
             qry_part = " AND (S.org_id, S.service_id) IN " + \
                        str(org_srvc_tuple).replace(',)', ')')
+            qry_part_where = " AND (org_id, service_id) IN " + \
+                       str(org_srvc_tuple).replace(',)', ')')
             print("qry_part::", qry_part)
             sort_by = sort_by.replace("org_id", "M.org_id")
             services = self.repo.execute(
-                "SELECT DISTINCT M.*,O.organization_name,O.org_assets_url FROM service_endpoint E, service_metadata M, service S "
+                "SELECT DISTINCT M.row_id, M.service_row_id, M.org_id, M.service_id, M.display_name, M.description, M.url, M.json, M.model_ipfs_hash, M.encoding, M.`type`," 
+				" M.mpe_address,M.service_rating, M.ranking, M.contributors, M.short_description,"
+                "O.organization_name,O.org_assets_url FROM service_endpoint E, service_metadata M, service S "
                 ", organization O WHERE O.org_id = S.org_id AND S.row_id = M.service_row_id AND "
                 "S.row_id = E.service_row_id " + qry_part + "ORDER BY E.is_available DESC, " + sort_by + " " + order_by)
+            services_media = self.repo.execute("select org_id ,service_id,file_type ,asset_type,url,alt_text ,`order`,row_id from service_media where asset_type = 'hero_image' " + qry_part_where)
             obj_utils = Utils()
             obj_utils.clean(services)
             available_service = self._get_is_available_service()
@@ -166,8 +171,14 @@ class Registry:
                     tags = rslt[org_id][service_id]["tags"].split(",")
                 if (org_id, service_id) in available_service:
                     is_available = 1
+                asset_media = []
+                if len(services_media)>0:
+                    asset_media = [x for x in services_media if x['service_id'] == service_id]
+                    if asset_media !=None:
+                        asset_media = asset_media[0]
                 rec.update({"tags": tags})
                 rec.update({"is_available": is_available})
+                rec.update({"media": asset_media})
 
             return services
         except Exception as err:
