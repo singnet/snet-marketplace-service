@@ -41,7 +41,7 @@ class TestServiceHandler(TestCase):
               VALUES(10,'snet', 'gene-annotation-service', 'https://test-s3-push', 5, 'text', 'hero_image','data is missing', '2021-01-08 13:31:50', '2021-01-08 13:31:50', 'Qmbb7tmKZX2TSxDKsK6DEAbp3tPgNUYP11CC93Cft7EkFb/hero_fbprophet_forecast1', 10);"""
         db.execute(insert_service_media)
 
-        insert_service_endpoint = """INSERT INTO contract_unittest_db.service_endpoint
+        insert_service_endpoint = """INSERT INTO service_endpoint
         (service_row_id, org_id, service_id, group_id, endpoint, is_available, last_check_timestamp, next_check_timestamp, failed_status_count, row_created, row_updated)
         VALUES(10, 'snet', 'gene-annotation-service', 'm5FKWq4hW0foGW5qSbzGSjgZRuKs7A1ZwbIrJ9e96rc=','https://mozi.ai:8000',1, '2020-05-21 06:53:30', '2020-05-21 06:53:30', 1, '2020-05-21 06:53:30', '2020-05-21 06:53:30');"""
         db.execute(insert_service_endpoint)
