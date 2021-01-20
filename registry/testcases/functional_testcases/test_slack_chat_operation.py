@@ -6,7 +6,7 @@ from urllib.parse import urlencode
 
 from registry.application.handlers.slack_chat_operation_handler import get_list_of_service_pending_for_approval
 from registry.application.handlers.slack_chat_operation_handler import slack_interaction_handler
-from registry.constants import OrganizationStatus, ServiceStatus, OrganizationAddressType
+from registry.constants import OrganizationStatus, ServiceStatus, OrganizationAddressType, OrganizationType
 from registry.domain.models.organization import Organization as OrganizationDomainModel
 from registry.infrastructure.models import Organization as OrganizationDBModel
 from registry.infrastructure.models import OrganizationAddress as OrganizationAddressDBModel
@@ -39,8 +39,8 @@ class TestSlackChatOperation(TestCase):
         self.tearDown()
         org_repo.add_organization(
             OrganizationDomainModel(
-                "test_org_uuid", "test_org_id", "org_dummy", "ORGANIZATION", "PUBLISHER", "description",
-                "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], []
+                "test_org_uuid", "test_org_id", "org_dummy", OrganizationType.ORGANIZATION.value, "PUBLISHER", "description",
+                "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], [], "", ""
             ),
             "dummy", OrganizationStatus.PUBLISHED.value
         )
@@ -124,9 +124,8 @@ class TestSlackChatOperation(TestCase):
     @patch("registry.application.services.slack_chat_operation.SlackChatOperation.validate_slack_signature")
     @patch("registry.application.services.slack_chat_operation.requests.post")
     @patch("common.utils.send_email_notification")
-    @patch("common.utils.send_slack_notification")
     def test_slack_interaction_handler_to_view_service_modal(
-            self, slack_notification, email_notification, post_request, validate_slack_signature,
+            self, email_notification, post_request, validate_slack_signature,
             validate_slack_channel_id, validate_slack_user):
         validate_slack_channel_id.return_value = True
         validate_slack_user.return_value = True
@@ -135,8 +134,8 @@ class TestSlackChatOperation(TestCase):
         self.tearDown()
         org_repo.add_organization(
             OrganizationDomainModel(
-                "test_org_uuid", "test_org_id", "org_dummy", "ORGANIZATION", "PUBLISHER", "description",
-                "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], []),
+                "test_org_uuid", "test_org_id", "org_dummy", OrganizationType.ORGANIZATION.value, "PUBLISHER", "description",
+                "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], [], "", ""),
             "dummy", OrganizationStatus.PUBLISHED.value)
         service_repo.add_item(
             ServiceDBModel(
@@ -205,8 +204,7 @@ class TestSlackChatOperation(TestCase):
     @patch("registry.application.services.slack_chat_operation.SlackChatOperation.validate_slack_channel_id")
     @patch("registry.application.services.slack_chat_operation.SlackChatOperation.validate_slack_signature")
     @patch("common.utils.send_email_notification")
-    @patch("common.utils.send_slack_notification")
-    def test_review_submission_for_service(self, slack_notification, email_notification, validate_slack_signature,
+    def test_review_submission_for_service(self, email_notification, validate_slack_signature,
                                            validate_slack_channel_id, validate_slack_user):
         validate_slack_channel_id.return_value = True
         validate_slack_user.return_value = True
@@ -214,8 +212,8 @@ class TestSlackChatOperation(TestCase):
         self.tearDown()
         org_repo.add_organization(
             OrganizationDomainModel(
-                "test_org_uuid", "test_org_id", "org_dummy", "ORGANIZATION", "PUBLISHER", "description",
-                "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], []),
+                "test_org_uuid", "test_org_id", "org_dummy", OrganizationType.ORGANIZATION.value, "PUBLISHER", "description",
+                "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], [], "", ""),
             "dummy", OrganizationStatus.PUBLISHED.value)
         service_repo.add_item(
             ServiceDBModel(
@@ -327,8 +325,118 @@ class TestSlackChatOperation(TestCase):
         self.tearDown()
         org_repo.add_organization(
             OrganizationDomainModel(
-                "test_org_uuid", "test_org_id", "org_dummy", "ORGANIZATION", "PUBLISHER", "description",
-                "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], []),
+                "test_org_uuid", "test_org_id", "org_dummy", OrganizationType.ORGANIZATION.value, "PUBLISHER", "description",
+                "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], [], "", ""),
+            "dummy", OrganizationStatus.ONBOARDING.value)
+        event = {
+            "resource": "/slack/interaction/submit",
+            "path": "/slack-approval/slack/interaction/submit",
+            "httpMethod": "POST",
+            "headers": {
+                "X-Slack-Request-Timestamp": "1586262180",
+                "X-Slack-Signature": "v0=3870786bc3c7d03367eb0fa81c2421fbed855f8afafe7f7a5e294d75d592961e"
+            },
+            "body": urlencode({
+                "payload": json.dumps({
+                    "type": "view_submission",
+                    "team": {"id": "T996H7VS8", "domain": "snet"},
+                    "user": {"username": "dummy"},
+                    "trigger_id": "1045596158583.315221267892.fa50212a87f6c7cd28234be6512803b1",
+                    "view": {
+                        "type": "modal",
+                        "blocks": [
+                            {
+                                "fields": [
+                                    {"type": "mrkdwn", "text": "*Organization Id:*\ntest_org_id"},
+                                    {"type": "mrkdwn", "text": "*Organization Name:*\nTest Organization"},
+                                    {"type": "mrkdwn",
+                                     "text": "*Approval Platform:*\n<http://staging-dapp.singularitynet.io.s3-website-us-east-1.amazonaws.com/servicedetails/servicedetails/org/test_org_id>\n"}
+                                ]
+                            },
+                            {
+                                "type": "section", "block_id": "/jQ",
+                                "text": {"type": "mrkdwn", "text": "*Comments*\n*No comment"}},
+                            {
+                                "type": "input", "block_id": "approval_state",
+                                "label": {"type": "plain_text",
+                                          "text": "*Approve / Reject / Request Change*",
+                                          "emoji": True
+                                          },
+                                "optional": False
+                            },
+                            {
+                                "type": "input", "block_id": "review_comment",
+                                "label": {"type": "plain_text", "text": "Comment",
+                                          "emoji": True},
+                                "hint": {"type": "plain_text",
+                                         "text": "* Comment is mandatory field.",
+                                         "emoji": True},
+                                "optional": False
+                            }
+                        ],
+                        "state": {
+                            "values": {
+                                "approval_state": {
+                                    "selection": {
+                                        "type": "radio_buttons",
+                                        "selected_option": {
+                                            "text": {
+                                                "type": "plain_text",
+                                                "text": "Approve",
+                                                "emoji": True
+                                            },
+                                            "value": "APPROVED",
+                                            "description": {
+                                                "type": "plain_text",
+                                                "text": "Allow user to publish organization.",
+                                                "emoji": True
+                                            }
+                                        }
+                                    }
+                                },
+                                "review_comment": {
+                                    "comment": {
+                                        "type": "plain_text_input",
+                                        "value": "1234"
+                                    }
+                                }
+                            }
+                        },
+                        "title": {
+                            "type": "plain_text",
+                            "text": "Org For Approval",
+                            "emoji": True
+                        },
+                        "clear_on_close": False,
+                        "notify_on_close": False,
+                        "close": {
+                            "type": "plain_text", "text": "Cancel", "emoji": True
+                        },
+                        "submit": {
+                            "type": "plain_text", "text": "Submit", "emoji": True
+                        }
+                    },
+                    "response_urls": []})
+            }),"isBase64Encoded": False
+        }
+        response = slack_interaction_handler(event=event, context=None)
+        assert (response["statusCode"] == 200)
+
+    @patch("registry.application.services.slack_chat_operation.SlackChatOperation.validate_slack_user")
+    @patch("registry.application.services.slack_chat_operation.SlackChatOperation.validate_slack_channel_id")
+    @patch("registry.application.services.slack_chat_operation.SlackChatOperation.validate_slack_signature")
+    @patch("common.boto_utils.BotoUtils.invoke_lambda")
+    def test_review_submission_for_Individual(
+            self, lambda_response, validate_slack_signature, validate_slack_channel_id,  validate_slack_user):
+        validate_slack_user.return_value = True
+        validate_slack_channel_id.return_value = True
+        validate_slack_signature.return_value = True
+        lambda_response.return_value = {"StatusCode": 202}
+        self.tearDown()
+        org_repo.add_organization(
+            OrganizationDomainModel(
+                "test_org_uuid", "test_org_id", "org_dummy", OrganizationType.INDIVIDUAL.value, "PUBLISHER", "description",
+                "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], [], "", ""),
             "dummy", OrganizationStatus.ONBOARDING.value)
         event = {
             "resource": "/slack/interaction/submit",
@@ -440,8 +548,8 @@ class TestSlackChatOperation(TestCase):
         self.tearDown()
         org_repo.add_organization(
             OrganizationDomainModel(
-                "test_org_uuid", "test_org_id", "org_dummy", "ORGANIZATION", "PUBLISHER", "description",
-                "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], []),
+                "test_org_uuid", "test_org_id", "org_dummy", OrganizationType.ORGANIZATION.value, "PUBLISHER", "description",
+                "short_description", "https://test.io", [], {}, "ipfs_hash", "123456879", [], [], [], [], "", ""),
             "dummy", OrganizationStatus.PUBLISHED.value)
         org_repo.add_item(
             OrganizationAddressDBModel(
@@ -450,7 +558,7 @@ class TestSlackChatOperation(TestCase):
                 street_address="Dummy Street",
                 apartment="Dummy Apartment",
                 city="Dummy City",
-                pincode=000000,
+                pincode="000000",
                 state="Dummy State",
                 country="Dummy Country",
                 created_on=dt.utcnow(),

@@ -14,12 +14,14 @@ from registry.config import SIGNING_SECRET, SLACK_APPROVAL_OAUTH_ACCESS_TOKEN, R
 from registry.config import STAGING_URL, ALLOWED_SLACK_USER, SLACK_APPROVAL_CHANNEL_URL, \
     ALLOWED_SLACK_CHANNEL_ID, MAX_SERVICES_SLACK_LISTING, NOTIFICATION_ARN, VERIFICATION_ARN
 from registry.constants import OrganizationAddressType, OrganizationType
-from registry.constants import UserType, ServiceSupportType, ServiceStatus, OrganizationStatus
+from registry.constants import UserType, ServiceSupportType, ServiceStatus, OrganizationStatus,Role
 from registry.domain.models.comment import Comment
 from registry.domain.models.service_comment import ServiceComment
-from registry.exceptions import InvalidSlackChannelException, InvalidSlackSignatureException, InvalidSlackUserException
+from registry.exceptions import InvalidSlackChannelException, InvalidSlackSignatureException, InvalidSlackUserException, \
+    InvalidOrganizationType
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
+from registry.application.services.organization_publisher_service import OrganizationPublisherService
 
 logger = get_logger(__name__)
 boto_util = boto_utils.BotoUtils(region_name=REGION_NAME)
@@ -203,6 +205,7 @@ class SlackChatOperation:
     def process_approval_comment(self, approval_type, state, comment, params):
         if approval_type == "organization":
             org = OrganizationPublisherRepository().get_org_for_org_id(org_id=params["org_id"])
+
             if org.org_state.state in [OrganizationStatus.APPROVAL_PENDING.value, OrganizationStatus.ONBOARDING.value]:
                 if org.org_type == OrganizationType.ORGANIZATION.value:
                     self.callback_verification_service(org.uuid, getattr(OrganizationStatus, state).value,
@@ -211,6 +214,14 @@ class SlackChatOperation:
                     OrganizationPublisherRepository().update_organization_status(
                         org.uuid, getattr(OrganizationStatus, state).value, self._username,
                         Comment(comment, self._username, datetime_to_string(datetime.now())))
+
+                    org_member_details = OrganizationPublisherRepository().\
+                                            get_org_member(org_uuid=org.uuid, role=Role.OWNER.value)
+
+                    if len(org_member_details)>0:
+                        user_name = org_member_details[0].username
+                        OrganizationPublisherService(org_uuid=org.uuid, username="").\
+                            send_mail_to_owner(owner_email_address=user_name , comment=comment, org_id=org.id, status=state)
 
         elif approval_type == "service":
             org_uuid, service = ServicePublisherRepository(). \
@@ -502,31 +513,65 @@ class SlackChatOperation:
             }
         }
         blocks = []
-        org_top_info_display_block = {
-            "type": "section",
-            "fields": [
-                {
-                    "type": "mrkdwn",
-                    "text": f"*Organization Id:*\n{org_id}"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": f"*Organization Name:*\n{organization_name}"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": f"*Duns Number:*\n{duns_no}\n"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": f"*Website URL:*\n{url}\n"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": f"*Phone Number:*\n{phone_no}\n"
-                }
-            ]
-        }
+        if org.org_type == OrganizationType.ORGANIZATION.value:
+            org_top_info_display_block = {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Organization Id:*\n{org_id}"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Organization Name:*\n{organization_name}"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Duns Number:*\n{duns_no}\n"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Website URL:*\n{url}\n"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Phone Number:*\n{phone_no}\n"
+                    }
+                ]
+            }
+        elif org.org_type == OrganizationType.INDIVIDUAL.value:
+            org_top_info_display_block = {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Organization Id:*\n{org_id}"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Organization Name:*\n{organization_name}"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Registration ID:*\n{'None' if not org.registration_id else org.registration_id}\n"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Registration Type:*\n{'None' if not org.registration_type else org.registration_type}\n"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Website URL:*\n{url}\n"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Phone Number:*\n{phone_no}\n"
+                    }
+                ]
+            }
+        else:
+            raise InvalidOrganizationType()
+
         org_address_title_block = {
             "type": "section",
             "text": {

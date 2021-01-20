@@ -48,7 +48,7 @@ def create_channel(event, context):
         logger.error(f"response: {response}\n"
                      f"event: {event}\n"
                      f"error: {repr(e)}")
-        utils.report_slack(1, str(repr(e)), SLACK_HOOK)
+        utils.report_slack(str(repr(e)), SLACK_HOOK)
         traceback.print_exc()
         return generate_lambda_response(StatusCode.INTERNAL_SERVER_ERROR, make_response_body(
             ResponseStatus.FAILED, response, Error.undefined_error(repr(e))
@@ -79,7 +79,7 @@ def record_create_channel_event(event, context):
                      f"stage: {NETWORK_ID}"
                      f"event: {event}\n"
                      f"error: {repr(e)}")
-        utils.report_slack(1, str(repr(e)), SLACK_HOOK)
+        utils.report_slack(str(repr(e)), SLACK_HOOK)
         traceback.print_exc()
         return generate_lambda_response(StatusCode.INTERNAL_SERVER_ERROR, make_response_body(
             ResponseStatus.FAILED, response, Error.undefined_error(repr(e))

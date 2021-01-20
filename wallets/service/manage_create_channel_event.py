@@ -39,4 +39,6 @@ class ManageCreateChannelEvent:
             channel_dao.update_create_channel_event(create_channel_event_from_orchestrator, TransactionStatus.SUCCESS)
         except Exception as e:
             channel_dao.update_create_channel_event(create_channel_event_from_orchestrator, TransactionStatus.FAILED)
-            utils.report_slack(type=1, slack_msg=f"Error while submitting blockchain transaction |method_name:: 'open_channel_by_third_party' |network_id: {NETWORK_ID} |error: {repr(e)}", SLACK_HOOK=SLACK_HOOK)
+            utils.report_slack(
+                slack_msg=f"Error while submitting blockchain transaction |method_name:: 'open_channel_by_third_party' |network_id: {NETWORK_ID} |error: {repr(e)}",
+                SLACK_HOOK=SLACK_HOOK)
