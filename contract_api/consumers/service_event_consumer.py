@@ -129,8 +129,8 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                 #insert service media data
                 service_media_data = {
                     "url":updated_url,
-                    "file_type":service_media_item.get('file_type',""),
-                    "order":service_media_item.get('order',""),
+                    "file_type":service_media_item['file_type'],
+                    "order":service_media_item['order'],
                     "asset_type":service_media_item.get('asset_type',""),
                     "alt_text":service_media_item.get('alt_text',""),
                     "ipfs_url":ipfs_url
