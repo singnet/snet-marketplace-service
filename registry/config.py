@@ -38,7 +38,8 @@ BLOCKCHAIN_TEST_ENV = {
     "ws_provider": "wss://ropsten.infura.io/ws",
     "publisher_private_key": "",
     "publisher_address": "",
-    "free_calls": 100
+    "free_calls": 100,
+    "test_price_in_cogs":1
 }
 SLACK_CHANNEL_FOR_APPROVAL_TEAM = ""
 SIGNING_SECRET = ""
@@ -62,3 +63,7 @@ EMAILS = {
     "SERVICE_APPROVERS_DLIST": ""
 }
 SERVICE_CURATE_ARN = ""
+APPROVAL_SLACK_HOOK = {
+    'hostname': 'https://hooks.slack.com',
+    'path': ''
+}
