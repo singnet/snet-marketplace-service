@@ -3,6 +3,7 @@ plugins:
   - serverless-python-requirements
   - serverless-plugin-tracing
   - serverless-prune-plugin
+  - serverless-aws-documentation
 
 service: contract-api
 provider:
@@ -155,6 +156,23 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Get all organizations"
+            description: "Get all organizations high level data"
+            tags:
+              - "organization"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Organization Data"
+                responseModels:
+                  "application/json": "GetAllOrgOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
   get_org_for_org_id:
     warmup: true
     handler: contract_api/handlers.organization_handlers.get_org_for_org_id
@@ -184,6 +202,23 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Get all organizations by org_id"
+            description: "Get all organization data by org_id"
+            tags:
+              - "organization"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Organization Data"
+                responseModels:
+                  "application/json": "GetOrgForOrgIdOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
   get_all_group_for_org:
     warmup: true
     handler: contract_api/handlers.organization_handlers.get_all_group_for_org
@@ -213,6 +248,23 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Get all group for organization by org_id"
+            description: "Get all organization data for given org_id"
+            tags:
+              - "group"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Group Data"
+                responseModels:
+                  "application/json": "GetAllGroupForOrgOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
   get_group_for_org_id:
     warmup: true
     handler:  contract_api/handlers.organization_handlers.get_group_for_org_id
@@ -242,6 +294,23 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Get group for organization by org_id and group_id"
+            description: "Get group data for given org_id and group_id"
+            tags:
+              - "group"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Group Data"
+                responseModels:
+                  "application/json": "GetGroupForOrgIdOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
   get_service_get:
     warmup: true
     handler: contract_api/handlers.service_handlers.get_service_get
@@ -267,6 +336,26 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Get service"
+            description: "Get service"
+            tags:
+              - "service"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            queryParams:
+              - name: "attribute"
+                description: "get key value pairs based on attribute"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Service Data"
+                responseModels:
+                  "application/json": "GetServiceGetOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
   get_service_post:
     warmup: true
     handler: contract_api/handlers.service_handlers.get_service_post
@@ -322,6 +411,23 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Get group by org_id and service_id"
+            description: "Get group for given org_id and service_id"
+            tags:
+              - "group"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Group Data"
+                responseModels:
+                  "application/json": "GetGroupForServiceOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
   get_service_for_given_org:
     warmup: true
     handler: contract_api/handlers.service_handlers.get_service_for_given_org
@@ -352,6 +458,23 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Get service by org_id"
+            description: "Get service for given org_id"
+            tags:
+              - "service"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Service Data"
+                responseModels:
+                  "application/json": "GetServiceForGivenOrgOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
   post_rating_for_given_service:
     warmup: true
     handler: contract_api/handlers.service_handlers.post_rating_for_given_service
@@ -372,6 +495,23 @@ functions:
               paths:
                 orgId: true
                 serviceId: true
+          documentation:
+            summary: "update rating for service by org_id"
+            description: "update rating for service by given service_id and orgn_id "
+            tags:
+              - "service"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "response"
+                responseModels:
+                  "application/json": "GetServiceForGivenOrgOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
   get_channels_for_group:
     warmup: true
     handler: contract_api/handlers.channel_handlers.get_channels_for_group

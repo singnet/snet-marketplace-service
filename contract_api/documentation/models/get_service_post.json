@@ -8,7 +8,154 @@
       "status": {
         "type": "string"
       },
-      "data": {},
+      "data": {
+        "type": "object",
+        "properties": {
+          "total_count": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "result": {
+            "type": "array",
+            "items": [
+              {
+                "type": "object",
+                "properties": {
+                  "service_row_id": {
+                    "type": "integer"
+                  },
+                  "org_id": {
+                    "type": "string"
+                  },
+                  "service_id": {
+                    "type": "string"
+                  },
+                  "display_name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string"
+                  },
+                  "json": {
+                    "type": "string"
+                  },
+                  "model_ipfs_hash": {
+                    "type": "string"
+                  },
+                  "encoding": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "mpe_address": {
+                    "type": "string"
+                  },
+                  "service_rating": {
+                    "type": "object",
+                    "properties": {
+                      "rating": {
+                        "type": "number"
+                      },
+                      "total_users_rated": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "rating",
+                      "total_users_rated"
+                    ]
+                  },
+                  "ranking": {
+                    "type": "integer"
+                  },
+                  "contributors": {
+                    "type": "object"
+                  },
+                  "short_description": {
+                    "type": "string"
+                  },
+                  "organization_name": {
+                    "type": "string"
+                  },
+                  "org_assets_url": {
+                    "type": "object",
+                    "properties": {
+                      "hero_image": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "hero_image"
+                    ]
+                  },
+                  "contacts": {
+                    "type": "array",
+                    "items": {}
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "is_available": {
+                    "type": "integer"
+                  },
+                  "media": {
+                    "type": "object",
+                    "properties": {
+                      "org_id": {
+                        "type": "string"
+                      },
+                      "service_id": {
+                        "type": "string"
+                      },
+                      "file_type": {
+                        "type": "string"
+                      },
+                      "asset_type": {
+                        "type": "string"
+                      },
+                      "url": {
+                        "type": "null"
+                      },
+                      "alt_text": {
+                        "type": "string"
+                      },
+                      "order": {
+                        "type": "integer"
+                      },
+                      "row_id": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
       "error": {
         "type": "object",
         "properties": {
