@@ -10,7 +10,7 @@ This service reads all actionable events i.e events from Registry/MPE/RFAI/Token
 #### DApp User
 This is a central service which stores user information across all the DApp.
 #### Registry
-The Registry service handles all the service developer task. This service mainly interact with Publisher Portal DApp. All the interaction right from when organization/individual is registered to the time it is published are handled by this service.
+The Registry service handles all the service developer task. This service helps service developers in publishing the service on the snet platform and mainly interacts with Publisher Portal DApp. All the interaction right from when organization/individual is registered to the time it is published are handled by this service.
 This service subscribes to Event Pub Sub for event and parses event data in structured format.
 #### Contract API
 The Contract API service handles all the general service consumer task. It helps to display and access curated service data in Marketplace DApp.
