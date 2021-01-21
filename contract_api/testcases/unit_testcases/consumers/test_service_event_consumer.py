@@ -169,7 +169,6 @@ class TestOrganizationEventConsumer(unittest.TestCase):
                     {
                         "file_type": "text",
                         "url": "Qmbb7tmKZX2TSxDKsK6DEAbp3tPgNUYP11CC93Cft7EkFb/hero_fbprophet_forecast1",
-                        "asset_type": "text updated",
                         "order": 2,
                         "alt_text": "text sample updated",
                     }],
@@ -229,7 +228,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
             media_item.pop('row_id')
 
         assert service_media == [
-            {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'https://test-s3-push', 'order': 2, 'file_type': 'text', 'asset_type': 'text updated', 'alt_text': 'text sample updated', 'ipfs_url': 'Qmbb7tmKZX2TSxDKsK6DEAbp3tPgNUYP11CC93Cft7EkFb/hero_fbprophet_forecast1'},
+            {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'https://test-s3-push', 'order': 2, 'file_type': 'text', 'asset_type': '', 'alt_text': 'text sample updated', 'ipfs_url': 'Qmbb7tmKZX2TSxDKsK6DEAbp3tPgNUYP11CC93Cft7EkFb/hero_fbprophet_forecast1'},
             {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'https://youtu.be/7mj-p1Os6QA', 'order': 5, 'file_type': 'video', 'asset_type': 'image updated', 'alt_text': 'alternate text sample updated', 'ipfs_url': ''},
             {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'https://test-s3-push', 'order': 6, 'file_type': 'asset', 'asset_type': 'hero_image', 'alt_text': '', 'ipfs_url': 'QmVcE6fEDP764ibadXTjZHk251Lmt5xAxdc4P9mPA4kksk/hero_gene-annotation-2b.png'}
         ]
