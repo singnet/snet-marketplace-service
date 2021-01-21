@@ -30,7 +30,9 @@
             },
             "members": {
               "type": "array",
-              "items": {}
+              "items": {
+                "type": "object"
+              }
             }
           }
         }
