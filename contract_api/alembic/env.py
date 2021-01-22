@@ -47,7 +47,7 @@ def run_migrations_offline():
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
-        version_table="contract_api_alembic_version"
+        version_table="alembic_version_contract_api"
     )
 
     with context.begin_transaction():

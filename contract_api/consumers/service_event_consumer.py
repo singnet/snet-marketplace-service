@@ -112,6 +112,54 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                                                                  service_id)
         return assets_url_mapping
 
+    def create_service_media(self,org_id,service_id,service_media,service_row_id):
+        count = 0;
+        if len(service_media)>0:
+            #clear the existing values from db
+            self._service_repository.delete_service_media(org_id=org_id,service_id=service_id)
+            #fif ipfs_url store in s3 and update url else store url
+            for service_media_item in service_media:
+                url = service_media_item.get("url",{})
+                if "http" in url or "https" in url:
+                    updated_url = url
+                    ipfs_url = ''
+                else:
+                    updated_url = self._push_asset_to_s3_using_hash(org_id=org_id,service_id=service_id,hash=url)
+                    ipfs_url = service_media_item.get("url","")
+                #insert service media data
+                service_media_data = {
+                    "url":updated_url,
+                    "file_type":service_media_item['file_type'],
+                    "order":service_media_item['order'],
+                    "asset_type":service_media_item.get('asset_type',""),
+                    "alt_text":service_media_item.get('alt_text',""),
+                    "ipfs_url":ipfs_url
+                }
+                self._service_repository.create_service_media(org_id=org_id,service_id=service_id,service_row_id=service_row_id,media_data=service_media_data)
+                if service_media_item.get('order',0) > count:
+                    count = service_media_item.get('order',0)
+
+        #Take assets from updated metadata and store them in service_media table
+        #Take order as greatest of media + 1
+        #Will be removed later as new format is used
+        service_metadata = self._service_repository.get_service_metadata(org_id=org_id,service_id=service_id)
+        if service_metadata is not None:
+            assets_url = json.loads(service_metadata.get('assets_url',{}))
+            assets_hash = json.loads(service_metadata.get('assets_hash',{}))
+        if len(assets_url)>0:
+            for key in assets_url.keys():
+                url = assets_url.get(key,"")
+                hash = assets_hash.get(key,"")
+                service_media_data = {
+                    "url":url,
+                    "file_type":"asset",
+                    "order":count+1,
+                     "asset_type":key,
+                     "alt_text":"",
+                     "ipfs_url":hash,
+                   }
+                self._service_repository.create_service_media(org_id=org_id,service_id=service_id,service_row_id=service_row_id,media_data=service_media_data)
+
     def _process_service_data(self, org_id, service_id, new_ipfs_hash, new_ipfs_data, tags_data):
         try:
 
@@ -129,6 +177,11 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             self._service_repository.create_or_update_service_metadata(service_row_id=service_row_id, org_id=org_id,
                                                                        service_id=service_id,
                                                                        ipfs_data=new_ipfs_data, assets_url=assets_url)
+
+            service_media = new_ipfs_data.get('media', [])
+            self.create_service_media(org_id=org_id,service_id=service_id,
+                                      service_media=service_media,service_row_id=service_row_id)
+
             groups = new_ipfs_data.get('groups', [])
             group_insert_count = 0
             for group in groups:
