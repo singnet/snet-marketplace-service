@@ -84,6 +84,10 @@ custom:
         contentType: "application/json"
         schema: ${file(contract_api/documentation/models/get_service_post.json):GetServicePostOutput}
       -
+        name: "GetServicePostInput"
+        contentType: "application/json"
+        schema: ${file(contract_api/documentation/models/get_service_post.json):GetServicePostInput}
+      -
         name: "PostRatingForGivenServiceOutput"
         contentType: "application/json"
         schema: ${file(contract_api/documentation/models/post_rating_for_given_service.json):PostRatingForGivenServiceOutput}
@@ -381,6 +385,25 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Get service"
+            description: "Get service"
+            tags:
+              - "service"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Service Data"
+                responseModels:
+                  "application/json": "GetServicePostOutput"
+                requestModels:
+                  "application/json": "GetServicePostInput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
   get_group_for_service:
     warmup: true
     handler:  contract_api/handlers.service_handlers.get_group_for_service
@@ -542,6 +565,28 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Get channels for groupId and channelId"
+            description: "Get channels for given group by groupId and channelId"
+            tags:
+              - "channel"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            pathParams:
+              - name: "groupId"
+                description: "Enter groupId"
+              - name: "channelId"
+                description: "Enter channelId"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "response"
+                responseModels:
+                  "application/json": "GetChannelsForGroupOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
 
   get_channels_old_api:
     warmup: true
@@ -568,6 +613,23 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Get channel"
+            description: "Get channel"
+            tags:
+              - "channel"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Channel Data"
+                responseModels:
+                  "application/json": "GetChannelsOldApiOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
   get_channel:
     warmup: true
     handler: contract_api/handlers.channel_handlers.get_channels
@@ -593,6 +655,23 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Get channel"
+            description: "Get channel"
+            tags:
+              - "channel"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Channel Data"
+                responseModels:
+                  "application/json": "GetChannelOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
 
   update-consumed-balance:
     handler: contract_api/handlers.channel_handlers.update_consumed_balance
@@ -623,6 +702,26 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Get balance by channel_id"
+            description: "Get balance for given channel_id"
+            tags:
+              - "channel"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            pathParams:
+              - name: "channel_id"
+                description: "Enter channel_id"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Channel Data"
+                responseModels:
+                  "application/json": "UpdateConsumedBalanceOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
 
   service-curation:
     handler: contract_api.handlers.service_handlers.service_curation
