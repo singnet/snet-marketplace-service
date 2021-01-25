@@ -236,26 +236,26 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-      documentation:
-        summary: "Verify organization"
-        description: "Verify organization"
-        tags:
-          - "organization"
-        requestHeaders:
-          - name: "Content-Type"
-            description: "application/json"
-        pathParams:
-          - name: "org_id"
-            description: "Enter organization org_id"
-        methodResponses:
-          - statusCode: "200"
-            responseBody:
-              description: "Verified Data"
-            responseModels:
-              "application/json": "VerifyOrganizationIdOutput"
-          - statusCode: "500"
-            responseModels:
-              "application/json": "ErrorMessage"
+          documentation:
+            summary: "Verify organization"
+            description: "Verify organization"
+            tags:
+              - "organization"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            pathParams:
+              - name: "org_id"
+                description: "Enter organization org_id"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Verified Data"
+                responseModels:
+                  "application/json": "VerifyOrganizationIdOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
 
   get_groups_for_org:
     warmup: true
@@ -1128,28 +1128,28 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-      documentation:
-        summary: "save service attribute by org_uuid and service_uuid"
-        description: "save service attribute by given org_uuid and service_uuid"
-        tags:
-          - "service"
-        requestHeaders:
-          - name: "Content-Type"
-            description: "application/json"
-        pathParams:
-          - name: "org_uuid"
-            description: "Enter org_uuid"
-          - name: "service_uuid"
-            description: "Enter service_uuid"
-        methodResponses:
-          - statusCode: "200"
-            responseBody:
-              description: "Service Data"
-            responseModels:
-              "application/json": "SaveServiceAttributesOutput"
-          - statusCode: "500"
-            responseModels:
-              "application/json": "ErrorMessage"
+          documentation:
+            summary: "save service attribute by org_uuid and service_uuid"
+            description: "save service attribute by given org_uuid and service_uuid"
+            tags:
+              - "service"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            pathParams:
+              - name: "org_uuid"
+                description: "Enter org_uuid"
+              - name: "service_uuid"
+                description: "Enter service_uuid"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Service Data"
+                responseModels:
+                  "application/json": "SaveServiceAttributesOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
 
   get-services-for-org:
     warmup: true
