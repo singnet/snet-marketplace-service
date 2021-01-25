@@ -82,8 +82,7 @@ custom:
       -
         name: "GetServicePostOutput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_service_post.json):GetServicePostOutput
-
+        schema: ${file(contract_api/documentation/models/get_service_post.json):GetServicePostOutput}
       -
         name: "GetServicePostInput"
         contentType: "application/json"
