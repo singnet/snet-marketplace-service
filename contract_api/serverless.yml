@@ -82,7 +82,8 @@ custom:
       -
         name: "GetServicePostOutput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_service_post.json):GetServicePostOutput}
+        schema: ${file(contract_api/documentation/models/get_service_post.json):GetServicePostOutput
+
       -
         name: "GetServicePostInput"
         contentType: "application/json"
@@ -168,8 +169,6 @@ functions:
             requestHeaders:
               - name: "Content-Type"
                 description: "application/json"
-            requestBody:
-              description: "request body"
             requestModels:
               "application/json": "GetServicePostInput"
             methodResponses:
@@ -399,10 +398,10 @@ functions:
                 description: "application/json"
             requestBody:
               description: "service data"
-            responseBody:
-               description: "Service Data"
             methodResponses:
               - statusCode: "200"
+                responseBody:
+                  description: "Service Data"
                 responseModels:
                   "application/json": "GetServicePostOutput"
               - statusCode: "500"

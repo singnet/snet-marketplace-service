@@ -570,7 +570,7 @@ functions:
               - name: "org_uuid"
                 description: "Enter organization org_uuid"
               - name: "username"
-                  description: "Enter username"
+                description: "Enter username"
             methodResponses:
               - statusCode: "200"
                 responseBody:
