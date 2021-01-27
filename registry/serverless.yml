@@ -124,6 +124,9 @@ custom:
       - name: "GetServiceForServiceUuidOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/get_service_for_service_uuid.json):GetServiceForServiceUuidOutput}
+      - name: "UpdateOrgOutput"
+        contentType: "application/json"
+        schema: ${file(registry/documentation/models/update_org.json):UpdateOrgOutput}
 
 package:
   exclude:
