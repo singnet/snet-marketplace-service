@@ -88,9 +88,9 @@ custom:
       - name: "GetMemberOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/get_member.json):GetMemberOutput}
-      - name: "GetMembersOutput"
+      - name: "GetAllMembersOutput"
         contentType: "application/json"
-        schema: ${file(registry/documentation/models/get_all_members.json):GetMembersOutput}
+        schema: ${file(registry/documentation/models/get_all_members.json):GetAllMembersOutput}
       - name: "InviteMembersOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/invite_members.json):InviteMembersOutput}
@@ -123,7 +123,7 @@ custom:
         schema: ${file(registry/documentation/models/get_services_for_org.json):GetServicesForOrgOutput}
       - name: "GetServiceForServiceUuidOutput"
         contentType: "application/json"
-        schema: ${file(registry/documentation/models/get_services_for_org.json):GetServiceForServiceUuidOutput}
+        schema: ${file(registry/documentation/models/get_service_for_service_uuid.json):GetServiceForServiceUuidOutput}
 
 package:
   exclude:
