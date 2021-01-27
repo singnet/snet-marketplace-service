@@ -1089,11 +1089,11 @@ functions:
                   description: "Service Data"
                 responseModels:
                   "application/json": "SaveServiceOutput"
-              pathParams:
-                - name: "org_uuid"
-                  description: "Enter org_uuid"
-                - name: "service_uuid"
-                  description: "Enter service_uuid"
+                pathParams:
+                  - name: "org_uuid"
+                    description: "Enter org_uuid"
+                  - name: "service_uuid"
+                    description: "Enter service_uuid"
               - statusCode: "500"
                 responseModels:
                   "application/json": "ErrorMessage"
