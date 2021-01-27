@@ -168,8 +168,6 @@ functions:
             requestHeaders:
               - name: "Content-Type"
                 description: "application/json"
-            requestBody:
-              description: "request body"
             requestModels:
               "application/json": "GetServicePostInput"
             methodResponses:
@@ -399,10 +397,10 @@ functions:
                 description: "application/json"
             requestBody:
               description: "service data"
-            responseBody:
-               description: "Service Data"
             methodResponses:
               - statusCode: "200"
+                responseBody:
+                  description: "Service Data"
                 responseModels:
                   "application/json": "GetServicePostOutput"
               - statusCode: "500"
