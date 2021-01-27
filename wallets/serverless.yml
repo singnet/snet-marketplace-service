@@ -7,7 +7,7 @@ plugins:
 service: wallets
 custom:
   pythonRequirements:
-    fileName: wallets/requirement.txt
+    fileName: wallets/requirements.txt
     dockerizePip: true
     useDownloadCache: true
     useStaticCache: true
@@ -20,7 +20,7 @@ custom:
 
 provider:
   name: aws
-  runtime: python3.6
+  runtime: python3.7
   description: Dapp user service# optional, Description to publish to AWS
   memorySize: 128
   timeout: 30
@@ -40,7 +40,7 @@ package:
     - .circleci/**
     - .gitignore/**
     - .serverless/**
-    - requirement.txt
+    - requirements.txt
     - venv/**
     - config.ropsten.json
     - test/**
@@ -149,6 +149,23 @@ functions:
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
 
+  delete-user-wallet:
+    warmup: true
+    handler: wallets/handlers/wallet_handlers.delete_user_wallet
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: POST
+          path: /wallet/delete
+          private: true
+
   create-channel-event:
     warmup: true
     handler: wallets/handlers/channel_handler.record_create_channel_event
@@ -169,6 +186,19 @@ functions:
   channelTxnStatus:
     warmup: true
     handler: wallets/handlers/channel_transaction_status_handler.request_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - schedule: rate(2 minutes)
+
+  open-channel-by-third-party:
+    handler: wallets/handlers/channel_handler.open_channel_by_third_party
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:

@@ -1,8 +1,14 @@
 import json
 from collections import defaultdict
+
+from common.logger import get_logger
 from common.utils import Utils
+from contract_api.constant import GET_ALL_SERVICE_LIMIT, GET_ALL_SERVICE_OFFSET_LIMIT
+from contract_api.dao.service_repository import ServiceRepository
 from contract_api.filter import Filter
-from contract_api.constant import GET_ALL_SERVICE_OFFSET_LIMIT, GET_ALL_SERVICE_LIMIT
+
+logger = get_logger(__name__)
+BUILD_CODE = {"SUCCESS": 1, "FAILED": 0}
 
 
 class Registry:
@@ -10,11 +16,21 @@ class Registry:
         self.repo = obj_repo
         self.obj_utils = Utils()
 
+    def service_build_status_notifier(self, org_id, service_id, build_status):
+        logger.info(f"received event for service_id: {service_id} org_id:{org_id}")
+        if build_status == BUILD_CODE['FAILED']:
+            self.curate_service(org_id, service_id, curated=False)
+        elif build_status == BUILD_CODE['SUCCESS']:
+            self.curate_service(org_id, service_id, curated=True)
+        else:
+            raise Exception("invalid build status")
+
     def _get_all_service(self):
         """ Method to generate org_id and service mapping."""
         try:
-            all_orgs_srvcs_raw = self.repo.execute("SELECT O.org_id, O.organization_name,O.org_assets_url, O.owner_address, S.service_id  FROM service S, "
-                                                   "organization O WHERE S.org_id = O.org_id AND S.is_curated = 1")
+            all_orgs_srvcs_raw = self.repo.execute(
+                "SELECT O.org_id, O.organization_name,O.org_assets_url, O.owner_address, S.service_id  FROM service S, "
+                "organization O WHERE S.org_id = O.org_id AND S.is_curated = 1")
             all_orgs_srvcs = {}
             for rec in all_orgs_srvcs_raw:
                 if rec['org_id'] not in all_orgs_srvcs.keys():
@@ -83,8 +99,9 @@ class Registry:
                 filter_query = " AND " + filter_query
             search_count_query = "SELECT count(*) as search_count FROM service A, (SELECT DISTINCT M.org_id, M.service_id FROM " \
                                  "service_metadata M LEFT JOIN service_tags T ON M.service_row_id = T.service_row_id WHERE (" \
-                                 + sub_qry.replace('%', '%%') + ")" + filter_query + ") B WHERE A.service_id = B.service_id " \
-                                 "AND A.org_id = B.org_id AND A.is_curated = 1 "
+                                 + sub_qry.replace('%',
+                                                   '%%') + ")" + filter_query + ") B WHERE A.service_id = B.service_id " \
+                                                                                "AND A.org_id = B.org_id AND A.is_curated = 1 "
 
             res = self.repo.execute(search_count_query, values)
             return res[0].get("search_count", 0)
@@ -93,9 +110,7 @@ class Registry:
 
     def _convert_service_metadata_str_to_json(self, record):
         record["service_rating"] = json.loads(record["service_rating"])
-        record["assets_url"] = json.loads(record["assets_url"])
         record["org_assets_url"] = json.loads(record["org_assets_url"])
-        record["assets_hash"] = json.loads(record["assets_hash"])
         record["contributors"] = json.loads(record.get("contributors", "[]"))
         record["contacts"] = json.loads(record.get("contacts", "[]"))
 
@@ -109,9 +124,11 @@ class Registry:
             if filter_query != "":
                 filter_query = " AND " + filter_query
             srch_qry = "SELECT * FROM service A, (SELECT M.org_id, M.service_id, group_concat(T.tag_name) AS tags FROM " \
-                       "service_metadata M LEFT JOIN service_tags T ON M.service_row_id = T.service_row_id WHERE (" \
-                       + sub_qry.replace('%', '%%') + ")" + filter_query + " GROUP BY M.org_id, M.service_id ORDER BY " + sort_by + " " + order_by + " ) B WHERE " \
-                                                      "A.service_id = B.service_id AND A.org_id=B.org_id AND A.is_curated= 1 LIMIT %s , %s"
+                       "service_metadata M LEFT JOIN service_tags T ON M.service_row_id = T.service_row_id " \
+                       "LEFT JOIN service_endpoint E ON M.service_row_id = E.service_row_id WHERE (" \
+                       + sub_qry.replace('%', '%%') + ")" + filter_query + \
+                       " GROUP BY M.org_id, M.service_id ORDER BY E.is_available DESC, " + sort_by + " " + order_by + \
+                       " ) B WHERE A.service_id = B.service_id AND A.org_id=B.org_id AND A.is_curated= 1 LIMIT %s , %s"
 
             qry_dta = self.repo.execute(
                 srch_qry, values + [int(offset), int(limit)])
@@ -128,11 +145,18 @@ class Registry:
                     rslt[org_id][service_id] = {}
                 rslt[org_id][service_id]["tags"] = tags
             qry_part = " AND (S.org_id, S.service_id) IN " + \
-                str(org_srvc_tuple).replace(',)', ')')
+                       str(org_srvc_tuple).replace(',)', ')')
+            qry_part_where = " AND (org_id, service_id) IN " + \
+                       str(org_srvc_tuple).replace(',)', ')')
             print("qry_part::", qry_part)
             sort_by = sort_by.replace("org_id", "M.org_id")
-            services = self.repo.execute("SELECT M.*,O.organization_name,O.org_assets_url FROM service_metadata M, service S , organization O WHERE O.org_id = S.org_id and "
-                                         "S.row_id = M.service_row_id " + qry_part + "ORDER BY " + sort_by + " " + order_by)
+            services = self.repo.execute(
+                "SELECT DISTINCT M.row_id, M.service_row_id, M.org_id, M.service_id, M.display_name, M.description, M.url, M.json, M.model_ipfs_hash, M.encoding, M.`type`," 
+				" M.mpe_address,M.service_rating, M.ranking, M.contributors, M.short_description,"
+                "O.organization_name,O.org_assets_url FROM service_endpoint E, service_metadata M, service S "
+                ", organization O WHERE O.org_id = S.org_id AND S.row_id = M.service_row_id AND "
+                "S.row_id = E.service_row_id " + qry_part + "ORDER BY E.is_available DESC, " + sort_by + " " + order_by)
+            services_media = self.repo.execute("select org_id ,service_id,file_type ,asset_type,url,alt_text ,`order`,row_id from service_media where asset_type = 'hero_image' " + qry_part_where)
             obj_utils = Utils()
             obj_utils.clean(services)
             available_service = self._get_is_available_service()
@@ -147,8 +171,14 @@ class Registry:
                     tags = rslt[org_id][service_id]["tags"].split(",")
                 if (org_id, service_id) in available_service:
                     is_available = 1
+                asset_media = []
+                if len(services_media)>0:
+                    asset_media = [x for x in services_media if x['service_id'] == service_id]
+                    if len(asset_media)>0:
+                        asset_media = asset_media[0]
                 rec.update({"tags": tags})
                 rec.update({"is_available": is_available})
+                rec.update({"media": asset_media})
 
             return services
         except Exception as err:
@@ -207,14 +237,36 @@ class Registry:
                     groups = {group_id: {"group_id": rec['group_id'],
                                          "group_name": rec['group_name'],
                                          "pricing": json.loads(rec['pricing']),
-                                         "endpoints": []
+                                         "endpoints": [],
+                                         "free_calls": rec.get("free_calls", 0),
+                                         "free_call_signer_address": rec.get("free_call_signer_address", "")
                                          }
                               }
-                    groups[group_id]['endpoints'].append({"endpoint": rec['endpoint'], "is_available":
-                                                          rec['is_available'], "last_check_timestamp": rec["last_check_timestamp"]})
+                groups[group_id]['endpoints'].append({"endpoint": rec['endpoint'], "is_available":
+                    rec['is_available'], "last_check_timestamp": rec["last_check_timestamp"]})
             return list(groups.values())
         except Exception as e:
             print(repr(e))
+            raise e
+
+    def get_service_media(self,org_id,service_id):
+        try:
+            query = """select `row_id`,url,`order`,file_type,asset_type,alt_text from service_media 
+            where service_id = %s and org_id = %s """
+            query_response = self.repo.execute(query,[service_id,org_id])
+            media = []
+            if len(query_response)==0:
+               return []
+            for response_item in query_response:
+                media.append({
+                    "row_id":response_item['row_id'],
+                    "url":response_item['url'],
+                    "file_type":response_item['file_type'],
+                    "order":response_item['order'],
+                    "alt_text":response_item['alt_text']
+                })
+            return media
+        except Exception as e:
             raise e
 
     def _get_is_available_service(self):
@@ -238,7 +290,8 @@ class Registry:
             return '%s %s"%s"' % (filter_condition.attr, filter_condition.operator, "%s"), value
         if filter_condition.operator == "IN":
             value = filter_condition.value
-            return '%s %s %s' % (filter_condition.attr, filter_condition.operator, "(" + (("%s,")*len(value))[:-1] + ")"), value
+            return '%s %s %s' % (
+                filter_condition.attr, filter_condition.operator, "(" + (("%s,") * len(value))[:-1] + ")"), value
         if filter_condition.operator == "BETWEEN":
             value = filter_condition.value
             return '%s %s %s AND %s' % (filter_condition.attr, filter_condition.operator, "%s", "%s"), value
@@ -268,14 +321,17 @@ class Registry:
         try:
             filter_attribute = {"attribute": attribute, "values": []}
             if attribute == "tag_name":
-                filter_data = self.repo.execute("SELECT DISTINCT tag_name AS 'key', tag_name AS 'value' FROM service_tags T, service S "
-                                                "WHERE S.row_id = T.service_row_id AND S.is_curated = 1")
+                filter_data = self.repo.execute(
+                    "SELECT DISTINCT tag_name AS 'key', tag_name AS 'value' FROM service_tags T, service S "
+                    "WHERE S.row_id = T.service_row_id AND S.is_curated = 1")
             elif attribute == "display_name":
-                filter_data = self.repo.execute("SELECT DISTINCT S.service_id AS 'key',display_name AS 'value' FROM service_metadata M, service S "
-                                                "WHERE S.row_id = M.service_row_id AND S.is_curated = 1")
+                filter_data = self.repo.execute(
+                    "SELECT DISTINCT S.service_id AS 'key',display_name AS 'value' FROM service_metadata M, service S "
+                    "WHERE S.row_id = M.service_row_id AND S.is_curated = 1")
             elif attribute == "org_id":
-                filter_data = self.repo.execute("SELECT DISTINCT O.org_id AS 'key' ,O.organization_name AS 'value' from organization O, service S "
-                                                "WHERE S.org_id = O.org_id AND S.is_curated = 1")
+                filter_data = self.repo.execute(
+                    "SELECT DISTINCT O.org_id AS 'key' ,O.organization_name AS 'value' from organization O, service S "
+                    "WHERE S.org_id = O.org_id AND S.is_curated = 1")
             else:
                 return filter_attribute
             for rec in filter_data:
@@ -316,15 +372,16 @@ class Registry:
             tags = []
             org_groups_dict = {}
             basic_service_data = self.repo.execute(
-                "SELECT M.*, S.*, O.org_id, O.organization_name, O.owner_address, O.org_metadata_uri, O.org_email, "
-                "O.org_assets_url, O.assets_hash, O.description as org_description, O.contacts "
+                "SELECT M.row_id, M.service_row_id, M.org_id, M.service_id, M.display_name, M.description, M.url, M.json, M.model_ipfs_hash, M.encoding, M.`type`," 
+				" M.mpe_address,M.service_rating, M.ranking, M.contributors, M.short_description,"
+                " S.*, O.org_id, O.organization_name, O.owner_address, O.org_metadata_uri, O.org_email, "
+                "O.org_assets_url, O.description as org_description, O.contacts "
                 "FROM service_metadata M, service S, organization O "
                 "WHERE O.org_id = S.org_id AND S.row_id = M.service_row_id AND S.org_id = %s "
                 "AND S.service_id = %s AND S.is_curated = 1", [org_id, service_id])
             if len(basic_service_data) == 0:
                 return []
             self.obj_utils.clean(basic_service_data)
-
 
             org_group_data = self.repo.execute(
                 "SELECT * FROM org_group WHERE org_id = %s", [org_id])
@@ -336,6 +393,7 @@ class Registry:
             tags = self.repo.execute("SELECT tag_name FROM service_tags WHERE org_id = %s AND service_id = %s",
                                      [org_id, service_id])
 
+            media = self.get_service_media(org_id=org_id,service_id=service_id)
             result = basic_service_data[0]
 
             self._convert_service_metadata_str_to_json(result)
@@ -347,7 +405,7 @@ class Registry:
             is_available = 0
             # Hard Coded Free calls in group data
             for rec in service_group_data:
-                rec["free_calls"] = 15
+                rec["free_calls"] = rec.get("free_calls", 0)
                 if is_available == 0:
                     endpoints = rec['endpoints']
                     for endpoint in endpoints:
@@ -356,7 +414,7 @@ class Registry:
                             break
                 rec.update(org_groups_dict.get(rec['group_id'], {}))
 
-            result.update({"is_available": is_available, "groups": service_group_data, "tags": tags})
+            result.update({"is_available": is_available, "groups": service_group_data, "tags": tags,"media":media})
             return result
         except Exception as e:
             print(repr(e))
@@ -395,4 +453,35 @@ class Registry:
             return "success"
         except Exception as e:
             print(repr(e))
+            raise e
+
+    def curate_service(self, org_id, service_id, curated):
+        service_repo = ServiceRepository(self.repo)
+        if str(curated).lower() == "true":
+            service_repo.curate_service(org_id, service_id, 1)
+        elif str(curated).lower() == "false":
+            service_repo.curate_service(org_id, service_id, 0)
+        else:
+            Exception("Invalid curation flag")
+
+    def get_service_media(self,org_id,service_id):
+        try:
+            query = """select `row_id`,url,`order`,file_type,asset_type,alt_text from service_media 
+            where service_id = %s and org_id = %s """
+            query_response = self.repo.execute(query,[service_id,org_id])
+            media = []
+            if len(query_response)==0:
+                return media
+            for response_item in query_response:
+                media.append({
+                    "row_id":response_item['row_id'],
+                    "url":response_item['url'],
+                    "file_type":response_item['file_type'],
+                    "order":response_item['order'],
+                    "alt_text":response_item['alt_text'],
+                    "asset_type":response_item['asset_type']
+                })
+            return media
+        except Exception as e:
+            logger.error(f'Error in getting service media data for org_id = {org_id} service_id = {service_id}')
             raise e

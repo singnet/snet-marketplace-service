@@ -1,5 +1,5 @@
-from datetime import datetime
 import json
+from datetime import datetime
 
 from contract_api.dao.common_repository import CommonRepository
 
@@ -147,9 +147,54 @@ class ServiceRepository(CommonRepository):
 
     def create_group(self, service_row_id, org_id, service_id, grp_data):
         insert_group = "INSERT INTO service_group (service_row_id, org_id, service_id, group_id, group_name," \
-                       "pricing, row_updated, row_created)" \
-                       "VALUES(%s, %s, %s, %s, %s, %s, %s, %s)"
+                       "pricing,free_call_signer_address,free_calls,row_updated, row_created)" \
+                       "VALUES(%s, %s, %s, %s, %s, %s, %s, %s ,%s ,%s)"
         insert_group_param = [service_row_id, org_id, service_id, grp_data['group_id'], grp_data['group_name'],
-                              grp_data['pricing'], datetime.utcnow(), datetime.utcnow()]
+                              grp_data['pricing'],grp_data.get("free_call_signer_address","") ,grp_data.get("free_calls",0),datetime.utcnow(), datetime.utcnow()]
 
         return self.connection.execute(insert_group, insert_group_param)
+
+    def get_service_group(self, org_id, service_id):
+        select_group_query = """
+        SELECT  org_id, service_id, group_id, group_name, pricing,free_call_signer_address,free_calls
+            FROM service_group WHERE service_id = %s AND org_id = %s;
+        """
+
+        query_response = self.connection.execute(select_group_query, [service_id, org_id])
+
+        return query_response[0]
+
+    def curate_service(self, org_id, service_id, curate):
+        update_curation_query = "UPDATE service SET is_curated = %s where org_id = %s and service_id = %s"
+        try:
+            self.connection.execute(update_curation_query, [curate, org_id, service_id])
+            self.commit_transaction()
+        except:
+            self.rollback_transaction()
+            raise
+
+    def get_service_media(self,service_id,org_id):
+        query = "SELECT `row_id`, org_id, service_id, url, `order`, file_type, asset_type, alt_text,ipfs_url FROM service_media where service_id = %s and org_id = %s order by `order` "
+        service_media = self.connection.execute(query, (service_id, org_id))
+
+        if len(service_media) > 0:
+            return service_media
+        return None
+
+    def create_service_media(self,org_id,service_id,service_row_id,media_data):
+        url = media_data.get('url',""),
+        ipfs_url = media_data.get('ipfs_url',""),
+        order = media_data.get('order',"")
+        file_type = media_data.get('file_type',"")
+        asset_type = media_data.get('asset_type',""),
+        alt_text = media_data.get('alt_text',"")
+
+        query = "INSERT INTO service_media (org_id, service_id, url, `order`, file_type, asset_type, alt_text,ipfs_url,service_row_id,created_on, updated_on) VALUES(%s, %s, %s, %s, %s, %s, %s, %s,%s, %s,%s)"
+        insert_media_parameters = (org_id,service_id,url,order,file_type,asset_type,alt_text,ipfs_url,service_row_id,datetime.now(),datetime.now())
+
+        self.connection.execute(query,insert_media_parameters)
+
+    def delete_service_media(self,org_id,service_id):
+        delete_service_media = 'DELETE FROM service_media WHERE service_id = %s AND org_id = %s '
+        response = self.connection.execute(delete_service_media, [service_id, org_id])
+

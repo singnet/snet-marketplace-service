@@ -1,4 +1,3 @@
-
 NETWORKS = {
     3: {
         "name": "test",
@@ -16,12 +15,7 @@ NETWORKS = {
 
 SLACK_HOOK = {
     'hostname': 'https://hooks.slack.com',
-    'port': 443,
-    'path': '',
-    'method': 'POST',
-    'headers': {
-        'Content-Type': 'application/json'
-    }
+    'path': ''
 }
 IPFS_URL = {
     'url': '',
@@ -35,3 +29,7 @@ S3_BUCKET_SECRET_KEY = ""
 ASSETS_BUCKET_NAME = ""
 PATH_PREFIX = "/EthAccounts/ropsten/"
 ASSETS_PREFIX = ""
+GET_SERVICE_FROM_ORGID_SERVICE_ID_REGISTRY_ARN = ""
+MARKETPLACE_DAPP_BUILD = ""
+ASSET_TEMP_EXTRACT_DIRECTORY = "/var/task/"
+ASSETS_COMPONENT_BUCKET_NAME = ""

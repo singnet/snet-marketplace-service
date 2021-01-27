@@ -7,7 +7,7 @@ plugins:
 service: dapp-user
 custom:
   pythonRequirements:
-    fileName: dapp_user/requirement.txt
+    fileName: dapp_user/requirements.txt
     dockerizePip: true
     useDownloadCache: true
     useStaticCache: true
@@ -19,7 +19,7 @@ custom:
 
 provider:
   name: aws
-  runtime: python3.6
+  runtime: python3.7
   description: Dapp user service# optional, Description to publish to AWS
   memorySize: 128
   timeout: 30
@@ -38,7 +38,7 @@ package:
     - .circleci/**
     - .gitignore/**
     - .serverless/**
-    - requirement.txt
+    - requirements.txt
     - venv/**
     - config.ropsten.json
     - sls_deploy.sh
@@ -61,9 +61,9 @@ package:
     - node_modules/**
 
 functions:
-  dapp-user:
+  get-user-preference:
     warmup: true
-    handler: dapp_user/lambda_handler.request_handler
+    handler: dapp_user/application/handlers/user_handlers.get_user_preference
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -75,7 +75,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /signup
+          path: /user/preference
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -91,9 +91,52 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+
+  enable-disable-user-preference:
+    warmup: true
+    handler: dapp_user/application/handlers/user_handlers.add_or_update_user_preference
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: POST
+          path: /user/preference
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+  dapp-user:
+    warmup: true
+    handler: dapp_user/lambda_handler.request_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
       - http:
           method: GET
-          path: /delete-user
+          path: /signup
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -238,3 +281,46 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+
+  delete-user:
+    warmup: true
+    handler: dapp_user/application/handlers/user_handlers.delete_user
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /user/delete
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
+  register-user-post-aws-cognito-signup:
+    warmup: true
+    handler: dapp_user/application/handlers/user_handlers.register_user_post_aws_cognito_signup
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}

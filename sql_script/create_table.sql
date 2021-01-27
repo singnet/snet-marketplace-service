@@ -195,4 +195,32 @@ CREATE TABLE `daemon_token` (
   KEY `daemon_id_idx` (`daemon_id`),
   UNIQUE KEY `uq_daemon_id` (`daemon_id`)
 ) ;
-
+-- -----------------------------------------
+CREATE TABLE `service_status_stats` (
+       `row_id` int(11) NOT NULL AUTO_INCREMENT,
+       `org_id` varchar(128) NOT NULL,
+       `service_id` varchar(128) NOT NULL,
+       `previous_state` varchar(128) NOT NULL,
+       `current_state` varchar(128) NOT NULL,
+       `row_created` timestamp NULL DEFAULT NULL,
+       `row_updated` timestamp NULL DEFAULT NULL,
+       PRIMARY KEY (`row_id`)
+     ) ;
+-----------------------------------------------
+CREATE TABLE `service_media` (
+  `row_id` int NOT NULL AUTO_INCREMENT,
+  `org_id` varchar(100) NOT NULL,
+  `service_id` varchar(100) NOT NULL,
+  `url` varchar(512) DEFAULT NULL,
+  `order` int DEFAULT NULL,
+  `file_type` varchar(100) DEFAULT NULL,
+  `asset_type` varchar(100) DEFAULT NULL,
+  `alt_text` varchar(100) DEFAULT NULL,
+  `created_on` timestamp NULL DEFAULT NULL,
+  `updated_on` timestamp NULL DEFAULT NULL,
+  `ipfs_url` varchar(512) DEFAULT NULL,
+  `service_row_id` int DEFAULT NULL,
+  PRIMARY KEY (`row_id`),
+  KEY `ServiceMedisFK` (`service_row_id`),
+  CONSTRAINT `ServiceMedisFK` FOREIGN KEY (`service_row_id`) REFERENCES `service` (`row_id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=162 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

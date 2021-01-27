@@ -7,39 +7,32 @@ logger = get_logger(__name__)
 
 
 class WalletDAO:
-    def __init__(self, obj_repo):
-        self.repo = obj_repo
+    def __init__(self, repo):
+        self.repo = repo
 
-    def insert_wallet_details(self, username, address, type, status):
-        try:
-            self.repo.begin_transaction()
-            time_now = dt.utcnow()
-            wallet_query = "INSERT INTO wallet (address, type, status, row_created, row_updated) VALUES (%s, %s, %s, %s, %s)"
-            wallet_query_response = self.repo.execute(wallet_query, [address, type, status, time_now, time_now])
-            logger.info(f"Insert status for wallet is: {wallet_query_response}")
+    def add_user_for_wallet(self, wallet, username):
+        is_default = 0
+        time_now = dt.utcnow()
+        user_wallet_query = "INSERT INTO user_wallet (username, address, is_default, row_created, row_updated) " \
+                            "VALUES (%s, %s, %s, %s, %s)"
+        user_wallet_query_response = self.repo.execute(user_wallet_query,
+                                                       [username, wallet.address, is_default, time_now, time_now])
+        logger.info(f"Insert in user_wallet status is: {user_wallet_query_response}")
+        if user_wallet_query_response[0] != 1:
+            raise Exception("Failed to link user to the wallet")
 
-            is_default = 0
-            default_wallet_query = "SELECT * FROM user_wallet WHERE username = %s AND is_default = %s"
-            default_wallet = self.repo.execute(default_wallet_query, [username, 1])
-            if len(default_wallet) == 0:
-                logger.info(f"There is not default wallet for {username}")
-                is_default = 1
+    def get_wallet_details(self, wallet):
+        wallet_query = "SELECT address, type, status FROM wallet WHERE address = %s"
+        wallet_response = self.repo.execute(wallet_query, [wallet.address])
+        return wallet_response
 
-            user_wallet_query = "INSERT INTO user_wallet (username, address, is_default, row_created, row_updated) " \
-                                "VALUES (%s, %s, %s, %s, %s)"
-            user_wallet_query_response = self.repo.execute(user_wallet_query,
-                                                           [username, address, is_default, time_now, time_now])
-
-            logger.info(f"Insert in user_wallet status is: {user_wallet_query_response}")
-
-            if user_wallet_query_response[0] == 1 and wallet_query_response[0] == 1:
-                self.repo.commit_transaction()
-                return True
-            raise Exception("Failed to insert wallet details")
-        except Exception as e:
-            self.repo.rollback_transaction()
-            logger.error(repr(e))
-            return False
+    def insert_wallet(self, wallet):
+        time_now = dt.utcnow()
+        wallet_query = "INSERT INTO wallet (address, type, status, row_created, row_updated) VALUES (%s, %s, %s, %s, %s)"
+        wallet_query_response = self.repo.execute(wallet_query, [wallet.address, wallet.type, wallet.status, time_now, time_now])
+        logger.info(f"Insert status for wallet is: {wallet_query_response}")
+        if wallet_query_response[0] != 1:
+            raise Exception("failed to insert the wallet")
 
     def get_wallet_data_by_username(self, username):
         """ Method to get wallet details for a given username. """
@@ -66,3 +59,7 @@ class WalletDAO:
         except Exception as e:
             self.repo.rollback_transaction()
             print(repr(e))
+
+    def remove_user_wallet(self, username):
+        query = "DELETE FROM user_wallet where username=%s"
+        self.repo.execute(query, [username])

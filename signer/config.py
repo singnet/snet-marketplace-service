@@ -12,17 +12,14 @@ NETWORKS = {
         },
     }
 }
-GET_FREE_CALLS_METERING_ARN = ""
+METERING_ARN = ""
+GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_ARN = ""
+GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_REGISTRY_ARN=""
 PREFIX_FREE_CALL = ""
 NET_ID = 0
 SLACK_HOOK = {
     "hostname": "",
-    "port": 443,
-    "path": "",
-    "method": "POST",
-    "headers": {
-        "Content-Type": "application/json"
-    },
+    "path": ""
 }
 # this configuration is only for testing
 SIGNER_KEY = "5d66dccb32b03871f30533fe410d2e5998d607a579fb7bc2d991cd2148e3ec69"

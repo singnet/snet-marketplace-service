@@ -44,13 +44,31 @@ EVENT_SUBSCRIPTIONS = {"OrganizationCreated": [{"name": "", "type": "lambda_arn"
                                             "url": "arn:awser"}],
                        "ChannelSenderClaim": [{"name": "", "type": "lambda_arn",
                                                "url": "arn:aws"}],
+                       "OpenForStake": [{"name": "", "type": "lambda_arn",
+                                         "url": "arn:aws"}],
+                       "SubmitStake": [{"name": "", "type": "lambda_arn",
+                                        "url": "arn:aws"}],
+                       "UpdateAutoRenewal": [{"name": "", "type": "lambda_arn",
+                                              "url": "arn:aws"}],
+                       "ClaimStake": [{"name": "", "type": "lambda_arn",
+                                       "url": "arn:aws"}],
+                       "ApproveStake": [{"name": "", "type": "lambda_arn",
+                                         "url": "arn:aws"}],
+                       "RejectStake": [{"name": "", "type": "lambda_arn",
+                                        "url": "arn:aws"}],
+                       "AutoRenewStake": [{"name": "", "type": "lambda_arn",
+                                           "url": "arn:aws"}],
+                       "RenewStake": [{"name": "", "type": "lambda_arn",
+                                       "url": "arn:aws"}],
+                       "WithdrawStake": [{"name": "", "type": "lambda_arn",
+                                          "url": "arn:aws"}],
 
                        }
 
 WS_PROVIDER = "wss://ropsten.infura.io/"
-REGION_NAME="us-east-2"
+REGION_NAME = "us-east-2"
 SLACK_HOOK = {
-    'hostname' : 'https://hooks.slack.com',
+    'hostname': 'https://hooks.slack.com',
     'port': 443,
     'path': '',
     'method': 'POST',

@@ -9,7 +9,7 @@ from common.logger import get_logger
 from common.utils import Utils
 from wallets.config import NETWORK_ID, NETWORKS, SIGNER_ADDRESS, EXECUTOR_ADDRESS, EXECUTOR_KEY, \
     MINIMUM_AMOUNT_IN_COGS_ALLOWED, REGION_NAME
-from wallets.constant import GENERAL_WALLET_TYPE, MPE_ADDR_PATH, MPE_CNTRCT_PATH
+from wallets.constant import GENERAL_WALLET_TYPE, MPE_ADDR_PATH, MPE_CNTRCT_PATH, WalletStatus
 from wallets.dao.channel_dao import ChannelDAO
 from wallets.dao.wallet_data_access_object import WalletDAO
 from wallets.wallet import Wallet
@@ -18,43 +18,42 @@ logger = get_logger(__name__)
 
 
 class WalletService:
-    def __init__(self, obj_repo):
-        self.repo = obj_repo
+    def __init__(self, repo):
+        self.repo = repo
         self.boto_utils = BotoUtils(region_name=REGION_NAME)
-        self.obj_blockchain_util = BlockChainUtil(
+        self.blockchain_util = BlockChainUtil(
             provider_type="HTTP_PROVIDER",
             provider=NETWORKS[NETWORK_ID]['http_provider']
         )
         self.utils = Utils()
-        self.channel_dao = ChannelDAO(obj_repo=self.repo)
-        self.obj_wallet_dao = WalletDAO(obj_repo=self.repo)
+        self.channel_dao = ChannelDAO(repo=self.repo)
+        self.wallet_dao = WalletDAO(repo=self.repo)
 
     def create_and_register_wallet(self, username):
-        address, private_key = self.obj_blockchain_util.create_account()
-        obj_wallet = Wallet(address=address, private_key=private_key, type=GENERAL_WALLET_TYPE, status=0)
-        registered = self.register_wallet(username=username, obj_wallet=obj_wallet)
-        if registered:
-            return obj_wallet.get_wallet()
-        raise Exception("Unable to create and register wallet.")
+        address, private_key = self.blockchain_util.create_account()
+        wallet = Wallet(address=address, private_key=private_key,
+                        type=GENERAL_WALLET_TYPE, status=WalletStatus.ACTIVE.value)
+        self._register_wallet(wallet, username)
+        return wallet.to_dict()
 
-    def register_wallet(self, username, obj_wallet):
-        wallet_details = obj_wallet.get_wallet()
+    def _register_wallet(self, wallet, username):
+        existing_wallet = self.wallet_dao.get_wallet_details(wallet)
+        if len(existing_wallet) == 0:
+            self.wallet_dao.insert_wallet(wallet)
+        self.wallet_dao.add_user_for_wallet(wallet, username)
 
-        persisted = self.obj_wallet_dao.insert_wallet_details(
-            username=username,
-            address=wallet_details["address"],
-            type=wallet_details["type"],
-            status=wallet_details["status"]
-        )
+    def register_wallet(self, wallet_address, wallet_type, status, username):
+        wallet = Wallet(address=wallet_address, type=wallet_type, status=status)
+        self._register_wallet(wallet, username)
+        return wallet.to_dict()
 
-        if persisted:
-            return True
-        raise Exception("Unable to register wallet.")
+    def remove_user_wallet(self, username):
+        self.wallet_dao.remove_user_wallet(username)
 
     def get_wallet_details(self, username):
         """ Method to get wallet details for a given username. """
         logger.info(f"Fetching wallet details for {username}")
-        wallet_data = self.obj_wallet_dao.get_wallet_data_by_username(username)
+        wallet_data = self.wallet_dao.get_wallet_data_by_username(username)
         self.utils.clean(wallet_data)
 
         logger.info(f"Fetched {len(wallet_data)} wallets for username: {username}")
@@ -67,8 +66,8 @@ class WalletService:
         values = ["__openChannelByThirdParty", self.mpe_address, self.EXECUTOR_WALLET_ADDRESS, SIGNER_ADDRESS,
                   recipient,
                   group_id, agi_tokens, expiration, message_nonce]
-        signature = self.obj_blockchain_util.generate_signature(data_types=data_types, values=values,
-                                                                signer_key=signer_key)
+        signature = self.blockchain_util.generate_signature(data_types=data_types, values=values,
+                                                            signer_key=signer_key)
         v, r, s = Web3.toInt(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
         return r, s, v, signature
 
@@ -91,7 +90,7 @@ class WalletService:
         self.EXECUTOR_WALLET_ADDRESS = self.boto_utils.get_ssm_parameter(EXECUTOR_ADDRESS)
         self.EXECUTOR_WALLET_KEY = self.boto_utils.get_ssm_parameter(EXECUTOR_KEY)
         method_name = "openChannelByThirdParty"
-        self.mpe_address = self.obj_blockchain_util.read_contract_address(
+        self.mpe_address = self.blockchain_util.read_contract_address(
             net_id=NETWORK_ID, path=MPE_ADDR_PATH,
             key='address'
         )
@@ -109,19 +108,20 @@ class WalletService:
             current_block_no, v, r, s
         )
 
-        transaction_object = self.obj_blockchain_util.create_transaction_object(
+        transaction_object = self.blockchain_util.create_transaction_object(
             *positional_inputs,
             method_name=method_name,
             address=self.EXECUTOR_WALLET_ADDRESS,
             contract_path=MPE_CNTRCT_PATH,
             contract_address_path=MPE_ADDR_PATH,
-            net_id=NETWORK_ID
+            net_id=NETWORK_ID,
+            gas=250000
         )
 
-        raw_transaction = self.obj_blockchain_util.sign_transaction_with_private_key(
+        raw_transaction = self.blockchain_util.sign_transaction_with_private_key(
             transaction_object=transaction_object,
             private_key=self.EXECUTOR_WALLET_KEY)
-        transaction_hash = self.obj_blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
+        transaction_hash = self.blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
 
         logger.info("openChannelByThirdParty::transaction_hash : %s for order_id : %s", transaction_hash, order_id)
 
@@ -140,7 +140,7 @@ class WalletService:
         }
 
     def set_default_wallet(self, username, address):
-        self.obj_wallet_dao.set_default_wallet(username=username, address=address)
+        self.wallet_dao.set_default_wallet(username=username, address=address)
         return "OK"
 
     def add_funds_to_channel(self, org_id, group_id, channel_id, sender, recipient, order_id, amount, currency, amount_in_cogs):
@@ -151,7 +151,7 @@ class WalletService:
         self.__validate__cogs(amount_in_cogs=amount_in_cogs)
         positional_inputs = (channel_id, amount_in_cogs)
 
-        transaction_object = self.obj_blockchain_util.create_transaction_object(
+        transaction_object = self.blockchain_util.create_transaction_object(
             *positional_inputs, method_name=method_name,
             address=self.EXECUTOR_WALLET_ADDRESS,
             contract_path=MPE_CNTRCT_PATH,
@@ -159,11 +159,11 @@ class WalletService:
             net_id=NETWORK_ID
         )
 
-        raw_transaction = self.obj_blockchain_util.sign_transaction_with_private_key(
+        raw_transaction = self.blockchain_util.sign_transaction_with_private_key(
             transaction_object=transaction_object,
             private_key=self.EXECUTOR_WALLET_KEY)
 
-        transaction_hash = self.obj_blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
+        transaction_hash = self.blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
         logger.info("channelAddFunds::transaction_hash: %s for order_id: %s", transaction_hash, order_id)
 
         self.channel_dao.insert_channel_history(

@@ -1,123 +1,108 @@
-import base64
-from datetime import datetime
-
-import common.boto_utils as boto_utils
-from common.logger import get_logger
-from registry.config import ASSET_BUCKET, METADATA_FILE_PATH, REGION_NAME
+from registry.config import ALLOWED_ORIGIN
+from registry.constants import OrganizationStatus, Role, OrganizationAddressType
+from registry.domain.models.comment import Comment
 from registry.domain.models.group import Group
-from registry.domain.models.organization import Organization
+from registry.domain.models.organization import Organization, OrganizationState
 from registry.domain.models.organization_address import OrganizationAddress
-
-logger = get_logger(__name__)
+from registry.domain.models.organization_member import OrganizationMember
+from registry.exceptions import InvalidOriginException, BadRequestException
 
 
 class OrganizationFactory:
 
     @staticmethod
-    def parse_raw_organization(payload):
+    def org_domain_entity_from_payload(payload):
 
-        def extract_and_upload_assets(uuid, raw_assets):
-            org_assets = {}
-            boto_client = boto_utils.BotoUtils(region_name=REGION_NAME)
-            for asset_type in raw_assets:
-                org_assets[asset_type] = {}
-                asset = raw_assets[asset_type]
-                if "raw" in asset and len(asset["raw"]) != 0:
-                    current_time = datetime.utcnow().strftime("%Y%m%d%H%M%S")
-                    key_name = f"{uuid}-{asset_type}-{current_time}.{asset['file_type']}"
-                    filename = f"{METADATA_FILE_PATH}/{key_name}"
-                    raw_file = base64.b64decode(asset["raw"].encode())
-                    with open(filename, 'wb') as image:
-                        image.write(raw_file)
-                    boto_client.s3_upload_file(filename, ASSET_BUCKET, key_name)
-                    asset_url = f"https://{ASSET_BUCKET}.s3.amazonaws.com/{key_name}"
-                    org_assets[asset_type]["url"] = asset_url
-                if "url" in asset:
-                    org_assets[asset_type]["url"] = asset["url"]
-            return org_assets
-
-        org_id = payload.get("org_id", None)
-        org_name = payload.get("org_name", None)
-        org_type = payload.get("org_type", None)
-        org_uuid = payload.get("org_uuid", None)
-        description = payload.get("description", None)
-        assets = {}
-        short_description = payload.get("short_description", None)
-        url = payload.get("url", None)
-        duns_no = payload.get("duns_no", None)
-        owner_name = payload.get("owner_name", None)
-        contacts = payload.get("contacts", None)
-        metadata_ipfs_hash = payload.get("metadata_ipfs_hash", None)
-        groups = OrganizationFactory.parse_raw_list_groups(payload.get("groups", []))
-        addresses = OrganizationFactory.parse_raw_address_list(payload.get("addresses", []))
+        org_uuid = payload["org_uuid"]
+        org_id = payload["org_id"]
+        org_name = payload["org_name"]
+        org_type = payload["org_type"]
+        description = payload["description"]
+        short_description = payload["short_description"]
+        url = payload["url"]
+        duns_no = payload["duns_no"]
+        registration_id = payload["registration_id"]
+        registration_type = payload["registration_type"]
+        origin = payload["origin"]
+        if origin not in ALLOWED_ORIGIN:
+            raise InvalidOriginException()
+        contacts = payload["contacts"]
+        assets = payload["assets"]
+        metadata_ipfs_uri = payload["metadata_ipfs_uri"]
+        groups = OrganizationFactory.group_domain_entity_from_group_list_payload(payload["groups"])
+        addresses = OrganizationFactory \
+            .domain_address_entity_from_address_list_payload(payload["org_address"]["addresses"])
         organization = Organization(
-            name=org_name, org_id=org_id, org_uuid=org_uuid, org_type=org_type, description=description,
-            short_description=short_description, url=url, contacts=contacts, assets=assets,
-            metadata_ipfs_hash=metadata_ipfs_hash, duns_no=duns_no, owner_name=owner_name, groups=groups,
-            addresses=addresses, owner="")
-        organization.setup_id()
-        organization.assets = extract_and_upload_assets(organization.org_uuid, payload.get("assets", {}))
+            org_uuid, org_id, org_name, org_type, origin, description, short_description, url, contacts,
+            assets, metadata_ipfs_uri, duns_no, groups, addresses, None, [], registration_id, registration_type)
         return organization
 
     @staticmethod
-    def parse_raw_list_groups(raw_groups):
-        groups = []
-        for group in raw_groups:
-            groups.append(OrganizationFactory.parse_raw_group(group))
-        return groups
-
-    @staticmethod
-    def parse_raw_address_list(raw_addresses):
-        addresses = []
-        for address in raw_addresses:
-            addresses.append(OrganizationFactory.parse_raw_address(address))
-        return addresses
-
-    @staticmethod
-    def parse_raw_group(raw_group):
-        group_id = raw_group.get("id", None)
-        group_name = raw_group.get("name", None)
-        payment_address = raw_group.get("payment_address", None)
-        payment_config = raw_group.get("payment_config", None)
+    def group_domain_entity_from_payload(payload):
+        group_id = payload["id"]
+        group_name = payload["name"]
+        payment_address = payload["payment_address"]
+        payment_config = payload["payment_config"]
         group = Group(group_name, group_id, payment_address, payment_config, '')
+        group.setup_id()
         return group
 
     @staticmethod
-    def parse_raw_address(raw_address):
-        address_type = raw_address.get("address_type", None)
-        street_address = raw_address.get("street_address", None)
-        apartment = raw_address.get("apartment", None)
-        city = raw_address.get("city", None)
-        pincode = raw_address.get("pincode", None)
-        state = raw_address.get("state", None)
-        country = raw_address.get("country", None)
+    def group_domain_entity_from_group_list_payload(payload):
+        domain_group_entity = []
+        for group in payload:
+            domain_group_entity.append(OrganizationFactory.group_domain_entity_from_payload(group))
+        return domain_group_entity
+
+    @staticmethod
+    def domain_address_entity_from_payload(payload):
+        address_type = payload.get("address_type", None)
+        if address_type not in [OrganizationAddressType.HEAD_QUARTER_ADDRESS.value,
+                                OrganizationAddressType.MAIL_ADDRESS.value]:
+            raise BadRequestException()
+        street_address = payload.get("street_address", None)
+        apartment = payload.get("apartment", None)
+        city = payload.get("city", None)
+        pincode = payload.get("pincode", None)
+        state = payload.get("state", None)
+        country = payload.get("country", None)
         address = OrganizationAddress(address_type=address_type, street_address=street_address, apartment=apartment,
                                       pincode=pincode, city=city, state=state, country=country)
         return address
 
     @staticmethod
-    def parse_organization_data_model(item):
-        organization = Organization(
-            item.name, item.org_id, item.org_uuid, item.type, item.owner, item.description,
-            item.short_description, item.url, item.contacts, item.assets, item.metadata_ipfs_hash,
-            item.duns_no, OrganizationFactory.parse_organization_address_data_model(item.address),
-            OrganizationFactory.parse_group_data_model(item.groups), item.owner_name
+    def domain_address_entity_from_address_list_payload(raw_addresses):
+        addresses = []
+        for address in raw_addresses:
+            addresses.append(OrganizationFactory.domain_address_entity_from_payload(address))
+        return addresses
+
+    @staticmethod
+    def get_comment_from_db(comments):
+        return [Comment(comment['comment'], comment['created_by'], comment['created_at']) for comment in comments]
+
+    @staticmethod
+    def org_domain_entity_from_repo_model(organization_repo_model):
+        return Organization(
+            uuid=organization_repo_model.uuid,
+            name=organization_repo_model.name,
+            org_id=organization_repo_model.org_id,
+            org_type=organization_repo_model.org_type,
+            origin=organization_repo_model.origin,
+            description=organization_repo_model.description,
+            short_description=organization_repo_model.short_description,
+            url=organization_repo_model.url,
+            contacts=organization_repo_model.contacts,
+            assets=organization_repo_model.assets,
+            metadata_ipfs_uri=organization_repo_model.metadata_ipfs_uri,
+            duns_no=organization_repo_model.duns_no,
+            groups=OrganizationFactory.parse_group_data_model(organization_repo_model.groups),
+            addresses=OrganizationFactory.parse_organization_address_data_model(organization_repo_model.addresses),
+            org_state=OrganizationFactory.parse_organization_state_data_model(organization_repo_model.org_state),
+            members=[],
+            registration_id=organization_repo_model.registration_id,
+            registration_type=organization_repo_model.registration_type
         )
-        return organization
-
-    @staticmethod
-    def parse_organization_data_model_list(items):
-        organizations = []
-        for item in items:
-            organizations.append(OrganizationFactory.parse_organization_data_model(item))
-        return organizations
-
-    @staticmethod
-    def parse_organization_workflow_data_model_list(items):
-        organizations = []
-        for item in items:
-            organizations.append(OrganizationFactory.parse_organization_data_model(item.Organization))
-        return organizations
 
     @staticmethod
     def parse_group_data_model(items):
@@ -143,31 +128,130 @@ class OrganizationFactory:
         return addresses
 
     @staticmethod
-    def parse_organization_details(items):
-        orgs = []
-        for item in items:
-            orgs.append({
-                "organization": OrganizationFactory.parse_organization_data_model(item.Organization),
-                "status": item.OrganizationReviewWorkflow.status
-            })
-
-        return orgs
+    def parse_organization_state_data_model(item):
+        if len(item) == 0:
+            return []
+        item = item[0]
+        return OrganizationState(
+            org_uuid=item.org_uuid,
+            state=item.state, transaction_hash=item.transaction_hash, wallet_address=item.wallet_address,
+            created_on=item.created_on, updated_on=item.updated_on, updated_by=item.updated_by,
+            reviewed_by=item.reviewed_by, reviewed_on=item.reviewed_on,
+            comments=OrganizationFactory.get_comment_from_db(item.comments), created_by=item.created_by)
 
     @staticmethod
-    def parse_organization_metadata_assets(assets):
+    def parse_organization_state_from_db(item):
+        return OrganizationState(
+            org_uuid=item.org_uuid, state=item.state, transaction_hash=item.transaction_hash,
+            wallet_address=item.wallet_address,
+            created_on=item.created_on, updated_on=item.updated_on, updated_by=item.updated_by,
+            reviewed_by=item.reviewed_by, reviewed_on=item.reviewed_on,
+            comments=OrganizationFactory.get_comment_from_db(item.comments),
+            created_by=item.created_by)
+
+    @staticmethod
+    def parse_organization_state_from_db_list(org_state_db_list):
+        return [OrganizationFactory.parse_organization_state_from_db(org_state) for org_state in org_state_db_list]
+
+    @staticmethod
+    def org_domain_entity_from_repo_model_list(organization_repo_model_list):
+        organization_domain_entity = []
+        for organization_repo_model in organization_repo_model_list:
+            organization_domain_entity.append(
+                OrganizationFactory.org_domain_entity_from_repo_model(organization_repo_model))
+        return organization_domain_entity
+
+    @staticmethod
+    def org_member_domain_from_repo_model_list(org_member_repo_model_list):
+        org_member_domain_entity = []
+        for org_member_repo_model in org_member_repo_model_list:
+            org_member_domain_entity.append(
+                OrganizationFactory.org_member_domain_entity_from_repo_model(org_member_repo_model))
+        return org_member_domain_entity
+
+    @staticmethod
+    def org_member_domain_entity_from_repo_model(org_member_repo_model):
+        org_member = OrganizationMember(
+            org_member_repo_model.org_uuid, org_member_repo_model.username, org_member_repo_model.status,
+            org_member_repo_model.role, org_member_repo_model.address, org_member_repo_model.invite_code,
+            org_member_repo_model.transaction_hash, org_member_repo_model.invited_on, org_member_repo_model.updated_on)
+        return org_member
+
+    @staticmethod
+    def org_member_domain_entity_from_payload_list(payload, org_uuid):
+        org_member_list = []
+        for org_member in payload:
+            org_member_list.append(OrganizationFactory.org_member_domain_entity_from_payload(org_member, org_uuid))
+        return org_member_list
+
+    @staticmethod
+    def org_member_domain_entity_from_payload(payload, org_uuid):
+        username = payload.get("username", "")
+        status = payload.get("status", "")
+        role = payload.get("role", "")
+        address = payload.get("address", "")
+        invite_code = payload.get("invite_code", "")
+        transaction_hash = payload.get("transaction_hash", "")
+        org_member = OrganizationMember(org_uuid, username, status, role, address, invite_code, transaction_hash)
+        return org_member
+
+    @staticmethod
+    def parse_group_domain_entity_from_metadata(payload):
+        group_id = payload["group_id"]
+        group_name = payload["group_name"]
+        payment_address = payload['payment']["payment_address"]
+        payment_config = {"payment_expiration_threshold": payload['payment']["payment_expiration_threshold"],
+                          "payment_channel_storage_type": payload['payment']["payment_channel_storage_type"],
+                          "payment_channel_storage_client": payload['payment']["payment_channel_storage_client"]}
+        group = Group(group_name, group_id, payment_address, payment_config, '')
+        group.setup_id()
+        return group
+
+    @staticmethod
+    def group_domain_entity_from_group_list_metadata(payload):
+        domain_group_entity = []
+        for group in payload:
+            domain_group_entity.append(OrganizationFactory.parse_group_domain_entity_from_metadata(group))
+        return domain_group_entity
+
+    @staticmethod
+    def parser_org_members_from_metadata(org_uuid, members, status):
+
+        org_members = []
+        for member in members:
+            org_members.append(OrganizationMember(org_uuid, "", status, Role.MEMBER.value, member))
+        return org_members
+
+    @staticmethod
+    def parser_org_owner_from_metadata(org_uuid, owner, status):
+        return OrganizationMember(org_uuid, "", status, Role.OWNER.value, owner)
+
+    @staticmethod
+    def parse_organization_metadata_assets(assets, existing_assets):
         if assets is None:
-            return None
+            assets = {}
+        if existing_assets is None:
+            existing_assets = {}
+        url = ""
         for key, value in assets.items():
+            if existing_assets and key in existing_assets:
+                if existing_assets[key] and 'url' in existing_assets[key]:
+                    url = existing_assets[key]['url']
+            else:
+                url = ""
+
             assets[key] = {
                 "ipfs_hash": value,
-                "url": ""
+                "url": url
             }
-        return assets
+        merged = {**existing_assets, **assets}
+        return merged
 
     @staticmethod
-    def parse_organization_metadata(ipfs_org_metadata):
+    def parse_organization_metadata(org_uuid, ipfs_org_metadata, origin, duns_no, addresses, metadata_uri,
+                                    existing_assets, transaction_hash, members):
         org_id = ipfs_org_metadata.get("org_id", None)
-        org_name = ipfs_org_metadata.get("name", None)
+        org_name = ipfs_org_metadata.get("org_name", None)
         org_type = ipfs_org_metadata.get("org_type", None)
         description = ipfs_org_metadata.get("description", None)
         short_description = ""
@@ -180,12 +264,19 @@ class OrganizationFactory:
             url = description.get("url", None)
 
         contacts = ipfs_org_metadata.get("contacts", None)
-        assets = OrganizationFactory.parse_organization_metadata_assets(ipfs_org_metadata.get("assets", None))
-        metadata_ipfs_hash = ipfs_org_metadata.get("metadata_ipfs_hash", None)
+        assets = OrganizationFactory.parse_organization_metadata_assets(ipfs_org_metadata.get("assets", None),
+                                                                        existing_assets)
+        metadata_ipfs_hash = metadata_uri
         owner = ""
-        groups = OrganizationFactory.parse_raw_list_groups(ipfs_org_metadata.get("groups", []))
+        registration_id = ""
+        registration_type = ""
+        groups = OrganizationFactory.group_domain_entity_from_group_list_metadata(ipfs_org_metadata.get("groups", []))
 
-        organization = Organization(org_name, org_id, "", org_type, owner, long_description,
-                                    short_description, url, contacts, assets, metadata_ipfs_hash, "", [], groups)
-
+        organization = Organization(org_uuid, org_id, org_name, org_type,
+                                    origin, long_description,
+                                    short_description, url, contacts, assets, metadata_ipfs_hash,
+                                    duns_no, groups,
+                                    addresses,
+                                    OrganizationStatus.PUBLISHED.value,
+                                    members, registration_id, registration_type)
         return organization

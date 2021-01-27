@@ -88,7 +88,3 @@ class TestUtils(unittest.TestCase):
         signature = self.obj_utils.generate_signature(data_types=data_types, values=values, signer_key=SIGNER_KEY)
         v, r, s = Web3.toInt(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
         assert(signature == "0x7e50ac20909da29f72ed2ab9cf6c6375f853d8eddfcf3ce33806a4e27b30bcbd5366c41a59647467f0519b0bfc89a50d890b683cd797d5566ba03937f82819c41b")
-
-
-if __name__ == '__main__':
-    unittest.main()

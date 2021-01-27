@@ -19,6 +19,8 @@ class BotoUtils:
         lambda_client = boto3.client('lambda', region_name=self.region_name, config=config)
         lambda_response = lambda_client.invoke(FunctionName=lambda_function_arn, InvocationType=invocation_type,
                                                Payload=payload)
+        if invocation_type == "Event":
+            return lambda_response
         return json.loads(lambda_response.get('Payload').read())
 
     def s3_upload_file(self, filename, bucket, key):

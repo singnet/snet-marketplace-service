@@ -3,6 +3,7 @@ import unittest
 from unittest.mock import patch
 
 from signer import lambda_handler
+from signer.lambda_handler import free_call_token_handler, get_free_call_signer_address
 
 
 class TestSignUPAPI(unittest.TestCase):
@@ -123,8 +124,59 @@ class TestSignUPAPI(unittest.TestCase):
         assert response_body["data"]["r"] == "0x6057e2706d63351e774eaf56616afa7c138129b27b0dfd121457761d4267c3b8"
         assert response_body["data"]["s"] == "0x2f2b98ae088f6e5d4737fae8beba95c7203d33c07baaeccbb8eea5a6c361ae84"
         assert response_body["data"]["v"] == 27
-        assert response_body["data"]["signature"] == "0x6057e2706d63351e774eaf56616afa7c138129b27b0dfd121457761d4267c3b82f2b98ae088f6e5d4737fae8beba95c7203d33c07baaeccbb8eea5a6c361ae841b"
+        assert response_body["data"][
+                   "signature"] == "0x6057e2706d63351e774eaf56616afa7c138129b27b0dfd121457761d4267c3b82f2b98ae088f6e5d4737fae8beba95c7203d33c07baaeccbb8eea5a6c361ae841b"
+
+    @patch("boto3.client")
+    def test_free_call_signer_address(self, boto_client):
+        boto_client.return_value = None
+        event = {
+            "path": "/freecall/signer_address",
+            "requestContext": {
+                "authorizer": {
+                    "claims": {
+                        "email": "dummy_user1@dummy.io"
+                    }
+                }
+            },
+            "httpMethod": "GET",
+            "queryStringParameters": {"org_id": "test_org_id", "service_id": "test_service_id",
+                                      "group_id": "test_group_id"}
+        }
+        response = get_free_call_signer_address(event=event, context=None)
+        assert response["statusCode"] == 200
+        response_body = json.loads(response["body"])
+        assert response_body["status"] == "success"
+        assert response_body["data"]["free_call_signer_address"] == "0xBBE343b9BEf87Fb687cA83A014324d5E52cc3754"
 
 
-if __name__ == "__main__":
-    unittest.main()
+
+    @patch("signer.signers.Signer._get_no_of_free_calls_from_daemon")
+    @patch("signer.signers.Signer._get_daemon_endpoint_and_free_call_for_group")
+    @patch("common.blockchain_util.BlockChainUtil.read_contract_address")
+    @patch("common.blockchain_util.BlockChainUtil.get_current_block_no")
+    @patch("boto3.client")
+    def test_token_for_free_call(self, boto_client,mock_current_block_no,mock_read_contract_address,mock_endpoint,mock_daemon_free_call):
+        boto_client.return_value = None
+
+        mock_read_contract_address.return_value = "0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C"
+        mock_current_block_no.return_value = 6521925
+        mock_endpoint.return_value = "1.2.3.4",15
+        mock_daemon_free_call.return_value=10
+
+        event = {
+            "path": "/freecall/signer_address",
+            "requestContext": {
+                "authorizer": {
+                    "claims": {
+                        "email": "dummy_user1@dummy.io"
+                    }
+                }
+            },
+            "httpMethod": "GET",
+            "queryStringParameters": {"org_id": "test_org_id", "service_id": "test_service_id",
+                                      "group_id": "test_group_id","public_key":"0xBEEC34186ed77F1CEbb92fd1C11cDD2F9789Dbe5"}
+        }
+
+        response = free_call_token_handler(event, "")
+        assert response == {'statusCode': 200, 'body': '{"status": "success", "data": {"token_to_make_free_call": "42be207062f78f38cff688fd61239d65952deb6b4e3546dfe79d1188cdd3724d44d6088039d52495996d749f53c41cd25012b9e9a5b918a2ce5d1d0c020c78221b", "token_expiration_block": 6694725}}', 'headers': {'Content-Type': 'application/json', 'X-Requested-With': '*', 'Access-Control-Allow-Headers': 'Access-Control-Allow-Origin, Content-Type, X-Amz-Date, Authorization,X-Api-Key,x-requested-with', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,OPTIONS,POST'}}
