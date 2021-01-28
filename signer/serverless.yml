@@ -147,7 +147,7 @@ functions:
               - name: "Content-Type"
                 description: "application/json"
             requestModels:
-                "application\json":"SignerInput"
+                "application/json": "SignerInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
@@ -184,7 +184,7 @@ functions:
               - name: "Content-Type"
                 description: "application/json"
             requestModels:
-              "application\json": "RegularCallInput"
+              "application/json": "RegularCallInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
@@ -221,7 +221,7 @@ functions:
               - name: "Content-Type"
                 description: "application/json"
             requestModels:
-              "application\json": "StateServiceInput"
+              "application/json": "StateServiceInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
@@ -258,7 +258,7 @@ functions:
               - name: "Content-Type"
                 description: "application/json"
             requestModels:
-              "application\json": "OpenChannelForThirdPartyInput"
+              "application/json": "OpenChannelForThirdPartyInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
