@@ -1,5 +1,13 @@
 {
-  "GetAllOrgPendingForApprovalInput": {},
+  "GetAllOrgPendingForApprovalInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "GetAllOrgPendingForApprovalInput",
+    "type": "object",
+    "properties": {
+      "data": {
+      }
+    }
+  },
   "GetAllOrgPendingForApprovalOutput": {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "GetAllOrgPendingForApprovalOutput",

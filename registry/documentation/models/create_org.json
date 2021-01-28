@@ -1,5 +1,13 @@
 {
-  "CreateOrgInput": {},
+  "CreateOrgInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "CreateOrgInput",
+    "type": "object",
+    "properties": {
+      "data": {
+      }
+    }
+  },
   "CreateOrgOutput": {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "CreateOrgOutput",

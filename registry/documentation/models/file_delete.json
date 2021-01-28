@@ -1,5 +1,13 @@
 {
-  "FileDeleteInput": {},
+  "FileDeleteInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "FileDeleteInput",
+    "type": "object",
+    "properties": {
+      "data": {
+      }
+    }
+  },
   "FileDeleteOutput": {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "FileDeleteOutput",

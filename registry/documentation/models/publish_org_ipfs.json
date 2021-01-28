@@ -1,5 +1,13 @@
 {
-  "PublishOrgIpfsInput": {},
+  "PublishOrgIpfsInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "PublishOrgIpfsInput",
+    "type": "object",
+    "properties": {
+      "data": {
+      }
+    }
+  },
   "PublishOrgIpfsOutput": {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "PublishOrgIpfsOutput",

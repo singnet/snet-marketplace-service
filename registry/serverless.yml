@@ -55,36 +55,66 @@ custom:
       - name: "SaveOrgTransactionsOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/save_org_transactions.json):SaveOrgTransactionsOutput}
+      - name: "SaveOrgTransactionsInput"
+        contentType: "application/json"
+        schema: ${file(registry/documentation/models/save_org_transactions.json):SaveOrgTransactionsInput}
       - name: "GetAllOrgPendingForApprovalOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/get_all_org_pending_for_approval.json):GetAllOrgPendingForApprovalOutput}
+      - name: "GetAllOrgPendingForApprovalInput"
+        contentType: "application/json"
+        schema: ${file(registry/documentation/models/get_all_org_pending_for_approval.json):GetAllOrgPendingForApprovalInput}
       - name: "SlackInteractionForApprovalOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/slack_interaction_for_approval.json):SlackInteractionForApprovalOutput}
+      - name: "SlackInteractionForApprovalInput"
+        contentType: "application/json"
+        schema: ${file(registry/documentation/models/slack_interaction_for_approval.json):SlackInteractionForApprovalInput}
       - name: "GetAllServicePendingForApprovalOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/get_all_service_pending_for_approval.json):GetAllServicePendingForApprovalOutput}
+      - name: "GetAllServicePendingForApprovalInput"
+        contentType: "application/json"
+        schema: ${file(registry/documentation/models/get_all_service_pending_for_approval.json):GetAllServicePendingForApprovalInput}
       - name: "FileDeleteOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/file_delete.json):FileDeleteOutput}
+      - name: "FileDeleteInput"
+        contentType: "application/json"
+        schema: ${file(registry/documentation/models/file_delete.json):FileDeleteInput}
       - name: "DemonConfigForGivenNetworkIdOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/demon_config_for_given_network_id.json):DemonConfigForGivenNetworkIdOutput}
       - name: "SaveServiceTransactionOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/save_service_transaction.json):SaveServiceTransactionOutput}
+      - name: "SaveServiceTransactionInput"
+        contentType: "application/json"
+        schema: ${file(registry/documentation/models/save_service_transaction.json):SaveServiceTransactionInput}
       - name: "SubmitServiceOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/submit_service.json):SubmitServiceOutput}
+      - name: "SubmitServiceInput"
+        contentType: "application/json"
+        schema: ${file(registry/documentation/models/submit_service.json):SubmitServiceInput}
       - name: "PublishServiceMetadataToIpfsHashOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/publish_service_metadata_to_ipfs_hash.json):PublishServiceMetadataToIpfsHashOutput}
+      - name: "PublishServiceMetadataToIpfsHashInput"
+        contentType: "application/json"
+        schema: ${file(registry/documentation/models/publish_service_metadata_to_ipfs_hash.json):PublishServiceMetadataToIpfsHashInput}
       - name: "CreateOrgOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/create_org.json):CreateOrgOutput}
+      - name: "CreateOrgInput"
+        contentType: "application/json"
+        schema: ${file(registry/documentation/models/create_org.json):CreateOrgInput}
       - name: "PublishOrgIpfsOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/publish_org_ipfs.json):PublishOrgIpfsOutput}
+      - name: "PublishOrgIpfsInput"
+        contentType: "application/json"
+        schema: ${file(registry/documentation/models/publish_org_ipfs.json):PublishOrgIpfsInput}
       - name: "GetMemberOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/get_member.json):GetMemberOutput}
@@ -94,39 +124,63 @@ custom:
       - name: "InviteMembersOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/invite_members.json):InviteMembersOutput}
+      - name: "InviteMembersInput"
+        contentType: "application/json"
+        schema: ${file(registry/documentation/models/invite_members.json):InviteMembersInput}
       - name: "VerifyInviteOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/verify_invite.json):VerifyInviteOutput}
       - name: "RegisterMemberOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/register_member.json):RegisterMemberOutput}
+      - name: "RegisterMemberInput"
+        contentType: "application/json"
+        schema: ${file(registry/documentation/models/register_member.json):RegisterMemberInput}
       - name: "PublishMembersOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/publish_members.json):PublishMembersOutput}
+      - name: "PublishMembersInput"
+        contentType: "application/json"
+        schema: ${file(registry/documentation/models/publish_members.json):PublishMembersInput}
       - name: "DeleteMemberOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/delete_member.json):DeleteMemberOutput}
+      - name: "DeleteMemberInput"
+        contentType: "application/json"
+        schema: ${file(registry/documentation/models/delete_member.json):DeleteMemberInput}
       - name: "VerifyServiceIdOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/verify_service_id.json):VerifyServiceIdOutput}
       - name: "CreateServiceOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/create_service.json):CreateServiceOutput}
+      - name: "CreateServiceInput"
+        contentType: "application/json"
+        schema: ${file(registry/documentation/models/create_service.json):CreateServiceInput}
       - name: "SaveServiceOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/save_service.json):SaveServiceOutput}
+      - name: "SaveServiceInput"
+        contentType: "application/json"
+        schema: ${file(registry/documentation/models/save_service.json):SaveServiceInput}
       - name: "SaveServiceAttributesOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/save_service_attributes.json):SaveServiceAttributesOutput}
       - name: "GetServicesForOrgOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/get_services_for_org.json):GetServicesForOrgOutput}
+      - name: "GetServicesForOrgInput"
+        contentType: "application/json"
+        schema: ${file(registry/documentation/models/get_services_for_org.json):GetServicesForOrgInput}
       - name: "GetServiceForServiceUuidOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/get_service_for_service_uuid.json):GetServiceForServiceUuidOutput}
       - name: "UpdateOrgOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/update_org.json):UpdateOrgOutput}
+      - name: "UpdateOrgInput"
+        contentType: "application/json"
+        schema: ${file(registry/documentation/models/update_org.json):UpdateOrgInput}
 
 package:
   exclude:
@@ -349,6 +403,8 @@ functions:
             requestHeaders:
               - name: "Content-Type"
                 description: "application/json"
+            requestModels:
+              "application/json": "CreateOrgInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
@@ -401,6 +457,8 @@ functions:
             pathParams:
               - name: "org_uuid"
                 description: "Enter org_uuid"
+            requestModels:
+              "application/json": "UpdateOrgInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
@@ -466,6 +524,8 @@ functions:
             pathParams:
               - name: "org_uuid"
                 description: "Enter org_uuid"
+            requestModels:
+              "application/json": "PublishOrgIpfsInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
@@ -517,6 +577,8 @@ functions:
             pathParams:
               - name: "org_uuid"
                 description: "Enter organization org_uuid"
+            requestModels:
+              "application/json": "SaveOrgTransactionsInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
@@ -686,6 +748,8 @@ functions:
             pathParams:
               - name: "org_uuid"
                 description: "Enter organization org_uuid"
+            requestModels:
+              "application/json" : "InviteMembersInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
@@ -787,6 +851,8 @@ functions:
             requestHeaders:
               - name: "Content-Type"
                 description: "application/json"
+            requestModels:
+              "application/json": "RegisterMemberInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
@@ -842,6 +908,8 @@ functions:
             pathParams:
               - name: "org_uuid"
                 description: "Enter org_uuid"
+            requestModels:
+              "application/json": "PublishMembersInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
@@ -897,6 +965,8 @@ functions:
             pathParams:
               - name: "org_uuid"
                 description: "Enter org_uuid"
+            requestModels:
+              "application/json": "DeleteMemberInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
@@ -1038,6 +1108,8 @@ functions:
             pathParams:
               - name: "org_uuid"
                 description: "Enter org_uuid"
+            requestModels:
+              "application/json": "CreateServiceInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
@@ -1086,6 +1158,8 @@ functions:
             requestHeaders:
               - name: "Content-Type"
                 description: "application/json"
+            requestModels:
+              "application/json": "SaveServiceInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
@@ -1195,6 +1269,8 @@ functions:
             pathParams:
               - name: "org_uuid"
                 description: "Enter org_uuid"
+            requestModels:
+              "application/json": "GetServicesForOrgInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
@@ -1301,6 +1377,8 @@ functions:
                 description: "Enter org_uuid"
               - name: "service_uuid"
                 description: "Enter service_uuid"
+            requestModels:
+              "application/json": "PublishServiceMetadataToIpfsHashInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
@@ -1353,6 +1431,8 @@ functions:
                 description: "Enter org_uuid"
               - name: "service_uuid"
                 description: "Enter service_uuid"
+            requestModels:
+              "application/json": "SubmitServiceInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
@@ -1407,6 +1487,8 @@ functions:
                 description: "Enter org_uuid"
               - name: "service_uuid"
                 description: "Enter service_uuid"
+            requestModels:
+              "application/json": "SaveServiceTransactionInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
@@ -1510,6 +1592,8 @@ functions:
             requestHeaders:
               - name: "Content-Type"
                 description: "application/json"
+            requestModels:
+              "application/json": "FileDeleteInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
@@ -1594,6 +1678,8 @@ functions:
             requestHeaders:
               - name: "Content-Type"
                 description: "application/json"
+            requestModels:
+              "application/json": "GetAllServicePendingForApprovalInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
@@ -1637,6 +1723,8 @@ functions:
             requestHeaders:
               - name: "Content-Type"
                 description: "application/json"
+            responseModels:
+              "apllication/json": "SlackInteractionForApprovalInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
@@ -1680,6 +1768,8 @@ functions:
             requestHeaders:
               - name: "Content-Type"
                 description: "application/json"
+            requestModels:
+              "application/json": "GetAllOrgPendingForApprovalInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:

@@ -1,5 +1,13 @@
 {
-  "DeleteMemberInput": {},
+  "DeleteMemberInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "DeleteMemberInput",
+    "type": "object",
+    "properties": {
+      "data": {
+      }
+    }
+  },
   "DeleteMemberOutput": {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "DeleteMemberOutput",

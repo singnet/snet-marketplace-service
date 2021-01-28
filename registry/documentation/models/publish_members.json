@@ -1,5 +1,13 @@
 {
-  "PublishMembersInput": {},
+  "PublishMembersInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "PublishMembersInput",
+    "type": "object",
+    "properties": {
+      "data": {
+      }
+    }
+  },
   "PublishMembersOutput": {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "PublishMembersOutput",
