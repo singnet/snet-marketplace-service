@@ -1,5 +1,15 @@
 {
   "SendEmailInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "SendEmailInput",
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "data": {
+      }
+    }
   },
   "SendEmailOutput": {
     "$schema": "http://json-schema.org/draft-04/schema#",
