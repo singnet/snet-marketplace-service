@@ -525,18 +525,18 @@ functions:
           requestHeaders:
             - name: "Content-Type"
               description: "application/json"
-            pathParams:
+          pathParams:
               - name: "order_id"
                 description: "Enter order_id"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Order Data"
-                responseModels:
-                  "application/json": "CancelOrderOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
+          methodResponses:
+            - statusCode: "200"
+              responseBody:
+                description: "Order Data"
+              responseModels:
+                "application/json": "CancelOrderOutput"
+            - statusCode: "500"
+              responseModels:
+                 "application/json": "ErrorMessage"
   currency-to-token-conversion:
     warmup: true
     handler: orchestrator/handlers.order_handler.currency_to_token_conversion

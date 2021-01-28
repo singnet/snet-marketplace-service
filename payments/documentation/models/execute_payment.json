@@ -1,0 +1,34 @@
+{
+  "ExecutePaymentInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "ExecutePaymentInput",
+    "type": "object",
+    "properties": {
+      "data": {
+      }
+    }
+  },
+  "ExecutePaymentOutput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "ExecutePaymentOutput",
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "data": {
+      },
+      "error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

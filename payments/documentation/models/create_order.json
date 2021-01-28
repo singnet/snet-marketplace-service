@@ -1,0 +1,34 @@
+{
+  "CreateOrderInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "CreateOrderInput",
+    "type": "object",
+    "properties": {
+      "data": {
+      }
+    }
+  },
+  "CreateOrderOutput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "CreateOrderOutput",
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "data": {
+      },
+      "error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
