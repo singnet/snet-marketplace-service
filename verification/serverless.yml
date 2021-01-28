@@ -172,7 +172,7 @@ functions:
               - name: "Content-Type"
                 description: "application/json"
             requestModels:
-              "applicaton/json":"CallBackInput"
+              "applicaton/json": "CallBackInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:

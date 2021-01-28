@@ -292,7 +292,7 @@ functions:
               - name: "payment_id"
                 description: "Enter payment_id"
             requestModels:
-              "application/json":"CancelPaymentInput"
+              "application/json": "CancelPaymentInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
