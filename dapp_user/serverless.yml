@@ -20,7 +20,7 @@ custom:
   documentation:
     models:
       - name: "ErrorMessage"
-        contentType: "appRlication/json"
+        contentType: "application/json"
         schema: ${file(dapp_user/documentation/models/error.json)}
       - name: "GetUserPreferenceOutput"
         contentType: "application/json"
