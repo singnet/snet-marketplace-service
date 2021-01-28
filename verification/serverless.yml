@@ -4,6 +4,7 @@ plugins:
   - serverless-plugin-tracing
   - serverless-prune-plugin
   - serverless-aws-plugin
+  - serverless-aws-documentation
 
 service: verification
 custom:
