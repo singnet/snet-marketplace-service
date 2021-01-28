@@ -496,7 +496,7 @@ functions:
               - name: "Content-Type"
                 description: "application/json"
             requestModels:
-              "application/json":"DappUserPostFeedbackInput"
+              "application/json": "DappUserPostFeedbackInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
@@ -533,7 +533,7 @@ functions:
               - name: "Content-Type"
                 description: "application/json"
             requestModels:
-                "application/json":"DappUserWalletRegisterInput"
+                "application/json": "DappUserWalletRegisterInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
@@ -583,7 +583,7 @@ functions:
               - name: "Content-Type"
                 description: "application/json"
             requestModels:
-              "application/json":"DeleteUserInput"
+              "application/json": "DeleteUserInput"
             methodResponses:
               - statusCode: "200"
                 responseModels:
