@@ -4,9 +4,6 @@
     "title": "SlackAuthWrapperInput",
     "type": "object",
     "properties": {
-      "status": {
-        "type": "string"
-      },
       "data": {
       }
     }

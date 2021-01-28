@@ -1,17 +1,14 @@
 {
-  "UploadInput": {
+  "UploadFileInput": {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "UploadFileInput",
     "type": "object",
     "properties": {
-      "status": {
-        "type": "string"
-      },
       "data": {
       }
     }
   },
-  "UploadOutput": {
+  "UploadFileOutput": {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "UploadFileOutput",
     "type": "object",

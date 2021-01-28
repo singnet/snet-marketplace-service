@@ -4,9 +4,6 @@
     "title": "CreateOrganizationInput",
     "type": "object",
     "properties": {
-      "status": {
-        "type": "string"
-      },
       "data": {
       }
     }

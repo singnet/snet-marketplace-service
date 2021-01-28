@@ -4,9 +4,6 @@
     "title": "InitiateOrderInput",
     "type": "object",
     "properties": {
-      "status": {
-        "type": "string"
-      },
       "data": {
       }
     }
