@@ -1,5 +1,14 @@
 {
-  "GetServiceForGivenOrgInput": {},
+  "GetServiceForGivenOrgInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "GetServiceForGivenOrgInput",
+    "type": "object",
+    "properties": {
+      "data": {
+
+      }
+    }
+  },
   "GetServiceForGivenOrgOutput": {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "GetServiceForGivenOrgOutput",
@@ -132,39 +141,37 @@
                 },
                 "pricing": {
                   "type": "array",
-                  "items":
-                    {
-                      "type": "object",
-                      "properties": {
-                        "default": {
-                          "type": "boolean"
-                        },
-                        "price_model": {
-                          "type": "string"
-                        },
-                        "price_in_cogs": {
-                          "type": "integer"
-                        }
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "default": {
+                        "type": "boolean"
+                      },
+                      "price_model": {
+                        "type": "string"
+                      },
+                      "price_in_cogs": {
+                        "type": "integer"
                       }
                     }
+                  }
                 },
                 "endpoints": {
                   "type": "array",
-                  "items":
-                    {
-                      "type": "object",
-                      "properties": {
-                        "endpoint": {
-                          "type": "string"
-                        },
-                        "is_available": {
-                          "type": "integer"
-                        },
-                        "last_check_timestamp": {
-                          "type": "string"
-                        }
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "endpoint": {
+                        "type": "string"
+                      },
+                      "is_available": {
+                        "type": "integer"
+                      },
+                      "last_check_timestamp": {
+                        "type": "string"
                       }
                     }
+                  }
                 },
                 "free_calls": {
                   "type": "null"

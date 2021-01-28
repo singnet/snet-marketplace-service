@@ -1,5 +1,13 @@
 {
-  "SaveServiceInput": {},
+  "SaveServiceInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "SaveServiceInput",
+    "type": "object",
+    "properties": {
+      "data": {
+      }
+    }
+  },
   "SaveServiceOutput": {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "SaveServiceOutput",

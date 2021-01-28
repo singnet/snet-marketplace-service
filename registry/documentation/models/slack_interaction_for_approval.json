@@ -1,5 +1,13 @@
 {
-  "SlackInteractionForApprovalInput": {},
+  "SlackInteractionForApprovalInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "SlackInteractionForApprovalInput",
+    "type": "object",
+    "properties": {
+      "data": {
+      }
+    }
+  },
   "SlackInteractionForApprovalOutput": {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "SlackInteractionForApprovalOutput",
