@@ -41,7 +41,7 @@ documentation:
         contentType: "application/json"
         schema: ${file(orchestrator/documentation/models/get_wallet.json):GetWalletOutput}
       - name: "GetOrderOutput"
-         contentType: "application/json"
+        contentType: "application/json"
         schema: ${file(orchestrator/documentation/models/get_order.json):GetOrderOutput}
       - name: "GetOrderByOrderIdOutput"
         contentType: "application/json"
