@@ -4,9 +4,6 @@
     "title": "SendEmailInput",
     "type": "object",
     "properties": {
-      "status": {
-        "type": "string"
-      },
       "data": {
       }
     }

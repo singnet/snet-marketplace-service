@@ -4,9 +4,6 @@
     "title": "ExecuteOrderInput",
     "type": "object",
     "properties": {
-      "status": {
-        "type": "string"
-      },
       "data": {
       }
     }

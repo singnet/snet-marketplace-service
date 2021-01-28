@@ -4,9 +4,6 @@
     "title": "RegisterOrgMemberInput",
     "type": "object",
     "properties": {
-      "status": {
-        "type": "string"
-      },
       "data": {
       }
     }
