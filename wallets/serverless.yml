@@ -17,10 +17,9 @@ custom:
     automatic: true
     includeLayers: true
     number: 5
-documentation:
+  documentation:
     models:
-      -
-        name: "ErrorMessage"
+      - name: "ErrorMessage"
         contentType: "application/json"
         schema: ${file(wallets/documentation/models/error.json)}
       - name: "PostWalletOutput"
@@ -312,25 +311,25 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
-    documentation:
-      summary: "Create channel"
-      description: "Create channel"
-      tags:
-        - "wallet"
-      requestHeaders:
-        - name: "Content-Type"
-          description: "application/json"
-      requestModels:
-        "application/json": "CreateChannelInput"
-      methodResponses:
-        - statusCode: "200"
-          responseBody:
-            description: "response"
-          responseModels:
-            "application/json": "CreateChannelOutput"
-        - statusCode: "500"
-          responseModels:
-            "application/json": "ErrorMessage"
+          documentation:
+            summary: "Create channel"
+            description: "Create channel"
+            tags:
+              - "wallet"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestModels:
+              "application/json": "CreateChannelInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "response"
+                responseModels:
+                  "application/json": "CreateChannelOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
 
 
   delete-user-wallet:
@@ -349,25 +348,25 @@ functions:
           method: POST
           path: /wallet/delete
           private: true
-    documentation:
-      summary: "Delete user wallet"
-      description: "Delete user wallet"
-      tags:
-        - "wallet"
-      requestHeaders:
-        - name: "Content-Type"
-          description: "application/json"
-      requestModels:
-        "application/json": "DeleteUserWalletInput"
-      methodResponses:
-        - statusCode: "200"
-          responseBody:
-            description: "response"
-          responseModels:
-            "application/json": "DeleteUserWalletOutput"
-        - statusCode: "500"
-          responseModels:
-            "application/json": "ErrorMessage"
+          documentation:
+            summary: "Delete user wallet"
+            description: "Delete user wallet"
+            tags:
+              - "wallet"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestModels:
+              "application/json": "DeleteUserWalletInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "response"
+                responseModels:
+                  "application/json": "DeleteUserWalletOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
 
   create-channel-event:
     warmup: true
