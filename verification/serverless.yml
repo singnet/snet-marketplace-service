@@ -21,28 +21,28 @@ custom:
     models:
       - name: "ErrorMessage"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/error.json)}
+        schema: ${file(verification/documentation/models/error.json)}
       - name: "InitiateOutput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/initiate.json):InitiateOutput}
+        schema: ${file(verification/documentation/models/initiate.json):InitiateOutput}
       - name: "InitiateInput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/initiate.json):InitiateInput}
+        schema: ${file(verification/documentation/models/initiate.json):InitiateInput}
       - name: "CallBackOutput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/callback.json):CallBackOutput}
+        schema: ${file(verification/documentation/models/callback.json):CallBackOutput}
       - name: "CallBackInput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/callback.json):CallBackInput}
+        schema: ${file(verification/documentation/models/callback.json):CallBackInput}
       - name: "StatusOutput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/status.json):StatusOutput}
+        schema: ${file(verification/documentation/models/status.json):StatusOutput}
       - name: "PostCallBackOutput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/post_callback.json):PostCallBackOutput}
+        schema: ${file(verification/documentation/models/post_callback.json):PostCallBackOutput}
       - name: "PostCallBackInput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/post_callback.json):PostCallBackInput}
+        schema: ${file(verification/documentation/models/post_callback.json):PostCallBackInput}
 
 provider:
   name: aws
@@ -172,7 +172,7 @@ functions:
               - name: "Content-Type"
                 description: "application/json"
             requestModels:
-              "applicaton/json": "CallBackInput"
+              "application/json": "CallBackInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
