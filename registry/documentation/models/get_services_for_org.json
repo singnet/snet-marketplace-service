@@ -1,5 +1,13 @@
 {
-  "GetServicesForOrgInput": {},
+  "GetServicesForOrgInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "GetServicesForOrgInput",
+    "type": "object",
+    "properties": {
+      "data": {
+      }
+    }
+  },
   "GetServicesForOrgOutput": {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "GetServicesForOrgOutput",

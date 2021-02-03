@@ -1,5 +1,13 @@
 {
-  "SaveOrgTransactionsInput": {},
+  "SaveOrgTransactionsInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "SaveOrgTransactionsInput",
+    "type": "object",
+    "properties": {
+      "data": {
+      }
+    }
+  },
   "SaveOrgTransactionsOutput": {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "SaveOrgTransactionsOutput",

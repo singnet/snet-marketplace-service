@@ -1,5 +1,13 @@
 {
-  "GetAllServicePendingForApprovalInput": {},
+  "GetAllServicePendingForApprovalInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "GetAllServicePendingForApprovalInput",
+    "type": "object",
+    "properties": {
+      "data": {
+      }
+    }
+  },
   "GetAllServicePendingForApprovalOutput": {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "GetAllServicePendingForApprovalOutput",
