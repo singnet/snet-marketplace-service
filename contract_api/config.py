@@ -4,9 +4,10 @@ NETWORKS = {
         "http_provider": "https://ropsten.infura.io",
         "ws_provider": "wss://ropsten.infura.io/ws",
         "db": {
+            "DB_DRIVER": "mysql+pymysql",
             "DB_HOST": "localhost",
-            "DB_USER": "unittest_root",
-            "DB_PASSWORD": "unittest_pwd",
+            "DB_USER": "root",
+            "DB_PASSWORD": "Admin@123",
             "DB_NAME": "unittest_db",
             "DB_PORT": 3306,
         },
