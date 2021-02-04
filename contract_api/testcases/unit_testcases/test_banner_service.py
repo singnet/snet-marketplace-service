@@ -10,13 +10,13 @@ class MyTestCase(unittest.TestCase):
         repo = UIContentRepository()
         repo.delete_banners()
         banner_list = [
-            Banner(id=1, image="https://d16o4vcu292x9v.cloudfront.net/assets/snet/minecraftizing-service/hero.jpeg"
+            Banner(id=1, image="dummy_image"
                    , image_alignment="LEFT", alt_text="minecraft",
                    title="Song/Splitter.", rank=1, description="dflkajflajsdflkj"),
-            Banner(id=2, image="https://d16o4vcu292x9v.cloudfront.net/assets/snet/minecraftizing-service/hero.jpeg"
+            Banner(id=2, image="dummy_image"
                    , image_alignment="LEFT", alt_text="minecraft",
                    title="Song/Splitter.", rank=1, description="dflkajflajsdflkj"),
-            Banner(id=3, image="https://d16o4vcu292x9v.cloudfront.net/assets/snet/minecraftizing-service/hero.jpeg"
+            Banner(id=3, image="dummy_image"
                    , image_alignment="LEFT", alt_text="minecraft",
                    title="Song/Splitter.", rank=1, description="dflkajflajsdflkj")
         ]
@@ -33,6 +33,24 @@ class MyTestCase(unittest.TestCase):
     def test_get_banners(self):
         banner_service = BannerService()
         response = banner_service.get_banners()
-        expected_response = [{'id': 1, 'image': 'https://d16o4vcu292x9v.cloudfront.net/assets/snet/minecraftizing-service/hero.jpeg', 'alt_text': 'minecraft', 'image_alignment': 'LEFT', 'title': 'Song/Splitter.', 'description': 'dflkajflajsdflkj', 'cta': [{'id': 1, 'text': 'abc', 'url': 'www.google.com', 'type': 'primary', 'variant': 'contained'}, {'id': 2, 'text': 'abc', 'url': 'www.google.com', 'type': 'primary', 'variant': 'contained'}]}, {'id': 2, 'image': 'https://d16o4vcu292x9v.cloudfront.net/assets/snet/minecraftizing-service/hero.jpeg', 'alt_text': 'minecraft', 'image_alignment': 'LEFT', 'title': 'Song/Splitter.', 'description': 'dflkajflajsdflkj', 'cta': [{'id': 3, 'text': 'abc', 'url': 'www.google.com', 'type': 'primary', 'variant': 'text'}, {'id': 4, 'text': 'abc', 'url': 'www.google.com', 'type': 'primary', 'variant': 'contained'}]}, {'id': 3, 'image': 'https://d16o4vcu292x9v.cloudfront.net/assets/snet/minecraftizing-service/hero.jpeg', 'alt_text': 'minecraft', 'image_alignment': 'LEFT', 'title': 'Song/Splitter.', 'description': 'dflkajflajsdflkj', 'cta': [{'id': 5, 'text': 'abc', 'url': 'www.google.com', 'type': 'primary', 'variant': 'outlined'}, {'id': 6, 'text': 'abc', 'url': 'www.google.com', 'type': 'primary', 'variant': 'contained'}]}]
+        expected_response = [{'id': 1, 'image': 'dummy_image', 'alt_text': 'minecraft', 'image_alignment': 'LEFT',
+                              'title': 'Song/Splitter.', 'description': 'dflkajflajsdflkj', 'cta': [
+                {'id': 1, 'text': 'abc', 'url': 'www.google.com', 'type': 'primary', 'variant': 'contained'},
+                {'id': 2, 'text': 'abc', 'url': 'www.google.com', 'type': 'primary', 'variant': 'contained'}]},
+                             {'id': 2, 'image': 'dummy_image', 'alt_text': 'minecraft', 'image_alignment': 'LEFT',
+                              'title': 'Song/Splitter.', 'description': 'dflkajflajsdflkj', 'cta': [
+                                 {'id': 3, 'text': 'abc', 'url': 'www.google.com', 'type': 'primary',
+                                  'variant': 'text'},
+                                 {'id': 4, 'text': 'abc', 'url': 'www.google.com', 'type': 'primary',
+                                  'variant': 'contained'}]},
+                             {'id': 3, 'image': 'dummy_image', 'alt_text': 'minecraft', 'image_alignment': 'LEFT',
+                              'title': 'Song/Splitter.', 'description': 'dflkajflajsdflkj', 'cta': [
+                                 {'id': 5, 'text': 'abc', 'url': 'www.google.com', 'type': 'primary',
+                                  'variant': 'outlined'},
+                                 {'id': 6, 'text': 'abc', 'url': 'www.google.com', 'type': 'primary',
+                                  'variant': 'contained'}]}]
         self.assertListEqual(expected_response, response)
 
+
+if __name__ == "main":
+    MyTestCase().test_get_banners()
