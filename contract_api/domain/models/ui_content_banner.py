@@ -8,8 +8,6 @@ class Banner(object):
         self.__title = title
         self.__rank = rank
         self.__description = description
-        # self.__row_created = row_created
-        # self.__row_updated = row_updated
 
     @property
     def id(self):
@@ -39,14 +37,6 @@ class Banner(object):
     def description(self):
         return self.__description
 
-    # @property
-    # def row_created(self):
-    #     return self.__row_created
-    #
-    # @property
-    # def row_updated(self):
-    #     return self.__row_updated
-
     def to_response(self):
         response = {
             "id": self.id,
@@ -54,12 +44,6 @@ class Banner(object):
             "alt_text": self.alt_text,
             "image_alignment": self.image_alignment,
             "title": self.title,
-            "description": self.description,
-            # "row_created": self.row_created,
-            # "row_updated": self.row_updated
+            "description": self.description
         }
-        # if self.row_created is not None:
-        #     response["row_created"] = datetime_to_string(self.row_created)
-        # if self.row_updated is not None:
-        #     response["row_created"] = datetime_to_string(self.row_updated)
         return response

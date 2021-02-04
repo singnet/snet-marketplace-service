@@ -33,10 +33,3 @@ class BaseRepository:
             self.session.commit()
             raise e
 
-    def delete(self, table):
-        try:
-            self.session.delete(table[0])
-            self.session.commit()
-        except Exception as e:
-            self.session.commit()
-            raise e

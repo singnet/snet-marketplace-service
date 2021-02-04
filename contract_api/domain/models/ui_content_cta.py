@@ -1,6 +1,3 @@
-from common.utils import datetime_to_string
-
-
 class CTA(object):
     def __init__(self, id, text, url, type, variant,
                  rank):
@@ -35,8 +32,7 @@ class CTA(object):
     def rank(self):
         return self.__rank
 
-
-    def to_response(self):
+    def to_dict(self):
         response = {
             "id": self.id,
             "text": self.text,

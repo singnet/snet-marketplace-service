@@ -52,5 +52,6 @@ class MyTestCase(unittest.TestCase):
         self.assertListEqual(expected_response, response)
 
 
-if __name__ == "main":
-    MyTestCase().test_get_banners()
+    def tearDown(self):
+        repo = UIContentRepository()
+        repo.delete_banners()
