@@ -107,6 +107,10 @@ custom:
         name: "UpdateConsumedBalanceInput"
         contentType: "application/json"
         schema: ${file(contract_api/documentation/models/update_consumed_balance.json):UpdateConsumedBalanceInput}
+      -
+        name: "MarketplaceCarousel"
+        contentType: "application/json"
+        schema: ${file(contract_api/documentation/models/get_marketplace_carousel.json):MarketplaceCarouselOutput}
 package:
   exclude:
     - .circleci/**
@@ -731,6 +735,48 @@ functions:
                   description: "Channel Data"
                 responseModels:
                   "application/json": "UpdateConsumedBalanceOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
+
+  get_marketplace_carousel:
+    handler: contract_api/handlers.ui_content_handlers.get_marketplace_carousel
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /uicontent/marketplacecarousel
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+          documentation:
+            summary: "Get Marketplace carousel content"
+            description: "Get the list of banners and their respects CTAs to display in the marketplace dapp carousel"
+            tags:
+              - "ui"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Carousel Data"
+                responseModels:
+                  "application/json": "MarketplaceCarousel"
               - statusCode: "500"
                 responseModels:
                   "application/json": "ErrorMessage"
