@@ -146,7 +146,7 @@ class ServiceMedia(Base):
     ipfs_url = Column("ipfs_url", VARCHAR(512), default=null)
     service_row_id = Column("service_row_id", Integer,
                             ForeignKey("service.row_id", ondelete="CASCADE"),
-                            nullable=False)
+                            default=null)
     Index("ServiceMedisFK", service_row_id)
 
 
