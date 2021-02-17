@@ -114,3 +114,4 @@ event_pubsub/node_modules/
 #IDE files
 .idea/
 .vscode/
+**/*/.DS_Store

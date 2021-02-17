@@ -1,0 +1,48 @@
+{
+  "DappUserPostFeedbackInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "DappUserPostFeedbackInput",
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "data": {
+      },
+      "error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "DappUserPostFeedbackOutput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "DappUserPostFeedbackOutput",
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "data": {
+      },
+      "error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

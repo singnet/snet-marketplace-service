@@ -1,0 +1,251 @@
+{
+  "GetAllOrgInput": {},
+  "GetAllOrgOutput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "GetAllOrgOutput",
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "data": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "org_name": {
+              "type": "string"
+            },
+            "org_id": {
+              "type": "string"
+            },
+            "org_uuid": {
+              "type": "string"
+            },
+            "org_type": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "short_description": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
+            },
+            "duns_no": {
+              "type": "string"
+            },
+            "registration_id": {
+              "type": "string"
+            },
+            "registration_type": {
+              "type": "string"
+            },
+            "origin": {
+              "type": "string"
+            },
+            "contacts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "contact_type": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "assets": {
+              "type": "object",
+              "properties": {
+                "hero_image": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string"
+                    },
+                    "ipfs_hash": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "metadata_ipfs_uri": {
+              "type": "string"
+            },
+            "groups": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "payment_address": {
+                    "type": "string"
+                  },
+                  "payment_config": {
+                    "type": "object",
+                    "properties": {
+                      "payment_channel_storage_type": {
+                        "type": "string"
+                      },
+                      "payment_expiration_threshold": {
+                        "type": "integer"
+                      },
+                      "payment_channel_storage_client": {
+                        "type": "object",
+                        "properties": {
+                          "endpoints": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "request_timeout": {
+                            "type": "string"
+                          },
+                          "connection_timeout": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "status": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "org_address": {
+              "type": "object",
+              "properties": {
+                "mail_address_same_hq_address": {
+                  "type": "boolean"
+                },
+                "addresses": {
+                  "type": "array",
+                  "items": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "address_type": {
+                          "type": "string"
+                        },
+                        "street_address": {
+                          "type": "string"
+                        },
+                        "apartment": {
+                          "type": "string"
+                        },
+                        "city": {
+                          "type": "string"
+                        },
+                        "pincode": {
+                          "type": "string"
+                        },
+                        "state": {
+                          "type": "null"
+                        },
+                        "country": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "address_type": {
+                          "type": "string"
+                        },
+                        "street_address": {
+                          "type": "string"
+                        },
+                        "apartment": {
+                          "type": "string"
+                        },
+                        "city": {
+                          "type": "string"
+                        },
+                        "pincode": {
+                          "type": "string"
+                        },
+                        "state": {
+                          "type": "null"
+                        },
+                        "country": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "state": {
+              "type": "object",
+              "properties": {
+                "state": {
+                  "type": "string"
+                },
+                "updated_on": {
+                  "type": "string"
+                },
+                "updated_by": {
+                  "type": "string"
+                },
+                "reviewed_by": {
+                  "type": "string"
+                },
+                "reviewed_on": {
+                  "type": "string"
+                },
+                "comments": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "comment": {
+                        "type": "string"
+                      },
+                      "created_by": {
+                        "type": "string"
+                      },
+                      "created_at": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

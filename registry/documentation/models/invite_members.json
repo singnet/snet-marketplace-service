@@ -1,0 +1,34 @@
+{
+  "InviteMembersInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "InviteMembersInput",
+    "type": "object",
+    "properties": {
+      "data": {
+      }
+    }
+  },
+  "InviteMembersOutput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "InviteMembersOutput",
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "data": {
+      },
+      "error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

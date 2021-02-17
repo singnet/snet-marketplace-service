@@ -1,0 +1,34 @@
+{
+  "CreateServiceInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "CreateServiceInput",
+    "type": "object",
+    "properties": {
+      "data": {
+      }
+    }
+  },
+  "CreateServiceOutput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "CreateServiceOutput",
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "data": {
+      },
+      "error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

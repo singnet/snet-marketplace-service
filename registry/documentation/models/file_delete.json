@@ -1,0 +1,46 @@
+{
+  "FileDeleteInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "FileDeleteInput",
+    "type": "object",
+    "properties": {
+      "data": {
+      }
+    }
+  },
+  "FileDeleteOutput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "FileDeleteOutput",
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "data": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "data": {
+            "type": "string"
+          },
+          "error": {
+            "type": "object"
+          }
+        }
+      },
+      "error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

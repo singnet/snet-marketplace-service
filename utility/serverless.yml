@@ -3,6 +3,7 @@ plugins:
   - serverless-python-requirements
   - serverless-plugin-tracing
   - serverless-prune-plugin
+  - serverless-aws-documentation
 
 service: common-utility
 provider:
@@ -32,6 +33,23 @@ custom:
     automatic: true
     includeLayers: true
     number: 5
+  documentation:
+    models:
+      - name: "ErrorMessage"
+        contentType: "application/json"
+        schema: ${file(utility/documentation/models/error.json)}
+      - name: "UploadFileInput"
+        contentType: "application/json"
+        schema: ${file(utility/documentation/models/upload.json):UploadFileInput}
+      - name: "UploadFileOutput"
+        contentType: "application/json"
+        schema: ${file(utility/documentation/models/upload.json):UploadFileOutput}
+      - name: "SlackAuthWrapperInput"
+        contentType: "application/json"
+        schema: ${file(utility/documentation/models/slack_auth_wrapper.json):SlackAuthWrapperInput}
+      - name: "SlackAuthWrapperOutput"
+        contentType: "application/json"
+        schema: ${file(utility/documentation/models/slack_auth_wrapper.json):SlackAuthWrapperOutput}
 
 
 functions:
@@ -64,6 +82,25 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Upload file"
+            description: "Upload file"
+            tags:
+              - "file"
+            requestHeaders:
+              - name: "content-type"
+                description: "application/json"
+            requestModels:
+              "application/json": "UploadFileInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Response body"
+                responseModels:
+                  "application/json": "UploadFileOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
   slack-auth-wrapper:
     handler: utility.application.handlers.slack_feedback_handler.main
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -93,3 +130,23 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Post slack feedback"
+            description: "Post slack feedback"
+            tags:
+              - "feedback"
+            requestHeaders:
+              - name: "content-type"
+                description: "application/json"
+            requestModels:
+              "application/json": "SlackAuthWrapperInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Response body"
+                responseModels:
+                  "application/json": "SlackAuthWrapperOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
+

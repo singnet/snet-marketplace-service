@@ -1,0 +1,46 @@
+{
+  "PublishOrgIpfsInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "PublishOrgIpfsInput",
+    "type": "object",
+    "properties": {
+      "data": {
+      }
+    }
+  },
+  "PublishOrgIpfsOutput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "PublishOrgIpfsOutput",
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "data": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "data": {
+            "type": "string"
+          },
+          "error": {
+            "type": "object"
+          }
+        }
+      },
+      "error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
