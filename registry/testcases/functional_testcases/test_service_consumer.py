@@ -108,7 +108,7 @@ class TestServiceEventConsumer(unittest.TestCase):
             org_uuid, service_uuid)
 
         self.assertEqual(["tag1", "tag2"], published_service.tags)
-        self.assertEqual(ServiceStatus.PUBLISHED.value,
+        self.assertEqual(ServiceStatus.DRAFT.value,
                          published_service.service_state.state)
         self.assertEqual(
             service_metadata["display_name"], published_service.display_name)
