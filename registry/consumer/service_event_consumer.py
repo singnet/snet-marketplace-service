@@ -20,7 +20,8 @@ BLOCKCHAIN_USER = "BLOCKCHAIN_USER"
 class ServiceEventConsumer(object):
 
     def __init__(self, ws_provider, ipfs_url, ipfs_port, service_repository, organiztion_repository):
-        self._blockchain_util = blockchain_util.BlockChainUtil("WS_PROVIDER", ws_provider)
+        self._blockchain_util = blockchain_util.BlockChainUtil(
+            "WS_PROVIDER", ws_provider)
         self._service_repository = service_repository
         self._organiztion_repository = organiztion_repository
         self._ipfs_util = ipfs_util.IPFSUtil(ipfs_url, ipfs_port)
@@ -57,14 +58,16 @@ class ServiceEventConsumer(object):
     def _get_metadata_uri_from_event(self, event):
         event_data = event['data']
         service_data = eval(event_data['json_str'])
-        metadata_uri = Web3.toText(service_data['metadataURI'])[7:].rstrip("\u0000")
+        metadata_uri = Web3.toText(service_data['metadataURI'])[
+            7:].rstrip("\u0000")
         return metadata_uri
 
     def _get_registry_contract(self):
         net_id = NETWORK_ID
         base_contract_path = os.path.abspath(
             os.path.join(os.path.dirname(__file__), '..', '..', 'node_modules', 'singularitynet-platform-contracts'))
-        registry_contract = self._blockchain_util.get_contract_instance(base_contract_path, "REGISTRY", net_id)
+        registry_contract = self._blockchain_util.get_contract_instance(
+            base_contract_path, "REGISTRY", net_id)
         return registry_contract
 
     def _get_service_details_from_blockchain(self, event):
@@ -75,7 +78,8 @@ class ServiceEventConsumer(object):
         service_id = self._get_service_id_from_event(event)
 
         tags_data = self._fetch_tags(
-            registry_contract=registry_contract, org_id_hex=org_id.encode("utf-8"),
+            registry_contract=registry_contract, org_id_hex=org_id.encode(
+                "utf-8"),
             service_id_hex=service_id.encode("utf-8"))
         transaction_hash = self._get_tarnsaction_hash(event)
 
@@ -85,7 +89,8 @@ class ServiceEventConsumer(object):
 class ServiceCreatedEventConsumer(ServiceEventConsumer):
 
     def on_event(self, event):
-        org_id, service_id, tags_data, transaction_hash = self._get_service_details_from_blockchain(event)
+        org_id, service_id, tags_data, transaction_hash = self._get_service_details_from_blockchain(
+            event)
         metadata_uri = self._get_metadata_uri_from_event(event)
         service_ipfs_data = self._ipfs_util.read_file_from_ipfs(metadata_uri)
         self._process_service_data(
@@ -111,7 +116,8 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
 
     def _process_service_data(self, org_id, service_id, service_metadata, tags_data, transaction_hash, metadata_uri):
 
-        org_uuid, existing_service = self._get_existing_service_details(org_id, service_id)
+        org_uuid, existing_service = self._get_existing_service_details(
+            org_id, service_id)
         service_uuid = str(uuid4())
         display_name = service_metadata.get("display_name", "")
         description_dict = service_metadata.get("service_description", {})
@@ -131,7 +137,8 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             ServiceFactory.create_service_state_entity_model(org_uuid, service_uuid,
                                                              getattr(ServiceStatus, "PUBLISHED_UNAPPROVED").value)
 
-        self._add_validation_attribute_to_endpoint(service_metadata.get("groups", []))
+        self._add_validation_attribute_to_endpoint(
+            service_metadata.get("groups", []))
         groups = [
             ServiceFactory.create_service_group_entity_model(org_uuid, service_uuid, group) for group in
             service_metadata.get("groups", [])]
@@ -142,7 +149,8 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             existing_service.description = description
             existing_service.project_url = project_url
             existing_service.proto = proto
-            existing_service.assets = ServiceFactory.parse_service_metadata_assets(assets, existing_service.assets)
+            existing_service.assets = ServiceFactory.parse_service_metadata_assets(
+                assets, existing_service.assets)
             existing_service.mpe_address = mpe_address
             existing_service.metadata_uri = metadata_uri
             existing_service.contributors = contributors
@@ -152,7 +160,8 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                 service_metadata.get("groups", [])]
 
         recieved_service = Service(
-            org_uuid, str(uuid4()), service_id, display_name, short_description,
+            org_uuid, str(
+                uuid4()), service_id, display_name, short_description,
             description, project_url,
             proto, assets,
             DEFAULT_SERVICE_RANKING,
@@ -163,21 +172,30 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             state)
 
         if not existing_service:
-            self._service_repository.add_service(recieved_service, BLOCKCHAIN_USER)
+            self._service_repository.add_service(
+                recieved_service, BLOCKCHAIN_USER)
 
-        elif existing_service.service_state.transaction_hash != transaction_hash and existing_service.is_major_change(
-                recieved_service):
-            self._service_repository.save_service(BLOCKCHAIN_USER, existing_service, ServiceStatus.DRAFT.value)
-        else:
-            self.__curate_service_in_marketplace(service_id, org_id, curated=True)
-            self._service_repository.save_service(BLOCKCHAIN_USER, existing_service, ServiceStatus.PUBLISHED.value)
+        elif existing_service.service_state.transaction_hash == transaction_hash:
+            self.___curate_service_in_marketplace(
+                service_id, org_id, curated=True)
+            self._service_repository.save_service(
+                BLOCKCHAIN_USER, existing_service, ServiceStatus.PUBLISHED.value)
+
+        elif existing_service.service_state.transaction_hash is None:
+            self._service_repository.save_service(
+                BLOCKCHAIN_USER, existing_service, ServiceStatus.DRAFT.value)
+
+        elif existing_service.service_state.transaction_hash != transaction_hash:
+            # TODO: Implement major & minor changes
+            self._service_repository.save_service(
+                BLOCKCHAIN_USER, existing_service, ServiceStatus.DRAFT.value)
 
     @staticmethod
-    def __curate_service_in_marketplace(service_id, org_id, curated):
+    def ___curate_service_in_marketplace(service_id, org_id, curated):
         curate_service_payload = {
             "pathParameters": {
-                "orgId": org_id,
-                "serviceId": service_id
+                "org_id": org_id,
+                "service_id": service_id
             },
             "queryStringParameters": {
                 "curate": str(curated)
@@ -189,5 +207,6 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                            invocation_type="RequestResponse",
                            payload=json.dumps(curate_service_payload))
         if curate_service_response["statusCode"] != StatusCode.CREATED:
-            logger.info(f"failed to update service ({service_id}, {org_id}) curation {curate_service_response}")
+            logger.info(
+                f"failed to update service ({service_id}, {org_id}) curation {curate_service_response}")
             raise Exception("failed to update service curation")
