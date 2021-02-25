@@ -164,13 +164,13 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
 
         if not existing_service:
             self._service_repository.add_service(recieved_service, BLOCKCHAIN_USER)
-        elif existing_service.service_state.transaction_hash == transaction_hash:
-            self.___curate_service_in_marketplace(service_id, org_id, curated=True)
         elif existing_service.service_state.transaction_hash is None:
             self._service_repository.save_service(BLOCKCHAIN_USER, existing_service, ServiceStatus.DRAFT.value)
         elif existing_service.service_state.transaction_hash != transaction_hash:
             # TODO:  Implement major & minor changes
             self._service_repository.save_service(BLOCKCHAIN_USER, existing_service, ServiceStatus.DRAFT.value)
+        elif existing_service.service_state.transaction_hash == transaction_hash:
+            self.__curate_service_in_marketplace(service_id, org_id, curated=True)
 
     @staticmethod
     def __curate_service_in_marketplace(service_id, org_id, curated):
