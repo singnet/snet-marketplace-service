@@ -21,6 +21,7 @@ from orchestrator.exceptions import PaymentInitiateFailed, ChannelCreationFailed
 from orchestrator.order_status import OrderStatus
 from orchestrator.services.wallet_service import WalletService
 from orchestrator.transaction_history import TransactionHistory
+from utility.services.crypto_to_fiat import get_cogs_amount
 
 logger = get_logger(__name__)
 
@@ -167,7 +168,7 @@ class OrderService:
 
     def calculate_amount_in_cogs(self, amount, currency):
         if currency == "USD":
-            amount_in_cogs = round(amount * USD_TO_COGS_CONVERSION_FACTOR)
+            amount_in_cogs = get_cogs_amount(crypto_symbol='AGI',fiat_symbol=currency, fiat_rate=amount)
             return amount_in_cogs
         else:
             raise Exception("Currency %s not supported.", currency)
