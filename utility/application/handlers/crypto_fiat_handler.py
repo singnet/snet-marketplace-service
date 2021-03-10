@@ -8,6 +8,10 @@ def get_agi_usd_rate(event, context):
     logger.info("Received request for AGI-USD rate")
     convert_crypto_to_fiat(crypto='AGI', fiat='USD')
 
+def calculate_latest_agi_rate(event, context):
+    logger.info("Received request for computing latest AGI rate")
+    derive_new_agi_rate(crypto_symbol='AGI', fiat_symbol='USD')
+
 if __name__ == '__main__':
     a = get_cogs_amount(crypto_symbol='AGI',fiat_symbol='USD', fiat_rate=4)
     # print(a)
