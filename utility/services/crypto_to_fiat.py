@@ -49,22 +49,22 @@ def convert_crypto_to_fiat(crypto, fiat):
 
 
 # TODO: Create handler and call weekly
-def derive_new_agi_rate(crypto_symbol, fiat_symbol):
+def derive_new_crypto_rate(crypto, fiat):
 
     start_date = datetime.today()
     end_date = datetime.today() - timedelta(days=7)
 
     try:
-        current_rate = CryptoFiatRates().get_latest_rate(crypto_symbol=crypto_symbol,fiat_symbol=fiat_symbol,fiat_unit=1).crypto_rate or convert_crypto_to_fiat(crypto=crypto_symbol, fiat=fiat_symbol)
-        average_rate = HistoricalCryptoFiatRates().get_avg_crypto_rates_between_date(crypto_symbol, fiat_symbol, start_date, end_date,
+        current_rate = CryptoFiatRates().get_latest_rate(crypto_symbol=crypto,fiat_symbol=fiat).crypto_rate or convert_crypto_to_fiat(crypto=crypto, fiat=fiat)
+        average_rate = HistoricalCryptoFiatRates().get_avg_crypto_rates_between_date(crypto, fiat, start_date, end_date,
                                                                     CRYPTO_FIAT_CONVERSION['MULTIPLIER'])
 
-        latest_rate = CryptoFiatExchangeRates(fiat_symbol=fiat_symbol, crypto_symbol=crypto_symbol,
+        latest_rate = CryptoFiatExchangeRates(fiat_symbol=fiat, crypto_symbol=crypto,
                                                     crypto_rate=average_rate, fiat_rate=1, from_date=start_date)
 
         # TODO: Add some formulae here
 
-        CryptoFiatRates().update_rate(crypto_symbol=crypto_symbol, fiat_symbol=fiat_symbol, to_date=start_date, item=latest_rate)
+        CryptoFiatRates().update_rate(crypto_symbol=crypto, fiat_symbol=fiat, to_date=start_date, item=latest_rate)
         
     except Exception as e:
         logger.error(f"Failed while updating latest AGI rate {e}")
@@ -72,13 +72,13 @@ def derive_new_agi_rate(crypto_symbol, fiat_symbol):
      
 
 
-def get_cogs_amount(crypto_symbol, fiat_symbol, fiat_rate):
+def get_cogs_amount(crypto, fiat, fiat_rate):
     try:
-        rate = CryptoFiatRates().get_latest_rate(crypto_symbol=crypto_symbol, fiat_symbol=fiat_symbol)
+        rate = CryptoFiatRates().get_latest_rate(crypto_symbol=crypto, fiat_symbol=fiat)
         if rate is not None:
             return round((1/rate.crypto_rate) * fiat_rate)
         else:
             return False
     except Exception as e:
-        logger.error(f"Failed to get rates for {crypto_symbol}-{fiat_symbol} :: Error {e}")
+        logger.error(f"Failed to get rates for {crypto}-{fiat} :: Error {e}")
         raise(e)
