@@ -74,8 +74,10 @@ def derive_new_crypto_rate(crypto, fiat):
 def get_cogs_amount(crypto, fiat, fiat_rate):
     try:
         rate = CryptoFiatRates().get_latest_rate(crypto_symbol=crypto, fiat_symbol=fiat)
-        if rate is not None:
-            return round((1 / rate.crypto_rate) * fiat_rate)
+        if rate is None:
+            return CRYPTO_FIAT_CONVERSION['CURRENT_AGI_USD_RATE']
+        else:
+            return round((1 / rate) * fiat_rate)
     except Exception as e:
         logger.error(f"Failed to get rates for {crypto}-{fiat} :: Error {e}")
         raise e
