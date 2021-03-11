@@ -80,7 +80,7 @@ def get_cogs_amount(crypto, fiat, fiat_rate):
             return round((1 / rate) * fiat_rate)
     except Exception as e:
         logger.error(f"Failed to get rates for {crypto}-{fiat} :: Error {e}")
-        raise e
+    return False
 
 
 def get_change(current, previous):

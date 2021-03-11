@@ -1,6 +1,8 @@
+import json
 import unittest
 
-from utility.application.handlers.crypto_fiat_handler import get_agi_usd_rate, calculate_latest_agi_rate
+from utility.application.handlers.crypto_fiat_handler import calculate_latest_agi_rate, get_agi_fiat_rate, \
+    get_agi_usd_rate
 from utility.infrastructure.repository.crypto_fiat_rate import CryptoFiatRates
 from utility.infrastructure.repository.historical_crypto_fiat_rate import HistoricalCryptoFiatRates
 from utility.config import CRYPTO_FIAT_CONVERSION
@@ -24,7 +26,6 @@ class TestAGIUSDConversion(unittest.TestCase):
         rate = HistoricalCryptoFiatRates().get_max_rates(crypto_symbol=crypto, fiat_symbol=fiat, limit=limit,
                                                          multiplier=multiplier)
         self.assertGreaterEqual(rate, 0)
-
 
     def test_calculate_latest_agi_rate(self):
         crypto = 'AGI'
@@ -63,3 +64,14 @@ class TestAGIUSDConversion(unittest.TestCase):
 
         rate = CryptoFiatRates().get_latest_rate(crypto_symbol=crypto, fiat_symbol=fiat)
         self.assertEqual(rate, None)
+
+    def test_get_agi_fiat_rate(self):
+        event = {"pathParameters": {"currency": "USD"}, "queryStringParameters": {"amount": "100"}}
+        response = get_agi_fiat_rate(event=event, context=None)
+
+        print(response)
+
+        assert (response["statusCode"] == 200)
+        response_body = json.loads(response["body"])
+        assert (response_body["status"] == "success")
+        self.assertGreaterEqual(float(response_body["data"]["amount_in_agi"]), 0)

@@ -14,7 +14,7 @@ class HistoricalCryptoFiatExchangeRates(Base):
     fiat_symbol = Column("fiat_symbol", VARCHAR(100), nullable=False)
     crypto_rate = Column("crypto_rate", DECIMAL(19, 8), nullable=False)
     fiat_rate = Column("fiat_rate", DECIMAL(19, 8), nullable=False)
-    added_at = Column("added_at", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow(), index=True)
+    created_at = Column("created_at", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow(), index=True)
 
 class CryptoFiatExchangeRates(Base):
     __tablename__ = "crypto_fiat_rates"
@@ -25,3 +25,4 @@ class CryptoFiatExchangeRates(Base):
     fiat_rate = Column("fiat_rate", DECIMAL(19, 8), nullable=False)
     from_date = Column("from_date", TIMESTAMP(timezone=False), nullable=False)
     to_date = Column("to_date", TIMESTAMP(timezone=False), nullable=True)
+    created_at = Column("created_at", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
