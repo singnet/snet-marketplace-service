@@ -10,8 +10,7 @@ def get_cmc_secret():
     secret_name = "COIN_MARKETPLACE_API_TOKEN"
     region_name = "us-east-1"
     
-    # TODO: Remove profile name
-    session = boto3.session.Session(profile_name="SINGNET")
+    session = boto3.session.Session()
     client = session.client(
         service_name='secretsmanager',
         region_name=region_name
