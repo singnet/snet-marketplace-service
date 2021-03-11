@@ -17,5 +17,5 @@ class TestOrderHandler(unittest.TestCase):
         assert (response["statusCode"] == 200)
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
-        self.assertGreaterEqual(float(response_body["data"]["amount_in_cogs"]), 0)
-        self.assertGreaterEqual(float(response_body["data"]["amount_in_agi"]), 0)
+        assert (response_body["data"]["amount_in_cogs"] == "100")
+        assert (response_body["data"]["amount_in_agi"] == "0.00000100")
