@@ -113,7 +113,7 @@ functions:
     events:
       - schedule:
           rate: cron(57 23 * * ? *)
-          enabled: ${file(./config.${self:provider.stage}.json):agi_crypto_rate_update_status}
+          enabled: true
   calculate-latest-agi-rate:
     handler: utility.application.handlers.crypto_fiat_handler.calculate_latest_agi_rate
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -127,7 +127,7 @@ functions:
     events:
       - schedule:
           rate: rate(7 days)
-          enabled: ${file(./config.${self:provider.stage}.json):agi_crypto_rate_update_status}
+          enabled: true
   slack-auth-wrapper:
     handler: utility.application.handlers.slack_feedback_handler.main
     role: ${file(./config.${self:provider.stage}.json):ROLE}

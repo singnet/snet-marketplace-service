@@ -168,7 +168,7 @@ class OrderService:
 
     def calculate_amount_in_cogs(self, amount, currency):
         if currency == "USD":
-            amount_in_cogs = get_cogs_amount(crypto_symbol='AGI',fiat_symbol=currency, fiat_rate=amount)
+            amount_in_cogs = get_cogs_amount(crypto='AGI', fiat=currency, fiat_rate=amount)
             return amount_in_cogs
         else:
             raise Exception("Currency %s not supported.", currency)

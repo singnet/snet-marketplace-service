@@ -30,3 +30,13 @@ SLACK_FEEDBACK_HOOK = {
     "RFAI": "",
     "STAKING": ""
 }
+
+CRYPTO_FIAT_CONVERSION = {
+    'EXCHANGE': 'COINMARKETCAP',
+    'RATE_THRESHOLD': 10,
+    'MULTIPLIER': 1.5,
+    'LIMIT': 4,
+    'COINMARKETCAP': {
+        'API_ENDPOINT': 'https://pro-api.coinmarketcap.com/v2/tools/price-conversion?amount=1&convert={}&symbol={}'
+    }
+}

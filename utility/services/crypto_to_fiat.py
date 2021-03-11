@@ -5,15 +5,13 @@ from utility.infrastructure.repository.historical_crypto_fiat_rate import Histor
 from utility.infrastructure.repository.crypto_fiat_rate import CryptoFiatRates
 from utility.infrastructure.models import HistoricalCryptoFiatExchangeRates, CryptoFiatExchangeRates
 from utility.config import CRYPTO_FIAT_CONVERSION, SLACK_HOOK
-from datetime import datetime, timedelta
+from datetime import datetime
 from common.utils import Utils
 from utility.services.secrets_manager import get_cmc_secret
 
-utils = Utils()
 rates = HistoricalCryptoFiatRates()
 
 logger = get_logger(__name__)
-# utils.report_slack(f"got error : {response} \n {str(e)} \n for event : {event} ", SLACK_HOOK)
 
 
 def cmc_rate_converter(crypto_symbol, fiat_symbol):
@@ -32,7 +30,6 @@ def cmc_rate_converter(crypto_symbol, fiat_symbol):
         raise e
 
 
-# TODO: Create handler and call daily
 def convert_crypto_to_fiat(crypto, fiat):
     if CRYPTO_FIAT_CONVERSION['EXCHANGE'] == 'COINMARKETCAP':
 
@@ -48,37 +45,47 @@ def convert_crypto_to_fiat(crypto, fiat):
         raise Exception('Invalid exchange')
 
 
-# TODO: Create handler and call weekly
 def derive_new_crypto_rate(crypto, fiat):
-
-    start_date = datetime.today()
-    end_date = datetime.today() - timedelta(days=7)
-
     try:
-        current_rate = CryptoFiatRates().get_latest_rate(crypto_symbol=crypto,fiat_symbol=fiat).crypto_rate or convert_crypto_to_fiat(crypto=crypto, fiat=fiat)
-        average_rate = HistoricalCryptoFiatRates().get_avg_crypto_rates_between_date(crypto, fiat, start_date, end_date,
-                                                                    CRYPTO_FIAT_CONVERSION['MULTIPLIER'])
+        current_rate = convert_crypto_to_fiat(crypto=crypto, fiat=fiat)
+        recent_max_rate = HistoricalCryptoFiatRates().get_max_rates(crypto_symbol=crypto, fiat_symbol=fiat,
+                                                                    limit=CRYPTO_FIAT_CONVERSION['LIMIT'],
+                                                                    multiplier=CRYPTO_FIAT_CONVERSION['MULTIPLIER'])
+        recent_max_rate = float(recent_max_rate)
+        current_rate = float(current_rate)
 
-        latest_rate = CryptoFiatExchangeRates(fiat_symbol=fiat, crypto_symbol=crypto,
-                                                    crypto_rate=average_rate, fiat_rate=1, from_date=start_date)
+        percentage_in_price_change = get_change(current=current_rate, previous=recent_max_rate)
+        if percentage_in_price_change >= CRYPTO_FIAT_CONVERSION['RATE_THRESHOLD']:
+            today = datetime.today()
+            latest_rate = CryptoFiatExchangeRates(fiat_symbol=fiat, crypto_symbol=crypto, crypto_rate=recent_max_rate,
+                                                  fiat_rate=1, from_date=today)
+            CryptoFiatRates().update_rate(crypto_symbol=crypto, fiat_symbol=fiat, to_date=today, item=latest_rate)
+        else:
+            Utils().report_slack(
+                "{crypto}-{fiat} didn't update as the change in percentage is {percentage_in_price_change}. Recent "
+                "max rate: {recent_max_rate}",
+                SLACK_HOOK)
 
-        # TODO: Add some formulae here
-
-        CryptoFiatRates().update_rate(crypto_symbol=crypto, fiat_symbol=fiat, to_date=start_date, item=latest_rate)
-        
     except Exception as e:
         logger.error(f"Failed while updating latest AGI rate {e}")
-        raise(e)    
-     
+        raise e
 
 
 def get_cogs_amount(crypto, fiat, fiat_rate):
     try:
         rate = CryptoFiatRates().get_latest_rate(crypto_symbol=crypto, fiat_symbol=fiat)
         if rate is not None:
-            return round((1/rate.crypto_rate) * fiat_rate)
-        else:
-            return False
+            return round((1 / rate.crypto_rate) * fiat_rate)
     except Exception as e:
         logger.error(f"Failed to get rates for {crypto}-{fiat} :: Error {e}")
-        raise(e)
+        raise e
+
+
+def get_change(current, previous):
+    if current == previous:
+        return 0
+    try:
+        change = (abs(current - previous) / previous) * 100.0
+        return round(change, 2)
+    except ZeroDivisionError:
+        return 0
