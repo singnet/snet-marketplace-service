@@ -32,12 +32,12 @@ SLACK_FEEDBACK_HOOK = {
 }
 
 CRYPTO_FIAT_CONVERSION = {
-    'EXCHANGE': 'COINMARKETCAP',
-    'RATE_THRESHOLD': 10,
-    'MULTIPLIER': 1.5,
-    'CURRENT_AGI_USD_RATE': 0.30045,
-    'LIMIT': 4,
+    'EXCHANGE': '',
+    'RATE_THRESHOLD': '',
+    'MULTIPLIER': '',
+    'CURRENT_AGI_USD_RATE': '',
+    'LIMIT': '',
     'COINMARKETCAP': {
-        'API_ENDPOINT': 'https://pro-api.coinmarketcap.com/v2/tools/price-conversion?amount=1&convert={}&symbol={}'
+        'API_ENDPOINT': ''
     }
 }

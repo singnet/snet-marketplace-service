@@ -46,29 +46,32 @@ def convert_crypto_to_fiat(crypto, fiat):
 
 
 def derive_new_crypto_rate(crypto, fiat):
-    try:
-        current_rate = convert_crypto_to_fiat(crypto=crypto, fiat=fiat)
+
+    latest_rate = convert_crypto_to_fiat(crypto=crypto, fiat=fiat)
+    current_rate = get_cogs_amount(crypto=crypto, fiat=fiat,fiat_rate=1)
+    current_rate = float(current_rate)
+    latest_rate = float(latest_rate)
+    
+    if latest_rate > current_rate:
+        update_rate(crypto=crypto, fiat=fiat, latest_rate=latest_rate)
+    else:
+
         recent_max_rate = HistoricalCryptoFiatRates().get_max_rates(crypto_symbol=crypto, fiat_symbol=fiat,
                                                                     limit=CRYPTO_FIAT_CONVERSION['LIMIT'],
                                                                     multiplier=CRYPTO_FIAT_CONVERSION['MULTIPLIER'])
+
         recent_max_rate = float(recent_max_rate)
-        current_rate = float(current_rate)
 
         percentage_in_price_change = get_change(current=current_rate, previous=recent_max_rate)
+
         if percentage_in_price_change >= CRYPTO_FIAT_CONVERSION['RATE_THRESHOLD']:
-            today = datetime.today()
-            latest_rate = CryptoFiatExchangeRates(fiat_symbol=fiat, crypto_symbol=crypto, crypto_rate=recent_max_rate,
-                                                  fiat_rate=1, from_date=today)
-            CryptoFiatRates().update_rate(crypto_symbol=crypto, fiat_symbol=fiat, to_date=today, item=latest_rate)
+            update_rate(crypto=crypto, fiat=fiat, latest_rate=latest_rate)
         else:
             Utils().report_slack(
-                "{crypto}-{fiat} didn't update as the change in percentage is {percentage_in_price_change}. Recent "
-                "max rate: {recent_max_rate}",
-                SLACK_HOOK)
-
-    except Exception as e:
-        logger.error(f"Failed while updating latest AGI rate {e}")
-        raise e
+                    "{crypto}-{fiat} didn't update as the change in percentage is {percentage_in_price_change}. Recent "
+                    "max rate: {recent_max_rate}",
+                    SLACK_HOOK)
+       
 
 
 def get_cogs_amount(crypto, fiat, fiat_rate):
@@ -77,11 +80,17 @@ def get_cogs_amount(crypto, fiat, fiat_rate):
         if rate is None:
             return CRYPTO_FIAT_CONVERSION['CURRENT_AGI_USD_RATE']
         else:
-            return round((1 / rate) * fiat_rate)
+            rate = rate.crypto_rate
+            return round((1 / float(rate)) * float(fiat_rate))
     except Exception as e:
         logger.error(f"Failed to get rates for {crypto}-{fiat} :: Error {e}")
     return False
 
+def update_rate(crypto,fiat,latest_rate):
+    today = datetime.today()
+    rate = CryptoFiatExchangeRates(fiat_symbol=fiat, crypto_symbol=crypto, crypto_rate=latest_rate,
+                                                  fiat_rate=1, from_date=today)
+    CryptoFiatRates().update_rate(crypto_symbol=crypto, fiat_symbol=fiat, to_date=today, item=rate)
 
 def get_change(current, previous):
     if current == previous:
