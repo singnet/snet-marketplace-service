@@ -30,3 +30,14 @@ SLACK_FEEDBACK_HOOK = {
     "RFAI": "",
     "STAKING": ""
 }
+
+CRYPTO_FIAT_CONVERSION = {
+    'EXCHANGE': '',
+    'RATE_THRESHOLD': '',
+    'MULTIPLIER': '',
+    'CURRENT_AGI_USD_RATE': '',
+    'LIMIT': '',
+    'COINMARKETCAP': {
+        'API_ENDPOINT': ''
+    }
+}
