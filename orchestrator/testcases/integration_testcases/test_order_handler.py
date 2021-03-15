@@ -4,7 +4,6 @@ import json
 from orchestrator.handlers.order_handler import currency_to_token_conversion
 from unittest.mock import patch
 
-
 class TestOrderHandler(unittest.TestCase):
     def setUp(self):
         pass

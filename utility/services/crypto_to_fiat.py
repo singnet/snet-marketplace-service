@@ -6,19 +6,20 @@ from utility.infrastructure.repository.crypto_fiat_rate import CryptoFiatRates
 from utility.infrastructure.models import HistoricalCryptoFiatExchangeRates, CryptoFiatExchangeRates
 from utility.config import CRYPTO_FIAT_CONVERSION, SLACK_HOOK
 from datetime import datetime
+from common.boto_utils import BotoUtils
 from common.utils import Utils
-from utility.services.secrets_manager import secret_value
 
 rates = HistoricalCryptoFiatRates()
 
 logger = get_logger(__name__)
-
+boto_client = BotoUtils(region_name='us-east-1')
 
 def cmc_rate_converter(crypto_symbol, fiat_symbol):
     try:
+        api_token = boto_client.get_parameter_value_from_secrets_manager(secret_name='COIN_MARKETPLACE_API_TOKEN')
         URL = CRYPTO_FIAT_CONVERSION['COINMARKETCAP']['API_ENDPOINT'].format(
             fiat_symbol, crypto_symbol)
-        headers = {'X-CMC_PRO_API_KEY': secret_value(secret_name='COIN_MARKETPLACE_API_TOKEN')}
+        headers = {'X-CMC_PRO_API_KEY': api_token}
         result = requests.get(url=URL, headers=headers)
         response = result.json()['data'][0]
         fiat_rate = response['amount']
@@ -48,31 +49,40 @@ def convert_crypto_to_fiat(crypto, fiat):
 def derive_new_crypto_rate(crypto, fiat):
 
     latest_rate = convert_crypto_to_fiat(crypto=crypto, fiat=fiat)
-    current_rate = get_cogs_amount(crypto=crypto, fiat=fiat,fiat_rate=1)
-    current_rate = float(current_rate)
+    crypto_rate = get_latest_crypto_rate(crypto=crypto, fiat=fiat, fiat_rate=1)
+    crypto_rate = float(crypto_rate)
     latest_rate = float(latest_rate)
     
-    if latest_rate > current_rate:
+    if latest_rate > crypto_rate:
         update_rate(crypto=crypto, fiat=fiat, latest_rate=latest_rate)
     else:
 
-        recent_max_rate = HistoricalCryptoFiatRates().get_max_rates(crypto_symbol=crypto, fiat_symbol=fiat,
+        derived_rate = HistoricalCryptoFiatRates().get_max_rates(crypto_symbol=crypto, fiat_symbol=fiat,
                                                                     limit=CRYPTO_FIAT_CONVERSION['LIMIT'],
                                                                     multiplier=CRYPTO_FIAT_CONVERSION['MULTIPLIER'])
 
-        recent_max_rate = float(recent_max_rate)
+        derived_rate = float(derived_rate)
 
-        percentage_in_price_change = get_change(current=current_rate, previous=recent_max_rate)
+        percentage_in_price_change = get_change(current=latest_rate, previous=derived_rate)
 
         if percentage_in_price_change >= CRYPTO_FIAT_CONVERSION['RATE_THRESHOLD']:
-            update_rate(crypto=crypto, fiat=fiat, latest_rate=latest_rate)
+            update_rate(crypto=crypto, fiat=fiat, latest_rate=derived_rate)
         else:
             Utils().report_slack(
                     "{crypto}-{fiat} didn't update as the change in percentage is {percentage_in_price_change}. Recent "
-                    "max rate: {recent_max_rate}",
-                    SLACK_HOOK)
-       
+                    "derived rate: {derived_rate}",
+                    SLACK_HOOK)     
 
+def get_latest_crypto_rate(crypto, fiat, fiat_rate):
+    try:
+        rate = CryptoFiatRates().get_latest_rate(crypto_symbol=crypto, fiat_symbol=fiat)
+        if rate is None:
+            return CRYPTO_FIAT_CONVERSION['CURRENT_AGI_USD_RATE']
+        else:
+            return round(rate.crypto_rate, 4)
+    except Exception as e:
+        logger.error(f"Failed to get rates for {crypto}-{fiat} :: Error {e}")
+    return False
 
 def get_cogs_amount(crypto, fiat, fiat_rate):
     try:
@@ -81,7 +91,7 @@ def get_cogs_amount(crypto, fiat, fiat_rate):
             return CRYPTO_FIAT_CONVERSION['CURRENT_AGI_USD_RATE']
         else:
             rate = rate.crypto_rate
-            return round((1 / float(rate)) * float(fiat_rate))
+            return round((1 / float(rate)) * float(fiat_rate), 4)
     except Exception as e:
         logger.error(f"Failed to get rates for {crypto}-{fiat} :: Error {e}")
     return False
