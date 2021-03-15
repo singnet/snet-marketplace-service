@@ -7,7 +7,7 @@ from utility.infrastructure.models import HistoricalCryptoFiatExchangeRates, Cry
 from utility.config import CRYPTO_FIAT_CONVERSION, SLACK_HOOK
 from datetime import datetime
 from common.utils import Utils
-from utility.services.secrets_manager import get_cmc_secret
+from utility.services.secrets_manager import secret_value
 
 rates = HistoricalCryptoFiatRates()
 
@@ -18,7 +18,7 @@ def cmc_rate_converter(crypto_symbol, fiat_symbol):
     try:
         URL = CRYPTO_FIAT_CONVERSION['COINMARKETCAP']['API_ENDPOINT'].format(
             fiat_symbol, crypto_symbol)
-        headers = {'X-CMC_PRO_API_KEY': get_cmc_secret()}
+        headers = {'X-CMC_PRO_API_KEY': secret_value(secret_name='COIN_MARKETPLACE_API_TOKEN')}
         result = requests.get(url=URL, headers=headers)
         response = result.json()['data'][0]
         fiat_rate = response['amount']
