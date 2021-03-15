@@ -18,4 +18,3 @@ class TestOrderHandler(unittest.TestCase):
         assert (response_body["status"] == "success")
         assert (response_body["data"]["amount_in_cogs"] == "100")
         assert (response_body["data"]["amount_in_agi"] == "0.00000100")
-        
