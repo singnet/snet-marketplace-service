@@ -3,6 +3,7 @@ plugins:
   - serverless-python-requirements
   - serverless-plugin-tracing
   - serverless-prune-plugin
+  - serverless-aws-documentation
 
 service: wallets
 custom:
@@ -16,7 +17,59 @@ custom:
     automatic: true
     includeLayers: true
     number: 2
-
+  documentation:
+    models:
+      - name: "ErrorMessage"
+        contentType: "application/json"
+        schema: ${file(wallets/documentation/models/error.json)}
+      - name: "PostWalletOutput"
+        contentType: "application/json"
+        schema: ${file(wallets/documentation/models/post_wallet.json):PostWalletOutput}
+      - name: "PostWalletInput"
+        contentType: "application/json"
+        schema: ${file(wallets/documentation/models/post_wallet.json):PostWalletInput}
+      - name: "GetWalletOutput"
+        contentType: "application/json"
+        schema: ${file(wallets/documentation/models/get_wallet.json):GetWalletOutput}
+      - name: "WalletRegisterOutput"
+        contentType: "application/json"
+        schema: ${file(wallets/documentation/models/wallet_register.json):WalletRegisterOutput}
+      - name: "WalletRegisterInput"
+        contentType: "application/json"
+        schema: ${file(wallets/documentation/models/wallet_register.json):WalletRegisterInput}
+      - name: "WalletChannelDepositOutput"
+        contentType: "application/json"
+        schema: ${file(wallets/documentation/models/wallet_channel_deposit.json):WalletChannelDepositOutput}
+      - name: "WalletChannelDepositInput"
+        contentType: "application/json"
+        schema: ${file(wallets/documentation/models/wallet_channel_deposit.json):WalletChannelDepositInput}
+      - name: "WalletStatusOutput"
+        contentType: "application/json"
+        schema: ${file(wallets/documentation/models/wallet_status.json):WalletStatusOutput}
+      - name: "WalletStatusInput"
+        contentType: "application/json"
+        schema: ${file(wallets/documentation/models/wallet_status.json):WalletStatusInput}
+      - name: "WalletTransactionsOutput"
+        contentType: "application/json"
+        schema: ${file(wallets/documentation/models/wallet_transactions.json):WalletTransactionsOutput}
+      - name: "CreateChannelOutput"
+        contentType: "application/json"
+        schema: ${file(wallets/documentation/models/create_channel.json):CreateChannelOutput}
+      - name: "CreateChannelInput"
+        contentType: "application/json"
+        schema: ${file(wallets/documentation/models/create_channel.json):CreateChannelInput}
+      - name: "DeleteUserWalletOutput"
+        contentType: "application/json"
+        schema: ${file(wallets/documentation/models/delete_user_wallet.json):DeleteUserWalletOutput}
+      - name: "DeleteUserWalletInput"
+        contentType: "application/json"
+        schema: ${file(wallets/documentation/models/delete_user_wallet.json):DeleteUserWalletInput}
+      - name: "CreateChannelEventOutput"
+        contentType: "application/json"
+        schema: ${file(wallets/documentation/models/create_channel_event.json):CreateChannelEventOutput}
+      - name: "CreateChannelEventInput"
+        contentType: "application/json"
+        schema: ${file(wallets/documentation/models/create_channel_event.json):CreateChannelEventInput}
 
 provider:
   name: aws
@@ -85,10 +138,47 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
+          documentation:
+            summary: "Get wallet"
+            description: "Get Wallet"
+            tags:
+              - "wallet"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestModels:
+              "application/json": "PostWalletInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "response"
+                responseModels:
+                  "application/json": "PostWalletOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
+
       - http:
           method: GET
           path: /wallet
           private: true
+          documentation:
+            summary: "Get wallet"
+            description: "Get Wallet"
+            tags:
+              - "wallet"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "response"
+                responseModels:
+                  "application/json": "GetWalletOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
       - http:
           method: POST
           path: /wallet/register
@@ -98,6 +188,25 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
+          documentation:
+            summary: "Register Wallet"
+            description: "Register Wallet"
+            tags:
+              - "wallet"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestModels:
+              "application/json": "WalletRegisterInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "response"
+                responseModels:
+                  "application/json": "WalletRegisterOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
       - http:
           method: POST
           path: /wallet/channel/deposit
@@ -107,6 +216,25 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
+          documentation:
+            summary: "Deposit to channel"
+            description: "Deposit to channel wallet"
+            tags:
+              - "wallet"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestModels:
+              "application/json": "WalletChannelDepositInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "response"
+                responseModels:
+                  "application/json": "WalletChannelDepositOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
       - http:
           method: POST
           path: /wallet/status
@@ -116,6 +244,25 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
+          documentation:
+            summary: "Get wallet status"
+            description: "Get wallet status"
+            tags:
+              - "wallet"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestModels:
+              "application/json": "WalletStatusInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "response"
+                responseModels:
+                  "application/json": "WalletStatusOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
 
       - http:
           method: GET
@@ -126,6 +273,23 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
+          documentation:
+            summary: "Get wallet transactions"
+            description: "Get wallet transactions"
+            tags:
+              - "wallet"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "response"
+                responseModels:
+                  "application/json": "WalletTransactionsOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
 
   create-channel:
     warmup: true
@@ -148,6 +312,26 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
+          documentation:
+            summary: "Create channel"
+            description: "Create channel"
+            tags:
+              - "wallet"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestModels:
+              "application/json": "CreateChannelInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "response"
+                responseModels:
+                  "application/json": "CreateChannelOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
+
 
   delete-user-wallet:
     warmup: true
@@ -165,6 +349,25 @@ functions:
           method: POST
           path: /wallet/delete
           private: true
+          documentation:
+            summary: "Delete user wallet"
+            description: "Delete user wallet"
+            tags:
+              - "wallet"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestModels:
+              "application/json": "DeleteUserWalletInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "response"
+                responseModels:
+                  "application/json": "DeleteUserWalletOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
 
   create-channel-event:
     warmup: true
@@ -182,6 +385,25 @@ functions:
           method: POST
           path: /wallet/channel/event
           private: true
+          documentation:
+            summary: "Create channel event"
+            description: "Create channel event "
+            tags:
+              - "channel"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestModels:
+              "application/json": "CreateChannelEventInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "response"
+                responseModels:
+                  "application/json": "CreateChannelEventOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
 
   channelTxnStatus:
     warmup: true

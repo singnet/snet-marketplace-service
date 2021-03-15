@@ -1,0 +1,34 @@
+{
+  "SlackAuthWrapperInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "SlackAuthWrapperInput",
+    "type": "object",
+    "properties": {
+      "data": {
+      }
+    }
+  },
+  "SlackAuthWrapperOutput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "SlackAuthWrapperOutput",
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "data": {
+      },
+      "error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

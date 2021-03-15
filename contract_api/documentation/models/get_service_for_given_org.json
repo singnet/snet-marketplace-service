@@ -1,5 +1,14 @@
 {
-  "GetServiceForGivenOrgInput": {},
+  "GetServiceForGivenOrgInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "GetServiceForGivenOrgInput",
+    "type": "object",
+    "properties": {
+      "data": {
+
+      }
+    }
+  },
   "GetServiceForGivenOrgOutput": {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "GetServiceForGivenOrgOutput",
@@ -101,126 +110,114 @@
           },
           "contacts": {
             "type": "array",
-            "items": [
-              {
-                "type": "object",
-                "properties": {
-                  "phone": {
-                    "type": "string"
-                  },
-                  "email_id": {
-                    "type": "string"
-                  },
-                  "contact_type": {
-                    "type": "string"
-                  }
+            "items": {
+              "type": "object",
+              "properties": {
+                "phone": {
+                  "type": "string"
+                },
+                "email_id": {
+                  "type": "string"
+                },
+                "contact_type": {
+                  "type": "string"
                 }
               }
-            ]
+            }
           },
           "is_available": {
             "type": "integer"
           },
           "groups": {
             "type": "array",
-            "items": [
-              {
-                "type": "object",
-                "properties": {
-                  "group_id": {
-                    "type": "string"
-                  },
-                  "group_name": {
-                    "type": "string"
-                  },
-                  "pricing": {
-                    "type": "array",
-                    "items": [
-                      {
-                        "type": "object",
-                        "properties": {
-                          "default": {
-                            "type": "boolean"
-                          },
-                          "price_model": {
-                            "type": "string"
-                          },
-                          "price_in_cogs": {
-                            "type": "integer"
-                          }
-                        }
+            "items": {
+              "type": "object",
+              "properties": {
+                "group_id": {
+                  "type": "string"
+                },
+                "group_name": {
+                  "type": "string"
+                },
+                "pricing": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "default": {
+                        "type": "boolean"
+                      },
+                      "price_model": {
+                        "type": "string"
+                      },
+                      "price_in_cogs": {
+                        "type": "integer"
                       }
-                    ]
-                  },
-                  "endpoints": {
-                    "type": "array",
-                    "items": [
-                      {
-                        "type": "object",
-                        "properties": {
-                          "endpoint": {
-                            "type": "string"
-                          },
-                          "is_available": {
-                            "type": "integer"
-                          },
-                          "last_check_timestamp": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    ]
-                  },
-                  "free_calls": {
-                    "type": "null"
-                  },
-                  "free_call_signer_address": {
-                    "type": "null"
+                    }
                   }
+                },
+                "endpoints": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "endpoint": {
+                        "type": "string"
+                      },
+                      "is_available": {
+                        "type": "integer"
+                      },
+                      "last_check_timestamp": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "free_calls": {
+                  "type": "null"
+                },
+                "free_call_signer_address": {
+                  "type": "null"
                 }
               }
-            ]
+            }
           },
           "tags": {
             "type": "array",
-            "items": [
-              {
-                "type": "object",
-                "properties": {
-                  "tag_name": {
-                    "type": "string"
-                  }
+            "items": {
+              "type": "object",
+              "properties": {
+                "tag_name": {
+                  "type": "string"
                 }
               }
-            ]
+            }
           },
           "media": {
             "type": "array",
-            "items": [
-              {
-                "type": "object",
-                "properties": {
-                  "row_id": {
-                    "type": "integer"
-                  },
-                  "url": {
-                    "type": "string"
-                  },
-                  "file_type": {
-                    "type": "string"
-                  },
-                  "order": {
-                    "type": "integer"
-                  },
-                  "alt_text": {
-                    "type": "string"
-                  },
-                  "asset_type": {
-                    "type": "string"
-                  }
+            "items": {
+              "type": "object",
+              "properties": {
+                "row_id": {
+                  "type": "integer"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "file_type": {
+                  "type": "string"
+                },
+                "order": {
+                  "type": "integer"
+                },
+                "alt_text": {
+                  "type": "string"
+                },
+                "asset_type": {
+                  "type": "string"
                 }
               }
-            ]
+            }
           }
         }
       },

@@ -125,19 +125,19 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                     ipfs_url = ''
                 else:
                     updated_url = self._push_asset_to_s3_using_hash(org_id=org_id,service_id=service_id,hash=url)
-                    ipfs_url = service_media_item["url"]
+                    ipfs_url = service_media_item.get("url","")
                 #insert service media data
                 service_media_data = {
                     "url":updated_url,
                     "file_type":service_media_item['file_type'],
                     "order":service_media_item['order'],
-                    "asset_type":service_media_item['asset_type'],
-                    "alt_text":service_media_item['alt_text'],
+                    "asset_type":service_media_item.get('asset_type',""),
+                    "alt_text":service_media_item.get('alt_text',""),
                     "ipfs_url":ipfs_url
                 }
                 self._service_repository.create_service_media(org_id=org_id,service_id=service_id,service_row_id=service_row_id,media_data=service_media_data)
-                if service_media_item['order'] > count:
-                    count = service_media_item['order']
+                if service_media_item.get('order',0) > count:
+                    count = service_media_item.get('order',0)
 
         #Take assets from updated metadata and store them in service_media table
         #Take order as greatest of media + 1

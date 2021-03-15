@@ -10,63 +10,57 @@
       },
       "data": {
         "type": "array",
-        "items": [
-          {
-            "type": "object",
-            "properties": {
-              "group_id": {
-                "type": "string"
-              },
-              "group_name": {
-                "type": "string"
-              },
-              "pricing": {
-                "type": "array",
-                "items": [
-                  {
-                    "type": "object",
-                    "properties": {
-                      "default": {
-                        "type": "boolean"
-                      },
-                      "price_model": {
-                        "type": "string"
-                      },
-                      "price_in_cogs": {
-                        "type": "integer"
-                      }
-                    }
+        "items": {
+          "type": "object",
+          "properties": {
+            "group_id": {
+              "type": "string"
+            },
+            "group_name": {
+              "type": "string"
+            },
+            "pricing": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "default": {
+                    "type": "boolean"
+                  },
+                  "price_model": {
+                    "type": "string"
+                  },
+                  "price_in_cogs": {
+                    "type": "integer"
                   }
-                ]
-              },
-              "endpoints": {
-                "type": "array",
-                "items": [
-                  {
-                    "type": "object",
-                    "properties": {
-                      "endpoint": {
-                        "type": "string"
-                      },
-                      "is_available": {
-                        "type": "integer"
-                      },
-                      "last_check_timestamp": {
-                        "type": "string"
-                      }
-                    }
-                  }
-                ]
-              },
-              "free_calls": {
-                "type": "integer"
-              },
-              "free_call_signer_address": {
-                "type": "string"
+                }
               }
+            },
+            "endpoints": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "endpoint": {
+                    "type": "string"
+                  },
+                  "is_available": {
+                    "type": "integer"
+                  },
+                  "last_check_timestamp": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "free_calls": {
+              "type": "integer"
+            },
+            "free_call_signer_address": {
+              "type": "string"
             }
           }
-        ]
+        }
       },
       "error": {
         "type": "object",
