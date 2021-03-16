@@ -51,7 +51,6 @@ custom:
         contentType: "application/json"
         schema: ${file(utility/documentation/models/slack_auth_wrapper.json):SlackAuthWrapperOutput}
 
-
 functions:
   upload:
     handler: utility.application.handlers.upload_handlers.upload_file
@@ -98,6 +97,79 @@ functions:
                   description: "Response body"
                 responseModels:
                   "application/json": "UploadFileOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
+  agi-usd-rates:
+    handler: utility.application.handlers.crypto_fiat_handler.get_agi_usd_rate
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - schedule:
+          rate: cron(55 23 * * ? *)
+          enabled: true
+  calculate-latest-agi-rate:
+    handler: utility.application.handlers.crypto_fiat_handler.calculate_latest_agi_rate
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - schedule:
+          rate: cron(0 9 ? * MON *)
+          enabled: true
+  currency-to-token-conversion:
+    warmup: true
+    handler: utility/application/handlers.crypto_fiat_handler.py.get_agi_fiat_rate
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /currency/{currency}/crypto
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+          documentation:
+            summary: "Get token by currency"
+            description: "Get token by given currency"
+            tags:
+              - "order"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            pathParams:
+              - name: "currency"
+                description: "Enter currency"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Token Data"
+                responseModels:
+                  "application/json": "GetTokenOutput"
               - statusCode: "500"
                 responseModels:
                   "application/json": "ErrorMessage"
@@ -149,4 +221,3 @@ functions:
               - statusCode: "500"
                 responseModels:
                   "application/json": "ErrorMessage"
-
