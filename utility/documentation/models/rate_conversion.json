@@ -1,0 +1,34 @@
+{
+    "RateConversionInput": {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "title": "RateConversionInput",
+      "type": "object",
+      "properties": {
+        "data": {
+        }
+      }
+    },
+    "RateConversionOutput": {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "title": "RateConversionOutput",
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "data": {
+        },
+        "error": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "integer"
+            },
+            "message": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
