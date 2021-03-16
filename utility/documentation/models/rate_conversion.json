@@ -1,19 +1,10 @@
 {
-    "RateConversionInput": {
-      "$schema": "http://json-schema.org/draft-04/schema#",
-      "title": "RateConversionInput",
-      "type": "object",
-      "properties": {
-        "data": {
-        }
-      }
-    },
     "RateConversionOutput": {
       "$schema": "http://json-schema.org/draft-04/schema#",
       "title": "RateConversionOutput",
       "type": "object",
       "properties": {
-        "status": {
+        "statusCode": {
           "type": "string"
         },
         "data": {
