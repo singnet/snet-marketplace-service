@@ -50,6 +50,9 @@ custom:
       - name: "SlackAuthWrapperOutput"
         contentType: "application/json"
         schema: ${file(utility/documentation/models/slack_auth_wrapper.json):SlackAuthWrapperOutput}
+      - name: "RateConversionOutput"
+        contentType: "application/json"
+        schema: ${file(utility/documentation/models/rate_conversion.json):RateConversionOutput}
 
 functions:
   upload:
@@ -161,8 +164,6 @@ functions:
             requestHeaders:
               - name: "content-type"
                 description: "application/json"
-            requestModels:
-              "application/json": "RateConversionInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
