@@ -153,26 +153,7 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-          documentation:
-            summary: "Get token by currency"
-            description: "Get token by given currency"
-            tags:
-              - "order"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            pathParams:
-              - name: "currency"
-                description: "Enter currency"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Token Data"
-                responseModels:
-                  "application/json": "GetTokenOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
+
   slack-auth-wrapper:
     handler: utility.application.handlers.slack_feedback_handler.main
     role: ${file(./config.${self:provider.stage}.json):ROLE}
