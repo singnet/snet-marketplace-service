@@ -80,6 +80,7 @@ class OrganizationEventConsumer(EventConsumer):
 
         blockchain_org_data = registry_contract.functions.getOrganizationById(org_id.encode('utf-8')).call()
         org_metadata_uri = Web3.toText(blockchain_org_data[2]).rstrip("\x00").lstrip("ipfs://")
+        logger.info(f"Ipfs hash:: {org_metadata_uri}")
         ipfs_org_metadata = self._ipfs_util.read_file_from_ipfs(org_metadata_uri)
 
         return org_id, blockchain_org_data, ipfs_org_metadata, org_metadata_uri
