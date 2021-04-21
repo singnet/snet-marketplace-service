@@ -1,0 +1,73 @@
+{
+  "MarketplaceCarouselInput": {},
+  "MarketplaceCarouselOutput": {
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "array",
+  "items": [
+    {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "image": {
+          "type": "string"
+        },
+        "alt_text": {
+          "type": "string"
+        },
+        "image_alignment": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "cta": {
+          "type": "array",
+          "items": [
+            {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "variant": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "text",
+                "url",
+                "type",
+                "variant"
+              ]
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "image",
+        "alt_text",
+        "image_alignment",
+        "title",
+        "description",
+        "cta"
+      ]
+    }
+  ]
+}
+}

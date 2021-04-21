@@ -114,3 +114,8 @@ event_pubsub/node_modules/
 #IDE files
 .idea/
 .vscode/
+**/*/.DS_Store
+orchestrator/node_modules/*
+orchestrator/package-lock.json
+utility/node_modules/*
+utility/package-lock.json

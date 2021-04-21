@@ -172,3 +172,29 @@ class ServiceRepository(CommonRepository):
         except:
             self.rollback_transaction()
             raise
+
+    def get_service_media(self,service_id,org_id):
+        query = "SELECT `row_id`, org_id, service_id, url, `order`, file_type, asset_type, alt_text,ipfs_url FROM service_media where service_id = %s and org_id = %s order by `order` "
+        service_media = self.connection.execute(query, (service_id, org_id))
+
+        if len(service_media) > 0:
+            return service_media
+        return None
+
+    def create_service_media(self,org_id,service_id,service_row_id,media_data):
+        url = media_data.get('url',""),
+        ipfs_url = media_data.get('ipfs_url',""),
+        order = media_data.get('order',"")
+        file_type = media_data.get('file_type',"")
+        asset_type = media_data.get('asset_type',""),
+        alt_text = media_data.get('alt_text',"")
+
+        query = "INSERT INTO service_media (org_id, service_id, url, `order`, file_type, asset_type, alt_text,ipfs_url,service_row_id,created_on, updated_on) VALUES(%s, %s, %s, %s, %s, %s, %s, %s,%s, %s,%s)"
+        insert_media_parameters = (org_id,service_id,url,order,file_type,asset_type,alt_text,ipfs_url,service_row_id,datetime.now(),datetime.now())
+
+        self.connection.execute(query,insert_media_parameters)
+
+    def delete_service_media(self,org_id,service_id):
+        delete_service_media = 'DELETE FROM service_media WHERE service_id = %s AND org_id = %s '
+        response = self.connection.execute(delete_service_media, [service_id, org_id])
+

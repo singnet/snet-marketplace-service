@@ -8,7 +8,28 @@
       "status": {
         "type": "string"
       },
-      "data": {},
+      "data": {
+        "type": "object",
+        "properties": {
+          "attribute": {
+            "type": "string"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
       "error": {
         "type": "object",
         "properties": {
