@@ -2,7 +2,7 @@ import os
 from enum import Enum
 
 COMMON_CNTRCT_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), 'node_modules', 'singularitynet-platform-contracts'))
+    os.path.join(os.path.dirname(__file__), '..', 'node_modules', 'singularitynet-platform-contracts'))
 REG_CNTRCT_PATH = os.path.join(COMMON_CNTRCT_PATH, 'abi', 'Registry.json')
 MPE_CNTRCT_PATH = os.path.join(COMMON_CNTRCT_PATH, "abi", "MultiPartyEscrow.json")
 REG_ADDR_PATH = os.path.join(COMMON_CNTRCT_PATH, "networks", "Registry.json")

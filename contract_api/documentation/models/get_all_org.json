@@ -8,7 +8,35 @@
       "status": {
         "type": "string"
       },
-      "data": {},
+      "data": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "org_id": {
+              "type": "string"
+            },
+            "org_name": {
+              "type": "string"
+            },
+            "owner_address": {
+              "type": "string"
+            },
+            "service_id": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "members": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      },
       "error": {
         "type": "object",
         "properties": {

@@ -31,6 +31,7 @@ def get_service_get(event, context):
 
 @handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
 def get_service_post(event, context):
+    logger.info(f"Got service post:: {event}")
     obj_reg = Registry(obj_repo=db)
     payload_dict = json.loads(event['body'])
     response_data = obj_reg.get_all_srvcs(qry_param=payload_dict)
@@ -40,6 +41,7 @@ def get_service_post(event, context):
 
 @handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
 def get_service_for_given_org(event, context):
+    logger.info(f"Got service for given org :: {event}")
     obj_reg = Registry(obj_repo=db)
     org_id = event['pathParameters']['orgId']
     service_id = event['pathParameters']['serviceId']
@@ -51,6 +53,7 @@ def get_service_for_given_org(event, context):
 
 @handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
 def get_group_for_service(event, context):
+    logger.info(f"Got group fpr service event :: {event}")
     obj_reg = Registry(obj_repo=db)
     org_id = event['pathParameters']['orgId']
     service_id = event['pathParameters']['serviceId']
@@ -62,6 +65,7 @@ def get_group_for_service(event, context):
 
 @handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
 def post_rating_for_given_service(event, context):
+    logger.info(f"Got post rating for given service event :: {event}")
     obj_reg = Registry(obj_repo=db)
     org_id = event['pathParameters']['orgId']
     service_id = event['pathParameters']['serviceId']
@@ -72,6 +76,7 @@ def post_rating_for_given_service(event, context):
 
 @exception_handler(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
 def service_curation(event, context):
+    logger.info(f"Got service curation event :: {event}")
     registry = Registry(obj_repo=db)
     org_id = event['pathParameters']['orgId']
     service_id = event['pathParameters']['serviceId']

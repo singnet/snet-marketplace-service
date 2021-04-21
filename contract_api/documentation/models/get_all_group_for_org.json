@@ -8,7 +8,59 @@
       "status": {
         "type": "string"
       },
-      "data": {},
+      "data": {
+        "type": "object",
+        "properties": {
+          "org_id": {
+            "type": "string"
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "group_id": {
+                  "type": "string"
+                },
+                "group_name": {
+                  "type": "string"
+                },
+                "payment": {
+                  "type": "object",
+                  "properties": {
+                    "payment_address": {
+                      "type": "string"
+                    },
+                    "payment_channel_storage_type": {
+                      "type": "string"
+                    },
+                    "payment_expiration_threshold": {
+                      "type": "integer"
+                    },
+                    "payment_channel_storage_client": {
+                      "type": "object",
+                      "properties": {
+                        "endpoints": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "request_timeout": {
+                          "type": "string"
+                        },
+                        "connection_timeout": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       "error": {
         "type": "object",
         "properties": {
