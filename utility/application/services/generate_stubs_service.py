@@ -49,7 +49,7 @@ class GenerateStubService:
                         downloaded_path = temp_path + proto_filename + file_extension
                         self.s3_utils.download_s3_object(bucket=proto_bucket, key=obj['Key'],
                                                          target_directory=downloaded_path)
-                        file_utils.zip_file(source_path=downloaded_path, destination_path=extracted_path)
+                        file_utils.unzip_file(source_path=downloaded_path, destination_path=extracted_path)
 
                         # if proto file present generate stub zip and upload to s3
                         proto_location = None
@@ -76,7 +76,7 @@ class GenerateStubService:
                             to_be_uploaded_local_destination = generated_stub_location + '\\' + \
                                                                f'{language}'
                             upload_file_name = f"{language}{file_extension}"
-                            file_utils.unzip_file(
+                            file_utils.zip_file(
                                 destination=to_be_uploaded_local_destination,
                                 source=os.path.join(generated_stub_location, folder)
                             )
