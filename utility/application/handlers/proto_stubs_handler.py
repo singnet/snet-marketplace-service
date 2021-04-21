@@ -7,7 +7,7 @@ from utility.config import SERVICE_ASSETS_BUCKET
 logger = get_logger(__name__)
 
 
-def generate_proto_buffs_for_service(event, context):
+def generate_proto_stubs(event, context):
     logger.info(f"Generate proto buffs for service {event}")
     stub_s3_url = event['stub_s3_url']
     proto_s3_url = event['proto_s3_url']
