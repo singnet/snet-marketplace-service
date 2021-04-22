@@ -153,25 +153,7 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-          documentation:
-            summary: "FIAT-AGI Rate Conversion"
-            description: "FIAT-AGI Rate Conversion"
-            tags:
-              - "conversion"
-            requestHeaders:
-              - name: "content-type"
-                description: "application/json"
-            requestModels:
-              "application/json": "RateConversionInput"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Response body"
-                responseModels:
-                  "application/json": "RateConversionOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
+
   slack-auth-wrapper:
     handler: utility.application.handlers.slack_feedback_handler.main
     role: ${file(./config.${self:provider.stage}.json):ROLE}
