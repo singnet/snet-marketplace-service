@@ -105,7 +105,7 @@ functions:
                   "application/json": "ErrorMessage"
   agi-usd-rates:
     handler: utility.application.handlers.crypto_fiat_handler.get_agi_usd_rate
-    role: ${file(./config.${self:provider.stage}.json):AGI_ROLE}
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
@@ -119,7 +119,7 @@ functions:
           enabled: true
   calculate-latest-agi-rate:
     handler: utility.application.handlers.crypto_fiat_handler.calculate_latest_agi_rate
-    role: ${file(./config.${self:provider.stage}.json):AGI_ROLE}
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
@@ -134,7 +134,7 @@ functions:
   currency-to-token-conversion:
     warmup: true
     handler: utility/application/handlers.crypto_fiat_handler.py.get_agi_fiat_rate
-    role: ${file(./config.${self:provider.stage}.json):AGI_ROLE}
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
