@@ -7,6 +7,7 @@ import io
 import json
 import os
 import os.path
+import shutil
 import sys
 import tarfile
 import traceback
@@ -291,6 +292,10 @@ def send_email_notification(recipients, notification_subject, notification_messa
 def extract_zip_file(zip_file_path, extracted_path):
     with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
         zip_ref.extractall(extracted_path)
+
+
+def zip_file(source_path, zipped_path):
+    shutil.make_archive(zipped_path, 'zip', source_path)
 
 
 def make_tarfile(output_filename, source_dir):
