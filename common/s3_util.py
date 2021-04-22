@@ -86,22 +86,21 @@ class S3Util(object):
         s3_resource = self.get_s3_resource_from_key()
         s3_resource.meta.client.upload_file(file_path, bucket, key)
 
-    def delete_s3_objects_in_key(self, url):
+    def delete_objects_from_s3(self, bucket, key):
         s3_client = self.get_s3_client_from_key()
-        bucket, key = self.get_bucket_and_key_from_url(url=url)
-        objects = self.get_s3_objs_from_url(url=url)
+        objects = self.get_objects_from_s3(bucket=bucket, key=key)
         for obj in objects:
             s3_client.delete_object(Bucket=bucket, Key=obj['Key'])
 
-    def get_s3_objs_from_url(self, url):
-        s3 = boto3.client('s3')
+    def get_objects_from_s3(self, bucket, key):
+        s3 = self.get_s3_client_from_key()
         objects = []
         paginator = s3.get_paginator('list_objects_v2')
-        bucket, key = self.get_bucket_and_key_from_url(url=url)
         pages = paginator.paginate(Bucket=bucket, Prefix=key)
         for page in pages:
-            for obj in page['Contents']:
-                objects.append(obj)
+            if page.get("Contents", None):
+                for obj in page['Contents']:
+                    objects.append(obj)
         return objects
 
     def download_s3_object(self, bucket, key, target_directory):

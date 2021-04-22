@@ -4,7 +4,6 @@ import subprocess
 import tempfile
 import uuid
 from pathlib import Path, PurePath
-from urllib.parse import urlparse
 
 import pkg_resources
 from grpc_tools.protoc import main as protoc
@@ -26,9 +25,8 @@ class GenerateStubService:
             proto_bucket, proto_bucket_key = self.s3_utils.get_bucket_and_key_from_url(url=proto_s3_url)
             stub_bucket, stub_bucket_key = self.s3_utils.get_bucket_and_key_from_url(url=stub_s3_url)
 
-            self.s3_utils.delete_s3_objects_in_key(stub_s3_url)
-
-            file_objects = self.s3_utils.get_s3_objs_from_url(url=proto_s3_url)
+            self.s3_utils.delete_objects_from_s3(bucket=stub_bucket, key=stub_bucket_key)
+            file_objects = self.s3_utils.get_objects_from_s3(bucket=proto_bucket, key=proto_bucket_key)
 
             if len(file_objects) == 0:
                 raise Exception("Proto file is not found")
@@ -38,30 +36,28 @@ class GenerateStubService:
                 if re.match(s3_key_pattern, obj['Key']):
                     # file details
                     filename_with_key, file_extension = os.path.splitext(obj['Key'])
-                    path, proto_filename = os.path.split(filename_with_key)
                     # temp locations
                     temp_path = TEMP_FILE_DIR + '\\' + uuid.uuid4().hex + '_proto_'
-                    extracted_path = temp_path + proto_filename + '_extracted'
-                    generated_stub_location = extracted_path + '\\stubs'
+                    temp_extracted_path = temp_path + 'extracted'
+                    temp_downloaded_path = temp_path + file_extension
+                    temp_generated_stub_location = temp_extracted_path + '\\stubs'
 
                     if file_extension == '.zip':
                         # download and extract files from s3 and store in temp location
-                        downloaded_path = temp_path + proto_filename + file_extension
-                        self.s3_utils.download_s3_object(bucket=proto_bucket, key=obj['Key'],
-                                                         target_directory=downloaded_path)
-                        file_utils.unzip_file(source_path=downloaded_path, destination_path=extracted_path)
+                        self.s3_utils.download_s3_object(bucket=proto_bucket, key=obj['Key'], target_directory=temp_downloaded_path)
+                        file_utils.unzip_file(source_path=temp_downloaded_path, destination_path=temp_extracted_path)
 
                         # if proto file present generate stub zip and upload to s3
                         proto_location = None
-                        for filename in os.listdir(extracted_path):
+                        for filename in os.listdir(temp_extracted_path):
                             if filename.endswith(".proto"):
-                                proto_location = os.path.join(extracted_path, filename)
+                                proto_location = os.path.join(temp_extracted_path, filename)
                                 filename_without_extn = os.path.splitext(filename)[0]
                             if proto_location:
                                 for language in PROTO_STUB_TARGET_LANGUAGES:
                                     result, file_location = self.generate_stubs(
-                                        entry_path=Path(extracted_path),
-                                        codegen_dir=Path(generated_stub_location + '\\' + language),
+                                        entry_path=Path(temp_extracted_path),
+                                        codegen_dir=Path(temp_generated_stub_location + '\\' + language),
                                         target_language=language,
                                         proto_file_path=proto_location,
                                         proto_file_name=filename_without_extn
@@ -72,16 +68,16 @@ class GenerateStubService:
                                 raise Exception("Proto file is not found")
 
                         # zip and upload generated files
-                        for folder in os.listdir(generated_stub_location):
-                            to_be_uploaded_local_destination = generated_stub_location + '\\' + \
+                        for folder in os.listdir(temp_generated_stub_location):
+                            file_to_be_uploaded = temp_generated_stub_location + '\\' + \
                                                                f'{language}'
                             upload_file_name = f"{language}{file_extension}"
                             file_utils.zip_file(
-                                destination=to_be_uploaded_local_destination,
-                                source=os.path.join(generated_stub_location, folder)
+                                destination=file_to_be_uploaded,
+                                source=os.path.join(temp_generated_stub_location, folder)
                             )
                             self.s3_utils.push_file_to_s3(
-                                file_path=to_be_uploaded_local_destination + file_extension,
+                                file_path=file_to_be_uploaded + file_extension,
                                 bucket=stub_bucket,
                                 key=stub_bucket_key + '/' + upload_file_name
                             )
