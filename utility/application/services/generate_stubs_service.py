@@ -40,10 +40,10 @@ class GenerateStubService:
                 if re.match(s3_key_pattern, obj['Key']):
                     # File details and temp locations
                     filename_with_key, file_extension = os.path.splitext(obj['Key'])
-                    temp_path = TEMP_FILE_DIR + '\\' + uuid.uuid4().hex + '_proto_'
+                    temp_path = os.path.join(TEMP_FILE_DIR, uuid.uuid4().hex + '_proto_')
                     temp_downloaded_path = temp_path + file_extension
                     temp_extracted_path = temp_path + 'extracted'
-                    temp_generated_stub_location = temp_extracted_path + '\\stubs'
+                    temp_generated_stub_location = os.path.join(temp_extracted_path, 'stubs')
                     # Download and unzip
                     if file_extension == '.zip':
                         boto_utils.s3_download_file(bucket=proto_bucket,
@@ -61,19 +61,16 @@ class GenerateStubService:
                                 for language in PROTO_STUB_TARGET_LANGUAGES:
                                     result, file_location = self.generate_stubs(
                                         entry_path=Path(temp_extracted_path),
-                                        codegen_dir=Path(temp_generated_stub_location + '\\' + language),
+                                        codegen_dir=os.path.join(temp_generated_stub_location, language),
                                         target_language=language,
                                         proto_file_path=Path(proto_location),
                                         proto_file_name=filename_without_extn
                                     )
-                                    if not result:
-                                        raise Exception("Error in generating stub")
                             else:
                                 raise Exception("Proto file is not found")
                         # Zip and upload generated files
                         for folder in os.listdir(temp_generated_stub_location):
-                            file_to_be_uploaded = temp_generated_stub_location + '\\' + \
-                                                  f'{language}'
+                            file_to_be_uploaded = os.path.join(temp_generated_stub_location, folder)
                             upload_file_name = f"{folder}{file_extension}"
                             utils.zip_file(
                                 source_path=Path(file_to_be_uploaded),
