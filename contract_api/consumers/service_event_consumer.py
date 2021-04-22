@@ -12,11 +12,9 @@ from common.s3_util import S3Util
 from common.utils import download_file_from_url, extract_zip_file, make_tarfile
 from contract_api.config import ASSETS_BUCKET_NAME, ASSETS_PREFIX, GET_SERVICE_FROM_ORGID_SERVICE_ID_REGISTRY_ARN, \
     MARKETPLACE_DAPP_BUILD, NETWORKS, NETWORK_ID, REGION_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY, \
-    ASSET_TEMP_EXTRACT_DIRECTORY, ASSETS_COMPONENT_BUCKET_NAME, SERVICE_CURATE_ARN
+    ASSET_TEMP_EXTRACT_DIRECTORY, ASSETS_COMPONENT_BUCKET_NAME
 from contract_api.consumers.event_consumer import EventConsumer
 from contract_api.dao.service_repository import ServiceRepository
-from common import boto_utils
-from common.constant import StatusCode
 
 logger = get_logger(__name__)
 
@@ -344,26 +342,3 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
                                       f"assets/{org_id}/{service_id}/{component_files_tar_path.split('/')[-1]}")
 
         self._trigger_code_build_for_marketplace_dapp(org_id, service_id)
-
-        self.__curate_service_in_marketplace(service_id, org_id, curated=True)
-
-
-    @staticmethod
-    def __curate_service_in_marketplace(service_id, org_id, curated):
-        curate_service_payload = {
-            "pathParameters": {
-                "orgId": org_id,
-                "serviceId": service_id
-            },
-            "queryStringParameters": {
-                "curate": str(curated)
-            },
-            "body": None
-        }
-        curate_service_response = boto_utils.BotoUtils(region_name=REGION_NAME) \
-            .invoke_lambda(lambda_function_arn=SERVICE_CURATE_ARN,
-                           invocation_type="RequestResponse",
-                           payload=json.dumps(curate_service_payload))
-        if curate_service_response["statusCode"] != StatusCode.CREATED:
-            logger.info(f"failed to update service ({service_id}, {org_id}) curation {curate_service_response}")
-            raise Exception("failed to update service curation")
