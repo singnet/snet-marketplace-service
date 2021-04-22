@@ -23,6 +23,14 @@ class S3Util(object):
 
         return s3_resource
 
+    def get_s3_client_from_key(self):
+        s3_client = boto3.client(
+            's3',
+            aws_access_key_id=self.aws_access_key,
+            aws_secret_access_key=self.aws_secrete_key
+        )
+        return s3_client
+
     def get_s3_resource_from_assumed_role(self):
         sts_client = boto3.client('sts')
 
@@ -77,3 +85,14 @@ class S3Util(object):
     def push_file_to_s3(self, file_path, bucket, key):
         s3_resource = self.get_s3_resource_from_key()
         s3_resource.meta.client.upload_file(file_path, bucket, key)
+
+    def get_objects_from_s3(self, bucket, key):
+        s3 = self.get_s3_client_from_key()
+        objects = []
+        paginator = s3.get_paginator('list_objects_v2')
+        pages = paginator.paginate(Bucket=bucket, Prefix=key)
+        for page in pages:
+            if page.get("Contents", None):
+                for obj in page['Contents']:
+                    objects.append(obj)
+        return objects
