@@ -3,14 +3,14 @@ from uuid import uuid4
 
 from aws_xray_sdk.core import patch_all
 
-from common import utils, boto_utils
+from common import utils
 from common.boto_utils import BotoUtils
 from common.constant import StatusCode
 from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
 from common.utils import download_file_from_url, json_to_file, publish_zip_file_in_ipfs, send_email_notification, Utils
 from registry.config import ASSET_DIR, BLOCKCHAIN_TEST_ENV, EMAILS, IPFS_URL, METADATA_FILE_PATH, NETWORKS, NETWORK_ID, \
-    NOTIFICATION_ARN, REGION_NAME, APPROVAL_SLACK_HOOK, SERVICE_CURATE_ARN
+    NOTIFICATION_ARN, REGION_NAME, APPROVAL_SLACK_HOOK
 from registry.constants import EnvironmentType, OrganizationStatus, ServiceAvailabilityStatus, ServiceStatus, \
     ServiceSupportType, UserType
 from registry.domain.factory.service_factory import ServiceFactory
@@ -306,8 +306,6 @@ class ServicePublisherService:
         service = service_factory.create_service_entity_model(
             self._org_uuid, self._service_uuid, payload, ServiceStatus.APPROVAL_PENDING.value)
 
-        self.__curate_service_in_marketplace(service_id=service.service_id, org_id=service.org_uuid, curated=True)
-
         # publish service data with test config on ipfs
         service = self.obj_service_publisher_domain_service.publish_service_data_to_ipfs(service,
                                                                                          EnvironmentType.TEST.value)
@@ -335,26 +333,6 @@ class ServicePublisherService:
         # notify approval team via slack
         self.notify_approval_team(service.service_id, service.display_name, organization.id, organization.name)
         return response
-
-    @staticmethod
-    def __curate_service_in_marketplace(service_id, org_id, curated):
-        curate_service_payload = {
-            "pathParameters": {
-                "orgId": org_id,
-                "serviceId": service_id
-            },
-            "queryStringParameters": {
-                "curate": str(curated)
-            },
-            "body": None
-        }
-        curate_service_response = boto_utils.BotoUtils(region_name=REGION_NAME) \
-            .invoke_lambda(lambda_function_arn=SERVICE_CURATE_ARN,
-                           invocation_type="RequestResponse",
-                           payload=json.dumps(curate_service_payload))
-        if curate_service_response["statusCode"] != StatusCode.CREATED:
-            logger.info(f"failed to update service ({service_id}, {org_id}) curation {curate_service_response}")
-            raise Exception("failed to update service curation")
 
     @staticmethod
     def publish_to_ipfs(filename, data):
