@@ -7,7 +7,6 @@ import io
 import json
 import os
 import os.path
-import shutil
 import sys
 import tarfile
 import traceback
