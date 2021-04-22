@@ -83,6 +83,8 @@ class OrganizationEventConsumer(EventConsumer):
         logger.info(f"Ipfs hash:: {org_metadata_uri}")
         ipfs_org_metadata = self._ipfs_util.read_file_from_ipfs(org_metadata_uri)
 
+        logger.info(f"org_metadata_uri {org_metadata_uri}")
+
         return org_id, blockchain_org_data, ipfs_org_metadata, org_metadata_uri
 
 
