@@ -6,6 +6,7 @@ from common.utils import Utils
 from contract_api.constant import GET_ALL_SERVICE_LIMIT, GET_ALL_SERVICE_OFFSET_LIMIT
 from contract_api.dao.service_repository import ServiceRepository
 from contract_api.filter import Filter
+from contract_api.services.stub_service import get_proto_stubs
 
 logger = get_logger(__name__)
 BUILD_CODE = {"SUCCESS": 1, "FAILED": 0}
@@ -381,8 +382,8 @@ class Registry:
                         if is_available == 1:
                             break
                 rec.update(org_groups_dict.get(rec['group_id'], {}))
-
-            result.update({"is_available": is_available, "groups": service_group_data, "tags": tags})
+                proto_stubs = get_proto_stubs(org_id=org_id, service_id=service_id)
+            result.update({"is_available": is_available, "groups": service_group_data, "tags": tags, "proto_stubs": proto_stubs})
             return result
         except Exception as e:
             print(repr(e))

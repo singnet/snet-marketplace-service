@@ -77,4 +77,3 @@ class S3Util(object):
     def push_file_to_s3(self, file_path, bucket, key):
         s3_resource = self.get_s3_resource_from_key()
         s3_resource.meta.client.upload_file(file_path, bucket, key)
-
