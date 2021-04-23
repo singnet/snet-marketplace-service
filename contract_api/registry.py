@@ -415,7 +415,7 @@ class Registry:
                             break
                 rec.update(org_groups_dict.get(rec['group_id'], {}))
 
-                proto_stubs = get_proto_stubs(org_id=org_id, service_id=service_id)
+            proto_stubs = get_proto_stubs(org_id=org_id, service_id=service_id)
             result.update({"is_available": is_available, "groups": service_group_data, "tags": tags,"media":media, "proto_stubs": proto_stubs})
 
             return result

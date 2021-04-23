@@ -1,4 +1,5 @@
 from unittest import TestCase
+from unittest.mock import patch
 
 from common.repository import Repository
 from contract_api.config import NETWORK_ID, NETWORKS
@@ -33,7 +34,9 @@ class TestRegistry(TestCase):
     def tearDown(self):
         db.execute("DELETE FROM service WHERE 1")
 
-    def test_get_service_data_by_org_id_and_service_id_with_media(self):
+    @patch("common.boto_utils.BotoUtils.get_objects_from_s3")
+    def test_get_service_data_by_org_id_and_service_id_with_media(self, s3_objects):
+        s3_objects.return_value = []
         registry = Registry(obj_repo=db)
         self.clear_dependencies()
 
@@ -85,10 +88,13 @@ class TestRegistry(TestCase):
                              'is_available': 0,
                              'groups': [],
                              'tags': [],
-                             'media': [{'row_id': 10, 'url': 'https://test-s3-push', 'file_type': 'text', 'order': 5, 'alt_text': 'data is missing',"asset_type":"hero_image"}]
+                             'media': [{'row_id': 10, 'url': 'https://test-s3-push', 'file_type': 'text', 'order': 5, 'alt_text': 'data is missing',"asset_type":"hero_image"}],
+                             'proto_stubs':[]
                              }
 
-    def test_get_service_data_by_org_id_and_service_id_without_media(self):
+    @patch("common.boto_utils.BotoUtils.get_objects_from_s3")
+    def test_get_service_data_by_org_id_and_service_id_without_media(self, s3_objects):
+        s3_objects.return_value = []
         registry = Registry(obj_repo=db)
         self.clear_dependencies()
 
@@ -107,7 +113,7 @@ class TestRegistry(TestCase):
         VALUES(10,10, 'snet', 'gene-annotation-service', 'Annotation Service', 'Use this service to annotate a humane genome with uniform terms, Reactome pathway memberships, and BioGrid protein interactions.', 'short description', 'https://mozi-ai.github.io/annotation-service/', '{"name":"John", "age":31, "city":"New York"}', 'QmXqonxB9EvNBe11J8oCYXMQAtPKAb2x8CyFLmQpkvVaLf', 'proto', 'grpc', '0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C','{"hero_image": "https://test-s3-push"}', '{"hero_image": "QmVcE6fEDP764ibadXTjZHk251Lmt5xAxdc4P9mPA4kksk/hero_gene-annotation-2b.png"}','{"rating": 0.0, "total_users_rated": 0}', 1, '[{"name": "dummy dummy", "email_id": "dummy@dummy.io"}]', '2021-01-08 05:48:26', '2021-01-08 05:48:26')"""
         db.execute(insert_metadata_query)
 
-        response = registry.get_service_data_by_org_id_and_service_id('snet','gene-annotation-service')
+        response = registry.get_service_data_by_org_id_and_service_id('snet', 'gene-annotation-service')
 
         assert response == {'service_row_id': 10,
                              'org_id': 'snet',
@@ -135,7 +141,8 @@ class TestRegistry(TestCase):
                              'is_available': 0,
                              'groups': [],
                              'tags': [],
-                             'media': []
+                             'media': [],
+                             'proto_stubs': []
                              }
 
     def clear_dependencies(self):
