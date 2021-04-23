@@ -3,6 +3,7 @@ plugins:
   - serverless-python-requirements
   - serverless-graph
   - serverless-prune-plugin
+  - serverless-aws-documentation
 
 service: service-status
 custom:
@@ -15,7 +16,15 @@ custom:
   prune:
     automatic: true
     includeLayers: true
-    number: 5
+    number: 2
+  documentation:
+    models:
+      - name: "ErrorMessage"
+        contentType: "application/json"
+        schema: ${file(service_status/documentation/models/error.json)}
+      - name: "ResetServiceHealthNextCheckTimeOutput"
+        contentType: "application/json"
+        schema: ${file(service_status/documentation/models/reset_service_health_next_check_time.json):ResetServiceHealthNextCheckTimeOutput}
 
 
 provider:
@@ -115,3 +124,25 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Reset service health "
+            description: "Reset service health next check time by given org_id and service_id"
+            tags:
+              - "service health"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            pathParams:
+              - name: "org_id"
+                description: "Enter org_id"
+              - name: "service_id"
+                description: "Enter service_id"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "response"
+                responseModels:
+                  "application/json": "ResetServiceHealthNextCheckTimeOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"

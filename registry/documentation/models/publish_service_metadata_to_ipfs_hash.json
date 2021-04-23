@@ -1,0 +1,34 @@
+{
+  "PublishServiceMetadataToIpfsHashInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "PublishServiceMetadataToIpfsHashInput",
+    "type": "object",
+    "properties": {
+      "data": {
+      }
+    }
+  },
+  "PublishServiceMetadataToIpfsHashOutput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "PublishServiceMetadataToIpfsHashOutput",
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "data": {
+      },
+      "error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

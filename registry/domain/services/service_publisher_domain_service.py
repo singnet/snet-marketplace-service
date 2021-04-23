@@ -94,6 +94,8 @@ class ServicePublisherDomainService:
             for group in service_metadata["groups"]:
                 group["endpoints"] = service_test_endpoints[group["group_id"]]
                 group["free_calls"] = BLOCKCHAIN_TEST_ENV["free_calls"]
+                for item in group["pricing"]:
+                      item["price_in_cogs"] = BLOCKCHAIN_TEST_ENV["test_price_in_cogs"]
         if not service.is_metadata_valid(service_metadata):
             logger.info("Service metadata is not valid")
             raise InvalidMetadataException()

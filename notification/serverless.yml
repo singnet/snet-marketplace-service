@@ -2,6 +2,7 @@ plugins:
   - serverless-offline
   - serverless-python-requirements
   - serverless-prune-plugin
+  - serverless-aws-documentation
 
 service: notifcation
 
@@ -15,7 +16,18 @@ custom:
   prune:
     automatic: true
     includeLayers: true
-    number: 5
+    number: 2
+  documentation:
+    models:
+      - name: "ErrorMessage"
+        contentType: "application/json"
+        schema: ${file(notification/documentation/models/error.json)}
+      - name: "SendEmailOutput"
+        contentType: "application/json"
+        schema: ${file(notification/documentation/models/post_send_email.json):SendEmailOutput}
+      - name: "SendEmailInput"
+        contentType: "application/json"
+        schema: ${file(notification/documentation/models/post_send_email.json):SendEmailInput}
 
 provider:
   name: aws
@@ -92,3 +104,22 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Send email"
+            description: "Send email"
+            tags:
+              - "email"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestModels:
+              "application/json": "SendEmailInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "data"
+                responseModels:
+                  "application/json": "SendEmailOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
