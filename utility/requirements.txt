@@ -5,3 +5,4 @@ aws-xray-sdk==2.4.2
 requests==2.24.0
 rlp==1.2.0
 web3==5.10.0
+snet.snet-cli
