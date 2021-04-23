@@ -33,10 +33,4 @@ GET_SERVICE_FROM_ORGID_SERVICE_ID_REGISTRY_ARN = ""
 MARKETPLACE_DAPP_BUILD = ""
 ASSET_TEMP_EXTRACT_DIRECTORY = "/var/task/"
 ASSETS_COMPONENT_BUCKET_NAME = ""
-PROTO_STUB_DOWNLOAD_DETAILS = {
-    "key": "",
-    "bucket": "",
-    "access_key": "",
-    "secret_key": "",
-    "download_url": ""
-}
+PROTO_STUB_s3_URL = ""
