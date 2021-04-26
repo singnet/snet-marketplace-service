@@ -3,6 +3,7 @@ plugins:
   - serverless-python-requirements
   - serverless-plugin-tracing
   - serverless-prune-plugin
+  - serverless-aws-documentation
 
 service: dapp-user
 custom:
@@ -15,7 +16,63 @@ custom:
   prune:
     automatic: true
     includeLayers: true
-    number: 5
+    number: 2
+  documentation:
+    models:
+      - name: "ErrorMessage"
+        contentType: "application/json"
+        schema: ${file(dapp_user/documentation/models/error.json)}
+      - name: "GetUserPreferenceOutput"
+        contentType: "application/json"
+        schema: ${file(dapp_user/documentation/models/get_user_preference.json):GetUserPreferenceOutput}
+      - name: "EnableDisableUserPreferenceOutput"
+        contentType: "application/json"
+        schema: ${file(dapp_user/documentation/models/enable_disable_user_preference.json):EnableDisableUserPreferenceOutput}
+      - name: "EnableDisableUserPreferenceInput"
+        contentType: "application/json"
+        schema: ${file(dapp_user/documentation/models/enable_disable_user_preference.json):EnableDisableUserPreferenceInput}
+      - name: "DappUserSignupOutput"
+        contentType: "application/json"
+        schema: ${file(dapp_user/documentation/models/dapp_user_signup_output.json):DappUserSignupOutput}
+      - name: "DappUserGetProfileOutput"
+        contentType: "application/json"
+        schema: ${file(dapp_user/documentation/models/dapp_user_get_profile.json):DappUserGetProfileOutput}
+      - name: "DappUserPostProfileOutput"
+        contentType: "application/json"
+        schema: ${file(dapp_user/documentation/models/dapp_user_post_profile.json):DappUserPostProfileOutput}
+      - name: "DappUserPostProfileInput"
+        contentType: "application/json"
+        schema: ${file(dapp_user/documentation/models/dapp_user_post_profile.json):DappUserPostProfileInput}
+      - name: "DappUserGetWalletOutput"
+        contentType: "application/json"
+        schema: ${file(dapp_user/documentation/models/dapp_user_get_wallet.json):DappUserGetWalletOutput}
+      - name: "DappUserGetHealthOutput"
+        contentType: "application/json"
+        schema: ${file(dapp_user/documentation/models/dapp_user_get_health.json):DappUserGetHealthOutput}
+      - name: "DappUserGetFeedbackOutput"
+        contentType: "application/json"
+        schema: ${file(dapp_user/documentation/models/dapp_user_get_feedback.json):DappUserGetFeedbackOutput}
+      - name: "DappUserGetUsageFreeCallsOutput"
+        contentType: "application/json"
+        schema: ${file(dapp_user/documentation/models/dapp_user_get_usage_free_calls.json):DappUserGetUsageFreeCallsOutput}
+      - name: "DappUserPostFeedbackOutput"
+        contentType: "application/json"
+        schema: ${file(dapp_user/documentation/models/dapp_user_post_feedback.json):DappUserPostFeedbackOutput}
+      - name: "DappUserPostFeedbackInput"
+        contentType: "application/json"
+        schema: ${file(dapp_user/documentation/models/dapp_user_post_feedback.json):DappUserPostFeedbackInput}
+      - name: "DappUserWalletRegisterOutput"
+        contentType: "application/json"
+        schema: ${file(dapp_user/documentation/models/dapp_user_wallet_register.json):DappUserWalletRegisterOutput}
+      - name: "DappUserWalletRegisterInput"
+        contentType: "application/json"
+        schema: ${file(dapp_user/documentation/models/dapp_user_wallet_register.json):DappUserWalletRegisterInput}
+      - name: "DeleteUserOutput"
+        contentType: "application/json"
+        schema: ${file(dapp_user/documentation/models/user_delete.json):DeleteUserOutput}
+      - name: "DeleteUserInput"
+        contentType: "application/json"
+        schema: ${file(dapp_user/documentation/models/user_delete.json):DeleteUserInput}
 
 provider:
   name: aws
@@ -91,6 +148,23 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Get user preference"
+            description: "Get user preference"
+            tags:
+              - "user preference"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "User Data"
+                responseModels:
+                  "application/json": "GetUserPreferenceOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
 
   enable-disable-user-preference:
     warmup: true
@@ -122,6 +196,25 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Enable disable user preference"
+            description: "Enable disable user preference"
+            tags:
+              - "user preference"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestModels:
+                "application/json": "EnableDisableUserPreferenceInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "User Data"
+                responseModels:
+                  "application/json": "EnableDisableUserPreferenceOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
   dapp-user:
     warmup: true
     handler: dapp_user/lambda_handler.request_handler
@@ -152,6 +245,23 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "User profile signup"
+            description: "User profile signup"
+            tags:
+              - "profile"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "application/json"
+                responseModels:
+                  "application/json": "DappUserSignupOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
       - http:
           method: GET
           path: /profile
@@ -170,6 +280,23 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Get profile"
+            description: "Get profile"
+            tags:
+              - "profile"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "application/json"
+                responseModels:
+                  "application/json": "DappUserGetProfileOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
       - http:
           method: POST
           path: /profile
@@ -188,6 +315,25 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Post profile"
+            description: "Post profile"
+            tags:
+              - "profile"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestModels:
+              "application/json": "DappUserPostProfileInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "application/json"
+                responseModels:
+                  "application/json": "DappUserPostProfileOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
       - http:
           method: GET
           path: /wallet
@@ -206,9 +352,47 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Get wallet"
+            description: "Get Wallet"
+            tags:
+              - "wallet"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Wallet Data"
+                responseModels:
+                  "application/json": "DappUserGetWalletOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
+
+
       - http:
           method: GET
           path: /health
+          documentation:
+            summary: "Get health"
+            description: "Get health"
+            tags:
+              - "health"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            responseBody:
+              description: "application/json"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Health Data"
+                responseModels:
+                  "application/json": "DappUserGetHealthOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
       - http:
           method: GET
           path: /feedback
@@ -227,6 +411,27 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Get feedback"
+            description: "Get feedback"
+            tags:
+              - "feedback"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            responseBody:
+              description: "application/json"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Feedback Data"
+                responseModels:
+                  "application/json": "DappUserGetFeedbackOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
+
+
       - http:
           path: /usage/freecalls
           method: get
@@ -245,6 +450,25 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Get usage freecalls"
+            description: "Get usage freecalls"
+            tags:
+              - "freecalls"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            responseBody:
+              description: "application/json"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Freecalls Data"
+                responseModels:
+                  "application/json": "DappUserGetUsageFreeCallsOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
       - http:
           method: POST
           path: /feedback
@@ -263,6 +487,25 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Get Feedback"
+            description: "Get Feedback"
+            tags:
+              - "feedback"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestModels:
+              "application/json": "DappUserPostFeedbackInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "application/json"
+                responseModels:
+                  "application/json": "DappUserPostFeedbackOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
       - http:
           method: POST
           path: /wallet/register
@@ -281,6 +524,25 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Register wallet"
+            description: "Register wallet"
+            tags:
+              - "wallet"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestModels:
+                "application/json": "DappUserWalletRegisterInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "application/json"
+                responseModels:
+                  "application/json": "DappUserWalletRegisterOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
 
   delete-user:
     warmup: true
@@ -312,6 +574,23 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Delete user"
+            description: "Delete user"
+            tags:
+              - "user"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestModels:
+              "application/json": "DeleteUserInput"
+            methodResponses:
+              - statusCode: "200"
+                responseModels:
+                  "application/json": "DeleteUserOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
 
   register-user-post-aws-cognito-signup:
     warmup: true

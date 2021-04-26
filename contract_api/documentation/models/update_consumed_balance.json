@@ -1,5 +1,12 @@
 {
-  "UpdateConsumedBalanceInput": {},
+  "UpdateConsumedBalanceInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "UpdateConsumedBalanceInput",
+    "type": "object",
+    "properties": {
+      "data": {}
+    }
+  },
   "UpdateConsumedBalanceOutput": {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "UpdateConsumedBalanceOutput",

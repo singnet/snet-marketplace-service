@@ -3,6 +3,7 @@ plugins:
   - serverless-python-requirements
   - serverless-plugin-tracing
   - serverless-prune-plugin
+  - serverless-aws-documentation
 
 service: common-utility
 provider:
@@ -31,8 +32,24 @@ custom:
   prune:
     automatic: true
     includeLayers: true
-    number: 5
-
+    number: 2
+  documentation:
+    models:
+      - name: "ErrorMessage"
+        contentType: "application/json"
+        schema: ${file(utility/documentation/models/error.json)}
+      - name: "UploadFileInput"
+        contentType: "application/json"
+        schema: ${file(utility/documentation/models/upload.json):UploadFileInput}
+      - name: "UploadFileOutput"
+        contentType: "application/json"
+        schema: ${file(utility/documentation/models/upload.json):UploadFileOutput}
+      - name: "SlackAuthWrapperInput"
+        contentType: "application/json"
+        schema: ${file(utility/documentation/models/slack_auth_wrapper.json):SlackAuthWrapperInput}
+      - name: "SlackAuthWrapperOutput"
+        contentType: "application/json"
+        schema: ${file(utility/documentation/models/slack_auth_wrapper.json):SlackAuthWrapperOutput}
 
 functions:
   upload:
@@ -64,6 +81,79 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Upload file"
+            description: "Upload file"
+            tags:
+              - "file"
+            requestHeaders:
+              - name: "content-type"
+                description: "application/json"
+            requestModels:
+              "application/json": "UploadFileInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Response body"
+                responseModels:
+                  "application/json": "UploadFileOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
+  agi-usd-rates:
+    handler: utility.application.handlers.crypto_fiat_handler.get_agi_usd_rate
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - schedule:
+          rate: cron(55 23 * * ? *)
+          enabled: true
+  calculate-latest-agi-rate:
+    handler: utility.application.handlers.crypto_fiat_handler.calculate_latest_agi_rate
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - schedule:
+          rate: cron(0 9 ? * MON *)
+          enabled: true
+  currency-to-token-conversion:
+    warmup: true
+    handler: utility/application/handlers.crypto_fiat_handler.py.get_agi_fiat_rate
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /currency/{currency}/crypto
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
   slack-auth-wrapper:
     handler: utility.application.handlers.slack_feedback_handler.main
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -93,3 +183,33 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Post slack feedback"
+            description: "Post slack feedback"
+            tags:
+              - "feedback"
+            requestHeaders:
+              - name: "content-type"
+                description: "application/json"
+            requestModels:
+              "application/json": "SlackAuthWrapperInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Response body"
+                responseModels:
+                  "application/json": "SlackAuthWrapperOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
+
+  generate-proto-stubs:
+    handler: utility.application.handlers.proto_stubs_handler.generate_proto_stubs
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
