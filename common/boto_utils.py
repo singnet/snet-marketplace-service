@@ -65,3 +65,29 @@ class BotoUtils:
 
         response = json.loads(parameter_value)
         return response[secret_name]
+
+
+    @staticmethod
+    def delete_objects_from_s3(bucket, key, key_pattern):
+        if key_pattern in key:
+            if len([char for char in key.replace(key_pattern, "") if char == "/"]) == 1:
+                s3_client = boto3.client('s3')
+                s3_client.delete_object(Bucket=bucket, Key=key)
+
+    @staticmethod
+    def get_objects_from_s3(bucket, key):
+        s3 = boto3.client('s3')
+        objects = []
+        paginator = s3.get_paginator('list_objects_v2')
+        pages = paginator.paginate(Bucket=bucket, Prefix=key)
+        for page in pages:
+            if page.get("Contents", None):
+                for obj in page['Contents']:
+                    objects.append(obj)
+        return objects
+
+    @staticmethod
+    def get_bucket_and_key_from_url(url):
+        parsed_url = urlparse(url)
+        return parsed_url.hostname.split(".")[0], parsed_url.path[1:]
+
