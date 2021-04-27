@@ -59,7 +59,7 @@ jobs:
           command: |
             PYTHONPATH=$PWD python -m coverage run -m pytest */testcases/integration_testcases/*.py */testcases/unit_testcases/*.py */testcases/unit_testcases/*/*.py */testcases/functional_testcases/*.py
             python -m coverage report -m
-            COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} python -m coveralls
+#            COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} python -m coveralls
       - save_cache:
           key: dependency-cache-{{ checksum "/tmp/checksum_files_list" }}
           paths:
