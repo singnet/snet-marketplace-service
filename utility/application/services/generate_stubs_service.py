@@ -100,13 +100,12 @@ class GenerateStubService:
             compiler_args.append("--grpc_python_out={}".format(codegen_dir))
             compiler = protoc
         elif target_language == "nodejs":
-            subprocess.call(['cmd', '/c', 'dir'])
             protoc_node_compiler_path = Path(
                 RESOURCES_PATH.joinpath("node_modules").joinpath("grpc-tools").joinpath("bin").joinpath(
                     "protoc.js")).absolute()
             grpc_node_plugin_path = Path(
                 RESOURCES_PATH.joinpath("node_modules").joinpath("grpc-tools").joinpath("bin").joinpath(
-                    "grpc_node_plugin.exe")).resolve()
+                    "grpc_node_plugin")).resolve()
             if not os.path.isfile(protoc_node_compiler_path) or not os.path.isfile(grpc_node_plugin_path):
                 print("Missing required node.js protoc compiler. Retrieving from npm...")
                 subprocess.run(["npm", "install"], cwd=RESOURCES_PATH)
