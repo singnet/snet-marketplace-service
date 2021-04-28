@@ -1,8 +1,12 @@
 import json
+from urllib.parse import urlparse
 
 import boto3
 from botocore.config import Config
+from botocore.exceptions import ClientError
+from common.logger import get_logger
 
+logger = get_logger(__name__)
 
 class BotoUtils:
     def __init__(self, region_name):
@@ -30,3 +34,40 @@ class BotoUtils:
     def s3_download_file(self, bucket, key, filename):
         s3_client = boto3.client('s3')
         s3_client.download_file(bucket, key, filename)
+
+    def get_parameter_value_from_secrets_manager(self, secret_name):
+        config = Config(retries = dict(max_attempts = 2))
+        session = boto3.session.Session()
+        client = session.client(service_name='secretsmanager', region_name=self.region_name, config=config)
+        try:
+            parameter_value = client.get_secret_value(SecretId=secret_name)['SecretString']
+        except ClientError as e:
+            logger.error(f"Failed to fetch credentials {e}")
+            raise e
+
+        response = json.loads(parameter_value)
+        return response[secret_name]
+
+    @staticmethod
+    def delete_objects_from_s3(bucket, key, key_pattern):
+        if key_pattern in key:
+            if len([char for char in key.replace(key_pattern, "") if char == "/"]) == 1:
+                s3_client = boto3.client('s3')
+                s3_client.delete_object(Bucket=bucket, Key=key)
+
+    @staticmethod
+    def get_objects_from_s3(bucket, key):
+        s3 = boto3.client('s3')
+        objects = []
+        paginator = s3.get_paginator('list_objects_v2')
+        pages = paginator.paginate(Bucket=bucket, Prefix=key)
+        for page in pages:
+            if page.get("Contents", None):
+                for obj in page['Contents']:
+                    objects.append(obj)
+        return objects
+
+    @staticmethod
+    def get_bucket_and_key_from_url(url):
+        parsed_url = urlparse(url)
+        return parsed_url.hostname.split(".")[0], parsed_url.path[1:]

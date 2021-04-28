@@ -30,3 +30,15 @@ SLACK_FEEDBACK_HOOK = {
     "RFAI": "",
     "STAKING": ""
 }
+CRYPTO_FIAT_CONVERSION = {
+    'EXCHANGE': '',
+    'RATE_THRESHOLD': '',
+    'MULTIPLIER': '',
+    'CURRENT_AGI_USD_RATE': '',
+    'LIMIT': '',
+    'COINMARKETCAP': {
+        'API_ENDPOINT': ''
+    }
+}
+PROTO_STUB_TARGET_LANGUAGES = []
+PROTO_DIRECTORY_REGEX_PATTERN = ""

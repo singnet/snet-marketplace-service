@@ -16,7 +16,7 @@ custom:
   prune:
     automatic: true
     includeLayers: true
-    number: 5
+    number: 2
   documentation:
     models:
       - name: "ErrorMessage"
@@ -70,6 +70,7 @@ custom:
       - name: "CreateChannelEventInput"
         contentType: "application/json"
         schema: ${file(wallets/documentation/models/create_channel_event.json):CreateChannelEventInput}
+
 provider:
   name: aws
   runtime: python3.7

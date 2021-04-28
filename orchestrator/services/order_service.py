@@ -403,7 +403,7 @@ class OrderService:
                 return channel_details
             except Exception as e:
                 logger.error("Failed to create channel")
-                logger.error(repr(e))
+                print(repr(e))
                 raise ChannelCreationFailed("Failed to create channel", wallet_details=order_data)
 
         elif order_type == OrderType.FUND_CHANNEL.value:
