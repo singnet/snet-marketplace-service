@@ -99,26 +99,25 @@ SERVICE_METADATA_SCHEMA = {
     },
     "media": {
         "type": "list",
-        "items": {
-            "type": "object",
-            "properties": {
+        "schema": {
+            "type": "dict",
+            "schema": {
                 "order": {
-                    "type": "integer"
+                    "type": ["string", "integer"]
                 },
                 "url": {
-                    "type": "string",
-                    "minLength": 1
+                    "type": "string"
                 },
                 "file_type": {
-                    "type": "string",
-                    "enum": ["image", "video"]
+                    "type": "string"
                 },
                 "alt_text": {
-                    "type": "string",
-                    "enum": ["hover_on_the_image_text", "hover_on_the_video_url"]
-                }
-            },
-            "additionalProperties": False
+                    "type": "string"
+                },
+                "asset_type": {
+                    "type": "string"
+                },
+            }
         }
     },
     "contributors": {
