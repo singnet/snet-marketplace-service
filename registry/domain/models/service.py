@@ -98,7 +98,7 @@ SERVICE_METADATA_SCHEMA = {
         }
     },
     "media": {
-        "type": "array",
+        "type": "list",
         "items": {
             "type": "object",
             "properties": {
@@ -118,8 +118,7 @@ SERVICE_METADATA_SCHEMA = {
                     "enum": ["hover_on_the_image_text", "hover_on_the_video_url"]
                 }
             },
-            "additionalProperties": False,
-            "required": ["order", "url", "file_type", "alt_text"]
+            "additionalProperties": False
         }
     },
     "contributors": {
@@ -174,7 +173,7 @@ class Service:
         }
 
     def to_metadata(self):
-        result = {
+        return {
             "version": 1,
             "display_name": self._display_name,
             "encoding": self.proto.get("encoding", ""),
@@ -190,8 +189,6 @@ class Service:
             "media": self.prepare_assets_for_metadata(),
             "contributors": self._contributors
         }
-        print(result)
-        return  result
 
     @property
     def org_uuid(self):
