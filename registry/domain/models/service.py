@@ -51,7 +51,7 @@ SERVICE_METADATA_SCHEMA = {
                     "type": "list",
                     "schema": {
                         "type": "string",
-                        "empty":True
+                        "empty": True
 
                     }
                 },
@@ -97,12 +97,29 @@ SERVICE_METADATA_SCHEMA = {
             }
         }
     },
-    "assets": {
-        "type": "dict",
-        "schema": {
-            "hero_image": {
-                "type": "string"
-            }
+    "media": {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "order": {
+                    "type": "integer"
+                },
+                "url": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "file_type": {
+                    "type": "string",
+                    "enum": ["image", "video"]
+                },
+                "alt_text": {
+                    "type": "string",
+                    "enum": ["hover_on_the_image_text", "hover_on_the_video_url"]
+                }
+            },
+            "additionalProperties": False,
+            "required": ["order", "url", "file_type", "alt_text"]
         }
     },
     "contributors": {
@@ -114,7 +131,7 @@ REQUIRED_ASSETS_FOR_METADATA = ['hero_image']
 
 class Service:
     def __init__(self, org_uuid, uuid, service_id, display_name, short_description, description, project_url, proto,
-                 assets, ranking, rating, contributors, tags, mpe_address, metadata_uri, groups, service_state):
+                 media, ranking, rating, contributors, tags, mpe_address, metadata_uri, groups, service_state):
         self._org_uuid = org_uuid
         self._uuid = uuid
         self._service_id = service_id
@@ -123,7 +140,7 @@ class Service:
         self._description = description
         self._project_url = project_url
         self._proto = proto
-        self._assets = assets
+        self._media = media
         self._ranking = ranking
         self._rating = rating
         self._contributors = contributors
@@ -144,7 +161,7 @@ class Service:
             "description": self._description,
             "project_url": self._project_url,
             "proto": self._proto,
-            "assets": self._assets,
+            "media": self._media,
             "ranking": self._ranking,
             "rating": self._rating,
             "contributors": self._contributors,
@@ -157,7 +174,7 @@ class Service:
         }
 
     def to_metadata(self):
-        return {
+        result = {
             "version": 1,
             "display_name": self._display_name,
             "encoding": self.proto.get("encoding", ""),
@@ -170,9 +187,11 @@ class Service:
                 "short_description": self.short_description,
                 "description": self._description
             },
-            "assets": self.prepare_assets_for_metadata(),
+            "media": self.prepare_assets_for_metadata(),
             "contributors": self._contributors
         }
+        print(result)
+        return  result
 
     @property
     def org_uuid(self):
@@ -228,11 +247,11 @@ class Service:
 
     @property
     def assets(self):
-        return self._assets
+        return self._media
 
     @assets.setter
     def assets(self, assets):
-        self._assets = assets
+        self._media = assets
 
     @property
     def ranking(self):
@@ -311,10 +330,15 @@ class Service:
         return False
 
     def prepare_assets_for_metadata(self):
-        metadata_assets = {}
+        metadata_assets = []
+        order = 1
         for asset in self.assets.keys():
             if asset in REQUIRED_ASSETS_FOR_METADATA:
-                metadata_assets.update({asset: self.assets[asset].get("ipfs_hash", "")})
+                metadata_assets.append({
+                    "order": order,
+                    "url": self.assets[asset].get("url", ""),
+                    "file_type": self.assets[asset].get("file_type", ""),
+                    "alt_text": self.assets[asset].get("alt_text", ""),
+                })
+                order += 1
         return metadata_assets
-
-
