@@ -6,7 +6,7 @@ logger = get_logger(__name__)
 REQUIRED_KEYS_FOR_CURRENCY_TO_TOKEN_CONVERSION = ['pathParameters', 'queryStringParameters']
 
 def get_agi_fiat_rate(event, context):
-    logger.info("Received request for AGI-USD rate {event}")
+    logger.info("Received request for AGIX-USD rate {event}")
     try:
         valid_event = validate_dict(
             data_dict=event, required_keys=REQUIRED_KEYS_FOR_CURRENCY_TO_TOKEN_CONVERSION)
@@ -17,7 +17,7 @@ def get_agi_fiat_rate(event, context):
 
             currency = path_parameters["currency"]
             amount = query_string_parameters["amount"]
-            rate = get_cogs_amount(crypto='AGI', fiat=currency, fiat_rate=amount)
+            rate = get_cogs_amount(crypto='AGIX', fiat=currency, fiat_rate=amount)
 
             if rate is not None:
                 conversion_data = {"base": currency, "amount": amount, "amount_in_agi": str(rate)}
@@ -27,15 +27,15 @@ def get_agi_fiat_rate(event, context):
         else:
             response = generate_lambda_response(400, "Bad Request", cors_enabled=True)
     except Exception as e:
-        logger.info("Failed to response to AGI-USD rate {e}")
+        logger.info("Failed to response to AGIX-USD rate {e}")
         response = generate_lambda_response(400, "Bad Request", cors_enabled=True)
     return response
 
 def get_agi_usd_rate(event, context):
-    logger.info("Received request for AGI-USD rate")
-    convert_crypto_to_fiat(crypto='AGI', fiat='USD')
+    logger.info("Received request for AGIX-USD rate")
+    convert_crypto_to_fiat(crypto='AGIX', fiat='USD')
 
 
 def calculate_latest_agi_rate(event, context):
     logger.info("Received request for computing latest AGI rate")
-    derive_new_crypto_rate(crypto='AGI', fiat='USD')
+    derive_new_crypto_rate(crypto='AGIX', fiat='USD')

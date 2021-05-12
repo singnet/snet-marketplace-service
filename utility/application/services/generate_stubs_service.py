@@ -74,7 +74,7 @@ class GenerateStubService:
                             upload_file_name = f"{folder}{file_extension}"
                             utils.zip_file(
                                 source_path=Path(file_to_be_uploaded),
-                                zipped_path=os.path.join(temp_generated_stub_location, folder)
+                                zipped_path=os.path.join(temp_generated_stub_location, upload_file_name)
                             )
                             boto_utils.s3_upload_file(
                                 filename=file_to_be_uploaded + file_extension,
