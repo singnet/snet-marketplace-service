@@ -29,7 +29,8 @@ class TestServicePublisherDomainService(TestCase):
                     "ipfs_hash": "QmUfDprFisFeaRnmLEqks1AFN6iam5MmTh49KcomXHEiQY"
                 }},
             ranking=1,
-            rating={}, contributors=[{'name': 'df', 'email_id': '123@mail.io'}], tags=["1234"], mpe_address="0x123",
+            rating={}, contributors=[{'name': 'df', 'email_id': '123@mail.io'}], tags=["1234", "4321"],
+            mpe_address="0x123",
             metadata_uri="", groups=[
                 ServiceGroup(
                     org_uuid="test_org_uuid", service_uuid="test_service_uuid",
