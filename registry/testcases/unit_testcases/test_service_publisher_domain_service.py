@@ -52,4 +52,4 @@ class TestServicePublisherDomainService(TestCase):
              'service_description': {'url': 'https://dummy.io', 'short_description': 'test_short_description',
                                      'description': 'test_description'},
              'assets': {'hero_image': 'QmUfDprFisFeaRnmLEqks1AFN6iam5MmTh49KcomXHEiQY'},
-             'contributors': [{'name': 'df', 'email_id': '123@mail.io'}]}, service_metadata)
+             'contributors': [{'name': 'df', 'email_id': '123@mail.io'}], 'tags': ['1234', "4321"]}, service_metadata)
