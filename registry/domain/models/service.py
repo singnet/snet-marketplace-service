@@ -132,7 +132,7 @@ REQUIRED_ASSETS_FOR_METADATA = ['hero_image']
 
 class Service:
     def __init__(self, org_uuid, uuid, service_id, display_name, short_description, description, project_url, proto,
-                 media, ranking, rating, contributors, tags, mpe_address, metadata_uri, groups, service_state):
+                 assets, ranking, rating, contributors, tags, mpe_address, metadata_uri, groups, service_state):
         self._org_uuid = org_uuid
         self._uuid = uuid
         self._service_id = service_id
@@ -141,7 +141,7 @@ class Service:
         self._description = description
         self._project_url = project_url
         self._proto = proto
-        self._media = media
+        self._media = assets
         self._ranking = ranking
         self._rating = rating
         self._contributors = contributors
