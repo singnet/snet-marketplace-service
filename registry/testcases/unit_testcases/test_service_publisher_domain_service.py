@@ -14,7 +14,7 @@ class TestServicePublisherDomainService(TestCase):
             display_name="test_display_name", short_description="test_short_description",
             description="test_description", project_url="https://dummy.io",
             proto={"encoding": "proto", "service_type": "grpc", "model_ipfs_hash": "test_model_ipfs_hash"},
-            assets={
+            media={
                 "proto_files": {
                     "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/9887ec2e099e4afd92c4a052737eaa"
                            "97/services/7420bf47989e4afdb1797d1bba8090aa/proto/20200327130256_proto_files.zip",
@@ -50,5 +50,5 @@ class TestServicePublisherDomainService(TestCase):
                  'endpoints': ['https://dummydaemonendpoint.io'], 'group_id': 'test', 'group_name': 'test_name'}],
              'service_description': {'url': 'https://dummy.io', 'short_description': 'test_short_description',
                                      'description': 'test_description'},
-             'media': [{"order": 1, "url": "QmUfDprFisFeaRnmLEqks1AFN6iam5MmTh49KcomXHEiQY/20200323130126_asset.png", "file_type": "", "alt_text": ""}],
+             'media': [{"order": 1, "url": "QmUfDprFisFeaRnmLEqks1AFN6iam5MmTh49KcomXHEiQY/20200323130126_asset.png", "file_type": "hero_image", "alt_text": ""}],
              'contributors': [{'name': 'df', 'email_id': '123@mail.io'}]}, service_metadata)
