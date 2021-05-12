@@ -242,11 +242,11 @@ class Service:
         self._proto = proto
 
     @property
-    def media(self):
+    def assets(self):
         return self._media
 
-    @media.setter
-    def media(self, assets):
+    @assets.setter
+    def assets(self, assets):
         self._media = assets
 
     @property
