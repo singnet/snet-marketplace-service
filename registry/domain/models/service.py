@@ -189,7 +189,7 @@ class Service:
                 "description": self._description
             },
             "media": self.prepare_media_for_metadata(),
-            "contributors": self._contributors
+            "contributors": self._contributors,
             "tags": self._tags
         }
 
