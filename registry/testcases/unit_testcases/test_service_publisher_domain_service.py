@@ -14,7 +14,7 @@ class TestServicePublisherDomainService(TestCase):
             display_name="test_display_name", short_description="test_short_description",
             description="test_description", project_url="https://dummy.io",
             proto={"encoding": "proto", "service_type": "grpc", "model_ipfs_hash": "test_model_ipfs_hash"},
-            media={
+            assets={
                 "proto_files": {
                     "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/9887ec2e099e4afd92c4a052737eaa"
                            "97/services/7420bf47989e4afdb1797d1bba8090aa/proto/20200327130256_proto_files.zip",
