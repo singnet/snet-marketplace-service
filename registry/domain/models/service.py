@@ -129,7 +129,7 @@ REQUIRED_ASSETS_FOR_METADATA = ['hero_image']
 
 class Service:
     def __init__(self, org_uuid, uuid, service_id, display_name, short_description, description, project_url, proto,
-                 assets, ranking, rating, contributors, tags, mpe_address, metadata_uri, groups, service_state):
+                 media, ranking, rating, contributors, tags, mpe_address, metadata_uri, groups, service_state):
         self._org_uuid = org_uuid
         self._uuid = uuid
         self._service_id = service_id
@@ -138,7 +138,7 @@ class Service:
         self._description = description
         self._project_url = project_url
         self._proto = proto
-        self._assets = assets
+        self._media = media
         self._ranking = ranking
         self._rating = rating
         self._contributors = contributors
@@ -159,7 +159,7 @@ class Service:
             "description": self._description,
             "project_url": self._project_url,
             "proto": self._proto,
-            "media": self._assets,
+            "media": self._media,
             "ranking": self._ranking,
             "rating": self._rating,
             "contributors": self._contributors,
@@ -185,7 +185,7 @@ class Service:
                 "short_description": self.short_description,
                 "description": self._description
             },
-            "media": self.prepare_assets_for_metadata(),
+            "media": self.prepare_media_for_metadata(),
             "contributors": self._contributors
         }
 
@@ -243,11 +243,11 @@ class Service:
 
     @property
     def assets(self):
-        return self._assets
+        return self._media
 
     @assets.setter
-    def assets(self, assets):
-        self._assets = assets
+    def assets(self, media):
+        self._media = media
 
     @property
     def ranking(self):
@@ -325,7 +325,7 @@ class Service:
     def is_major_change(self, other):
         return False
 
-    def prepare_assets_for_metadata(self):
+    def prepare_media_for_metadata(self):
         metadata_assets = []
         order = 1
         for asset in self.assets.keys():
@@ -333,7 +333,7 @@ class Service:
                 metadata_assets.append({
                     "order": order,
                     "url": self.assets[asset].get("url", ""),
-                    "file_type": self.assets[asset].get("file_type", ""),
+                    "file_type": "hero_image",
                     "alt_text": self.assets[asset].get("alt_text", ""),
                 })
                 order += 1
