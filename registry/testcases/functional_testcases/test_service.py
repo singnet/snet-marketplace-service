@@ -1197,6 +1197,7 @@ class TestService(TestCase):
                     "alt_text": ""
                 }
             ],
+            'tags': ['adsf'],
             "contributors": [{"name": "df", "email_id": ""}]
         }
 
