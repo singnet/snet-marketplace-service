@@ -1,5 +1,5 @@
 from contract_api.consumers.service_event_consumer import ServiceCreatedEventConsumer, ServiceMetadataModifiedConsumer, \
-    ServiceTagsModifiedEventConsumer, SeviceDeletedEventConsumer
+     SeviceDeletedEventConsumer
 from contract_api.config import NETWORKS, NETWORK_ID, IPFS_URL
 from contract_api.consumers.organization_event_consumer import OrganizationCreatedEventConsumer, OrganizationModifiedEventConsumer, \
     OrganizationDeletedEventConsumer
@@ -23,10 +23,6 @@ def get_service_event_consumer(event):
 
     elif event['name'] == 'ServiceMetadataModified':
         return ServiceMetadataModifiedConsumer(NETWORKS[NETWORK_ID]["ws_provider"], IPFS_URL['url'], IPFS_URL['port'])
-
-
-    elif event['name'] == 'ServiceTagsModified':
-        return ServiceTagsModifiedEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"], IPFS_URL['url'], IPFS_URL['port'])
 
     elif event['name'] == 'ServiceDeleted':
         return SeviceDeletedEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"], IPFS_URL['url'], IPFS_URL['port'])
