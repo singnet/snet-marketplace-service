@@ -26,7 +26,7 @@ class ServiceFactory:
             project_url=service.project_url,
             proto=service.proto,
             metadata_uri=service.metadata_uri,
-            media=service.assets,
+            assets=service.assets,
             rating=service.rating,
             ranking=service.ranking,
             contributors=service.contributors,
