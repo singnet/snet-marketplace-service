@@ -26,7 +26,7 @@ class ServiceFactory:
             project_url=service.project_url,
             proto=service.proto,
             metadata_uri=service.metadata_uri,
-            media=service.assets,
+            media=service.media,
             rating=service.rating,
             ranking=service.ranking,
             contributors=service.contributors,
@@ -62,7 +62,7 @@ class ServiceFactory:
             short_description=service.short_description,
             description=service.description,
             project_url=service.project_url,
-            assets=service.assets,
+            assets=service.media,
             rating=service.rating,
             ranking=service.ranking,
             contributors=service.contributors,
@@ -103,7 +103,6 @@ class ServiceFactory:
             updated_by=username,
             approved_by="",
             created_on=dt.utcnow()
-
         )
 
     @staticmethod
