@@ -123,6 +123,9 @@ SERVICE_METADATA_SCHEMA = {
     "contributors": {
         "type": "list"
     },
+    "tags": {
+        "type": "list",
+    }
 }
 REQUIRED_ASSETS_FOR_METADATA = ['hero_image']
 
@@ -187,6 +190,7 @@ class Service:
             },
             "media": self.prepare_media_for_metadata(),
             "contributors": self._contributors
+            "tags": self._tags
         }
 
     @property

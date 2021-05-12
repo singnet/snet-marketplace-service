@@ -28,7 +28,8 @@ class TestServicePublisherDomainService(TestCase):
                     "ipfs_hash": "QmUfDprFisFeaRnmLEqks1AFN6iam5MmTh49KcomXHEiQY"
                 }},
             ranking=1,
-            rating={}, contributors=[{'name': 'df', 'email_id': '123@mail.io'}], tags=["1234"], mpe_address="0x123",
+            rating={}, contributors=[{'name': 'df', 'email_id': '123@mail.io'}], tags=["1234", "4321"],
+            mpe_address="0x123",
             metadata_uri="", groups=[
                 ServiceGroup(
                     org_uuid="test_org_uuid", service_uuid="test_service_uuid",
@@ -51,4 +52,4 @@ class TestServicePublisherDomainService(TestCase):
              'service_description': {'url': 'https://dummy.io', 'short_description': 'test_short_description',
                                      'description': 'test_description'},
              'media': [{"order": 1, "url": "QmUfDprFisFeaRnmLEqks1AFN6iam5MmTh49KcomXHEiQY/20200323130126_asset.png", "file_type": "hero_image", "alt_text": ""}],
-             'contributors': [{'name': 'df', 'email_id': '123@mail.io'}]}, service_metadata)
+             'contributors': [{'name': 'df', 'email_id': '123@mail.io'}], 'tags': ['1234', "4321"]}, service_metadata)
