@@ -49,23 +49,6 @@ class ServiceRepository(CommonRepository):
 
         query_response = self.connection.execute(upsrt_servicec_metadata, upsrt_service_metadata_params)
 
-    def update_tags(self, org_id, service_id, tags_data):
-        try:
-            self.delete_tags(org_id=org_id, service_id=service_id)
-            if (tags_data is not None and tags_data[0]):
-                tags = tags_data[3]
-                service_data = self.get_service_row_id(
-                    service_id=service_id, org_id=org_id)
-                service_row_id = service_data[0]['row_id']
-                for tag in tags:
-                    tag = tag.decode('utf-8')
-                    tag = tag.rstrip("\u0000")
-                    self.create_tags(srvc_rw_id=service_row_id, org_id=org_id, service_id=service_id, tag_name=tag)
-                    self.commit_transaction()
-        except Exception as e:
-
-            self.rollback_transaction()
-
     def create_endpoints(self, service_row_id, org_id, service_id, endpt_data):
         insert_endpoints = "INSERT INTO service_endpoint (service_row_id, org_id, service_id, group_id, endpoint, " \
                            "is_available, row_created, row_updated) " \
