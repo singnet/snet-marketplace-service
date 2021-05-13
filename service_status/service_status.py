@@ -60,7 +60,7 @@ class ServiceStatus:
 
     def _get_service_endpoint_data(self):
         query = "SELECT row_id, org_id, service_id, endpoint, is_available, failed_status_count FROM service_endpoint WHERE " \
-                "next_check_timestamp < UTC_TIMESTAMP AND endpoint not regexp %s ORDER BY last_check_timestamp ASC " \
+                "next_check_timestamp < UTC_TIMESTAMP AND endpoint not regexp %s AND (org_id,service_id) IN (SELECT org_id, service_id FROM service WHERE service.is_curated=1) ORDER BY last_check_timestamp ASC " \
                 "LIMIT %s"
         result = self.repo.execute(query, [self.rex_for_pb_ip, LIMIT])
         if result is None or result == []:
