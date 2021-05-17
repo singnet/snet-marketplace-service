@@ -124,6 +124,7 @@ class OrganizationPublisherService:
     def publish_org_to_ipfs(self):
         logger.info(f"publish organization to ipfs org_uuid: {self.org_uuid}")
         organization = org_repo.get_org_for_org_uuid(self.org_uuid)
+        logger.info(f"Organization metadata: {organization}")
         organization.publish_to_ipfs()
         org_repo.store_ipfs_hash(organization, self.username)
         return organization.to_response()
