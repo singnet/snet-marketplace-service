@@ -120,11 +120,11 @@ class RegistryBlockChainUtil:
                     f"updating service {service_id} in {self.__env_type} blockchain environment.")
         return transaction_hash
 
-    def register_service_in_blockchain(self, org_id, service_id, metadata_uri, tags):
+    def register_service_in_blockchain(self, org_id, service_id, metadata_uri):
         method_name = "createServiceRegistration"
         positional_inputs = (web3.Web3.toHex(text=org_id),
                              web3.Web3.toHex(text=service_id),
-                             ipfsuri_to_bytesuri(metadata_uri), [web3.Web3.toHex(text=tag) for tag in tags])
+                             ipfsuri_to_bytesuri(metadata_uri))
         transaction_hash = self.__make_trasaction(*positional_inputs, method_name=method_name)
         logger.info(
             f"transaction hash {transaction_hash} generated while registering service {service_id} "
@@ -137,12 +137,12 @@ class RegistryBlockChainUtil:
             net_id=self.__network_id, path=self.__contract_address_path, key='address')
         return self.__service_exist_in_blockchain(org_id, service_id, contract, contract_address)
 
-    def register_or_update_service_in_blockchain(self, org_id, service_id, metadata_uri, tags):
+    def register_or_update_service_in_blockchain(self, org_id, service_id, metadata_uri):
         if not self.is_org_published(org_id=org_id):
             raise OrganizationNotFoundException()
 
         if self.is_service_published(org_id=org_id, service_id=service_id):
             transaction_hash = self.update_service_in_blockchain(org_id, service_id, metadata_uri)
         else:
-            transaction_hash = self.register_service_in_blockchain(org_id, service_id, metadata_uri, tags)
+            transaction_hash = self.register_service_in_blockchain(org_id, service_id, metadata_uri)
         return transaction_hash
