@@ -74,23 +74,23 @@ class ServiceEventConsumer(object):
         org_id = self._get_org_id_from_event(event)
         service_id = self._get_service_id_from_event(event)
 
-        tags_data = self._fetch_tags(
-            registry_contract=registry_contract, org_id_hex=org_id.encode("utf-8"),
-            service_id_hex=service_id.encode("utf-8"))
+        # tags_data = self._fetch_tags(
+        #     registry_contract=registry_contract, org_id_hex=org_id.encode("utf-8"),
+        #     service_id_hex=service_id.encode("utf-8"))
         transaction_hash = self._get_tarnsaction_hash(event)
 
-        return org_id, service_id, tags_data, transaction_hash
+        return org_id, service_id, transaction_hash
 
 
 class ServiceCreatedEventConsumer(ServiceEventConsumer):
 
     def on_event(self, event):
-        org_id, service_id, tags_data, transaction_hash = self._get_service_details_from_blockchain(event)
+        org_id, service_id, transaction_hash = self._get_service_details_from_blockchain(event)
         metadata_uri = self._get_metadata_uri_from_event(event)
         service_ipfs_data = self._ipfs_util.read_file_from_ipfs(metadata_uri)
         self._process_service_data(
-            org_id=org_id, service_id=service_id, service_metadata=service_ipfs_data,
-            tags_data=tags_data, transaction_hash=transaction_hash, metadata_uri=metadata_uri)
+            org_id=org_id, service_id=service_id, service_metadata=service_ipfs_data, transaction_hash=transaction_hash,
+            metadata_uri=metadata_uri)
 
     def _get_existing_service_details(self, org_id, service_id):
         org_uuid, existing_service = self._service_repository.get_service_for_given_service_id_and_org_id(org_id,
@@ -109,7 +109,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                 changed_endpoints[endpoint] = {'valid': False}
             group['endpoints'] = changed_endpoints
 
-    def _process_service_data(self, org_id, service_id, service_metadata, tags_data, transaction_hash, metadata_uri):
+    def _process_service_data(self, org_id, service_id, service_metadata, transaction_hash, metadata_uri):
 
         org_uuid, existing_service = self._get_existing_service_details(org_id, service_id)
         service_uuid = str(uuid4())
@@ -127,6 +127,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         mpe_address = service_metadata.get("mpe_address", "")
         metadata_uri = "ipfs://" + metadata_uri
         contributors = service_metadata.get("contributors", [])
+        tags_data = service_metadata.get("tags", [])
         state = \
             ServiceFactory.create_service_state_entity_model(org_uuid, service_uuid,
                                                              getattr(ServiceStatus, "PUBLISHED_UNAPPROVED").value)
