@@ -268,9 +268,9 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
         response = json.loads(result['body'])
 
         if response["status"] == "success":
-            assets = response["data"].get("assets")
-            proto_file_s3_path = assets["proto_files"]["url"]
-            component_files_s3_path = assets["demo_files"]["url"]
+            media = response["data"].get("media")
+            proto_file_s3_path = media["proto_files"]["url"]
+            component_files_s3_path = media["demo_files"]["url"]
 
         return proto_file_s3_path, component_files_s3_path
 
