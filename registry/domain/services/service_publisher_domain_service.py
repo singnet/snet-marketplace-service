@@ -105,7 +105,7 @@ class ServicePublisherDomainService:
         # deploy service on testing blockchain environment for verification
         transaction_hash = RegistryBlockChainUtil(environment).register_or_update_service_in_blockchain(
             org_id=org_id, service_id=service.service_id,
-            metadata_uri=service.metadata_uri, tags=service.tags)
+            metadata_uri=service.metadata_uri)
         return service.to_dict()
 
     @staticmethod
