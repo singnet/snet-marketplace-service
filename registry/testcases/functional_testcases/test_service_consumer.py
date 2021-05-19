@@ -26,8 +26,7 @@ class TestServiceEventConsumer(unittest.TestCase):
     @patch("common.boto_utils.BotoUtils.invoke_lambda", return_value={"statusCode": StatusCode.CREATED})
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
     @patch('common.blockchain_util.BlockChainUtil')
-    @patch('registry.consumer.service_event_consumer.ServiceEventConsumer._fetch_tags')
-    def test_on_service_created_event(self, mock_fetch_tags, mock_block_chain_util, mock_s3_push, mock_boto, mock_ipfs):
+    def test_on_service_created_event(self, mock_block_chain_util, mock_s3_push, mock_boto, mock_ipfs):
         org_uuid = str(uuid4())
         service_uuid = str(uuid4())
         self.org_repo.add_item(
@@ -59,6 +58,7 @@ class TestServiceEventConsumer(unittest.TestCase):
                 description="test_description",
                 project_url="https://dummy.io",
                 ranking=1,
+                tags=["tag1", "tag2"],
                 created_on=datetime.utcnow(), updated_on=datetime.utcnow()
             )
         )
@@ -95,7 +95,6 @@ class TestServiceEventConsumer(unittest.TestCase):
                           'row_updated': datetime(2019, 10, 21, 9, 59, 37),
                           'row_created': datetime(2019, 10, 21, 9, 59, 37)}, "name": "ServiceCreated"}
 
-        mock_fetch_tags.return_value = ["tag1", "tag2"]
         mock_s3_push.return_value = "https://test-s3-push"
         service_event_consumer = ServiceCreatedEventConsumer("wss://ropsten.infura.io/ws",
                                                              "http://ipfs.singularitynet.io",
@@ -104,7 +103,7 @@ class TestServiceEventConsumer(unittest.TestCase):
 
         published_service = self.service_repo.get_service_for_given_service_uuid(org_uuid, service_uuid)
 
-        self.assertEqual(["tag1", "tag2"], published_service.tags)
+        self.assertEqual([], published_service.tags)
         self.assertEqual(ServiceStatus.DRAFT.value, published_service.service_state.state)
         self.assertEqual(service_metadata["display_name"], published_service.display_name)
         self.assertEqual(service_metadata["service_description"]["description"], published_service.description)
@@ -138,9 +137,7 @@ class TestServiceEventConsumer(unittest.TestCase):
         write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
     @patch('common.blockchain_util.BlockChainUtil')
-    @patch('registry.consumer.service_event_consumer.ServiceEventConsumer._fetch_tags')
-    def test_on_service_created_event_from_snet_cli(self, mock_fetch_tags, mock_block_chain_util,
-                                                    mock_s3_push, mock_ipfs):
+    def test_on_service_created_event_from_snet_cli(self, mock_block_chain_util, mock_s3_push, mock_ipfs):
         org_uuid = str(uuid4())
         self.org_repo.add_item(
             Organization(
@@ -168,8 +165,6 @@ class TestServiceEventConsumer(unittest.TestCase):
                           'logIndex': '0', 'error_code': 1, 'error_msg': '',
                           'row_updated': datetime(2019, 10, 21, 9, 59, 37),
                           'row_created': datetime(2019, 10, 21, 9, 59, 37)}, "name": "ServiceCreated"}
-
-        mock_fetch_tags.return_value = ["tag1", "tag2"]
         mock_s3_push.return_value = "https://test-s3-push"
         service_event_consumer = ServiceCreatedEventConsumer("wss://ropsten.infura.io/ws",
                                                              "http://ipfs.singularitynet.io",
@@ -178,7 +173,7 @@ class TestServiceEventConsumer(unittest.TestCase):
 
         org_uuid, published_service = self.service_repo.get_service_for_given_service_id_and_org_id("test_org_id",
                                                                                                     "test_service_id")
-        self.assertEqual(["tag1", "tag2"], published_service.tags)
+        self.assertEqual([], published_service.tags)
         self.assertEqual(ServiceStatus.PUBLISHED_UNAPPROVED.value, published_service.service_state.state)
         self.assertEqual(service_metadata["display_name"], published_service.display_name)
         self.assertEqual(service_metadata["service_description"]["description"], published_service.description)
@@ -211,9 +206,7 @@ class TestServiceEventConsumer(unittest.TestCase):
         write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
     @patch('common.blockchain_util.BlockChainUtil')
-    @patch('registry.consumer.service_event_consumer.ServiceEventConsumer._fetch_tags')
-    def test_on_gasprice_boosted_service_created_event(self, mock_fetch_tags, mock_block_chain_util,
-                                                    mock_s3_push, mock_ipfs):
+    def test_on_gas_price_boosted_service_created_event(self, mock_block_chain_util, mock_s3_push, mock_ipfs):
         org_uuid = str(uuid4())
         self.org_repo.add_item(
             Organization(
@@ -242,7 +235,6 @@ class TestServiceEventConsumer(unittest.TestCase):
                           'row_updated': datetime(2019, 10, 21, 9, 59, 37),
                           'row_created': datetime(2019, 10, 21, 9, 59, 37)}, "name": "ServiceCreated"}
 
-        mock_fetch_tags.return_value = ["tag1", "tag2"]
         mock_s3_push.return_value = "https://test-s3-push"
         service_event_consumer = ServiceCreatedEventConsumer("wss://ropsten.infura.io/ws",
                                                              "http://ipfs.singularitynet.io",
@@ -251,7 +243,7 @@ class TestServiceEventConsumer(unittest.TestCase):
 
         org_uuid, published_service = self.service_repo.get_service_for_given_service_id_and_org_id("test_org_id",
                                                                                                     "test_service_id")
-        self.assertEqual(["tag1", "tag2"], published_service.tags)
+        self.assertEqual([], published_service.tags)
         self.assertEqual(ServiceStatus.PUBLISHED_UNAPPROVED.value, published_service.service_state.state)
         self.assertEqual(service_metadata["display_name"], published_service.display_name)
         self.assertEqual(service_metadata["service_description"]["description"], published_service.description)
