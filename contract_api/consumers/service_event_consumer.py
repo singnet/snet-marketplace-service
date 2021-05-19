@@ -216,7 +216,7 @@ class ServiceMetadataModifiedConsumer(ServiceCreatedEventConsumer):
 class SeviceDeletedEventConsumer(ServiceEventConsumer):
 
     def on_event(self, event):
-        org_id, service_id, tags_data = self._get_service_details_from_blockchain(event)
+        org_id, service_id = self._get_service_details_from_blockchain(event)
         self._service_repository.delete_service_dependents(org_id, service_id)
         self._service_repository.delete_service(
             org_id=org_id, service_id=service_id)
@@ -229,7 +229,7 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
         self.lambda_client = boto3.client("lambda", region_name=REGION_NAME)
 
     def on_event(self, event):
-        org_id, service_id, tags_data = self._get_service_details_from_blockchain(event)
+        org_id, service_id = self._get_service_details_from_blockchain(event)
         self._process_service_deployment(org_id=org_id, service_id=service_id)
 
     def _extract_zip_and_and_tar(self, org_id, service_id, s3_url):
