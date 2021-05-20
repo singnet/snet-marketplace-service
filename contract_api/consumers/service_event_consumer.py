@@ -1,5 +1,6 @@
 import json
 import os
+
 import boto3
 from web3 import Web3
 
@@ -74,7 +75,6 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                                    new_ipfs_data=service_ipfs_data)
 
     def _push_asset_to_s3_using_hash(self, hash, org_id, service_id):
-        logger.info(" Reading file in ipfs ")
         io_bytes = self._ipfs_util.read_bytesio_from_ipfs(hash)
         filename = hash.split("/")[1]
         if service_id:
