@@ -77,7 +77,6 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         self._process_service_data(org_id=org_id, service_id=service_id, new_ipfs_hash=metadata_uri,
                                    new_ipfs_data=service_ipfs_data)
         logger.info(f"Process service event end time - {time.time() - start_time_process}")
-        a = 1
 
     def _push_asset_to_s3_using_hash(self, hash, org_id, service_id):
         logger.info(" Reading file in ipfs ")
