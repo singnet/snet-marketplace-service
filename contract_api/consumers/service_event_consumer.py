@@ -71,17 +71,19 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         org_id, service_id = self._get_service_details_from_blockchain(event)
         metadata_uri = self._get_metadata_uri_from_event(event)
         start_time_ipfs = time.time()
-        logger.info(" ipfs start " % (start_time_ipfs))
         service_ipfs_data = self._ipfs_util.read_file_from_ipfs(metadata_uri)
-        logger.info(" ipfs end " % (time.time() - start_time_ipfs))
+        logger.info(f"IPFS metadata read time - {time.time() - start_time_ipfs}")
         start_time_process = time.time()
-        logger.info(" process service data start " % (start_time_process))
         self._process_service_data(org_id=org_id, service_id=service_id, new_ipfs_hash=metadata_uri,
                                    new_ipfs_data=service_ipfs_data)
-        logger.info(" process service data end " % (time.time() - start_time_process))
+        logger.info(f"Process service event end time - {time.time() - start_time_process}")
+        a = 1
 
     def _push_asset_to_s3_using_hash(self, hash, org_id, service_id):
+        logger.info(" Reading file in ipfs ")
+        st_time = time.time()
         io_bytes = self._ipfs_util.read_bytesio_from_ipfs(hash)
+        logger.info(f'Read file from ipfs time --> {time.time() - st_time}')
         filename = hash.split("/")[1]
         if service_id:
             s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename
