@@ -268,9 +268,9 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
         response = json.loads(result['body'])
 
         if response["status"] == "success":
-            media = response["data"].get("media")
-            proto_file_s3_path = media["proto_files"]["url"]
-            component_files_s3_path = media["demo_files"]["url"]
+            media = response["data"].get("media", {})
+            proto_file_s3_path = media.get("proto_files", {}).get("url", None)
+            component_files_s3_path = media.get("demo_files", {}).get("url", None)
 
         return proto_file_s3_path, component_files_s3_path
 
@@ -304,14 +304,12 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
         logger.info(f"Processing Service deployment for {org_id} {service_id}")
         proto_file_s3_path, component_files_s3_path = self._get_s3_path_url_for_proto_and_component(org_id, service_id)
 
-        proto_file_tar_path = self._extract_zip_and_and_tar(org_id, service_id, proto_file_s3_path)
-        component_files_tar_path = self._extract_zip_and_and_tar(org_id, service_id,
-                                                                 component_files_s3_path)
-
-        self._s3_util.push_file_to_s3(proto_file_tar_path, ASSETS_COMPONENT_BUCKET_NAME,
-                                      f"assets/{org_id}/{service_id}/{proto_file_tar_path.split('/')[-1]}")
-
-        self._s3_util.push_file_to_s3(component_files_tar_path, ASSETS_COMPONENT_BUCKET_NAME,
-                                      f"assets/{org_id}/{service_id}/{component_files_tar_path.split('/')[-1]}")
+        if proto_file_s3_path:
+            proto_file_tar_path = self._extract_zip_and_and_tar(org_id, service_id, proto_file_s3_path)
+            self._s3_util.push_file_to_s3(proto_file_tar_path, ASSETS_COMPONENT_BUCKET_NAME,
+                                          f"assets/{org_id}/{service_id}/{proto_file_tar_path.split('/')[-1]}")
+        if component_files_s3_path:
+            component_files_tar_path = self._extract_zip_and_and_tar(org_id, service_id, component_files_s3_path)
+            self._s3_util.push_file_to_s3(component_files_tar_path, ASSETS_COMPONENT_BUCKET_NAME)
 
         self._trigger_code_build_for_marketplace_dapp(org_id, service_id)
