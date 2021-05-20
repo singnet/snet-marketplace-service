@@ -808,6 +808,7 @@ functions:
     warmup: true
     handler: contract_api/handlers.consumer_handlers.service_event_consumer_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
+    timeout: 60
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
