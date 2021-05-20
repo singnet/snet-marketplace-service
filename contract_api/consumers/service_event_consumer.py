@@ -1,6 +1,6 @@
 import json
 import os
-
+import time
 import boto3
 from web3 import Web3
 
@@ -70,9 +70,15 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
     def on_event(self, event):
         org_id, service_id = self._get_service_details_from_blockchain(event)
         metadata_uri = self._get_metadata_uri_from_event(event)
+        start_time_ipfs = time.time()
+        logger.info(" ipfs start " % (start_time_ipfs))
         service_ipfs_data = self._ipfs_util.read_file_from_ipfs(metadata_uri)
+        logger.info(" ipfs end " % (time.time() - start_time_ipfs))
+        start_time_process = time.time()
+        logger.info(" process service data start " % (start_time_process))
         self._process_service_data(org_id=org_id, service_id=service_id, new_ipfs_hash=metadata_uri,
                                    new_ipfs_data=service_ipfs_data)
+        logger.info(" process service data end " % (time.time() - start_time_process))
 
     def _push_asset_to_s3_using_hash(self, hash, org_id, service_id):
         io_bytes = self._ipfs_util.read_bytesio_from_ipfs(hash)
