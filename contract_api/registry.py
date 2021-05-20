@@ -132,7 +132,7 @@ class Registry:
 
             qry_dta = self.repo.execute(
                 srch_qry, values + [int(offset), int(limit)])
-            org_srvc_tuple = ()
+            org_srvc_tuple = (('', ''))
             rslt = {}
             for rec in qry_dta:
                 org_id = rec['org_id']
