@@ -166,10 +166,6 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                                                                        service_id=service_id,
                                                                        ipfs_data=new_ipfs_data, assets_url=assets_url)
 
-            service_media = new_ipfs_data.get('media', [])
-            self.create_service_media(org_id=org_id,service_id=service_id,
-                                      service_media=service_media,service_row_id=service_row_id)
-
             groups = new_ipfs_data.get('groups', [])
             group_insert_count = 0
             for group in groups:
@@ -202,6 +198,11 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                                                      service_id=service_id,
                                                      tag_name=tag,
                                                      )
+
+            service_media = new_ipfs_data.get('media', [])
+            self.create_service_media(org_id=org_id, service_id=service_id,
+                                      service_media=service_media, service_row_id=service_row_id)
+
             self._connection.commit_transaction()
 
         except Exception as e:
