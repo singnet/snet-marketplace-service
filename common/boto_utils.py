@@ -71,3 +71,11 @@ class BotoUtils:
     def get_bucket_and_key_from_url(url):
         parsed_url = urlparse(url)
         return parsed_url.hostname.split(".")[0], parsed_url.path[1:]
+
+    @staticmethod
+    def push_io_bytes_to_s3(key, bucket_name, io_bytes):
+        s3_url = 'https://{}.s3.amazonaws.com/{}'.format(bucket_name, key)
+        s3_resource = boto3.resource('s3')
+        object = s3_resource.Object(bucket_name, key)
+        result = object.upload_fileobj(io_bytes)
+        return s3_url
