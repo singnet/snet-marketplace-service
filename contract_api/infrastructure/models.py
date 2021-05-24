@@ -162,6 +162,7 @@ class ServiceMetadata(Base):
     display_name = Column("display_name", VARCHAR(256), default=null)
     description = Column("description", VARCHAR(1024), default=null)
     short_description = Column("short_description", VARCHAR(1024), default=null)
+    demo_component_available = Column("demo_component_available", TINYINT(1), default=0, server_default="0")
     url = Column("url", VARCHAR(256), default=null)
     json = Column("json", VARCHAR(1024), default=null)
     model_ipfs_hash = Column("model_ipfs_hash", VARCHAR(256), default=null)
