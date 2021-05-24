@@ -10,7 +10,6 @@ from common.utils import Utils, generate_lambda_response
 from common.utils import handle_exception_with_slack_notification
 from contract_api.config import NETWORKS, NETWORK_ID, SLACK_HOOK
 from contract_api.registry import Registry
-from contract_api.services.media_service import MediaService
 
 patch_all()
 
@@ -100,16 +99,3 @@ def service_deployment_status_notification_handler(event, context):
         {"status": "success", "data": "Build failure notified", "error": {}}, cors_enabled=True
     )
 
-
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
-def push_media_to_s3_using_hash(event, context):
-    ipfs_hash = event.get("hash")
-    s3_filename = event.get("s3_filename")
-    s3_bucket_name = event.get("s3_bucket_name")
-    service_media_item = event.get("service_media_item")
-    MediaService().upload_media_to_s3(ipfs_hash=ipfs_hash, s3_filename=s3_filename, s3_bucket_name=s3_bucket_name,
-                                      service_media_item=service_media_item)
-    return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": {}, "error": {}}, cors_enabled=True
-    )

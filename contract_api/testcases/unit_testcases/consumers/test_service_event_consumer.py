@@ -25,14 +25,17 @@ class TestOrganizationEventConsumer(unittest.TestCase):
                           'logIndex': '0', 'error_code': 1, 'error_msg': '',
                           'row_updated': datetime(2019, 10, 21, 9, 59, 37),
                           'row_created': datetime(2019, 10, 21, 9, 59, 37)}, "name": "ServiceCreated"}
-
         connection = Repository(NETWORK_ID, NETWORKS=NETWORKS)
         service_repository = ServiceRepository(connection)
         service_repository.delete_service(org_id='snet', service_id='gene-annotation-service')
         service_repository.delete_service_dependents(org_id='snet', service_id='gene-annotation-service')
 
         nock_read_bytesio_from_ipfs.return_value = "some_value to_be_pushed_to_s3_whic_is_mocked"
-        mock_invoke_lambda.return_value = True
+        mock_invoke_lambda.return_value = {'statusCode': 200, 'body': '{"status": "success", "data": {"url": "some_url"}, "error": {}}',
+                    'headers': {'Content-Type': 'application/json', 'X-Requested-With': '*',
+                                'Access-Control-Allow-Headers': 'Access-Control-Allow-Origin, Content-Type, X-Amz-Date, Authorization,X-Api-Key,x-requested-with',
+                                'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,OPTIONS,POST'}}
+
         mock_ipfs_read.return_value = {
             "version": 1,
             "display_name": "Annotation Service",
@@ -131,8 +134,5 @@ class TestOrganizationEventConsumer(unittest.TestCase):
         for media_item in service_media:
             media_item.pop('row_id')
 
-        assert service_media == [
-            {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'https://youtu.be/7mj-p1Os6QA',
-             'order': 5, 'file_type': 'video', 'asset_type': 'image updated',
-             'alt_text': 'alternate text sample updated', 'ipfs_url': ''}
-        ]
+        assert service_media == [{'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'some_url', 'order': 2, 'file_type': 'text', 'asset_type': '', 'alt_text': 'text sample updated', 'ipfs_url': ''},
+                                 {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'https://youtu.be/7mj-p1Os6QA', 'order': 5, 'file_type': 'video', 'asset_type': 'image updated', 'alt_text': 'alternate text sample updated', 'ipfs_url': ''}]

@@ -851,14 +851,3 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-
-  push-media-to-s3-using-hash:
-    handler: contract_api/handlers.service_handlers.push_asset_to_s3_using_hash
-      role: ${file(./config.${self:provider.stage}.json):ROLE}
-      vpc:
-        securityGroupIds:
-          - ${file(./config.${self:provider.stage}.json):SG1}
-          - ${file(./config.${self:provider.stage}.json):SG2}
-        subnetIds:
-          - ${file(./config.${self:provider.stage}.json):VPC1}
-          - ${file(./config.${self:provider.stage}.json):VPC2}

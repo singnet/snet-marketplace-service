@@ -1,6 +1,7 @@
 import json
 import os
 import time
+
 import boto3
 from web3 import Web3
 
@@ -99,33 +100,28 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                 if "http" in url or "https" in url:
                     updated_url = url
                     ipfs_url = ''
-                    service_media_data = {
-                        "url": updated_url,
-                        "file_type": service_media_item['file_type'],
-                        "order": service_media_item['order'],
-                        "asset_type": service_media_item.get('asset_type', ""),
-                        "alt_text": service_media_item.get('alt_text', ""),
-                        "ipfs_url": ipfs_url
-                    }
-                    self._service_repository.create_service_media(org_id=org_id, service_id=service_id,
-                                                                  service_row_id=service_row_id,
-                                                                  media_data=service_media_data)
                 else:
-                    self.upload_media(org_id=org_id, service_id=service_id, service_media_item=service_media_item,
-                                      url=url, service_row_id=service_row_id)
-                    if service_media_item.get('order', 0) > count:
-                        count = service_media_item.get('order', 0)
+                    updated_url = self.upload_media(org_id=org_id, service_id=service_id,
+                                                    service_media_item=service_media_item,
+                                                    url=url, service_row_id=service_row_id)
+                service_media_data = {
+                    "url": updated_url,
+                    "file_type": service_media_item['file_type'],
+                    "order": service_media_item['order'],
+                    "asset_type": service_media_item.get('asset_type', ""),
+                    "alt_text": service_media_item.get('alt_text', ""),
+                    "ipfs_url": ipfs_url
+                }
+                self._service_repository.create_service_media(org_id=org_id, service_id=service_id,
+                                                              service_row_id=service_row_id,
+                                                              media_data=service_media_data)
 
-    @staticmethod
-    def upload_media(org_id, service_id, url, service_media_item, service_row_id):
+    def upload_media(self, org_id, service_id, url, service_media_item, service_row_id):
         filename = url.split("/")[1]
         if service_id:
             s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename
         else:
             s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + filename
-        service_media_item["org_id"] = org_id
-        service_media_item["service_id"] = service_id
-        service_media_item["service_row_id"] = service_row_id
         request = \
             {
                 "hash": url,
@@ -133,10 +129,16 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                 "s3_filename": s3_filename,
                 "service_media_item": service_media_item
             }
-        BotoUtils(region_name=REGION_NAME).invoke_lambda(
+        response = BotoUtils(region_name=REGION_NAME).invoke_lambda(
             lambda_function_arn=PUSH_MEDIA_TO_S3_USING_HASH_LAMBDA_ARN,
-            invocation_type="Event",
+            invocation_type="RequestResponse",
             payload=json.dumps(request))
+        if response["statusCode"] != 200:
+            logger.info(f" Error in uploading media :: {response} ")
+        if response["statusCode"] == 200:
+            body = json.loads(response["body"])
+            updated_url = body["data"].get("url", {})
+        return updated_url
 
     def _process_service_data(self, org_id, service_id, new_ipfs_hash, new_ipfs_data):
         try:

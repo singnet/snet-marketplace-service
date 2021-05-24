@@ -72,3 +72,16 @@ def get_and_validate_upload_type(query_string_parameter):
         if validate_dict(query_string_parameter, UPLOAD_TYPE_DETAILS[upload_request_type]["required_query_params"]):
             return True, upload_request_type
     return False, upload_request_type
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def push_media_to_s3_using_hash(event, context):
+    ipfs_hash = event.get("hash")
+    s3_filename = event.get("s3_filename")
+    s3_bucket_name = event.get("s3_bucket_name")
+    response = UploadService().push_asset_to_s3_using_hash(hash=ipfs_hash, s3_filename=s3_filename,
+                                                          s3_bucket_name=s3_bucket_name)
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": {"url": response}, "error": {}}, cors_enabled=True
+    )
