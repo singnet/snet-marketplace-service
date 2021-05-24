@@ -57,6 +57,13 @@ $ cd <service-name>
 $ alembic init alembic
 $ alembic upgrade head
 ```
+
+#### Include updated ORM models in alembic
+```bash
+$ alembic revision --autogenerate -m "commit message"
+$ alembic upgrade head
+```
+
 #### Configuration
 We are maintaining service configuration file in S3 bucket. During code build when the service is getting deployed it get picked based on service name and environment.
 #### Deployment
