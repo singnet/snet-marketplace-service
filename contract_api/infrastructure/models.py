@@ -129,6 +129,7 @@ class ServiceGroup(Base):
     row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
     row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
     Index("ServiceFK_idx", service_row_id)
+    UniqueConstraint(org_id, service_id, group_id, name="uq_srvc_grp")
 
 
 class ServiceMedia(Base):
