@@ -1,6 +1,6 @@
 import json
 import os
-
+import time
 import boto3
 from web3 import Web3
 
@@ -13,7 +13,7 @@ from common.s3_util import S3Util
 from common.utils import download_file_from_url, extract_zip_file, make_tarfile
 from contract_api.config import ASSETS_BUCKET_NAME, ASSETS_PREFIX, GET_SERVICE_FROM_ORGID_SERVICE_ID_REGISTRY_ARN, \
     MARKETPLACE_DAPP_BUILD, NETWORKS, NETWORK_ID, REGION_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY, \
-    ASSET_TEMP_EXTRACT_DIRECTORY, ASSETS_COMPONENT_BUCKET_NAME, PUSH_ASSET_TO_S3_USING_HASH_LAMBDA_ARN
+    ASSET_TEMP_EXTRACT_DIRECTORY, ASSETS_COMPONENT_BUCKET_NAME, PUSH_MEDIA_TO_S3_USING_HASH_LAMBDA_ARN
 from contract_api.consumers.event_consumer import EventConsumer
 from contract_api.dao.service_repository import ServiceRepository
 
@@ -75,25 +75,27 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         self._process_service_data(org_id=org_id, service_id=service_id, new_ipfs_hash=metadata_uri,
                                    new_ipfs_data=service_ipfs_data)
 
-    def _get_new_assets_url(self, org_id, service_id, new_ipfs_data):
-        new_assets_hash = new_ipfs_data.get('assets', {})
-        existing_assets_hash = {}
-        existing_assets_url = {}
+    def _push_asset_to_s3_using_hash(self, hash, org_id, service_id):
+        logger.info(" Reading file in ipfs ")
+        st_time = time.time()
+        io_bytes = self._ipfs_util.read_bytesio_from_ipfs(hash)
+        logger.info(f'Read file from ipfs time --> {time.time() - st_time}')
+        filename = hash.split("/")[1]
+        if service_id:
+            s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename
+        else:
+            s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + filename
 
-        existing_service_metadata = self._service_repository.get_service_metadata(service_id, org_id)
-        if existing_service_metadata:
-            existing_assets_hash = json.loads(existing_service_metadata["assets_hash"])
-            existing_assets_url = json.loads(existing_service_metadata["assets_url"])
-        assets_url_mapping = self._comapre_assets_and_push_to_s3(existing_assets_hash, new_assets_hash,
-                                                                 existing_assets_url, org_id,
-                                                                 service_id)
-        return assets_url_mapping
+        new_url = self._s3_util.push_io_bytes_to_s3(s3_filename,
+                                                    ASSETS_BUCKET_NAME, io_bytes)
+        return new_url
 
     def create_service_media(self, org_id, service_id, service_media, service_row_id):
+        count = 0
         if len(service_media) > 0:
             self._service_repository.delete_service_media(org_id=org_id, service_id=service_id)
             for service_media_item in service_media:
-                url = service_media_item.get("url",{})
+                url = service_media_item.get("url", {})
                 if "http" in url or "https" in url:
                     updated_url = url
                     ipfs_url = ''
@@ -111,6 +113,8 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                 else:
                     self.upload_media(org_id=org_id, service_id=service_id, service_media_item=service_media_item,
                                       url=url, service_row_id=service_row_id)
+                    if service_media_item.get('order', 0) > count:
+                        count = service_media_item.get('order', 0)
 
     @staticmethod
     def upload_media(org_id, service_id, url, service_media_item, service_row_id):
@@ -130,7 +134,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                 "service_media_item": service_media_item
             }
         BotoUtils(region_name=REGION_NAME).invoke_lambda(
-            lambda_function_arn=PUSH_ASSET_TO_S3_USING_HASH_LAMBDA_ARN,
+            lambda_function_arn=PUSH_MEDIA_TO_S3_USING_HASH_LAMBDA_ARN,
             invocation_type="Event",
             payload=json.dumps(request))
 
@@ -139,9 +143,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
 
             self._connection.begin_transaction()
 
-            assets_url = self._get_new_assets_url(
-                org_id, service_id, new_ipfs_data)
-
+            assets_url = {}
             self._service_repository.delete_service_dependents(
                 org_id=org_id, service_id=service_id)
             service_data = self._service_repository.create_or_update_service(

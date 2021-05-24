@@ -102,7 +102,7 @@ def service_deployment_status_notification_handler(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
-def push_asset_to_s3_using_hash(event, context):
+def push_media_to_s3_using_hash(event, context):
     ipfs_hash = event.get("hash")
     s3_filename = event.get("s3_filename")
     s3_bucket_name = event.get("s3_bucket_name")
