@@ -56,7 +56,10 @@ class UploadService:
             raise BadRequestException()
 
     def push_asset_to_s3_using_hash(self, hash, s3_filename, s3_bucket_name):
-        io_bytes = IPFSUtil(ipfs_url=IPFS_URL['url'], port=IPFS_URL['port']).read_bytesio_from_ipfs(hash)
-        new_url = self.boto_utils.push_io_bytes_to_s3(key=s3_filename, bucket_name=s3_bucket_name, io_bytes=io_bytes)
-        return new_url
-
+        try:
+            io_bytes = IPFSUtil(ipfs_url=IPFS_URL['url'], port=IPFS_URL['port']).read_bytesio_from_ipfs(hash)
+            new_url = self.boto_utils.push_io_bytes_to_s3(key=s3_filename, bucket_name=s3_bucket_name, io_bytes=io_bytes)
+            return new_url
+        except Exception as e:
+            logger.info(f" Exception in handling asset for ipfs has :: {hash} ")
+            raise e
