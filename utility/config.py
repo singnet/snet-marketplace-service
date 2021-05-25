@@ -42,3 +42,7 @@ CRYPTO_FIAT_CONVERSION = {
 }
 PROTO_STUB_TARGET_LANGUAGES = []
 PROTO_DIRECTORY_REGEX_PATTERN = ""
+IPFS_URL = {
+    'url': "",
+    'port': '',
+}
