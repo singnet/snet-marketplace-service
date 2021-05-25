@@ -3,7 +3,7 @@ from datetime import datetime
 from unittest.mock import patch
 
 from common.repository import Repository
-from contract_api.config import NETWORKS, NETWORK_ID, ASSETS_BUCKET_NAME
+from contract_api.config import NETWORKS, NETWORK_ID, ASSETS_BUCKET_NAME, ASSETS_PREFIX
 from contract_api.consumers.service_event_consumer import ServiceCreatedEventConsumer
 from contract_api.dao.service_repository import ServiceRepository
 
@@ -130,5 +130,5 @@ class TestOrganizationEventConsumer(unittest.TestCase):
 
         for media_item in service_media:
             media_item.pop('row_id')
-        assert service_media == [{'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': f'https://{ASSETS_BUCKET_NAME}.s3.amazonaws.com/assets/snet/gene-annotation-service/hero_fbprophet_forecast1', 'order': 2, 'file_type': 'text', 'asset_type': '', 'alt_text': 'text sample updated', 'ipfs_url': ''},
+        assert service_media == [{'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': f'https://{ASSETS_BUCKET_NAME}.s3.amazonaws.com/{ASSETS_PREFIX}/snet/gene-annotation-service/hero_fbprophet_forecast1', 'order': 2, 'file_type': 'text', 'asset_type': '', 'alt_text': 'text sample updated', 'ipfs_url': ''},
                                  {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'https://youtu.be/7mj-p1Os6QA', 'order': 5, 'file_type': 'video', 'asset_type': 'image updated', 'alt_text': 'alternate text sample updated', 'ipfs_url': ''}]
