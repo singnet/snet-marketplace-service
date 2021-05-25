@@ -3,7 +3,7 @@ from datetime import datetime
 from unittest.mock import patch
 
 from common.repository import Repository
-from contract_api.config import NETWORKS, NETWORK_ID
+from contract_api.config import NETWORKS, NETWORK_ID, ASSETS_BUCKET_NAME
 from contract_api.consumers.service_event_consumer import ServiceCreatedEventConsumer
 from contract_api.dao.service_repository import ServiceRepository
 
@@ -16,7 +16,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
     @patch('common.ipfs_util.IPFSUtil.read_file_from_ipfs')
     @patch('common.ipfs_util.IPFSUtil.read_bytesio_from_ipfs')
-    def test_on_service_created_event_with_media(self, nock_read_bytesio_from_ipfs, mock_ipfs_read,
+    def test_on_service_created_event(self, nock_read_bytesio_from_ipfs, mock_ipfs_read,
                                                  mock_s3_push, mock_invoke_lambda):
         event = {"data": {'row_id': 202, 'block_no': 6325625, 'event': 'ServiceCreated',
                           'json_str': "{'orgId': b'snet\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'serviceId': b'gene-annotation-service\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'metadataURI': b'ipfs://QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'}",
@@ -31,10 +31,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
         service_repository.delete_service_dependents(org_id='snet', service_id='gene-annotation-service')
 
         nock_read_bytesio_from_ipfs.return_value = "some_value to_be_pushed_to_s3_whic_is_mocked"
-        mock_invoke_lambda.return_value = {'statusCode': 200, 'body': '{"status": "success", "data": {"url": "some_url"}, "error": {}}',
-                    'headers': {'Content-Type': 'application/json', 'X-Requested-With': '*',
-                                'Access-Control-Allow-Headers': 'Access-Control-Allow-Origin, Content-Type, X-Amz-Date, Authorization,X-Api-Key,x-requested-with',
-                                'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,OPTIONS,POST'}}
+        mock_invoke_lambda.return_value = True
 
         mock_ipfs_read.return_value = {
             "version": 1,
@@ -133,6 +130,5 @@ class TestOrganizationEventConsumer(unittest.TestCase):
 
         for media_item in service_media:
             media_item.pop('row_id')
-
-        assert service_media == [{'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'some_url', 'order': 2, 'file_type': 'text', 'asset_type': '', 'alt_text': 'text sample updated', 'ipfs_url': ''},
+        assert service_media == [{'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': f'https://{ASSETS_BUCKET_NAME}.s3.amazonaws.com/assets/snet/gene-annotation-service/hero_fbprophet_forecast1', 'order': 2, 'file_type': 'text', 'asset_type': '', 'alt_text': 'text sample updated', 'ipfs_url': ''},
                                  {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'https://youtu.be/7mj-p1Os6QA', 'order': 5, 'file_type': 'video', 'asset_type': 'image updated', 'alt_text': 'alternate text sample updated', 'ipfs_url': ''}]

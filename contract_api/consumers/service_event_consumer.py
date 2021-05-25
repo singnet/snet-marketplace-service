@@ -92,7 +92,6 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         return new_url
 
     def create_service_media(self, org_id, service_id, service_media, service_row_id):
-        count = 0
         if len(service_media) > 0:
             self._service_repository.delete_service_media(org_id=org_id, service_id=service_id)
             for service_media_item in service_media:
@@ -103,7 +102,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                 else:
                     updated_url = self.upload_media(org_id=org_id, service_id=service_id,
                                                     service_media_item=service_media_item,
-                                                    url=url, service_row_id=service_row_id)
+                                                    url=url)
                 service_media_data = {
                     "url": updated_url,
                     "file_type": service_media_item['file_type'],
@@ -116,7 +115,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                                                               service_row_id=service_row_id,
                                                               media_data=service_media_data)
 
-    def upload_media(self, org_id, service_id, url, service_media_item, service_row_id):
+    def upload_media(self, org_id, service_id, url, service_media_item):
         filename = url.split("/")[1]
         if service_id:
             s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename
@@ -129,15 +128,11 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                 "s3_filename": s3_filename,
                 "service_media_item": service_media_item
             }
-        response = BotoUtils(region_name=REGION_NAME).invoke_lambda(
+        BotoUtils(region_name=REGION_NAME).invoke_lambda(
             lambda_function_arn=PUSH_MEDIA_TO_S3_USING_HASH_LAMBDA_ARN,
-            invocation_type="RequestResponse",
+            invocation_type="Event",
             payload=json.dumps(request))
-        if response["statusCode"] != 200:
-            logger.info(f" Error in uploading media :: {response} ")
-        if response["statusCode"] == 200:
-            body = json.loads(response["body"])
-            updated_url = body["data"].get("url", {})
+        updated_url = 'https://{}.s3.amazonaws.com/{}'.format(ASSETS_BUCKET_NAME, s3_filename)
         return updated_url
 
     def _process_service_data(self, org_id, service_id, new_ipfs_hash, new_ipfs_data):
