@@ -213,3 +213,14 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+
+  push-service-media-from-ipfs-to-s3:
+    handler: utility.application.handlers.push_service_media_from_ipfs_to_s3
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}

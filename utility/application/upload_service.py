@@ -1,7 +1,8 @@
 from common.boto_utils import BotoUtils
+from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
 from common.utils import date_time_for_filename
-from utility.config import REGION_NAME
+from utility.config import REGION_NAME, IPFS_URL
 from utility.constants import UPLOAD_TYPE_DETAILS, UploadType
 from utility.exceptions import BadRequestException
 
@@ -53,3 +54,12 @@ class UploadService:
         else:
             logger.error(f"Invalid upload request type {upload_type} params: {request_params}")
             raise BadRequestException()
+
+    def extract_ipfs_data_to_s3(self, hash, s3_filename, s3_bucket_name):
+        try:
+            io_bytes = IPFSUtil(ipfs_url=IPFS_URL['url'], port=IPFS_URL['port']).read_bytesio_from_ipfs(hash)
+            new_url = self.boto_utils.push_io_bytes_to_s3(key=s3_filename, bucket_name=s3_bucket_name, io_bytes=io_bytes)
+            return new_url
+        except Exception as e:
+            logger.info(f" Exception in handling asset for ipfs has :: {hash} ")
+            raise e
