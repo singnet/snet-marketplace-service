@@ -74,7 +74,7 @@ def get_and_validate_upload_type(query_string_parameter):
     return False, upload_request_type
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def push_service_media_from_ipfs_to_s3(event, context):
     logger.info(f"push_service_media_from_ipfs_to_s3 :: {event}")
     ipfs_hash = event["hash"]

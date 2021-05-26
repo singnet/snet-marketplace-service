@@ -1,8 +1,8 @@
 from common.boto_utils import BotoUtils
 from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
-from common.utils import date_time_for_filename
-from utility.config import REGION_NAME, IPFS_URL
+from common.utils import date_time_for_filename, Utils
+from utility.config import REGION_NAME, IPFS_URL, SLACK_HOOK
 from utility.constants import UPLOAD_TYPE_DETAILS, UploadType
 from utility.exceptions import BadRequestException
 
@@ -61,5 +61,6 @@ class UploadService:
             new_url = self.boto_utils.push_io_bytes_to_s3(key=s3_filename, bucket_name=s3_bucket_name, io_bytes=io_bytes)
             return new_url
         except Exception as e:
-            logger.info(f" Exception in handling asset for ipfs has :: {hash} ")
-            raise e
+            exception_info = f" Exception in handling asset for ipfs has :: {hash} "
+            logger.info(f"{exception_info} :: error {repr(e)}")
+            Utils().report_slack(slack_msg=exception_info, SLACK_HOOK=SLACK_HOOK)
