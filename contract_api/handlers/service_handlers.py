@@ -98,3 +98,4 @@ def service_deployment_status_notification_handler(event, context):
         StatusCode.CREATED,
         {"status": "success", "data": "Build failure notified", "error": {}}, cors_enabled=True
     )
+
