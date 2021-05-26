@@ -131,5 +131,5 @@ class TestOrganizationEventConsumer(unittest.TestCase):
 
         for media_item in service_media:
             media_item.pop('row_id')
-        assert service_media == [{'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': f'some_url', 'order': 2, 'file_type': 'text', 'asset_type': '', 'alt_text': 'text sample updated', 'ipfs_url': ''},
+        assert service_media == [{'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': f'some_url', 'order': 2, 'file_type': 'text', 'asset_type': '', 'alt_text': 'text sample updated', 'ipfs_url': 'Qmbb7tmKZX2TSxDKsK6DEAbp3tPgNUYP11CC93Cft7EkFb/hero_fbprophet_forecast1'},
                                  {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'https://youtu.be/7mj-p1Os6QA', 'order': 5, 'file_type': 'video', 'asset_type': 'image updated', 'alt_text': 'alternate text sample updated', 'ipfs_url': ''}]

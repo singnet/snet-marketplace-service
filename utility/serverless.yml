@@ -217,6 +217,7 @@ functions:
   push-service-media-from-ipfs-to-s3:
     handler: utility.application.handlers.push_service_media_from_ipfs_to_s3
     role: ${file(./config.${self:provider.stage}.json):ROLE}
+    timeout: ${file(./config.${self:provider.stage}.json):PUSH_SERVICE_MEDIA_FROM_IPFS_TO_S3_TIMEOUT}
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
