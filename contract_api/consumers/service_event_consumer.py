@@ -100,19 +100,26 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                     updated_url = url
                     ipfs_url = ''
                 else:
-                    updated_url = self.extract_ipfs_data_to_s3(org_id=org_id, service_id=service_id,
-                                                               url=url)
-                service_media_data = {
-                    "url": updated_url,
-                    "file_type": service_media_item['file_type'],
-                    "order": service_media_item['order'],
-                    "asset_type": service_media_item.get('asset_type', ""),
-                    "alt_text": service_media_item.get('alt_text', ""),
-                    "ipfs_url": ipfs_url
-                }
-                self._service_repository.create_service_media(org_id=org_id, service_id=service_id,
-                                                              service_row_id=service_row_id,
-                                                              media_data=service_media_data)
+                    updated_url = ""
+                    try:
+                        ipfs_url = url
+                        updated_url = self.extract_ipfs_data_to_s3(org_id=org_id, service_id=service_id,
+                                                                   url=url)
+                    except Exception as e:
+                        logger.info(f"Exception while pushing ipfs data {url} to s3 :: {e} ")
+                        pass
+                if updated_url:
+                    service_media_data = {
+                        "url": updated_url,
+                        "file_type": service_media_item['file_type'],
+                        "order": service_media_item['order'],
+                        "asset_type": service_media_item.get('asset_type', ""),
+                        "alt_text": service_media_item.get('alt_text', ""),
+                        "ipfs_url": ipfs_url
+                    }
+                    self._service_repository.create_service_media(org_id=org_id, service_id=service_id,
+                                                                  service_row_id=service_row_id,
+                                                                  media_data=service_media_data)
 
     @staticmethod
     def extract_ipfs_data_to_s3(org_id, service_id, url):
