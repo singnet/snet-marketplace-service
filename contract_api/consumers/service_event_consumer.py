@@ -95,19 +95,18 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         if len(service_media) > 0:
             self._service_repository.delete_service_media(org_id=org_id, service_id=service_id)
             for service_media_item in service_media:
-                url = service_media_item.get("url", {})
-                if "http" in url or "https" in url:
-                    updated_url = url
-                    ipfs_url = ''
+                raw_url = service_media_item.get("url", {})
+                updated_url = ""
+                ipfs_url = ""
+                if "http" in raw_url or "https" in raw_url:
+                    updated_url = raw_url
                 else:
-                    updated_url = ""
+                    ipfs_url = raw_url
                     try:
-                        ipfs_url = url
                         updated_url = self.extract_ipfs_data_to_s3(org_id=org_id, service_id=service_id,
-                                                                   url=url)
+                                                                   ipfs_url=ipfs_url)
                     except Exception as e:
-                        logger.info(f"Exception while pushing ipfs data {url} to s3 :: {e} ")
-                        pass
+                        logger.info(f"Exception while pushing ipfs data {ipfs_url} to s3 :: {repr(e)}")
                 if updated_url:
                     service_media_data = {
                         "url": updated_url,
@@ -122,15 +121,15 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                                                                   media_data=service_media_data)
 
     @staticmethod
-    def extract_ipfs_data_to_s3(org_id, service_id, url):
-        filename = url.split("/")[1]
+    def extract_ipfs_data_to_s3(org_id, service_id, ipfs_url):
+        filename = ipfs_url.split("/")[1]
         if service_id:
             s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename
         else:
             s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + filename
         request = \
             {
-                "hash": url,
+                "hash": ipfs_url,
                 "s3_bucket_name": ASSETS_BUCKET_NAME,
                 "s3_filename": s3_filename
             }
