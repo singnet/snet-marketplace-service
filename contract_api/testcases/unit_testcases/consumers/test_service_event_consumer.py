@@ -12,12 +12,13 @@ class TestOrganizationEventConsumer(unittest.TestCase):
     def setUp(self):
         pass
 
+    @patch('common.utils.Utils.report_slack')
     @patch('common.boto_utils.BotoUtils.invoke_lambda')
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
     @patch('common.ipfs_util.IPFSUtil.read_file_from_ipfs')
     @patch('common.ipfs_util.IPFSUtil.read_bytesio_from_ipfs')
     def test_on_service_created_event(self, nock_read_bytesio_from_ipfs, mock_ipfs_read,
-                                                 mock_s3_push, mock_invoke_lambda):
+                                                 mock_s3_push, mock_invoke_lambda, mock_slack_report):
         event = {"data": {'row_id': 202, 'block_no': 6325625, 'event': 'ServiceCreated',
                           'json_str': "{'orgId': b'snet\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'serviceId': b'gene-annotation-service\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'metadataURI': b'ipfs://QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'}",
                           'processed': b'\x00',
@@ -33,6 +34,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
         nock_read_bytesio_from_ipfs.return_value = "some_value to_be_pushed_to_s3_whic_is_mocked"
         mock_invoke_lambda.return_value = {'statusCode': 200, 'body': '{"status": "success", "data": {"url": '
                                                                       '"some_url"}, "error": {}}'}
+        mock_slack_report.return_value = True
 
         mock_ipfs_read.return_value = {
             "version": 1,

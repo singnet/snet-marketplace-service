@@ -58,9 +58,9 @@ class UploadService:
     def extract_ipfs_data_to_s3(self, hash, s3_filename, s3_bucket_name):
         try:
             io_bytes = IPFSUtil(ipfs_url=IPFS_URL['url'], port=IPFS_URL['port']).read_bytesio_from_ipfs(hash)
-            new_url = self.boto_utils.push_io_bytes_to_s3(key=s3_filename, bucket_name=s3_bucket_name, io_bytes=io_bytes)
+            new_url = self.boto_utils.push_io_bytes_to_s3(key=s3_filename, bucket_name=s3_bucket_name,
+                                                          io_bytes=io_bytes)
             return new_url
         except Exception as e:
-            exception_info = f" Exception in handling asset for ipfs has :: {hash} "
-            logger.info(f"{exception_info} :: error {repr(e)}")
-            Utils().report_slack(slack_msg=exception_info, SLACK_HOOK=SLACK_HOOK)
+            logger.info(f" Exception in handling asset for ipfs has :: {hash} ")
+            raise e

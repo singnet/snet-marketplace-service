@@ -11,10 +11,10 @@ from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
 from common.repository import Repository
 from common.s3_util import S3Util
-from common.utils import download_file_from_url, extract_zip_file, make_tarfile
+from common.utils import download_file_from_url, extract_zip_file, make_tarfile, Utils
 from contract_api.config import ASSETS_BUCKET_NAME, ASSETS_PREFIX, GET_SERVICE_FROM_ORGID_SERVICE_ID_REGISTRY_ARN, \
     MARKETPLACE_DAPP_BUILD, NETWORKS, NETWORK_ID, REGION_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY, \
-    ASSET_TEMP_EXTRACT_DIRECTORY, ASSETS_COMPONENT_BUCKET_NAME, PUSH_SERVICE_MEDIA_FROM_IPFS_TO_S3_ARN
+    ASSET_TEMP_EXTRACT_DIRECTORY, ASSETS_COMPONENT_BUCKET_NAME, PUSH_SERVICE_MEDIA_FROM_IPFS_TO_S3_ARN, SLACK_HOOK
 from contract_api.consumers.event_consumer import EventConsumer
 from contract_api.dao.service_repository import ServiceRepository
 
@@ -106,7 +106,11 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                         updated_url = self.extract_ipfs_data_to_s3(org_id=org_id, service_id=service_id,
                                                                    ipfs_url=ipfs_url)
                     except Exception as e:
-                        logger.info(f"Exception while pushing ipfs data {ipfs_url} to s3 :: {repr(e)}")
+                        exception_msg = f"Exception while pushing ipfs data to s3 " \
+                                        f"\n ipfs hash : {ipfs_url} \n org_id : {org_id} \n service_id : {service_id}" \
+                                        f" \n {repr(e)}"
+                        logger.info(f"{exception_msg} :: {repr(e)}")
+                        Utils().report_slack(slack_msg=exception_msg, SLACK_HOOK=SLACK_HOOK)
                 if updated_url:
                     service_media_data = {
                         "url": updated_url,
@@ -138,8 +142,11 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             invocation_type="RequestResponse",
             payload=json.dumps(request)
         )
-        if response["statusCode"] != 200:
-            raise Exception(f"Error in push-service-media-from-ipfs-to-s3 :: response :: {response}")
+        statusCode = response.get("statusCode", "")
+        if not statusCode:
+            raise Exception(f"File upload timed out for ipfs_url")
+        if statusCode != 200:
+            raise Exception(f"Error in push-service-media-from-ipfs-to-s3 for ipfs :: {response}")
         updated_url = json.loads(response["body"])["data"]["url"]
         return updated_url
 
