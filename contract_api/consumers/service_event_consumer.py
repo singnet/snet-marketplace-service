@@ -17,6 +17,7 @@ from contract_api.config import ASSETS_BUCKET_NAME, ASSETS_PREFIX, GET_SERVICE_F
     ASSET_TEMP_EXTRACT_DIRECTORY, ASSETS_COMPONENT_BUCKET_NAME, PUSH_SERVICE_MEDIA_FROM_IPFS_TO_S3_ARN, SLACK_HOOK
 from contract_api.consumers.event_consumer import EventConsumer
 from contract_api.dao.service_repository import ServiceRepository
+from contract_api.exceptions import TimedOutException
 
 logger = get_logger(__name__)
 
@@ -105,11 +106,10 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                     try:
                         updated_url = self.extract_ipfs_data_to_s3(org_id=org_id, service_id=service_id,
                                                                    ipfs_url=ipfs_url)
-                    except Exception as e:
+                    except TimedOutException as e:
                         exception_msg = f"Exception while pushing ipfs data to s3 " \
-                                        f"\n ipfs hash : {ipfs_url} \n org_id : {org_id} \n service_id : {service_id}" \
-                                        f" \n {repr(e)}"
-                        logger.info(f"{exception_msg} :: {repr(e)}")
+                                        f"\n ipfs hash : {ipfs_url} \n org_id : {org_id} \n service_id : {service_id}"
+                        logger.info(f"{exception_msg}")
                         Utils().report_slack(slack_msg=exception_msg, SLACK_HOOK=SLACK_HOOK)
                 if updated_url:
                     service_media_data = {
@@ -144,7 +144,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         )
         statusCode = response.get("statusCode", "")
         if not statusCode:
-            raise Exception(f"File upload timed out for ipfs_url")
+            raise TimedOutException
         if statusCode != 200:
             raise Exception(f"Error in push-service-media-from-ipfs-to-s3 for ipfs :: {response}")
         updated_url = json.loads(response["body"])["data"]["url"]
