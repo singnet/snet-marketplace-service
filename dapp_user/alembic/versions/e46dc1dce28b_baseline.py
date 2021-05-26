@@ -76,7 +76,7 @@ def upgrade():
         sa.Column('updated_on', mysql.TIMESTAMP(), nullable=False),
         sa.ForeignKeyConstraint(['user_row_id'], ['user.row_id'], onupdate='CASCADE', ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('row_id'),
-        sa.UniqueConstraint('preference_type', 'communication_type', 'source', name='uq_usr_pref')
+        sa.UniqueConstraint('preference_type', 'communication_type', 'source', 'user_row_id', name='uq_usr_pref')
     )
     # ### end Alembic commands ###
 
