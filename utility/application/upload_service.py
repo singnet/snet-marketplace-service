@@ -55,7 +55,7 @@ class UploadService:
             logger.error(f"Invalid upload request type {upload_type} params: {request_params}")
             raise BadRequestException()
 
-    def push_asset_to_s3_using_hash(self, hash, s3_filename, s3_bucket_name):
+    def extract_ipfs_data_to_s3(self, hash, s3_filename, s3_bucket_name):
         try:
             io_bytes = IPFSUtil(ipfs_url=IPFS_URL['url'], port=IPFS_URL['port']).read_bytesio_from_ipfs(hash)
             new_url = self.boto_utils.push_io_bytes_to_s3(key=s3_filename, bucket_name=s3_bucket_name, io_bytes=io_bytes)

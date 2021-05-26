@@ -75,12 +75,13 @@ def get_and_validate_upload_type(query_string_parameter):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
-def push_media_to_s3_using_hash(event, context):
-    ipfs_hash = event.get("hash")
-    s3_filename = event.get("s3_filename")
-    s3_bucket_name = event.get("s3_bucket_name")
-    response = UploadService().push_asset_to_s3_using_hash(hash=ipfs_hash, s3_filename=s3_filename,
-                                                          s3_bucket_name=s3_bucket_name)
+def push_service_media_from_ipfs_to_s3(event, context):
+    logger.info(f"push_service_media_from_ipfs_to_s3 :: {event}")
+    ipfs_hash = event["hash"]
+    s3_filename = event["s3_filename"]
+    s3_bucket_name = event["s3_bucket_name"]
+    response = UploadService().extract_ipfs_data_to_s3(hash=ipfs_hash, s3_filename=s3_filename,
+                                                       s3_bucket_name=s3_bucket_name)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": {"url": response}, "error": {}}, cors_enabled=True

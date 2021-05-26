@@ -14,7 +14,7 @@ from common.s3_util import S3Util
 from common.utils import download_file_from_url, extract_zip_file, make_tarfile
 from contract_api.config import ASSETS_BUCKET_NAME, ASSETS_PREFIX, GET_SERVICE_FROM_ORGID_SERVICE_ID_REGISTRY_ARN, \
     MARKETPLACE_DAPP_BUILD, NETWORKS, NETWORK_ID, REGION_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY, \
-    ASSET_TEMP_EXTRACT_DIRECTORY, ASSETS_COMPONENT_BUCKET_NAME, PUSH_MEDIA_TO_S3_USING_HASH_LAMBDA_ARN
+    ASSET_TEMP_EXTRACT_DIRECTORY, ASSETS_COMPONENT_BUCKET_NAME, PUSH_SERVICE_MEDIA_FROM_IPFS_TO_S3
 from contract_api.consumers.event_consumer import EventConsumer
 from contract_api.dao.service_repository import ServiceRepository
 
@@ -91,7 +91,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                                                     ASSETS_BUCKET_NAME, io_bytes)
         return new_url
 
-    def create_service_media(self, org_id, service_id, service_media, service_row_id):
+    def extract_media(self, org_id, service_id, service_media, service_row_id):
         if len(service_media) > 0:
             self._service_repository.delete_service_media(org_id=org_id, service_id=service_id)
             for service_media_item in service_media:
@@ -100,9 +100,8 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                     updated_url = url
                     ipfs_url = ''
                 else:
-                    updated_url = self.upload_media(org_id=org_id, service_id=service_id,
-                                                    service_media_item=service_media_item,
-                                                    url=url)
+                    updated_url = self.extract_ipfs_data_to_s3(org_id=org_id, service_id=service_id,
+                                                               url=url)
                 service_media_data = {
                     "url": updated_url,
                     "file_type": service_media_item['file_type'],
@@ -115,7 +114,8 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                                                               service_row_id=service_row_id,
                                                               media_data=service_media_data)
 
-    def upload_media(self, org_id, service_id, url, service_media_item):
+    @staticmethod
+    def extract_ipfs_data_to_s3(org_id, service_id, url):
         filename = url.split("/")[1]
         if service_id:
             s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename
@@ -125,14 +125,16 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             {
                 "hash": url,
                 "s3_bucket_name": ASSETS_BUCKET_NAME,
-                "s3_filename": s3_filename,
-                "service_media_item": service_media_item
+                "s3_filename": s3_filename
             }
-        BotoUtils(region_name=REGION_NAME).invoke_lambda(
-            lambda_function_arn=PUSH_MEDIA_TO_S3_USING_HASH_LAMBDA_ARN,
-            invocation_type="Event",
-            payload=json.dumps(request))
-        updated_url = 'https://{}.s3.amazonaws.com/{}'.format(ASSETS_BUCKET_NAME, s3_filename)
+        response = BotoUtils(region_name=REGION_NAME).invoke_lambda(
+            lambda_function_arn=PUSH_SERVICE_MEDIA_FROM_IPFS_TO_S3,
+            invocation_type="RequestResponse",
+            payload=json.dumps(request)
+        )
+        if response["statusCode"] != 200:
+            raise Exception(f"Error in push-service-media-from-ipfs-to-s3 :: response :: {response}")
+        updated_url = json.loads(response["body"])["data"]["url"]
         return updated_url
 
     def _process_service_data(self, org_id, service_id, new_ipfs_hash, new_ipfs_data):
@@ -185,7 +187,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                                                      )
 
             service_media = new_ipfs_data.get('media', [])
-            self.create_service_media(org_id=org_id, service_id=service_id,
+            self.extract_media(org_id=org_id, service_id=service_id,
                                       service_media=service_media, service_row_id=service_row_id)
 
             self._connection.commit_transaction()

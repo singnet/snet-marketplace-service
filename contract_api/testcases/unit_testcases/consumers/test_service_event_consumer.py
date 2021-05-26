@@ -31,7 +31,8 @@ class TestOrganizationEventConsumer(unittest.TestCase):
         service_repository.delete_service_dependents(org_id='snet', service_id='gene-annotation-service')
 
         nock_read_bytesio_from_ipfs.return_value = "some_value to_be_pushed_to_s3_whic_is_mocked"
-        mock_invoke_lambda.return_value = True
+        mock_invoke_lambda.return_value = {'statusCode': 200, 'body': '{"status": "success", "data": {"url": '
+                                                                      '"some_url"}, "error": {}}'}
 
         mock_ipfs_read.return_value = {
             "version": 1,
@@ -130,5 +131,5 @@ class TestOrganizationEventConsumer(unittest.TestCase):
 
         for media_item in service_media:
             media_item.pop('row_id')
-        assert service_media == [{'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': f'https://{ASSETS_BUCKET_NAME}.s3.amazonaws.com/{ASSETS_PREFIX}/snet/gene-annotation-service/hero_fbprophet_forecast1', 'order': 2, 'file_type': 'text', 'asset_type': '', 'alt_text': 'text sample updated', 'ipfs_url': ''},
+        assert service_media == [{'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': f'some_url', 'order': 2, 'file_type': 'text', 'asset_type': '', 'alt_text': 'text sample updated', 'ipfs_url': ''},
                                  {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'https://youtu.be/7mj-p1Os6QA', 'order': 5, 'file_type': 'video', 'asset_type': 'image updated', 'alt_text': 'alternate text sample updated', 'ipfs_url': ''}]
