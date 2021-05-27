@@ -129,6 +129,7 @@ class ServiceGroup(Base):
     row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
     row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
     Index("ServiceFK_idx", service_row_id)
+    UniqueConstraint(org_id, service_id, group_id, name="uq_srvc_grp")
 
 
 class ServiceMedia(Base):
@@ -161,6 +162,7 @@ class ServiceMetadata(Base):
     display_name = Column("display_name", VARCHAR(256), default=null)
     description = Column("description", VARCHAR(1024), default=null)
     short_description = Column("short_description", VARCHAR(1024), default=null)
+    demo_component_available = Column("demo_component_available", TINYINT(1), default=0, server_default="0", nullable=False)
     url = Column("url", VARCHAR(256), default=null)
     json = Column("json", VARCHAR(1024), default=null)
     model_ipfs_hash = Column("model_ipfs_hash", VARCHAR(256), default=null)
