@@ -1191,11 +1191,12 @@ class TestService(TestCase):
             },
             "media": [
                 {
-                    "order": 1,
-                    "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/9887ec2e099e4afd92c4a052737eaa97/services/7420bf47989e4afdb1797d1bba8090aa/assets/20200323130126_asset.png",
-                    "file_type": "hero_image",
-                    "alt_text": ""
-                }
+                 "order": 1,
+                 "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/9887ec2e099e4afd92c4a052737eaa97/services/7420bf47989e4afdb1797d1bba8090aa/assets/20200323130126_asset.png",
+                 "file_type": "image",
+                 "asset_type": "hero_image",
+                 "alt_text": ""
+                 }
             ],
             'tags': ['adsf'],
             "contributors": [{"name": "df", "email_id": ""}]
