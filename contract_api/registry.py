@@ -377,7 +377,7 @@ class Registry:
             org_groups_dict = {}
             basic_service_data = self.repo.execute(
                 "SELECT M.row_id, M.service_row_id, M.org_id, M.service_id, M.display_name, M.description, M.url, M.json, M.model_ipfs_hash, M.encoding, M.`type`," 
-				" M.mpe_address,M.service_rating, M.ranking, M.contributors, M.short_description,"
+				" M.mpe_address,M.service_rating, M.ranking, M.contributors, M.short_description, M.demo_component_available,"
                 " S.*, O.org_id, O.organization_name, O.owner_address, O.org_metadata_uri, O.org_email, "
                 "O.org_assets_url, O.description as org_description, O.contacts "
                 "FROM service_metadata M, service S, organization O "
