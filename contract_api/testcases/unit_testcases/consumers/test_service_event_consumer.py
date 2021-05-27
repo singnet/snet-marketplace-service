@@ -15,8 +15,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
     @patch('common.ipfs_util.IPFSUtil.read_file_from_ipfs')
     @patch('common.ipfs_util.IPFSUtil.read_bytesio_from_ipfs')
-    @patch('contract_api.consumers.service_event_consumer.ServiceEventConsumer._fetch_tags')
-    def test_on_service_created_event(self, mock_fetch_tags, nock_read_bytesio_from_ipfs, mock_ipfs_read, mock_s3_push):
+    def test_on_service_created_event(self, nock_read_bytesio_from_ipfs, mock_ipfs_read, mock_s3_push):
         event = {"data": {'row_id': 202, 'block_no': 6325625, 'event': 'ServiceCreated',
                           'json_str': "{'orgId': b'snet\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'serviceId': b'gene-annotation-service\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'metadataURI': b'ipfs://QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'}",
                           'processed': b'\x00',
@@ -70,10 +69,9 @@ class TestOrganizationEventConsumer(unittest.TestCase):
                     "name": "dummy dummy",
                     "email_id": "dummy@dummy.io"
                 }
-            ]
+            ],
+            "tags": ["1234", "3241"]
         }
-        mock_fetch_tags.return_value = ["test", "", "", [b'\x61\x74\x6F\x6D\x65\x73\x65',
-                                                         b'\x62\x69\x6F\x69\x6E\x66\x6F\x72\x6D\x61\x74\x69\x63\x73']]
         mock_s3_push.return_value = "https://test-s3-push"
         org_event_consumer = ServiceCreatedEventConsumer("wss://ropsten.infura.io/ws", "http://ipfs.singularitynet.io",
                                                          80)
@@ -104,17 +102,16 @@ class TestOrganizationEventConsumer(unittest.TestCase):
         assert service_endpoints == [{'org_id': 'snet', 'service_id': 'gene-annotation-service',
                                       'group_id': 'm5FKWq4hW0foGW5qSbzGSjgZRuKs7A1ZwbIrJ9e96rc=',
                                       'endpoint': 'https://mozi.ai:8000'}]
-        assert service_tags == [{'org_id': 'snet', 'service_id': 'gene-annotation-service', 'tag_name': 'atomese'},
-                                {'org_id': 'snet', 'service_id': 'gene-annotation-service',
-                                 'tag_name': 'bioinformatics'}]
+        assert service_tags == [{'org_id': 'snet', 'service_id': 'gene-annotation-service', 'tag_name': '1234'},
+                                {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'tag_name': '3241'}]
 
         assert service_groups == {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'group_id': 'm5FKWq4hW0foGW5qSbzGSjgZRuKs7A1ZwbIrJ9e96rc=', 'group_name': 'default_group', 'pricing': '[{"default": true, "price_model": "fixed_price", "price_in_cogs": 1}]', 'free_call_signer_address': '0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F', 'free_calls': 12}
 
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
     @patch('common.ipfs_util.IPFSUtil.read_file_from_ipfs')
     @patch('common.ipfs_util.IPFSUtil.read_bytesio_from_ipfs')
-    @patch('contract_api.consumers.service_event_consumer.ServiceEventConsumer._fetch_tags')
-    def test_on_service_created_event_with_media(self, mock_fetch_tags, nock_read_bytesio_from_ipfs, mock_ipfs_read, mock_s3_push):
+    def test_on_service_created_event_with_media(self, nock_read_bytesio_from_ipfs, mock_ipfs_read,
+                                                 mock_s3_push):
         event = {"data": {'row_id': 202, 'block_no': 6325625, 'event': 'ServiceCreated',
                           'json_str': "{'orgId': b'snet\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'serviceId': b'gene-annotation-service\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'metadataURI': b'ipfs://QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'}",
                           'processed': b'\x00',
@@ -182,10 +179,9 @@ class TestOrganizationEventConsumer(unittest.TestCase):
                     "name": "dummy dummy",
                     "email_id": "dummy@dummy.io"
                 }
-            ]
+            ],
+            "tags": ["1234", "3241"]
         }
-        mock_fetch_tags.return_value = ["test", "", "", [b'\x61\x74\x6F\x6D\x65\x73\x65',
-                                                         b'\x62\x69\x6F\x69\x6E\x66\x6F\x72\x6D\x61\x74\x69\x63\x73']]
         mock_s3_push.return_value = "https://test-s3-push"
         org_event_consumer = ServiceCreatedEventConsumer("wss://ropsten.infura.io/ws", "http://ipfs.singularitynet.io",
                                                          80)
@@ -218,9 +214,8 @@ class TestOrganizationEventConsumer(unittest.TestCase):
         assert service_endpoints == [{'org_id': 'snet', 'service_id': 'gene-annotation-service',
                                       'group_id': 'm5FKWq4hW0foGW5qSbzGSjgZRuKs7A1ZwbIrJ9e96rc=',
                                       'endpoint': 'https://mozi.ai:8000'}]
-        assert service_tags == [{'org_id': 'snet', 'service_id': 'gene-annotation-service', 'tag_name': 'atomese'},
-                                {'org_id': 'snet', 'service_id': 'gene-annotation-service',
-                                 'tag_name': 'bioinformatics'}]
+        assert service_tags == [{'org_id': 'snet', 'service_id': 'gene-annotation-service', 'tag_name': '1234'},
+                                {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'tag_name': '3241'}]
 
         assert service_groups == {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'group_id': 'm5FKWq4hW0foGW5qSbzGSjgZRuKs7A1ZwbIrJ9e96rc=', 'group_name': 'default_group', 'pricing': '[{"default": true, "price_model": "fixed_price", "price_in_cogs": 1}]', 'free_call_signer_address': '0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F', 'free_calls': 12}
 
