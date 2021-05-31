@@ -23,9 +23,9 @@ class ServiceTransactionStatus:
                 transaction_hash=transaction_hash)
             if transaction_receipt is None:
                 pass
-            else:
-                if transaction_receipt.status == 0:
-                    failed_service_transactions.append(service_uuid)
-                    logger.info(f"Failed service_uuid:{service_uuid} transaction_hash:{transaction_hash}")
+            elif transaction_receipt.status == 0:
+                failed_service_transactions.append(service_uuid)
+                logger.info(f"Failed service_uuid:{service_uuid} transaction_hash:{transaction_hash}")
         if len(failed_service_transactions) > 0:
-            service_repo.update_service_status(failed_service_transactions, ServiceStatus.PUBLISH_IN_PROGRESS.value, ServiceStatus.FAILED.value)
+            service_repo.update_service_status(failed_service_transactions, ServiceStatus.PUBLISH_IN_PROGRESS.value,
+                                               ServiceStatus.FAILED.value)
