@@ -294,12 +294,15 @@ def extract_zip_file(zip_file_path, extracted_path):
 
 
 def zip_file(source_path, zipped_path):
-    zf = zipfile.ZipFile(zipped_path, "w")
-    for dirname, subdirs, files in os.walk(source_path):
-        zf.write(dirname)
-        for filename in files:
-            zf.write(os.path.join(dirname, filename))
-    zf.close()
+    outZipFile = zipfile.ZipFile(zipped_path, 'w', zipfile.ZIP_DEFLATED)
+    for dir_path, dir_names, filenames in os.walk(source_path):
+        for filename in filenames:
+            filepath = os.path.join(dir_path, filename)
+            parent_path = os.path.relpath(filepath, source_path)
+            arc_name = parent_path
+            outZipFile.write(filepath, arc_name)
+    outZipFile.close()
+
 
 def make_tarfile(output_filename, source_dir):
     with tarfile.open(output_filename, "w:gz") as tar:
