@@ -337,7 +337,8 @@ class Service:
                 metadata_assets.append({
                     "order": order,
                     "url": self.assets[asset].get("url", ""),
-                    "file_type": "hero_image",
+                    "file_type": "image",
+                    "asset_type": "hero_image",
                     "alt_text": self.assets[asset].get("alt_text", ""),
                 })
                 order += 1
