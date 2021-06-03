@@ -9,15 +9,17 @@ NETWORKS = {
                'DB_NAME': 'unittest_db',
                'DB_PORT': 3306
                }
-    } 
+    }
 }
 SLACK_HOOK = {
     'hostname': '',
     'path': ''
 }
 NETWORK_ID = 0
-REGION_NAME="us-east-2"
+NETWORK_NAME = NETWORKS[NETWORK_ID]["name"]
+REGION_NAME = "us-east-2"
 NOTIFICATION_ARN = ""
 MAXIMUM_INTERVAL_IN_HOUR = 12
 MINIMUM_INTERVAL_IN_HOUR = 1
 CERTIFICATION_EXPIRATION_THRESHOLD = 30
+BASE_URL_TO_RESET_SERVICE_HEALTH = ""

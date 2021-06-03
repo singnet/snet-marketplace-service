@@ -51,7 +51,7 @@ SERVICE_METADATA_SCHEMA = {
                     "type": "list",
                     "schema": {
                         "type": "string",
-                        "empty":True
+                        "empty": True
 
                     }
                 },
@@ -97,17 +97,35 @@ SERVICE_METADATA_SCHEMA = {
             }
         }
     },
-    "assets": {
-        "type": "dict",
+    "media": {
+        "type": "list",
         "schema": {
-            "hero_image": {
-                "type": "string"
+            "type": "dict",
+            "schema": {
+                "order": {
+                    "type": ["string", "integer"]
+                },
+                "url": {
+                    "type": "string"
+                },
+                "file_type": {
+                    "type": "string"
+                },
+                "alt_text": {
+                    "type": "string"
+                },
+                "asset_type": {
+                    "type": "string"
+                },
             }
         }
     },
     "contributors": {
         "type": "list"
     },
+    "tags": {
+        "type": "list",
+    }
 }
 REQUIRED_ASSETS_FOR_METADATA = ['hero_image']
 
@@ -123,7 +141,7 @@ class Service:
         self._description = description
         self._project_url = project_url
         self._proto = proto
-        self._assets = assets
+        self._media = assets
         self._ranking = ranking
         self._rating = rating
         self._contributors = contributors
@@ -144,7 +162,7 @@ class Service:
             "description": self._description,
             "project_url": self._project_url,
             "proto": self._proto,
-            "assets": self._assets,
+            "media": self._media,
             "ranking": self._ranking,
             "rating": self._rating,
             "contributors": self._contributors,
@@ -170,8 +188,9 @@ class Service:
                 "short_description": self.short_description,
                 "description": self._description
             },
-            "assets": self.prepare_assets_for_metadata(),
-            "contributors": self._contributors
+            "media": self.prepare_media_for_metadata(),
+            "contributors": self._contributors,
+            "tags": self._tags
         }
 
     @property
@@ -228,11 +247,11 @@ class Service:
 
     @property
     def assets(self):
-        return self._assets
+        return self._media
 
     @assets.setter
-    def assets(self, assets):
-        self._assets = assets
+    def assets(self, media):
+        self._media = media
 
     @property
     def ranking(self):
@@ -310,11 +329,17 @@ class Service:
     def is_major_change(self, other):
         return False
 
-    def prepare_assets_for_metadata(self):
-        metadata_assets = {}
+    def prepare_media_for_metadata(self):
+        metadata_assets = []
+        order = 1
         for asset in self.assets.keys():
             if asset in REQUIRED_ASSETS_FOR_METADATA:
-                metadata_assets.update({asset: self.assets[asset].get("ipfs_hash", "")})
+                metadata_assets.append({
+                    "order": order,
+                    "url": self.assets[asset].get("url", ""),
+                    "file_type": "image",
+                    "asset_type": "hero_image",
+                    "alt_text": self.assets[asset].get("alt_text", ""),
+                })
+                order += 1
         return metadata_assets
-
-

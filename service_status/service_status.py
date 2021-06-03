@@ -11,13 +11,12 @@ from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from common.utils import Utils
 from service_status.config import REGION_NAME, NOTIFICATION_ARN, SLACK_HOOK, NETWORKS, NETWORK_ID, \
-    MAXIMUM_INTERVAL_IN_HOUR, MINIMUM_INTERVAL_IN_HOUR
+    MAXIMUM_INTERVAL_IN_HOUR, MINIMUM_INTERVAL_IN_HOUR, NETWORK_NAME, BASE_URL_TO_RESET_SERVICE_HEALTH
 from service_status.constant import SRVC_STATUS_GRPC_TIMEOUT, LIMIT
 
 logger = get_logger(__name__)
 boto_util = BotoUtils(region_name=REGION_NAME)
 util = Utils()
-NETWORK_NAME = NETWORKS[NETWORK_ID]["name"]
 
 
 class ServiceStatus:
@@ -60,7 +59,7 @@ class ServiceStatus:
 
     def _get_service_endpoint_data(self):
         query = "SELECT row_id, org_id, service_id, endpoint, is_available, failed_status_count FROM service_endpoint WHERE " \
-                "next_check_timestamp < UTC_TIMESTAMP AND endpoint not regexp %s ORDER BY last_check_timestamp ASC " \
+                "next_check_timestamp < UTC_TIMESTAMP AND endpoint not regexp %s AND (org_id,service_id) IN (SELECT org_id, service_id FROM service WHERE service.is_curated=1) ORDER BY last_check_timestamp ASC " \
                 "LIMIT %s"
         result = self.repo.execute(query, [self.rex_for_pb_ip, LIMIT])
         if result is None or result == []:
@@ -157,15 +156,14 @@ class ServiceStatus:
         return slack_message
 
     def _send_email_notification(self, org_id, service_id, recipient, endpoint):
-        network_name = NETWORKS[NETWORK_ID]["name"]
+        RESET_SERVICE_HEALTH_URL = f"{BASE_URL_TO_RESET_SERVICE_HEALTH}/org/{org_id}/service/{service_id}/health/reset"
         send_notification_payload = {"body": json.dumps({
             "message": f"<html><head></head><body><div><p>Hello,</p><p>Your service {service_id} under organization "
-                       f"{org_id} is down.</p><p>Please click the below URL to update service status on priority. <br/> "
-                       f"<a href='https://{network_name}-marketplace.singularitynet.io/service-status/org/{org_id}/service/{service_id}/health/reset'>"
-                       f"https://{network_name}-marketplace.singularitynet.io/service-status/org/{org_id}/service/{service_id}/health/reset"
-                       f"</a></p><br /><p><em>Please do not reply to the email for any enquiries for any queries please "
-                       f"email at cs-marketplace@singularitynet.io. </em></p><p>Warmest regards, <br />"
-                       f"SingularityNET Marketplace Team</p></div></body></html>",
+                       f"{org_id} is down.</p><p>Please click the below URL to update service status on priority. "
+                       f"<br/> <a href='{RESET_SERVICE_HEALTH_URL}'>{RESET_SERVICE_HEALTH_URL}</a></p><br /><p><em>"
+                       f"Please do not reply to the email for any enquiries for any queries please email at "
+                       f"cs-marketplace@singularitynet.io. </em></p><p>Warmest regards, <br /> SingularityNET "
+                       f"Marketplace Team</p></div></body></html>",
             "subject": f"Your service {service_id} is down for {NETWORK_NAME} network.",
             "notification_type": "support",
             "recipient": recipient})}

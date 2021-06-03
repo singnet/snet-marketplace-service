@@ -399,7 +399,7 @@ class OrderService:
                     'amount_in_cogs': amount_in_cogs
                 }
                 channel_details = self.wallet_service.create_channel(open_channel_body=open_channel_body)
-                logger.info("channel_details: ", channel_details)
+                logger.info(f"channel_details: {channel_details}")
                 return channel_details
             except Exception as e:
                 logger.error("Failed to create channel")
