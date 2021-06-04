@@ -14,5 +14,11 @@ class InvalidContentType(CustomException):
     def __init__(self):
         super().__init__({})
 
+class ProtoNotFound(CustomException):
+    error_message = "PROTO_NOT_FOUND"
+
+    def __init__(self):
+        super().__init__({})
+
 
 EXCEPTIONS = (BadRequestException, InvalidContentType)
