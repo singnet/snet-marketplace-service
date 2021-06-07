@@ -29,51 +29,49 @@ def generate_python_stubs(proto_s3_url, stub_s3_url):
             raise Exception(f"Proto files are missing in location :: {proto_s3_url}")
 
         # Temp location file handling details
-        temp = os.path.join(TEMP_FILE_DIR, uuid.uuid4().hex + '_proto_')
-        temp_downloaded_path = temp + '.zip'
-        temp_extracted_path = temp + 'extracted'
-        temp_result_path = os.path.join(temp_extracted_path, 'stubs')
+        tmp_paths = prepare_temporary_paths()
 
         for file in compressed_proto_files:
-            if utils.validate_file_url(path=f"s3://{proto_bucket}/{file['Key']}", regex_pattern=PROTO_DIRECTORY_REGEX_PATTERN):
-                folder_name ,file_extension = utils.get_file_name_and_extension_from_path(path=file['Key'])
-                # download and extract
-                utils.download_extract_zip_files_from_s3(
-                    boto_utils=boto_utils,
-                    bucket=proto_bucket,
-                    key=file['Key'],
-                    download_location=temp_downloaded_path,
-                    extract_location=temp_extracted_path
-                )
-
+            if utils.validate_file_url(path=f"s3://{proto_bucket}/{file['Key']}",
+                                       regex_pattern=PROTO_DIRECTORY_REGEX_PATTERN):
+                folder_name, file_extension = utils.get_file_name_and_extension_from_path(path=file['Key'])
+                # Download and extract files
+                boto_utils.s3_download_file(bucket=proto_bucket, key=file['Key'], filename=tmp_paths["downloaded"])
+                utils.extract_zip_file(zip_file_path=tmp_paths["downloaded"], extracted_path=tmp_paths["extracted"])
                 # Generate stubs
                 proto_location = None
-                for filename in os.listdir(temp_extracted_path):
+                for filename in os.listdir(tmp_paths["extracted"]):
                     if filename.endswith(".proto"):
-                        proto_location = os.path.join(temp_extracted_path, filename)
+                        proto_location = os.path.join(tmp_paths["extracted"], filename)
                     if proto_location:
                         compile_proto(
-                            entry_path=Path(temp_extracted_path),
-                            codegen_dir=os.path.join(temp_result_path, f"python/{folder_name}"),
+                            entry_path=Path(tmp_paths["extracted"]),
+                            codegen_dir=os.path.join(tmp_paths["result"], folder_name),
                             proto_file_path=Path(proto_location),
                         )
                     else:
                         raise ProtoNotFound
-
         # zip and upload to s3
-        utils.zip_and_upload_to_s3(boto_utils=boto_utils,
-                                   bucket=stub_bucket,
-                                   key=f"{stub_bucket_key}python{file_extension}",
-                                   zipped_path= os.path.join(temp_extracted_path,f"python{file_extension}"),
-                                   source=Path(temp_result_path)
-                                   )
-        return {"message":"success"}
+        file_to_be_uploaded = os.path.join(tmp_paths["extracted"], f"python{file_extension}")
+        utils.zip_file(source_path=Path(tmp_paths["result"]), zipped_path=file_to_be_uploaded)
+        boto_utils.s3_upload_file(filename=file_to_be_uploaded, bucket=stub_bucket, key=stub_bucket_key + f"python.zip")
+        return {"message": "success"}
     except ProtoNotFound as protoException:
-        message = (f"Proto file is not found for proto_s3_url :: {proto_s3_url}")
+        message = f"Proto file is not found for proto_s3_url :: {proto_s3_url}"
         logger.info(message)
         utils.report_slack(slack_msg=message, SLACK_HOOK=SLACK_HOOK)
     except Exception as e:
         raise e(f"Error in generating python proto stubs {repr(e)}")
+
+
+def prepare_temporary_paths():
+    temporary_paths = {}
+    base = os.path.join(TEMP_FILE_DIR, uuid.uuid4().hex + '_proto_')
+    extracted = base + 'extracted'
+    temporary_paths.update({"downloaded": base + '.zip'})
+    temporary_paths.update({"extracted": extracted})
+    temporary_paths.update({"result": os.path.join(extracted, 'stubs', 'python')})
+    return temporary_paths
 
 
 def compile_proto(entry_path, codegen_dir, proto_file_path):
@@ -90,8 +88,3 @@ def compile_proto(entry_path, codegen_dir, proto_file_path):
     compiler = protoc
     compiler_args.append(str(proto_file_path))
     return (True, codegen_dir) if not compiler(compiler_args) else (False, None)
-
-
-
-
-

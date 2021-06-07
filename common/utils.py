@@ -317,26 +317,6 @@ def validate_signature(signature, message, key, opt_params):
                         + hmac.new(key.encode(), message.encode(), hashlib.sha256).hexdigest()
     return hmac.compare_digest(derived_signature, signature)
 
-def download_extract_zip_files_from_s3(boto_utils, bucket,key,download_location, extract_location):
-    boto_utils.s3_download_file(
-        bucket=bucket,
-        key=key, filename=download_location
-    )
-    extract_zip_file(
-        zip_file_path=download_location,
-        extracted_path=extract_location
-    )
-
-def zip_and_upload_to_s3(boto_utils, source, zipped_path, bucket, key):
-        zipped_file_path =zip_file(
-            source_path=Path(source),
-            zipped_path=Path(zipped_path)
-        )
-        boto_utils.s3_upload_file(
-            filename=str(zipped_file_path),
-            bucket=bucket,
-            key=key
-        )
 
 def validate_file_url(path, regex_pattern):
     key_pattern = re.compile(regex_pattern)
