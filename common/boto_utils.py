@@ -1,4 +1,5 @@
 import json
+import os
 from urllib.parse import urlparse
 
 import boto3
@@ -36,7 +37,7 @@ class BotoUtils:
         s3_client.download_file(bucket, key, filename)
 
     def get_parameter_value_from_secrets_manager(self, secret_name):
-        config = Config(retries = dict(max_attempts = 2))
+        config = Config(retries=dict(max_attempts=2))
         session = boto3.session.Session()
         client = session.client(service_name='secretsmanager', region_name=self.region_name, config=config)
         try:
@@ -51,7 +52,6 @@ class BotoUtils:
     @staticmethod
     def delete_objects_from_s3(bucket, key, key_pattern):
         if key_pattern in key:
-            if len([char for char in key.replace(key_pattern, "") if char == "/"]) == 1:
                 s3_client = boto3.client('s3')
                 s3_client.delete_object(Bucket=bucket, Key=key)
 
@@ -71,3 +71,32 @@ class BotoUtils:
     def get_bucket_and_key_from_url(url):
         parsed_url = urlparse(url)
         return parsed_url.hostname.split(".")[0], parsed_url.path[1:]
+
+    def upload_folder_contents_to_s3(self, folder_path, bucket, key):
+        try:
+            for root, dirs, files in os.walk(folder_path):
+                for file in files:
+                    folder_name = root.replace(str(folder_path), "")
+                    folder_name = folder_name.replace("\\","")
+                    if folder_name:
+                        folder_name = folder_name + "/"
+                    self.s3_upload_file(filename=os.path.join(root, file), bucket=bucket,
+                                        key=f"{key}/{folder_name}{file}")
+        except Exception as e:
+            raise e
+
+    def download_folder_contents_from_s3(self, bucket, key, target):
+        try:
+            keys = self.get_objects_from_s3(bucket=bucket, key=key)
+            for object_key in keys:
+                path, filename = os.path.split(object_key['Key'])
+                file_or_folder = object_key['Key'].replace(key,"")
+                sub_folder_structure = ""
+                if "/" in file_or_folder:
+                    sub_folder_structure = path.replace(key, "")
+                target_path = os.path.join(target, sub_folder_structure)
+                if not os.path.exists(target_path):
+                    os.makedirs(target_path)
+                self.s3_download_file(bucket=bucket, key=object_key['Key'], filename=os.path.join(target_path, filename))
+        except Exception as e:
+            raise e

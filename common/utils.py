@@ -318,7 +318,7 @@ def validate_signature(signature, message, key, opt_params):
     return hmac.compare_digest(derived_signature, signature)
 
 
-def validate_file_url(path, regex_pattern):
+def match_regex_string(path, regex_pattern):
     key_pattern = re.compile(regex_pattern)
     match = re.match(key_pattern, path)
     return match
