@@ -77,7 +77,7 @@ class BotoUtils:
             for root, dirs, files in os.walk(folder_path):
                 for file in files:
                     folder_name = root.replace(str(folder_path), "")
-                    folder_name = folder_name.replace(os.sep, "")
+                    folder_name = folder_name.replace(os.path.sep, "")
                     if folder_name:
                         folder_name = folder_name + "/"
                     self.s3_upload_file(filename=os.path.join(root, file), bucket=bucket,
