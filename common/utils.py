@@ -291,8 +291,13 @@ def send_email_notification(recipients, notification_subject, notification_messa
 
 
 def extract_zip_file(zip_file_path, extracted_path):
-    with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
-        zip_ref.extractall(extracted_path)
+    if zip_file_path.endswith(".zip"):
+        with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+            zip_ref.extractall(extracted_path)
+    if zip_file_path.endswith("tar.gz"):
+        tar = tarfile.open(zip_file_path, "r:gz")
+        tar.extractall(path=extracted_path)
+        tar.close()
 
 
 def zip_file(source_path, zipped_path):

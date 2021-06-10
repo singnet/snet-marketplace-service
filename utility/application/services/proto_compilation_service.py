@@ -37,7 +37,7 @@ class GenerateStubService:
                     )
                     utils.extract_zip_file(zip_file_path=download_folder, extracted_path=os.path.join(extracted,name))
             boto_utils.upload_folder_contents_to_s3(
-                folder_path=extracted,
+                folder_path=os.path.join(extracted,"proto.tar"),
                 bucket=proto_bucket,
                 key=proto_bucket_key+'proto_extracted'
             )
