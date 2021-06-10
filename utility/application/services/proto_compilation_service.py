@@ -42,12 +42,13 @@ class GenerateStubService:
                 key=proto_bucket_key+'proto_extracted'
             )
             # call lambdas for processing protos
+            error_messages = []
+            error_msg = "Error in compiling {} proto stubs at {}.Response :: {}"
             for environment in SUPPORTED_ENVIRONMENT:
                 if environment is 'python':
-                    # response = self.invoke_python_stubs_lambda(input_s3_path=input_s3_path+"proto_extracted/", output_s3_path=output_s3_path)
-                    respone = generate_python_stubs(input_s3_path=input_s3_path+"proto_extracted/", output_s3_path=output_s3_path)
+                    response = self.invoke_python_stubs_lambda(input_s3_path=input_s3_path+"proto_extracted/", output_s3_path=output_s3_path)
                 if environment is 'nodejs':
-                    response = self.invoke_node_stubs_lambda(input_s3_path=input_s3_path, output_s3_path=output_s3_path)
+                    response = self.invoke_node_stubs_lambda(input_s3_path=input_s3_path+"proto_extracted/", output_s3_path=output_s3_path)
                 if response.get("statusCode",{}) != 200:
                     msg = error_msg.format(environment,input_s3_path,response)
                     logger.info(msg)
@@ -59,10 +60,10 @@ class GenerateStubService:
             raise e(f"proto lambda invocation failed {repr(e)}")
 
     @staticmethod
-    def invoke_node_stubs_lambda(stub_s3_url, proto_s3_url):
+    def invoke_node_stubs_lambda(input_s3_path, output_s3_path):
         payload = json.dumps({
-            "stub_s3_url": stub_s3_url,
-            "proto_s3_url": proto_s3_url
+            "input_s3_path": input_s3_path,
+            "output_s3_path": output_s3_path
         })
         response = boto_utils.invoke_lambda(
             invocation_type="RequestResponse",
@@ -72,10 +73,10 @@ class GenerateStubService:
         return response
 
     @staticmethod
-    def invoke_python_stubs_lambda(stub_s3_url, proto_s3_url):
+    def invoke_python_stubs_lambda(input_s3_path, output_s3_path):
         payload = json.dumps({
-            "stub_s3_url": stub_s3_url,
-            "proto_s3_url": proto_s3_url
+            "input_s3_path": input_s3_path,
+            "output_s3_path": output_s3_path
         })
         response = boto_utils.invoke_lambda(
             invocation_type="RequestResponse",
