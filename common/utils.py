@@ -7,10 +7,12 @@ import io
 import json
 import os
 import os.path
+import re
 import sys
 import tarfile
 import traceback
 import zipfile
+from pathlib import Path
 from urllib.parse import urlparse
 from zipfile import ZipFile
 
@@ -294,12 +296,16 @@ def extract_zip_file(zip_file_path, extracted_path):
 
 
 def zip_file(source_path, zipped_path):
-    zf = zipfile.ZipFile(zipped_path, "w")
-    for dirname, subdirs, files in os.walk(source_path):
-        zf.write(dirname)
-        for filename in files:
-            zf.write(os.path.join(dirname, filename))
-    zf.close()
+    outZipFile = zipfile.ZipFile(zipped_path, 'w', zipfile.ZIP_DEFLATED)
+    for dir_path, dir_names, filenames in os.walk(source_path):
+        for filename in filenames:
+            filepath = os.path.join(dir_path, filename)
+            parent_path = os.path.relpath(filepath, source_path)
+            arc_name = parent_path
+            outZipFile.write(filepath, arc_name)
+    outZipFile.close()
+    return zipped_path
+
 
 def make_tarfile(output_filename, source_dir):
     with tarfile.open(output_filename, "w:gz") as tar:
@@ -310,3 +316,13 @@ def validate_signature(signature, message, key, opt_params):
     derived_signature = opt_params.get("slack_signature_prefix", "") \
                         + hmac.new(key.encode(), message.encode(), hashlib.sha256).hexdigest()
     return hmac.compare_digest(derived_signature, signature)
+
+
+def match_regex_string(path, regex_pattern):
+    key_pattern = re.compile(regex_pattern)
+    match = re.match(key_pattern, path)
+    return match
+
+def get_file_name_and_extension_from_path(path):
+    base = os.path.basename(path)
+    return os.path.splitext(base)
