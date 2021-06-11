@@ -253,25 +253,6 @@ class Registry:
             print(repr(e))
             raise e
 
-    def get_service_media(self,org_id,service_id):
-        try:
-            query = """select `row_id`,url,`order`,file_type,asset_type,alt_text from service_media 
-            where service_id = %s and org_id = %s """
-            query_response = self.repo.execute(query,[service_id,org_id])
-            media = []
-            if len(query_response)==0:
-               return []
-            for response_item in query_response:
-                media.append({
-                    "row_id":response_item['row_id'],
-                    "url":response_item['url'],
-                    "file_type":response_item['file_type'],
-                    "order":response_item['order'],
-                    "alt_text":response_item['alt_text']
-                })
-            return media
-        except Exception as e:
-            raise e
 
     def _get_is_available_service(self):
         try:
@@ -397,7 +378,7 @@ class Registry:
             tags = self.repo.execute("SELECT tag_name FROM service_tags WHERE org_id = %s AND service_id = %s",
                                      [org_id, service_id])
 
-            media = self.get_service_media(org_id=org_id,service_id=service_id)
+            media, stubs = self.get_service_media(org_id=org_id,service_id=service_id)
             result = basic_service_data[0]
 
             self._convert_service_metadata_str_to_json(result)
@@ -418,7 +399,7 @@ class Registry:
                             break
                 rec.update(org_groups_dict.get(rec['group_id'], {}))
 
-            result.update({"is_available": is_available, "groups": service_group_data, "tags": tags,"media":media})
+            result.update({"is_available": is_available, "groups": service_group_data, "tags": tags,"media":media, "stubs": stubs})
             return result
         except Exception as e:
             print(repr(e))
@@ -474,18 +455,21 @@ class Registry:
             where service_id = %s and org_id = %s """
             query_response = self.repo.execute(query,[service_id,org_id])
             media = []
+            stubs = []
             if len(query_response)==0:
-                return media
+               return media, stubs
             for response_item in query_response:
-                media.append({
-                    "row_id":response_item['row_id'],
-                    "url":response_item['url'],
-                    "file_type":response_item['file_type'],
-                    "order":response_item['order'],
-                    "alt_text":response_item['alt_text'],
-                    "asset_type":response_item['asset_type']
-                })
-            return media
+                if response_item.get('file_type', "") == "grpc_stub":
+                    stubs.append({"url":response_item['url']})
+                else:
+                    media.append({
+                        "row_id":response_item['row_id'],
+                        "url":response_item['url'],
+                        "file_type":response_item['file_type'],
+                        "order":response_item['order'],
+                        "alt_text":response_item['alt_text']
+                    })
+            return media, stubs
         except Exception as e:
             logger.error(f'Error in getting service media data for org_id = {org_id} service_id = {service_id}')
             raise e
