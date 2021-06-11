@@ -12,10 +12,11 @@ class TestOrganizationEventConsumer(unittest.TestCase):
     def setUp(self):
         pass
 
+    @patch('contract_api.consumers.service_event_consumer.ServiceCreatedEventConsumer._compile_proto_stubs')
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
     @patch('common.ipfs_util.IPFSUtil.read_file_from_ipfs')
     @patch('common.ipfs_util.IPFSUtil.read_bytesio_from_ipfs')
-    def test_on_service_created_event(self, nock_read_bytesio_from_ipfs, mock_ipfs_read, mock_s3_push):
+    def test_on_service_created_event(self, nock_read_bytesio_from_ipfs, mock_ipfs_read, mock_s3_push, mock_proto_compile):
         event = {"data": {'row_id': 202, 'block_no': 6325625, 'event': 'ServiceCreated',
                           'json_str': "{'orgId': b'snet\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'serviceId': b'gene-annotation-service\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'metadataURI': b'ipfs://QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'}",
                           'processed': b'\x00',
@@ -29,6 +30,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
         service_repository.delete_service(org_id='snet', service_id='gene-annotation-service')
         service_repository.delete_service_dependents(org_id='snet', service_id='gene-annotation-service')
 
+        mock_proto_compile.return_value = ["sample_url_1", "sample_url_2"]
         nock_read_bytesio_from_ipfs.return_value = "some_value to_be_pushed_to_s3_whic_is_mocked"
         mock_ipfs_read.return_value = {
             "version": 1,
@@ -107,11 +109,12 @@ class TestOrganizationEventConsumer(unittest.TestCase):
 
         assert service_groups == {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'group_id': 'm5FKWq4hW0foGW5qSbzGSjgZRuKs7A1ZwbIrJ9e96rc=', 'group_name': 'default_group', 'pricing': '[{"default": true, "price_model": "fixed_price", "price_in_cogs": 1}]', 'free_call_signer_address': '0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F', 'free_calls': 12}
 
+    @patch('contract_api.consumers.service_event_consumer.ServiceCreatedEventConsumer._compile_proto_stubs')
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
     @patch('common.ipfs_util.IPFSUtil.read_file_from_ipfs')
     @patch('common.ipfs_util.IPFSUtil.read_bytesio_from_ipfs')
     def test_on_service_created_event_with_media(self, nock_read_bytesio_from_ipfs, mock_ipfs_read,
-                                                 mock_s3_push):
+                                                 mock_s3_push, mock_proto_compile):
         event = {"data": {'row_id': 202, 'block_no': 6325625, 'event': 'ServiceCreated',
                           'json_str': "{'orgId': b'snet\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'serviceId': b'gene-annotation-service\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'metadataURI': b'ipfs://QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'}",
                           'processed': b'\x00',
@@ -125,6 +128,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
         service_repository.delete_service(org_id='snet', service_id='gene-annotation-service')
         service_repository.delete_service_dependents(org_id='snet', service_id='gene-annotation-service')
 
+        mock_proto_compile.return_value = ["sample_url_1","sample_url_2"]
         nock_read_bytesio_from_ipfs.return_value = "some_value to_be_pushed_to_s3_whic_is_mocked"
         mock_ipfs_read.return_value = {
             "version": 1,
@@ -223,7 +227,9 @@ class TestOrganizationEventConsumer(unittest.TestCase):
             media_item.pop('row_id')
 
         assert service_media == [
-            {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'https://test-s3-push', 'order': 2, 'file_type': 'text', 'asset_type': '', 'alt_text': 'text sample updated', 'ipfs_url': 'Qmbb7tmKZX2TSxDKsK6DEAbp3tPgNUYP11CC93Cft7EkFb/hero_fbprophet_forecast1'},
-            {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'https://youtu.be/7mj-p1Os6QA', 'order': 5, 'file_type': 'video', 'asset_type': 'image updated', 'alt_text': 'alternate text sample updated', 'ipfs_url': ''},
-            {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'https://test-s3-push', 'order': 6, 'file_type': 'asset', 'asset_type': 'hero_image', 'alt_text': '', 'ipfs_url': 'QmVcE6fEDP764ibadXTjZHk251Lmt5xAxdc4P9mPA4kksk/hero_gene-annotation-2b.png'}
-        ]
+                {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'sample_url_1', 'order': 0, 'file_type': 'grpc_stub', 'asset_type': 'stub', 'alt_text': '', 'ipfs_url': ''},
+                {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'sample_url_2', 'order': 0, 'file_type': 'grpc_stub', 'asset_type': 'stub', 'alt_text': '', 'ipfs_url': ''},
+                {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'https://test-s3-push', 'order': 2, 'file_type': 'text', 'asset_type': '', 'alt_text': 'text sample updated', 'ipfs_url': 'Qmbb7tmKZX2TSxDKsK6DEAbp3tPgNUYP11CC93Cft7EkFb/hero_fbprophet_forecast1'},
+                {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'https://youtu.be/7mj-p1Os6QA', 'order': 5, 'file_type': 'video', 'asset_type': 'image updated', 'alt_text': 'alternate text sample updated', 'ipfs_url': ''}
+            ]
+

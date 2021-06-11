@@ -52,6 +52,11 @@ class TestRegistry(TestCase):
         VALUES(10,10, 'snet', 'gene-annotation-service', 'Annotation Service', 'Use this service to annotate a humane genome with uniform terms, Reactome pathway memberships, and BioGrid protein interactions.', 'short description',0, 'https://mozi-ai.github.io/annotation-service/', '{"name":"John", "age":31, "city":"New York"}', 'QmXqonxB9EvNBe11J8oCYXMQAtPKAb2x8CyFLmQpkvVaLf', 'proto', 'grpc', '0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C','{"hero_image": "https://test-s3-push"}', '{"hero_image": "QmVcE6fEDP764ibadXTjZHk251Lmt5xAxdc4P9mPA4kksk/hero_gene-annotation-2b.png"}','{"rating": 0.0, "total_users_rated": 0}', 1, '[{"name": "dummy dummy", "email_id": "dummy@dummy.io"}]', '2021-01-08 05:48:26', '2021-01-08 05:48:26')"""
         db.execute(insert_metadata_query)
 
+        insert_service_stubs = """INSERT INTO contract_unittest_db.service_media
+        (row_id, org_id, service_id, url, `order`, file_type, asset_type, alt_text, created_on, updated_on, ipfs_url, service_row_id)
+        VALUES(80, 'snet', 'gene-annotation-service', 'https://ropsten-service-components/.s3.us-east-1.amazonaws.com/assets/d263/d263test/stubs/nodejs.zip', 0, 'grpc_stub', 'stub', '', '2021-06-11 14:21:25', '2021-06-11 14:21:25', ' ', 10)"""
+        db.execute(insert_service_stubs)
+
         insert_service_media = """INSERT INTO service_media
         (row_id,org_id, service_id, url, `order`, file_type, asset_type, alt_text, created_on, updated_on, ipfs_url, service_row_id)
         VALUES(10,'snet', 'gene-annotation-service', 'https://test-s3-push', 5, 'text', 'hero_image','data is missing', '2021-01-08 13:31:50', '2021-01-08 13:31:50', 'Qmbb7tmKZX2TSxDKsK6DEAbp3tPgNUYP11CC93Cft7EkFb/hero_fbprophet_forecast1', 10);"""
@@ -86,7 +91,7 @@ class TestRegistry(TestCase):
                              'is_available': 0,
                              'groups': [],
                              'tags': [],
-                             'media': [{'row_id': 10, 'url': 'https://test-s3-push', 'file_type': 'text', 'order': 5, 'alt_text': 'data is missing',"asset_type":"hero_image"}]
+                             'media': [{'row_id': 10, 'url': 'https://test-s3-push', 'file_type': 'text', 'order': 5, 'alt_text': 'data is missing', 'asset_type': 'hero_image'}, {'row_id': 80, 'url': 'https://ropsten-service-components/.s3.us-east-1.amazonaws.com/assets/d263/d263test/stubs/nodejs.zip', 'file_type': 'grpc_stub', 'order': 0, 'alt_text': '', 'asset_type': 'stub'}]
                              }
 
     def test_get_service_data_by_org_id_and_service_id_without_media(self):
