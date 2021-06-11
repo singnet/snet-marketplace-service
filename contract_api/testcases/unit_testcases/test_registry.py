@@ -54,7 +54,7 @@ class TestRegistry(TestCase):
 
         insert_service_stubs = """INSERT INTO contract_unittest_db.service_media
         (row_id, org_id, service_id, url, `order`, file_type, asset_type, alt_text, created_on, updated_on, ipfs_url, service_row_id)
-        VALUES(80, 'snet', 'gene-annotation-service', 'https://ropsten-service-components/.s3.us-east-1.amazonaws.com/assets/d263/d263test/stubs/nodejs.zip', 0, 'grpc_stub', 'stub', '', '2021-06-11 14:21:25', '2021-06-11 14:21:25', ' ', 10)"""
+        VALUES(80, 'snet', 'gene-annotation-service', 'https://ropsten-service-components.s3.us-east-1.amazonaws.com/assets/d263/d263test/stubs/nodejs.zip', 0, 'grpc_stub', 'stub', '', '2021-06-11 14:21:25', '2021-06-11 14:21:25', ' ', 10)"""
         db.execute(insert_service_stubs)
 
         insert_service_media = """INSERT INTO service_media
@@ -65,34 +65,38 @@ class TestRegistry(TestCase):
         response = registry.get_service_data_by_org_id_and_service_id('snet','gene-annotation-service')
 
         assert response == {'service_row_id': 10,
-                             'org_id': 'snet',
-                             'service_id': 'gene-annotation-service',
-                             'display_name': 'Annotation Service',
-                             'description': 'Use this service to annotate a humane genome with uniform terms, Reactome pathway memberships, and BioGrid protein interactions.',
-                             'short_description': 'short description',
-                             'demo_component_available': 0,
-                             'url': 'https://mozi-ai.github.io/annotation-service/',
-                             'json': '{"name":"John", "age":31, "city":"New York"}',
-                             'model_ipfs_hash': 'QmXqonxB9EvNBe11J8oCYXMQAtPKAb2x8CyFLmQpkvVaLf',
-                             'encoding': 'proto', 'type': 'grpc', 'mpe_address': '0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C',
-                             'service_rating': {'rating': 0.0, 'total_users_rated': 0},
-                             'ranking': 1,
-                             'contributors': [{'name': 'dummy dummy', 'email_id': 'dummy@dummy.io'}],
-                             'service_path': 'service_path', 'ipfs_hash': 'QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf',
-                             'is_curated': 1,
-                             'service_email': 'email',
-                             'organization_name': 'gene-annotation-service',
-                             'owner_address': 'owner_add',
-                             'org_metadata_uri': 'uri',
-                             'org_email': 'email',
-                             'org_assets_url': {'url': 'google.com'},
-                             'org_description': 'description',
-                             'contacts': {},
-                             'is_available': 0,
-                             'groups': [],
-                             'tags': [],
-                             'media': [{'row_id': 10, 'url': 'https://test-s3-push', 'file_type': 'text', 'order': 5, 'alt_text': 'data is missing', 'asset_type': 'hero_image'}, {'row_id': 80, 'url': 'https://ropsten-service-components/.s3.us-east-1.amazonaws.com/assets/d263/d263test/stubs/nodejs.zip', 'file_type': 'grpc_stub', 'order': 0, 'alt_text': '', 'asset_type': 'stub'}]
-                             }
+                            'org_id': 'snet',
+                            'service_id': 'gene-annotation-service',
+                            'display_name': 'Annotation Service',
+                            'description': 'Use this service to annotate a humane genome with uniform terms, Reactome pathway memberships, and BioGrid protein interactions.',
+                            'url': 'https://mozi-ai.github.io/annotation-service/',
+                            'json': '{"name":"John", "age":31, "city":"New York"}',
+                            'model_ipfs_hash': 'QmXqonxB9EvNBe11J8oCYXMQAtPKAb2x8CyFLmQpkvVaLf',
+                            'encoding': 'proto',
+                            'type': 'grpc',
+                            'mpe_address': '0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C',
+                            'service_rating': {'rating': 0.0, 'total_users_rated': 0},
+                            'ranking': 1,
+                            'contributors': [{'name': 'dummy dummy', 'email_id': 'dummy@dummy.io'}],
+                            'short_description': 'short description',
+                            'demo_component_available': 0,
+                            'service_path': 'service_path',
+                            'ipfs_hash': 'QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf',
+                            'is_curated': 1,
+                            'service_email': 'email',
+                            'organization_name': 'gene-annotation-service',
+                            'owner_address': 'owner_add',
+                            'org_metadata_uri': 'uri',
+                            'org_email': 'email',
+                            'org_assets_url': {'url': 'google.com'},
+                            'org_description': 'description',
+                            'contacts': {},
+                            'is_available': 0,
+                            'groups': [],
+                            'tags': [],
+                            'media': [{'row_id': 10, 'url': 'https://test-s3-push', 'file_type': 'text', 'order': 5, 'alt_text': 'data is missing'}],
+                            'stubs': [{'url': 'https://ropsten-service-components.s3.us-east-1.amazonaws.com/assets/d263/d263test/stubs/nodejs.zip'}]
+                            }
 
     def test_get_service_data_by_org_id_and_service_id_without_media(self):
         registry = Registry(obj_repo=db)
@@ -143,7 +147,8 @@ class TestRegistry(TestCase):
                              'is_available': 0,
                              'groups': [],
                              'tags': [],
-                             'media': []
+                             'media': [],
+                              'stubs': []
                              }
 
     def clear_dependencies(self):
