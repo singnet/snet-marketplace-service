@@ -179,7 +179,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
 
             proto_stubs = []
             if not existing_service_metadata or (
-                    existing_service_metadata["model_ipfs_hash"] != new_ipfs_hash["model_ipfs_hash"]):
+                    existing_service_metadata["model_ipfs_hash"] != new_ipfs_hash):
                 proto_stubs = self._compile_proto_stubs(org_id=org_id, service_id=service_id)
 
             self._service_repository.delete_service_dependents(
