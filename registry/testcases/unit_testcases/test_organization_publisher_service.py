@@ -59,7 +59,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         org_repo.add_organization(
             DomainOrganization(test_org_uuid, test_org_id, "org_dummy", OrganizationType.INDIVIDUAL.value, ORIGIN, "",
                                "",
-                               "", [], {}, "", "", groups, [], [], [], "", ""),
+                               "", [], {}, "", "", groups, [], [], []),
             username, OrganizationStatus.CHANGE_REQUESTED.value)
         payload = json.loads(ORG_PAYLOAD_MODEL)
         payload["org_uuid"] = test_org_uuid
@@ -89,7 +89,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         groups = OrganizationFactory.group_domain_entity_from_group_list_payload(json.loads(ORG_GROUPS))
         org_repo.add_organization(
             DomainOrganization(test_org_uuid, test_org_id, "org_dummy", "ORGANIZATION", ORIGIN, "", "",
-                               "", [], {}, "", "", groups, [], [], [], "", ""),
+                               "", [], {}, "", "", groups, [], [], []),
             username, OrganizationStatus.PUBLISHED.value)
         payload = json.loads(ORG_PAYLOAD_MODEL)
         payload["org_uuid"] = test_org_uuid
@@ -110,7 +110,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         groups = OrganizationFactory.group_domain_entity_from_group_list_payload(json.loads(ORG_GROUPS))
         org_repo.add_organization(
             DomainOrganization(test_org_uuid, test_org_id, "org_dummy", OrganizationType.INDIVIDUAL.value,
-                               ORIGIN, "", "", "", [], {}, "", "", groups, [], [], [], "", ""),
+                               ORIGIN, "", "", "", [], {}, "", "", groups, [], [], []),
             username, OrganizationStatus.CHANGE_REQUESTED.value)
         payload = json.loads(ORG_PAYLOAD_MODEL)
         payload["org_uuid"] = test_org_uuid
@@ -140,7 +140,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         groups = OrganizationFactory.group_domain_entity_from_group_list_payload(json.loads(ORG_GROUPS))
         org_repo.add_organization(
             DomainOrganization(test_org_uuid, test_org_id, "org_dummy", "ORGANIZATION", ORIGIN, "", "",
-                               "", [], {}, "", "", groups, [], [], [], "", ""),
+                               "", [], {}, "", "", groups, [], [], []),
             username, OrganizationStatus.PUBLISHED.value)
         payload = json.loads(ORG_PAYLOAD_MODEL)
         payload["org_uuid"] = test_org_uuid
@@ -332,7 +332,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         username = "dummy@snet.io"
         org_repo.add_organization(
             DomainOrganization(test_org_id, "org_id", "org_dummy", OrganizationType.ORGANIZATION.value, ORIGIN, "", "",
-                               "", [], {}, "", "", [], [], [], [], "", ""),
+                               "", [], {}, "", "", [], [], [], []),
             username, OrganizationStatus.APPROVED.value)
         response = OrganizationPublisherService(test_org_id, username).publish_org_to_ipfs()
         self.assertEqual(response["metadata_ipfs_uri"], "ipfs://Q12PWP")
