@@ -5,6 +5,7 @@ import boto3
 from web3 import Web3
 
 from common.blockchain_util import BlockChainUtil
+from common.boto_utils import BotoUtils
 from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
 from common.repository import Repository
@@ -12,7 +13,7 @@ from common.s3_util import S3Util
 from common.utils import download_file_from_url, extract_zip_file, make_tarfile
 from contract_api.config import ASSETS_BUCKET_NAME, ASSETS_PREFIX, GET_SERVICE_FROM_ORGID_SERVICE_ID_REGISTRY_ARN, \
     MARKETPLACE_DAPP_BUILD, NETWORKS, NETWORK_ID, REGION_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY, \
-    ASSET_TEMP_EXTRACT_DIRECTORY, ASSETS_COMPONENT_BUCKET_NAME
+    ASSET_TEMP_EXTRACT_DIRECTORY, ASSETS_COMPONENT_BUCKET_NAME, MANAGE_PROTO_COMPILATION
 from contract_api.consumers.event_consumer import EventConsumer
 from contract_api.dao.service_repository import ServiceRepository
 
@@ -86,12 +87,11 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                                                     ASSETS_BUCKET_NAME, io_bytes)
         return new_url
 
-    def _get_new_assets_url(self, org_id, service_id, new_ipfs_data):
+    def _get_new_assets_url(self, org_id, service_id, new_ipfs_data, existing_service_metadata):
         new_assets_hash = new_ipfs_data.get('assets', {})
         existing_assets_hash = {}
         existing_assets_url = {}
 
-        existing_service_metadata = self._service_repository.get_service_metadata(service_id, org_id)
         if existing_service_metadata:
             existing_assets_hash = json.loads(existing_service_metadata["assets_hash"])
             existing_assets_url = json.loads(existing_service_metadata["assets_url"])
@@ -100,11 +100,25 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                                                                  service_id)
         return assets_url_mapping
 
+    def insert_proto_stubs(self, org_id, service_id, proto_stubs, service_row_id):
+        if proto_stubs:
+            self._service_repository.delete_service_media(org_id=org_id, service_id=service_id, file_types = ['grpc_stub'])
+        for stub in proto_stubs:
+            stub_item = {
+                "url": stub,
+                "file_type": "grpc_stub",
+                "asset_type": "stub",
+            }
+            self._service_repository.insert_service_media(org_id=org_id, service_id=service_id,
+                                                          service_row_id=service_row_id,
+                                                          media_data=stub_item)
+
+
     def create_service_media(self,org_id,service_id,service_media,service_row_id):
         count = 0;
         if len(service_media)>0:
             #clear the existing values from db
-            self._service_repository.delete_service_media(org_id=org_id,service_id=service_id)
+            self._service_repository.delete_service_media(org_id=org_id,service_id=service_id, file_types=['image','video'])
             #fif ipfs_url store in s3 and update url else store url
             for service_media_item in service_media:
                 url = service_media_item.get("url",{})
@@ -123,38 +137,50 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                     "alt_text":service_media_item.get('alt_text',""),
                     "ipfs_url":ipfs_url
                 }
-                self._service_repository.create_service_media(org_id=org_id,service_id=service_id,service_row_id=service_row_id,media_data=service_media_data)
+                self._service_repository.insert_service_media(org_id=org_id,service_id=service_id,service_row_id=service_row_id,media_data=service_media_data)
                 if service_media_item.get('order',0) > count:
                     count = service_media_item.get('order',0)
 
-        #Take assets from updated metadata and store them in service_media table
-        #Take order as greatest of media + 1
-        #Will be removed later as new format is used
-        service_metadata = self._service_repository.get_service_metadata(org_id=org_id,service_id=service_id)
-        if service_metadata is not None:
-            assets_url = json.loads(service_metadata.get('assets_url',{}))
-            assets_hash = json.loads(service_metadata.get('assets_hash',{}))
-        if len(assets_url)>0:
-            for key in assets_url.keys():
-                url = assets_url.get(key,"")
-                hash = assets_hash.get(key,"")
-                service_media_data = {
-                    "url":url,
-                    "file_type":"asset",
-                    "order":count+1,
-                     "asset_type":key,
-                     "alt_text":"",
-                     "ipfs_url":hash,
-                   }
-                self._service_repository.create_service_media(org_id=org_id,service_id=service_id,service_row_id=service_row_id,media_data=service_media_data)
+    def _compile_proto_stubs(self, org_id, service_id):
+        boto_utils = BotoUtils(region_name=REGION_NAME)
+        base_url = f"s3://{ASSETS_COMPONENT_BUCKET_NAME}/assets/{org_id}/{service_id}/"
+        output_url = base_url + "stubs/"
+        lambda_payload = {
+            "input_s3_path": base_url,
+            "output_s3_path": output_url
+        }
+        response = boto_utils.invoke_lambda(
+            invocation_type="RequestResponse",
+            lambda_function_arn=MANAGE_PROTO_COMPILATION,
+            payload=json.dumps(lambda_payload)
+        )
+        generated_stubs_url = []
+        if response['statusCode'] == 200:
+            output_bucket,output_key = boto_utils.get_bucket_and_key_from_url(url=output_url)
+            stub_objects = boto_utils.get_objects_from_s3(bucket=output_bucket, key=output_key)
+            for object in stub_objects:
+                generated_stubs_url.append(f"https://{output_bucket}.s3.{REGION_NAME}.amazonaws.com/{object['Key']}")
+            return generated_stubs_url
+        else:
+            msg = f"Error generating stubs :: {response}"
+            logger.info(msg)
+            raise Exception(msg)
 
     def _process_service_data(self, org_id, service_id, new_ipfs_hash, new_ipfs_data):
         try:
 
             self._connection.begin_transaction()
 
+            existing_service_metadata = self._service_repository.get_service_metadata(org_id=org_id,
+                                                                                      service_id=service_id)
+
             assets_url = self._get_new_assets_url(
-                org_id, service_id, new_ipfs_data)
+                org_id, service_id, new_ipfs_data, existing_service_metadata)
+
+            proto_stubs = []
+            if not existing_service_metadata or (
+                    existing_service_metadata["model_ipfs_hash"] != new_ipfs_data["model_ipfs_hash"]):
+                proto_stubs = self._compile_proto_stubs(org_id=org_id, service_id=service_id)
 
             self._service_repository.delete_service_dependents(
                 org_id=org_id, service_id=service_id)
@@ -167,8 +193,9 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                                                                        ipfs_data=new_ipfs_data, assets_url=assets_url)
 
             service_media = new_ipfs_data.get('media', [])
-            self.create_service_media(org_id=org_id,service_id=service_id,
-                                      service_media=service_media,service_row_id=service_row_id)
+            self.create_service_media(org_id=org_id, service_id=service_id,
+                                      service_media=service_media, service_row_id=service_row_id)
+            self.insert_proto_stubs(org_id=org_id, service_id=service_id, proto_stubs=proto_stubs, service_row_id=service_row_id)
 
             groups = new_ipfs_data.get('groups', [])
             group_insert_count = 0
