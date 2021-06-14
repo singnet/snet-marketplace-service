@@ -185,7 +185,7 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                                                        duns_no, groups,
                                                        addresses,
                                                        OrganizationStatus.DRAFT.value,
-                                                       members, "", "")
+                                                       members)
 
             test_transaction_hash = RegistryBlockChainUtil(EnvironmentType.TEST.value) \
                 .publish_organization_to_test_network(received_organization_event)

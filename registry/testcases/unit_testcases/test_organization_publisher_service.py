@@ -98,58 +98,6 @@ class TestOrganizationPublisherService(unittest.TestCase):
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
-    @patch(
-        "registry.application.services.organization_publisher_service.OrganizationPublisherService.notify_approval_team")
-    @patch(
-        "registry.application.services.organization_publisher_service.OrganizationPublisherService.notify_user_on_start_of_onboarding_process")
-    def test_edit_organization_with_major_changes_onboarding(self, mock_user_mail, mock_approval_team, mock_boto,
-                                                             mock_ipfs):
-        username = "karl@dummy.com"
-        test_org_uuid = uuid4().hex
-        test_org_id = "org_id"
-        groups = OrganizationFactory.group_domain_entity_from_group_list_payload(json.loads(ORG_GROUPS))
-        org_repo.add_organization(
-            DomainOrganization(test_org_uuid, test_org_id, "org_dummy", OrganizationType.INDIVIDUAL.value,
-                               ORIGIN, "", "", "", [], {}, "", "", groups, [], [], []),
-            username, OrganizationStatus.CHANGE_REQUESTED.value)
-        payload = json.loads(ORG_PAYLOAD_MODEL)
-        payload["org_uuid"] = test_org_uuid
-        payload["org_id"] = test_org_id
-        OrganizationPublisherService(test_org_uuid, username) \
-            .update_organization(payload, OrganizationActions.DRAFT.value)
-        org_db_model = org_repo.session.query(Organization).first()
-        if org_db_model is None:
-            assert False
-        organization = OrganizationFactory.org_domain_entity_from_repo_model(org_db_model)
-        org_dict = organization.to_response()
-        org_dict["state"] = {}
-        org_dict["groups"] = []
-        org_dict["assets"]["hero_image"]["url"] = ""
-        expected_organization = json.loads(ORG_RESPONSE_MODEL)
-        expected_organization["org_id"] = test_org_id
-        expected_organization["groups"] = []
-        expected_organization["org_uuid"] = test_org_uuid
-        self.assertDictEqual(expected_organization, org_dict)
-
-    @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
-    @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
-    def test_edit_organization_with_major_changes_after_published(self, mock_boto, mock_ipfs):
-        username = "karl@dummy.com"
-        test_org_uuid = uuid4().hex
-        test_org_id = "org_id"
-        groups = OrganizationFactory.group_domain_entity_from_group_list_payload(json.loads(ORG_GROUPS))
-        org_repo.add_organization(
-            DomainOrganization(test_org_uuid, test_org_id, "org_dummy", "ORGANIZATION", ORIGIN, "", "",
-                               "", [], {}, "", "", groups, [], [], []),
-            username, OrganizationStatus.PUBLISHED.value)
-        payload = json.loads(ORG_PAYLOAD_MODEL)
-        payload["org_uuid"] = test_org_uuid
-        payload["org_id"] = test_org_id
-        self.assertRaises(OperationNotAllowed, OrganizationPublisherService(test_org_uuid, username)
-                          .update_organization, payload, OrganizationActions.DRAFT.value)
-
-    @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
-    @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
     def test_submit_organization_for_approval_after_published(self, mock_boto, mock_ipfs):
         username = "karl@dummy.com"
         test_org_uuid = uuid4().hex
