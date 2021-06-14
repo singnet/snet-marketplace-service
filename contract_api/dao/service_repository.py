@@ -164,7 +164,7 @@ class ServiceRepository(CommonRepository):
             return service_media
         return None
 
-    def create_service_media(self,org_id,service_id,service_row_id,media_data):
+    def insert_service_media(self,org_id,service_id,service_row_id,media_data):
         url = media_data.get('url',"")
         ipfs_url = media_data.get('ipfs_url',"")
         order = media_data.get('order',0)
