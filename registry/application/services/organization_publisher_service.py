@@ -71,15 +71,11 @@ class OrganizationPublisherService:
         logger.info(f"create organization for user: {self.username}")
         organization = OrganizationFactory.org_domain_entity_from_payload(payload)
         organization.setup_id()
-        if not organization.create_setup():
-            raise Exception("Invalid Organization information")
         logger.info(f"assigned org_uuid : {organization.uuid}")
         org_ids = self.get_all_org_id()
         if organization.id in org_ids:
             raise Exception("Org_id already exists")
         updated_state = Organization.next_state(None, None, OrganizationActions.CREATE.value)
-        self.notify_approval_team(organization.id, organization.name)
-        self.notify_user_on_start_of_onboarding_process(organization.id, recipients=[self.username])
         org_repo.add_organization(organization, self.username, updated_state)
         return organization.to_response()
 
@@ -89,9 +85,6 @@ class OrganizationPublisherService:
         current_organization = org_repo.get_org_for_org_uuid(self.org_uuid)
         self._archive_current_organization(current_organization)
         updated_state = Organization.next_state(current_organization, updated_organization, action)
-        if updated_state == OrganizationStatus.ONBOARDING.value:
-            self.notify_approval_team(updated_organization.id, updated_organization.name)
-            self.notify_user_on_start_of_onboarding_process(updated_organization.id, recipients=[self.username])
         org_repo.update_organization(updated_organization, self.username, updated_state)
         return "OK"
 

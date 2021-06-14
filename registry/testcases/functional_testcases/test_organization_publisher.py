@@ -25,7 +25,7 @@ class TestOrganizationPublisher(TestCase):
             DomainOrganization(
                 test_org_uuid, "org_id", "org_dummy",
                 "ORGANIZATION", ORIGIN, "description",
-                "short_description", "https://test.io", ORG_CONTACTS, {}, "ipfs_hash", "123456879", [], [], [], [], "", ""),
+                "short_description", "https://test.io", ORG_CONTACTS, {}, "ipfs_hash", "123456879", [], [], [], []),
             username, OrganizationStatus.PUBLISHED.value)
         event = {
             "requestContext": {"authorizer": {"claims": {"email": username}}},

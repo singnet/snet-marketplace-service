@@ -155,8 +155,7 @@ class OrganizationPublisherRepository(BaseRepository):
             uuid=organization.uuid, name=organization.name, org_id=organization.id,
             org_type=organization.org_type, origin=organization.origin, description=organization.description,
             short_description=organization.short_description, url=organization.url,
-            duns_no=organization.duns_no, registration_id=organization.registration_id,
-            registration_type=organization.registration_type, contacts=organization.contacts,
+            duns_no=organization.duns_no, contacts=organization.contacts,
             assets=organization.assets, metadata_ipfs_uri=organization.metadata_ipfs_uri,
             org_state=org_state, groups=groups, addresses=addresses
         ))
@@ -176,8 +175,6 @@ class OrganizationPublisherRepository(BaseRepository):
         organization_db_model.short_description = organization.short_description
         organization_db_model.url = organization.url
         organization_db_model.duns_no = organization.duns_no
-        organization_db_model.registration_id = organization.registration_id
-        organization_db_model.registration_type = organization.registration_type
         organization_db_model.contacts = organization.contacts
         organization_db_model.assets = organization.assets
         organization_db_model.metadata_ipfs_uri = organization.metadata_ipfs_uri
@@ -218,8 +215,7 @@ class OrganizationPublisherRepository(BaseRepository):
             uuid=organization.uuid, name=organization.name, org_id=organization.id,
             org_type=organization.org_type, origin=organization.origin, description=organization.description,
             short_description=organization.short_description, url=organization.url,
-            duns_no=organization.duns_no, registration_id=organization.registration_id,
-            registration_type=organization.registration_type, contacts=organization.contacts,
+            duns_no=organization.duns_no, contacts=organization.contacts,
             assets=organization.assets, metadata_ipfs_uri=organization.metadata_ipfs_uri,
             org_state=org_state, groups=groups
         ))

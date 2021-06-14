@@ -34,8 +34,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         username = "karl@cryptonian.io"
         payload = {
             "org_id": "", "org_uuid": "", "org_name": "test_org", "org_type": "organization",
-            "metadata_ipfs_uri": "", "duns_no": "123456789", "registration_id": "",
-            "registration_type": "", "origin": ORIGIN, "description": "",
+            "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN, "description": "",
             "short_description": "", "url": "https://dummy.dummy", "contacts": "",
             "assets": {"hero_image": {"url": "", "ipfs_hash": ""}},
             "org_address": ORG_ADDRESS, "groups": json.loads(ORG_GROUPS),
@@ -60,7 +59,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         org_repo.add_organization(
             DomainOrganization(test_org_uuid, test_org_id, "org_dummy", OrganizationType.INDIVIDUAL.value, ORIGIN, "",
                                "",
-                               "", [], {}, "", "", groups, [], [], [], "", ""),
+                               "", [], {}, "", "", groups, [], [], []),
             username, OrganizationStatus.CHANGE_REQUESTED.value)
         payload = json.loads(ORG_PAYLOAD_MODEL)
         payload["org_uuid"] = test_org_uuid
@@ -79,6 +78,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         expected_organization["org_id"] = test_org_id
         expected_organization["groups"] = []
         expected_organization["org_uuid"] = test_org_uuid
+        self.assertDictEqual.__self__.maxDiff = None
         self.assertDictEqual(expected_organization, org_dict)
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
@@ -90,64 +90,12 @@ class TestOrganizationPublisherService(unittest.TestCase):
         groups = OrganizationFactory.group_domain_entity_from_group_list_payload(json.loads(ORG_GROUPS))
         org_repo.add_organization(
             DomainOrganization(test_org_uuid, test_org_id, "org_dummy", "ORGANIZATION", ORIGIN, "", "",
-                               "", [], {}, "", "", groups, [], [], [], "", ""),
+                               "", [], {}, "", "", groups, [], [], []),
             username, OrganizationStatus.PUBLISHED.value)
         payload = json.loads(ORG_PAYLOAD_MODEL)
         payload["org_uuid"] = test_org_uuid
-        self.assertRaises(OperationNotAllowed, OrganizationPublisherService(test_org_uuid, username)
-                          .update_organization, payload, OrganizationActions.DRAFT.value)
-
-    @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
-    @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
-    @patch(
-        "registry.application.services.organization_publisher_service.OrganizationPublisherService.notify_approval_team")
-    @patch(
-        "registry.application.services.organization_publisher_service.OrganizationPublisherService.notify_user_on_start_of_onboarding_process")
-    def test_edit_organization_with_major_changes_onboarding(self, mock_user_mail, mock_approval_team, mock_boto,
-                                                             mock_ipfs):
-        username = "karl@dummy.com"
-        test_org_uuid = uuid4().hex
-        test_org_id = "org_id"
-        groups = OrganizationFactory.group_domain_entity_from_group_list_payload(json.loads(ORG_GROUPS))
-        org_repo.add_organization(
-            DomainOrganization(test_org_uuid, test_org_id, "org_dummy", OrganizationType.INDIVIDUAL.value,
-                               ORIGIN, "", "", "", [], {}, "", "", groups, [], [], [], "", ""),
-            username, OrganizationStatus.CHANGE_REQUESTED.value)
-        payload = json.loads(ORG_PAYLOAD_MODEL)
-        payload["org_uuid"] = test_org_uuid
-        payload["org_id"] = test_org_id
-        OrganizationPublisherService(test_org_uuid, username) \
-            .update_organization(payload, OrganizationActions.DRAFT.value)
-        org_db_model = org_repo.session.query(Organization).first()
-        if org_db_model is None:
-            assert False
-        organization = OrganizationFactory.org_domain_entity_from_repo_model(org_db_model)
-        org_dict = organization.to_response()
-        org_dict["state"] = {}
-        org_dict["groups"] = []
-        org_dict["assets"]["hero_image"]["url"] = ""
-        expected_organization = json.loads(ORG_RESPONSE_MODEL)
-        expected_organization["org_id"] = test_org_id
-        expected_organization["groups"] = []
-        expected_organization["org_uuid"] = test_org_uuid
-        self.assertDictEqual(expected_organization, org_dict)
-
-    @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
-    @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
-    def test_edit_organization_with_major_changes_after_published(self, mock_boto, mock_ipfs):
-        username = "karl@dummy.com"
-        test_org_uuid = uuid4().hex
-        test_org_id = "org_id"
-        groups = OrganizationFactory.group_domain_entity_from_group_list_payload(json.loads(ORG_GROUPS))
-        org_repo.add_organization(
-            DomainOrganization(test_org_uuid, test_org_id, "org_dummy", "ORGANIZATION", ORIGIN, "", "",
-                               "", [], {}, "", "", groups, [], [], [], "", ""),
-            username, OrganizationStatus.PUBLISHED.value)
-        payload = json.loads(ORG_PAYLOAD_MODEL)
-        payload["org_uuid"] = test_org_uuid
-        payload["org_id"] = test_org_id
-        self.assertRaises(OperationNotAllowed, OrganizationPublisherService(test_org_uuid, username)
-                          .update_organization, payload, OrganizationActions.DRAFT.value)
+        self.assertEqual("OK", OrganizationPublisherService(test_org_uuid, username)
+                         .update_organization(payload, OrganizationActions.DRAFT.value))
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
@@ -158,8 +106,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         username = "karl@cryptonian.io"
         payload = {
             "org_id": test_org_id, "org_uuid": test_org_uuid, "org_name": "test_org", "org_type": "organization",
-            "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN, "registration_id": "",
-            "registration_type": "",
+            "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN,
             "description": "this is description", "short_description": "this is short description",
             "url": "https://dummy.dummy", "contacts": "",
             "assets": {"hero_image": {"url": "", "ipfs_hash": ""}},
@@ -185,8 +132,6 @@ class TestOrganizationPublisherService(unittest.TestCase):
         test_org_uuid = uuid4().hex
         test_org_id = "org_id"
         username = "karl@cryptonian.io"
-        registration_type = ""
-        registration_id = ""
         current_time = datetime.now()
         org_state = OrganizationState(
             org_uuid=test_org_uuid, state=OrganizationStatus.APPROVED.value, transaction_hash="0x123",
@@ -216,8 +161,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
             origin=ORIGIN, description="this is long description",
             short_description="this is short description", url="https://dummy.com", duns_no="123456789", contacts=[],
             assets={"hero_image": {"url": "some_url", "ipfs_hash": "Q123"}},
-            metadata_ipfs_uri="Q3E12", org_state=[org_state], groups=[group], addresses=org_address,
-            registration_type=registration_type, registration_id=registration_id)
+            metadata_ipfs_uri="Q3E12", org_state=[org_state], groups=[group], addresses=org_address)
 
         owner = OrganizationMember(
             invite_code="123", org_uuid=test_org_uuid, role=Role.OWNER.value, username=username,
@@ -231,8 +175,8 @@ class TestOrganizationPublisherService(unittest.TestCase):
             "queryStringParameters": {"action": "DRAFT"},
             "body": json.dumps({
                 "org_id": test_org_id, "org_uuid": test_org_uuid, "org_name": "test_org", "org_type": "organization",
-                "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN, "registration_id": "",
-                "registration_type": "", "description": "this is long description",
+                "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN,
+                "description": "this is long description",
                 "short_description": "this is short description",
                 "url": "https://dummy.com", "contacts": [],
                 "assets": {"hero_image": {"url": "https://my_image", "ipfs_hash": ""}},
@@ -280,8 +224,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         username = "karl@cryptonian.io"
         payload = {
             "org_id": test_org_id, "org_uuid": test_org_uuid, "org_name": "test_org", "org_type": "organization",
-            "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN, "registration_id": "",
-            "registration_type": "",
+            "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN,
             "description": "this is description", "short_description": "this is short description",
             "url": "https://dummy.dummy", "contacts": "",
             "assets": {"hero_image": {"url": "", "ipfs_hash": ""}},
@@ -310,8 +253,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         username = "karl@cryptonian.io"
         payload = {
             "org_id": test_org_id, "org_uuid": test_org_uuid, "org_name": "test_org", "org_type": "organization",
-            "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN, "registration_id": "",
-            "registration_type": "",
+            "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN,
             "description": "this is description", "short_description": "this is short description",
             "url": "https://dummy.dummy", "contacts": "",
             "assets": {"hero_image": {"url": "", "ipfs_hash": ""}},
@@ -340,7 +282,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         username = "dummy@snet.io"
         org_repo.add_organization(
             DomainOrganization(test_org_id, "org_id", "org_dummy", OrganizationType.ORGANIZATION.value, ORIGIN, "", "",
-                               "", [], {}, "", "", [], [], [], [], "", ""),
+                               "", [], {}, "", "", [], [], [], []),
             username, OrganizationStatus.APPROVED.value)
         response = OrganizationPublisherService(test_org_id, username).publish_org_to_ipfs()
         self.assertEqual(response["metadata_ipfs_uri"], "ipfs://Q12PWP")
@@ -348,22 +290,18 @@ class TestOrganizationPublisherService(unittest.TestCase):
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q12PWP")))
     @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
     def test_org_verification_individual(self, mock_boto_utils, mock_ipfs_utils):
-        registration_type = "type"
-        registration_id = "123"
         username = "karl@dummy.in"
         for count in range(0, 3):
             org_id = uuid4().hex
             org_repo.add_organization(DomainOrganization(org_id, org_id, f"org_{org_id}",
                                                          OrganizationType.INDIVIDUAL.value, ORIGIN, "",
-                                                         "", "", [], {}, "", "", [], [], [], [], registration_id,
-                                                         registration_type),
+                                                         "", "", [], {}, "", "", [], [], [], []),
                                       username, OrganizationStatus.ONBOARDING.value)
         for count in range(0, 3):
             org_id = uuid4().hex
             org_repo.add_organization(DomainOrganization(org_id, org_id, f"org_{org_id}",
                                                          OrganizationType.INDIVIDUAL.value, ORIGIN, "",
-                                                         "", "", [], {}, "", "", [], [], [], [], registration_id,
-                                                         registration_type),
+                                                         "", "", [], {}, "", "", [], [], [], []),
                                       username, OrganizationStatus.APPROVED.value)
         OrganizationPublisherService(None, None).update_verification(
             "INDIVIDUAL", verification_details={"updated_by": "TEST_CASES", "status": "APPROVED", "username": username})
@@ -377,12 +315,9 @@ class TestOrganizationPublisherService(unittest.TestCase):
         username = "karl@dummy.in"
         org_id = "test_org_id"
         org_uuid = "test_org_uuid"
-        registration_type = ""
-        registration_id = ""
         org_repo.add_organization(DomainOrganization(org_uuid, org_id, f"org_{org_id}",
                                                      OrganizationType.ORGANIZATION.value, ORIGIN, "",
-                                                     "", "", [], {}, "", "", [], [], [], [], registration_id,
-                                                     registration_type),
+                                                     "", "", [], {}, "", "", [], [], [], []),
                                   username, OrganizationStatus.ONBOARDING.value)
 
         OrganizationPublisherService(None, None).update_verification(
@@ -405,13 +340,10 @@ class TestOrganizationPublisherService(unittest.TestCase):
         username = "karl@dummy.in"
         org_id = "test_org_id"
         org_uuid = "test_org_uuid"
-        registration_type = "type"
-        registration_id = "123"
         current_time = datetime.now()
         org_repo.add_organization(
             DomainOrganization(org_uuid, org_id, f"org_{org_id}", OrganizationType.INDIVIDUAL.value, ORIGIN, "",
-                               "", "", [], {}, "", "", [], [], [], [], registration_type=registration_type,
-                               registration_id=registration_id), username, OrganizationStatus.ONBOARDING.value)
+                               "", "", [], {}, "", "", [], [], [], []), username, OrganizationStatus.ONBOARDING.value)
         SlackChatOperation("admin", "").process_approval_comment(
             "organization", "APPROVED", "here is the comment", {"org_id": "test_org_id"})
         organization = org_repo.get_org_for_org_uuid(org_uuid)
