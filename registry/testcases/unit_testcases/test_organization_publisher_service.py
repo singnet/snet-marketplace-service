@@ -78,6 +78,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         expected_organization["org_id"] = test_org_id
         expected_organization["groups"] = []
         expected_organization["org_uuid"] = test_org_uuid
+        self.assertDictEqual.__self__.maxDiff = None
         self.assertDictEqual(expected_organization, org_dict)
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
@@ -93,8 +94,8 @@ class TestOrganizationPublisherService(unittest.TestCase):
             username, OrganizationStatus.PUBLISHED.value)
         payload = json.loads(ORG_PAYLOAD_MODEL)
         payload["org_uuid"] = test_org_uuid
-        self.assertRaises(OperationNotAllowed, OrganizationPublisherService(test_org_uuid, username)
-                          .update_organization, payload, OrganizationActions.DRAFT.value)
+        self.assertEqual("OK", OrganizationPublisherService(test_org_uuid, username)
+                         .update_organization(payload, OrganizationActions.DRAFT.value))
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
@@ -174,7 +175,8 @@ class TestOrganizationPublisherService(unittest.TestCase):
             "queryStringParameters": {"action": "DRAFT"},
             "body": json.dumps({
                 "org_id": test_org_id, "org_uuid": test_org_uuid, "org_name": "test_org", "org_type": "organization",
-                "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN, "description": "this is long description",
+                "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN,
+                "description": "this is long description",
                 "short_description": "this is short description",
                 "url": "https://dummy.com", "contacts": [],
                 "assets": {"hero_image": {"url": "https://my_image", "ipfs_hash": ""}},

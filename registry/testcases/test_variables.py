@@ -72,8 +72,6 @@ ORG_PAYLOAD_MODEL = json.dumps({
     "org_type": "individual",
     "metadata_ipfs_uri": "ipfs://Q12PWP",
     "duns_no": "123456789",
-    "registration_id": "123",
-    "registration_type": "type",
     "origin": ORIGIN,
     "description": "this is the dummy org for testcases",
     "short_description": "this is the short description",
@@ -102,8 +100,6 @@ ORG_RESPONSE_MODEL = json.dumps({
     "short_description": "this is the short description",
     "url": "https://dummy.dummy",
     "duns_no": "123456789",
-    "registration_id": "123",
-    "registration_type": "type",
     "origin": ORIGIN,
     "contacts": [
         {
