@@ -164,12 +164,12 @@ class ServiceRepository(CommonRepository):
             return service_media
         return None
 
-    def create_service_media(self,org_id,service_id,service_row_id,media_data):
-        url = media_data.get('url',""),
-        ipfs_url = media_data.get('ipfs_url',""),
-        order = media_data.get('order',"")
+    def insert_service_media(self,org_id,service_id,service_row_id,media_data):
+        url = media_data.get('url',"")
+        ipfs_url = media_data.get('ipfs_url',"")
+        order = media_data.get('order',0)
         file_type = media_data.get('file_type',"")
-        asset_type = media_data.get('asset_type',""),
+        asset_type = media_data.get('asset_type',"")
         alt_text = media_data.get('alt_text',"")
 
         query = "INSERT INTO service_media (org_id, service_id, url, `order`, file_type, asset_type, alt_text,ipfs_url,service_row_id,created_on, updated_on) VALUES(%s, %s, %s, %s, %s, %s, %s, %s,%s, %s,%s)"
@@ -177,7 +177,11 @@ class ServiceRepository(CommonRepository):
 
         self.connection.execute(query,insert_media_parameters)
 
-    def delete_service_media(self,org_id,service_id):
+    def delete_service_media(self,org_id,service_id, file_types=None):
         delete_service_media = 'DELETE FROM service_media WHERE service_id = %s AND org_id = %s '
-        response = self.connection.execute(delete_service_media, [service_id, org_id])
+        parameters = (service_id, org_id)
+        if file_types:
+            delete_service_media = delete_service_media +  " AND file_type IN %s"
+            parameters = (service_id, org_id, file_types)
+        response = self.connection.execute(delete_service_media, parameters)
 
