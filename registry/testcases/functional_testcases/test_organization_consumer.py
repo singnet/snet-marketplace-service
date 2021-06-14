@@ -50,8 +50,7 @@ class TestOrganizationService(unittest.TestCase):
         organization = Organization(
             uuid=test_org_uuid, name="test_org", org_id=test_org_id, org_type="organization",
             origin="PUBLISHER_PORTAL", description="this is long description",
-            short_description="this is short description", url="https://dummy.com", duns_no="123456789",
-            registration_id="", registration_type="", contacts=[],
+            short_description="this is short description", url="https://dummy.com", duns_no="123456789", contacts=[],
             assets={"hero_image": {"url": "some_url", "ipfs_hash": "Q123"}},
             metadata_ipfs_uri="Q3E12", org_state=[org_state], groups=[group])
         owner = OrganizationMember(
