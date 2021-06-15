@@ -5,7 +5,7 @@ from unittest.mock import patch
 from uuid import uuid4
 
 from common.constant import StatusCode
-from registry.application.handlers.service_handlers import create_service
+from registry.application.handlers.service_handlers import create_service, get_code_build_status_for_service
 from registry.application.handlers.service_handlers import get_daemon_config_for_current_network
 from registry.application.handlers.service_handlers import get_service_for_service_uuid
 from registry.application.handlers.service_handlers import get_services_for_organization
@@ -1342,6 +1342,113 @@ class TestService(TestCase):
                            'https://example-service-a.singularitynet.io:8011': {'valid': True}}, 'test_endpoints': [],
              'pricing': [{'default': True, 'price_model': 'fixed_price', 'price_in_cogs': 1}], 'free_calls': 15,
              'free_call_signer_address': '0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F', 'daemon_addresses': []}])
+
+        @patch("registry.application.services.code_build_service.CodeBuild.get_build_results")
+        def test_get_code_build_status(self, mock_build_response):
+            self.tearDown()
+            mock_build_response.return_value = {
+                'builds': [
+                    {
+                        'id': 'sample_build_id',
+                        'arn': 'arn:aws:codebuild:us-east-1:533793137436:build/ropstenstagingv2codebuildtr-LwN9IM20ho2d:08444f51-ed99-47d8-ba08-565ae1dc28ef',
+                        'currentPhase': 'COMPLETED',
+                        'buildStatus': 'SUCCEEDED'
+                    }
+                ]
+            }
+            org_repo.add_item(
+                OrganizationDBModel(
+                    name="test_org",
+                    org_id="test_org_id",
+                    uuid="test_org_uuid",
+                    org_type="organization",
+                    description="that is the dummy org for testcases",
+                    short_description="that is the short description",
+                    url="https://dummy.url",
+                    contacts=[],
+                    assets={},
+                    duns_no=12345678,
+                    origin="PUBLISHER_DAPP",
+                    groups=[],
+                    addresses=[],
+                    metadata_ipfs_uri="#dummyhashdummyhash"
+                )
+            )
+            new_org_members = [
+                {
+                    "username": "karl@dummy.io",
+                    "address": "0x123"
+                },
+                {
+                    "username": "trax@dummy.io",
+                    "address": "0x234"
+                },
+                {
+                    "username": "dummy_user1@dummy.io",
+                    "address": "0x345"
+                }
+
+            ]
+            org_repo.add_all_items(
+                [
+                    OrganizationMemberDBModel(
+                        username=member["username"],
+                        org_uuid="test_org_uuid",
+                        role=Role.MEMBER.value,
+                        address=member["address"],
+                        status=OrganizationMemberStatus.ACCEPTED.value,
+                        transaction_hash="0x123",
+                        invite_code=str(uuid4()),
+                        invited_on=dt.utcnow(),
+                        updated_on=dt.utcnow()
+                    ) for member in new_org_members
+                ]
+            )
+            service_repo.add_item(
+                ServiceDBModel(
+                    org_uuid="test_org_uuid",
+                    uuid="test_service_uuid",
+                    display_name="test_display_name",
+                    service_id="test_service_id",
+                    metadata_uri="Qasdfghjklqwertyuiopzxcvbnm",
+                    short_description="test_short_description",
+                    description="test_description",
+                    project_url="https://dummy.io",
+                    ranking=1,
+                    assets={
+                        "demo_files": {
+                            "url": "https://marketplace-registry-assets.s3.amazonaws.com/6509581150c8446e8a73b3fa71ebdb69/services/05676ad531cd40a889841ff1f3c5608b/component/20210228000436_component.zip",
+                            "ipfs_hash": "QmUKfyv5c8Ru93xyxTcXGswnNzuBTCBU9NGjMV7SMwLSgy",
+                            "build_id": "sample_build_id"
+                        },
+                        "hero_image": {
+                            "url": "https://marketplace-registry-assets.s3.amazonaws.com/6509581150c8446e8a73b3fa71ebdb69/services/05676ad531cd40a889841ff1f3c5608b/assets/20210127060152_asset.png",
+                            "ipfs_hash": "QmdSh54XcNPJo8v89LRFDN5FAoGL92mn174rKFzoHwUCM1/20210127060152_asset.png"
+                        },
+                        "proto_files": {
+                            "url": "https://marketplace-registry-assets.s3.amazonaws.com/6509581150c8446e8a73b3fa71ebdb69/services/05676ad531cd40a889841ff1f3c5608b/proto/20210131042033_proto_files.zip",
+                            "ipfs_hash": "QmUKfyv5c8Ru93xyxTcXGswnNzuBTCBU9NGjMV7SMwLSgy"
+                        }
+                    },
+                    created_on=dt.utcnow()
+                )
+            )
+            service_repo.add_item(
+                ServiceStateDBModel(
+                    row_id=1000,
+                    org_uuid="test_org_uuid",
+                    service_uuid="test_service_uuid",
+                    state=ServiceStatus.APPROVAL_PENDING.value,
+                    created_by="dummy_user",
+                    updated_by="dummy_user",
+                    created_on=dt.utcnow()
+                )
+            )
+            event = {"pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"}}
+            response = get_code_build_status_for_service(event=event, context=None)
+            assert (response["statusCode"] == 200)
+            body = json.loads(response['body'])
+            assert body['data']['build_status'] == "SUCCEEDED"
 
     def tearDown(self):
         org_repo.session.query(OrganizationStateDBModel).delete()
