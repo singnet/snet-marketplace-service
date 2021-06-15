@@ -1,6 +1,8 @@
 from datetime import datetime
 from uuid import uuid4
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from registry.constants import Role, OrganizationMemberStatus, OrganizationStatus, VerificationStatus
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.exceptions import OrganizationNotFoundException
@@ -10,6 +12,24 @@ from registry.infrastructure.repositories.base_repository import BaseRepository
 
 
 class OrganizationPublisherRepository(BaseRepository):
+
+    def get_organization(self, org_id=None, org_uuid=None):
+        try:
+            organization_query = self.session.query(Organization) \
+                .join(OrganizationState, Organization.uuid == OrganizationState.org_uuid)
+            if org_id:
+                organization_query = organization_query.filter(Organization.org_id == org_id)
+            if org_uuid:
+                organization_query = organization_query.filter(Organization.org_uuid == org_uuid)
+            organization_db = organization_query.first()
+            self.session.commit()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
+        if organization_db is None:
+            return None
+        organization = OrganizationFactory.org_domain_entity_from_repo_model(organization_db)
+        return organization
 
     def get_org(self, status=None, limit=None, org_type=None):
         organization_query = self.session.query(Organization)
@@ -281,7 +301,7 @@ class OrganizationPublisherRepository(BaseRepository):
     def delete_published_members(self, member_list):
         member_address_list = [member.address for member in member_list]
         self.session.query(OrganizationMember).filter(OrganizationMember.address.in_(member_address_list)) \
-            .filter(OrganizationMember.status == OrganizationMemberStatus.PUBLISHED.value)\
+            .filter(OrganizationMember.status == OrganizationMemberStatus.PUBLISHED.value) \
             .delete(synchronize_session='fetch')
         self.session.commit()
 
