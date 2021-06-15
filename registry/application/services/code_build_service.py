@@ -4,7 +4,6 @@ from common.logger import get_logger
 from registry.application.services.service_publisher_service import ServicePublisherService
 
 logger = get_logger(__name__)
-client = boto3.client('codebuild')
 
 
 class CodeBuild:
@@ -28,6 +27,6 @@ class CodeBuild:
             return {"build_status": status}
         except self.build_client.exceptions.InvalidInputException as e:
             raise Exception(f"build_id {build_id} is not found for service {service_uuid} and org {org_uuid}")
-        except client.exceptions.InvalidInputException as e:
+        except self.build_client.exceptions.InvalidInputException as e:
             logger.info(f"error in triggering build_id {build_id} for service {service_uuid} and org {org_uuid}")
             raise e
