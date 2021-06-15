@@ -6,6 +6,7 @@ from common.exceptions import BadRequestException
 from common.logger import get_logger
 from common.utils import generate_lambda_response, validate_dict
 from registry.application.access_control.authorization import secured
+from registry.application.services.code_build_service import CodeBuild
 from registry.application.services.service_publisher_service import ServicePublisherService
 from registry.application.services.service_transaction_status import ServiceTransactionStatus
 from registry.config import NETWORK_ID, SLACK_HOOK
@@ -275,3 +276,14 @@ def update_transaction(event, context):
     logger.info(event)
     ServiceTransactionStatus().update_transaction_status()
     return generate_lambda_response(StatusCode.OK, "OK")
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+def get_code_build_status_for_service(event, context):
+    logger.info(f"get code build for :: {event}")
+    org_uuid = event["org_uuid"]
+    service_uuid = event["service_uuid"]
+    response = CodeBuild().get_code_build_status(org_uuid=org_uuid, service_uuid=service_uuid)
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
