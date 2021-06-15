@@ -391,37 +391,6 @@ class TestOrganizationPublisherService(unittest.TestCase):
         organization = org_repo.get_org(OrganizationStatus.ONBOARDING_APPROVED.value)
         self.assertEqual(len(organization), 1)
 
-    @patch("common.boto_utils.BotoUtils.invoke_lambda")
-    def test_notify_user_on_start_of_onboarding_process(self, mock_invoke_lambda):
-        recipients = ["dummy@dummy.com"]
-        org_publisher_service = OrganizationPublisherService(username=None, org_uuid=None)
-        org_publisher_service.notify_user_on_start_of_onboarding_process(org_id="dummy", recipients=recipients)
-
-    @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
-    @patch("common.boto_utils.BotoUtils",
-           return_value=Mock(invoke_lambda=Mock(return_value={"StatusCode": 202}), s3_upload_file=Mock()))
-    def test_individual_organization_review(self, mock_boto, mock_ipfs):
-        from registry.application.services.slack_chat_operation import SlackChatOperation
-        username = "karl@dummy.in"
-        org_id = "test_org_id"
-        org_uuid = "test_org_uuid"
-        registration_type = "type"
-        registration_id = "123"
-        current_time = datetime.now()
-        org_repo.add_organization(
-            DomainOrganization(org_uuid, org_id, f"org_{org_id}", OrganizationType.INDIVIDUAL.value, ORIGIN, "",
-                               "", "", [], {}, "", "", [], [], [], [], registration_type=registration_type,
-                               registration_id=registration_id), username, OrganizationStatus.ONBOARDING.value)
-        SlackChatOperation("admin", "").process_approval_comment(
-            "organization", "APPROVED", "here is the comment", {"org_id": "test_org_id"})
-        organization = org_repo.get_org_for_org_uuid(org_uuid)
-        comments = organization.org_state.comments
-        if len(comments) != 1:
-            assert False
-        self.assertEqual("admin", comments[0].created_by)
-        self.assertEqual("here is the comment", comments[0].comment)
-        self.assertEqual(datetime_to_string(current_time), comments[0].created_at)
-
     def tearDown(self):
         org_repo.session.query(Group).delete()
         org_repo.session.query(OrganizationMember).delete()
