@@ -1794,7 +1794,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /org/{orgId}/service/{serviceId}/codebuild/demo_component
+          path: /org/{org_uuid}/service/{service_uuid}/codebuild/demo_component
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:

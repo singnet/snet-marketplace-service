@@ -1445,7 +1445,7 @@ class TestService(TestCase):
                 created_on=dt.utcnow()
             )
         )
-        event = {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"}
+        event = {"pathParameters":{"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"}}
         response = get_code_build_status_for_service(event=event, context=None)
         assert (response["statusCode"] == 200)
         body = json.loads(response['body'])

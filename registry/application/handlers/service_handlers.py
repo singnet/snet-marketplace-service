@@ -280,8 +280,9 @@ def update_transaction(event, context):
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def get_code_build_status_for_service(event, context):
     logger.info(f"get code build for :: {event}")
-    org_uuid = event["org_uuid"]
-    service_uuid = event["service_uuid"]
+    path_parameters = event["pathParameters"]
+    org_uuid = path_parameters["org_uuid"]
+    service_uuid = path_parameters["service_uuid"]
     response = CodeBuild().get_code_build_status(org_uuid=org_uuid, service_uuid=service_uuid)
     return generate_lambda_response(
         StatusCode.OK,
