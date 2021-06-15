@@ -5,7 +5,7 @@ from unittest.mock import patch
 from uuid import uuid4
 
 from common.constant import StatusCode
-from registry.application.handlers.service_handlers import create_service, get_code_build_status_for_service
+from registry.application.handlers.service_handlers import create_service
 from registry.application.handlers.service_handlers import get_daemon_config_for_current_network
 from registry.application.handlers.service_handlers import get_service_for_service_uuid
 from registry.application.handlers.service_handlers import get_services_for_organization
@@ -16,7 +16,6 @@ from registry.application.handlers.service_handlers import save_service
 from registry.application.handlers.service_handlers import save_service_attributes, verify_service_id
 from registry.application.handlers.service_handlers import save_transaction_hash_for_published_service
 from registry.application.handlers.service_handlers import submit_service_for_approval
-from registry.application.services.code_build_service import CodeBuild
 from registry.constants import EnvironmentType
 from registry.constants import OrganizationMemberStatus
 from registry.constants import Role
