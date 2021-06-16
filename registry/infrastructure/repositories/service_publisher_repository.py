@@ -1,6 +1,7 @@
 from datetime import datetime as dt
 
 from sqlalchemy import func
+from sqlalchemy.exc import SQLAlchemyError
 
 from registry.constants import ServiceStatus
 from registry.domain.factory.service_factory import ServiceFactory
@@ -193,7 +194,23 @@ class ServicePublisherRepository(BaseRepository):
         return service_state
 
     def update_service_status(self, service_uuid_list, prev_state, next_state):
-        self.session.query(ServiceState).filter(ServiceState.service_uuid.in_(service_uuid_list))\
+        self.session.query(ServiceState).filter(ServiceState.service_uuid.in_(service_uuid_list)) \
             .filter(ServiceState.state == prev_state).update({ServiceState.state: next_state},
                                                              synchronize_session=False)
         self.session.commit()
+
+    def update_service(self, org_uuid, service_uuid, assets=None):
+        try:
+            service = self.session.query(Service).filter(org_uuid == org_uuid) \
+                .filter(service_uuid == service_uuid).first()
+            if service:
+                if assets:
+                    service.assets = assets
+                self.session.commit()
+            else:
+                raise Exception(f"Service {service_uuid} not found for org {org_uuid}")
+        except SQLAlchemyError as error:
+            self.session.rollback()
+            raise error
+        except Exception as e:
+            raise e

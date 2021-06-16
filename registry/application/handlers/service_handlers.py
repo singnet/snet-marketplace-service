@@ -11,6 +11,7 @@ from registry.application.services.service_transaction_status import ServiceTran
 from registry.config import NETWORK_ID, SLACK_HOOK
 from registry.constants import Action, EnvironmentType
 from registry.exceptions import EnvironmentNotFoundException, EXCEPTIONS
+from registry.application.services.validate_component_service import ValidateComponent
 
 logger = get_logger(__name__)
 
@@ -292,7 +293,7 @@ def get_code_build_status_for_service(event, context):
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def validate_demo_component(event, context):
     logger.info(f"Validate demo component event :: {event}")
-    resource = {}
+    response = ValidateComponent().trigger_demo_component_code_build(payload=event)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True

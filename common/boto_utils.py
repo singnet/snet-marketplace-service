@@ -108,3 +108,12 @@ class BotoUtils:
             return build_client.batch_get_builds(ids=build_ids)
         except build_client.exceptions.InvalidInputException as e:
             raise Exception(f"build id is not found {build_ids}")
+
+    @staticmethod
+    def trigger_code_build(build_details):
+        try:
+            cb = boto3.client('codebuild')
+            build = cb.start_build(**build_details)
+            return build
+        except Exception as e:
+            raise e

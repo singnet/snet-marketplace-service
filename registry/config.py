@@ -67,3 +67,5 @@ APPROVAL_SLACK_HOOK = {
     'hostname': 'https://hooks.slack.com',
     'path': ''
 }
+COMPONENT_PATH_VALIDATION_PATTERN = ""
+COMPONENT_CODE_BUILD_ID = ""
