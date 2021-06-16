@@ -1688,3 +1688,4 @@ functions:
           event: s3:ObjectCreated:*
           rules:
             - suffix: _component.zip
+          existing: true
