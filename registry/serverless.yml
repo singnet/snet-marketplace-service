@@ -1682,10 +1682,3 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - s3:
-          bucket: ropsten-marketplace-service-assets
-          event: s3:ObjectCreated:*
-          rules:
-            - suffix: _component.zip
-          existing: true
