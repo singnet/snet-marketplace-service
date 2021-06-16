@@ -23,13 +23,13 @@ class RegistryBlockChainUtil:
             self.__blockchain_util = BlockChainUtil(provider_type="HTTP_PROVIDER",
                                                     provider=NETWORKS[self.__network_id]['http_provider'])
 
-        elif env_type == EnvironmentType.TEST.value:
-            self.__contract_path = TEST_REG_CNTRCT_PATH
-            self.__contract_address_path = TEST_REG_ADDR_PATH
-            self.__executor_address = BLOCKCHAIN_TEST_ENV["publisher_address"]
-            self.__network_id = BLOCKCHAIN_TEST_ENV["network_id"]
-            self.__blockchain_util = BlockChainUtil(provider_type="HTTP_PROVIDER",
-                                                    provider=BLOCKCHAIN_TEST_ENV['http_provider'])
+        # elif env_type == EnvironmentType.TEST.value:
+        #     self.__contract_path = TEST_REG_CNTRCT_PATH
+        #     self.__contract_address_path = TEST_REG_ADDR_PATH
+        #     self.__executor_address = BLOCKCHAIN_TEST_ENV["publisher_address"]
+        #     self.__network_id = BLOCKCHAIN_TEST_ENV["network_id"]
+        #     self.__blockchain_util = BlockChainUtil(provider_type="HTTP_PROVIDER",
+        #                                             provider=BLOCKCHAIN_TEST_ENV['http_provider'])
         else:
             raise MethodNotImplemented()
 
@@ -51,55 +51,55 @@ class RegistryBlockChainUtil:
         org_found = org_data[0]
         return org_found
 
-    def __generate_blockchain_transaction_for_test_environment(self, *positional_inputs, method_name):
-        transaction_object = self.__blockchain_util.create_transaction_object(
-            *positional_inputs, method_name=method_name, address=self.__executor_address,
-            contract_path=self.__contract_path, contract_address_path=self.__contract_address_path,
-            net_id=self.__network_id)
-        return transaction_object
+    # def __generate_blockchain_transaction_for_test_environment(self, *positional_inputs, method_name):
+    #     transaction_object = self.__blockchain_util.create_transaction_object(
+    #         *positional_inputs, method_name=method_name, address=self.__executor_address,
+    #         contract_path=self.__contract_path, contract_address_path=self.__contract_address_path,
+    #         net_id=self.__network_id)
+    #     return transaction_object
 
-    def __make_trasaction(self, *positional_inputs, method_name):
-        if self.__env_type == EnvironmentType.TEST.value:
-            executor_key = BotoUtils(REGION_NAME).get_ssm_parameter(BLOCKCHAIN_TEST_ENV["publisher_private_key"])
-            transaction_object = self.__generate_blockchain_transaction_for_test_environment(
-                *positional_inputs, method_name=method_name)
-        else:
-            raise EnvironmentNotFoundException()
-        raw_transaction = self.__blockchain_util.sign_transaction_with_private_key(
-            transaction_object=transaction_object,
-            private_key=executor_key)
-        transaction_hash = self.__blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
-        return transaction_hash
+    # def __make_trasaction(self, *positional_inputs, method_name):
+    #     if self.__env_type == EnvironmentType.TEST.value:
+    #         executor_key = BotoUtils(REGION_NAME).get_ssm_parameter(BLOCKCHAIN_TEST_ENV["publisher_private_key"])
+    #         transaction_object = self.__generate_blockchain_transaction_for_test_environment(
+    #             *positional_inputs, method_name=method_name)
+    #     else:
+    #         raise EnvironmentNotFoundException()
+    #     raw_transaction = self.__blockchain_util.sign_transaction_with_private_key(
+    #         transaction_object=transaction_object,
+    #         private_key=executor_key)
+    #     transaction_hash = self.__blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
+    #     return transaction_hash
 
-    def __update_organization_in_blockchain(self, org_id, metadata_uri):
-        method_name = "changeOrganizationMetadataURI"
-        positional_inputs = (web3.Web3.toHex(text=org_id), hash_to_bytesuri(metadata_uri))
-        transaction_hash = self.__make_trasaction(*positional_inputs, method_name=method_name)
-        logger.info(
-            f"transaction hash {transaction_hash} generated while registering organization "
-            f"{org_id} in {self.__env_type} blockchain environment.")
-        return transaction_hash
+    # def __update_organization_in_blockchain(self, org_id, metadata_uri):
+    #     method_name = "changeOrganizationMetadataURI"
+    #     positional_inputs = (web3.Web3.toHex(text=org_id), hash_to_bytesuri(metadata_uri))
+    #     transaction_hash = self.__make_trasaction(*positional_inputs, method_name=method_name)
+    #     logger.info(
+    #         f"transaction hash {transaction_hash} generated while registering organization "
+    #         f"{org_id} in {self.__env_type} blockchain environment.")
+    #     return transaction_hash
+    #
+    # def __register_organization_in_blockchain(self, org_id, metadata_uri, members):
+    #     method_name = "createOrganization"
+    #     positional_inputs = (web3.Web3.toHex(text=org_id), hash_to_bytesuri(metadata_uri), members)
+    #     transaction_hash = self.__make_trasaction(*positional_inputs, method_name=method_name)
+    #     logger.info(
+    #         f"transaction hash {transaction_hash} generated while registering organization "
+    #         f"{org_id} in {self.__env_type} blockchain environment.")
+    #     return transaction_hash
 
-    def __register_organization_in_blockchain(self, org_id, metadata_uri, members):
-        method_name = "createOrganization"
-        positional_inputs = (web3.Web3.toHex(text=org_id), hash_to_bytesuri(metadata_uri), members)
-        transaction_hash = self.__make_trasaction(*positional_inputs, method_name=method_name)
-        logger.info(
-            f"transaction hash {transaction_hash} generated while registering organization "
-            f"{org_id} in {self.__env_type} blockchain environment.")
-        return transaction_hash
-
-    def publish_organization_to_test_network(self, organization):
-        metadata_uri = organization.metadata_ipfs_uri
-        members = []
-        org_id = organization.id
-        if self.__env_type == EnvironmentType.TEST.value:
-            if self.is_org_published(org_id):
-                return self.__update_organization_in_blockchain(org_id, metadata_uri)
-            else:
-                return self.__register_organization_in_blockchain(org_id, metadata_uri, members)
-        else:
-            raise EnvironmentNotFoundException()
+    # def publish_organization_to_test_network(self, organization):
+    #     metadata_uri = organization.metadata_ipfs_uri
+    #     members = []
+    #     org_id = organization.id
+    #     if self.__env_type == EnvironmentType.TEST.value:
+    #         if self.is_org_published(org_id):
+    #             return self.__update_organization_in_blockchain(org_id, metadata_uri)
+    #         else:
+    #             return self.__register_organization_in_blockchain(org_id, metadata_uri, members)
+    #     else:
+    #         raise EnvironmentNotFoundException()
 
     def __service_exist_in_blockchain(self, org_id, service_id, contract, contract_address):
         method_name = "getServiceRegistrationById"
@@ -111,25 +111,25 @@ class RegistryBlockChainUtil:
         service_found = service_data[0]
         return service_found
 
-    def update_service_in_blockchain(self, org_id, service_id, metadata_uri):
-        method_name = "updateServiceRegistration"
-        positional_inputs = (
-        web3.Web3.toHex(text=org_id), web3.Web3.toHex(text=service_id), ipfsuri_to_bytesuri(metadata_uri))
-        transaction_hash = self.__make_trasaction(*positional_inputs, method_name=method_name)
-        logger.info(f"transaction hash {transaction_hash} generated while "
-                    f"updating service {service_id} in {self.__env_type} blockchain environment.")
-        return transaction_hash
-
-    def register_service_in_blockchain(self, org_id, service_id, metadata_uri):
-        method_name = "createServiceRegistration"
-        positional_inputs = (web3.Web3.toHex(text=org_id),
-                             web3.Web3.toHex(text=service_id),
-                             ipfsuri_to_bytesuri(metadata_uri))
-        transaction_hash = self.__make_trasaction(*positional_inputs, method_name=method_name)
-        logger.info(
-            f"transaction hash {transaction_hash} generated while registering service {service_id} "
-            f"in {self.__env_type} blockchain environment.")
-        return transaction_hash
+    # def update_service_in_blockchain(self, org_id, service_id, metadata_uri):
+    #     method_name = "updateServiceRegistration"
+    #     positional_inputs = (
+    #     web3.Web3.toHex(text=org_id), web3.Web3.toHex(text=service_id), ipfsuri_to_bytesuri(metadata_uri))
+    #     transaction_hash = self.__make_trasaction(*positional_inputs, method_name=method_name)
+    #     logger.info(f"transaction hash {transaction_hash} generated while "
+    #                 f"updating service {service_id} in {self.__env_type} blockchain environment.")
+    #     return transaction_hash
+    #
+    # def register_service_in_blockchain(self, org_id, service_id, metadata_uri):
+    #     method_name = "createServiceRegistration"
+    #     positional_inputs = (web3.Web3.toHex(text=org_id),
+    #                          web3.Web3.toHex(text=service_id),
+    #                          ipfsuri_to_bytesuri(metadata_uri))
+    #     transaction_hash = self.__make_trasaction(*positional_inputs, method_name=method_name)
+    #     logger.info(
+    #         f"transaction hash {transaction_hash} generated while registering service {service_id} "
+    #         f"in {self.__env_type} blockchain environment.")
+    #     return transaction_hash
 
     def is_service_published(self, org_id, service_id):
         contract = self.__blockchain_util.load_contract(path=self.__contract_path)

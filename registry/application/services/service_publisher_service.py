@@ -291,11 +291,10 @@ class ServicePublisherService:
                                 payload=json.dumps(send_notification_payload))
 
     def submit_service_for_approval(self, payload):
-
         user_as_contributor = [{"email_id": self._username, "name": ""}]
         payload["contributors"] = payload.get("contributors", user_as_contributor) + user_as_contributor
 
-        organization = OrganizationPublisherRepository().get_org_for_org_uuid(self._org_uuid)
+        organization = OrganizationPublisherRepository().get_organization(org_uuid=self._org_uuid)
         if not organization:
             raise OrganizationNotFoundException()
         if not organization.org_state:
@@ -307,8 +306,8 @@ class ServicePublisherService:
             self._org_uuid, self._service_uuid, payload, ServiceStatus.APPROVAL_PENDING.value)
 
         # publish service data with test config on ipfs
-        service = self.obj_service_publisher_domain_service.publish_service_data_to_ipfs(service,
-                                                                                         EnvironmentType.TEST.value)
+        # service = self.obj_service_publisher_domain_service.publish_service_data_to_ipfs(service,
+        #                                                                                  EnvironmentType.TEST.value)
 
         comments = payload.get("comments", {}).get(UserType.SERVICE_PROVIDER.value, "")
         if bool(comments):
@@ -323,16 +322,16 @@ class ServicePublisherService:
         service = ServicePublisherRepository().save_service(self._username, service, service.service_state.state)
 
         # publish service on test network
-        response = self.obj_service_publisher_domain_service.publish_service_on_blockchain(
-            org_id=organization.id, service=service, environment=EnvironmentType.TEST.value)
+        # response = self.obj_service_publisher_domain_service.publish_service_on_blockchain(
+        #     org_id=organization.id, service=service, environment=EnvironmentType.TEST.value)
 
         # notify service contributors via email
-        self.notify_service_contributor_when_user_submit_for_approval(organization.id, service.service_id,
-                                                                      service.contributors)
+        # self.notify_service_contributor_when_user_submit_for_approval(organization.id, service.service_id,
+        #                                                               service.contributors)
 
         # notify approval team via slack
-        self.notify_approval_team(service.service_id, service.display_name, organization.id, organization.name)
-        return response
+        # self.notify_approval_team(service.service_id, service.display_name, organization.id, organization.name)
+        return service.to_dict()
 
     @staticmethod
     def publish_to_ipfs(filename, data):
@@ -342,7 +341,7 @@ class ServicePublisherService:
         return service_metadata_ipfs_hash
 
     def daemon_config(self, environment):
-        organization = OrganizationPublisherRepository().get_org_for_org_uuid(self._org_uuid)
+        organization = OrganizationPublisherRepository().get_organization(org_uuid=self._org_uuid)
         if not organization:
             raise OrganizationNotFoundException()
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
@@ -383,7 +382,7 @@ class ServicePublisherService:
         list_of_services = []
         services = ServicePublisherRepository().get_list_of_service_pending_for_approval(limit)
         for service in services:
-            org = OrganizationPublisherRepository().get_org_for_org_uuid(org_uuid=service.org_uuid)
+            org = OrganizationPublisherRepository().get_organization(org_uuid=service.org_uuid)
             list_of_services.append({
                 "org_uuid": service.org_uuid,
                 "org_id": org.id,

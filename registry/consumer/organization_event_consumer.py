@@ -127,8 +127,7 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
 
     def _get_existing_organization_records(self, org_id):
         try:
-            existing_publish_in_progress_organization = self._organization_repository.get_org_for_org_id(
-                org_id)
+            existing_publish_in_progress_organization = self._organization_repository.get_organization(org_id=org_id)
         except OrganizationNotFoundException:
             return None
         except Exception as e:
@@ -185,10 +184,11 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                                                        duns_no, groups,
                                                        addresses,
                                                        OrganizationStatus.DRAFT.value,
-                                                       members, "", "")
+                                                       members)
 
-            test_transaction_hash = RegistryBlockChainUtil(EnvironmentType.TEST.value) \
-                .publish_organization_to_test_network(received_organization_event)
+            # test_transaction_hash = RegistryBlockChainUtil(EnvironmentType.TEST.value) \
+            #     .publish_organization_to_test_network(received_organization_event)
+            test_transaction_hash = None
 
             if not existing_publish_in_progress_organization:
                 existing_members = []
