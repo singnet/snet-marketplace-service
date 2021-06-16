@@ -26,11 +26,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
-    @patch(
-        "registry.application.services.organization_publisher_service.OrganizationPublisherService.notify_approval_team")
-    @patch(
-        "registry.application.services.organization_publisher_service.OrganizationPublisherService.notify_user_on_start_of_onboarding_process")
-    def test_create_organization(self, mock_user_mail, mock_approval_team, mock_boto, mock_ipfs):
+    def test_create_organization(self, mock_boto, mock_ipfs):
         username = "karl@cryptonian.io"
         payload = {
             "org_id": "", "org_uuid": "", "org_name": "test_org", "org_type": "organization",
@@ -274,10 +270,8 @@ class TestOrganizationPublisherService(unittest.TestCase):
                 assert False
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q12PWP")))
-    @patch("registry.domain.services.registry_blockchain_util."
-           "RegistryBlockChainUtil.publish_organization_to_test_network", return_value="0x123")
     @patch("registry.domain.models.organization.json_to_file")
-    def test_org_publish_to_ipfs(self, mock_json_to_file_util, mock_test_network_publish, mock_ipfs_utils):
+    def test_org_publish_to_ipfs(self, mock_json_to_file_util, mock_ipfs_utils):
         test_org_id = uuid4().hex
         username = "dummy@snet.io"
         org_repo.add_organization(

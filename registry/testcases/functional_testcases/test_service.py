@@ -1076,6 +1076,15 @@ class TestService(TestCase):
                 ) for member in new_org_members
             ]
         )
+        org_repo.add_item(
+            OrganizationStateDBModel(
+                org_uuid="test_org_uuid",
+                state="PUBLISHED",
+                created_by="dummy_user1@dummy.io",
+                updated_by="dummy_user1@dummy.io"
+            )
+        )
+
         service_repo.add_item(
             ServiceDBModel(
                 org_uuid="test_org_uuid",
@@ -1104,25 +1113,6 @@ class TestService(TestCase):
                 created_on=dt.utcnow()
             )
         )
-        event = {"path": "/org/test_org_uuid/service/test_service_uuid/group_id/test_group_id/daemon/config",
-                 "requestContext": {
-                     "authorizer": {
-                         "claims": {
-                             "email": "dummy_user1@dummy.io"
-                         }
-                     }
-                 }, "httpMethod": "GET",
-                 "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid",
-                                    "group_id": "test_group_id"},
-                 "queryStringParameters": {"network": EnvironmentType.TEST.value}}
-        response = get_daemon_config_for_current_network(event, "")
-        assert (response["statusCode"] == 200)
-        response_body = json.loads(response["body"])
-        assert (response_body["status"] == "success")
-        assert (response_body["data"]["allowed_user_flag"] is True)
-        assert (len(response_body["data"]["allowed_user_addresses"]) == 2)
-        assert (response_body["data"]["blockchain_enabled"] is False)
-        assert (response_body["data"]["passthrough_enabled"] is True)
         event = {"path": "/org/test_org_uuid/service/test_service_uuid/group_id/test_group_id/daemon/config",
                  "requestContext": {
                      "authorizer": {
