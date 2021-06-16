@@ -272,18 +272,27 @@ def service_deployment_status_notification_handler(event, context):
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def update_transaction(event, context):
-    logger.info(event)
+    logger.info(f"Update transaction event :: {event}")
     ServiceTransactionStatus().update_transaction_status()
     return generate_lambda_response(StatusCode.OK, "OK")
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def get_code_build_status_for_service(event, context):
-    logger.info(f"get code build for :: {event}")
+    logger.info(f"Get code build status event :: {event}")
     path_parameters = event["pathParameters"]
     org_uuid = path_parameters["org_uuid"]
     service_uuid = path_parameters["service_uuid"]
     response = ServicePublisherService(org_uuid=org_uuid, service_uuid=service_uuid, username=None)\
                     .get_service_demo_component_build_status()
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+def validate_demo_component(event, context):
+    logger.info(f"Validate demo component event :: {event}")
+    resource = {}
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
