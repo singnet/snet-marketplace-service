@@ -21,7 +21,7 @@ class TestOrganizationMember(TestCase):
             DomainOrganization(
                 test_org_uuid, "org_id", "org_dummy",
                 "ORGANIZATION", ORIGIN, "description",
-                "short_description", "https://test.io", ORG_CONTACTS, {}, "ipfs_hash", "123456879", [], [], [], [], "", ""),
+                "short_description", "https://test.io", ORG_CONTACTS, {}, "ipfs_hash", "123456879", [], [], [], []),
             owner_username, OrganizationStatus.PUBLISHED.value)
 
         new_org_members = [
@@ -67,7 +67,7 @@ class TestOrganizationMember(TestCase):
             DomainOrganization(
                 test_org_uuid, "org_id", "org_dummy",
                 "ORGANIZATION", ORIGIN, "description",
-                "short_description", "https://test.io", ORG_CONTACTS, {}, "ipfs_hash", "123456879", [], [], [], [], "", ""),
+                "short_description", "https://test.io", ORG_CONTACTS, {}, "ipfs_hash", "123456879", [], [], [], []),
             owner_username, OrganizationStatus.PUBLISHED.value)
 
         members = OrganizationPublisherService(test_org_uuid, owner_username).get_member(owner_username)
@@ -95,7 +95,7 @@ class TestOrganizationMember(TestCase):
             DomainOrganization(
                 test_org_uuid, "org_id", "org_dummy",
                 "ORGANIZATION", ORIGIN, "description",
-                "short_description", "https://test.io", ORG_CONTACTS, {}, "ipfs_hash", "123456879", [], [], [], [], "", ""),
+                "short_description", "https://test.io", ORG_CONTACTS, {}, "ipfs_hash", "123456879", [], [], [], []),
             owner_username, OrganizationStatus.PUBLISHED.value)
 
         member_username = "karl@dummy.io"
@@ -123,7 +123,7 @@ class TestOrganizationMember(TestCase):
             DomainOrganization(
                 test_org_uuid, "org_id", "org_dummy",
                 "ORGANIZATION", ORIGIN, "description",
-                "short_description", "https://test.io", ORG_CONTACTS, {}, "ipfs_hash", "123456879", [], [], [], [], "", ""),
+                "short_description", "https://test.io", ORG_CONTACTS, {}, "ipfs_hash", "123456879", [], [], [], []),
             owner_username, OrganizationStatus.PUBLISHED.value)
 
         new_org_members = [
@@ -170,7 +170,7 @@ class TestOrganizationMember(TestCase):
             DomainOrganization(
                 test_org_uuid, "org_id", "org_dummy",
                 "ORGANIZATION", ORIGIN, "description",
-                "short_description", "https://test.io", ORG_CONTACTS, {}, "ipfs_hash", "123456879", [], [], [], [], "", ""),
+                "short_description", "https://test.io", ORG_CONTACTS, {}, "ipfs_hash", "123456879", [], [], [], []),
             owner_username, OrganizationStatus.PUBLISHED.value)
 
         new_org_members = [
@@ -218,7 +218,7 @@ class TestOrganizationMember(TestCase):
             DomainOrganization(
                 test_org_uuid, "org_id", "org_dummy",
                 "ORGANIZATION", ORIGIN, "description",
-                "short_description", "https://test.io", ORG_CONTACTS, {}, "ipfs_hash", "123456879", [], [], [], [], "", ""),
+                "short_description", "https://test.io", ORG_CONTACTS, {}, "ipfs_hash", "123456879", [], [], [], []),
             owner_username, OrganizationStatus.PUBLISHED.value)
 
         member_username = "karl@dummy.io"
@@ -263,7 +263,7 @@ class TestOrganizationMember(TestCase):
             DomainOrganization(
                 test_org_uuid, "org_id", "org_dummy",
                 "ORGANIZATION", ORIGIN, "description",
-                "short_description", "https://test.io", ORG_CONTACTS, {}, "ipfs_hash", "123456879", [], [], [], [], "", ""),
+                "short_description", "https://test.io", ORG_CONTACTS, {}, "ipfs_hash", "123456879", [], [], [], []),
             owner_username, OrganizationStatus.PUBLISHED.value)
 
         new_org_members = [

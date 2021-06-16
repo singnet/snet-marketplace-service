@@ -38,16 +38,16 @@ class OrganizationPublisherService:
 
     def get_approval_pending_organizations(self, limit, type=None):
         status = OrganizationStatus.ONBOARDING.value
-        organizations = org_repo.get_org(status, limit, type)
+        organizations = org_repo.get_organizations(status, limit, type)
         return [org.to_response() for org in organizations]
 
     def get_all_org_for_user(self):
         logger.info(f"get organization for user: {self.username}")
-        organizations = org_repo.get_org_for_user(username=self.username)
+        organizations = org_repo.get_all_orgs_for_user(username=self.username)
         return [org.to_response() for org in organizations]
 
     def get_all_org_id(self):
-        organizations = org_repo.get_org()
+        organizations = org_repo.get_organizations()
         return [org.id for org in organizations]
 
     def get_org_id_availability_status(self, org_id):
@@ -71,27 +71,21 @@ class OrganizationPublisherService:
         logger.info(f"create organization for user: {self.username}")
         organization = OrganizationFactory.org_domain_entity_from_payload(payload)
         organization.setup_id()
-        if not organization.create_setup():
-            raise Exception("Invalid Organization information")
         logger.info(f"assigned org_uuid : {organization.uuid}")
         org_ids = self.get_all_org_id()
         if organization.id in org_ids:
             raise Exception("Org_id already exists")
         updated_state = Organization.next_state(None, None, OrganizationActions.CREATE.value)
-        self.notify_approval_team(organization.id, organization.name)
-        self.notify_user_on_start_of_onboarding_process(organization.id, recipients=[self.username])
         org_repo.add_organization(organization, self.username, updated_state)
+        organization = org_repo.get_organization(org_id=organization.id)
         return organization.to_response()
 
     def update_organization(self, payload, action):
         logger.info(f"update organization for user: {self.username} org_uuid: {self.org_uuid} action: {action}")
         updated_organization = OrganizationFactory.org_domain_entity_from_payload(payload)
-        current_organization = org_repo.get_org_for_org_uuid(self.org_uuid)
+        current_organization = org_repo.get_organization(org_uuid=self.org_uuid)
         self._archive_current_organization(current_organization)
         updated_state = Organization.next_state(current_organization, updated_organization, action)
-        if updated_state == OrganizationStatus.ONBOARDING.value:
-            self.notify_approval_team(updated_organization.id, updated_organization.name)
-            self.notify_user_on_start_of_onboarding_process(updated_organization.id, recipients=[self.username])
         org_repo.update_organization(updated_organization, self.username, updated_state)
         return "OK"
 
@@ -123,7 +117,7 @@ class OrganizationPublisherService:
 
     def publish_org_to_ipfs(self):
         logger.info(f"publish organization to ipfs org_uuid: {self.org_uuid}")
-        organization = org_repo.get_org_for_org_uuid(self.org_uuid)
+        organization = org_repo.get_organization(org_uuid=self.org_uuid)
         organization.publish_to_ipfs()
         org_repo.store_ipfs_hash(organization, self.username)
         return organization.to_response()
@@ -196,7 +190,7 @@ class OrganizationPublisherService:
             org_member.set_invited_on(current_time)
             org_member.set_updated_on(current_time)
 
-        organization = org_repo.get_org_for_org_uuid(self.org_uuid)
+        organization = org_repo.get_organization(org_uuid=self.org_uuid)
         org_name = organization.name
         self._send_email_notification_for_inviting_organization_member(eligible_invite_member_list, org_name)
         org_repo.add_member(eligible_invite_member_list)
@@ -234,7 +228,7 @@ class OrganizationPublisherService:
                 comment = verification_details["comment"]
                 if status in ORG_STATUS_LIST:
                     org_repo.update_organization_status(org_uuid, status, updated_by)
-                    organization = org_repo.get_org_for_org_uuid(org_uuid)
+                    organization = org_repo.get_organization(org_uuid=org_uuid)
                     owner = org_repo.get_org_member(org_uuid=org_uuid, role=Role.OWNER.value)
                     owner_username = owner[0].username
                     self.send_mail_to_owner(owner_username, comment, organization.id, status)

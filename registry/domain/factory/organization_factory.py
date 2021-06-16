@@ -21,8 +21,6 @@ class OrganizationFactory:
         short_description = payload["short_description"]
         url = payload["url"]
         duns_no = payload["duns_no"]
-        registration_id = payload["registration_id"]
-        registration_type = payload["registration_type"]
         origin = payload["origin"]
         if origin not in ALLOWED_ORIGIN:
             raise InvalidOriginException()
@@ -34,7 +32,7 @@ class OrganizationFactory:
             .domain_address_entity_from_address_list_payload(payload["org_address"]["addresses"])
         organization = Organization(
             org_uuid, org_id, org_name, org_type, origin, description, short_description, url, contacts,
-            assets, metadata_ipfs_uri, duns_no, groups, addresses, None, [], registration_id, registration_type)
+            assets, metadata_ipfs_uri, duns_no, groups, addresses, None, [])
         return organization
 
     @staticmethod
@@ -99,9 +97,7 @@ class OrganizationFactory:
             groups=OrganizationFactory.parse_group_data_model(organization_repo_model.groups),
             addresses=OrganizationFactory.parse_organization_address_data_model(organization_repo_model.addresses),
             org_state=OrganizationFactory.parse_organization_state_data_model(organization_repo_model.org_state),
-            members=[],
-            registration_id=organization_repo_model.registration_id,
-            registration_type=organization_repo_model.registration_type
+            members=[]
         )
 
     @staticmethod
@@ -268,8 +264,6 @@ class OrganizationFactory:
                                                                         existing_assets)
         metadata_ipfs_hash = metadata_uri
         owner = ""
-        registration_id = ""
-        registration_type = ""
         groups = OrganizationFactory.group_domain_entity_from_group_list_metadata(ipfs_org_metadata.get("groups", []))
 
         organization = Organization(org_uuid, org_id, org_name, org_type,
@@ -278,5 +272,5 @@ class OrganizationFactory:
                                     duns_no, groups,
                                     addresses,
                                     OrganizationStatus.PUBLISHED.value,
-                                    members, registration_id, registration_type)
+                                    members)
         return organization
