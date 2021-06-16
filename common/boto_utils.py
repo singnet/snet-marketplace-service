@@ -100,3 +100,11 @@ class BotoUtils:
                 self.s3_download_file(bucket=bucket, key=object_key['Key'], filename=os.path.join(target_path, filename))
         except Exception as e:
             raise e
+
+    @staticmethod
+    def get_code_build_details(build_ids):
+        try:
+            build_client = boto3.client('codebuild')
+            return build_client.batch_get_builds(ids=build_ids)
+        except build_client.exceptions.InvalidInputException as e:
+            raise Exception(f"build id is not found {build_ids}")
