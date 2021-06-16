@@ -393,3 +393,19 @@ class ServicePublisherService:
             })
 
         return list_of_services
+
+    def get_service_demo_component_build_status(self):
+        try:
+            service = self.get_service_for_given_service_uuid()
+            if service:
+                build_id = service["media"]["demo_files"]["build_id"]
+                build_response = boto_util.get_code_build_details(build_ids=[build_id])
+                build_data = [data for data in build_response['builds'] if data['id'] == build_id]
+                status = build_data[0]['buildStatus']
+            else:
+                raise Exception(f"service for org {self._org_uuid} and service {service} is not found")
+            return {"build_status": status}
+        except Exception as e:
+            logger.info(
+                f"error in triggering build_id {build_id} for service {self._service_uuid} and org {self._org_uuid} :: error {repr(e)}")
+            raise e
