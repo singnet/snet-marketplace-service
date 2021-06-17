@@ -298,3 +298,15 @@ def validate_demo_component(event, context):
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+def update_demo_component_build_status(event, context):
+    logger.info(f"Demo component build status update :: {event}")
+    org_uuid = event['org_uuid']
+    service_uuid = event['service_uuid']
+    build_status = event['build_status']
+    response = ValidateDemoComponent().update_demo_component_build_status(org_uuid=org_uuid, service_uuid=service_uuid, build_status=build_status)
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
