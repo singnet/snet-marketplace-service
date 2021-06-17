@@ -16,26 +16,36 @@ class ValidateComponent:
     def trigger_demo_component_code_build(self, payload):
         try:
             uploaded_file_path = payload["Records"][0]['s3']['object']['key']
-            org_uuid, service_uuid = self.validate_uploaded_file(uploaded_file_path=uploaded_file_path)
+            service_details = self.validate_uploaded_file(uploaded_file_path=uploaded_file_path)
 
             build_details = {
                 'projectName': COMPONENT_CODE_BUILD_ID,
                 'environmentVariablesOverride': [
                     {
                         'name': 'org_uuid',
-                        'value': f"{org_uuid}",
+                        'value': f"{service_details['org_uuid']}",
                         'type': 'PLAINTEXT'
                     },
                     {
                         'name': 'service_uuid',
-                        'value': f"{service_uuid}",
+                        'value': f"{service_details['service_uuid']}",
                         'type': 'PLAINTEXT'
                     },
+                    {
+                        'name': 'filename',
+                        'value': f"{service_details['filename']}",
+                        'type': 'PLAINTEXT'
+                    },
+                    {
+                        'name': 'lambda_function',
+                        'value': f" ",
+                        'type': 'PLAINTEXT'
+                    }
                 ]
             }
             build_trigger_response = self.boto_utils.trigger_code_build(build_details=build_details)
             build_id = build_trigger_response['build']['id']
-            self.update_demo_trigger_id_to_service(org_uuid=org_uuid, service_uuid=service_uuid, build_id=build_id)
+            self.update_demo_trigger_id_to_service(org_uuid=service_details['org_uuid'], service_uuid=service_details['service_uuid'], build_id=build_id)
             return {'build_id': build_id}
         except Exception as e:
             raise e
@@ -57,10 +67,12 @@ class ValidateComponent:
             logger.info(msg)
             raise Exception(msg)
         path_values = uploaded_file_path.split('/')
-        org_uuid = path_values[0]
-        service_uuid = path_values[2]
-        return org_uuid, service_uuid
-
+        service_details = {
+            "org_uuid": path_values[0],
+            "service_uuid": path_values[2],
+            "filename": path_values[4]
+        }
+        return service_details
 
 
 
