@@ -50,7 +50,8 @@ class ServicePublisherService:
 
         if build_status == BUILD_FAILURE_CODE:
             BUILD_FAIL_MESSAGE = "Build failed please check your components"
-            org_uuid, service = ServicePublisherRepository().get_service_for_given_service_id_and_org_id(org_id, service_id)
+            org_uuid, service = ServicePublisherRepository().get_service_for_given_service_id_and_org_id(org_id,
+                                                                                                         service_id)
 
             contacts = [contributor.get("email_id", "") for contributor in service.contributors]
 
@@ -82,21 +83,51 @@ class ServicePublisherService:
             return {}
         return service.to_dict()
 
+    @staticmethod
+    def _get_valid_service_contributors(contributors):
+        for contributor in contributors:
+            email_id = contributor.get("email_id", None)
+            name = contributor.get("name", None)
+            if (email_id is None or len(email_id) == 0) and (name is None or len(name) == 0):
+                contributors.remove(contributor)
+        return contributors
+
+    def _save_service_comment(self, support_type, user_type, comment):
+        service_provider_comment = ServiceFactory. \
+            create_service_comment_entity_model(org_uuid=self._org_uuid,
+                                                service_uuid=self._service_uuid,
+                                                support_type=support_type,
+                                                user_type=user_type,
+                                                commented_by=self._username,
+                                                comment=comment)
+        ServicePublisherRepository().save_service_comments(service_provider_comment)
+
     def save_service(self, payload):
-        service = ServiceFactory().create_service_entity_model(self._org_uuid, self._service_uuid, payload,
-                                                               ServiceStatus.DRAFT.value)
+        service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
+        service.service_id = payload["service_id"]
+        service.proto = payload.get("proto", {})
+        service.short_description = payload.get("short_description", "")
+        service.description = payload.get("description", "")
+        service.project_url = payload.get("project_url", "")
+        service.assets = {
+            "proto_files": payload.get("assets", {}).get("proto_files", {}),
+            "demo_files": service.assets.get("demo_files", {}),
+            "hero_image": payload.get("assets", {}).get("hero_image", {})
+        }
+        service.contributors = ServicePublisherService. \
+            _get_valid_service_contributors(contributors=payload.get("contributors", []))
+        service.tags = payload.get("tags", [])
+        service.mpe_address = payload.get("mpe_address","")
+        service.groups = []
+        for group in payload["groups"]:
+            service_group = ServiceFactory.create_service_group_entity_model(self._org_uuid, self._service_uuid, group)
+            service.groups.append(service_group)
+        service.service_state.state = ServiceStatus.DRAFT.value
+        service.service_state.transaction_hash = payload.get("transaction_hash", None)
         service = ServicePublisherRepository().save_service(self._username, service, ServiceStatus.DRAFT.value)
-        comments = payload.get("comments", {}).get(UserType.SERVICE_PROVIDER.value, "")
-        if bool(comments):
-            service_provider_comment = service_factory. \
-                create_service_comment_entity_model(org_uuid=self._org_uuid,
-                                                    service_uuid=self._service_uuid,
-                                                    support_type="SERVICE_APPROVAL",
-                                                    user_type="SERVICE_PROVIDER",
-                                                    commented_by=self._username,
-                                                    comment=comments)
-            ServicePublisherRepository().save_service_comments(service_provider_comment)
-            service.comments = self.get_service_comments()
+        comment = payload.get("comments", {}).get(UserType.SERVICE_PROVIDER.value, "")
+        if len(comment) > 0:
+            self._save_service_comment(support_type="SERVICE_APPROVAL", user_type="SERVICE_PROVIDER", comment=comment)
         return service.to_dict()
 
     def save_service_attributes(self, payload):
@@ -240,18 +271,18 @@ class ServicePublisherService:
     # @staticmethod
     # def unregister_service_in_blockchain(org_id, service_id):
     #     return ""
-        # blockchain_util = BlockChainUtil(provider=NETWORKS[NETWORK_ID]["http_provider"], provider_type="http_provider")
-        # method_name = "deleteServiceRegistration"
-        # positional_inputs = (org_id, service_id)
-        # transaction_object = blockchain_util.create_transaction_object(*positional_inputs, method_name=method_name,
-        #                                                                address=EXECUTOR_ADDRESS,
-        #                                                                contract_path=REG_CNTRCT_PATH,
-        #                                                                contract_address_path=REG_ADDR_PATH,
-        #                                                                net_id=NETWORK_ID)
-        # raw_transaction = blockchain_util.sign_transaction_with_private_key(transaction_object=transaction_object,
-        #                                                                     private_key=EXECUTOR_KEY)
-        # transaction_hash = blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
-        # return transaction_hash
+    # blockchain_util = BlockChainUtil(provider=NETWORKS[NETWORK_ID]["http_provider"], provider_type="http_provider")
+    # method_name = "deleteServiceRegistration"
+    # positional_inputs = (org_id, service_id)
+    # transaction_object = blockchain_util.create_transaction_object(*positional_inputs, method_name=method_name,
+    #                                                                address=EXECUTOR_ADDRESS,
+    #                                                                contract_path=REG_CNTRCT_PATH,
+    #                                                                contract_address_path=REG_ADDR_PATH,
+    #                                                                net_id=NETWORK_ID)
+    # raw_transaction = blockchain_util.sign_transaction_with_private_key(transaction_object=transaction_object,
+    #                                                                     private_key=EXECUTOR_KEY)
+    # transaction_hash = blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
+    # return transaction_hash
 
     # @staticmethod
     # def unregister_service_in_blockchain_after_service_is_approved(org_id, service_id):

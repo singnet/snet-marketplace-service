@@ -19,8 +19,11 @@ class ValidateDemoComponent:
     def trigger_demo_component_code_build(payload):
         try:
             uploaded_file_path = payload["Records"][0]['s3']['object']['key']
-            org_uuid, service_uuid, filename = ValidateDemoComponent().extract_file_details_from_file_path(
-                path=uploaded_file_path)
+            bucket_name = payload["Records"][0]['s3']['bucket']['name']
+            org_uuid, service_uuid, filename, s3_url = ValidateDemoComponent.extract_file_details_from_file_path(
+                path=uploaded_file_path,
+                bucket_name=bucket_name
+            )
             build_details = {
                 'projectName': DEMO_COMPONENT_CODE_BUILD_NAME,
                 'environmentVariablesOverride': [
@@ -48,19 +51,20 @@ class ValidateDemoComponent:
             }
             build_trigger_response = boto_utils.trigger_code_build(build_details=build_details)
             build_id = build_trigger_response['build']['id']
-            ValidateDemoComponent().update_demo_code_build_id(org_uuid=org_uuid, service_uuid=service_uuid,
-                                                              build_id=build_id)
+            ValidateDemoComponent.update_demo_code_build_id(org_uuid=org_uuid, service_uuid=service_uuid,
+                                                              build_id=build_id, demo_url=s3_url)
             return {'build_id': build_id}
         except Exception as e:
             raise e
 
     @staticmethod
-    def update_demo_code_build_id(org_uuid, service_uuid, build_id):
+    def update_demo_code_build_id(org_uuid, service_uuid, build_id, demo_url):
         service = service_repo.get_service_for_given_service_uuid(org_uuid=org_uuid, service_uuid=service_uuid)
         if service:
             assets = service.assets
             demo_details = assets['demo_files']
             demo_details.update({'build_id': build_id})
+            demo_details.update({'url': demo_url})
             demo_details.update({'status': "PENDING"})
             assets.update({'demo_files': demo_details})
         else:
@@ -68,13 +72,14 @@ class ValidateDemoComponent:
         service_repo.save_service(username="S3::BucketName", service=service, state=service.service_state.state)
 
     @staticmethod
-    def extract_file_details_from_file_path(path):
+    def extract_file_details_from_file_path(path,bucket_name):
         if not utils.match_regex_string(path=path, regex_pattern=COMPONENT_PATH_VALIDATION_PATTERN):
             msg = f"Demo Component file path {path} is not valid."
             logger.info(msg)
             raise Exception(msg)
         path_values = path.split('/')
-        return path_values[0], path_values[2], path_values[4]
+        s3_url = f"https://{bucket_name}.s3.{REGION_NAME}.amazonaws.com/{path}"
+        return path_values[0], path_values[2], path_values[4], s3_url
 
     @staticmethod
     def update_demo_component_build_status(org_uuid, service_uuid, build_status):
