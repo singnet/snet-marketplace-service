@@ -1635,7 +1635,7 @@ class TestService(TestCase):
                 created_on=dt.utcnow()
             )
         )
-        event = {'org_uuid': 'test_org_uuid', 'service_uuid': 'test_service_uuid', 'build_status': 0}
+        event = {'org_uuid': 'test_org_uuid', 'service_uuid': 'test_service_uuid', 'build_status': '0'}
         response = update_demo_component_build_status(event=event, context=None)
         assert response['statusCode'] == 200
         service = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid="test_org_uuid",
@@ -1654,11 +1654,12 @@ class TestService(TestCase):
         }
 
         service_state = ServicePublisherRepository().get_service_state_with_status(
-            status=ServiceStatus.APPROVAL_PENDING.value)
+            status=ServiceStatus.CHANGE_REQUESTED.value)
         assert service_state[0].org_uuid == "test_org_uuid"
         assert service_state[0].service_uuid == "test_service_uuid"
 
-        event = {'org_uuid': 'test_org_uuid', 'service_uuid': 'test_service_uuid', 'build_status': 1}
+        ServicePublisherRepository().update_service_status(service_uuid_list=["test_service_uuid"], prev_state=ServiceStatus.CHANGE_REQUESTED.value, next_state=ServiceStatus.APPROVAL_PENDING.value)
+        event = {'org_uuid': 'test_org_uuid', 'service_uuid': 'test_service_uuid', 'build_status': '1'}
         response = update_demo_component_build_status(event=event, context=None)
         assert response['statusCode'] == 200
         service = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid="test_org_uuid",

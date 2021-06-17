@@ -78,7 +78,7 @@ class ValidateDemoComponent:
 
     @staticmethod
     def update_demo_component_build_status(org_uuid, service_uuid, build_status):
-        status = "SUCCEEDED" if build_status else "FAILED"
+        status = "SUCCEEDED" if int(build_status) else "FAILED"
         service = service_repo.get_service_for_given_service_uuid(org_uuid=org_uuid, service_uuid=service_uuid)
         if service:
             assets = service.assets
@@ -89,8 +89,14 @@ class ValidateDemoComponent:
             raise Exception(f"Service {service_uuid} not found for org {org_uuid}")
         service_repo.update_service_assets(org_uuid=org_uuid, service_uuid=service_uuid, assets=assets)
         if status == "SUCCEEDED":
-            service_repo.update_service_status(
-                service_uuid_list=[service_uuid],
-                prev_state=ServiceStatus.APPROVAL_PENDING.value,
-                next_state=ServiceStatus.APPROVED.value
-            )
+            next_state = ServiceStatus.APPROVED.value
+        else:
+            next_state = ServiceStatus.CHANGE_REQUESTED.value
+        service_repo.update_service_status(
+            service_uuid_list=[service_uuid],
+            prev_state=ServiceStatus.APPROVAL_PENDING.value,
+            next_state=next_state
+        )
+
+
+
