@@ -199,18 +199,14 @@ class ServicePublisherRepository(BaseRepository):
                                                              synchronize_session=False)
         self.session.commit()
 
-    def update_service(self, org_uuid, service_uuid, assets=None):
+    def update_service_assets(self, org_uuid, service_uuid, assets):
         try:
-            service = self.session.query(Service).filter(org_uuid == org_uuid) \
-                .filter(service_uuid == service_uuid).first()
+            service = self.session.query(Service).filter(org_uuid == org_uuid).filter(
+                service_uuid == service_uuid).first()
             if service:
-                if assets:
-                    service.assets = assets
-                self.session.commit()
-            else:
-                raise Exception(f"Service {service_uuid} not found for org {org_uuid}")
+                service.assets = assets
+            query_response = self.session.commit()
         except SQLAlchemyError as error:
             self.session.rollback()
             raise error
-        except Exception as e:
-            raise e
+        return query_response

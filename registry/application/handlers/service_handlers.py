@@ -11,7 +11,7 @@ from registry.application.services.service_transaction_status import ServiceTran
 from registry.config import NETWORK_ID, SLACK_HOOK
 from registry.constants import Action, EnvironmentType
 from registry.exceptions import EnvironmentNotFoundException, EXCEPTIONS
-from registry.application.services.validate_component_service import ValidateDemoComponent
+from registry.application.services.validate_demo_component_service import ValidateDemoComponent
 
 logger = get_logger(__name__)
 
