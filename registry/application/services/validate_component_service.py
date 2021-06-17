@@ -8,7 +8,7 @@ from registry.infrastructure.repositories.service_publisher_repository import Se
 logger = get_logger(__name__)
 
 
-class ValidateComponent:
+class ValidateDemoComponent:
     def __init__(self):
         self.boto_utils = BotoUtils(region_name=REGION_NAME)
         self.service_repo = ServicePublisherRepository()
