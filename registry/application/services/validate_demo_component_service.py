@@ -65,7 +65,7 @@ class ValidateDemoComponent:
             assets.update({'demo_files': demo_details})
         else:
             raise Exception(f"Service {service_uuid} not found for org {org_uuid}")
-        service_repo.update_service_assets(org_uuid=org_uuid, service_uuid=service_uuid, assets=assets)
+        service_repo.save_service(username="S3::BucketName", service=service, state=service.service_state.state)
 
     @staticmethod
     def extract_file_details_from_file_path(path):
@@ -87,16 +87,11 @@ class ValidateDemoComponent:
             assets.update({'demo_files': demo_details})
         else:
             raise Exception(f"Service {service_uuid} not found for org {org_uuid}")
-        service_repo.update_service_assets(org_uuid=org_uuid, service_uuid=service_uuid, assets=assets)
         if status == "SUCCEEDED":
             next_state = ServiceStatus.APPROVED.value
         else:
             next_state = ServiceStatus.CHANGE_REQUESTED.value
-        service_repo.update_service_status(
-            service_uuid_list=[service_uuid],
-            prev_state=ServiceStatus.APPROVAL_PENDING.value,
-            next_state=next_state
-        )
+        service_repo.save_service(username=f"CodeBuild :: {DEMO_COMPONENT_CODE_BUILD_NAME}", service=service, state=next_state)
 
 
 
