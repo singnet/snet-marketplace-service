@@ -190,20 +190,6 @@ def legal_approval_of_service(event, context):
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
-
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-def list_of_service_pending_for_approval_from_slack(event, context):
-    path_parameters = event["pathParameters"]
-    if "org_uuid" not in path_parameters:
-        raise BadRequestException()
-    org_uuid = path_parameters["org_uuid"]
-    response = ServicePublisherService(None, org_uuid, None).get_list_of_service_pending_for_approval()
-    return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
-    )
-
-
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def list_of_orgs_with_services_submitted_for_approval(event, context):
     response = ServicePublisherService(None, None, None).get_list_of_orgs_with_services_submitted_for_approval()

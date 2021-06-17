@@ -50,8 +50,7 @@ class ServicePublisherService:
 
         if build_status == BUILD_FAILURE_CODE:
             BUILD_FAIL_MESSAGE = "Build failed please check your components"
-            org_uuid, service = ServicePublisherRepository().get_service_for_given_service_id_and_org_id(org_id,
-                                                                                                         service_id)
+            org_uuid, service = ServicePublisherRepository().get_service_for_given_service_id_and_org_id(org_id, service_id)
 
             contacts = [contributor.get("email_id", "") for contributor in service.contributors]
 
@@ -151,7 +150,8 @@ class ServicePublisherService:
             "sort_by": sort_by if sort_by in ALLOWED_ATTRIBUTES_FOR_SERVICE_SORT_BY else DEFAULT_ATTRIBUTES_FOR_SERVICE_SORT_BY,
             "order_by": order_by if order_by in ALLOWED_ATTRIBUTES_FOR_SERVICE_SORT_BY else DEFAULT_ATTRIBUTES_FOR_SERVICE_ORDER_BY
         }
-        search_result = ServicePublisherRepository().get_services_for_organization(self._org_uuid, filter_parameters)
+        services = ServicePublisherRepository().get_services_for_organization(self._org_uuid, filter_parameters)
+        search_result = [service.to_dict() for service in services]
         search_count = ServicePublisherRepository().get_total_count_of_services_for_organization(self._org_uuid,
                                                                                                  filter_parameters)
         return {"total_count": search_count, "offset": offset, "limit": limit, "result": search_result}
@@ -237,9 +237,9 @@ class ServicePublisherService:
             return True
         return False
 
-    @staticmethod
-    def unregister_service_in_blockchain(org_id, service_id):
-        return ""
+    # @staticmethod
+    # def unregister_service_in_blockchain(org_id, service_id):
+    #     return ""
         # blockchain_util = BlockChainUtil(provider=NETWORKS[NETWORK_ID]["http_provider"], provider_type="http_provider")
         # method_name = "deleteServiceRegistration"
         # positional_inputs = (org_id, service_id)
@@ -253,12 +253,12 @@ class ServicePublisherService:
         # transaction_hash = blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
         # return transaction_hash
 
-    @staticmethod
-    def unregister_service_in_blockchain_after_service_is_approved(org_id, service_id):
-        transaction_hash = ServicePublisherService.unregister_service_in_blockchain(
-            org_id=org_id, service_id=service_id)
-        logger.info(
-            f"Transaction hash {transaction_hash} generated while unregistering service_id {service_id} in blockchain")
+    # @staticmethod
+    # def unregister_service_in_blockchain_after_service_is_approved(org_id, service_id):
+    #     transaction_hash = ServicePublisherService.unregister_service_in_blockchain(
+    #         org_id=org_id, service_id=service_id)
+    #     logger.info(
+    #         f"Transaction hash {transaction_hash} generated while unregistering service_id {service_id} in blockchain")
 
     @staticmethod
     def notify_service_contributor_when_user_submit_for_approval(org_id, service_id, contributors):
@@ -376,23 +376,6 @@ class ServicePublisherService:
         else:
             raise EnvironmentNotFoundException()
         return daemon_config
-
-    @staticmethod
-    def get_list_of_service_pending_for_approval(limit):
-        list_of_services = []
-        services = ServicePublisherRepository().get_list_of_service_pending_for_approval(limit)
-        for service in services:
-            org = OrganizationPublisherRepository().get_organization(org_uuid=service.org_uuid)
-            list_of_services.append({
-                "org_uuid": service.org_uuid,
-                "org_id": org.id,
-                "service_uuid": service.uuid,
-                "service_id": service.service_id,
-                "display_name": service.display_name,
-                "requested_at": None
-            })
-
-        return list_of_services
 
     def get_service_demo_component_build_status(self):
         try:
