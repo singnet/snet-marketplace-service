@@ -2,7 +2,7 @@ from common import utils
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from registry.config import REGION_NAME, COMPONENT_PATH_VALIDATION_PATTERN, DEMO_COMPONENT_CODE_BUILD_NAME, \
-    UPDATE_COMPONENT_BUILD_STATUS_LAMBDA_ARN
+    UPDATE_DEMO_COMPONENT_BUILD_STATUS_LAMBDA_ARN
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 
 logger = get_logger(__name__)
@@ -40,7 +40,7 @@ class ValidateDemoComponent:
                     },
                     {
                         'name': 'lambda_function',
-                        'value': UPDATE_COMPONENT_BUILD_STATUS_LAMBDA_ARN,
+                        'value': UPDATE_DEMO_COMPONENT_BUILD_STATUS_LAMBDA_ARN,
                         'type': 'PLAINTEXT'
                     }
                 ]
