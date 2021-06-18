@@ -291,7 +291,12 @@ def update_demo_component_build_status(event, context):
     org_uuid = event['org_uuid']
     service_uuid = event['service_uuid']
     build_status = event['build_status']
-    response = ValidateDemoComponent().update_demo_component_build_status(org_uuid=org_uuid, service_uuid=service_uuid, build_status=build_status)
+    build_id = event['build_id']
+    filename = event['filename']
+    response = ValidateDemoComponent()\
+        .update_demo_component_build_status(org_uuid=org_uuid, service_uuid=service_uuid,
+                                            build_status=build_status, build_id=build_id,
+                                            filename=filename)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True

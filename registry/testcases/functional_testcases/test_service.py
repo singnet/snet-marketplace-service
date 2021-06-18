@@ -1637,7 +1637,32 @@ class TestService(TestCase):
                 created_on=dt.utcnow()
             )
         )
-        event = {'org_uuid': 'test_org_uuid', 'service_uuid': 'test_service_uuid', 'build_status': '0'}
+
+        event = {'org_uuid': 'test_org_uuid', 'service_uuid': 'test_service_uuid', 'build_status': '0',
+                 'build_id': 'sample_build_id', 'filename': 'incorrect_name.zip'}
+        response = update_demo_component_build_status(event=event, context=None)
+        assert response['statusCode'] == 200
+        service = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid="test_org_uuid",
+                                                                                  service_uuid="test_service_uuid")
+
+        assert service.assets == {
+            "demo_files": {
+                "url": "https://marketplace-registry-assets.s3.amazonaws.com/6509581150c8446e8a73b3fa71ebdb69/services/05676ad531cd40a889841ff1f3c5608b/component/20210228000436_component.zip",
+                "ipfs_hash": "QmUKfyv5c8Ru93xyxTcXGswnNzuBTCBU9NGjMV7SMwLSgy",
+                "build_id": "sample_build_id"
+            },
+            "hero_image": {
+                "url": "https://marketplace-registry-assets.s3.amazonaws.com/6509581150c8446e8a73b3fa71ebdb69/services/05676ad531cd40a889841ff1f3c5608b/assets/20210127060152_asset.png",
+                "ipfs_hash": "QmdSh54XcNPJo8v89LRFDN5FAoGL92mn174rKFzoHwUCM1/20210127060152_asset.png"
+            },
+            "proto_files": {
+                "url": "https://marketplace-registry-assets.s3.amazonaws.com/6509581150c8446e8a73b3fa71ebdb69/services/05676ad531cd40a889841ff1f3c5608b/proto/20210131042033_proto_files.zip",
+                "ipfs_hash": "QmUKfyv5c8Ru93xyxTcXGswnNzuBTCBU9NGjMV7SMwLSgy"
+            }
+        }
+
+        event = {'org_uuid': 'test_org_uuid', 'service_uuid': 'test_service_uuid', 'build_status': '0',
+                 'build_id': 'sample_build_id', 'filename': '20210228000436_component.zip'}
         response = update_demo_component_build_status(event=event, context=None)
         assert response['statusCode'] == 200
         service = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid="test_org_uuid",
@@ -1660,8 +1685,11 @@ class TestService(TestCase):
         assert service_state[0].org_uuid == "test_org_uuid"
         assert service_state[0].service_uuid == "test_service_uuid"
 
-        ServicePublisherRepository().update_service_status(service_uuid_list=["test_service_uuid"], prev_state=ServiceStatus.CHANGE_REQUESTED.value, next_state=ServiceStatus.APPROVAL_PENDING.value)
-        event = {'org_uuid': 'test_org_uuid', 'service_uuid': 'test_service_uuid', 'build_status': '1'}
+        ServicePublisherRepository().update_service_status(service_uuid_list=["test_service_uuid"],
+                                                           prev_state=ServiceStatus.CHANGE_REQUESTED.value,
+                                                           next_state=ServiceStatus.APPROVAL_PENDING.value)
+        event = {'org_uuid': 'test_org_uuid', 'service_uuid': 'test_service_uuid', 'build_status': '1',
+                 'build_id': 'sample_build_id', 'filename': '20210228000436_component.zip'}
         response = update_demo_component_build_status(event=event, context=None)
         assert response['statusCode'] == 200
         service = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid="test_org_uuid",
