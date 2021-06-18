@@ -8,8 +8,7 @@ from common.boto_utils import BotoUtils
 from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
 from common.utils import Utils
-from registry.config import NOTIFICATION_ARN, REGION_NAME, EMAILS, \
-    APPROVAL_SLACK_HOOK
+import registry.config
 from registry.constants import EnvironmentType, ORG_STATUS_LIST, ORG_TYPE_VERIFICATION_TYPE_MAPPING, \
     OrganizationActions, OrganizationIDAvailabilityStatus, OrganizationMemberStatus, OrganizationStatus, \
     OrganizationType, Role
@@ -34,7 +33,7 @@ class OrganizationPublisherService:
     def __init__(self, org_uuid, username):
         self.org_uuid = org_uuid
         self.username = username
-        self.boto_utils = BotoUtils(region_name=REGION_NAME)
+        self.boto_utils = BotoUtils(region_name=registry.config.REGION_NAME)
 
     def get_approval_pending_organizations(self, limit, type=None):
         status = OrganizationStatus.ONBOARDING.value
@@ -89,13 +88,6 @@ class OrganizationPublisherService:
         org_repo.update_organization(updated_organization, self.username, updated_state)
         return "OK"
 
-    def notify_approval_team(self, org_id, org_name):
-        slack_msg = f"Organization with org_id {org_id} is submitted for approval"
-        mail_template = get_org_approval_mail(org_id, org_name)
-        Utils().report_slack(slack_msg, APPROVAL_SLACK_HOOK)
-        utils.send_email_notification([EMAILS["ORG_APPROVERS_DLIST"]], mail_template["subject"],
-                                      mail_template["body"], NOTIFICATION_ARN, self.boto_utils)
-
     def notify_user_on_start_of_onboarding_process(self, org_id, recipients):
         if not recipients:
             logger.info(f"Unable to find recipients for organization with org_id {org_id}")
@@ -107,7 +99,7 @@ class OrganizationPublisherService:
                 "subject": mail_template["subject"],
                 "notification_type": "support",
                 "recipient": recipient})}
-            self.boto_utils.invoke_lambda(lambda_function_arn=NOTIFICATION_ARN, invocation_type="RequestResponse",
+            self.boto_utils.invoke_lambda(lambda_function_arn=registry.config.NOTIFICATION_ARN, invocation_type="RequestResponse",
                                           payload=json.dumps(send_notification_payload))
             logger.info(f"Recipient {recipient} notified for successfully starting onboarding process.")
 
@@ -209,7 +201,7 @@ class OrganizationPublisherService:
                 "subject": mail_template["subject"],
                 "notification_type": "support",
                 "recipient": recipient})}
-            self.boto_utils.invoke_lambda(lambda_function_arn=NOTIFICATION_ARN, invocation_type="RequestResponse",
+            self.boto_utils.invoke_lambda(lambda_function_arn=registry.config.NOTIFICATION_ARN, invocation_type="RequestResponse",
                                           payload=json.dumps(send_notification_payload))
             logger.info(f"Org Membership Invite sent to {recipient}")
 
@@ -255,4 +247,4 @@ class OrganizationPublisherService:
             raise InvalidOrganizationStateException()
 
         utils.send_email_notification([owner_email_address], mail_template["subject"],
-                                      mail_template["body"], NOTIFICATION_ARN, self.boto_utils)
+                                      mail_template["body"], registry.config.NOTIFICATION_ARN, self.boto_utils)

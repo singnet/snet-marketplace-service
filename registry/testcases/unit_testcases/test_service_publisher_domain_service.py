@@ -41,18 +41,17 @@ class TestServicePublisherDomainService(TestCase):
                     free_call_signer_address="0xq2s3e4r5t6y7u8i9o0")], service_state=None
         )
         service_metadata = ServicePublisherDomainService("", "", "").get_service_metadata(service,
-                                                                                          EnvironmentType.TEST.value)
+                                                                                          EnvironmentType.MAIN.value)
+        self.assertDictEqual.__self__.maxDiff = None
         self.assertDictEqual(
-            {'version': 1, 'display_name': 'test_display_name', 'encoding': 'proto', 'service_type': 'grpc', 'model_ipfs_hash': 'test_model_ipfs_hash',
-             'mpe_address': '0x123',
-             'groups': [{'free_calls': 100, 'free_call_signer_address': '0xq2s3e4r5t6y7u8i9o0', 'daemon_addresses': ['0xq2w3e4rr5t6y7u8i9'],
-                         'pricing': [{'default': True, 'price_model': 'fixed_price', 'price_in_cogs': 1}],
-                         'endpoints': ['https://dummydaemonendpoint.io'], 'group_id': 'test', 'group_name': 'test_name'}],
-             'service_description': {'url': 'https://dummy.io', 'short_description': 'test_short_description', 'description': 'test_description'},
-             'media': [{'order': 1,
-                        'url': 'QmUfDprFisFeaRnmLEqks1AFN6iam5MmTh49KcomXHEiQY/20200323130126_asset.png',
-                        'file_type': 'image',
-                        'asset_type': 'hero_image',
-                        'alt_text': ''}],
-             'contributors': [{'name': 'df', 'email_id': '123@mail.io'}],
-             'tags': ['1234', '4321']}, service_metadata)
+            {'version': 1, 'display_name': 'test_display_name', 'encoding': 'proto', 'service_type': 'grpc',
+             'model_ipfs_hash': 'test_model_ipfs_hash', 'mpe_address': '0x123', 'groups': [
+                {'free_calls': 10, 'free_call_signer_address': '0xq2s3e4r5t6y7u8i9o0',
+                 'daemon_addresses': ['0xq2w3e4rr5t6y7u8i9'],
+                 'pricing': [{'default': True, 'price_model': 'fixed_price', 'price_in_cogs': 1}],
+                 'endpoints': ['https://dummydaemonendpoint.io'], 'group_id': 'test', 'group_name': 'test_name'}],
+             'service_description': {'url': 'https://dummy.io', 'short_description': 'test_short_description',
+                                     'description': 'test_description'}, 'media': [
+                {'order': 1, 'url': 'QmUfDprFisFeaRnmLEqks1AFN6iam5MmTh49KcomXHEiQY/20200323130126_asset.png',
+                 'file_type': 'image', 'asset_type': 'hero_image', 'alt_text': ''}],
+             'contributors': [{'name': 'df', 'email_id': '123@mail.io'}], 'tags': ['1234', '4321']}, service_metadata)
