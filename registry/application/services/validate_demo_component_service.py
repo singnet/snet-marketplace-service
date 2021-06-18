@@ -71,7 +71,7 @@ class ValidateDemoComponent:
             assets.update({'demo_files': demo_details})
         else:
             raise Exception(f"Service {service_uuid} not found for org {org_uuid}")
-        service_repo.save_service(username="S3::BucketName", service=service, state=service.service_state.state)
+        service_repo.save_service(username="S3::BucketName", service=service, state=ServiceStatus.DRAFT.value)
 
     @staticmethod
     def extract_file_details_from_file_path(path, bucket_name):
@@ -90,7 +90,7 @@ class ValidateDemoComponent:
         if service:
             assets = service.assets
             demo_details = assets['demo_files']
-            if ValidateDemoComponent.validate_demo_for_update(demo_details, build_id, filename):
+            if ValidateDemoComponent.validate_demo_component_details(demo_details, build_id, filename):
                 demo_details.update({'status': status})
                 assets.update({'demo_files': demo_details})
                 if status == "SUCCEEDED":
@@ -103,9 +103,8 @@ class ValidateDemoComponent:
             raise Exception(f"Service {service_uuid} not found for org {org_uuid}")
 
     @staticmethod
-    def validate_demo_for_update(demo_details, build_id, filename):
-        demo_url = demo_details.get("url", {})
-        demo_filename = os.path.basename(demo_url) if demo_url else ""
+    def validate_demo_component_details(demo_details, build_id, filename):
+        demo_filename = os.path.basename(demo_details.get("url", ""))
         demo_build_id = demo_details.get("build_id", "")
         logger.info(f"prev build_id {demo_build_id} new build_id {build_id}")
         logger.info(f"prev filename {demo_filename} new filename {filename}")
