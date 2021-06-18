@@ -110,7 +110,7 @@ class ServicePublisherService:
         service.description = payload.get("description", "")
         service.project_url = payload.get("project_url", "")
         service.assets = {
-            "proto_files": payload.get("assets", {}).get("proto_files", {}),
+            "proto_files": service.assets.get("proto_files", {}),
             "demo_files": service.assets.get("demo_files", {}),
             "hero_image": payload.get("assets", {}).get("hero_image", {})
         }
