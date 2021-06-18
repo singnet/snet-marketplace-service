@@ -12,6 +12,7 @@ from registry.infrastructure.repositories.organization_repository import Organiz
 
 org_repo = OrganizationPublisherRepository()
 
+
 class ServicePublisherRepository(BaseRepository):
     def get_services_for_organization(self, org_uuid, payload):
         try:
@@ -108,37 +109,12 @@ class ServicePublisherRepository(BaseRepository):
         service = ServiceFactory().convert_service_db_model_to_entity_model(service_db)
         return service
 
-    def add_service_review(self, org_uuid, service_uuid, payload):
-        self.add_item(
-            ServiceReviewHistory(
-                org_uuid=org_uuid,
-                service_uuid=service_uuid,
-                reviewed_service_data=payload["service_metadata"],
-                state="",
-                reviewed_by=payload["reviewed_by"],
-                reviewed_on=payload["reviewed_by"],
-                created_on=payload["created_on"],
-                updated_on=payload["updated_on"]
-            )
-        )
-
-    def get_all_services_review_data(self):
-        try:
-            services_review_db = self.session.query(ServiceReviewHistory).all()
-            self.session.commit()
-        except SQLAlchemyError as e:
-            self.session.rollback()
-            raise e
-        services_review = [ServiceFactory.convert_service_review_history_entity_model_to_db_model(service_review_db) for
-                           service_review_db in services_review_db]
-        return services_review
-
     def get_service_for_given_service_id_and_org_id(self, org_id, service_id):
         try:
-            service_db = self.session.query(Service).\
-                join(Organization, Service.org_uuid == Organization.uuid).\
-                filter(Organization.org_id == org_id).\
-                filter(Service.service_id == service_id).\
+            service_db = self.session.query(Service). \
+                join(Organization, Service.org_uuid == Organization.uuid). \
+                filter(Organization.org_id == org_id). \
+                filter(Service.service_id == service_id). \
                 first()
             self.session.commit()
         except Exception as e:

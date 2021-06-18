@@ -51,25 +51,25 @@ class ValidateDemoComponent:
             }
             build_trigger_response = boto_utils.trigger_code_build(build_details=build_details)
             build_id = build_trigger_response['build']['id']
-            ValidateDemoComponent.update_demo_code_build_id(org_uuid=org_uuid, service_uuid=service_uuid,
-                                                              build_id=build_id, demo_url=s3_url)
+            ValidateDemoComponent.update_demo_component_details(org_uuid=org_uuid, service_uuid=service_uuid,
+                                                                build_id=build_id, url=s3_url, bucket_name=bucket_name)
             return {'build_id': build_id}
         except Exception as e:
             raise e
 
     @staticmethod
-    def update_demo_code_build_id(org_uuid, service_uuid, build_id, demo_url):
+    def update_demo_component_details(org_uuid, service_uuid, build_id, url, bucket_name):
         service = service_repo.get_service_for_given_service_uuid(org_uuid=org_uuid, service_uuid=service_uuid)
         if service:
             assets = service.assets
             demo_details = assets['demo_files']
             demo_details.update({'build_id': build_id})
-            demo_details.update({'url': demo_url})
+            demo_details.update({'url': url})
             demo_details.update({'status': "PENDING"})
             assets.update({'demo_files': demo_details})
         else:
             raise Exception(f"Service {service_uuid} not found for org {org_uuid}")
-        service_repo.save_service(username="S3::BucketName", service=service, state=service.service_state.state)
+        service_repo.save_service(username=f"S3::{bucket_name}", service=service, state=service.service_state.state)
 
     @staticmethod
     def extract_file_details_from_file_path(path,bucket_name):
@@ -93,10 +93,11 @@ class ValidateDemoComponent:
         else:
             raise Exception(f"Service {service_uuid} not found for org {org_uuid}")
         if status == "SUCCEEDED":
-            next_state = ServiceStatus.APPROVED.value
+            pass
         else:
-            next_state = ServiceStatus.CHANGE_REQUESTED.value
-        service_repo.save_service(username=f"CodeBuild :: {DEMO_COMPONENT_CODE_BUILD_NAME}", service=service, state=next_state)
+            # Notify user for bad demo component files
+            pass
+        service_repo.save_service(username=f"CodeBuild :: {DEMO_COMPONENT_CODE_BUILD_NAME}", service=service, state=service.service_state.state)
 
 
 

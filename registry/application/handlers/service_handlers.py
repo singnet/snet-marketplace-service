@@ -56,24 +56,6 @@ def save_transaction_hash_for_published_service(event, context):
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
-def submit_service_for_approval(event, context):
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    path_parameters = event["pathParameters"]
-    payload = json.loads(event["body"])
-    if not path_parameters.get("org_uuid", "") and not path_parameters.get("service_uuid", ""):
-        raise BadRequestException()
-    org_uuid = path_parameters["org_uuid"]
-    service_uuid = path_parameters["service_uuid"]
-    response = ServicePublisherService(username, org_uuid, service_uuid).submit_service_for_approval(payload)
-    return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
-    )
-
-
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
-         username_path=("requestContext", "authorizer", "claims", "email"))
 def save_service(event, context):
     logger.info(f"Event for save service {event}")
     username = event["requestContext"]["authorizer"]["claims"]["email"]
@@ -178,28 +160,6 @@ def publish_service_metadata_to_ipfs(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-def legal_approval_of_service(event, context):
-    path_parameters = event["pathParameters"]
-    if "org_uuid" not in path_parameters and "service_uuid" not in path_parameters:
-        raise BadRequestException()
-    org_uuid = path_parameters["org_uuid"]
-    service_uuid = path_parameters["service_uuid"]
-    response = ServicePublisherService(None, org_uuid, service_uuid).approve_service()
-    return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
-    )
-
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-def list_of_orgs_with_services_submitted_for_approval(event, context):
-    response = ServicePublisherService(None, None, None).get_list_of_orgs_with_services_submitted_for_approval()
-    return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
-    )
-
-
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def get_daemon_config_for_current_network(event, context):
@@ -263,18 +223,20 @@ def update_transaction(event, context):
     ServiceTransactionStatus().update_transaction_status()
     return generate_lambda_response(StatusCode.OK, "OK")
 
+
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def get_code_build_status_for_service(event, context):
     logger.info(f"Get code build status event :: {event}")
     path_parameters = event["pathParameters"]
     org_uuid = path_parameters["org_uuid"]
     service_uuid = path_parameters["service_uuid"]
-    response = ServicePublisherService(org_uuid=org_uuid, service_uuid=service_uuid, username=None)\
-                    .get_service_demo_component_build_status()
+    response = ServicePublisherService(org_uuid=org_uuid, service_uuid=service_uuid, username=None) \
+        .get_service_demo_component_build_status()
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
+
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def validate_demo_component(event, context):
@@ -285,13 +247,15 @@ def validate_demo_component(event, context):
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
+
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def update_demo_component_build_status(event, context):
     logger.info(f"Demo component build status update :: {event}")
     org_uuid = event['org_uuid']
     service_uuid = event['service_uuid']
     build_status = event['build_status']
-    response = ValidateDemoComponent().update_demo_component_build_status(org_uuid=org_uuid, service_uuid=service_uuid, build_status=build_status)
+    response = ValidateDemoComponent().update_demo_component_build_status(org_uuid=org_uuid, service_uuid=service_uuid,
+                                                                          build_status=build_status)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
