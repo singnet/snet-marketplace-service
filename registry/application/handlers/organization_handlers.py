@@ -13,7 +13,7 @@ from registry.config import NETWORK_ID, SLACK_HOOK
 from registry.constants import Action, OrganizationActions
 from registry.exceptions import BadRequestException, EXCEPTIONS
 
-# patch_all()
+patch_all()
 logger = get_logger(__name__)
 
 
