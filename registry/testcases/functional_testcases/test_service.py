@@ -1709,11 +1709,9 @@ class TestService(TestCase):
         }
 
     @patch("common.boto_utils.BotoUtils.invoke_lambda")
-    @patch("common.utils.Utils.match_regex_string")
-    def test_validate_proto(self, mock_proto_compile_response, mock_regex_response):
+    def test_validate_proto(self, mock_proto_compile_response):
         self.tearDown()
         mock_proto_compile_response.return_value = {"statusCode": 200}
-        mock_regex_response.return_value = True
         org_repo.add_item(
             OrganizationDBModel(
                 name="test_org",
