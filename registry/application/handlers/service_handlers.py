@@ -11,7 +11,7 @@ from registry.application.services.service_transaction_status import ServiceTran
 from registry.config import NETWORK_ID, SLACK_HOOK
 from registry.constants import Action, EnvironmentType
 from registry.exceptions import EnvironmentNotFoundException, EXCEPTIONS
-from registry.application.services.validate_demo_component_service import ValidateDemoComponent
+from registry.application.services.update_service_assets import UpdateServiceAssets
 
 logger = get_logger(__name__)
 
@@ -239,23 +239,26 @@ def get_code_build_status_for_service(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-def validate_demo_component(event, context):
-    logger.info(f"Validate demo component event :: {event}")
-    response = ValidateDemoComponent().trigger_demo_component_code_build(payload=event)
+def update_service_assets(event, context):
+    logger.info(f"Update service assets event :: {event}")
+    response = UpdateServiceAssets().validate_and_process_service_assets(payload=event)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
-
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def update_demo_component_build_status(event, context):
-    logger.info(f"Demo component build status update :: {event}")
+    logger.info(f"Demo component build status update event :: {event}")
     org_uuid = event['org_uuid']
     service_uuid = event['service_uuid']
     build_status = event['build_status']
-    response = ValidateDemoComponent().update_demo_component_build_status(org_uuid=org_uuid, service_uuid=service_uuid,
-                                                                          build_status=build_status)
+    build_id = event['build_id']
+    filename = event['filename']
+    response = UpdateServiceAssets()\
+        .update_demo_component_build_status(org_uuid=org_uuid, service_uuid=service_uuid,
+                                            build_status=build_status, build_id=build_id,
+                                            filename=filename)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True

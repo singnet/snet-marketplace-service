@@ -1598,9 +1598,9 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-  validate-demo-component:
+  update-service-assets:
     warmup: true
-    handler: registry.application.handlers.service_handlers.validate_demo_component
+    handler: registry.application.handlers.service_handlers.update_service_assets
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
