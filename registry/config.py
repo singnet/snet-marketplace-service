@@ -6,8 +6,8 @@ NETWORKS = {
         "db": {
             "DB_DRIVER": "mysql+pymysql",
             "DB_HOST": "localhost",
-            "DB_USER": "unittest_root",
-            "DB_PASSWORD": "unittest_pwd",
+            "DB_USER": "root",
+            "DB_PASSWORD": "Dhiva@2025",
             "DB_NAME": "registry_unittest_db",
             "DB_PORT": 3306,
         },
@@ -50,4 +50,4 @@ APPROVAL_SLACK_HOOK = {
 DEMO_COMPONENT_CODE_BUILD_NAME = ""
 UPDATE_DEMO_COMPONENT_BUILD_STATUS_LAMBDA_ARN = ""
 MANAGE_PROTO_COMPILATION_LAMBDA_ARN = ""
-ALLOWED_HERO_IMAGE_FORMATS = []
+ALLOWED_HERO_IMAGE_FORMATS = ['.jpg', '.jpeg', '.png']
