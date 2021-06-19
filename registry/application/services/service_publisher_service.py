@@ -107,7 +107,6 @@ class ServicePublisherService:
         service.short_description = payload.get("short_description", "")
         service.description = payload.get("description", "")
         service.project_url = payload.get("project_url", "")
-        service.assets = {}
         service.contributors = ServicePublisherService. \
             _get_valid_service_contributors(contributors=payload.get("contributors", []))
         service.tags = payload.get("tags", [])
