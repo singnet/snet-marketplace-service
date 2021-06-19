@@ -7,6 +7,7 @@ from common import utils
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from utility.config import NODEJS_PROTO_LAMBDA_ARN, SUPPORTED_ENVIRONMENT, REGION_NAME, PYTHON_PROTO_LAMBDA_ARN
+from utility.constants import ProtoCompilationRegex
 
 TEMP_FILE_DIR = tempfile.gettempdir()
 boto_utils = BotoUtils(region_name=REGION_NAME)
@@ -119,6 +120,6 @@ class GenerateStubService:
     @staticmethod
     def get_file_regex_pattern(proto_key):
         if proto_key.endswith("tar.gz"):
-            return "(s3:\/\/ropsten-service-components\/assets\/)[a-zA-Z0-9]*(\/)[a-zA-Z0-9_]*(\/proto.tar.gz)"
+            return ProtoCompilationRegex.COMPONENT_URL.value
         if proto_key.endswith(".zip"):
-            return "(s3:\/\/ropsten-marketplace-service-assets\/)[a-zA-Z0-9]*(\/services\/)[a-zA-Z0-9_]*(\/proto\/)[^\/.]*(_proto_files.zip)"
+            return ProtoCompilationRegex.ASSET_URL.value
