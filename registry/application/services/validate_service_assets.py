@@ -174,8 +174,7 @@ class ValidateServiceAssets:
                 logger.info(msg)
                 raise Exception(msg)
         if file_type == 'hero_image':
-            pattern = "([a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/assets\/)[^\/.]*([^?#]*\.(?:{"+ '|'.\
-                join([format[1:] for format in ALLOWED_HERO_IMAGE_FORMATS]) +"})))"
+            pattern = "[a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/assets\/)[0-9]*(_asset.)("+ "|".join(format[1:] for format in ALLOWED_HERO_IMAGE_FORMATS) +")"
             if not utils.match_regex_string(path=path, regex_pattern=pattern):
                 msg = f"Hero image file path {path} is not valid."
                 logger.info(msg)
