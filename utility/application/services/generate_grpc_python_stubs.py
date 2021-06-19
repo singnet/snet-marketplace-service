@@ -30,17 +30,17 @@ def generate_python_stubs(input_s3_path, output_s3_path):
                 filepath = subdir + os.sep + file
                 if filepath.endswith(".proto"):
                     proto_location = filepath
-                    path, folder_name = os.path.split(subdir)
                     compile_proto(
                         entry_path=subdir,
-                        codegen_dir=os.path.join(tmp_paths["result"], folder_name),
+                        codegen_dir=os.path.join(tmp_paths["result"]),
                         proto_file_path=proto_location
                     )
         if proto_location is None:
             raise ProtoNotFound
-        file_to_be_uploaded = os.path.join(tmp_paths["base"], f"python.zip")
-        utils.zip_file(source_path=Path(tmp_paths["result"]), zipped_path=file_to_be_uploaded)
-        boto_utils.s3_upload_file(filename=file_to_be_uploaded, bucket=output_bucket, key=output_key + f"python.zip")
+        if output_s3_path:
+            file_to_be_uploaded = os.path.join(tmp_paths["base"], f"python.zip")
+            utils.zip_file(source_path=Path(tmp_paths["result"]), zipped_path=file_to_be_uploaded)
+            boto_utils.s3_upload_file(filename=file_to_be_uploaded, bucket=output_bucket, key=output_key + f"python.zip")
         return {"message": "success"}
     except ProtoNotFound as protoException:
         message = f"Proto file is not found for location :: {input_s3_path}"
@@ -51,7 +51,7 @@ def generate_python_stubs(input_s3_path, output_s3_path):
 
 
 def initialize_temp_paths():
-    base = os.path.join(TEMP_FILE_DIR, uuid.uuid4().hex, 'proto')
+    base = os.path.join(TEMP_FILE_DIR, uuid.uuid4().hex)
     if not os.path.exists(base):
         os.makedirs(base)
     temporary_paths = {

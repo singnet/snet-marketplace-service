@@ -69,8 +69,10 @@ class BotoUtils:
 
     @staticmethod
     def get_bucket_and_key_from_url(url):
-        parsed_url = urlparse(url)
-        return parsed_url.hostname.split(".")[0], parsed_url.path[1:]
+        if url:
+            parsed_url = urlparse(url)
+            return parsed_url.hostname.split(".")[0], parsed_url.path[1:]
+        return '', ''
 
     def upload_folder_contents_to_s3(self, folder_path, bucket, key):
         try:
