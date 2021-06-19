@@ -26,7 +26,7 @@ class ValidateServiceAssets:
             return ValidateServiceAssets.trigger_demo_component_code_build(uploaded_file_path, bucket_name)
         elif uploaded_file_path.endswith('_proto_files.zip'):
             ValidateServiceAssets.validate_proto(uploaded_file_path, bucket_name)
-        elif extension[1:] in ALLOWED_HERO_IMAGE_FORMATS:
+        elif extension in ALLOWED_HERO_IMAGE_FORMATS:
             ValidateServiceAssets.update_hero_image_url(uploaded_file_path, bucket_name)
 
     @staticmethod
@@ -174,7 +174,8 @@ class ValidateServiceAssets:
                 logger.info(msg)
                 raise Exception(msg)
         if file_type == 'hero_image':
-            pattern = "([a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/assets\/)[^\/.]*([^?#]*\.(?:{"+ '|'.join(ALLOWED_HERO_IMAGE_FORMATS) +"})))"
+            pattern = "([a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/assets\/)[^\/.]*([^?#]*\.(?:{"+ '|'.\
+                join([format[1:] for format in ALLOWED_HERO_IMAGE_FORMATS]) +"})))"
             if not utils.match_regex_string(path=path, regex_pattern=pattern):
                 msg = f"Hero image file path {path} is not valid."
                 logger.info(msg)
