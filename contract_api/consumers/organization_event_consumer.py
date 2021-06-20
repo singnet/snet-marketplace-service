@@ -107,7 +107,7 @@ class OrganizationCreatedEventConsumer(OrganizationEventConsumer):
 
                 self._organization_repository.create_or_updatet_organization(
                     org_id=org_id, org_name=ipfs_org_metadata["org_name"], owner_address=org_data[3],
-                    org_metadata_uri=org_metadata_uri, description=json.dumps(description),
+                    org_metadata_uri=org_metadata_uri, is_curated=1, description=json.dumps(description),
                     assets_hash=json.dumps(new_assets_hash),
                     assets_url=json.dumps(new_assets_url_mapping),contacts=json.dumps(contacts))
                 self._organization_repository.delete_organization_groups(org_id=org_id)
