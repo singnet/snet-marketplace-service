@@ -21,7 +21,8 @@ logger = get_logger(__name__)
 def generate_python_stubs(input_s3_path, output_s3_path):
     try:
         input_bucket, input_key = boto_utils.get_bucket_and_key_from_url(url=input_s3_path)
-        output_bucket, output_key = boto_utils.get_bucket_and_key_from_url(url=output_s3_path)
+        if output_s3_path:
+            output_bucket, output_key = boto_utils.get_bucket_and_key_from_url(url=output_s3_path)
         tmp_paths = initialize_temp_paths()
         boto_utils.download_folder_contents_from_s3(bucket=input_bucket, key=input_key, target=tmp_paths["base"])
         proto_location = None
