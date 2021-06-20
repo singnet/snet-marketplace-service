@@ -75,20 +75,24 @@ class GenerateStubService:
                 raise Exception(f"Invalid proto file found on given path :: {input_s3_path} :: response :: {response}")
 
         # Move objects from temp folder to output if success
-        boto_utils.move_s3_objects(
-            source_bucket=input_bucket_name,
-            source_key=temp_proto_file_path,
-            target_bucket=output_bucket_name,
-            target_key=f"{input_s3_file_key}proto_extracted/",
-            clear_destination=True
-        )
-        boto_utils.move_s3_objects(
-            source_bucket=input_bucket_name,
-            source_key=boto_utils.get_bucket_and_key_from_url(temp_output_path)[1],
-            target_bucket=output_bucket_name,
-            target_key=f"{output_file_path}stubs/",
-            clear_destination=True
-        )
+        # if no output path only remove temp extracted proto
+        if output_s3_path:
+            boto_utils.move_s3_objects(
+                source_bucket=input_bucket_name,
+                source_key=temp_proto_file_path,
+                target_bucket=output_bucket_name,
+                target_key=f"{input_s3_file_key}proto_extracted/",
+                clear_destination=True
+            )
+            boto_utils.move_s3_objects(
+                source_bucket=input_bucket_name,
+                source_key=boto_utils.get_bucket_and_key_from_url(temp_output_path)[1],
+                target_bucket=output_bucket_name,
+                target_key=f"{output_file_path}stubs/",
+                clear_destination=True
+            )
+        else:
+            self.clear_s3_files(bucket=input_bucket_name, key=temp_proto_file_path)
         return {"message": "success"}
 
     @staticmethod
