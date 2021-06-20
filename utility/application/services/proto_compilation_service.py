@@ -21,11 +21,15 @@ class GenerateStubService:
                                                 upload_file_path):
         base = os.path.join(TEMP_FILE_DIR, uuid.uuid4().hex)
         download = f"{base}_{filename}{input_file_extension}"
-        extracted = f"{base}_{input_file_extension}"
+        extracted = f"{base}_{filename}"
         boto_utils.s3_download_file(
             bucket=bucket_name, key=download_file_path, filename=download
         )
         utils.extract_zip_file(zip_file_path=download, extracted_path=extracted)
+        extracted = GenerateStubService.handle_extraction_path(
+            filename=f"{filename}{input_file_extension}",
+            extracted=extracted
+        )
         boto_utils.upload_folder_contents_to_s3(
             folder_path=extracted,
             bucket=bucket_name,
