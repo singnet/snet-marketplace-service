@@ -111,10 +111,11 @@ class ServicePublisherService:
             _get_valid_service_contributors(contributors=payload.get("contributors", []))
         service.tags = payload.get("tags", [])
         service.mpe_address = payload.get("mpe_address", "")
-        service.groups = []
+        groups = []
         for group in payload["groups"]:
             service_group = ServiceFactory.create_service_group_entity_model(self._org_uuid, self._service_uuid, group)
-            service.groups.append(service_group)
+            groups.append(service_group)
+        service.groups = groups
         service.service_state.transaction_hash = payload.get("transaction_hash", None)
         service = ServicePublisherRepository().save_service(self._username, service, ServiceStatus.APPROVED.value)
         comment = payload.get("comments", {}).get(UserType.SERVICE_PROVIDER.value, "")
