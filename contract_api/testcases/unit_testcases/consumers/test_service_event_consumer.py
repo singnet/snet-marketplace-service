@@ -251,6 +251,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
             org_assets_url={"url":"google.com"},
             row_created="2021-01-08 05:48:26",
             row_updated="2021-01-08 05:48:26",
+            is_curated = 1,
             description="description",
             assets_hash='{}',
             contacts='{}'
