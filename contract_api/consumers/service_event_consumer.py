@@ -143,8 +143,8 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
 
     def _compile_proto_stubs(self, org_id, service_id):
         boto_utils = BotoUtils(region_name=REGION_NAME)
-        base_url = f"s3://{ASSETS_COMPONENT_BUCKET_NAME}/assets/{org_id}/{service_id}/"
-        output_url = base_url + "stubs/"
+        base_url = f"s3://{ASSETS_COMPONENT_BUCKET_NAME}/assets/{org_id}/{service_id}/proto.tar.gz"
+        output_url = f"s3://{ASSETS_COMPONENT_BUCKET_NAME}/assets/{org_id}/{service_id}/"
         lambda_payload = {
             "input_s3_path": base_url,
             "output_s3_path": output_url
@@ -156,7 +156,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         )
         generated_stubs_url = []
         if response['statusCode'] == 200:
-            output_bucket,output_key = boto_utils.get_bucket_and_key_from_url(url=output_url)
+            output_bucket, output_key = boto_utils.get_bucket_and_key_from_url(url=f"{output_url}/stubs")
             stub_objects = boto_utils.get_objects_from_s3(bucket=output_bucket, key=output_key)
             for object in stub_objects:
                 generated_stubs_url.append(f"https://{output_bucket}.s3.{REGION_NAME}.amazonaws.com/{object['Key']}")
@@ -177,11 +177,6 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             assets_url = self._get_new_assets_url(
                 org_id, service_id, new_ipfs_data, existing_service_metadata)
 
-            proto_stubs = []
-            if not existing_service_metadata or (
-                    existing_service_metadata["model_ipfs_hash"] != new_ipfs_data["model_ipfs_hash"]):
-                proto_stubs = self._compile_proto_stubs(org_id=org_id, service_id=service_id)
-
             self._service_repository.delete_service_dependents(
                 org_id=org_id, service_id=service_id)
             service_data = self._service_repository.create_or_update_service(
@@ -192,10 +187,6 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                                                                        service_id=service_id,
                                                                        ipfs_data=new_ipfs_data, assets_url=assets_url)
 
-            service_media = new_ipfs_data.get('media', [])
-            self.create_service_media(org_id=org_id, service_id=service_id,
-                                      service_media=service_media, service_row_id=service_row_id)
-            self.insert_proto_stubs(org_id=org_id, service_id=service_id, proto_stubs=proto_stubs, service_row_id=service_row_id)
 
             groups = new_ipfs_data.get('groups', [])
             group_insert_count = 0
@@ -229,6 +220,17 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                                                      service_id=service_id,
                                                      tag_name=tag,
                                                      )
+
+            service_media = new_ipfs_data.get('media', [])
+            self.create_service_media(org_id=org_id, service_id=service_id,
+                                      service_media=service_media, service_row_id=service_row_id)
+            proto_stubs = []
+            if not existing_service_metadata or (
+                    existing_service_metadata["model_ipfs_hash"] != new_ipfs_data["model_ipfs_hash"]):
+                proto_stubs = self._compile_proto_stubs(org_id=org_id, service_id=service_id)
+            self.insert_proto_stubs(org_id=org_id, service_id=service_id, proto_stubs=proto_stubs,
+                                    service_row_id=service_row_id)
+
             self._connection.commit_transaction()
 
         except Exception as e:
