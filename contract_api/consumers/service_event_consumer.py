@@ -144,7 +144,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
     def _compile_proto_stubs(self, org_id, service_id):
         boto_utils = BotoUtils(region_name=REGION_NAME)
         base_url = f"s3://{ASSETS_COMPONENT_BUCKET_NAME}/assets/{org_id}/{service_id}/proto.tar.gz"
-        output_url = f"s3://{ASSETS_COMPONENT_BUCKET_NAME}/assets/{org_id}/{service_id}/stubs/"
+        output_url = f"s3://{ASSETS_COMPONENT_BUCKET_NAME}/assets/{org_id}/{service_id}/"
         lambda_payload = {
             "input_s3_path": base_url,
             "output_s3_path": output_url
@@ -156,7 +156,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         )
         generated_stubs_url = []
         if response['statusCode'] == 200:
-            output_bucket, output_key = boto_utils.get_bucket_and_key_from_url(url=output_url)
+            output_bucket, output_key = boto_utils.get_bucket_and_key_from_url(url=f"{output_url}/stubs")
             stub_objects = boto_utils.get_objects_from_s3(bucket=output_bucket, key=output_key)
             for object in stub_objects:
                 generated_stubs_url.append(f"https://{output_bucket}.s3.{REGION_NAME}.amazonaws.com/{object['Key']}")

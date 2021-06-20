@@ -47,8 +47,3 @@ UPLOAD_TYPE_DETAILS = {
 }
 
 TEMP_FILE_DIR = tempfile.gettempdir()
-
-
-class ProtoCompilationRegex(Enum):
-    ASSET_URL = "(s3:\/\/ropsten-marketplace-service-assets\/)[a-zA-Z0-9]*(\/services\/)[a-zA-Z0-9_]*(\/proto\/)[^\/.]*(_proto_files.zip)"
-    COMPONENT_URL = "(s3:\/\/ropsten-service-components\/assets\/)[a-zA-Z0-9]*(\/)[a-zA-Z0-9_]*(\/proto.tar.gz)"

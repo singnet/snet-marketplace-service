@@ -7,7 +7,6 @@ from common import utils
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from utility.config import NODEJS_PROTO_LAMBDA_ARN, SUPPORTED_ENVIRONMENT, REGION_NAME, PYTHON_PROTO_LAMBDA_ARN
-from utility.constants import ProtoCompilationRegex
 
 TEMP_FILE_DIR = tempfile.gettempdir()
 boto_utils = BotoUtils(region_name=REGION_NAME)
@@ -17,87 +16,80 @@ class GenerateStubService:
     def __init__(self):
         pass
 
+    @staticmethod
+    def download_extract_and_upload_proto_files(filename, input_file_extension, bucket_name, download_file_path,
+                                                upload_file_path):
+        base = os.path.join(TEMP_FILE_DIR, uuid.uuid4().hex)
+        download = f"{base}_{filename}{input_file_extension}"
+        extracted = f"{base}_{input_file_extension}"
+        boto_utils.s3_download_file(
+            bucket=bucket_name, key=download_file_path, filename=download
+        )
+        utils.extract_zip_file(zip_file_path=download, extracted_path=extracted)
+        boto_utils.upload_folder_contents_to_s3(
+            folder_path=extracted,
+            bucket=bucket_name,
+            key=upload_file_path
+        )
+
     def manage_proto_compilation(self, input_s3_path, output_s3_path):
-        try:
-            proto_bucket, proto_key = boto_utils.get_bucket_and_key_from_url(url=input_s3_path)
-            file_pattern = self.get_file_regex_pattern(proto_key=proto_key)
-            if file_pattern and utils.match_regex_string(path=f"s3://{proto_bucket}/{proto_key}",
-                                                         regex_pattern=file_pattern):
+        input_bucket_name, input_file_path = boto_utils.get_bucket_and_key_from_url(url=input_s3_path)
+        if output_s3_path:
+            output_bucket_name, output_file_path = boto_utils.get_bucket_and_key_from_url(url=output_s3_path)
 
-                # clear existing files
-                if output_s3_path:
-                    stub_bucket, stub_bucket_key = boto_utils.get_bucket_and_key_from_url(url=output_s3_path)
-                    self.clear_s3_files(bucket=stub_bucket, key=stub_bucket_key[:-1])
+        input_file_name, input_file_extension = utils.get_file_name_and_extension_from_path(input_file_path)
+        input_s3_file_key = input_file_path.replace(input_file_name + input_file_extension, "")
+        temp_proto_file_path = input_s3_file_key + "temp_proto_extracted"
 
-                name, extension = utils.get_file_name_and_extension_from_path(proto_key)
-                proto_extract_key = proto_key.replace(name + extension, "") + "proto_extracted"
-                self.clear_s3_files(bucket=proto_bucket, key=proto_extract_key)
-                # download --> extract --> upload
-                base = os.path.join(TEMP_FILE_DIR, uuid.uuid4().hex)
-                download = f"{base}_proto_{name}{extension}"
-                extracted = f"{base}_proto_{name}_extracted"
-                boto_utils.s3_download_file(
-                    bucket=proto_bucket, key=proto_key, filename=download
-                )
-                utils.extract_zip_file(zip_file_path=download, extracted_path=extracted)
-                extracted = self.handle_extraction_path(filename=f'{name}{extension}', extracted=extracted)
-                boto_utils.upload_folder_contents_to_s3(
-                    folder_path=extracted,
-                    bucket=proto_bucket,
-                    key=proto_extract_key
-                )
-
-            else:
-                raise Exception(f"Input proto file url is invalid {input_s3_path}")
-
-            # call lambdas for processing protos
-            proto_extracted_path = f"s3://{proto_bucket}/{proto_extract_key}/"
-            logger.info(f"proto is extracted to path :: {proto_extracted_path}")
-            error_messages = []
-            error_msg = "Error in compiling {} proto stubs at {}.Response :: {}"
-            for environment in SUPPORTED_ENVIRONMENT:
-                if environment is 'python':
-                    response = self.invoke_python_stubs_lambda(input_s3_path=proto_extracted_path,
-                                                               output_s3_path=output_s3_path)
-                if environment is 'nodejs':
-                    response = self.invoke_node_stubs_lambda(input_s3_path=proto_extracted_path,
-                                                             output_s3_path=output_s3_path)
-                if response.get("statusCode", {}) != 200:
-                    msg = error_msg.format(environment, input_s3_path, response)
-                    logger.info(msg)
-                    error_messages.append(msg)
-                if error_messages:
-                    raise Exception(error_messages)
-            logger.info(f"Stubs generation invoked for languages {SUPPORTED_ENVIRONMENT}")
-            return {"message": "success"}
-        except Exception as e:
-            raise e(f"proto lambda invocation failed {repr(e)}")
-
-    @staticmethod
-    def invoke_node_stubs_lambda(input_s3_path, output_s3_path):
-        payload = json.dumps({
-            "input_s3_path": input_s3_path,
-            "output_s3_path": output_s3_path
-        })
-        response = boto_utils.invoke_lambda(
-            invocation_type="RequestResponse",
-            payload=payload,
-            lambda_function_arn=NODEJS_PROTO_LAMBDA_ARN
+        # Clear temp files from s3
+        self.clear_s3_files(bucket=input_bucket_name, key=temp_proto_file_path)
+        self.download_extract_and_upload_proto_files(
+            filename=input_file_name,
+            input_file_extension=input_file_extension,
+            bucket_name=input_bucket_name,
+            download_file_path=input_file_path,
+            upload_file_path=temp_proto_file_path
         )
-        return response
 
-    @staticmethod
-    def invoke_python_stubs_lambda(input_s3_path, output_s3_path):
-        payload = json.dumps({
-            "input_s3_path": input_s3_path,
-            "output_s3_path": output_s3_path
+        # Compile lambdas --> move stubs to temp file
+        temp_output_path = os.path.join(output_s3_path, "temp_stubs/") if output_s3_path else output_s3_path
+        lambda_payload = json.dumps({
+            "input_s3_path": f"s3://{input_bucket_name}/{temp_proto_file_path}",
+            "output_s3_path": temp_output_path
         })
-        response = boto_utils.invoke_lambda(
-            invocation_type="RequestResponse",
-            payload=payload,
-            lambda_function_arn=PYTHON_PROTO_LAMBDA_ARN
+        response = {}
+        for environment in SUPPORTED_ENVIRONMENT:
+            if environment in 'python':
+                response = boto_utils.invoke_lambda(
+                    invocation_type="RequestResponse",
+                    payload=lambda_payload,
+                    lambda_function_arn=PYTHON_PROTO_LAMBDA_ARN
+                )
+            elif environment in 'nodejs':
+                response = boto_utils.invoke_lambda(
+                    invocation_type="RequestResponse",
+                    payload=lambda_payload,
+                    lambda_function_arn=NODEJS_PROTO_LAMBDA_ARN
+                )
+            if response.get('statusCode', {}) != 200:
+                raise Exception(f"Invalid proto file found on given path :: {input_s3_path} :: response :: {response}")
+
+        # Move objects from temp folder to output if success
+        boto_utils.move_s3_objects(
+            source_bucket=input_bucket_name,
+            source_key=temp_proto_file_path,
+            target_bucket=output_bucket_name,
+            target_key=f"{input_s3_file_key}proto_extracted/",
+            clear_destination=True
         )
-        return response
+        boto_utils.move_s3_objects(
+            source_bucket=input_bucket_name,
+            source_key=boto_utils.get_bucket_and_key_from_url(temp_output_path)[1],
+            target_bucket=output_bucket_name,
+            target_key=f"{output_file_path}stubs/",
+            clear_destination=True
+        )
+        return {"message": "success"}
 
     @staticmethod
     def clear_s3_files(bucket, key):
@@ -116,10 +108,3 @@ class GenerateStubService:
             sub_folder_name = filename.replace('.tar.gz', '')
             extracted = os.path.join(extracted, sub_folder_name)
         return extracted
-
-    @staticmethod
-    def get_file_regex_pattern(proto_key):
-        if proto_key.endswith("tar.gz"):
-            return ProtoCompilationRegex.COMPONENT_URL.value
-        if proto_key.endswith(".zip"):
-            return ProtoCompilationRegex.ASSET_URL.value
