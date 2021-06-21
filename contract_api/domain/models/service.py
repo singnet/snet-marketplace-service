@@ -1,5 +1,6 @@
 class Service:
-    def __init__(self, org_id, service_id, service_path, ipfs_hash, is_curated, service_email, service_metadata):
+    def __init__(self, org_id, service_id, service_path, ipfs_hash, is_curated, service_email, service_metadata, row_id=None):
+        self._row_id = row_id
         self._org_id = org_id
         self._service_id = service_id
         self._service_path = service_path
@@ -63,6 +64,14 @@ class Service:
     @service_metadata.setter
     def service_metadata(self, service_metadata):
         self._service_metadata = service_metadata
+
+    @property
+    def row_id(self):
+        return self._row_id
+
+    @row_id.setter
+    def row_id(self):
+        return self._row_id
 
 
 
