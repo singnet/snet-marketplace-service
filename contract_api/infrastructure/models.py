@@ -91,6 +91,7 @@ class Service(Base):
     service_email = Column("service_email", VARCHAR(128), default=null)
     row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
     row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    service_metadata = relationship("ServiceMetadata", uselist=False)
     UniqueConstraint(org_id, service_id, name="uq_srvc")
 
 
