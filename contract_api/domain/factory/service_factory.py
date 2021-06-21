@@ -1,6 +1,5 @@
 from contract_api.domain.models.service import Service
 from contract_api.domain.models.service_metadata import ServiceMetadata
-from registry.domain.models.service_group_assets import ServiceMedia
 
 
 class ServiceFactory:
