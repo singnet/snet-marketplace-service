@@ -9,6 +9,7 @@ class ServiceFactory:
         if not service_db:
             return None
         return Service(
+            row_id=service_db.row_id,
             org_id=service_db.org_id,
             service_id=service_db.service_id,
             service_path=service_db.service_path,
@@ -42,4 +43,20 @@ class ServiceFactory:
             service_rating=service_metadata_db.service_rating,
             ranking=service_metadata_db.ranking,
             contributors=service_metadata_db.contributors
+        )
+
+    @staticmethod
+    def convert_service_media_db_model_to_entity_model(service_media_db):
+        if not service_media_db:
+            return None
+        return ServiceMedia(
+            service_row_id=service_media_db.service_row_id,
+            org_id=service_media_db.org_id,
+            service_id=service_media_db.service_id,
+            url=service_media_db.url,
+            order=service_media_db.order,
+            file_type=service_media_db.file_type,
+            asset_type=service_media_db.asset_type,
+            alt_text=service_media_db.alt_text,
+            ipfs_url=service_media_db.ipfs_url
         )
