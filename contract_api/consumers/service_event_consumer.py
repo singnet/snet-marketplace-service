@@ -4,6 +4,7 @@ import os
 import boto3
 from web3 import Web3
 
+from common import utils
 from common.blockchain_util import BlockChainUtil
 from common.boto_utils import BotoUtils
 from common.ipfs_util import IPFSUtil
@@ -330,16 +331,17 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
         if not service:
            raise Exception(f"Unable to find service for given org_id {org_id} and service_id {service_id}")
         if proto_stubs:
-            service_media_repo.delete_service_media(org_id=org_id, service_id=service_id, file_types=['grpc_stub'])
+            service_media_repo.delete_service_media(org_id=org_id, service_id=service_id, file_types=['grpc-stub'])
         for stub in proto_stubs:
+            filename, extension = utils.get_file_name_and_extension_from_path(path=stub)
             media_item = ServiceMedia(
                 service_row_id=service.row_id,
                 org_id=org_id,
                 service_id=service_id,
                 url=stub,
-                file_type="grpc_stub",
+                file_type="grpc-stub",
                 order=0,
-                asset_type="stub",
+                asset_type=f"grpc-stub/{filename}",
                 alt_text="",
                 ipfs_url=""
             )

@@ -2,9 +2,12 @@ from unittest import TestCase
 
 from common.repository import Repository
 from contract_api.config import NETWORK_ID, NETWORKS
+from contract_api.infrastructure.models import ServiceMedia
+from contract_api.infrastructure.repositories.service_media_repository import ServiceMediaRepository
 from contract_api.registry import Registry
 
 db = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
+service_media_repo = ServiceMediaRepository()
 
 
 class TestRegistry(TestCase):
@@ -52,17 +55,37 @@ class TestRegistry(TestCase):
         VALUES(10,10, 'snet', 'gene-annotation-service', 'Annotation Service', 'Use this service to annotate a humane genome with uniform terms, Reactome pathway memberships, and BioGrid protein interactions.', 'short description',0, 'https://mozi-ai.github.io/annotation-service/', '{"name":"John", "age":31, "city":"New York"}', 'QmXqonxB9EvNBe11J8oCYXMQAtPKAb2x8CyFLmQpkvVaLf', 'proto', 'grpc', '0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C','{"hero_image": "https://test-s3-push"}', '{"hero_image": "QmVcE6fEDP764ibadXTjZHk251Lmt5xAxdc4P9mPA4kksk/hero_gene-annotation-2b.png"}','{"rating": 0.0, "total_users_rated": 0}', 1, '[{"name": "dummy dummy", "email_id": "dummy@dummy.io"}]', '2021-01-08 05:48:26', '2021-01-08 05:48:26')"""
         db.execute(insert_metadata_query)
 
-        insert_service_stubs = """INSERT INTO service_media
-        (row_id, org_id, service_id, url, `order`, file_type, asset_type, alt_text, created_on, updated_on, ipfs_url, service_row_id)
-        VALUES(80, 'snet', 'gene-annotation-service', 'https://ropsten-service-components.s3.us-east-1.amazonaws.com/assets/d263/d263test/stubs/nodejs.zip', 0, 'grpc_stub', 'stub', '', '2021-06-11 14:21:25', '2021-06-11 14:21:25', ' ', 10)"""
-        db.execute(insert_service_stubs)
+        service_media_repo.add_item(ServiceMedia(
+            row_id=8,
+            service_row_id=10,
+            org_id="snet",
+            service_id="gene-annotation-service",
+            url="https://ropsten-service-components.s3.us-east-1.amazonaws.com/assets/d263/d263test/stubs/nodejs.zip",
+            order=0,
+            asset_type="grpc-stub",
+            file_type="grpc-stub/nodejs",
+            alt_text="",
+            ipfs_url="",
+            created_on="2021-06-11 14:21:25",
+            updated_on="2021-06-11 14:21:25"
+        ))
 
-        insert_service_media = """INSERT INTO service_media
-        (row_id,org_id, service_id, url, `order`, file_type, asset_type, alt_text, created_on, updated_on, ipfs_url, service_row_id)
-        VALUES(10,'snet', 'gene-annotation-service', 'https://test-s3-push', 5, 'text', 'hero_image','data is missing', '2021-01-08 13:31:50', '2021-01-08 13:31:50', 'Qmbb7tmKZX2TSxDKsK6DEAbp3tPgNUYP11CC93Cft7EkFb/hero_fbprophet_forecast1', 10);"""
-        db.execute(insert_service_media)
+        service_media_repo.add_item(ServiceMedia(
+            row_id=10,
+            service_row_id=10,
+            org_id="snet",
+            service_id="gene-annotation-service",
+            url="https://test-s3-push",
+            order=5,
+            asset_type="hero_image",
+            file_type="image",
+            alt_text="data is missing",
+            ipfs_url="Qmbb7tmKZX2TSxDKsK6DEAbp3tPgNUYP11CC93Cft7EkFb",
+            created_on="2021-01-08 13:31:50",
+            updated_on="2021-01-08 13:31:50"
+        ))
 
-        response = registry.get_service_data_by_org_id_and_service_id('snet','gene-annotation-service')
+        response = registry.get_service_data_by_org_id_and_service_id('snet', 'gene-annotation-service')
 
         assert response == {'service_row_id': 10,
                             'org_id': 'snet',
@@ -94,8 +117,10 @@ class TestRegistry(TestCase):
                             'is_available': 0,
                             'groups': [],
                             'tags': [],
-                            'media': [{'row_id': 10, 'url': 'https://test-s3-push', 'file_type': 'text', 'order': 5, 'alt_text': 'data is missing'}],
-                            'stubs': [{'url': 'https://ropsten-service-components.s3.us-east-1.amazonaws.com/assets/d263/d263test/stubs/nodejs.zip'}]
+                            'media': [
+                                {'service_row_id': 10, 'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'https://ropsten-service-components.s3.us-east-1.amazonaws.com/assets/d263/d263test/stubs/nodejs.zip', 'order': 0, 'file_type': 'grpc-stub/nodejs', 'asset_type': 'grpc-stub', 'alt_text': '', 'ipfs_url': ''},
+                                {'service_row_id': 10, 'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'https://test-s3-push', 'order': 5, 'file_type': 'image', 'asset_type': 'hero_image', 'alt_text': 'data is missing', 'ipfs_url': 'Qmbb7tmKZX2TSxDKsK6DEAbp3tPgNUYP11CC93Cft7EkFb'}
+                            ]
                             }
 
     def test_get_service_data_by_org_id_and_service_id_without_media(self):
@@ -118,42 +143,44 @@ class TestRegistry(TestCase):
         VALUES(10,10, 'snet', 'gene-annotation-service', 'Annotation Service', 'Use this service to annotate a humane genome with uniform terms, Reactome pathway memberships, and BioGrid protein interactions.', 'short description', 'https://mozi-ai.github.io/annotation-service/', '{"name":"John", "age":31, "city":"New York"}', 'QmXqonxB9EvNBe11J8oCYXMQAtPKAb2x8CyFLmQpkvVaLf', 'proto', 'grpc', '0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C','{"hero_image": "https://test-s3-push"}', '{"hero_image": "QmVcE6fEDP764ibadXTjZHk251Lmt5xAxdc4P9mPA4kksk/hero_gene-annotation-2b.png"}','{"rating": 0.0, "total_users_rated": 0}', 1, '[{"name": "dummy dummy", "email_id": "dummy@dummy.io"}]', '2021-01-08 05:48:26', '2021-01-08 05:48:26')"""
         db.execute(insert_metadata_query)
 
-        response = registry.get_service_data_by_org_id_and_service_id('snet','gene-annotation-service')
+        response = registry.get_service_data_by_org_id_and_service_id('snet', 'gene-annotation-service')
 
         assert response == {'service_row_id': 10,
-                             'org_id': 'snet',
-                             'service_id': 'gene-annotation-service',
-                             'display_name': 'Annotation Service',
-                             'description': 'Use this service to annotate a humane genome with uniform terms, Reactome pathway memberships, and BioGrid protein interactions.',
-                             'short_description': 'short description',
-                             'demo_component_available':0,
-                             'url': 'https://mozi-ai.github.io/annotation-service/',
-                             'json': '{"name":"John", "age":31, "city":"New York"}',
-                             'model_ipfs_hash': 'QmXqonxB9EvNBe11J8oCYXMQAtPKAb2x8CyFLmQpkvVaLf',
-                             'encoding': 'proto', 'type': 'grpc', 'mpe_address': '0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C',
-                             'service_rating': {'rating': 0.0, 'total_users_rated': 0},
-                             'ranking': 1,
-                             'contributors': [{'name': 'dummy dummy', 'email_id': 'dummy@dummy.io'}],
-                             'service_path': 'service_path', 'ipfs_hash': 'QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf',
-                             'is_curated': 1,
-                             'service_email': 'email',
-                             'organization_name': 'gene-annotation-service',
-                             'owner_address': 'owner_add',
-                             'org_metadata_uri': 'uri',
-                             'org_email': 'email',
-                             'org_assets_url': {'url': 'google.com'},
-                             'org_description': 'description',
-                             'contacts': {},
-                             'is_available': 0,
-                             'groups': [],
-                             'tags': [],
-                             'media': [],
-                              'stubs': []
-                             }
+                            'org_id': 'snet',
+                            'service_id': 'gene-annotation-service',
+                            'display_name': 'Annotation Service',
+                            'description': 'Use this service to annotate a humane genome with uniform terms, Reactome pathway memberships, and BioGrid protein interactions.',
+                            'short_description': 'short description',
+                            'demo_component_available': 0,
+                            'url': 'https://mozi-ai.github.io/annotation-service/',
+                            'json': '{"name":"John", "age":31, "city":"New York"}',
+                            'model_ipfs_hash': 'QmXqonxB9EvNBe11J8oCYXMQAtPKAb2x8CyFLmQpkvVaLf',
+                            'encoding': 'proto', 'type': 'grpc',
+                            'mpe_address': '0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C',
+                            'service_rating': {'rating': 0.0, 'total_users_rated': 0},
+                            'ranking': 1,
+                            'contributors': [{'name': 'dummy dummy', 'email_id': 'dummy@dummy.io'}],
+                            'service_path': 'service_path',
+                            'ipfs_hash': 'QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf',
+                            'is_curated': 1,
+                            'service_email': 'email',
+                            'organization_name': 'gene-annotation-service',
+                            'owner_address': 'owner_add',
+                            'org_metadata_uri': 'uri',
+                            'org_email': 'email',
+                            'org_assets_url': {'url': 'google.com'},
+                            'org_description': 'description',
+                            'contacts': {},
+                            'is_available': 0,
+                            'groups': [],
+                            'tags': [],
+                            'media': []
+                            }
 
     def clear_dependencies(self):
         db.execute("DELETE FROM service WHERE 1")
         db.execute("DELETE FROM organization WHERE 1")
         db.execute("DELETE FROM service WHERE 1")
         db.execute("DELETE FROM service_metadata WHERE 1")
-        db.execute("DELETE FROM service_media WHERE 1")
+        service_media_repo.session.query(ServiceMedia).delete()
+        service_media_repo.session.commit()
