@@ -112,30 +112,36 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             service = new_service_repo.get_service(org_id=org_id, service_id=service_id)
             if not service:
                 raise Exception(f"Unable to find service for given org_id {org_id} and service_id {service_id}")
-            service_media_repo.delete_service_media(org_id=org_id, service_id=service_id, file_types=['image', 'video'])
+            service_media_list = []
             for service_media_item in service_media:
-                url = service_media_item.get("url", {})
-                if "http" in url or "https" in url:
-                    updated_url = url
-                    ipfs_url = ''
-                else:
-                    updated_url = self._push_asset_to_s3_using_hash(org_id=org_id, service_id=service_id, hash=url)
-                    ipfs_url = service_media_item.get("url", "")
-                # insert service media data
-                media_item = ServiceMedia(
-                    service_row_id=service.row_id,
-                    org_id=org_id,
-                    service_id=service_id,
-                    url=updated_url,
-                    file_type=service_media_item['file_type'],
-                    order=service_media_item['order'],
-                    asset_type=service_media_item.get('asset_type', ""),
-                    alt_text=service_media_item.get('alt_text', ""),
-                    ipfs_url=ipfs_url
-                )
-                service_media_repo.create_service_media(service_media=media_item)
-                if service_media_item.get('order', 0) > count:
-                    count = service_media_item.get('order', 0)
+                if service_media_item.get('file_type') in ['image', 'video']:
+                    url = service_media_item.get("url", {})
+                    if "http" in url or "https" in url:
+                        updated_url = url
+                        ipfs_url = ''
+                    else:
+                        updated_url = self._push_asset_to_s3_using_hash(org_id=org_id, service_id=service_id, hash=url)
+                        ipfs_url = service_media_item.get("url", "")
+                    # insert service media data
+                    asset_type = 'media_gallery' if service_media_item.get('asset_type', {}) != 'hero_image' else service_media.get('asset_type')
+                    media_item = ServiceMedia(
+                        service_row_id=service.row_id,
+                        org_id=org_id,
+                        service_id=service_id,
+                        url=updated_url,
+                        file_type=service_media_item['file_type'],
+                        order=service_media_item['order'],
+                        asset_type=asset_type,
+                        alt_text=service_media_item.get('alt_text', ""),
+                        ipfs_url=ipfs_url
+                    )
+                    service_media_list.append(media_item)
+                    if service_media_item.get('order', 0) > count:
+                        count = service_media_item.get('order', 0)
+            service_media_repo.update_service_media(org_id=org_id, service_id=service_id,
+                                                    service_media_list=service_media_list,
+                                                    asset_types=['hero_image', 'media_gallery']
+                                                    )
 
     def _process_service_data(self, org_id, service_id, new_ipfs_hash, new_ipfs_data):
         try:
@@ -329,9 +335,8 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
     def update_proto_stubs(org_id, service_id, proto_stubs):
         service = new_service_repo.get_service(org_id=org_id, service_id=service_id)
         if not service:
-           raise Exception(f"Unable to find service for given org_id {org_id} and service_id {service_id}")
-        if proto_stubs:
-            service_media_repo.delete_service_media(org_id=org_id, service_id=service_id, file_types=['grpc-stub'])
+            raise Exception(f"Unable to find service for given org_id {org_id} and service_id {service_id}")
+        proto_media_list = []
         for stub in proto_stubs:
             filename, extension = utils.get_file_name_and_extension_from_path(path=stub)
             media_item = ServiceMedia(
@@ -345,7 +350,11 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
                 alt_text="",
                 ipfs_url=""
             )
-            service_media_repo.create_service_media(service_media=media_item)
+            proto_media_list.append(media_item)
+        service_media_repo.update_service_media(org_id=org_id, service_id=service_id,
+                                                service_media_list=proto_media_list,
+                                                asset_types=['grpc-stub/nodejs', 'grpc-stub/python']
+                                                )
 
     def process_service_deployment(self, org_id, service_id, update_proto_stubs):
         logger.info(f"Processing Service deployment for {org_id} {service_id}")

@@ -19,8 +19,7 @@ class ServiceMedia:
             "order": self._order,
             "file_type": self._file_type,
             "asset_type": self._asset_type,
-            "alt_text": self._alt_text,
-            "ipfs_url": self._ipfs_url
+            "alt_text": self._alt_text
         }
 
     @property
@@ -87,10 +86,10 @@ class ServiceMedia:
     def alt_text(self, alt_text):
         self._alt_text = alt_text
 
-    @property
-    def ipfs_url(self):
-        return self._ipfs_url
-
-    @ipfs_url.setter
-    def ipfs_url(self, ipfs_url):
-        self.ipfs_url = ipfs_url
+    # @property
+    # def ipfs_url(self):
+    #     return self._ipfs_url
+    #
+    # @ipfs_url.setter
+    # def ipfs_url(self, ipfs_url):
+    #     self.ipfs_url = ipfs_url
