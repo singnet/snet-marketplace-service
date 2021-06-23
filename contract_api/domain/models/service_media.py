@@ -86,10 +86,10 @@ class ServiceMedia:
     def alt_text(self, alt_text):
         self._alt_text = alt_text
 
-    # @property
-    # def ipfs_url(self):
-    #     return self._ipfs_url
-    #
-    # @ipfs_url.setter
-    # def ipfs_url(self, ipfs_url):
-    #     self.ipfs_url = ipfs_url
+    @property
+    def ipfs_url(self):
+        return self._ipfs_url
+
+    @ipfs_url.setter
+    def ipfs_url(self, ipfs_url):
+        self.ipfs_url = ipfs_url
