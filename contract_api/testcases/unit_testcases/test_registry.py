@@ -118,8 +118,8 @@ class TestRegistry(TestCase):
                             'groups': [],
                             'tags': [],
                             'media': [
-                                {'service_row_id': 10, 'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'https://ropsten-service-components.s3.us-east-1.amazonaws.com/assets/d263/d263test/stubs/nodejs.zip', 'order': 0, 'file_type': 'grpc-stub/nodejs', 'asset_type': 'grpc-stub', 'alt_text': '', 'ipfs_url': ''},
-                                {'service_row_id': 10, 'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'https://test-s3-push', 'order': 5, 'file_type': 'image', 'asset_type': 'hero_image', 'alt_text': 'data is missing', 'ipfs_url': 'Qmbb7tmKZX2TSxDKsK6DEAbp3tPgNUYP11CC93Cft7EkFb'}
+                                {'service_row_id': 10, 'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'https://ropsten-service-components.s3.us-east-1.amazonaws.com/assets/d263/d263test/stubs/nodejs.zip', 'order': 0, 'file_type': 'grpc-stub/nodejs', 'asset_type': 'grpc-stub', 'alt_text': ''},
+                                {'service_row_id': 10, 'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'https://test-s3-push', 'order': 5, 'file_type': 'image', 'asset_type': 'hero_image', 'alt_text': 'data is missing'}
                             ]
                             }
 
