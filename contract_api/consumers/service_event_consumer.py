@@ -17,7 +17,7 @@ from contract_api.config import ASSETS_BUCKET_NAME, ASSETS_PREFIX, GET_SERVICE_F
     ASSET_TEMP_EXTRACT_DIRECTORY, ASSETS_COMPONENT_BUCKET_NAME, MANAGE_PROTO_COMPILATION, IPFS_URL
 from contract_api.consumers.event_consumer import EventConsumer
 from contract_api.dao.service_repository import ServiceRepository
-from contract_api.infrastructure.models import ServiceMedia
+from contract_api.domain.models.service_media import ServiceMedia
 from contract_api.infrastructure.repositories.service_media_repository import ServiceMediaRepository
 from contract_api.infrastructure.repositories.service_repository import ServiceRepository as NewServiceRepository
 
@@ -116,7 +116,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             for service_media_item in service_media:
                 if service_media_item.get('file_type') in ['image', 'video']:
                     url = service_media_item.get("url", {})
-                    if "http" in url or "https" in url:
+                    if utils.if_external_link(link=url):
                         updated_url = url
                         ipfs_url = ''
                     else:

@@ -33,12 +33,9 @@ class TestRegistry(TestCase):
         else:
             assert False
 
-    def tearDown(self):
-        db.execute("DELETE FROM service WHERE 1")
-
     def test_get_service_data_by_org_id_and_service_id_with_media(self):
         registry = Registry(obj_repo=db)
-        self.clear_dependencies()
+        self.tearDown()
 
         insert_organization_query = """INSERT INTO organization
         (row_id ,org_id, organization_name, owner_address, org_metadata_uri, org_email, org_assets_url, row_created, row_updated, description, assets_hash, contacts)
@@ -125,7 +122,7 @@ class TestRegistry(TestCase):
 
     def test_get_service_data_by_org_id_and_service_id_without_media(self):
         registry = Registry(obj_repo=db)
-        self.clear_dependencies()
+        self.tearDown()
 
         insert_organization_query = """INSERT INTO organization
         (row_id ,org_id, organization_name, owner_address, org_metadata_uri, org_email, org_assets_url, row_created, row_updated, description, assets_hash, contacts)
@@ -177,7 +174,7 @@ class TestRegistry(TestCase):
                             'media': []
                             }
 
-    def clear_dependencies(self):
+    def tearDown(self):
         db.execute("DELETE FROM service WHERE 1")
         db.execute("DELETE FROM organization WHERE 1")
         db.execute("DELETE FROM service WHERE 1")
