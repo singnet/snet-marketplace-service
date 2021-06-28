@@ -52,6 +52,11 @@ class TestRegistry(TestCase):
         VALUES(10,10, 'snet', 'gene-annotation-service', 'Annotation Service', 'Use this service to annotate a humane genome with uniform terms, Reactome pathway memberships, and BioGrid protein interactions.', 'short description',0, 'https://mozi-ai.github.io/annotation-service/', '{"name":"John", "age":31, "city":"New York"}', 'QmXqonxB9EvNBe11J8oCYXMQAtPKAb2x8CyFLmQpkvVaLf', 'proto', 'grpc', '0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C','{"hero_image": "https://test-s3-push"}', '{"hero_image": "QmVcE6fEDP764ibadXTjZHk251Lmt5xAxdc4P9mPA4kksk/hero_gene-annotation-2b.png"}','{"rating": 0.0, "total_users_rated": 0}', 1, '[{"name": "dummy dummy", "email_id": "dummy@dummy.io"}]', '2021-01-08 05:48:26', '2021-01-08 05:48:26')"""
         db.execute(insert_metadata_query)
 
+        insert_service_stubs = """INSERT INTO service_media
+        (row_id, org_id, service_id, url, `order`, file_type, asset_type, alt_text, created_on, updated_on, ipfs_url, service_row_id)
+        VALUES(80, 'snet', 'gene-annotation-service', 'https://ropsten-service-components.s3.us-east-1.amazonaws.com/assets/d263/d263test/stubs/nodejs.zip', 0, 'grpc_stub', 'stub', '', '2021-06-11 14:21:25', '2021-06-11 14:21:25', ' ', 10)"""
+        db.execute(insert_service_stubs)
+
         insert_service_media = """INSERT INTO service_media
         (row_id,org_id, service_id, url, `order`, file_type, asset_type, alt_text, created_on, updated_on, ipfs_url, service_row_id)
         VALUES(10,'snet', 'gene-annotation-service', 'https://test-s3-push', 5, 'text', 'hero_image','data is missing', '2021-01-08 13:31:50', '2021-01-08 13:31:50', 'Qmbb7tmKZX2TSxDKsK6DEAbp3tPgNUYP11CC93Cft7EkFb/hero_fbprophet_forecast1', 10);"""
@@ -60,34 +65,38 @@ class TestRegistry(TestCase):
         response = registry.get_service_data_by_org_id_and_service_id('snet','gene-annotation-service')
 
         assert response == {'service_row_id': 10,
-                             'org_id': 'snet',
-                             'service_id': 'gene-annotation-service',
-                             'display_name': 'Annotation Service',
-                             'description': 'Use this service to annotate a humane genome with uniform terms, Reactome pathway memberships, and BioGrid protein interactions.',
-                             'short_description': 'short description',
-                             'demo_component_available': 0,
-                             'url': 'https://mozi-ai.github.io/annotation-service/',
-                             'json': '{"name":"John", "age":31, "city":"New York"}',
-                             'model_ipfs_hash': 'QmXqonxB9EvNBe11J8oCYXMQAtPKAb2x8CyFLmQpkvVaLf',
-                             'encoding': 'proto', 'type': 'grpc', 'mpe_address': '0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C',
-                             'service_rating': {'rating': 0.0, 'total_users_rated': 0},
-                             'ranking': 1,
-                             'contributors': [{'name': 'dummy dummy', 'email_id': 'dummy@dummy.io'}],
-                             'service_path': 'service_path', 'ipfs_hash': 'QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf',
-                             'is_curated': 1,
-                             'service_email': 'email',
-                             'organization_name': 'gene-annotation-service',
-                             'owner_address': 'owner_add',
-                             'org_metadata_uri': 'uri',
-                             'org_email': 'email',
-                             'org_assets_url': {'url': 'google.com'},
-                             'org_description': 'description',
-                             'contacts': {},
-                             'is_available': 0,
-                             'groups': [],
-                             'tags': [],
-                             'media': [{'row_id': 10, 'url': 'https://test-s3-push', 'file_type': 'text', 'order': 5, 'alt_text': 'data is missing',"asset_type":"hero_image"}]
-                             }
+                            'org_id': 'snet',
+                            'service_id': 'gene-annotation-service',
+                            'display_name': 'Annotation Service',
+                            'description': 'Use this service to annotate a humane genome with uniform terms, Reactome pathway memberships, and BioGrid protein interactions.',
+                            'url': 'https://mozi-ai.github.io/annotation-service/',
+                            'json': '{"name":"John", "age":31, "city":"New York"}',
+                            'model_ipfs_hash': 'QmXqonxB9EvNBe11J8oCYXMQAtPKAb2x8CyFLmQpkvVaLf',
+                            'encoding': 'proto',
+                            'type': 'grpc',
+                            'mpe_address': '0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C',
+                            'service_rating': {'rating': 0.0, 'total_users_rated': 0},
+                            'ranking': 1,
+                            'contributors': [{'name': 'dummy dummy', 'email_id': 'dummy@dummy.io'}],
+                            'short_description': 'short description',
+                            'demo_component_available': 0,
+                            'service_path': 'service_path',
+                            'ipfs_hash': 'QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf',
+                            'is_curated': 1,
+                            'service_email': 'email',
+                            'organization_name': 'gene-annotation-service',
+                            'owner_address': 'owner_add',
+                            'org_metadata_uri': 'uri',
+                            'org_email': 'email',
+                            'org_assets_url': {'url': 'google.com'},
+                            'org_description': 'description',
+                            'contacts': {},
+                            'is_available': 0,
+                            'groups': [],
+                            'tags': [],
+                            'media': [{'row_id': 10, 'url': 'https://test-s3-push', 'file_type': 'text', 'order': 5, 'alt_text': 'data is missing'}],
+                            'stubs': [{'url': 'https://ropsten-service-components.s3.us-east-1.amazonaws.com/assets/d263/d263test/stubs/nodejs.zip'}]
+                            }
 
     def test_get_service_data_by_org_id_and_service_id_without_media(self):
         registry = Registry(obj_repo=db)
@@ -138,7 +147,8 @@ class TestRegistry(TestCase):
                              'is_available': 0,
                              'groups': [],
                              'tags': [],
-                             'media': []
+                             'media': [],
+                              'stubs': []
                              }
 
     def clear_dependencies(self):

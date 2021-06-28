@@ -247,7 +247,7 @@ def org_verification(event, context):
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def verify_org_id(event, context):
-    logger.info(event)
+    logger.info(f"Verify org id event:: {event}")
     query_parameters = event["queryStringParameters"]
     if "org_id" not in query_parameters:
         raise BadRequestException()
@@ -261,6 +261,6 @@ def verify_org_id(event, context):
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def update_transaction(event, context):
-    logger.info(event)
+    logger.info(f"Update transaction event:: {event}")
     OrganizationTransactionStatus().update_transaction_status()
     return generate_lambda_response(StatusCode.OK, "OK")

@@ -39,8 +39,7 @@ GROUP_MINOR_CHANGES = [
 
 class Organization:
     def __init__(self, uuid, org_id, name, org_type, origin, description, short_description, url,
-                 contacts, assets, metadata_ipfs_uri, duns_no, groups, addresses, org_state, members, registration_id,
-                 registration_type):
+                 contacts, assets, metadata_ipfs_uri, duns_no, groups, addresses, org_state, members):
         self.__name = name
         self.__id = org_id
         self.__uuid = uuid
@@ -57,8 +56,6 @@ class Organization:
         self.__addresses = addresses
         self.__state = org_state
         self.__members = members
-        self.__registration_id = registration_id
-        self.__registration_type = registration_type
 
     def to_metadata(self):
         assets = {}
@@ -103,8 +100,6 @@ class Organization:
             "short_description": self.__short_description,
             "url": self.__url,
             "duns_no": self.__duns_no,
-            "registration_id": self.__registration_id,
-            "registration_type": self.__registration_type,
             "origin": self.__origin,
             "contacts": self.__contacts,
             "assets": self.__assets,
@@ -163,14 +158,6 @@ class Organization:
     @property
     def duns_no(self):
         return self.__duns_no
-
-    @property
-    def registration_id(self):
-        return self.__registration_id
-
-    @property
-    def registration_type(self):
-        return self.__registration_type
 
     @property
     def origin(self):
@@ -257,12 +244,6 @@ class Organization:
         if self.__org_type == OrganizationType.INDIVIDUAL.value:
             self.__id = org_uuid
 
-    def create_setup(self):
-        if self.__org_type == OrganizationType.INDIVIDUAL.value:
-            if len(self.__registration_type) == 0 or len(self.__registration_id) == 0:
-                return False
-        return True
-
     def is_org_id_set(self):
         return self.__id is None or len(self.__id) == 0
 
@@ -311,40 +292,22 @@ class Organization:
         elif action == OrganizationActions.SUBMIT.value:
             next_state = Organization.next_state_for_update(current_organization, updated_organization)
         elif action == OrganizationActions.CREATE.value:
-            next_state = OrganizationStatus.ONBOARDING.value
+            next_state = OrganizationStatus.ONBOARDING_APPROVED.value
         else:
             raise Exception("Invalid Action for Organization")
         return next_state
 
     @staticmethod
     def next_state_for_update(current_organization, updated_organization):
-        if current_organization.get_status() in [OrganizationStatus.ONBOARDING_REJECTED.value,
-                                                 OrganizationStatus.REJECTED.value]:
-            raise OperationNotAllowed()
-
-        if current_organization.get_status() in [OrganizationStatus.CHANGE_REQUESTED.value,
-                                                 OrganizationStatus.ONBOARDING.value]:
-            next_state = OrganizationStatus.ONBOARDING.value
+        if current_organization.get_status() in [OrganizationStatus.CHANGE_REQUESTED.value, OrganizationStatus.ONBOARDING.value]:
+            next_state = OrganizationStatus.ONBOARDING_APPROVED.value
             return next_state
-
-        is_major_update, diff = current_organization.is_major_change(updated_organization)
-        if not is_major_update:
-            if current_organization.get_status() in \
-                    [OrganizationStatus.APPROVED.value, OrganizationStatus.PUBLISHED.value]:
-                next_state = OrganizationStatus.APPROVED.value
-            elif current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
-                next_state = OrganizationStatus.ONBOARDING_APPROVED.value
-            else:
-                raise OperationNotAllowed()
+        elif current_organization.get_status() in [OrganizationStatus.APPROVED.value, OrganizationStatus.PUBLISHED.value]:
+            next_state = OrganizationStatus.APPROVED.value
+        elif current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
+            next_state = OrganizationStatus.ONBOARDING_APPROVED.value
         else:
-            if "values_changed" in diff and "root._Organization__id" in diff["values_changed"]:
-                logger.error("org_id update not allowed")
-                raise OperationNotAllowed()
-            elif current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
-                next_state = OrganizationStatus.ONBOARDING_APPROVED.value
-                return next_state
-            else:
-                raise OperationNotAllowed()
+            raise OperationNotAllowed()
         return next_state
 
     def _get_all_contact_for_organization(self):

@@ -127,8 +127,7 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
 
     def _get_existing_organization_records(self, org_id):
         try:
-            existing_publish_in_progress_organization = self._organization_repository.get_org_for_org_id(
-                org_id)
+            existing_publish_in_progress_organization = self._organization_repository.get_organization(org_id=org_id)
         except OrganizationNotFoundException:
             return None
         except Exception as e:
@@ -153,25 +152,19 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
         try:
 
             existing_publish_in_progress_organization = self._get_existing_organization_records(org_id)
+
             org_id = ipfs_org_metadata.get("org_id", None)
             org_name = ipfs_org_metadata.get("org_name", None)
             org_type = ipfs_org_metadata.get("org_type", None)
-            description = ipfs_org_metadata.get("description", None)
-            short_description = ""
-            url = ""
-            long_description = ""
-
-            if description:
-                short_description = description.get("short_description", None)
-                long_description = description.get("description", None)
-                url = description.get("url", None)
-
+            description = ipfs_org_metadata.get("description", {})
+            short_description = description.get("short_description", "")
+            long_description = description.get("description", "")
+            url = description.get("url", "")
             contacts = ipfs_org_metadata.get("contacts", None)
-            assets = OrganizationFactory.parse_organization_metadata_assets(ipfs_org_metadata.get("assets", None),
-                                                                            None)
-
-            groups = OrganizationFactory.group_domain_entity_from_group_list_metadata(
-                ipfs_org_metadata.get("groups", []))
+            raw_assets = ipfs_org_metadata.get("assets", {})
+            assets = OrganizationFactory.parse_organization_metadata_assets(raw_assets, {})
+            raw_groups = ipfs_org_metadata.get("groups", [])
+            groups = OrganizationFactory.group_domain_entity_from_group_list_metadata(raw_groups)
 
             org_uuid = ""
             origin = ""
@@ -185,17 +178,14 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                                                        duns_no, groups,
                                                        addresses,
                                                        OrganizationStatus.DRAFT.value,
-                                                       members, "", "")
-
-            test_transaction_hash = RegistryBlockChainUtil(EnvironmentType.TEST.value) \
-                .publish_organization_to_test_network(received_organization_event)
+                                                       members)
 
             if not existing_publish_in_progress_organization:
                 existing_members = []
 
                 received_organization_event.setup_id()
                 org_uuid = received_organization_event.uuid
-                self._create_event_outside_publisher_portal(received_organization_event, test_transaction_hash)
+                self._create_event_outside_publisher_portal(received_organization_event, "")
 
             elif existing_publish_in_progress_organization.org_state.transaction_hash != transaction_hash \
                     and existing_publish_in_progress_organization.is_blockchain_major_change(received_organization_event)[0]:
@@ -206,13 +196,12 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                     org_uuid=existing_publish_in_progress_organization.uuid)
                 self._organization_repository.store_organization(
                     existing_publish_in_progress_organization, BLOCKCHAIN_USER,
-                    OrganizationStatus.APPROVAL_PENDING.value, test_transaction_hash=test_transaction_hash)
+                    OrganizationStatus.APPROVAL_PENDING.value, test_transaction_hash="")
             else:
                 org_uuid = existing_publish_in_progress_organization.uuid
                 existing_members = self._organization_repository.get_org_member(
                     org_uuid=existing_publish_in_progress_organization.uuid)
-                self._mark_existing_publish_in_progress_as_published(existing_publish_in_progress_organization,
-                                                                     test_transaction_hash)
+                self._mark_existing_publish_in_progress_as_published(existing_publish_in_progress_organization, "")
             owner = OrganizationFactory.parser_org_owner_from_metadata(org_uuid, owner,
                                                                        OrganizationMemberStatus.PUBLISHED.value)
             recieved_members = OrganizationFactory.parser_org_members_from_metadata(org_uuid, recieved_members_list,

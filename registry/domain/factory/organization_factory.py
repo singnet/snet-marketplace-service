@@ -21,8 +21,6 @@ class OrganizationFactory:
         short_description = payload["short_description"]
         url = payload["url"]
         duns_no = payload["duns_no"]
-        registration_id = payload["registration_id"]
-        registration_type = payload["registration_type"]
         origin = payload["origin"]
         if origin not in ALLOWED_ORIGIN:
             raise InvalidOriginException()
@@ -34,7 +32,7 @@ class OrganizationFactory:
             .domain_address_entity_from_address_list_payload(payload["org_address"]["addresses"])
         organization = Organization(
             org_uuid, org_id, org_name, org_type, origin, description, short_description, url, contacts,
-            assets, metadata_ipfs_uri, duns_no, groups, addresses, None, [], registration_id, registration_type)
+            assets, metadata_ipfs_uri, duns_no, groups, addresses, None, [])
         return organization
 
     @staticmethod
@@ -99,9 +97,7 @@ class OrganizationFactory:
             groups=OrganizationFactory.parse_group_data_model(organization_repo_model.groups),
             addresses=OrganizationFactory.parse_organization_address_data_model(organization_repo_model.addresses),
             org_state=OrganizationFactory.parse_organization_state_data_model(organization_repo_model.org_state),
-            members=[],
-            registration_id=organization_repo_model.registration_id,
-            registration_type=organization_repo_model.registration_type
+            members=[]
         )
 
     @staticmethod
@@ -228,10 +224,6 @@ class OrganizationFactory:
 
     @staticmethod
     def parse_organization_metadata_assets(assets, existing_assets):
-        if assets is None:
-            assets = {}
-        if existing_assets is None:
-            existing_assets = {}
         url = ""
         for key, value in assets.items():
             if existing_assets and key in existing_assets:
@@ -247,36 +239,34 @@ class OrganizationFactory:
         merged = {**existing_assets, **assets}
         return merged
 
-    @staticmethod
-    def parse_organization_metadata(org_uuid, ipfs_org_metadata, origin, duns_no, addresses, metadata_uri,
-                                    existing_assets, transaction_hash, members):
-        org_id = ipfs_org_metadata.get("org_id", None)
-        org_name = ipfs_org_metadata.get("org_name", None)
-        org_type = ipfs_org_metadata.get("org_type", None)
-        description = ipfs_org_metadata.get("description", None)
-        short_description = ""
-        url = ""
-        long_description = ""
-
-        if description:
-            short_description = description.get("short_description", None)
-            long_description = description.get("description", None)
-            url = description.get("url", None)
-
-        contacts = ipfs_org_metadata.get("contacts", None)
-        assets = OrganizationFactory.parse_organization_metadata_assets(ipfs_org_metadata.get("assets", None),
-                                                                        existing_assets)
-        metadata_ipfs_hash = metadata_uri
-        owner = ""
-        registration_id = ""
-        registration_type = ""
-        groups = OrganizationFactory.group_domain_entity_from_group_list_metadata(ipfs_org_metadata.get("groups", []))
-
-        organization = Organization(org_uuid, org_id, org_name, org_type,
-                                    origin, long_description,
-                                    short_description, url, contacts, assets, metadata_ipfs_hash,
-                                    duns_no, groups,
-                                    addresses,
-                                    OrganizationStatus.PUBLISHED.value,
-                                    members, registration_id, registration_type)
-        return organization
+    # @staticmethod
+    # def parse_organization_metadata(org_uuid, ipfs_org_metadata, origin, duns_no, addresses, metadata_uri,
+    #                                 existing_assets, transaction_hash, members):
+    #     org_id = ipfs_org_metadata.get("org_id", None)
+    #     org_name = ipfs_org_metadata.get("org_name", None)
+    #     org_type = ipfs_org_metadata.get("org_type", None)
+    #     description = ipfs_org_metadata.get("description", None)
+    #     short_description = ""
+    #     url = ""
+    #     long_description = ""
+    #
+    #     if description:
+    #         short_description = description.get("short_description", None)
+    #         long_description = description.get("description", None)
+    #         url = description.get("url", None)
+    #
+    #     contacts = ipfs_org_metadata.get("contacts", None)
+    #     assets = OrganizationFactory.parse_organization_metadata_assets(ipfs_org_metadata.get("assets", {}),
+    #                                                                     existing_assets)
+    #     metadata_ipfs_hash = metadata_uri
+    #     owner = ""
+    #     groups = OrganizationFactory.group_domain_entity_from_group_list_metadata(ipfs_org_metadata.get("groups", []))
+    #
+    #     organization = Organization(org_uuid, org_id, org_name, org_type,
+    #                                 origin, long_description,
+    #                                 short_description, url, contacts, assets, metadata_ipfs_hash,
+    #                                 duns_no, groups,
+    #                                 addresses,
+    #                                 OrganizationStatus.PUBLISHED.value,
+    #                                 members)
+    #     return organization

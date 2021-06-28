@@ -2,8 +2,7 @@ from common import utils
 from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
 from common.utils import json_to_file, publish_zip_file_in_ipfs, publish_file_in_ipfs
-from registry.config import ASSET_DIR, METADATA_FILE_PATH, IPFS_URL, BLOCKCHAIN_TEST_ENV
-from registry.constants import EnvironmentType
+from registry.config import ASSET_DIR, METADATA_FILE_PATH, IPFS_URL
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.services.registry_blockchain_util import RegistryBlockChainUtil
 from registry.exceptions import ServiceProtoNotFoundException, InvalidMetadataException
@@ -87,15 +86,6 @@ class ServicePublisherDomainService:
     @staticmethod
     def get_service_metadata(service, environment):
         service_metadata = service.to_metadata()
-        if environment == EnvironmentType.TEST.value:
-            service_test_endpoints = {}
-            for group in service.groups:
-                service_test_endpoints[group.group_id] = group.test_endpoints
-            for group in service_metadata["groups"]:
-                group["endpoints"] = service_test_endpoints[group["group_id"]]
-                group["free_calls"] = BLOCKCHAIN_TEST_ENV["free_calls"]
-                for item in group["pricing"]:
-                      item["price_in_cogs"] = BLOCKCHAIN_TEST_ENV["test_price_in_cogs"]
         if not service.is_metadata_valid(service_metadata):
             logger.info("Service metadata is not valid")
             raise InvalidMetadataException()
