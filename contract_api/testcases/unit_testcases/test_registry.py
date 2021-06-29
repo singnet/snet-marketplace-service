@@ -94,7 +94,7 @@ class TestRegistry(TestCase):
                             'is_available': 0,
                             'groups': [],
                             'tags': [],
-                            'media': [{'row_id': 10, 'url': 'https://test-s3-push', 'file_type': 'text', 'order': 5, 'alt_text': 'data is missing'}],
+                            'media': [{'row_id': 10, 'url': 'https://test-s3-push', 'file_type': 'text', 'order': 5, 'alt_text': 'data is missing', 'asset_type': 'hero_image'}],
                             'stubs': [{'url': 'https://ropsten-service-components.s3.us-east-1.amazonaws.com/assets/d263/d263test/stubs/nodejs.zip'}]
                             }
 
