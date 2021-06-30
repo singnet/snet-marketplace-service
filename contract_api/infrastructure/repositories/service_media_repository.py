@@ -39,7 +39,7 @@ class ServiceMediaRepository(BaseRepository):
     def delete_service_media(self, org_id, service_id, asset_types=None, file_types=None):
         try:
             service_media_query = self.session.query(ServiceMedia) \
-                .filter(org_id == org_id).filter(service_id == service_id)
+                .filter(ServiceMedia.org_id == org_id).filter(ServiceMedia.service_id == service_id)
             if file_types and type(file_types) == list:
                 service_media_query = service_media_query.filter(ServiceMedia.file_type.in_(file_types))
             if asset_types and type(asset_types) == list:
