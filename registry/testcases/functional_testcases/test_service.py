@@ -5,17 +5,14 @@ from unittest.mock import patch
 from uuid import uuid4
 
 from common.constant import StatusCode
-from registry.application.handlers.service_handlers import create_service, get_code_build_status_for_service
+from registry.application.handlers.service_handlers import create_service
 from registry.application.handlers.service_handlers import get_daemon_config_for_current_network
 from registry.application.handlers.service_handlers import get_service_for_service_uuid
 from registry.application.handlers.service_handlers import get_services_for_organization
-from registry.application.handlers.service_handlers import legal_approval_of_service
-from registry.application.handlers.service_handlers import list_of_orgs_with_services_submitted_for_approval
 from registry.application.handlers.service_handlers import publish_service_metadata_to_ipfs
 from registry.application.handlers.service_handlers import save_service
 from registry.application.handlers.service_handlers import save_service_attributes, verify_service_id
 from registry.application.handlers.service_handlers import save_transaction_hash_for_published_service
-from registry.application.handlers.service_handlers import submit_service_for_approval
 from registry.constants import EnvironmentType
 from registry.constants import OrganizationMemberStatus
 from registry.constants import Role
@@ -422,6 +419,7 @@ class TestService(TestCase):
             "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"},
             "body": json.dumps({
                 "description": "test description updated 1",
+                "service_id": "test_service_id",
                 "groups": [
                     {
                         "group_name": "defaultGroup",
@@ -445,7 +443,7 @@ class TestService(TestCase):
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
         assert (response_body["data"]["service_uuid"] == "test_service_uuid")
-        assert (response_body["data"]["service_state"]["state"] == ServiceStatus.DRAFT.value)
+        assert (response_body["data"]["service_state"]["state"] == ServiceStatus.APPROVED.value)
         event = {
             "path": "/org/test_org_uuid/service",
             "requestContext": {
@@ -459,6 +457,7 @@ class TestService(TestCase):
             "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"},
             "body": json.dumps({
                 "description": "test description updated 2",
+                "service_id": "test_service_id",
                 "groups": [
                     {
                         "group_name": "defaultGroup",
@@ -482,7 +481,7 @@ class TestService(TestCase):
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
         assert (response_body["data"]["service_uuid"] == "test_service_uuid")
-        assert (response_body["data"]["service_state"]["state"] == ServiceStatus.DRAFT.value)
+        assert (response_body["data"]["service_state"]["state"] == ServiceStatus.APPROVED.value)
 
     def test_get_service_for_service_uuid(self):
         org_repo.add_item(
@@ -772,267 +771,6 @@ class TestService(TestCase):
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
         assert (response_body["data"] == StatusCode.OK)
-
-    def test_list_of_orgs_with_services_submitted_for_approval(self):
-        service_repo.add_item(
-            ServiceReviewHistoryDBModel(
-                org_uuid="test_org_uuid",
-                service_uuid="test_service_uuid",
-                service_metadata={},
-                state=ServiceStatus.APPROVAL_PENDING.value,
-                reviewed_by=None,
-                reviewed_on=None,
-                created_on=dt.utcnow(),
-                updated_on=dt.utcnow()
-
-            )
-        )
-        org_repo.add_item(
-            OrganizationDBModel(
-                name="test_org",
-                org_id="test_org_id",
-                uuid="test_org_uuid",
-                org_type="organization",
-                description="that is the dummy org for testcases",
-                short_description="that is the short description",
-                url="https://dummy.url",
-                contacts=[],
-                assets={},
-                duns_no=12345678,
-                origin="PUBLISHER_DAPP",
-                groups=[],
-                addresses=[],
-                metadata_ipfs_uri="#dummyhashdummyhash"
-            )
-        )
-        new_org_members = [
-            {
-                "username": "dummy_user1@dummy.io",
-                "address": "0x345"
-            }
-
-        ]
-        org_repo.add_all_items(
-            [
-                OrganizationMemberDBModel(
-                    username=member["username"],
-                    org_uuid="test_org_uuid",
-                    role=Role.MEMBER.value,
-                    address=member["address"],
-                    status=OrganizationMemberStatus.ACCEPTED.value,
-                    transaction_hash="0x123",
-                    invite_code=str(uuid4()),
-                    invited_on=dt.utcnow(),
-                    updated_on=dt.utcnow()
-                ) for member in new_org_members
-            ]
-        )
-        event = {
-            "path": "/admin/orgs/services",
-            "requestContext": {
-                "authorizer": {
-                    "claims": {
-                        "email": "dummy_user1@dummy.io"
-                    }
-                }
-            },
-            "httpMethod": "GET"
-        }
-        response = list_of_orgs_with_services_submitted_for_approval(event=event, context=None)
-        assert (response["statusCode"] == 200)
-        response_body = json.loads(response["body"])
-        assert (response_body["status"] == "success")
-        assert (response_body["data"][0]["org_uuid"] == "test_org_uuid")
-        assert (response_body["data"][0]["services"][0]["service_uuid"] == "test_service_uuid")
-
-    def test_legal_approval_of_service(self):
-        service_repo.add_item(
-            ServiceReviewHistoryDBModel(
-                org_uuid="test_org_uuid",
-                service_uuid="test_service_uuid",
-                service_metadata={},
-                state=ServiceStatus.APPROVAL_PENDING.value,
-                reviewed_by=None,
-                reviewed_on=None,
-                created_on=dt.utcnow(),
-                updated_on=dt.utcnow()
-
-            )
-        )
-        event = {
-            "path": "/admin/org/test_org_uuid/service/test_service_uuid",
-            "requestContext": {
-                "authorizer": {
-                    "claims": {
-                        "email": "dummy_user1@dummy.io"
-                    }
-                }
-            },
-            "httpMethod": "POST",
-            "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"},
-        }
-        response = legal_approval_of_service(event, context=None)
-
-    @patch(
-        "registry.domain.services.registry_blockchain_util.RegistryBlockChainUtil.register_or_update_service_in_blockchain")
-    @patch("common.utils.publish_zip_file_in_ipfs")
-    @patch("common.ipfs_util.IPFSUtil.write_file_in_ipfs")
-    @patch("common.utils.send_email_notification")
-    @patch("common.utils.Utils.report_slack")
-    def test_submit_service_for_approval(self, report_slack, email_notification, file_ipfs_hash,
-                                         zip_file_ipfs_hash, blockchain_transaction):
-        blockchain_transaction.return_value = "0x2w3e4r5t6y7u8i9o0oi8u7y6t5r4e3w2"
-        zip_file_ipfs_hash.return_value = "Qwertyuiopasdfghjklzxcvbnm"
-        file_ipfs_hash.return_value = "Qzertyuiopasdfghjklzxcvbnn"
-        self.tearDown()
-        test_org_uuid = "test_org_uuid"
-        test_service_uuid = "test_service_uuid"
-        test_user = "dummy@dummy.io"
-        org_repo.add_item(
-            OrganizationDBModel(
-                name="test_org",
-                org_id="test_org_id",
-                uuid=test_org_uuid,
-                org_type="organization",
-                description="that is the dummy org for testcases",
-                short_description="that is the short description",
-                url="https://dummy.url",
-                contacts=[],
-                assets={},
-                duns_no=12345678,
-                origin="PUBLISHER_DAPP",
-                groups=[],
-                addresses=[],
-                metadata_ipfs_uri="#dummyhashdummyhash"
-            )
-        )
-        org_repo.add_item(
-            OrganizationStateDBModel(
-                org_uuid=test_org_uuid,
-                state="PUBLISHED",
-                created_by=test_user,
-                updated_by=test_user
-            )
-        )
-        new_org_members = [
-            {
-                "username": test_user,
-                "address": "0x345"
-            }
-
-        ]
-        org_repo.add_all_items(
-            [
-                OrganizationMemberDBModel(
-                    username=member["username"],
-                    org_uuid=test_org_uuid,
-                    role=Role.MEMBER.value,
-                    address=member["address"],
-                    status=OrganizationMemberStatus.ACCEPTED.value,
-                    transaction_hash="0x123",
-                    invite_code=str(uuid4()),
-                    invited_on=dt.utcnow(),
-                    updated_on=dt.utcnow()
-                ) for member in new_org_members
-            ]
-        )
-        service_repo.add_item(
-            ServiceDBModel(
-                org_uuid=test_org_uuid,
-                uuid=test_service_uuid,
-                display_name="test_display_name",
-                service_id="test_service_id",
-                metadata_uri="Qasdfghjklqwertyuiopzxcvbnm",
-                short_description="test_short_description",
-                description="test_description",
-                project_url="https://dummy.io",
-                ranking=1,
-                proto={"proto_files": {
-                    "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/test_org_uuid/services/test_service_uuid/assets/20200212111248_proto_files.zip"}},
-                contributors=[{"email_id": "dev@dummy.io", "name": "contributor"}],
-                created_on=dt.utcnow()
-            )
-        )
-        service_repo.add_item(
-            ServiceStateDBModel(
-                row_id=1000,
-                org_uuid=test_org_uuid,
-                service_uuid=test_service_uuid,
-                state=ServiceStatus.DRAFT.value,
-                created_by=test_user,
-                updated_by=test_user,
-                created_on=dt.utcnow()
-            )
-        )
-        service_repo.add_item(
-            ServiceGroupDBModel(
-                row_id="1000",
-                org_uuid=test_org_uuid,
-                service_uuid=test_service_uuid,
-                group_id="test_group_id",
-                endpoints=["https://dummydaemonendpoint.io"],
-                daemon_address=["0xq2w3e4rr5t6y7u8i9"],
-                free_calls=10,
-                free_call_signer_address="0xq2s3e4r5t6y7u8i9o0",
-                created_on=dt.utcnow()
-            )
-        )
-        event = {
-            "path": "/org/test_org_uuid/service",
-            "requestContext": {
-                "authorizer": {
-                    "claims": {
-                        "email": test_user
-                    }
-                }
-            },
-            "httpMethod": "PUT",
-            "pathParameters": {"org_uuid": test_org_uuid, "service_uuid": test_service_uuid},
-            "body": json.dumps({
-                "org_id": "curation",
-                "service_id": "test_service_id",
-                "display_name": "test_display_name",
-                "description": "test description updated",
-                "mpe_address": "0xq2w3e4r5t6y7u8i9i98u7y6t5r4e3w2",
-                "assets": {
-                    "proto_files": {
-                        "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/test_org_uuid/services/test"
-                               "_service_uuid/assets/20200212111248_proto_files.zip"
-                    }
-                },
-                "contributors": [{"name": "dummy", "email_id": "dev@dummy.io"}],
-                "groups": [{"group_name": "default_group",
-                            "free_calls": 12,
-                            "free_call_signer_address": "0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F",
-                            "daemon_address": ["0x1234", "0x345"],
-                            "pricing": [
-                                {
-                                    "price_model": "fixed_price",
-                                    "price_in_cogs": 1,
-                                    "default": True
-                                }
-                            ],
-                            "endpoints": {
-                                "https://tz-services-1.snet.sh:8005": {}
-                            },
-                            "test_endpoints": [
-                                "https://tz-services-1.snet.sh:8005"
-                            ],
-                            "group_id": "EoFmN3nvaXpf6ew8jJbIPVghE5NXfYupFF7PkRmVyGQ="
-
-                            }]
-            }
-            )
-        }
-        response = submit_service_for_approval(event=event, context=None)
-        assert (response["statusCode"] == 200)
-        response_body = json.loads(response["body"])
-        assert (response_body["status"] == "success")
-        assert (response_body["data"]["service_uuid"] == test_service_uuid)
-        assert (response_body["data"]["service_state"]["state"] == ServiceStatus.APPROVAL_PENDING.value)
-        self.assertListEqual(
-            [{"name": "dummy", "email_id": "dev@dummy.io"}, {"name": "", "email_id": test_user}],
-            response_body["data"]["contributors"])
 
     def test_daemon_config_for_test_and_main_environment(self):
         org_repo.add_item(
@@ -1332,113 +1070,6 @@ class TestService(TestCase):
                            'https://example-service-a.singularitynet.io:8011': {'valid': True}}, 'test_endpoints': [],
              'pricing': [{'default': True, 'price_model': 'fixed_price', 'price_in_cogs': 1}], 'free_calls': 15,
              'free_call_signer_address': '0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F', 'daemon_addresses': []}])
-
-    @patch("common.boto_utils.BotoUtils.get_code_build_details")
-    def test_get_code_build_status(self, mock_build_response):
-        self.tearDown()
-        mock_build_response.return_value = {
-            'builds': [
-                {
-                    'id': 'sample_build_id',
-                    'arn': 'arn:aws:codebuild:us-east-1:533793137436:build/ropstenstagingv2codebuildtr-LwN9IM20ho2d:08444f51-ed99-47d8-ba08-565ae1dc28ef',
-                    'currentPhase': 'COMPLETED',
-                    'buildStatus': 'SUCCEEDED'
-                }
-            ]
-        }
-        org_repo.add_item(
-            OrganizationDBModel(
-                name="test_org",
-                org_id="test_org_id",
-                uuid="test_org_uuid",
-                org_type="organization",
-                description="that is the dummy org for testcases",
-                short_description="that is the short description",
-                url="https://dummy.url",
-                contacts=[],
-                assets={},
-                duns_no=12345678,
-                origin="PUBLISHER_DAPP",
-                groups=[],
-                addresses=[],
-                metadata_ipfs_uri="#dummyhashdummyhash"
-            )
-        )
-        new_org_members = [
-            {
-                "username": "karl@dummy.io",
-                "address": "0x123"
-            },
-            {
-                "username": "trax@dummy.io",
-                "address": "0x234"
-            },
-            {
-                "username": "dummy_user1@dummy.io",
-                "address": "0x345"
-            }
-
-        ]
-        org_repo.add_all_items(
-            [
-                OrganizationMemberDBModel(
-                    username=member["username"],
-                    org_uuid="test_org_uuid",
-                    role=Role.MEMBER.value,
-                    address=member["address"],
-                    status=OrganizationMemberStatus.ACCEPTED.value,
-                    transaction_hash="0x123",
-                    invite_code=str(uuid4()),
-                    invited_on=dt.utcnow(),
-                    updated_on=dt.utcnow()
-                ) for member in new_org_members
-            ]
-        )
-        service_repo.add_item(
-            ServiceDBModel(
-                org_uuid="test_org_uuid",
-                uuid="test_service_uuid",
-                display_name="test_display_name",
-                service_id="test_service_id",
-                metadata_uri="Qasdfghjklqwertyuiopzxcvbnm",
-                short_description="test_short_description",
-                description="test_description",
-                project_url="https://dummy.io",
-                ranking=1,
-                assets={
-                    "demo_files": {
-                        "url": "https://marketplace-registry-assets.s3.amazonaws.com/6509581150c8446e8a73b3fa71ebdb69/services/05676ad531cd40a889841ff1f3c5608b/component/20210228000436_component.zip",
-                        "ipfs_hash": "QmUKfyv5c8Ru93xyxTcXGswnNzuBTCBU9NGjMV7SMwLSgy",
-                        "build_id": "sample_build_id"
-                    },
-                    "hero_image": {
-                        "url": "https://marketplace-registry-assets.s3.amazonaws.com/6509581150c8446e8a73b3fa71ebdb69/services/05676ad531cd40a889841ff1f3c5608b/assets/20210127060152_asset.png",
-                        "ipfs_hash": "QmdSh54XcNPJo8v89LRFDN5FAoGL92mn174rKFzoHwUCM1/20210127060152_asset.png"
-                    },
-                    "proto_files": {
-                        "url": "https://marketplace-registry-assets.s3.amazonaws.com/6509581150c8446e8a73b3fa71ebdb69/services/05676ad531cd40a889841ff1f3c5608b/proto/20210131042033_proto_files.zip",
-                        "ipfs_hash": "QmUKfyv5c8Ru93xyxTcXGswnNzuBTCBU9NGjMV7SMwLSgy"
-                    }
-                },
-                created_on=dt.utcnow()
-            )
-        )
-        service_repo.add_item(
-            ServiceStateDBModel(
-                row_id=1000,
-                org_uuid="test_org_uuid",
-                service_uuid="test_service_uuid",
-                state=ServiceStatus.APPROVAL_PENDING.value,
-                created_by="dummy_user",
-                updated_by="dummy_user",
-                created_on=dt.utcnow()
-            )
-        )
-        event = {"pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"}}
-        response = get_code_build_status_for_service(event=event, context=None)
-        assert (response["statusCode"] == 200)
-        body = json.loads(response['body'])
-        assert body['data']['build_status'] == "SUCCEEDED"
 
     def tearDown(self):
         org_repo.session.query(OrganizationStateDBModel).delete()

@@ -108,3 +108,26 @@ class BotoUtils:
             return build_client.batch_get_builds(ids=build_ids)
         except build_client.exceptions.InvalidInputException as e:
             raise Exception(f"build id is not found {build_ids}")
+
+    @staticmethod
+    def trigger_code_build(build_details):
+        try:
+            cb = boto3.client('codebuild')
+            build = cb.start_build(**build_details)
+            return build
+        except Exception as e:
+            raise e
+
+    def move_s3_objects(self, source_bucket, source_key, target_bucket, target_key, clear_destination=False):
+        s3 = boto3.resource('s3')
+        source_objects = self.get_objects_from_s3(bucket=source_bucket, key=source_key)
+        dest_bucket = s3.Bucket(target_bucket)
+        if clear_destination:
+            destination_key = target_key[:-1] if target_key.endswith('/') else target_key
+            target_objects = self.get_objects_from_s3(bucket=target_bucket, key=destination_key)
+            for key in target_objects:
+                self.delete_objects_from_s3(bucket=target_bucket, key=key['Key'], key_pattern=destination_key)
+        for source_key in source_objects:
+            copy_source = {'Bucket': source_bucket, 'Key': source_key['Key']}
+            dest_bucket.copy(copy_source, target_key + os.path.basename(source_key['Key']))
+            s3.Object(source_bucket, source_key['Key']).delete()

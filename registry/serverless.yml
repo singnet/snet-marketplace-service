@@ -64,18 +64,6 @@ custom:
       - name: "GetAllOrgPendingForApprovalInput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/get_all_org_pending_for_approval.json):GetAllOrgPendingForApprovalInput}
-      - name: "SlackInteractionForApprovalOutput"
-        contentType: "application/json"
-        schema: ${file(registry/documentation/models/slack_interaction_for_approval.json):SlackInteractionForApprovalOutput}
-      - name: "SlackInteractionForApprovalInput"
-        contentType: "application/json"
-        schema: ${file(registry/documentation/models/slack_interaction_for_approval.json):SlackInteractionForApprovalInput}
-      - name: "GetAllServicePendingForApprovalOutput"
-        contentType: "application/json"
-        schema: ${file(registry/documentation/models/get_all_service_pending_for_approval.json):GetAllServicePendingForApprovalOutput}
-      - name: "GetAllServicePendingForApprovalInput"
-        contentType: "application/json"
-        schema: ${file(registry/documentation/models/get_all_service_pending_for_approval.json):GetAllServicePendingForApprovalInput}
       - name: "FileDeleteOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/file_delete.json):FileDeleteOutput}
@@ -91,12 +79,6 @@ custom:
       - name: "SaveServiceTransactionInput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/save_service_transaction.json):SaveServiceTransactionInput}
-      - name: "SubmitServiceOutput"
-        contentType: "application/json"
-        schema: ${file(registry/documentation/models/submit_service.json):SubmitServiceOutput}
-      - name: "SubmitServiceInput"
-        contentType: "application/json"
-        schema: ${file(registry/documentation/models/submit_service.json):SubmitServiceInput}
       - name: "PublishServiceMetadataToIpfsHashOutput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/publish_service_metadata_to_ipfs_hash.json):PublishServiceMetadataToIpfsHashOutput}
@@ -1388,61 +1370,6 @@ functions:
               - statusCode: "500"
                 responseModels:
                   "application/json": "ErrorMessage"
-  submit-service:
-    warmup: true
-    handler: registry.application.handlers.service_handlers.submit_service_for_approval
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: PUT
-          path: /org/{org_uuid}/service/{service_uuid}/submit
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-          documentation:
-            summary: "Submit service by org_uuid and service_uuid"
-            description: "Submit service by given org_uuid and service_uuid "
-            tags:
-              - "service"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            pathParams:
-              - name: "org_uuid"
-                description: "Enter org_uuid"
-              - name: "service_uuid"
-                description: "Enter service_uuid"
-            requestModels:
-              "application/json": "SubmitServiceInput"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Service Data"
-                responseModels:
-                  "application/json": "SubmitServiceOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
-
 
   save_service_transaction:
     warmup: true
@@ -1671,9 +1598,21 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-  validate-demo-component:
+  update-service-assets:
     warmup: true
-    handler: registry.application.handlers.service_handlers.validate_demo_component
+    handler: registry.application.handlers.service_handlers.update_service_assets
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+
+  update-demo-component-build-status:
+    warmup: true
+    handler: registry.application.handlers.service_handlers.update_demo_component_build_status
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:

@@ -205,13 +205,17 @@ class Service:
     def service_id(self):
         return self._service_id
 
+    @service_id.setter
+    def service_id(self, service_id):
+        self._service_id = service_id
+
     @property
     def display_name(self):
         return self._display_name
 
     @display_name.setter
-    def display_name(self, val):
-        self._display_name = val
+    def display_name(self, display_name):
+        self._display_name = display_name
 
     @property
     def short_description(self):

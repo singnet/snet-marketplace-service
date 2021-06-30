@@ -17,9 +17,17 @@ class ServiceState:
     def state(self):
         return self._state
 
+    @state.setter
+    def state(self, state):
+        self._state = state
+
     @property
     def transaction_hash(self):
         return self._transaction_hash
+
+    @transaction_hash.setter
+    def transaction_hash(self, transaction_hash):
+        self._transaction_hash = transaction_hash
 
     @property
     def org_uuid(self):

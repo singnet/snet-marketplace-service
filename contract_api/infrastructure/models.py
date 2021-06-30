@@ -71,11 +71,12 @@ class Organization(Base):
     org_metadata_uri = Column("org_metadata_uri", VARCHAR(128), default=null)
     org_email = Column("org_email", VARCHAR(128), default=null)
     org_assets_url = Column("org_assets_url", JSON, default=null)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    is_curated = Column("is_curated", TINYINT, default=null)
     description = Column("description", VARCHAR(256), default=null)
     assets_hash = Column("assets_hash", JSON, default=null)
     contacts = Column("contacts", JSON, default=null)
+    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
     UniqueConstraint(org_id, name="uq_org")
 
 
@@ -90,6 +91,7 @@ class Service(Base):
     service_email = Column("service_email", VARCHAR(128), default=null)
     row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
     row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    service_metadata = relationship("ServiceMetadata", uselist=False)
     UniqueConstraint(org_id, service_id, name="uq_srvc")
 
 
