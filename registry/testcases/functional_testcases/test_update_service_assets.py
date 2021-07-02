@@ -208,7 +208,7 @@ class TestService(TestCase):
                 "ipfs_hash": "QmUKfyv5c8Ru93xyxTcXGswnNzuBTCBU9NGjMV7SMwLSgy"}
         }
 
-        service_state = ServicePublisherRepository().get_service_state_with_status(
+        service_state = ServicePublisherRepository().get_service_state(
             status=ServiceStatus.CHANGE_REQUESTED.value)
         assert service_state[0].org_uuid == "test_org_uuid"
         assert service_state[0].service_uuid == "test_service_uuid"

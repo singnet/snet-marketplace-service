@@ -14,7 +14,7 @@ class ServiceTransactionStatus:
                                                                   provider=NETWORKS[NETWORK_ID]['http_provider'])
 
     def update_transaction_status(self):
-        org_transaction_data = service_repo.get_service_state_with_status(ServiceStatus.PUBLISH_IN_PROGRESS.value)
+        org_transaction_data = service_repo.get_service_state(ServiceStatus.PUBLISH_IN_PROGRESS.value)
         failed_service_transactions = []
         for service_state in org_transaction_data:
             service_uuid = service_state.service_uuid

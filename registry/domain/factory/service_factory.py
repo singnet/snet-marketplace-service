@@ -42,10 +42,6 @@ class ServiceFactory:
         )
 
     @staticmethod
-    def convert_service_state_from_db_list(service_state_list):
-        return [ServiceFactory.convert_service_state_from_db(service_state) for service_state in service_state_list]
-
-    @staticmethod
     def convert_service_state_from_db(service_state):
         return ServiceState(service_state.org_uuid, service_state.service_uuid, service_state.state,
                             service_state.transaction_hash)
