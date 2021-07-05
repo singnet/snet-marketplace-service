@@ -160,17 +160,18 @@ class ServicePublisherRepository(BaseRepository):
         service_comment = ServiceFactory().convert_service_comment_db_model_to_entity_model(service_comment_db)
         return service_comment
 
-    def get_service_state_with_status(self, status):
+    def get_service_state(self, status):
         try:
-            service_state_db = self.session.query(ServiceState).filter(ServiceState.state == status).all()
+            services_state_db = self.session.query(ServiceState).filter(ServiceState.state == status).all()
             self.session.commit()
         except SQLAlchemyError as error:
             self.session.rollback()
             raise error
-        if not service_state_db:
-            return None
-        service_state = ServiceFactory.convert_service_state_from_db_list(service_state_db)
-        return service_state
+        services_state = []
+        for service_state_db in services_state_db:
+            service_state = ServiceFactory.convert_service_state_from_db(service_state_db)
+            services_state.append(service_state)
+        return services_state
 
     def update_service_status(self, service_uuid_list, prev_state, next_state):
         try:
