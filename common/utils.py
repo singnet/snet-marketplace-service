@@ -298,6 +298,10 @@ def extract_zip_file(zip_file_path, extracted_path):
         tar = tarfile.open(zip_file_path, "r:gz")
         tar.extractall(path=extracted_path)
         tar.close()
+    if zip_file_path.endswith("tar"):
+        tar = tarfile.open(zip_file_path, "r:")
+        tar.extractall(path=extracted_path)
+        tar.close()
 
 
 def zip_file(source_path, zipped_path):

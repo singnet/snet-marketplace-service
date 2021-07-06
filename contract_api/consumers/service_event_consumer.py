@@ -1,5 +1,7 @@
 import json
 import os
+import tempfile
+import uuid
 
 import boto3
 from web3 import Web3
@@ -210,6 +212,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                                              IPFS_URL['url'], IPFS_URL['port']).process_service_deployment(
             org_id=org_id,
             service_id=service_id,
+            proto_hash=new_ipfs_data["model_ipfs_hash"],
             update_proto_stubs=update_proto_stubs
         )
 
@@ -356,14 +359,30 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
                                                 asset_types=['grpc-stub/nodejs', 'grpc-stub/python']
                                                 )
 
-    def process_service_deployment(self, org_id, service_id, update_proto_stubs):
+    def upload_proto_file_from_hash_to_bucket(self, org_id, service_id, asset_hash):
+        temp_dir = tempfile.gettempdir()
+
+        base_path = os.path.join(temp_dir, str(uuid.uuid1()))
+        if not os.path.exists(base_path):
+            os.makedirs(base_path)
+
+        temp_download_path = os.path.join(base_path, 'proto.tar')
+        temp_extraction_path = os.path.join(base_path, 'proto')
+        temp_output_path = os.path.join(base_path, 'proto.tar.gz')
+
+        io_bytes = self._ipfs_util.read_bytesio_from_ipfs(asset_hash)
+        with open(temp_download_path, 'wb') as outfile:
+            outfile.write(io_bytes.getbuffer())
+
+        extract_zip_file(zip_file_path=temp_download_path, extracted_path=temp_extraction_path)
+        make_tarfile(source_dir=temp_extraction_path, output_filename=temp_output_path)
+        self._s3_util.push_file_to_s3(temp_output_path, ASSETS_COMPONENT_BUCKET_NAME,
+                                      f"assets/{org_id}/{service_id}/proto.tar.gz")
+
+    def process_service_deployment(self, org_id, service_id, update_proto_stubs, proto_hash):
         logger.info(f"Processing Service deployment for {org_id} {service_id}")
         proto_file_s3_path, component_files_s3_path = self._get_s3_path_url_for_proto_and_component(org_id, service_id)
 
-        if proto_file_s3_path:
-            proto_file_tar_path = self._extract_zip_and_and_tar(org_id, service_id, proto_file_s3_path)
-            self._s3_util.push_file_to_s3(proto_file_tar_path, ASSETS_COMPONENT_BUCKET_NAME,
-                                          f"assets/{org_id}/{service_id}/{proto_file_tar_path.split('/')[-1]}")
         if component_files_s3_path:
             component_files_tar_path = self._extract_zip_and_and_tar(org_id, service_id, component_files_s3_path)
             self._s3_util.push_file_to_s3(component_files_tar_path, ASSETS_COMPONENT_BUCKET_NAME,
@@ -372,5 +391,6 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
         self._trigger_code_build_for_marketplace_dapp(org_id, service_id)
 
         if update_proto_stubs:
+            self.upload_proto_file_from_hash_to_bucket(org_id=org_id, service_id=service_id, asset_hash=proto_hash)
             proto_stubs = self.compile_proto_stubs(org_id=org_id, service_id=service_id)
             self.update_proto_stubs(org_id=org_id, service_id=service_id, proto_stubs=proto_stubs)
