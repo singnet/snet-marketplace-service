@@ -10,7 +10,7 @@ class ServiceMediaRepository(BaseRepository):
     def get_service_media(self, org_id, service_id):
         try:
             service_media = self.session.query(ServiceMedia) \
-                .filter(org_id == org_id).filter(service_id == service_id) \
+                .filter(ServiceMedia.org_id == org_id).filter(ServiceMedia.service_id == service_id) \
                 .all()
             self.session.commit()
         except SQLAlchemyError as e:
