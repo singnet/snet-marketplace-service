@@ -372,10 +372,6 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
         logger.info(f"Processing Service deployment for {org_id} {service_id}")
         proto_file_s3_path, component_files_s3_path = self._get_s3_path_url_for_proto_and_component(org_id, service_id)
 
-        if proto_file_s3_path:
-            proto_file_tar_path = self._extract_zip_and_and_tar(org_id, service_id, proto_file_s3_path)
-            self._s3_util.push_file_to_s3(proto_file_tar_path, ASSETS_COMPONENT_BUCKET_NAME,
-                                          f"assets/{org_id}/{service_id}/{proto_file_tar_path.split('/')[-1]}")
         if component_files_s3_path:
             component_files_tar_path = self._extract_zip_and_and_tar(org_id, service_id, component_files_s3_path)
             self._s3_util.push_file_to_s3(component_files_tar_path, ASSETS_COMPONENT_BUCKET_NAME,
