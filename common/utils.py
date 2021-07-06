@@ -334,4 +334,4 @@ def get_file_name_and_extension_from_path(path):
 
 
 def if_external_link(link):
-    return "https://" in link or "http://" in link
+    return link.startswith("https://") or link.startswith("http://")
