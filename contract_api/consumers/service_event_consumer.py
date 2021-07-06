@@ -125,7 +125,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                         updated_url = self._push_asset_to_s3_using_hash(org_id=org_id, service_id=service_id, hash=url)
                         ipfs_url = service_media_item.get("url", "")
                     # insert service media data
-                    asset_type = 'media_gallery' if service_media_item.get('asset_type', {}) != 'hero_image' else service_media.get('asset_type')
+                    asset_type = 'media_gallery' if service_media_item.get('asset_type', {}) != 'hero_image' else service_media_item.get('asset_type')
                     media_item = ServiceMedia(
                         service_row_id=service.row_id,
                         org_id=org_id,
