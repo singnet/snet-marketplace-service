@@ -335,3 +335,7 @@ def match_regex_string(path, regex_pattern):
 def get_file_name_and_extension_from_path(path):
     base = os.path.basename(path)
     return os.path.splitext(base)
+
+
+def if_external_link(link):
+    return link.startswith("https://") or link.startswith("http://")

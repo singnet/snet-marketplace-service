@@ -5,12 +5,14 @@ from common.logger import get_logger
 from common.utils import Utils
 from contract_api.constant import GET_ALL_SERVICE_LIMIT, GET_ALL_SERVICE_OFFSET_LIMIT
 from contract_api.dao.service_repository import ServiceRepository
+from contract_api.infrastructure.repositories.service_media_repository import ServiceMediaRepository
 from contract_api.infrastructure.repositories.service_repository import ServiceRepository as NewServiceRepository
 from contract_api.filter import Filter
 
 logger = get_logger(__name__)
 BUILD_CODE = {"SUCCESS": 1, "FAILED": 0}
 new_service_repo = NewServiceRepository()
+service_media_repo = ServiceMediaRepository()
 
 class Registry:
     def __init__(self, obj_repo):
@@ -385,7 +387,8 @@ class Registry:
             tags = self.repo.execute("SELECT tag_name FROM service_tags WHERE org_id = %s AND service_id = %s",
                                      [org_id, service_id])
 
-            media, stubs = self.get_service_media(org_id=org_id,service_id=service_id)
+            service_media = service_media_repo.get_service_media(org_id=org_id, service_id=service_id)
+            media = [media_data.to_dict() for media_data in service_media]
             result = basic_service_data[0]
 
             self._convert_service_metadata_str_to_json(result)
@@ -406,7 +409,7 @@ class Registry:
                             break
                 rec.update(org_groups_dict.get(rec['group_id'], {}))
 
-            result.update({"is_available": is_available, "groups": service_group_data, "tags": tags,"media":media, "stubs": stubs})
+            result.update({"is_available": is_available, "groups": service_group_data, "tags": tags, "media": media})
             return result
         except Exception as e:
             print(repr(e))
@@ -455,29 +458,3 @@ class Registry:
             service_repo.curate_service(org_id, service_id, 0)
         else:
             Exception("Invalid curation flag")
-
-    def get_service_media(self,org_id,service_id):
-        try:
-            query = """select `row_id`,url,`order`,file_type,asset_type,alt_text from service_media 
-            where service_id = %s and org_id = %s """
-            query_response = self.repo.execute(query,[service_id,org_id])
-            media = []
-            stubs = []
-            if len(query_response)==0:
-               return media, stubs
-            for response_item in query_response:
-                if response_item.get('file_type', "") == "grpc_stub":
-                    stubs.append({"url":response_item['url']})
-                else:
-                    media.append({
-                        "row_id":response_item['row_id'],
-                        "url":response_item['url'],
-                        "file_type":response_item['file_type'],
-                        "order":response_item['order'],
-                        "alt_text":response_item['alt_text'],
-                        "asset_type": response_item['asset_type']
-                    })
-            return media, stubs
-        except Exception as e:
-            logger.error(f'Error in getting service media data for org_id = {org_id} service_id = {service_id}')
-            raise e
