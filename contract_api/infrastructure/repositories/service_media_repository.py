@@ -21,11 +21,11 @@ class ServiceMediaRepository(BaseRepository):
             service_media_list.append(ServiceFactory.convert_service_media_db_model_to_entity_model(media))
         return service_media_list
 
-    def create_service_media(self, service_media):
+    def create_service_media(self, org_id, service_id, service_media):
         self.add_item(ServiceMedia(
             service_row_id=service_media.service_row_id,
-            org_id=service_media.org_id,
-            service_id=service_media.service_id,
+            org_id=org_id,
+            service_id=service_id,
             url=service_media.url,
             order=service_media.order,
             file_type=service_media.file_type,
@@ -36,14 +36,25 @@ class ServiceMediaRepository(BaseRepository):
             updated_on=dt.utcnow()
         ))
 
-    def delete_service_media(self, org_id, service_id, file_types=None):
+    def delete_service_media(self, org_id, service_id, asset_types=None, file_types=None):
         try:
             service_media_query = self.session.query(ServiceMedia) \
                 .filter(ServiceMedia.org_id == org_id).filter(ServiceMedia.service_id == service_id)
             if file_types and type(file_types) == list:
                 service_media_query = service_media_query.filter(ServiceMedia.file_type.in_(file_types))
+            if asset_types and type(asset_types) == list:
+                service_media_query = service_media_query.filter(ServiceMedia.asset_type.in_(asset_types))
             service_media_query.delete(synchronize_session='fetch')
             self.session.commit()
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
+
+    def update_service_media(self, org_id, service_id, service_media_list, asset_types):
+        try:
+            self.delete_service_media(org_id=org_id, service_id=service_id, asset_types=asset_types)
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
+        for media in service_media_list:
+            self.create_service_media(org_id=org_id, service_id=service_id, service_media=media)
