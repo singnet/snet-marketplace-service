@@ -298,6 +298,10 @@ def extract_zip_file(zip_file_path, extracted_path):
         tar = tarfile.open(zip_file_path, "r:gz")
         tar.extractall(path=extracted_path)
         tar.close()
+    if zip_file_path.endswith("tar"):
+        tar = tarfile.open(zip_file_path, "r:")
+        tar.extractall(path=extracted_path)
+        tar.close()
 
 
 def zip_file(source_path, zipped_path):
@@ -331,3 +335,7 @@ def match_regex_string(path, regex_pattern):
 def get_file_name_and_extension_from_path(path):
     base = os.path.basename(path)
     return os.path.splitext(base)
+
+
+def if_external_link(link):
+    return link.startswith("https://") or link.startswith("http://")
