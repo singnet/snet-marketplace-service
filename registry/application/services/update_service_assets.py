@@ -83,10 +83,12 @@ class UpdateServiceAssets:
         return build_id
 
     @staticmethod
-    def validate_proto(file_path, bucket_name):
+    def validate_proto(file_path, bucket_name, org_uuid, service_uuid):
         payload = {
             "input_s3_path": f"s3://{bucket_name}/{file_path}",
-            "output_s3_path": ""
+            "output_s3_path": "",
+            "org_id": org_uuid,
+            "service_id": service_uuid
         }
         response = boto_utils.invoke_lambda(
             payload=json.dumps(payload),

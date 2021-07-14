@@ -339,3 +339,9 @@ def get_file_name_and_extension_from_path(path):
 
 def if_external_link(link):
     return link.startswith("https://") or link.startswith("http://")
+
+
+def prepare_text_file(target_path, context):
+    f = open(target_path, "a")
+    f.write(context)
+    f.close()
