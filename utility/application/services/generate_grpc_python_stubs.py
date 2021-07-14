@@ -81,6 +81,7 @@ def compile_proto(entry_path, codegen_dir, proto_file_path):
     compiler_args.append(str(proto_file_path))
     return (True, codegen_dir) if not compiler(compiler_args) else (False, None)
 
+
 def prepare_readme_file(target_path, service_id):
     context = f"INSTRUCTIONS:\n" \
               f"1.{service_id}-proto contains proto files of the service.\n" \
@@ -88,7 +89,3 @@ def prepare_readme_file(target_path, service_id):
               f"NOTE:Please follow instructions provided in the python tab of install and run on how to invoke " \
               f"the service."
     utils.prepare_text_file(target_path=target_path, context=context)
-
-# generate_python_stubs("s3://ropsten-service-components/assets/d263/d263test/proto_extracted/",
-#                       "s3://ropsten-service-components/assets/d263/d263test/temp_stubs/", org_id="d263",
-#                       service_id="d263_test")
