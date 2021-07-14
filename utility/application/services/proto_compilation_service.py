@@ -36,7 +36,7 @@ class GenerateStubService:
             key=upload_file_path
         )
 
-    def manage_proto_compilation(self, input_s3_path, output_s3_path):
+    def manage_proto_compilation(self, input_s3_path, output_s3_path, org_id, service_id):
         input_bucket_name, input_file_path = boto_utils.get_bucket_and_key_from_url(url=input_s3_path)
         if output_s3_path:
             output_bucket_name, output_file_path = boto_utils.get_bucket_and_key_from_url(url=output_s3_path)
@@ -59,7 +59,9 @@ class GenerateStubService:
         temp_output_path = os.path.join(output_s3_path, "temp_stubs/") if output_s3_path else output_s3_path
         lambda_payload = json.dumps({
             "input_s3_path": f"s3://{input_bucket_name}/{temp_proto_file_path}",
-            "output_s3_path": temp_output_path
+            "output_s3_path": temp_output_path,
+            "org_id": org_id,
+            "service_id": service_id
         })
         response = {}
         for environment in SUPPORTED_ENVIRONMENT:
