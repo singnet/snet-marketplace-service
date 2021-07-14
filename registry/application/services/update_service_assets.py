@@ -29,7 +29,7 @@ class UpdateServiceAssets:
         if not service:
             raise Exception(f"Service with org_uuid {org_uuid} and service_uuid {service_uuid} not found")
         if utils.match_regex_string(path=file_path, regex_pattern=ServiceAssetsRegex.PROTO_FILE_URL.value):
-            proto_compile_status = UpdateServiceAssets.validate_proto(file_path, bucket_name)
+            proto_compile_status = UpdateServiceAssets.validate_proto(file_path, bucket_name, org_uuid=org_uuid, service_uuid=service_uuid)
             proto_details = {
                 "url": f"https://{bucket_name}.s3.{REGION_NAME}.amazonaws.com/{file_path}",
                 "status": proto_compile_status
@@ -83,10 +83,12 @@ class UpdateServiceAssets:
         return build_id
 
     @staticmethod
-    def validate_proto(file_path, bucket_name):
+    def validate_proto(file_path, bucket_name, org_uuid, service_uuid):
         payload = {
             "input_s3_path": f"s3://{bucket_name}/{file_path}",
-            "output_s3_path": ""
+            "output_s3_path": "",
+            "org_id": org_uuid,
+            "service_id": service_uuid
         }
         response = boto_utils.invoke_lambda(
             payload=json.dumps(payload),

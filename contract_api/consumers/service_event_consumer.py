@@ -315,7 +315,9 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
         output_url = f"s3://{ASSETS_COMPONENT_BUCKET_NAME}/assets/{org_id}/{service_id}/"
         lambda_payload = {
             "input_s3_path": base_url,
-            "output_s3_path": output_url
+            "output_s3_path": output_url,
+            "org_id": org_id,
+            "service_id": service_id
         }
         response = boto_utils.invoke_lambda(
             invocation_type="RequestResponse",
