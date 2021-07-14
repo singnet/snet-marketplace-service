@@ -88,4 +88,4 @@ def prepare_readme_file(target_path, service_id):
               f"2.{service_id}-grpc-stubs contains compiled grpc stubs required for invoking the service.\n\n" \
               f"NOTE:Please follow instructions provided in the python tab of install and run on how to invoke " \
               f"the service."
-    utils.prepare_text_file(target_path=target_path, context=context)
+    utils.create_text_file(target_path=target_path, context=context)
