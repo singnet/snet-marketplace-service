@@ -29,7 +29,7 @@ class UpdateServiceAssets:
         if not service:
             raise Exception(f"Service with org_uuid {org_uuid} and service_uuid {service_uuid} not found")
         if utils.match_regex_string(path=file_path, regex_pattern=ServiceAssetsRegex.PROTO_FILE_URL.value):
-            proto_compile_status = UpdateServiceAssets.validate_proto(file_path, bucket_name)
+            proto_compile_status = UpdateServiceAssets.validate_proto(file_path, bucket_name, org_uuid=org_uuid, service_uuid=service_uuid)
             proto_details = {
                 "url": f"https://{bucket_name}.s3.{REGION_NAME}.amazonaws.com/{file_path}",
                 "status": proto_compile_status
