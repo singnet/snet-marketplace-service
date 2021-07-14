@@ -85,7 +85,7 @@ def compile_proto(entry_path, codegen_dir, proto_file_path):
 def prepare_readme_file(target_path, service_id):
     context = f"INSTRUCTIONS:\n" \
               f"1.{service_id}-proto contains proto files of the service.\n" \
-              f"2.{service_id}-grpc-stubs contains compiled grpc stubs required for invoking the service.\n\n" \
+              f"2.{service_id}-grpc-stubs contains compiled grpc stubs required for invoking the service.\n" \
               f"NOTE:Please follow instructions provided in the python tab of install and run on how to invoke " \
               f"the service."
     utils.create_text_file(target_path=target_path, context=context)
