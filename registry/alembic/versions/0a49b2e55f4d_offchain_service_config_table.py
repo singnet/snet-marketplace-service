@@ -1,8 +1,8 @@
 """offchain_service_config_table
 
-Revision ID: bcd803a15c92
+Revision ID: 0a49b2e55f4d
 Revises: 027993bb994b
-Create Date: 2021-07-15 22:47:49.813665
+Create Date: 2021-07-16 11:54:59.852355
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = 'bcd803a15c92'
+revision = '0a49b2e55f4d'
 down_revision = '027993bb994b'
 branch_labels = None
 depends_on = None
@@ -22,11 +22,9 @@ def upgrade():
     sa.Column('row_id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('org_uuid', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('service_uuid', mysql.VARCHAR(length=128), nullable=False),
-    sa.Column('service_id', mysql.VARCHAR(length=128), nullable=False),
     sa.Column('demo_component_required', mysql.TINYINT(display_width=1), server_default='0', nullable=False),
     sa.Column('created_on', mysql.TIMESTAMP(), nullable=False),
     sa.Column('updated_on', mysql.TIMESTAMP(), nullable=False),
-    sa.ForeignKeyConstraint(['org_uuid'], ['organization.uuid'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['service_uuid'], ['service.uuid'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('row_id')
     )

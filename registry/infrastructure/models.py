@@ -202,13 +202,10 @@ class ServiceComment(Base):
 class OffchainServiceConfig(Base):
     __tablename__ = "offchain_service_config"
     row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
-    org_uuid = Column("org_uuid", VARCHAR(128),
-                      ForeignKey("organization.uuid", ondelete="CASCADE", onupdate="CASCADE"),
-                      nullable=False)
+    org_uuid = Column("org_uuid", VARCHAR(128), nullable=False)
     service_uuid = Column("service_uuid", VARCHAR(128),
                           ForeignKey("service.uuid", ondelete="CASCADE", onupdate="CASCADE"),
                           nullable=False)
-    service_id = Column("service_id", VARCHAR(128), nullable=False)
     demo_component_required = Column("demo_component_required", TINYINT(1), default=0, server_default="0",
                                      nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
