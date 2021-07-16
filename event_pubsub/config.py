@@ -1,7 +1,7 @@
 import os
 
 os.environ["LOG_LEVEL"] = "DEBUG"
-
+NETWORK_ID = 0
 NETWORKS = {"db": {
     "HOST": "localhost",
     "USER": "unittest_root",
@@ -10,10 +10,20 @@ NETWORKS = {"db": {
     "PORT": 3306,
 },
 }
-
-NETWORK_ID = 0
-
-EVENT_SUBSCRIPTIONS = {"OrganizationCreated": [{"name": "", "type": "lambda_arn",
+WS_PROVIDER = "wss://ropsten.infura.io/"
+HTTP_PROVIDER = "https://ropsten.infura.io/"
+REGION_NAME = "us-east-2"
+SLACK_HOOK = {
+    'hostname': 'https://hooks.slack.com',
+    'port': 443,
+    'path': '',
+    'method': 'POST',
+    'headers': {
+        'Content-Type': 'application/json'
+    }
+}
+EVENT_SUBSCRIPTIONS = {
+    "OrganizationCreated": [{"name": "", "type": "lambda_arn",
                                                 "url": "arn:aws:lambda:"}],
 
                        "OrganizationModified": [{"name": "", "type": "lambda_arn",
@@ -64,15 +74,3 @@ EVENT_SUBSCRIPTIONS = {"OrganizationCreated": [{"name": "", "type": "lambda_arn"
                                           "url": "arn:aws"}],
 
                        }
-
-WS_PROVIDER = "wss://ropsten.infura.io/"
-REGION_NAME = "us-east-2"
-SLACK_HOOK = {
-    'hostname': 'https://hooks.slack.com',
-    'port': 443,
-    'path': '',
-    'method': 'POST',
-    'headers': {
-        'Content-Type': 'application/json'
-    }
-}
