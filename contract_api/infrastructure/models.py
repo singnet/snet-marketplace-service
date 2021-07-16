@@ -164,7 +164,8 @@ class ServiceMetadata(Base):
     display_name = Column("display_name", VARCHAR(256), default=null)
     description = Column("description", VARCHAR(1024), default=null)
     short_description = Column("short_description", VARCHAR(1024), default=null)
-    demo_component_available = Column("demo_component_available", TINYINT(1), default=0, server_default="0", nullable=False)
+    demo_component_available = Column("demo_component_available", TINYINT(1), default=0, server_default="0",
+                                      nullable=False)
     url = Column("url", VARCHAR(256), default=null)
     json = Column("json", VARCHAR(1024), default=null)
     model_ipfs_hash = Column("model_ipfs_hash", VARCHAR(256), default=null)
@@ -223,12 +224,14 @@ class CTA(Base):
     row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
     row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
 
+
 class OffchainServiceConfig(Base):
     __tablename__ = "offchain_service_config"
     row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
     org_id = Column("org_id", VARCHAR(128), nullable=False)
     service_id = Column("service_id", VARCHAR(128), nullable=False)
-    demo_component_required = Column("demo_component_required", TINYINT(1), default=0, server_default="0",
-                                         nullable=False)
+    parameter_name = Column("parameter_name", VARCHAR(128), nullable=False)
+    parameter_value = Column("parameter_value", VARCHAR(512), nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
     updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=datetime.utcnow())
+    UniqueConstraint(org_id, service_id, parameter_name, name="uq_off")
