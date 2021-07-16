@@ -205,8 +205,8 @@ class OffchainServiceConfig(Base):
     service_uuid = Column("service_uuid", VARCHAR(128),
                           ForeignKey("service.uuid", ondelete="CASCADE", onupdate="CASCADE"),
                           nullable=False)
-    parameter_name = Column("parameter_name", VARCHAR(512), nullable=False)
+    parameter_name = Column("parameter_name", VARCHAR(128), nullable=False)
     parameter_value = Column("parameter_value", VARCHAR(512), nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
     updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=datetime.utcnow())
-    UniqueConstraint(org_uuid, service_uuid, parameter_name, name="uq_offchain_const")
+    UniqueConstraint(org_uuid, service_uuid, parameter_name, name="uq_off")
