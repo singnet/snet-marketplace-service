@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import Column, Integer, ForeignKey, UniqueConstraint
-from sqlalchemy.dialects.mysql import JSON, TIMESTAMP, VARCHAR, TEXT
+from sqlalchemy.dialects.mysql import JSON, TIMESTAMP, VARCHAR, TEXT, TINYINT
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -195,5 +195,21 @@ class ServiceComment(Base):
     user_type = Column("user_type", VARCHAR(128), nullable=False)
     commented_by = Column("commented_by", VARCHAR(128), nullable=False)
     comment = Column("comment", TEXT, nullable=False)
+    created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=datetime.utcnow())
+
+
+class OffchainServiceConfig(Base):
+    __tablename__ = "offchain_service_config"
+    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
+    org_uuid = Column("org_uuid", VARCHAR(128),
+                      ForeignKey("organization.uuid", ondelete="CASCADE", onupdate="CASCADE"),
+                      nullable=False)
+    service_uuid = Column("service_uuid", VARCHAR(128),
+                          ForeignKey("service.uuid", ondelete="CASCADE", onupdate="CASCADE"),
+                          nullable=False)
+    service_id = Column("service_id", VARCHAR(128), nullable=False)
+    demo_component_required = Column("demo_component_required", TINYINT(1), default=0, server_default="0",
+                                     nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
     updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=datetime.utcnow())
