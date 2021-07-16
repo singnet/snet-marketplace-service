@@ -22,12 +22,12 @@ def upgrade():
     sa.Column('row_id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('org_id', sa.VARCHAR(length=128), nullable=False),
     sa.Column('service_id', sa.VARCHAR(length=128), nullable=False),
-    sa.Column('parameter_name', sa.VARCHAR(length=512), nullable=False),
+    sa.Column('parameter_name', sa.VARCHAR(length=128), nullable=False),
     sa.Column('parameter_value', sa.VARCHAR(length=512), nullable=False),
     sa.Column('created_on', mysql.TIMESTAMP(), nullable=False),
     sa.Column('updated_on', mysql.TIMESTAMP(), nullable=False),
     sa.PrimaryKeyConstraint('row_id'),
-    sa.UniqueConstraint('org_id', 'service_id', 'parameter_name', name='uq_offchain_const')
+    sa.UniqueConstraint('org_id', 'service_id', 'parameter_name', name='uq_off')
     )
     # ### end Alembic commands ###
 
