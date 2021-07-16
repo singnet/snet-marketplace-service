@@ -11,7 +11,7 @@ logger = get_logger(__name__)
 
 class BlockchainEventProducer(EventProducer):
     def __init__(self, ws_provider, repository=None, ):
-        self._blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
+        self._blockchain_util = BlockChainUtil("HTTP_PROVIDER", ws_provider)
         self._event_repository = EventRepository(repository)
 
     def _get_base_contract_path(self):
