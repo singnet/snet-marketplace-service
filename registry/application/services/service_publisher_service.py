@@ -208,8 +208,7 @@ class ServicePublisherService:
             org_uuid=self._org_uuid,
             service_uuid=self._service_uuid
         )
-        service_response = service.to_dict()
-        service_response = self.map_offchain_service_config(offchain_service_config, service_response)
+        service_response = self.map_offchain_service_config(offchain_service_config, service.to_dict())
         return service_response
 
     def publish_service_data_to_ipfs(self):
