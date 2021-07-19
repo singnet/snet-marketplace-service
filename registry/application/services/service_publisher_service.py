@@ -100,6 +100,24 @@ class ServicePublisherService:
                                                 comment=comment)
         ServicePublisherRepository().save_service_comments(service_provider_comment)
 
+    def save_offline_service_configs(self, payload, service):
+        offchain_config_map = {}
+
+        demo_component_required = str(payload.get("assets", {}).get("demo_files", {}).get("required", 0))
+        offchain_config_map.update({"demo_component_required": demo_component_required})
+        if "demo_files" not in service["media"]:
+            service["media"]["demo_files"] = {}
+        service["media"]["demo_files"].update({"required": int(demo_component_required)})
+
+        for config in offchain_config_map:
+            ServicePublisherRepository().add_or_update_offline_service_config(
+                org_uuid=self._org_uuid,
+                service_uuid=self._service_uuid,
+                parameter_name=config,
+                parameter_value=offchain_config_map[config]
+            )
+        return service
+
     def save_service(self, payload):
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
         service.service_id = payload["service_id"]
@@ -121,7 +139,8 @@ class ServicePublisherService:
         comment = payload.get("comments", {}).get(UserType.SERVICE_PROVIDER.value, "")
         if len(comment) > 0:
             self._save_service_comment(support_type="SERVICE_APPROVAL", user_type="SERVICE_PROVIDER", comment=comment)
-        return service.to_dict()
+        response = self.save_offline_service_configs(payload=payload, service=service.to_dict())
+        return response
 
     def save_service_attributes(self, payload):
         VALID_PATCH_ATTRIBUTE = ["groups"]

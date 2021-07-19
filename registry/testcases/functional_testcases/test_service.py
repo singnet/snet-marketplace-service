@@ -421,6 +421,7 @@ class TestService(TestCase):
             "body": json.dumps({
                 "description": "test description updated 1",
                 "service_id": "test_service_id",
+                "assets":{"demo_files": {"required": 1}},
                 "groups": [
                     {
                         "group_name": "defaultGroup",
@@ -439,12 +440,21 @@ class TestService(TestCase):
                 ]
             })
         }
+        service_repo.add_item(OffchainServiceConfigDBModel(
+            org_uuid="test_org_uuid",
+            service_uuid="test_service_uuid",
+            parameter_name="demo_component_required",
+            parameter_value="1",
+            created_on="2021-07-19 12:13:55",
+            updated_on="2021-07-19 12:13:55"
+        ))
         response = save_service(event=event, context=None)
         assert (response["statusCode"] == 200)
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
         assert (response_body["data"]["service_uuid"] == "test_service_uuid")
         assert (response_body["data"]["service_state"]["state"] == ServiceStatus.APPROVED.value)
+        assert (response_body["data"]["media"]["demo_files"]) == {"required": 1}
         event = {
             "path": "/org/test_org_uuid/service",
             "requestContext": {
