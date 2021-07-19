@@ -6,7 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from registry.constants import ServiceStatus
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.infrastructure.models import Service, ServiceGroup, ServiceState, ServiceReviewHistory, Organization, \
-    ServiceComment
+    ServiceComment, OffchainServiceConfig
 from registry.infrastructure.repositories.base_repository import BaseRepository
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 
@@ -182,3 +182,20 @@ class ServicePublisherRepository(BaseRepository):
         except SQLAlchemyError as error:
             self.session.rollback()
             raise error
+
+    def get_offchain_service_config(self, org_uuid, service_uuid):
+        try:
+            offchain_service_config_db = self.session.query(OffchainServiceConfig).\
+                filter(OffchainServiceConfig.org_uuid == org_uuid).\
+                filter(OffchainServiceConfig.service_uuid == service_uuid).\
+                all()
+            self.session.commit()
+        except SQLAlchemyError as error:
+            self.session.rollback()
+            raise error
+        offchain_service_config = []
+        if not offchain_service_config_db:
+            offchain_service_config
+        for config in offchain_service_config_db:
+            offchain_service_config.append(ServiceFactory().convert_offchain_service_config_db_model_to_entity_model(config))
+        return offchain_service_config

@@ -192,12 +192,29 @@ class ServicePublisherService:
             UserType.SERVICE_APPROVER.value: "<div></div>" if not approver_comment else f"<div>{approver_comment.comment}</div>"
         }
 
+    def map_offchain_service_config(self,offchain_service_config,service):
+        offchain_map = {}
+        for config in offchain_service_config:
+            offchain_map.update({config.parameter_name : config.parameter_value})
+        # updating offchain demo_component_required key
+        demo_details = service["media"].get("demo_files", {})
+        demo_details.update({"demo_component_required": offchain_map["demo_component_required"]})
+        service["media"].update({"demo_files" : demo_details})
+        return service
+
     def get_service_for_given_service_uuid(self):
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
         if not service:
             return None
         service.comments = self.get_service_comments()
-        return service.to_dict()
+        offchain_service_config = ServicePublisherRepository().get_offchain_service_config(
+            org_uuid=self._org_uuid,
+            service_uuid=self._service_uuid
+        )
+        service_response = service.to_dict()
+        if offchain_service_config:
+            service_response = self.map_offchain_service_config(offchain_service_config, service_response)
+        return service_response
 
     def publish_service_data_to_ipfs(self):
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)

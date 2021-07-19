@@ -26,6 +26,7 @@ from registry.infrastructure.models import Service as ServiceDBModel
 from registry.infrastructure.models import ServiceGroup as ServiceGroupDBModel
 from registry.infrastructure.models import ServiceReviewHistory as ServiceReviewHistoryDBModel
 from registry.infrastructure.models import ServiceState as ServiceStateDBModel
+from registry.infrastructure.models import OffchainServiceConfig as OffchainServiceConfigDBModel
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 
@@ -557,7 +558,17 @@ class TestService(TestCase):
                 created_on=dt.utcnow()
             )
         )
-
+        service_repo.add_item(
+            OffchainServiceConfigDBModel(
+                row_id=10,
+                org_uuid="test_org_uuid",
+                service_uuid="test_service_uuid",
+                parameter_name="demo_component_required",
+                parameter_value=0,
+                created_on=dt.utcnow(),
+                updated_on=dt.utcnow()
+            )
+        )
         event = {
             "path": "/org/test_org_uuid/service",
             "requestContext": {
@@ -577,6 +588,11 @@ class TestService(TestCase):
         assert (response_body["data"]["org_uuid"] == "test_org_uuid")
         assert (response_body["data"]["service_uuid"] == "test_service_uuid")
         assert (response_body["data"]["service_state"]["state"] == ServiceStatus.DRAFT.value)
+        assert (response_body["data"]["media"]) == {
+            "demo_files": {
+                "demo_component_required": 0
+            }
+        }
 
     @patch("registry.application.services.service_publisher_service.ServicePublisherService.publish_to_ipfs")
     def test_get_service_metadata_uri(self, mock_ipfs):

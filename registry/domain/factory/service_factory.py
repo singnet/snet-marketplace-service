@@ -1,13 +1,14 @@
 from datetime import datetime as dt
 
 from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus
+from registry.domain.models.offchain_service_config import OffchainServiceConfig
 from registry.domain.models.service import Service
 from registry.domain.models.service_comment import ServiceComment
 from registry.domain.models.service_group import ServiceGroup
 from registry.domain.models.service_state import ServiceState
 from registry.exceptions import InvalidServiceStateException
 from registry.infrastructure.models import Service as ServiceDBModel, ServiceGroup as ServiceGroupDBModel, \
-    ServiceReviewHistory, ServiceState as ServiceStateDBModel
+    ServiceReviewHistory, ServiceState as ServiceStateDBModel, OffchainServiceConfig as OffchainServiceConfigDBModel
 
 
 class ServiceFactory:
@@ -166,6 +167,17 @@ class ServiceFactory:
             service_uuid=service_uuid,
             state=state,
             transaction_hash=transaction_hash
+        )
+
+    @staticmethod
+    def convert_offchain_service_config_db_model_to_entity_model(OffchainServiceConfigDBModel):
+        if OffchainServiceConfigDBModel.parameter_name in ["demo_component_required"]:
+            OffchainServiceConfigDBModel.parameter_value = int(OffchainServiceConfigDBModel.parameter_value)
+        return OffchainServiceConfig(
+            org_uuid=OffchainServiceConfigDBModel.org_uuid,
+            service_uuid=OffchainServiceConfigDBModel.service_uuid,
+            parameter_name=OffchainServiceConfigDBModel.parameter_name,
+            parameter_value=OffchainServiceConfigDBModel.parameter_value
         )
 
     @staticmethod
