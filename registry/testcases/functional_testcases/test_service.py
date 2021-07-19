@@ -590,7 +590,7 @@ class TestService(TestCase):
         assert (response_body["data"]["service_state"]["state"] == ServiceStatus.DRAFT.value)
         assert (response_body["data"]["media"]) == {
             "demo_files": {
-                "demo_component_required": 0
+                "required": 0
             }
         }
 

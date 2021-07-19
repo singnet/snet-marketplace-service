@@ -193,9 +193,9 @@ class ServicePublisherRepository(BaseRepository):
         except SQLAlchemyError as error:
             self.session.rollback()
             raise error
-        offchain_service_config = []
-        if not offchain_service_config_db:
-            offchain_service_config
-        for config in offchain_service_config_db:
-            offchain_service_config.append(ServiceFactory().convert_offchain_service_config_db_model_to_entity_model(config))
+        offchain_service_config = ServiceFactory().convert_offchain_service_config_db_model_to_entity_model(
+            org_uuid=org_uuid,
+            service_uuid=service_uuid,
+            offchain_service_configs_db=offchain_service_config_db
+        )
         return offchain_service_config
