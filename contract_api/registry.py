@@ -8,11 +8,13 @@ from contract_api.dao.service_repository import ServiceRepository
 from contract_api.infrastructure.repositories.service_media_repository import ServiceMediaRepository
 from contract_api.infrastructure.repositories.service_repository import ServiceRepository as NewServiceRepository
 from contract_api.filter import Filter
+from contract_api.infrastructure.repositories.offchain_service_config_repository import OffchainServiceConfigRepository
 
 logger = get_logger(__name__)
 BUILD_CODE = {"SUCCESS": 1, "FAILED": 0}
 new_service_repo = NewServiceRepository()
 service_media_repo = ServiceMediaRepository()
+offchain_service_config_repo = OffchainServiceConfigRepository()
 
 class Registry:
     def __init__(self, obj_repo):
@@ -391,6 +393,12 @@ class Registry:
             media = [media_data.to_dict() for media_data in service_media]
             result = basic_service_data[0]
 
+            offchain_service_config_db = offchain_service_config_repo.get_offchain_service_config(
+                org_id=org_id,
+                service_id=service_id
+            )
+            offchain_service_config = offchain_service_config_db.to_dict()
+
             self._convert_service_metadata_str_to_json(result)
 
             for rec in org_group_data:
@@ -409,7 +417,7 @@ class Registry:
                             break
                 rec.update(org_groups_dict.get(rec['group_id'], {}))
 
-            result.update({"is_available": is_available, "groups": service_group_data, "tags": tags, "media": media})
+            result.update({"is_available": is_available, "groups": service_group_data, "tags": tags, "media": media, "offchain_service_config": offchain_service_config})
             return result
         except Exception as e:
             print(repr(e))

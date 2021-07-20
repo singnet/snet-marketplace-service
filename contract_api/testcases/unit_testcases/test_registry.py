@@ -1,8 +1,8 @@
 from unittest import TestCase
-
+from datetime import datetime as dt
 from common.repository import Repository
 from contract_api.config import NETWORK_ID, NETWORKS
-from contract_api.infrastructure.models import ServiceMedia
+from contract_api.infrastructure.models import ServiceMedia, OffchainServiceConfig
 from contract_api.infrastructure.repositories.service_media_repository import ServiceMediaRepository
 from contract_api.registry import Registry
 
@@ -82,6 +82,15 @@ class TestRegistry(TestCase):
             updated_on="2021-01-08 13:31:50"
         ))
 
+        service_media_repo.add_item(OffchainServiceConfig(
+            org_id="snet",
+            service_id="gene-annotation-service",
+            parameter_name="demo_component_required",
+            parameter_value= 1,
+            created_on = dt.utcnow(),
+            updated_on = dt.utcnow()
+        ))
+
         response = registry.get_service_data_by_org_id_and_service_id('snet', 'gene-annotation-service')
 
         assert response == {'service_row_id': 10,
@@ -117,7 +126,8 @@ class TestRegistry(TestCase):
                             'media': [
                                 {'service_row_id': 10, 'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'https://ropsten-service-components.s3.us-east-1.amazonaws.com/assets/d263/d263test/stubs/nodejs.zip', 'order': 0, 'file_type': 'grpc-stub/nodejs', 'asset_type': 'grpc-stub', 'alt_text': ''},
                                 {'service_row_id': 10, 'org_id': 'snet', 'service_id': 'gene-annotation-service', 'url': 'https://test-s3-push', 'order': 5, 'file_type': 'image', 'asset_type': 'hero_image', 'alt_text': 'data is missing'}
-                            ]
+                            ],
+                            'offchain_service_config': {'org_id': 'snet', 'service_id': 'gene-annotation-service', 'configs': {'demo_component_required': 1}}
                             }
 
     def test_get_service_data_by_org_id_and_service_id_without_media(self):
@@ -171,7 +181,8 @@ class TestRegistry(TestCase):
                             'is_available': 0,
                             'groups': [],
                             'tags': [],
-                            'media': []
+                            'media': [],
+                            'offchain_service_config':{'org_id':'snet', 'service_id': 'gene-annotation-service', 'configs': {}}
                             }
 
     def tearDown(self):
@@ -180,4 +191,5 @@ class TestRegistry(TestCase):
         db.execute("DELETE FROM service WHERE 1")
         db.execute("DELETE FROM service_metadata WHERE 1")
         service_media_repo.session.query(ServiceMedia).delete()
+        service_media_repo.session.query(OffchainServiceConfig).delete()
         service_media_repo.session.commit()
