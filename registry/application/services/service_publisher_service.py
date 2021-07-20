@@ -215,7 +215,7 @@ class ServicePublisherService:
         # update demo component flag in service assets
         if "demo_files" not in service["media"]:
             service["media"]["demo_files"] = {}
-        service["media"]["demo_files"].update({"required": offchain_service_config.configs.get("demo_component_required", 0)})
+        service["media"]["demo_files"].update({"required": offchain_service_config.configs.get("demo_component_required", 1)})
         return service
 
     def get_service_for_given_service_uuid(self):
