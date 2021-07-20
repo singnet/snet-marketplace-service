@@ -40,11 +40,11 @@ class UpdateServiceAssets:
             build_id = UpdateServiceAssets.trigger_demo_component_code_build(org_uuid=org_uuid,
                                                                              service_uuid=service_uuid,
                                                                              filename=filename)
-            service_details = service_repo.get_service_for_given_service_uuid(org_uuid=org_uuid, service_uuid=service_uuid)
-            demo_details = service_details.get("assets", {}).get("demo_files", {})
-            demo_details.update({"url": f"https://{bucket_name}.s3.{REGION_NAME}.amazonaws.com/{file_path}"})
-            demo_details.update({"build_id": build_id}),
-            demo_details.update({"status": "PENDING"})
+            demo_details = {
+                "url": f"https://{bucket_name}.s3.{REGION_NAME}.amazonaws.com/{file_path}",
+                "build_id": build_id,
+                "status": "PENDING"
+            }
             service.assets.update({"demo_files": demo_details})
             response = {'build_id': build_id}
         elif utils.match_regex_string(path=file_path, regex_pattern=ServiceAssetsRegex.HERO_IMAGE_URL.value):
