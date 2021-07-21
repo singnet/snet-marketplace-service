@@ -22,7 +22,7 @@ from registry.domain.models.offchain_service_config import OffchainServiceConfig
 from registry.domain.models.service_comment import ServiceComment
 from registry.domain.services.service_publisher_domain_service import ServicePublisherDomainService
 from registry.exceptions import EnvironmentNotFoundException, InvalidServiceStateException, \
-    OrganizationNotFoundException, ServiceNotFoundException, ServiceProtoNotFoundException
+    OrganizationNotFoundException, ServiceNotFoundException, ServiceProtoNotFoundException, InvalidMetadataException
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 from deepdiff import DeepDiff
@@ -336,6 +336,27 @@ class ServicePublisherService:
                 f"error in triggering build_id {build_id} for service {self._service_uuid} and org {self._org_uuid} :: error {repr(e)}")
             raise e
 
+    def get_existing_offchain_configs(self, existing_service_data):
+        existing_offchain_configs = {}
+        if "demo_component_required" in existing_service_data:
+            existing_offchain_configs.update(
+                {"demo_component_required": existing_service_data["demo_component_required"]})
+        return existing_offchain_configs
+
+    def are_blockchain_attributes_got_updated(self, existing_metadata, current_service_metadata):
+        change = DeepDiff(current_service_metadata, existing_metadata)
+        logger.info(f"Change in blockchain attributes::{change}")
+        if change:
+            return True
+        return False
+
+    def are_offchain_attributes_got_updated(self, existing_offchain_configs, current_offchain_attributes):
+        change = DeepDiff(current_offchain_attributes, existing_offchain_configs)
+        logger.info(f"Change in offchain attributes::{change}")
+        if change:
+            return True
+        return False
+
     def publish_offchain_service_configs(self, org_id, service_id, payload):
         response = requests.post(
             PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT.format(org_id, service_id), data=payload)
@@ -349,53 +370,39 @@ class ServicePublisherService:
             raise Exception(f"Error getting service details for org_id :: {org_id} service_id :: {service_id}")
         return json.loads(response.text)["data"]
 
-    def validate_service_metadata(self, current_offchain_attributes, current_service_data, existing_service_data):
-        # VALIDATE METADATA
+    def publish_service_data(self):
+        # Validate service metadata
+        current_service_data = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid=self._org_uuid, service_uuid=self._service_uuid)
+
         is_valid = Service.is_metadata_valid(service_metadata=current_service_data.to_metadata())
         if not is_valid:
-            raise Exception("Service data is not valid!. Please make all valid data are present before publishing")
-        if not existing_service_data:
-            return {"publish_to_blockchain": True, "publish_offchain_attributes": True}
-        publish_onchain = publish_offchain = False
-        # ONCHAIN DIFF
-        existing_metadata = ipfs_util.read_file_from_ipfs(existing_service_data["ipfs_hash"])
-        onchain_diff = DeepDiff(current_service_data.to_metadata(), existing_metadata)
-        if onchain_diff:
-            publish_onchain = True
-            logger.info(f"changes in onchain_data :: f{onchain_diff}")
+            raise InvalidMetadataException("Service metadata is not valid.")
 
-        # Map existing configs
-        existing_offchain_configs = {}
-        if "demo_component_required" in existing_service_data:
-            existing_offchain_configs.update(
-                {"demo_component_required": existing_service_data["demo_component_required"]})
-
-        offchain_diff = DeepDiff(current_offchain_attributes.configs, existing_offchain_configs)
-        if offchain_diff:
-            publish_offchain = True
-            logger.info(f"changes in onchain_data :: f{offchain_diff}")
-        return {"publish_to_blockchain": publish_onchain, "publish_offchain_attributes": publish_offchain}
-
-    def publish_service_data(self):
-        # Get required details for validation
+        # Monitor blockchain and offchain changes
         current_organization_data = OrganizationPublisherRepository().get_organization(org_uuid=self._org_uuid)
-        current_service_data = ServicePublisherRepository() \
-            .get_service_for_given_service_uuid(org_uuid=self._org_uuid, service_uuid=self._service_uuid)
         existing_service_data = self.get_existing_service_details_from_contract_api(current_service_data.service_id, current_organization_data.id)
-        current_offchain_attributes = ServicePublisherRepository().get_offchain_service_config(
-            org_uuid=self._org_uuid,
-            service_uuid=self._service_uuid
-        )
-        # Validate metadata
-        service_validation = self.validate_service_metadata(current_offchain_attributes, current_service_data, existing_service_data)
-        # Publish service data
-        if service_validation["publish_to_blockchain"]:
+        existing_metadata = ipfs_util.read_file_from_ipfs(existing_service_data["ipfs_hash"])
+        publish_to_blockchain = self.are_blockchain_attributes_got_updated(existing_metadata,
+                                                                                                current_service_data.to_metadata())
+
+        existing_offchain_configs = self.get_existing_offchain_configs(existing_service_data)
+        current_offchain_attributes = ServicePublisherRepository().get_offchain_service_config(org_uuid=self._org_uuid,
+                                                                                               service_uuid=self._service_uuid)
+        publish_offchain_attributes = self.are_offchain_attributes_got_updated(
+            existing_offchain_configs,
+            current_offchain_attributes.configs)
+
+        status = {
+            "publish_to_blockchain": publish_to_blockchain,
+            "publish_offchain_attributes": publish_offchain_attributes,
+        }
+        if publish_to_blockchain:
             ipfs_data = self.publish_service_data_to_ipfs()
-            service_validation.update({"service_metadata_ipfs_hash": ipfs_data["metadata_ipfs_hash"]})
-        if service_validation["publish_offchain_attributes"]:
+            status["service_metadata_ipfs_hash"] = ipfs_data["metadata_ipfs_hash"]
+        if publish_offchain_attributes:
             self.publish_offchain_service_configs(
                 org_id=current_organization_data.id,
                 service_id=current_service_data.service_id,
                 payload=json.dumps(current_offchain_attributes.configs)
             )
-        return service_validation
+        return status

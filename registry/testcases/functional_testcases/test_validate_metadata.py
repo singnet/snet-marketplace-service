@@ -4,10 +4,7 @@ from unittest import TestCase
 from unittest.mock import patch
 from uuid import uuid4
 
-import common.ipfs_util
-import registry.application.services.service_publisher_service
 from registry.application.handlers.service_handlers import publish_service
-from registry.application.services.service_publisher_service import ServicePublisherService
 from registry.constants import OrganizationMemberStatus
 from registry.constants import Role
 from registry.constants import ServiceStatus
