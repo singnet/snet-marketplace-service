@@ -201,25 +201,26 @@ class ServicePublisherRepository(BaseRepository):
         return offchain_service_config
 
     def add_or_update_offline_service_config(self, org_uuid, service_uuid, parameter_name, parameter_value):
-        offchain_service_config_db = self.session.query(OffchainServiceConfig).\
-            filter(OffchainServiceConfig.org_uuid==org_uuid).\
-            filter(OffchainServiceConfig.service_uuid==service_uuid).\
-            filter(OffchainServiceConfig.parameter_name==parameter_name).\
-            first()
-        if offchain_service_config_db:
-            offchain_service_config_db.parameter_value = parameter_value
-            offchain_service_config_db.updated_on = dt.utcnow()
-            try:
+        try:
+            offchain_service_config_db = self.session.query(OffchainServiceConfig). \
+                filter(OffchainServiceConfig.org_uuid == org_uuid). \
+                filter(OffchainServiceConfig.service_uuid == service_uuid). \
+                filter(OffchainServiceConfig.parameter_name == parameter_name). \
+                first()
+            self.session.commit()
+            if offchain_service_config_db:
+                offchain_service_config_db.parameter_value = parameter_value
+                offchain_service_config_db.updated_on = dt.utcnow()
                 self.session.commit()
-            except SQLAlchemyError as e:
-                self.session.rollback()
-                raise e
-        else:
-            self.add_item(OffchainServiceConfig(
-                org_uuid=org_uuid,
-                service_uuid=service_uuid,
-                parameter_name=parameter_name,
-                parameter_value=parameter_value,
-                created_on=dt.utcnow(),
-                updated_on=dt.utcnow()
-            ))
+            else:
+                self.add_item(OffchainServiceConfig(
+                    org_uuid=org_uuid,
+                    service_uuid=service_uuid,
+                    parameter_name=parameter_name,
+                    parameter_value=parameter_value,
+                    created_on=dt.utcnow(),
+                    updated_on=dt.utcnow()
+                ))
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
