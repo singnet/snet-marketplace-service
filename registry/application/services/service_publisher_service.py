@@ -12,11 +12,11 @@ from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
 from common.utils import download_file_from_url, json_to_file, publish_zip_file_in_ipfs, send_email_notification
 from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH, NETWORKS, NETWORK_ID, NOTIFICATION_ARN, \
-    REGION_NAME, PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT, GET_SERVICE_FOR_GIVEN_ORG_LAMBDA_ARN
+    REGION_NAME, PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT, GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT
 from registry.constants import EnvironmentType, ServiceAvailabilityStatus, ServiceStatus, \
     ServiceSupportType, UserType
 from registry.domain.factory.service_factory import ServiceFactory
-from registry.domain.models.service import SERVICE_METADATA_SCHEMA, Service
+from registry.domain.models.service import Service
 from registry.domain.models.offchain_service_config import OffchainServiceConfig
 
 from registry.domain.models.service_comment import ServiceComment
@@ -343,23 +343,11 @@ class ServicePublisherService:
             raise Exception(f"Error in updating offchain service attributes")
 
     def get_existing_service_details_from_contract_api(self, service_id, org_id):
-        payload = json.dumps({
-            "pathParameters": {
-                "serviceId": service_id,
-                "orgId": org_id
-            }
-        })
-        response = boto_util.invoke_lambda(
-            lambda_function_arn=GET_SERVICE_FOR_GIVEN_ORG_LAMBDA_ARN,
-            invocation_type="RequestResponse",
-            payload=payload
-        )
-        logger.info(f"get existing service response :: {response}")
-        if response["statusCode"] == 200:
-            response = json.loads(response["body"])["data"]
-            return response
-        raise Exception(
-            f"Error getting service details from lambda for org_id :: {self._org_uuid} and service_id :: {self._service_uuid}")
+        response = requests.get(
+            GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT.format(org_id, service_id))
+        if response.status_code != 200:
+            raise Exception(f"Error getting service details for org_id :: {org_id} service_id :: {service_id}")
+        return json.loads(response.text)["data"]
 
     def validate_service_metadata(self, current_offchain_attributes, current_service_data, existing_service_data):
         # VALIDATE METADATA
@@ -403,7 +391,7 @@ class ServicePublisherService:
         # Publish service data
         if service_validation["publish_to_blockchain"]:
             ipfs_data = self.publish_service_data_to_ipfs()
-            service_validation.update({"service_metadata_ipfs_hash": ipfs_data["service_metadata_ipfs_hash"]})
+            service_validation.update({"service_metadata_ipfs_hash": ipfs_data["metadata_ipfs_hash"]})
         if service_validation["publish_offchain_attributes"]:
             self.publish_offchain_service_configs(
                 org_id=current_organization_data.id,

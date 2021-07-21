@@ -203,7 +203,7 @@ class TestServiceMetadata(TestCase):
         response = publish_service(event=event, context=None)
         assert json.loads(response["body"])["data"] == {'publish_to_blockchain': False, 'publish_offchain_attributes': True}
 
-        mock_publish_to_ipfs.return_value = {"service_metadata_ipfs_hash": "sample_transaction_hash"}
+        mock_publish_to_ipfs.return_value = {"metadata_ipfs_hash": "sample_transaction_hash"}
         mock_read_ipfs.return_value = {'version': 1,
                                        'display_name': 'test_display_name',
                                        'encoding': 'proto',
@@ -250,7 +250,7 @@ class TestServiceMetadata(TestCase):
         assert json.loads(response["body"])["data"] == {'publish_to_blockchain': False,
                                                         'publish_offchain_attributes': True}
 
-        mock_publish_to_ipfs.return_value = {"service_metadata_ipfs_hash": "sample_transaction_hash_1"}
+        mock_publish_to_ipfs.return_value = {"metadata_ipfs_hash": "sample_transaction_hash_1"}
         mock_read_ipfs.return_value = {'version': 1,
                                        'display_name': 'test_display_name',
                                        'encoding': 'proto',
