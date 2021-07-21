@@ -16,8 +16,8 @@ class TestRegistryService(TestCase):
         self.tearDown()
         event = {
             "pathParameters": {
-                "org_id": "test_org_id",
-                "service_id": "test_service_id"
+                "orgId": "test_org_id",
+                "serviceId": "test_service_id"
             },
             "body": json.dumps({"demo_component_required": 0})
         }
@@ -27,8 +27,8 @@ class TestRegistryService(TestCase):
         assert (response_body["attributes"]["demo_component_required"] == 0)
         event = {
             "pathParameters": {
-                "org_id": "test_org_id",
-                "service_id": "test_service_id"
+                "orgId": "test_org_id",
+                "serviceId": "test_service_id"
             },
             "body": json.dumps({"demo_component_required": 1})
         }

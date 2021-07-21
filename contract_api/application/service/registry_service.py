@@ -1,7 +1,7 @@
 from contract_api.domain.models.offchain_service_attribute import OffchainServiceAttribute
-from contract_api.infrastructure.repositories.service_repository import ServiceRepository
+from contract_api.infrastructure.repositories.service_repository import OffchainServiceConfigRepository
 
-service_repository = ServiceRepository()
+offchain_service_config_repo = OffchainServiceConfigRepository()
 
 
 class RegistryService:
@@ -12,5 +12,5 @@ class RegistryService:
     def save_offchain_service_attribute(self, attributes):
         offchain_service_attribute = OffchainServiceAttribute(org_id=self.org_id, service_id=self.service_id,
                                                               attributes=attributes)
-        offchain_service_attribute = service_repository.save_offchain_service_attribute(offchain_service_attribute)
+        offchain_service_attribute = offchain_service_config_repo.save_offchain_service_attribute(offchain_service_attribute)
         return offchain_service_attribute.to_dict()
