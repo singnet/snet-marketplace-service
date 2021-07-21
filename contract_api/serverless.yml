@@ -865,7 +865,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /org/{org_id}/service/{service_uuid}/offchain-attributes/save
+          path: /org/{orgId}/service/{serviceId}/offchain-attributes/save
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
