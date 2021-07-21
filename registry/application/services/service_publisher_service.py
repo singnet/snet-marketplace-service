@@ -213,7 +213,7 @@ class ServicePublisherService:
         # update demo component flag in service assets
         if "demo_files" not in service["media"]:
             service["media"]["demo_files"] = {}
-        service["media"]["demo_files"].update({"required": offchain_service_config.configs.get("demo_component_required", 1)})
+        service["media"]["demo_files"].update({"required": offchain_service_config.configs["demo_component_required"]})
         return service
 
     def get_service_for_given_service_uuid(self):
@@ -225,8 +225,10 @@ class ServicePublisherService:
             org_uuid=self._org_uuid,
             service_uuid=self._service_uuid
         )
-        service_response = self.map_offchain_service_config(offchain_service_config, service.to_dict())
-        return service_response
+        service_data = service.to_dict()
+        if offchain_service_config.configs:
+            service_data = self.map_offchain_service_config(offchain_service_config, service_data)
+        return service_data
 
     def publish_service_data_to_ipfs(self):
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
