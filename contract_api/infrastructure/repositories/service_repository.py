@@ -124,6 +124,7 @@ class OffchainServiceConfigRepository(BaseRepository):
                     first()
                 if offchain_service_config_db:
                     offchain_service_config_db.parameter_value = parameter_value
+                    offchain_service_config_db.updated_on=dt.utcnow()
                 self.session.commit()
             except SQLAlchemyError as e:
                 self.session.rollback()
