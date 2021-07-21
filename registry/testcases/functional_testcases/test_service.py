@@ -444,7 +444,7 @@ class TestService(TestCase):
             org_uuid="test_org_uuid",
             service_uuid="test_service_uuid",
             parameter_name="demo_component_required",
-            parameter_value="1",
+            parameter_value="0",
             created_on="2021-07-19 12:13:55",
             updated_on="2021-07-19 12:13:55"
         ))
@@ -455,6 +455,7 @@ class TestService(TestCase):
         assert (response_body["data"]["service_uuid"] == "test_service_uuid")
         assert (response_body["data"]["service_state"]["state"] == ServiceStatus.APPROVED.value)
         assert (response_body["data"]["media"]["demo_files"]) == {"required": 1}
+
         event = {
             "path": "/org/test_org_uuid/service",
             "requestContext": {

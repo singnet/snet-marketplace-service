@@ -14,6 +14,7 @@ from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH, NETWORKS, N
 from registry.constants import EnvironmentType, ServiceAvailabilityStatus, ServiceStatus, \
     ServiceSupportType, UserType
 from registry.domain.factory.service_factory import ServiceFactory
+from registry.domain.models.offchain_service_config import OffchainServiceConfig
 from registry.domain.models.service_comment import ServiceComment
 from registry.domain.services.service_publisher_domain_service import ServicePublisherDomainService
 from registry.exceptions import EnvironmentNotFoundException, InvalidServiceStateException, \
@@ -100,23 +101,19 @@ class ServicePublisherService:
                                                 comment=comment)
         ServicePublisherRepository().save_service_comments(service_provider_comment)
 
-    def save_offline_service_configs(self, payload, service):
-        offchain_config_map = {}
-
-        demo_component_required = str(payload.get("assets", {}).get("demo_files", {}).get("required", 0))
-        offchain_config_map.update({"demo_component_required": demo_component_required})
-        if "demo_files" not in service["media"]:
-            service["media"]["demo_files"] = {}
-        service["media"]["demo_files"].update({"required": int(demo_component_required)})
-
-        for config in offchain_config_map:
-            ServicePublisherRepository().add_or_update_offline_service_config(
-                org_uuid=self._org_uuid,
-                service_uuid=self._service_uuid,
-                parameter_name=config,
-                parameter_value=offchain_config_map[config]
-            )
-        return service
+    def save_offline_service_configs(self, payload):
+        demo_component_required = payload.get("assets", {}).get("demo_files", {}).get("required", -1)
+        if demo_component_required == -1:
+            return
+        offchain_service_config = OffchainServiceConfig(
+            org_uuid=self._org_uuid,
+            service_uuid=self._service_uuid,
+            configs={
+                "demo_component_required": str(demo_component_required)
+            }
+        )
+        ServicePublisherRepository().add_or_update_offline_service_config(offchain_service_config)
+        return
 
     def save_service(self, payload):
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
@@ -135,12 +132,13 @@ class ServicePublisherService:
             groups.append(service_group)
         service.groups = groups
         service.service_state.transaction_hash = payload.get("transaction_hash", None)
-        service = ServicePublisherRepository().save_service(self._username, service, ServiceStatus.APPROVED.value)
+        ServicePublisherRepository().save_service(self._username, service, ServiceStatus.APPROVED.value)
         comment = payload.get("comments", {}).get(UserType.SERVICE_PROVIDER.value, "")
         if len(comment) > 0:
             self._save_service_comment(support_type="SERVICE_APPROVAL", user_type="SERVICE_PROVIDER", comment=comment)
-        response = self.save_offline_service_configs(payload=payload, service=service.to_dict())
-        return response
+        self.save_offline_service_configs(payload=payload)
+        service = self.get_service_for_given_service_uuid()
+        return service
 
     def save_service_attributes(self, payload):
         VALID_PATCH_ATTRIBUTE = ["groups"]
