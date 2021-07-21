@@ -163,6 +163,12 @@ custom:
       - name: "UpdateOrgInput"
         contentType: "application/json"
         schema: ${file(registry/documentation/models/update_org.json):UpdateOrgInput}
+      - name: "PublishServiceOutput"
+        contentType: "application/json"
+        schema: ${file(registry/documentation/models/publish_service.json):PublishServiceOutput}
+      - name: "PublishServiceInput"
+        contentType: "application/json"
+        schema: ${file(registry/documentation/models/publish_service.json):PublishServiceInput}
 
 package:
   exclude:
@@ -1621,3 +1627,58 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+
+  publish_service:
+    warmup: true
+    handler: registry.application.handlers.service_handlers.publish_service
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: POST
+          path: /org/{org_uuid}/service/{service_uuid}/publish
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+          documentation:
+            summary: "Validate and publish service"
+            description: "Validate service metadata and publish onchain and offchain attributes accordingly"
+            tags:
+              - "service"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            pathParams:
+              - name: "org_uuid"
+                description: "Enter org_uuid"
+              - name: "service_uuid"
+                description: "Enter service_uuid"
+            requestModels:
+              "application/json": "PublishServiceInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Service Data"
+                responseModels:
+                  "application/json": "PublishServiceOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
