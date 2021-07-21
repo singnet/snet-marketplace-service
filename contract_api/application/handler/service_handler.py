@@ -18,8 +18,8 @@ logger = get_logger(__name__)
 @handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
 def save_offchain_attribute(event, context):
     logger.info(f"Got save offchain attribute event:: {event}")
-    org_id = event["pathParameters"]["org_id"]
-    service_id = event["pathParameters"]["service_id"]
+    org_id = event["pathParameters"]["orgId"]
+    service_id = event["pathParameters"]["serviceId"]
     payload = json.loads(event["body"])
     response = RegistryService(org_id=org_id, service_id=service_id).save_offchain_service_attribute(attributes=payload)
     return generate_lambda_response(

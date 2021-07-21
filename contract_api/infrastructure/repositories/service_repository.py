@@ -90,16 +90,37 @@ class ServiceRepository(BaseRepository):
                 )
             ))
 
+
+class OffchainServiceConfigRepository(BaseRepository):
+    pass
+
+    def get_offchain_service_config(self, org_id, service_id):
+        try:
+            offchain_service_configs_db = self.session.query(OffchainServiceConfig). \
+                filter(OffchainServiceConfig.org_id == org_id). \
+                filter(OffchainServiceConfig.service_id == service_id). \
+                all()
+            self.session.commit()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
+        offchain_service_config = ServiceFactory().convert_offchain_service_configs_db_model_to_entity_model(
+            org_id=org_id,
+            service_id=service_id,
+            offchain_service_configs_db=offchain_service_configs_db
+        )
+        return offchain_service_config
+
     def save_offchain_service_attribute(self, offchain_service_attribute):
         attributes = offchain_service_attribute.attributes
         for key in attributes:
             parameter_name = key
             parameter_value = attributes[key]
             try:
-                offchain_service_config_db = self.session.query(OffchainServiceConfig).\
-                    filter(OffchainServiceConfig.org_id == offchain_service_attribute.org_id).\
-                    filter(OffchainServiceConfig.service_id == offchain_service_attribute.service_id).\
-                    filter(OffchainServiceConfig.parameter_name == parameter_name).\
+                offchain_service_config_db = self.session.query(OffchainServiceConfig). \
+                    filter(OffchainServiceConfig.org_id == offchain_service_attribute.org_id). \
+                    filter(OffchainServiceConfig.service_id == offchain_service_attribute.service_id). \
+                    filter(OffchainServiceConfig.parameter_name == parameter_name). \
                     first()
                 if offchain_service_config_db:
                     offchain_service_config_db.parameter_value = parameter_value
