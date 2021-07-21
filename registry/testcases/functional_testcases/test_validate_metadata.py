@@ -176,12 +176,7 @@ class TestServiceMetadata(TestCase):
                                        'tags': []}
         mock_existing_service_data.return_value = {
             'ipfs_hash': 'QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf',
-            'offchain_service_config': {
-                'org_id': 'test_org_id',
-                'service_id': 'test_service_id',
-                'configs': {
-                    "demo_component_required": 0
-                }}
+            "demo_component_required": 0
         }
         response = publish_service(event=event, context=None)
         assert json.loads(response["body"])["data"] =={'publish_to_blockchain': False, 'publish_offchain_attributes': False}
@@ -203,12 +198,7 @@ class TestServiceMetadata(TestCase):
                                        'tags': []}
         mock_existing_service_data.return_value = {
             'ipfs_hash': 'QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf',
-            'offchain_service_config': {
-                'org_id': 'test_org_id',
-                'service_id': 'test_service_id',
-                'configs': {
-                    "demo_component_required": 1
-                }}
+             'demo_component_required': 1
         }
         response = publish_service(event=event, context=None)
         assert json.loads(response["body"])["data"] == {'publish_to_blockchain': False, 'publish_offchain_attributes': True}
@@ -231,12 +221,7 @@ class TestServiceMetadata(TestCase):
                                        'tags': ["tag1", "tag2"]}
         mock_existing_service_data.return_value = {
             'ipfs_hash': 'QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf',
-            'offchain_service_config': {
-                'org_id': 'test_org_id',
-                'service_id': 'test_service_id',
-                'configs': {
-                    "demo_component_required": 0
-                }}
+             'demo_component_required': 0
         }
         response = publish_service(event=event, context=None)
         assert json.loads(response["body"])["data"] =={'publish_to_blockchain': True, 'publish_offchain_attributes': False,
@@ -259,12 +244,7 @@ class TestServiceMetadata(TestCase):
                                        'tags': []}
         mock_existing_service_data.return_value = {
             'ipfs_hash': 'QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf',
-            'offchain_service_config': {
-                'org_id': 'test_org_id',
-                'service_id': 'test_service_id',
-                'configs': {
-                    "demo_component_required": 1
-                }}
+            'demo_component_required': 1
         }
         response = publish_service(event=event, context=None)
         assert json.loads(response["body"])["data"] == {'publish_to_blockchain': False,
@@ -288,12 +268,7 @@ class TestServiceMetadata(TestCase):
                                        'tags': ["tag1", "tag2"]}
         mock_existing_service_data.return_value = {
             'ipfs_hash': 'QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf',
-            'offchain_service_config': {
-                'org_id': 'test_org_id',
-                'service_id': 'test_service_id',
-                'configs': {
-                    "demo_component_required": 1
-                }}
+            'demo_component_required': 1
         }
         response = publish_service(event=event, context=None)
         assert json.loads(response["body"])["data"] == {'publish_to_blockchain': True,

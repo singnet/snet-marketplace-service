@@ -316,10 +316,10 @@ class ServicePublisherService:
                 f"error in triggering build_id {build_id} for service {self._service_uuid} and org {self._org_uuid} :: error {repr(e)}")
             raise e
 
-    def publish_offchain_service_configs(self, org_id, service_id):
+    def publish_offchain_service_configs(self, org_id, service_id, payload):
         response = requests.post(
-            PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT.format(org_id.id, service_id))
-        if response.get["statusCode"] != 200:
+            PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT.format(org_id, service_id), data=payload)
+        if response.status_code != 200:
             raise Exception(f"Error in updating offchain service attributes")
 
     def get_existing_service_details_from_contract_api(self, service_id, org_id):
@@ -341,7 +341,7 @@ class ServicePublisherService:
         raise Exception(
             f"Error getting service details from lambda for org_id :: {self._org_uuid} and service_id :: {self._service_uuid}")
 
-    def validate_service_metadata(self, current_organization_data, current_service_data, existing_service_data):
+    def validate_service_metadata(self, current_offchain_attributes, current_service_data, existing_service_data):
         # VALIDATE METADATA
         is_valid = Service.is_metadata_valid(service_metadata=current_service_data.to_metadata())
         if not is_valid:
@@ -355,13 +355,14 @@ class ServicePublisherService:
         if onchain_diff:
             publish_onchain = True
             logger.info(f"changes in onchain_data :: f{onchain_diff}")
-        # OFFCHAIN DIFF
-        current_offchain_attributes = ServicePublisherRepository().get_offchain_service_config(
-            org_uuid=self._org_uuid,
-            service_uuid=self._service_uuid
-        )
-        offchain_diff = DeepDiff(current_offchain_attributes.configs,
-                                 existing_service_data["offchain_service_config"]["configs"])
+
+        # Map existing configs
+        existing_offchain_configs = {}
+        if "demo_component_required" in existing_service_data:
+            existing_offchain_configs.update(
+                {"demo_component_required": existing_service_data["demo_component_required"]})
+
+        offchain_diff = DeepDiff(current_offchain_attributes.configs, existing_offchain_configs)
         if offchain_diff:
             publish_offchain = True
             logger.info(f"changes in onchain_data :: f{offchain_diff}")
@@ -372,11 +373,13 @@ class ServicePublisherService:
         current_organization_data = OrganizationPublisherRepository().get_organization(org_uuid=self._org_uuid)
         current_service_data = ServicePublisherRepository() \
             .get_service_for_given_service_uuid(org_uuid=self._org_uuid, service_uuid=self._service_uuid)
-        existing_service_data = self.get_existing_service_details_from_contract_api(current_service_data.service_id,
-                                                                                    current_organization_data.id)
+        existing_service_data = self.get_existing_service_details_from_contract_api(current_service_data.service_id, current_organization_data.id)
+        current_offchain_attributes = ServicePublisherRepository().get_offchain_service_config(
+            org_uuid=self._org_uuid,
+            service_uuid=self._service_uuid
+        )
         # Validate metadata
-        service_validation = self.validate_service_metadata(current_organization_data, current_service_data,
-                                                            existing_service_data)
+        service_validation = self.validate_service_metadata(current_offchain_attributes, current_service_data, existing_service_data)
         # Publish service data
         if service_validation["publish_to_blockchain"]:
             ipfs_data = self.publish_service_data_to_ipfs()
@@ -384,6 +387,7 @@ class ServicePublisherService:
         if service_validation["publish_offchain_attributes"]:
             self.publish_offchain_service_configs(
                 org_id=current_organization_data.id,
-                service_id=current_service_data.service_id
+                service_id=current_service_data.service_id,
+                payload=json.dumps(current_offchain_attributes.configs)
             )
         return service_validation
