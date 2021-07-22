@@ -268,7 +268,7 @@ def update_demo_component_build_status(event, context):
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def publish_service(event, context):
-    logger.info(f"Publish event :: {event}")
+    logger.info(f"Publish service event::{event}")
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
     if "org_uuid" not in path_parameters and "service_uuid" not in path_parameters:
