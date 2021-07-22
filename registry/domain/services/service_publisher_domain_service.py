@@ -140,6 +140,7 @@ class ServicePublisherDomainService:
             current_proto_files = utils.extract_zip_file(os.path.join(base_dir, current_proto), os.path.join(base_dir, "proto_old"))
             published_proto_files = utils.extract_zip_file(os.path.join(base_dir, 'proto.tar'), os.path.join(base_dir, 'proto_new'))
             file_diff = utils.compare_directory(current_proto_files, published_proto_files)
+            logger.info(f"proto files are different :: {file_diff}")
             return file_diff
         finally:
             if os.path.exists(base_dir):
