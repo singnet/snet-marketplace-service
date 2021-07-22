@@ -353,7 +353,7 @@ def create_text_file(target_path, context):
 def compare_directory(path1, path2):
     directory_details = filecmp.dircmp(path1, path2)
     file_name_diff = list(set(directory_details.left_list).difference(directory_details.right_list))
-    logger.info(f"directory compare between :: filename diffs :: {file_name_diff} file_content_diffs :: {directory_details.diff_files}")
+    logger.info(f"directory compare :: filename diffs :: {file_name_diff} file_content_diffs :: {directory_details.diff_files}")
     if file_name_diff or directory_details.diff_files:
         return True
     else:
