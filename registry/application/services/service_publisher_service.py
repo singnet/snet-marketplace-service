@@ -237,24 +237,15 @@ class ServicePublisherService:
             service_data = self.map_offchain_service_config(offchain_service_config, service_data)
         return service_data
 
-    def publish_service_data_to_ipfs(self):
+    def publish_service_data_to_ipfs(self, existing_proto_hash=None):
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
         if service.service_state.state == ServiceStatus.APPROVED.value:
-            proto_url = service.assets.get("proto_files", {}).get("url", None)
-            if proto_url is None:
-                raise ServiceProtoNotFoundException
-            filename = download_file_from_url(file_url=proto_url,
-                                              file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}")
-            asset_ipfs_hash = publish_zip_file_in_ipfs(filename=filename,
-                                                       file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}",
-                                                       ipfs_client=IPFSUtil(IPFS_URL['url'], IPFS_URL['port']))
+            ServicePublisherDomainService.publish_assets(service, existing_proto_hash)
             service.proto = {
-                "model_ipfs_hash": asset_ipfs_hash,
+                "model_ipfs_hash": service.assets["proto_files"]["ipfs_hash"],
                 "encoding": "proto",
                 "service_type": "grpc"
             }
-            service.assets["proto_files"]["ipfs_hash"] = asset_ipfs_hash
-            ServicePublisherDomainService.publish_assets(service)
             service = ServicePublisherRepository().save_service(self._username, service, service.service_state.state)
             return service
         logger.info(f"Service status needs to be {ServiceStatus.APPROVED.value} to be eligible for publishing.")
@@ -367,21 +358,21 @@ class ServicePublisherService:
         return json.loads(response.text)["data"]
 
     def publish_service_data(self):
-        # Validate service metadata
-        current_service = self.publish_service_data_to_ipfs()
-
-        is_valid = Service.is_metadata_valid(service_metadata=current_service.to_metadata())
-        logger.info(f"is_valid :: {is_valid} :: validated current_metadata :: {current_service.to_metadata()}")
-        if not is_valid:
-            raise InvalidMetadataException()
-
-        # Monitor blockchain and offchain changes
+        # prepare data
+        current_service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
         current_org = OrganizationPublisherRepository().get_organization(org_uuid=self._org_uuid)
         existing_service_data = self.get_existing_service_details_from_contract_api(current_service.service_id, current_org.id)
         if existing_service_data:
             existing_metadata = ipfs_util.read_file_from_ipfs(existing_service_data["ipfs_hash"])
         else:
             existing_metadata = {}
+        # validate metadata
+        current_service = self.publish_service_data_to_ipfs(existing_metadata.get("model_ipfs_hash", {}))
+        is_valid = Service.is_metadata_valid(service_metadata=current_service.to_metadata())
+        logger.info(f"is_valid :: {is_valid} :: validated current_metadata :: {current_service.to_metadata()}")
+        if not is_valid:
+            raise InvalidMetadataException()
+        # check on chain and off chain differences
         publish_to_blockchain = self.are_blockchain_attributes_got_updated(existing_metadata, current_service.to_metadata())
         existing_offchain_configs = self.get_existing_offchain_configs(existing_service_data)
         current_offchain_attributes = ServicePublisherRepository().get_offchain_service_config(org_uuid=self._org_uuid,

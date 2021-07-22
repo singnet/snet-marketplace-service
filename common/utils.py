@@ -262,7 +262,7 @@ def convert_zip_file_to_tar_bytes(file_dir, filename):
         zipObj.extractall(file_dir, listOfFileNames)
     if not os.path.isdir(file_dir):
         raise Exception("Directory %s doesn't exists" % file_dir)
-    files = glob.glob(os.path.join(file_dir, "*.proto"))
+    files = glob.glob(os.path.join(file_dir, "*"))
     if len(files) == 0:
         raise Exception("Cannot find any %s files" % (os.path.join(file_dir, "*.proto")))
     files.sort()
@@ -302,6 +302,7 @@ def extract_zip_file(zip_file_path, extracted_path):
         tar = tarfile.open(zip_file_path, "r:")
         tar.extractall(path=extracted_path)
         tar.close()
+    return extracted_path
 
 
 def zip_file(source_path, zipped_path):

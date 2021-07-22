@@ -1,11 +1,17 @@
+import filecmp
+import os
+import shutil
+import tempfile
+import uuid
 from common import utils
 from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
-from common.utils import json_to_file, publish_zip_file_in_ipfs, publish_file_in_ipfs
+from common.utils import json_to_file, publish_zip_file_in_ipfs, publish_file_in_ipfs, download_file_from_url
 from registry.config import ASSET_DIR, METADATA_FILE_PATH, IPFS_URL
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.services.registry_blockchain_util import RegistryBlockChainUtil
 from registry.exceptions import ServiceProtoNotFoundException, InvalidMetadataException
+ipfs_util = IPFSUtil(IPFS_URL["url"], IPFS_URL["port"])
 
 service_factory = ServiceFactory()
 ipfs_client = IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
@@ -99,14 +105,43 @@ class ServicePublisherDomainService:
         return service.to_dict()
 
     @staticmethod
-    def publish_assets(service):
-        ASSETS_SUPPORTED = ["hero_image", "demo_files"]
-        for asset in service.assets.keys():
-            if asset in ASSETS_SUPPORTED:
-                asset_url = service.assets.get(asset, {}).get("url", None)
-                if asset_url is None:
-                    logger.info(f"asset url for {asset} is missing ")
-                asset_ipfs_hash = publish_file_in_ipfs(file_url=asset_url,
-                                                       file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}",
-                                                       ipfs_client=IPFSUtil(IPFS_URL['url'], IPFS_URL['port']))
-                service.assets[asset]["ipfs_hash"] = asset_ipfs_hash
+    def publish_assets(service, existing_proto_hash):
+        try:
+            ASSETS_SUPPORTED = ["hero_image", "proto_files", "demo_files"]
+            base_dir = f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}"
+            for asset in service.assets.keys():
+                if asset in ASSETS_SUPPORTED:
+                    asset_url = service.assets.get(asset, {}).get("url", None)
+                    if asset_url is None:
+                        logger.info(f"asset url for {asset} is missing ")
+                    if asset == "proto_files":
+                        if not ServicePublisherDomainService.get_proto_diff(asset_url, existing_proto_hash):
+                            service.assets[asset]["ipfs_hash"] = existing_proto_hash
+                            continue
+                    asset_ipfs_hash = publish_file_in_ipfs(
+                        file_url=asset_url,
+                        file_dir=f"{base_dir}/{asset}",
+                        ipfs_client=IPFSUtil(IPFS_URL['url'], IPFS_URL['port']))
+                    service.assets[asset]["ipfs_hash"] = asset_ipfs_hash
+        except Exception as e:
+            raise e
+        finally:
+            if os.path.exists(base_dir):
+                shutil.rmtree(base_dir)
+
+    @staticmethod
+    def get_proto_diff(proto_url, existing_proto_hash):
+        try:
+            base_dir = os.path.join(tempfile.gettempdir(), str(uuid.uuid4()))
+            current_proto = download_file_from_url(proto_url, base_dir)
+            published_proto = ipfs_util.read_bytesio_from_ipfs(existing_proto_hash)
+            with open(os.path.join(base_dir, "proto.tar"), 'wb') as outfile:
+                outfile.write(published_proto.getbuffer())
+            current_proto_files = utils.extract_zip_file(os.path.join(base_dir, current_proto), os.path.join(base_dir, "proto_old"))
+            published_proto_files = utils.extract_zip_file(os.path.join(base_dir, 'proto.tar'), os.path.join(base_dir, 'proto_new'))
+            proto_diff = filecmp.dircmp(current_proto_files, published_proto_files)
+            publish = True if proto_diff.diff_files else False
+            return publish
+        finally:
+            if os.path.exists(base_dir):
+                shutil.rmtree(base_dir)
