@@ -32,8 +32,8 @@ class InvalidOrganizationStateException(CustomException):
 class InvalidMetadataException(CustomException):
     error_message = "INVALID_METADATA_EXCEPTION"
 
-    def __init__(self, message=None):
-        super().__init__({message})
+    def __init__(self):
+        super().__init__({})
 
 
 class InvalidServiceStateException(CustomException):

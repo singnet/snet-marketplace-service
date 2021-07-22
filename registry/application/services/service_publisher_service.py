@@ -375,8 +375,9 @@ class ServicePublisherService:
         current_service_data = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid=self._org_uuid, service_uuid=self._service_uuid)
 
         is_valid = Service.is_metadata_valid(service_metadata=current_service_data.to_metadata())
+        logger.info(f"is_valid :: {is_valid} :: validated current_metadata :: {current_service_data.to_metadata()}")
         if not is_valid:
-            raise InvalidMetadataException("Service metadata is not valid.")
+            raise InvalidMetadataException()
 
         # Monitor blockchain and offchain changes
         current_organization_data = OrganizationPublisherRepository().get_organization(org_uuid=self._org_uuid)
