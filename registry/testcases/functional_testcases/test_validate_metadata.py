@@ -8,6 +8,7 @@ from registry.application.handlers.service_handlers import publish_service
 from registry.constants import OrganizationMemberStatus
 from registry.constants import Role
 from registry.constants import ServiceStatus
+from registry.domain.models.service import Service
 from registry.infrastructure.models import OffchainServiceConfig as OffchainServiceConfigDBModel
 from registry.infrastructure.models import Organization as OrganizationDBModel
 from registry.infrastructure.models import OrganizationMember as OrganizationMemberDBModel
@@ -135,13 +136,13 @@ class TestServiceMetadata(TestCase):
     @patch(
         "registry.application.services.service_publisher_service.ServicePublisherService.publish_offchain_service_configs")
     @patch(
+        "registry.application.services.service_publisher_service.ServicePublisherService.publish_to_ipfs")
+    @patch(
+        "registry.application.services.service_publisher_service.ServicePublisherService.get_existing_service_details_from_contract_api")
+    @patch(
         "registry.application.services.service_publisher_service.ServicePublisherService.publish_service_data_to_ipfs")
     @patch("common.ipfs_util.IPFSUtil.read_file_from_ipfs")
-    @patch(
-        'registry.application.services.service_publisher_service.ServicePublisherService'
-        '.get_existing_service_details_from_contract_api')
-    def test_validate_metadata(self, mock_existing_service_data, mock_read_ipfs, mock_publish_to_ipfs,
-                               mock_publish_offline_service_configs):
+    def test_validate_metadata(self, mock_read_ipfs, mock_publish_to_ipfs,mock_existing_service_details_from_contract_api, mock_ipfs_hash, mock_publish_offchain_configs):
         event = {
             "path": "/org/test_org_uuid/service/test_service_uuid/publish",
             "requestContext": {
@@ -155,7 +156,10 @@ class TestServiceMetadata(TestCase):
             "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"}
         }
 
-        mock_publish_offline_service_configs.return_value = True
+        mock_publish_offchain_configs.return_value = False
+
+        # blockchain false offchain false
+        mock_publish_to_ipfs.return_value = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid="test_org_uuid", service_uuid="test_service_uuid")
         mock_read_ipfs.return_value = {'version': 1,
                                        'display_name': 'test_display_name',
                                        'encoding': 'proto',
@@ -171,83 +175,17 @@ class TestServiceMetadata(TestCase):
                                                                           'description': 'test_description'},
                                        'media': [], 'contributors': [],
                                        'tags': []}
-        mock_existing_service_data.return_value = {
+        mock_existing_service_details_from_contract_api.return_value = {
             'ipfs_hash': 'QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf',
             "demo_component_required": 0
         }
         response = publish_service(event=event, context=None)
-        assert json.loads(response["body"])["data"] =={'publish_to_blockchain': False, 'publish_offchain_attributes': False}
-
-        mock_read_ipfs.return_value = {'version': 1,
-                                       'display_name': 'test_display_name',
-                                       'encoding': 'proto',
-                                       'service_type': 'grpc',
-                                       'model_ipfs_hash': 'QmcdTYvTxEJrv18Ui1vo1wNDisw8BMoFRMQyM13rz1ok5B',
-                                       'mpe_address': '#12345678', 'groups': [
-                {'free_calls': 10, 'free_call_signer_address': '0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F',
-                 'daemon_addresses': ['0xq2w3e4rr5t6y7u8i9'],
-                 'pricing': [{'default': True, 'price_model': 'fixed_price', 'price_in_cogs': 1}],
-                 'endpoints': ['https://dummydaemonendpoint.io'], 'group_id': 'test_group_id',
-                 'group_name': 'default_group'}], 'service_description': {'url': 'https://dummy.io',
-                                                                          'short_description': 'test_short_description',
-                                                                          'description': 'test_description'},
-                                       'media': [], 'contributors': [],
-                                       'tags': []}
-        mock_existing_service_data.return_value = {
-            'ipfs_hash': 'QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf',
-             'demo_component_required': 1
-        }
-        response = publish_service(event=event, context=None)
-        assert json.loads(response["body"])["data"] == {'publish_to_blockchain': False, 'publish_offchain_attributes': True}
-
-        mock_publish_to_ipfs.return_value = {"metadata_ipfs_hash": "sample_transaction_hash"}
-        mock_read_ipfs.return_value = {'version': 1,
-                                       'display_name': 'test_display_name',
-                                       'encoding': 'proto',
-                                       'service_type': 'grpc',
-                                       'model_ipfs_hash': 'QmcdTYvTxEJrv18Ui1vo1wNDisw8BMoFRMQyM13rz1ok5B',
-                                       'mpe_address': '#12345678', 'groups': [
-                {'free_calls': 10, 'free_call_signer_address': '0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F',
-                 'daemon_addresses': ['0xq2w3e4rr5t6y7u8i9'],
-                 'pricing': [{'default': True, 'price_model': 'fixed_price', 'price_in_cogs': 1}],
-                 'endpoints': ['https://dummydaemonendpoint.io'], 'group_id': 'test_group_id',
-                 'group_name': 'default_group'}], 'service_description': {'url': 'https://dummy.io',
-                                                                          'short_description': 'test_short_description',
-                                                                          'description': 'test_description'},
-                                       'media': [], 'contributors': [],
-                                       'tags': ["tag1", "tag2"]}
-        mock_existing_service_data.return_value = {
-            'ipfs_hash': 'QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf',
-             'demo_component_required': 0
-        }
-        response = publish_service(event=event, context=None)
-        assert json.loads(response["body"])["data"] =={'publish_to_blockchain': True, 'publish_offchain_attributes': False,
-                            'service_metadata_ipfs_hash': 'sample_transaction_hash'}
-
-        mock_read_ipfs.return_value = {'version': 1,
-                                       'display_name': 'test_display_name',
-                                       'encoding': 'proto',
-                                       'service_type': 'grpc',
-                                       'model_ipfs_hash': 'QmcdTYvTxEJrv18Ui1vo1wNDisw8BMoFRMQyM13rz1ok5B',
-                                       'mpe_address': '#12345678', 'groups': [
-                {'free_calls': 10, 'free_call_signer_address': '0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F',
-                 'daemon_addresses': ['0xq2w3e4rr5t6y7u8i9'],
-                 'pricing': [{'default': True, 'price_model': 'fixed_price', 'price_in_cogs': 1}],
-                 'endpoints': ['https://dummydaemonendpoint.io'], 'group_id': 'test_group_id',
-                 'group_name': 'default_group'}], 'service_description': {'url': 'https://dummy.io',
-                                                                          'short_description': 'test_short_description',
-                                                                          'description': 'test_description'},
-                                       'media': [], 'contributors': [],
-                                       'tags': []}
-        mock_existing_service_data.return_value = {
-            'ipfs_hash': 'QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf',
-            'demo_component_required': 1
-        }
-        response = publish_service(event=event, context=None)
+        assert response["statusCode"] == 200
         assert json.loads(response["body"])["data"] == {'publish_to_blockchain': False,
-                                                        'publish_offchain_attributes': True}
+                                                        'publish_offchain_attributes': False}
 
-        mock_publish_to_ipfs.return_value = {"metadata_ipfs_hash": "sample_transaction_hash_1"}
+        # blockchain true offchain false
+        mock_ipfs_hash.return_value = "sample_hash"
         mock_read_ipfs.return_value = {'version': 1,
                                        'display_name': 'test_display_name',
                                        'encoding': 'proto',
@@ -262,15 +200,101 @@ class TestServiceMetadata(TestCase):
                                                                           'short_description': 'test_short_description',
                                                                           'description': 'test_description'},
                                        'media': [], 'contributors': [],
-                                       'tags': ["tag1", "tag2"]}
-        mock_existing_service_data.return_value = {
+                                       'tags': ["tag1"]}
+        mock_existing_service_details_from_contract_api.return_value = {
             'ipfs_hash': 'QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf',
-            'demo_component_required': 1
+            "demo_component_required": 0
         }
         response = publish_service(event=event, context=None)
+        assert response["statusCode"] == 200
+        assert json.loads(response["body"])["data"] == {'publish_to_blockchain': True,
+                                                        'publish_offchain_attributes': False,
+                                                        "service_metadata_ipfs_hash": "ipfs://sample_hash"
+                                                        }
+
+        # blockchain true offchain true
+        mock_ipfs_hash.return_value = "sample_hash"
+        mock_read_ipfs.return_value = {'version': 1,
+                                       'display_name': 'test_display_name',
+                                       'encoding': 'proto',
+                                       'service_type': 'grpc',
+                                       'model_ipfs_hash': 'QmcdTYvTxEJrv18Ui1vo1wNDisw8BMoFRMQyM13rz1ok5B',
+                                       'mpe_address': '#12345678', 'groups': [
+                {'free_calls': 10, 'free_call_signer_address': '0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F',
+                 'daemon_addresses': ['0xq2w3e4rr5t6y7u8i9'],
+                 'pricing': [{'default': True, 'price_model': 'fixed_price', 'price_in_cogs': 1}],
+                 'endpoints': ['https://dummydaemonendpoint.io'], 'group_id': 'test_group_id',
+                 'group_name': 'default_group'}], 'service_description': {'url': 'https://dummy.io',
+                                                                          'short_description': 'test_short_description',
+                                                                          'description': 'test_description'},
+                                       'media': [], 'contributors': [],
+                                       'tags': ["tag1"]}
+        mock_existing_service_details_from_contract_api.return_value = {
+            'ipfs_hash': 'QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf',
+            "demo_component_required": 1
+        }
+        response = publish_service(event=event, context=None)
+        assert response["statusCode"] == 200
         assert json.loads(response["body"])["data"] == {'publish_to_blockchain': True,
                                                         'publish_offchain_attributes': True,
-                                                        'service_metadata_ipfs_hash': 'sample_transaction_hash_1'}
+                                                        "service_metadata_ipfs_hash": "ipfs://sample_hash"
+                                                        }
+
+        # blockchain false offchain true
+        mock_ipfs_hash.return_value = "sample_hash"
+        mock_read_ipfs.return_value = {'version': 1,
+                                       'display_name': 'test_display_name',
+                                       'encoding': 'proto',
+                                       'service_type': 'grpc',
+                                       'model_ipfs_hash': 'QmcdTYvTxEJrv18Ui1vo1wNDisw8BMoFRMQyM13rz1ok5B',
+                                       'mpe_address': '#12345678', 'groups': [
+                {'free_calls': 10, 'free_call_signer_address': '0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F',
+                 'daemon_addresses': ['0xq2w3e4rr5t6y7u8i9'],
+                 'pricing': [{'default': True, 'price_model': 'fixed_price', 'price_in_cogs': 1}],
+                 'endpoints': ['https://dummydaemonendpoint.io'], 'group_id': 'test_group_id',
+                 'group_name': 'default_group'}], 'service_description': {'url': 'https://dummy.io',
+                                                                          'short_description': 'test_short_description',
+                                                                          'description': 'test_description'},
+                                       'media': [], 'contributors': [],
+                                       'tags': []}
+        mock_existing_service_details_from_contract_api.return_value = {
+            'ipfs_hash': 'QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf',
+            "demo_component_required": 1
+        }
+        response = publish_service(event=event, context=None)
+        assert response["statusCode"] == 200
+        assert json.loads(response["body"])["data"] == {'publish_to_blockchain': False,
+                                                        'publish_offchain_attributes': True,
+                                                        }
+
+        # Validate meta
+        org_repo.session.query(ServiceGroupDBModel).delete()
+        org_repo.session.commit()
+        mock_publish_to_ipfs.return_value = ServicePublisherRepository().get_service_for_given_service_uuid(
+            org_uuid="test_org_uuid", service_uuid="test_service_uuid")
+        mock_ipfs_hash.return_value = "sample_hash"
+        mock_read_ipfs.return_value = {'version': 1,
+                                       'display_name': 'test_display_name',
+                                       'encoding': 'proto',
+                                       'service_type': 'grpc',
+                                       'model_ipfs_hash': 'QmcdTYvTxEJrv18Ui1vo1wNDisw8BMoFRMQyM13rz1ok5B',
+                                       'mpe_address': '#12345678', 'groups': [
+                {'free_calls': 10, 'free_call_signer_address': '0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F',
+                 'daemon_addresses': ['0xq2w3e4rr5t6y7u8i9'],
+                 'pricing': [{'default': True, 'price_model': 'fixed_price', 'price_in_cogs': 1}],
+                 'endpoints': ['https://dummydaemonendpoint.io'], 'group_id': 'test_group_id',
+                 'group_name': 'default_group'}], 'service_description': {'url': 'https://dummy.io',
+                                                                          'short_description': 'test_short_description',
+                                                                          'description': 'test_description'},
+                                       'media': [], 'contributors': [],
+                                       'tags': []}
+        mock_existing_service_details_from_contract_api.return_value = {
+            'ipfs_hash': 'QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf',
+            "demo_component_required": 1
+        }
+        response = publish_service(event=event, context=None)
+        assert response["statusCode"] == 500
+
 
     def tearDown(self):
         org_repo.session.query(OrganizationStateDBModel).delete()

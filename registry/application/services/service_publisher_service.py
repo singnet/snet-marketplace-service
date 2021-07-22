@@ -256,11 +256,7 @@ class ServicePublisherService:
             service.assets["proto_files"]["ipfs_hash"] = asset_ipfs_hash
             ServicePublisherDomainService.publish_assets(service)
             service = ServicePublisherRepository().save_service(self._username, service, service.service_state.state)
-            service_metadata = service.to_metadata()
-            filename = f"{METADATA_FILE_PATH}/{service.uuid}_service_metadata.json"
-            service.metadata_ipfs_hash = ServicePublisherService.publish_to_ipfs(filename, service_metadata)
-            return {"service_metadata": service.to_metadata(),
-                    "metadata_ipfs_hash": "ipfs://" + service.metadata_ipfs_hash}
+            return service
         logger.info(f"Service status needs to be {ServiceStatus.APPROVED.value} to be eligible for publishing.")
         raise InvalidServiceStateException()
 
@@ -372,19 +368,21 @@ class ServicePublisherService:
 
     def publish_service_data(self):
         # Validate service metadata
-        current_service_data = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid=self._org_uuid, service_uuid=self._service_uuid)
+        current_service = self.publish_service_data_to_ipfs()
 
-        is_valid = Service.is_metadata_valid(service_metadata=current_service_data.to_metadata())
+        is_valid = Service.is_metadata_valid(service_metadata=current_service.to_metadata())
+        logger.info(f"is_valid :: {is_valid} :: validated current_metadata :: {current_service.to_metadata()}")
         if not is_valid:
-            raise InvalidMetadataException("Service metadata is not valid.")
+            raise InvalidMetadataException()
 
         # Monitor blockchain and offchain changes
-        current_organization_data = OrganizationPublisherRepository().get_organization(org_uuid=self._org_uuid)
-        existing_service_data = self.get_existing_service_details_from_contract_api(current_service_data.service_id, current_organization_data.id)
-        existing_metadata = ipfs_util.read_file_from_ipfs(existing_service_data["ipfs_hash"])
-        publish_to_blockchain = self.are_blockchain_attributes_got_updated(existing_metadata,
-                                                                                                current_service_data.to_metadata())
-
+        current_org = OrganizationPublisherRepository().get_organization(org_uuid=self._org_uuid)
+        existing_service_data = self.get_existing_service_details_from_contract_api(current_service.service_id, current_org.id)
+        if existing_service_data:
+            existing_metadata = ipfs_util.read_file_from_ipfs(existing_service_data["ipfs_hash"])
+        else:
+            existing_metadata = {}
+        publish_to_blockchain = self.are_blockchain_attributes_got_updated(existing_metadata, current_service.to_metadata())
         existing_offchain_configs = self.get_existing_offchain_configs(existing_service_data)
         current_offchain_attributes = ServicePublisherRepository().get_offchain_service_config(org_uuid=self._org_uuid,
                                                                                                service_uuid=self._service_uuid)
@@ -397,12 +395,13 @@ class ServicePublisherService:
             "publish_offchain_attributes": publish_offchain_attributes,
         }
         if publish_to_blockchain:
-            ipfs_data = self.publish_service_data_to_ipfs()
-            status["service_metadata_ipfs_hash"] = ipfs_data["metadata_ipfs_hash"]
+            filename = f"{METADATA_FILE_PATH}/{current_service.uuid}_service_metadata.json"
+            ipfs_hash = ServicePublisherService.publish_to_ipfs(filename, current_service.to_metadata())
+            status["service_metadata_ipfs_hash"] = "ipfs://" + ipfs_hash
         if publish_offchain_attributes:
             self.publish_offchain_service_configs(
-                org_id=current_organization_data.id,
-                service_id=current_service_data.service_id,
+                org_id=current_org.id,
+                service_id=current_service.service_id,
                 payload=json.dumps(current_offchain_attributes.configs)
             )
         return status
