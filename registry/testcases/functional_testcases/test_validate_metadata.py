@@ -134,13 +134,15 @@ class TestServiceMetadata(TestCase):
         )
 
     @patch(
+        "registry.application.services.service_publisher_service.ServicePublisherService.publish_offchain_service_configs")
+    @patch(
         "registry.application.services.service_publisher_service.ServicePublisherService.publish_to_ipfs")
     @patch(
         "registry.application.services.service_publisher_service.ServicePublisherService.get_existing_service_details_from_contract_api")
     @patch(
         "registry.application.services.service_publisher_service.ServicePublisherService.publish_service_data_to_ipfs")
     @patch("common.ipfs_util.IPFSUtil.read_file_from_ipfs")
-    def test_validate_metadata(self, mock_read_ipfs, mock_publish_to_ipfs,mock_existing_service_details_from_contract_api, mock_ipfs_hash):
+    def test_validate_metadata(self, mock_read_ipfs, mock_publish_to_ipfs,mock_existing_service_details_from_contract_api, mock_ipfs_hash, mock_publish_offchain_configs):
         event = {
             "path": "/org/test_org_uuid/service/test_service_uuid/publish",
             "requestContext": {
@@ -153,6 +155,8 @@ class TestServiceMetadata(TestCase):
             "httpMethod": "GET",
             "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"}
         }
+
+        mock_publish_offchain_configs.return_value = False
 
         # blockchain false offchain false
         mock_publish_to_ipfs.return_value = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid="test_org_uuid", service_uuid="test_service_uuid")
