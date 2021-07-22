@@ -32,6 +32,7 @@ SERVICE_METADATA_SCHEMA = {
     },
     "groups": {
         "type": "list",
+        "empty": False,
         "schema": {
             "type": "dict",
             "schema": {
