@@ -1,5 +1,6 @@
 import datetime
 import decimal
+import filecmp
 import glob
 import hashlib
 import hmac
@@ -333,6 +334,7 @@ def match_regex_string(path, regex_pattern):
     match = re.match(key_pattern, path)
     return match
 
+
 def get_file_name_and_extension_from_path(path):
     base = os.path.basename(path)
     return os.path.splitext(base)
@@ -346,3 +348,12 @@ def create_text_file(target_path, context):
     f = open(target_path, "a")
     f.write(context)
     f.close()
+
+
+def compare_directory(path1, path2):
+    directory_details = filecmp.dircmp(path1, path2)
+    file_name_diff = list(set(directory_details.left_list).difference(directory_details.right_list))
+    if file_name_diff or directory_details.diff_files:
+        return True
+    else:
+        return False

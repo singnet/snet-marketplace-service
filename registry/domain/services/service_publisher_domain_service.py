@@ -139,9 +139,8 @@ class ServicePublisherDomainService:
                 outfile.write(published_proto.getbuffer())
             current_proto_files = utils.extract_zip_file(os.path.join(base_dir, current_proto), os.path.join(base_dir, "proto_old"))
             published_proto_files = utils.extract_zip_file(os.path.join(base_dir, 'proto.tar'), os.path.join(base_dir, 'proto_new'))
-            proto_diff = filecmp.dircmp(current_proto_files, published_proto_files)
-            publish = True if proto_diff.diff_files else False
-            return publish
+            file_diff = utils.compare_directory(current_proto_files, published_proto_files)
+            return file_diff
         finally:
             if os.path.exists(base_dir):
                 shutil.rmtree(base_dir)
