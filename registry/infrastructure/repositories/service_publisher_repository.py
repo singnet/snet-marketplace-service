@@ -1,5 +1,6 @@
 from datetime import datetime as dt
 
+import sqlalchemy
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -185,18 +186,17 @@ class ServicePublisherRepository(BaseRepository):
 
     def get_offchain_service_config(self, org_uuid, service_uuid):
         try:
-            offchain_service_config_db = self.session.query(OffchainServiceConfig).\
-                filter(OffchainServiceConfig.org_uuid == org_uuid).\
-                filter(OffchainServiceConfig.service_uuid == service_uuid).\
-                all()
-            self.session.commit()
+            sql_query = sqlalchemy.text(f"select * from offchain_service_config where service_uuid = '{service_uuid}' and org_uuid = '{org_uuid}'")
+            result = self.session.execute(sql_query)
+            result_as_list = result.fetchall()
+            print(f"offchain configs :: {result_as_list}")
         except SQLAlchemyError as error:
             self.session.rollback()
             raise error
         offchain_service_config = ServiceFactory().convert_offchain_service_config_db_model_to_entity_model(
             org_uuid=org_uuid,
             service_uuid=service_uuid,
-            offchain_service_configs_db=offchain_service_config_db
+            offchain_service_configs_db=result_as_list
         )
         return offchain_service_config
 
