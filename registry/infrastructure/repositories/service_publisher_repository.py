@@ -101,6 +101,7 @@ class ServicePublisherRepository(BaseRepository):
         try:
             service_db = self.session.query(Service).filter(Service.org_uuid == org_uuid).filter(
                 Service.uuid == service_uuid).first()
+            print(f"service query :: {str(self.session.query(Service).filter(Service.org_uuid == org_uuid).filter(Service.uuid == service_uuid))}")
             self.session.commit()
         except Exception as e:
             self.session.rollback()
