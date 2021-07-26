@@ -133,6 +133,7 @@ class Service(Base):
     updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=datetime.utcnow())
     groups = relationship("ServiceGroup", uselist=True)
     service_state = relationship("ServiceState", uselist=False)
+    offchain_service_config = relationship("OffchainServiceConfig", uselist=True)
 
 
 class ServiceState(Base):
