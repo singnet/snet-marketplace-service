@@ -173,9 +173,9 @@ class ServiceFactory:
     def convert_offchain_service_config_db_model_to_entity_model(org_uuid, service_uuid, offchain_service_configs_db):
         configs = {}
         for offchain_service_config_db in offchain_service_configs_db:
-            if offchain_service_config_db.parameter_name == "demo_component_required":
-                offchain_service_config_db.parameter_value = int(offchain_service_config_db.parameter_value)
-            configs.update({offchain_service_config_db.parameter_name: offchain_service_config_db.parameter_value})
+            if offchain_service_config_db[3] == "demo_component_required":
+                offchain_service_config_db[4] == int(offchain_service_config_db[4])
+            configs.update({offchain_service_config_db[3]: int(offchain_service_config_db[4])})
         return OffchainServiceConfig(
             org_uuid=org_uuid,
             service_uuid=service_uuid,
