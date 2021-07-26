@@ -1,6 +1,7 @@
 from contract_api.domain.models.service import Service
 from contract_api.domain.models.service_metadata import ServiceMetadata
 from contract_api.domain.models.service_media import ServiceMedia
+from contract_api.domain.models.offchain_service_attribute import OffchainServiceAttribute
 
 
 class ServiceFactory:
@@ -60,4 +61,20 @@ class ServiceFactory:
             asset_type=service_media_db.asset_type,
             alt_text=service_media_db.alt_text,
             ipfs_url=service_media_db.ipfs_url
+        )
+
+    @staticmethod
+    def convert_offchain_service_configs_db_model_to_entity_model(org_id, service_id, offchain_service_configs_db):
+        attributes = {}
+        for offchain_service_config_db in offchain_service_configs_db:
+            parameter_name = offchain_service_config_db.parameter_name
+            if offchain_service_config_db.parameter_name == "demo_component_required":
+                parameter_value = int(offchain_service_config_db.parameter_value)
+            else:
+                parameter_value = int(offchain_service_config_db.parameter_value)
+            attributes.update({parameter_name: parameter_value})
+        return OffchainServiceAttribute(
+            org_id=org_id,
+            service_id=service_id,
+            attributes=attributes
         )

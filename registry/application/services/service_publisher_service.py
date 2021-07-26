@@ -1,7 +1,9 @@
 import json
 from uuid import uuid4
+import requests
 
 from aws_xray_sdk.core import patch_all
+from cerberus import Validator
 
 from common import utils
 from common.boto_utils import BotoUtils
@@ -10,16 +12,20 @@ from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
 from common.utils import download_file_from_url, json_to_file, publish_zip_file_in_ipfs, send_email_notification
 from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH, NETWORKS, NETWORK_ID, NOTIFICATION_ARN, \
-    REGION_NAME
+    REGION_NAME, PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT, GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT
 from registry.constants import EnvironmentType, ServiceAvailabilityStatus, ServiceStatus, \
     ServiceSupportType, UserType
 from registry.domain.factory.service_factory import ServiceFactory
+from registry.domain.models.service import Service
+from registry.domain.models.offchain_service_config import OffchainServiceConfig
+
 from registry.domain.models.service_comment import ServiceComment
 from registry.domain.services.service_publisher_domain_service import ServicePublisherDomainService
 from registry.exceptions import EnvironmentNotFoundException, InvalidServiceStateException, \
-    OrganizationNotFoundException, ServiceNotFoundException, ServiceProtoNotFoundException
+    OrganizationNotFoundException, ServiceNotFoundException, ServiceProtoNotFoundException, InvalidMetadataException
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
+from deepdiff import DeepDiff
 
 patch_all()
 ALLOWED_ATTRIBUTES_FOR_SERVICE_SEARCH = ["display_name"]
@@ -35,6 +41,8 @@ BUILD_FAILURE_CODE = 0
 logger = get_logger(__name__)
 service_factory = ServiceFactory()
 boto_util = BotoUtils(region_name=REGION_NAME)
+validator = Validator()
+ipfs_util = IPFSUtil(IPFS_URL["url"], IPFS_URL["port"])
 
 
 class ServicePublisherService:
@@ -100,6 +108,20 @@ class ServicePublisherService:
                                                 comment=comment)
         ServicePublisherRepository().save_service_comments(service_provider_comment)
 
+    def save_offline_service_configs(self, payload):
+        demo_component_required = payload.get("assets", {}).get("demo_files", {}).get("required", -1)
+        if demo_component_required == -1:
+            return
+        offchain_service_config = OffchainServiceConfig(
+            org_uuid=self._org_uuid,
+            service_uuid=self._service_uuid,
+            configs={
+                "demo_component_required": str(demo_component_required)
+            }
+        )
+        ServicePublisherRepository().add_or_update_offline_service_config(offchain_service_config)
+        return
+
     def save_service(self, payload):
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
         service.service_id = payload["service_id"]
@@ -117,11 +139,13 @@ class ServicePublisherService:
             groups.append(service_group)
         service.groups = groups
         service.service_state.transaction_hash = payload.get("transaction_hash", None)
-        service = ServicePublisherRepository().save_service(self._username, service, ServiceStatus.APPROVED.value)
+        ServicePublisherRepository().save_service(self._username, service, ServiceStatus.APPROVED.value)
         comment = payload.get("comments", {}).get(UserType.SERVICE_PROVIDER.value, "")
         if len(comment) > 0:
             self._save_service_comment(support_type="SERVICE_APPROVAL", user_type="SERVICE_PROVIDER", comment=comment)
-        return service.to_dict()
+        self.save_offline_service_configs(payload=payload)
+        service = self.get_service_for_given_service_uuid()
+        return service
 
     def save_service_attributes(self, payload):
         VALID_PATCH_ATTRIBUTE = ["groups"]
@@ -192,12 +216,26 @@ class ServicePublisherService:
             UserType.SERVICE_APPROVER.value: "<div></div>" if not approver_comment else f"<div>{approver_comment.comment}</div>"
         }
 
+    def map_offchain_service_config(self, offchain_service_config, service):
+        # update demo component flag in service assets
+        if "demo_files" not in service["media"]:
+            service["media"]["demo_files"] = {}
+        service["media"]["demo_files"].update({"required": offchain_service_config.configs["demo_component_required"]})
+        return service
+
     def get_service_for_given_service_uuid(self):
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
         if not service:
             return None
         service.comments = self.get_service_comments()
-        return service.to_dict()
+        offchain_service_config = ServicePublisherRepository().get_offchain_service_config(
+            org_uuid=self._org_uuid,
+            service_uuid=self._service_uuid
+        )
+        service_data = service.to_dict()
+        if offchain_service_config.configs:
+            service_data = self.map_offchain_service_config(offchain_service_config, service_data)
+        return service_data
 
     def publish_service_data_to_ipfs(self):
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
@@ -218,11 +256,7 @@ class ServicePublisherService:
             service.assets["proto_files"]["ipfs_hash"] = asset_ipfs_hash
             ServicePublisherDomainService.publish_assets(service)
             service = ServicePublisherRepository().save_service(self._username, service, service.service_state.state)
-            service_metadata = service.to_metadata()
-            filename = f"{METADATA_FILE_PATH}/{service.uuid}_service_metadata.json"
-            service.metadata_ipfs_hash = ServicePublisherService.publish_to_ipfs(filename, service_metadata)
-            return {"service_metadata": service.to_metadata(),
-                    "metadata_ipfs_hash": "ipfs://" + service.metadata_ipfs_hash}
+            return service
         logger.info(f"Service status needs to be {ServiceStatus.APPROVED.value} to be eligible for publishing.")
         raise InvalidServiceStateException()
 
@@ -297,3 +331,77 @@ class ServicePublisherService:
             logger.info(
                 f"error in triggering build_id {build_id} for service {self._service_uuid} and org {self._org_uuid} :: error {repr(e)}")
             raise e
+
+    def get_existing_offchain_configs(self, existing_service_data):
+        existing_offchain_configs = {}
+        if "demo_component_required" in existing_service_data:
+            existing_offchain_configs.update(
+                {"demo_component_required": existing_service_data["demo_component_required"]})
+        return existing_offchain_configs
+
+    def are_blockchain_attributes_got_updated(self, existing_metadata, current_service_metadata):
+        change = DeepDiff(current_service_metadata, existing_metadata)
+        logger.info(f"Change in blockchain attributes::{change}")
+        if change:
+            return True
+        return False
+
+    def are_offchain_attributes_got_updated(self, existing_offchain_configs, current_offchain_attributes):
+        change = DeepDiff(current_offchain_attributes, existing_offchain_configs)
+        logger.info(f"Change in offchain attributes::{change}")
+        if change:
+            return True
+        return False
+
+    def publish_offchain_service_configs(self, org_id, service_id, payload):
+        response = requests.post(
+            PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT.format(org_id, service_id), data=payload)
+        if response.status_code != 200:
+            raise Exception(f"Error in updating offchain service attributes")
+
+    def get_existing_service_details_from_contract_api(self, service_id, org_id):
+        response = requests.get(
+            GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT.format(org_id, service_id))
+        if response.status_code != 200:
+            raise Exception(f"Error getting service details for org_id :: {org_id} service_id :: {service_id}")
+        return json.loads(response.text)["data"]
+
+    def publish_service_data(self):
+        # Validate service metadata
+        current_service = self.publish_service_data_to_ipfs()
+
+        is_valid = Service.is_metadata_valid(service_metadata=current_service.to_metadata())
+        logger.info(f"is_valid :: {is_valid} :: validated current_metadata :: {current_service.to_metadata()}")
+        if not is_valid:
+            raise InvalidMetadataException()
+
+        # Monitor blockchain and offchain changes
+        current_org = OrganizationPublisherRepository().get_organization(org_uuid=self._org_uuid)
+        existing_service_data = self.get_existing_service_details_from_contract_api(current_service.service_id, current_org.id)
+        if existing_service_data:
+            existing_metadata = ipfs_util.read_file_from_ipfs(existing_service_data["ipfs_hash"])
+        else:
+            existing_metadata = {}
+        publish_to_blockchain = self.are_blockchain_attributes_got_updated(existing_metadata, current_service.to_metadata())
+        existing_offchain_configs = self.get_existing_offchain_configs(existing_service_data)
+        current_offchain_attributes = ServicePublisherRepository().get_offchain_service_config(org_uuid=self._org_uuid,
+                                                                                               service_uuid=self._service_uuid)
+        publish_offchain_attributes = self.are_offchain_attributes_got_updated(
+            existing_offchain_configs,
+            current_offchain_attributes.configs)
+
+        status = {
+            "publish_to_blockchain": publish_to_blockchain,
+            "publish_offchain_attributes": publish_offchain_attributes,
+        }
+        if publish_to_blockchain:
+            filename = f"{METADATA_FILE_PATH}/{current_service.uuid}_service_metadata.json"
+            ipfs_hash = ServicePublisherService.publish_to_ipfs(filename, current_service.to_metadata())
+            status["service_metadata_ipfs_hash"] = "ipfs://" + ipfs_hash
+        if publish_offchain_attributes:
+            self.publish_offchain_service_configs(
+                org_id=current_org.id,
+                service_id=current_service.service_id,
+                payload=json.dumps(current_offchain_attributes.configs)
+            )
+        return status

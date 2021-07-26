@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import Column, Integer, ForeignKey, UniqueConstraint
-from sqlalchemy.dialects.mysql import JSON, TIMESTAMP, VARCHAR, TEXT
+from sqlalchemy.dialects.mysql import JSON, TIMESTAMP, VARCHAR, TEXT, TINYINT
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -133,6 +133,7 @@ class Service(Base):
     updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=datetime.utcnow())
     groups = relationship("ServiceGroup", uselist=True)
     service_state = relationship("ServiceState", uselist=False)
+    offchain_service_config = relationship("OffchainServiceConfig", uselist=True)
 
 
 class ServiceState(Base):
@@ -197,3 +198,16 @@ class ServiceComment(Base):
     comment = Column("comment", TEXT, nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
     updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=datetime.utcnow())
+
+class OffchainServiceConfig(Base):
+    __tablename__ = "offchain_service_config"
+    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
+    org_uuid = Column("org_uuid", VARCHAR(128), nullable=False)
+    service_uuid = Column("service_uuid", VARCHAR(128),
+                          ForeignKey("service.uuid", ondelete="CASCADE", onupdate="CASCADE"),
+                          nullable=False)
+    parameter_name = Column("parameter_name", VARCHAR(128), nullable=False)
+    parameter_value = Column("parameter_value", VARCHAR(512), nullable=False)
+    created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=datetime.utcnow())
+    UniqueConstraint(org_uuid, service_uuid, parameter_name, name="uq_off")

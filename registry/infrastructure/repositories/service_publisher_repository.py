@@ -1,12 +1,13 @@
 from datetime import datetime as dt
 
+import sqlalchemy
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 
 from registry.constants import ServiceStatus
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.infrastructure.models import Service, ServiceGroup, ServiceState, ServiceReviewHistory, Organization, \
-    ServiceComment
+    ServiceComment, OffchainServiceConfig
 from registry.infrastructure.repositories.base_repository import BaseRepository
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 
@@ -100,6 +101,7 @@ class ServicePublisherRepository(BaseRepository):
         try:
             service_db = self.session.query(Service).filter(Service.org_uuid == org_uuid).filter(
                 Service.uuid == service_uuid).first()
+            print(f"service query :: {str(self.session.query(Service).filter(Service.org_uuid == org_uuid).filter(Service.uuid == service_uuid))}")
             self.session.commit()
         except Exception as e:
             self.session.rollback()
@@ -182,3 +184,47 @@ class ServicePublisherRepository(BaseRepository):
         except SQLAlchemyError as error:
             self.session.rollback()
             raise error
+
+    def get_offchain_service_config(self, org_uuid, service_uuid):
+        try:
+            sql_query = sqlalchemy.text(f"select * from offchain_service_config where service_uuid = '{service_uuid}' and org_uuid = '{org_uuid}'")
+            result = self.session.execute(sql_query)
+            result_as_list = result.fetchall()
+            print(f"offchain configs :: {result_as_list}")
+        except SQLAlchemyError as error:
+            self.session.rollback()
+            raise error
+        offchain_service_config = ServiceFactory().convert_offchain_service_config_db_model_to_entity_model(
+            org_uuid=org_uuid,
+            service_uuid=service_uuid,
+            offchain_service_configs_db=result_as_list
+        )
+        return offchain_service_config
+
+    def add_or_update_offline_service_config(self, offchain_service_config):
+        configs = offchain_service_config.configs
+        for key in configs:
+            parameter_name = key
+            parameter_value = configs[key]
+            try:
+                offchain_service_config_db = self.session.query(OffchainServiceConfig). \
+                    filter(OffchainServiceConfig.org_uuid == offchain_service_config.org_uuid). \
+                    filter(OffchainServiceConfig.service_uuid == offchain_service_config.service_uuid). \
+                    filter(OffchainServiceConfig.parameter_name == parameter_name). \
+                    first()
+                if offchain_service_config_db:
+                    offchain_service_config_db.parameter_value = parameter_value
+                    offchain_service_config_db.updated_on = dt.utcnow()
+                self.session.commit()
+            except SQLAlchemyError as e:
+                self.session.rollback()
+                raise e
+            if not offchain_service_config_db:
+                self.add_item(OffchainServiceConfig(
+                    org_uuid=offchain_service_config.org_uuid,
+                    service_uuid=offchain_service_config.service_uuid,
+                    parameter_name=parameter_name,
+                    parameter_value=parameter_value,
+                    created_on=dt.utcnow(),
+                    updated_on=dt.utcnow()
+                ))

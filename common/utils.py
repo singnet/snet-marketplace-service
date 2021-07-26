@@ -269,9 +269,14 @@ def convert_zip_file_to_tar_bytes(file_dir, filename):
     tar_bytes = io.BytesIO()
     tar = tarfile.open(fileobj=tar_bytes, mode="w")
     for f in files:
-        tar.add(f, os.path.basename(f))
+        tar.add(f, os.path.basename(f), filter=reset)
     tar.close()
     return tar_bytes
+
+
+def reset(tarinfo):
+    tarinfo.mtime = 123456781234
+    return tarinfo
 
 
 def send_email_notification(recipients, notification_subject, notification_message, notification_arn, boto_util):
@@ -331,6 +336,7 @@ def match_regex_string(path, regex_pattern):
     key_pattern = re.compile(regex_pattern)
     match = re.match(key_pattern, path)
     return match
+
 
 def get_file_name_and_extension_from_path(path):
     base = os.path.basename(path)
