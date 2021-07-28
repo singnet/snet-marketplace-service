@@ -38,11 +38,3 @@ class TestPythonBoilerplate(unittest.TestCase):
                                   'response = service_client.service.service_method(request) # replace service_method   ' \
                                   'print(f"service invoked successfully :: response :: {response}")invoke_service() ' \
                                   '# call invoke service method'
-    def test(self):
-        event = {
-        "input_s3_path": "s3://ropsten-service-components/assets/rajeev_june_25_org/calculator_june_25/proto_extracted/",
-        "output_s3_path": "s3://ropsten-service-components/assets/rajeev_june_25_org/calculator_june_25/temp_stubs/",
-        "org_id": "rajeev_june_25_org",
-        "service_id": "calculator_june_25"
-    }
-        generate_grpc_python_stubs(event=event, context=None)
