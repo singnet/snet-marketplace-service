@@ -8,6 +8,7 @@ import json
 import os
 import os.path
 import re
+import shutil
 import sys
 import tarfile
 import traceback
@@ -345,6 +346,13 @@ def get_file_name_and_extension_from_path(path):
 
 def if_external_link(link):
     return link.startswith("https://") or link.startswith("http://")
+
+
+def copy_directory(source, target):
+    if not os.path.exists(target):
+        os.makedirs(target)
+    for filename in os.listdir(source):
+        shutil.copy(os.path.join(source, filename), target)
 
 
 def create_text_file(target_path, context):

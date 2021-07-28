@@ -10,6 +10,7 @@ from common import utils
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from contract_api.config import REGION_NAME
+from utility.application.services.python_boilerplate_service import prepare_boilerplate_template
 from utility.config import SLACK_HOOK
 from utility.exceptions import ProtoNotFound
 
@@ -26,10 +27,12 @@ def generate_python_stubs(input_s3_path, output_s3_path, org_id, service_id):
         tmp_paths = initialize_temp_paths(org_id=org_id, service_id=service_id)
         boto_utils.download_folder_contents_from_s3(bucket=input_bucket, key=input_key, target=tmp_paths["proto"])
         proto_location = None
+        proto_names = []
         for subdir, dirs, files in os.walk(tmp_paths["proto"]):
             for file in files:
                 filepath = subdir + os.sep + file
                 if filepath.endswith(".proto"):
+                    proto_names.append(os.path.basename(filepath))
                     proto_location = filepath
                     compile_proto(
                         entry_path=subdir,
@@ -40,6 +43,12 @@ def generate_python_stubs(input_s3_path, output_s3_path, org_id, service_id):
             raise ProtoNotFound
 
         prepare_readme_file(target_path=os.path.join(tmp_paths["base"],"readme.txt"), service_id=service_id)
+
+        # generate boilerplate stubs
+        utils.copy_directory(tmp_paths["stubs"], tmp_paths["boilerplate"])
+        stub_name = proto_names[0].replace('.proto', '')
+        prepare_boilerplate_template(org_id=org_id, service_id=service_id, stub_name=stub_name,
+                                     target_location=tmp_paths["boilerplate"])
 
         if output_s3_path:
             utils.zip_file(source_path=Path(tmp_paths["base"]), zipped_path=Path(tmp_paths["result"]))
@@ -61,6 +70,7 @@ def initialize_temp_paths(org_id, service_id):
         "base": base,
         "proto": os.path.join(base, f"{service_id}-proto"),
         "stubs": os.path.join(base, f"{service_id}-grpc-stubs"),
+        "boilerplate": os.path.join(base, f"{service_id}-boilerplate"),
         "result": f"{base}_python.zip"
     }
     return temporary_paths
@@ -86,6 +96,7 @@ def prepare_readme_file(target_path, service_id):
     context = f"INSTRUCTIONS:\n" \
               f"1.{service_id}-proto contains proto files of the service.\n" \
               f"2.{service_id}-grpc-stubs contains compiled grpc stubs required for invoking the service.\n" \
+              f"3.{service_id}-boilerplate contains the sample code.\n"\
               f"NOTE:Please follow instructions provided in the python tab of install and run on how to invoke " \
               f"the service."
     utils.create_text_file(target_path=target_path, context=context)
