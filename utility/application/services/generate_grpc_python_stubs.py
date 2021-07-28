@@ -14,10 +14,9 @@ from utility.application.services.python_boilerplate_service import prepare_boil
 from utility.config import SLACK_HOOK
 from utility.exceptions import ProtoNotFound
 
-TEMP_FILE_DIR = "D://tmp" #tempfile.gettempdir()
+TEMP_FILE_DIR = tempfile.gettempdir()
 boto_utils = BotoUtils(region_name=REGION_NAME)
 logger = get_logger(__name__)
-import shutil
 
 
 def generate_python_stubs(input_s3_path, output_s3_path, org_id, service_id):
