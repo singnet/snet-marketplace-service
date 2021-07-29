@@ -1,8 +1,7 @@
 import unittest
 
-from utility.application.handlers.proto_stubs_handler import generate_grpc_python_stubs
-from utility.config import NETWORKS, NETWORK_ID
 from utility.application.services.python_boilerplate_service import prepare_data
+from utility.config import NETWORK_NAME
 from utility.constants import PYTHON_BOILERPLATE_TEMPLATE
 
 
@@ -27,7 +26,7 @@ class TestPythonBoilerplate(unittest.TestCase):
                                                     "- pip install -r requirement.txt3.Replace appropriate values in config.py, service.py and run below command to invoke service   " \
                                                     "- python service.py"
             if content == "config":
-                assert context == f'PRIVATE_KEY = "<your wallet\'s private key>"ETH_RPC_ENDPOINT = "https://ropsten.infura.io/v3/<your infura key>"ORG_ID = "test_org_id"SERVICE_ID = "test_service_id"'
+                assert context == f'PRIVATE_KEY = "<your wallet\'s private key>"ETH_RPC_ENDPOINT = "https://{NETWORK_NAME}.infura.io/v3/<your infura key>"ORG_ID = "test_org_id"SERVICE_ID = "test_service_id"'
             if content == "service":
                 assert context == 'from snet.sdk import SnetSDKimport configimport test_stub_name_pb2import test_stub_name_pb2_grpcdef invoke_service():   ' \
                                   'snet_config = {"private_key": config.PRIVATE_KEY, "eth_rpc_endpoint": config.ETH_RPC_ENDPOINT}   ' \
