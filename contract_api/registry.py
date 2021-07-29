@@ -8,6 +8,7 @@ from contract_api.dao.service_repository import ServiceRepository
 from contract_api.infrastructure.repositories.service_media_repository import ServiceMediaRepository
 from contract_api.infrastructure.repositories.service_repository import ServiceRepository as NewServiceRepository, \
     OffchainServiceConfigRepository
+from contract_api.domain.models.offchain_service_attribute import OffchainServiceAttribute
 from contract_api.filter import Filter
 
 logger = get_logger(__name__)
@@ -24,14 +25,13 @@ class Registry:
     @staticmethod
     def service_build_status_notifier(org_id, service_id, build_status):
         is_curated = False
-        demo_component_available = False
+        logger.info(
+            f" demo component build status for org_id :: {org_id} service_id :: {service_id} build_status :: {build_status} ")
         if build_status == BUILD_CODE['SUCCESS']:
             is_curated = True
-            demo_component_available = True
         service = new_service_repo.get_service(org_id=org_id, service_id=service_id)
         if service:
             service.is_curated = is_curated
-            service.service_metadata.demo_component_available = demo_component_available
             new_service_repo.create_or_update_service(service=service)
         else:
             raise Exception(f"Unable to find service for service_id {service_id} and org_id {org_id}")
@@ -369,7 +369,7 @@ class Registry:
             org_groups_dict = {}
             basic_service_data = self.repo.execute(
                 "SELECT M.row_id, M.service_row_id, M.org_id, M.service_id, M.display_name, M.description, M.url, M.json, M.model_ipfs_hash, M.encoding, M.`type`,"
-                " M.mpe_address,M.service_rating, M.ranking, M.contributors, M.short_description, M.demo_component_available,"
+                " M.mpe_address,M.service_rating, M.ranking, M.contributors, M.short_description,"
                 " S.*, O.org_id, O.organization_name, O.owner_address, O.org_metadata_uri, O.org_email, "
                 "O.org_assets_url, O.description as org_description, O.contacts "
                 "FROM service_metadata M, service S, organization O "

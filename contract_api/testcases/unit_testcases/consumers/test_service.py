@@ -1,13 +1,15 @@
 import unittest
 from datetime import datetime as dt
 
-from contract_api.infrastructure.repositories.service_repository import ServiceRepository
+from contract_api.infrastructure.repositories.service_repository import ServiceRepository, \
+    OffchainServiceConfigRepository
 
 service_repo = ServiceRepository
 from contract_api.handlers.service_handlers import service_deployment_status_notification_handler
 from contract_api.infrastructure.models import ServiceMetadata, Service
 
 service_repo = ServiceRepository()
+offchain_service_repo = OffchainServiceConfigRepository()
 
 
 class TestService(unittest.TestCase):
@@ -33,7 +35,6 @@ class TestService(unittest.TestCase):
             display_name="annotation_service",
             description="sample description",
             short_description="short description",
-            demo_component_available=0,
             url="",
             json="{}",
             model_ipfs_hash="sample hash",
@@ -59,7 +60,6 @@ class TestService(unittest.TestCase):
         assert response['statusCode'] == 201
         service = service_repo.get_service(org_id="snet", service_id="gene-annotation-service")
         assert service.is_curated == 1
-        assert service.service_metadata.demo_component_available == 1
 
         event = {
             "org_id": "snet",
@@ -69,8 +69,7 @@ class TestService(unittest.TestCase):
         response = service_deployment_status_notification_handler(event=event, context=None)
         assert response['statusCode'] == 201
         service = service_repo.get_service(org_id="snet", service_id="gene-annotation-service")
-        assert service.is_curated == 0
-        assert service.service_metadata.demo_component_available == 0
+        service.is_curated == 0
 
     def tearDown(self):
         service_repo.session.query(Service).delete()

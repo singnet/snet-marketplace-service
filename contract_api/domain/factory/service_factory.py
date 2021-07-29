@@ -33,7 +33,6 @@ class ServiceFactory:
             display_name=service_metadata_db.display_name,
             description=service_metadata_db.description,
             short_description=service_metadata_db.short_description,
-            demo_component_available=service_metadata_db.demo_component_available,
             url=service_metadata_db.url,
             json=service_metadata_db.json,
             model_ipfs_hash=service_metadata_db.model_ipfs_hash,

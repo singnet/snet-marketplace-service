@@ -50,7 +50,6 @@ class ServiceRepository(BaseRepository):
                 service_db.service_metadata.assets_hash = service.service_metadata.assets_hash
                 service_db.service_metadata.service_rating = service.service_metadata.service_rating
                 service_db.service_metadata.ranking = service.service_metadata.ranking
-                service_db.service_metadata.demo_component_available = service.service_metadata.demo_component_available
                 service_db.service_metadata.contributors = service.service_metadata.contributors
                 service_db.service_metadata.row_updated = dt.utcnow()
             self.session.commit()
@@ -73,7 +72,6 @@ class ServiceRepository(BaseRepository):
                     display_name=service.service_metadata.display_name,
                     description=service.service_metadata.description,
                     short_description=service.service_metadata.short_description,
-                    demo_component_available=service.service_metadata.demo_component_available,
                     url=service.service_metadata.url,
                     json=service.service_metadata.json,
                     model_ipfs_hash=service.service_metadata.model_ipfs_hash,

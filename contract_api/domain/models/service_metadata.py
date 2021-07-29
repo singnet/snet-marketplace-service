@@ -1,6 +1,5 @@
 class ServiceMetadata:
-    def __init__(self, service_row_id, org_id, service_id, display_name, description, short_description,
-                 demo_component_available, url, json, model_ipfs_hash, encoding, type, mpe_address, assets_url,
+    def __init__(self, service_row_id, org_id, service_id, display_name, description, short_description, url, json, model_ipfs_hash, encoding, type, mpe_address, assets_url,
                  assets_hash, service_rating, ranking, contributors):
         self._service_row_id = service_row_id
         self._org_id = org_id
@@ -8,7 +7,6 @@ class ServiceMetadata:
         self._display_name = display_name
         self._description = description
         self._short_description = short_description
-        self._demo_component_available = demo_component_available
         self._url = url
         self._json = json
         self._model_ipfs_hash = model_ipfs_hash
@@ -44,10 +42,6 @@ class ServiceMetadata:
     @property
     def short_description(self):
         return self._short_description
-
-    @property
-    def demo_component_available(self):
-        return self._demo_component_available
 
     @property
     def url(self):
@@ -116,10 +110,6 @@ class ServiceMetadata:
     @short_description.setter
     def short_description(self, short_description):
         self._short_description = short_description
-
-    @demo_component_available.setter
-    def demo_component_available(self, demo_component_available):
-        self._demo_component_available = demo_component_available
 
     @url.setter
     def url(self, url):
