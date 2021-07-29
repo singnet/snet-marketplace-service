@@ -46,6 +46,11 @@ UPLOAD_TYPE_DETAILS = {
     }
 }
 
+ETHERIUM_NETWORK_NAMES = {
+    "1": "mainnet",
+    "3": "ropsten"
+}
+
 PYTHON_BOILERPLATE_TEMPLATE = {
     "requirement": {
         "extension": ".txt",
@@ -72,7 +77,7 @@ PYTHON_BOILERPLATE_TEMPLATE = {
     "config": {
         "extension": ".py",
         "content": 'PRIVATE_KEY = "<your wallet\'s private key>"\n' \
-                   f'ETH_RPC_ENDPOINT = "{NETWORKS[NETWORK_ID]["http_provider"]}/v3/<your infura key>"\n'
+                   f'ETH_RPC_ENDPOINT = "https://{ETHERIUM_NETWORK_NAMES[str(NETWORK_ID)]}.infura.io/v3/<your infura key>"\n'
                    f'ORG_ID = "org_id_placeholder"\n' \
                    f'SERVICE_ID = "service_id_placeholder"\n'
     },
