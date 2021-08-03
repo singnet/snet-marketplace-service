@@ -169,3 +169,16 @@ class EventRepository(object):
         except Exception as e:
             self.connection.rollback_transaction()
             raise e
+
+    def get_mpe_processed_transactions(self, transaction_list):
+        self.connection.begin_transaction()
+        try:
+            query = "select transactionHash from mpe_events_raw where processed = 1 and transactionHash in %s"
+            params = [transaction_list]
+            result = self.connection.execute(query, params)
+            if result:
+                result = [txn["transactionHash"] for txn in result]
+            return result
+        except Exception as e:
+            self.connection.rollback_transaction()
+            raise e
