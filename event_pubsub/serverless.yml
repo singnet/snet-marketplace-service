@@ -226,6 +226,23 @@ functions:
           rate: rate(2 minutes)
           enabled: ${file(./config.${self:provider.stage}.json):token_stake_cron_status}
 
+  get_mpe_processed_transactions:
+    warmup: true
+    handler: event_pubsub/handlers/lambda_handler.get_mpe_processed_transactions
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+
+
 
 
 
