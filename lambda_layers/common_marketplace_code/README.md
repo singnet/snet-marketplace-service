@@ -1,0 +1,1 @@
+During code build we will copy /common directory present in root directory to this directory. We will deploy marketplace common code as lambda layers which has numerous advantages.
