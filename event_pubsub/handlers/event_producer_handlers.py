@@ -6,10 +6,10 @@ from event_pubsub.producers.blockchain_event_producer import MPEEventProducer, R
     TokenStakeEventProducer
 from event_pubsub.repository import Repository
 
-registry_event_producer = RegistryEventProducer(NETWORKS["http_provider"], Repository(NETWORKS))
-mpe_event_producer = MPEEventProducer(NETWORKS["http_provider"], Repository(NETWORKS))
-rfai_event_producer = RFAIEventProducer(NETWORKS["http_provider"], Repository(NETWORKS))
-token_stake_event_producer = TokenStakeEventProducer(NETWORKS["http_provider"], Repository(NETWORKS))
+registry_event_producer = RegistryEventProducer(NETWORKS["http_provider"], Repository(NETWORKS, NETWORK_ID))
+mpe_event_producer = MPEEventProducer(NETWORKS["http_provider"], Repository(NETWORKS, NETWORK_ID))
+rfai_event_producer = RFAIEventProducer(NETWORKS["http_provider"], Repository(NETWORKS, NETWORK_ID))
+token_stake_event_producer = TokenStakeEventProducer(NETWORKS["http_provider"], Repository(NETWORKS, NETWORK_ID))
 
 logger = get_logger(__name__)
 

@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 from hexbytes import HexBytes
 from web3.datastructures import AttributeDict
 
-from event_pubsub.config import NETWORKS
+from event_pubsub.config import NETWORKS, NETWORK_ID
 from event_pubsub.event_repository import EventRepository
 from event_pubsub.producers.blockchain_event_producer import MPEEventProducer, RegistryEventProducer
 from event_pubsub.repository import Repository
@@ -19,10 +19,10 @@ class TestBlockchainEventProducer(unittest.TestCase):
     @patch('common.blockchain_util.BlockChainUtil.get_current_block_no')
     def test_produce_registry_events_from_blockchain(self, mock_get_current_block_no, mock_last_block_number,
                                                      mock_get_contract_instance):
-        registry_event_producer = RegistryEventProducer("wss://ropsten.infura.io/ws", Repository(NETWORKS))
+        registry_event_producer = RegistryEventProducer("wss://ropsten.infura.io/ws", Repository(NETWORKS, NETWORK_ID))
 
         org_created_event_object = Mock()
-        event_repository = EventRepository(Repository(NETWORKS))
+        event_repository = EventRepository(Repository(NETWORKS, NETWORK_ID))
         org_created_event_object.createFilter = Mock(
             return_value=Mock(get_all_entries=Mock(return_value=[AttributeDict({'args': AttributeDict({
                 'orgId': b'snet\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'}),
@@ -56,8 +56,8 @@ class TestBlockchainEventProducer(unittest.TestCase):
     @patch('common.blockchain_util.BlockChainUtil.get_current_block_no')
     def test_produce_mpe_events_from_blockchain(self, mock_get_current_block_no, mock_last_block_number,
                                                 mock_get_contract_instance):
-        mpe_event_producer = MPEEventProducer("wss://ropsten.infura.io/ws", Repository(NETWORKS))
-        event_repository = EventRepository(Repository(NETWORKS))
+        mpe_event_producer = MPEEventProducer("wss://ropsten.infura.io/ws", Repository(NETWORKS, NETWORK_ID))
+        event_repository = EventRepository(Repository(NETWORKS, NETWORK_ID))
 
         deposit_fund_Event_object = Mock()
         deposit_fund_Event_object.createFilter = Mock(

@@ -4,11 +4,11 @@ import pymysql
 class Repository:
     connection = None
 
-    def __init__(self, NETWORKS):
-        self.DB_HOST = NETWORKS['db']['HOST']
-        self.DB_USER = NETWORKS['db']['USER']
-        self.DB_PASSWORD = NETWORKS['db']['PASSWORD']
-        self.DB_NAME = NETWORKS['db']['NAME']
+    def __init__(self, NETWORKS, NETWORK_ID):
+        self.DB_HOST = NETWORKS[NETWORK_ID]['db']['DB_HOST']
+        self.DB_USER = NETWORKS[NETWORK_ID]['db']['DB_USER']
+        self.DB_PASSWORD = NETWORKS[NETWORK_ID]['db']['DB_PASSWORD']
+        self.DB_NAME = NETWORKS[NETWORK_ID]['db']['DB_NAME']
         self.DB_PORT = 3306
         self.connection = self.__get_connection()
         self.auto_commit = True

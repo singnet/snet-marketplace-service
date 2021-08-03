@@ -1,6 +1,6 @@
 from common.logger import get_logger
 from event_pubsub.repository import Repository
-from event_pubsub.config import NETWORKS, EVENT_SUBSCRIPTIONS
+from event_pubsub.config import NETWORKS, EVENT_SUBSCRIPTIONS, NETWORK_ID
 from event_pubsub.event_repository import EventRepository
 
 from event_pubsub.listeners.listener_handlers import WebHookHandler
@@ -10,7 +10,7 @@ logger = get_logger(__name__)
 
 
 class EventListener(object):
-    _connection = Repository(NETWORKS=NETWORKS)
+    _connection = Repository(NETWORKS=NETWORKS, NETWORK_ID=NETWORK_ID)
     _event_repository = EventRepository(_connection)
 
     def __init__(self, repository=None):
