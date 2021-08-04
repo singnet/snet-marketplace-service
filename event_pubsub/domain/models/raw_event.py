@@ -1,4 +1,4 @@
-class RawEvents:
+class RawEvent:
     def __init__(self, block_no, uncle_block_no, event, event_data, processed, transactionHash, logIndex, error_code,
                  error_msg):
         self._block_no = block_no

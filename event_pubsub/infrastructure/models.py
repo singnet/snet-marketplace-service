@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import Column, VARCHAR, Integer, UniqueConstraint, null, Index
-from sqlalchemy.dialects.mysql import TIMESTAMP, TINYINT
+from sqlalchemy.dialects.mysql import TIMESTAMP, BIT
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -14,7 +14,7 @@ class MpeEventsRaw(Base):
     uncle_block_no = Column("uncle_block_no", Integer, nullable=True, default=null)
     event = Column("event", VARCHAR(256), nullable=False)
     event_data = Column("json_str", VARCHAR(256), nullable=True)
-    processed = Column("processed", TINYINT, nullable=True, default=null)
+    processed = Column("processed", BIT, nullable=True, default=null)
     transactionHash = Column("transactionHash", VARCHAR(256), nullable=True, default=null)
     logIndex = Column("logIndex", VARCHAR(256), nullable=True, default=null)
     error_code = Column("error_code", Integer, nullable=True, default=null)
@@ -32,7 +32,7 @@ class RfaiEventsRaw(Base):
     uncle_block_no = Column("uncle_block_no", Integer, nullable=True, default=null)
     event = Column("event", VARCHAR(256), nullable=False)
     event_data = Column("json_str", VARCHAR(256), nullable=True)
-    processed = Column("processed", TINYINT, nullable=True, default=null)
+    processed = Column("processed", BIT, nullable=True, default=null)
     transactionHash = Column("transactionHash", VARCHAR(256), nullable=True, default=null)
     logIndex = Column("logIndex", VARCHAR(256), nullable=True, default=null)
     error_code = Column("error_code", Integer, nullable=True, default=null)
@@ -59,7 +59,7 @@ class TokenStakesEventsRaw(Base):
     uncle_block_no = Column("uncle_block_no", Integer, nullable=True, default=null)
     event = Column("event", VARCHAR(256), nullable=False)
     event_data = Column("json_str", VARCHAR(256), nullable=True)
-    processed = Column("processed", TINYINT, nullable=True, default=null)
+    processed = Column("processed", BIT, nullable=True, default=null)
     transactionHash = Column("transactionHash", VARCHAR(256), nullable=True, default=null)
     logIndex = Column("logIndex", VARCHAR(256), nullable=True, default=null)
     error_code = Column("error_code", Integer, nullable=True, default=null)
@@ -77,7 +77,7 @@ class RegistryEventsRaw(Base):
     uncle_block_no = Column("uncle_block_no", Integer, nullable=True, default=null)
     event = Column("event", VARCHAR(256), nullable=False)
     event_data = Column("json_str", VARCHAR(256), nullable=True)
-    processed = Column("processed", TINYINT, nullable=True, default=null)
+    processed = Column("processed", BIT, nullable=True, default=null)
     transactionHash = Column("transactionHash", VARCHAR(256), nullable=True, default=null)
     logIndex = Column("logIndex", VARCHAR(256), nullable=True, default=null)
     error_code = Column("error_code", Integer, nullable=True, default=null)

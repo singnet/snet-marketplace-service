@@ -84,3 +84,4 @@ EVENT_SUBSCRIPTIONS = {
                        "url": "arn:aws"}],
 
 }
+TRANSACTION_HASH_LIMIT = 20
