@@ -11,10 +11,10 @@ logger = get_logger(__name__)
 def get_raw_event_details(event, context):
     logger.info(f"get_raw_event_details :: event :: {event}")
     transaction_hash_list = event["transaction_hash_list"]
-    event_name = event["event_name"]
+    contract_name = event["contract_name"]
     response = RawEventsService().get_raw_events(
         transaction_hash_list=transaction_hash_list,
-        event_name=event_name
+        contract_name=contract_name
     )
     return generate_lambda_response(
         StatusCode.OK,

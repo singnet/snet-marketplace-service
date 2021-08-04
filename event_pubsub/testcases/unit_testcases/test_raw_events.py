@@ -62,7 +62,7 @@ class EventPubsubService(unittest.TestCase):
                 "0x714e00dd9b023f497cba1a03628e9cbb8b007f1e02fa97fb3291ee7251198cc3",
                 "sample_hash"
             ],
-            "event_name": EventType.MPE.value,
+            "contract_name": EventType.MPE.value,
         }
         res = get_raw_event_details(event=event, context=None)
         assert res['statusCode'] == 200

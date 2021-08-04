@@ -9,14 +9,13 @@ class RawEventsService:
         pass
 
     @staticmethod
-    def get_repo_obj(event_name):
-        if event_name == EventType.MPE.value:
+    def get_repo_obj(contract_name):
+        if contract_name == EventType.MPE.value:
             return mpe_repo
-        raise Exception(f"Invalid Contract name :: {event_name}")
+        raise Exception(f"Invalid Contract name :: {contract_name}")
 
-    def get_raw_events(self, transaction_hash_list, event_name):
-        repo_obj = self.get_repo_obj(event_name=event_name)
+    def get_raw_events(self, transaction_hash_list, contract_name):
+        repo_obj = self.get_repo_obj(contract_name=contract_name)
         raw_events = repo_obj.get_raw_events(transaction_hash_list=transaction_hash_list)
-        if raw_events:
-            raw_events = [raw_event.to_dict() for raw_event in raw_events]
-        return raw_events
+        return [raw_event.to_dict() for raw_event in raw_events]
+
