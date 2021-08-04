@@ -10,7 +10,7 @@ class EventFactory:
             block_no=raw_event.block_no,
             uncle_block_no=raw_event.uncle_block_no,
             event=raw_event.event,
-            json_str=raw_event.json_str,
+            event_data=raw_event.event_data,
             processed=int.from_bytes(raw_event.processed, "big"),
             transactionHash=raw_event.transactionHash,
             logIndex=raw_event.logIndex,

@@ -1,10 +1,10 @@
 class RawEvents:
-    def __init__(self, block_no, uncle_block_no, event, json_str, processed, transactionHash, logIndex, error_code,
+    def __init__(self, block_no, uncle_block_no, event, event_data, processed, transactionHash, logIndex, error_code,
                  error_msg):
         self._block_no = block_no
         self._uncle_block_no = uncle_block_no
         self._event = event
-        self._json_str = json_str
+        self._event_data = event_data
         self._processed = processed
         self._transactionHash = transactionHash
         self._logIndex = logIndex
@@ -16,8 +16,8 @@ class RawEvents:
             "block_no": self._block_no,
             "uncle_block_no": self._uncle_block_no,
             "event": self._event,
-            "json_str": self._json_str,
-            "processed" : self._processed,
+            "event_data": self._event_data,
+            "processed": self._processed,
             "transactionHash": self._transactionHash,
             "logIndex": self._logIndex,
             "error_code": self._error_code,
@@ -37,8 +37,8 @@ class RawEvents:
         return self._event
 
     @property
-    def json_str(self):
-        return self._json_str
+    def event_data(self):
+        return self._event_data
 
     @property
     def processed(self):
