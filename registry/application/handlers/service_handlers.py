@@ -1,3 +1,5 @@
+import sys
+sys.path.append('/opt')
 import json
 
 from common.constant import StatusCode
