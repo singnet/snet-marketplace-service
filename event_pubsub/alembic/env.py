@@ -4,13 +4,15 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from alembic import context
 from event_pubsub.config import NETWORKS
+from event_pubsub.infrastructure.models import Base
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
-config = context.config
-MYSQL_CONNECTION_STRING = f"mysql+pymysql://{NETWORKS['db']['USER']}:{NETWORKS['db']['PASSWORD']}" \
-                          f"@{NETWORKS['db']['HOST']}:{NETWORKS['db']['PORT']}/{NETWORKS['db']['NAME']}"
+MYSQL_CONNECTION_STRING = f"mysql+pymysql://{NETWORKS['db']['USER']}:" \
+                          f"{NETWORKS['db']['PASSWORD']}" \
+                          f"@{NETWORKS['db']['HOST']}:" \
+                          f"{NETWORKS['db']['PORT']}/{NETWORKS['db']['NAME']}"
 config.set_main_option('sqlalchemy.url', MYSQL_CONNECTION_STRING)
 
 # Interpret the config file for Python logging.
@@ -21,7 +23,7 @@ fileConfig(config.config_file_name)
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = None
+target_metadata = Base.metadata
 
 
 # other values from the config, defined by the needs of env.py,

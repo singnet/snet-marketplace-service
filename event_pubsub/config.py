@@ -12,7 +12,15 @@ NETWORKS = {
         "PASSWORD": "unittest_pwd",
         "NAME": "unittest_db",
         "PORT": 3306,
-    },
+    }
+}
+DB_DETAILS = {
+    "driver": "mysql+pymysql",
+    "host": "localhost",
+    "user": "unittest_root",
+    "password": "unittest_pwd",
+    "name": "unittest_db",
+    "port": 3306
 }
 REGION_NAME = "us-east-2"
 SLACK_HOOK = {
