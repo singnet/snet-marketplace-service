@@ -172,37 +172,41 @@ custom:
 
 package:
   exclude:
-    - .circleci/**
-    - .gitignore/**
-    - .serverless/**
-    - requirements.txt
-    - venv/**
-    - config.ropsten.json
-    - sls_deploy.sh
-    - serverless.yml
-    - test/**
-    - tests/**
-    - sql_script/**
-    - service_status/**
-    - dapp-user/**
-    - repositories/**
-    - Readme.md
-    - parse_events.sh
-    - package.json
-    - Dockerfile
-    - License
-    - log_setup.py
-    - heath_check.sh
-    - node_modules/**
-    - wallets/**
-    - payments/**
-    - orchestrator/**
-    - notification/**
-    - dapp_user/**
-    - signer/**
+    - common/**
     - contract_api/**
-  include:
-    - node_modules/singularitynet-platform-contracts/**
+    - dapp_user/**
+    - event_pubsub/**
+    - lambda_layers/**
+    - notification/**
+    - orchestrator/**
+    - payments/**
+    - registry/testcases/**
+    - registry/migration/**
+    - registry/package.json
+    - registry/package-lock.json
+    - registry/serverless.yml
+    - registry/requirements.txt
+    - registry/documentation/**
+    - service_media/**
+    - service_status/**
+    - signer/**
+    - sql_script/**
+    - utility/**
+    - verification/**
+    - wallets/**
+    - .circleci/**
+    - .serverless/**
+    - node_modules/**
+    - package.json
+    - package-lock.json
+    - .gitignore
+    - serverless.yml
+    - README.md
+    - build.sh
+    - Dockerfile
+    - health_check.sh
+    - LICENSE
+    - config.rt-v2.json
 
 functions:
   get_all_org:
