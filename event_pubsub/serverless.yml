@@ -226,9 +226,9 @@ functions:
           rate: rate(2 minutes)
           enabled: ${file(./config.${self:provider.stage}.json):token_stake_cron_status}
 
-  get_mpe_processed_transactions:
+  get_raw_event_details:
     warmup: true
-    handler: event_pubsub/handlers/lambda_handler.get_mpe_processed_transactions
+    handler: event_pubsub/handlers/raw_events_handler.get_raw_event_details
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}

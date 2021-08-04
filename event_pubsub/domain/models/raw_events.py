@@ -1,6 +1,8 @@
-class MpeEventsRaw:
-    def __init__(self, block_no, event, json_str, processed, transactionHash, logIndex, error_code, error_msg):
+class RawEvents:
+    def __init__(self, block_no, uncle_block_no, event, json_str, processed, transactionHash, logIndex, error_code,
+                 error_msg):
         self._block_no = block_no
+        self._uncle_block_no = uncle_block_no
         self._event = event
         self._json_str = json_str
         self._processed = processed
@@ -9,9 +11,26 @@ class MpeEventsRaw:
         self._error_code = error_code
         self._error_msg = error_msg
 
+    def to_dict(self):
+        return {
+            "block_no": self._block_no,
+            "uncle_block_no": self._uncle_block_no,
+            "event": self._event,
+            "json_str": self._json_str,
+            "processed" : self._processed,
+            "transactionHash": self._transactionHash,
+            "logIndex": self._logIndex,
+            "error_code": self._error_code,
+            "error_msg": self._error_msg
+        }
+
     @property
     def block_no(self):
         return self._block_no
+
+    @property
+    def uncle_block_no(self):
+        return self._uncle_block_no
 
     @property
     def event(self):

@@ -6,3 +6,4 @@ class EventType(Enum):
     MPE = "MPE"
     RFAI = "RFAI"
     TOKEN_STAKE = "TOKEN_STAKE"
+
