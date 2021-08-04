@@ -172,37 +172,41 @@ custom:
 
 package:
   exclude:
-    - .circleci/**
-    - .gitignore/**
-    - .serverless/**
-    - requirements.txt
-    - venv/**
-    - config.ropsten.json
-    - sls_deploy.sh
-    - serverless.yml
-    - test/**
-    - tests/**
-    - sql_script/**
-    - service_status/**
-    - dapp-user/**
-    - repositories/**
-    - Readme.md
-    - parse_events.sh
-    - package.json
-    - Dockerfile
-    - License
-    - log_setup.py
-    - heath_check.sh
-    - node_modules/**
-    - wallets/**
-    - payments/**
-    - orchestrator/**
-    - notification/**
-    - dapp_user/**
-    - signer/**
+    - common/**
     - contract_api/**
-  include:
-    - node_modules/singularitynet-platform-contracts/**
+    - dapp_user/**
+    - event_pubsub/**
+    - lambda_layers/**
+    - notification/**
+    - orchestrator/**
+    - payments/**
+    - registry/testcases/**
+    - registry/migration/**
+    - registry/package.json
+    - registry/package-lock.json
+    - registry/serverless.yml
+    - registry/requirements.txt
+    - registry/documentation/**
+    - service_media/**
+    - service_status/**
+    - signer/**
+    - sql_script/**
+    - utility/**
+    - verification/**
+    - wallets/**
+    - .circleci/**
+    - .serverless/**
+    - node_modules/**
+    - package.json
+    - package-lock.json
+    - .gitignore
+    - serverless.yml
+    - README.md
+    - build.sh
+    - Dockerfile
+    - health_check.sh
+    - LICENSE
+    - config.rt-v2.json
 
 functions:
   get_all_org:
@@ -215,6 +219,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -262,6 +271,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -313,6 +327,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -364,6 +383,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -415,6 +439,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -468,6 +497,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
 
 
 
@@ -482,6 +516,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -535,6 +574,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -588,6 +632,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -645,6 +694,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -702,6 +756,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -760,6 +819,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -812,6 +876,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -862,6 +931,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -919,6 +993,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -976,6 +1055,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
 
 
   service_event_consumer_handler:
@@ -989,6 +1073,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   org-update-transaction:
     handler: registry.application.handlers.organization_handlers.update_transaction
@@ -1000,6 +1089,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
           rate: rate(10 minutes)
@@ -1015,6 +1109,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -1066,6 +1165,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -1119,6 +1223,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: PUT
@@ -1174,6 +1283,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: PATCH
@@ -1227,6 +1341,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -1280,6 +1399,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -1333,6 +1457,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -1388,6 +1517,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -1444,6 +1578,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -1498,6 +1637,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -1550,6 +1694,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   service_deployment_status_notification_handler:
     warmup: true
@@ -1563,6 +1712,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   service-update-transaction:
     handler: registry.application.handlers.service_handlers.update_transaction
@@ -1574,6 +1728,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
           rate: rate(10 minutes)
@@ -1589,6 +1748,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -1615,6 +1779,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   update-demo-component-build-status:
     warmup: true
@@ -1627,6 +1796,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   publish_service:
     warmup: true
@@ -1639,6 +1813,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
