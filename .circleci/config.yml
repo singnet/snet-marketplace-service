@@ -40,6 +40,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
+            for requirement_file in `ls */*/requirement*.txt`;do sudo pip install -r $requirement_file --prefer-binary ;done
             for requirement_file in `ls */requirement*.txt`;do sudo pip install -r $requirement_file --prefer-binary ;done
             for package_file in `ls */package*.json | cut -d '/' -f1`;do sudo npm install $package_file/;done
       - run:
