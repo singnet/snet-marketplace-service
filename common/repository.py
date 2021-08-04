@@ -1,7 +1,5 @@
 import pymysql
 
-from wallets.config import NETWORK_ID
-
 
 class Repository:
     connection = None
