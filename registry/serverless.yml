@@ -4,6 +4,7 @@ plugins:
   - serverless-plugin-tracing
   - serverless-prune-plugin
   - serverless-plugin-split-stacks
+  - serverless-latest-layer-version
 #  - serverless-aws-documentation
 
 service: registry
