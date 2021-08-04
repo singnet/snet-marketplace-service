@@ -12,19 +12,18 @@ from wallets.infrastructure.repositories.channel_repository import ChannelReposi
 boto_utils = BotoUtils(region_name=REGION_NAME)
 channel_repo = ChannelRepository()
 logger = get_logger(__name__)
+obj_blockchain_util = BlockChainUtil(provider_type="HTTP_PROVIDER",
+                                     provider=NETWORKS[NETWORK_ID]['http_provider'])
 
 
 class ChannelTransactionStatusService:
-    def __init__(self, repo, net_id):
-        self.net_id = net_id
-        self.repo = repo
-        self.obj_blockchain_util = BlockChainUtil(provider_type="HTTP_PROVIDER",
-                                                  provider=NETWORKS[NETWORK_ID]['http_provider'])
-        self.obj_channel_transaction_history_dao = ChannelTransactionStatusDataAccessObject(repo=self.repo)
+    def __init__(self):
+        pass
 
+    @staticmethod
     def get_mpe_processed_transactions_from_event_pub_sub(transaction_list):
         response = boto_utils.invoke_lambda(
-            payload=json.dumps({"transaction_hash_list": transaction_list, "event_type" : "mpe"}),
+            payload=json.dumps({"transaction_hash_list": transaction_list, "contract_name": "MPE"}),
             lambda_function_arn=GET_MPE_PROCESSED_TRANSACTION_ARN,
             invocation_type="RequestResponse"
         )
@@ -38,8 +37,8 @@ class ChannelTransactionStatusService:
         pending_txns = [txn.transaction_hash for txn in pending_txns_db]
         logger.info(f"Pending transactions :: {pending_txns}")
         for txn_hash in pending_txns:
-            txn_receipt = self.obj_blockchain_util.get_transaction_receipt_from_blockchain(
-                    transaction_hash=txn_hash)
+            txn_receipt = obj_blockchain_util.get_transaction_receipt_from_blockchain(
+                transaction_hash=txn_hash)
             if txn_hash is not None:
                 new_status = TransactionStatus.PROCESSING if txn_receipt.status == 1 else TransactionStatus.FAILED
                 channel_repo.update_channel_transaction_history_status(

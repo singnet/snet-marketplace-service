@@ -15,6 +15,22 @@ class ChannelTransactionHistory:
         self._transaction_hash = transaction_hash
         self._status = status
 
+    def to_dict(self):
+        return {
+            "order_id": self._order_id,
+            "amount": self._amount,
+            "currency": self._currency,
+            "type": self._type,
+            "address": self._address,
+            "recipient": self._recipient,
+            "signature": self._signature,
+            "org_id": self._org_id,
+            "group_id": self._group_id,
+            "request_parameters": self._request_parameters,
+            "transaction_hash": self._transaction_hash,
+            "status": self._status
+        }
+
     @property
     def order_id(self):
         return self._order_id
@@ -36,7 +52,7 @@ class ChannelTransactionHistory:
         return self._address
 
     @property
-    def recipent(self):
+    def recipient(self):
         return self._recipient
 
     @property
