@@ -1,5 +1,4 @@
 plugins:
-  - serverless-latest-layer-version
   - serverless-prune-plugin
 
 service: marketplace-lambda-layer
