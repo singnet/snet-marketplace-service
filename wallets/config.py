@@ -6,9 +6,9 @@ NETWORKS = {
         "db": {
             "DB_DRIVER": "mysql+pymysql",
             "DB_HOST": "localhost",
-            "DB_USER": "d",
-            "DB_PASSWORD": "123",
-            "DB_NAME": "wallet",
+            "DB_USER": "unittest_root",
+            "DB_PASSWORD": "unittest_pwd",
+            "DB_NAME": "unittest_db",
             "DB_PORT": 3306,
         },
     }
@@ -16,9 +16,9 @@ NETWORKS = {
 DB_DETAILS = {
     "driver": "mysql+pymysql",
     "host": "localhost",
-    "user": "d",
-    "password": "123",
-    "name": "wallet",
+    "user": "unittest_root",
+    "password": "unittest_pwd",
+    "name": "unittest_db",
     "port": 3306
 }
 SIGNER_KEY = ""
