@@ -14,7 +14,6 @@ provider:
   runtime: python3.7
   stage: ${opt:stage,'dev'}
   region: ${file(./config.${self:provider.stage}.json):REGION}
-  profile: default
 
 layers:
   MplaceCommonCode:
