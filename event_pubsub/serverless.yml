@@ -38,39 +38,39 @@ provider:
 package:
   exclude:
     - common/**
-      - contract_api/**
-      - dapp_user/**
-      - lambda_layers/**
-      - notification/**
-      - orchestrator/**
-      - payments/**
-      - registry/**
-      - event_pubsub/testcases/**
-      - event_pubsub/package.json
-      - event_pubsub/package-lock.json
-      - event_pubsub/serverless.yml
-      - event_pubsub/requirements.txt
-      - event_pubsub/documentation/**
-      - service_media/**
-      - service_status/**
-      - signer/**
-      - sql_script/**
-      - utility/**
-      - verification/**
-      - wallets/**
-      - .circleci/**
-      - .serverless/**
-      - node_modules/**
-      - package.json
-      - package-lock.json
-      - .gitignore
-      - serverless.yml
-      - README.md
-      - build.sh
-      - Dockerfile
-      - health_check.sh
-      - LICENSE
-      - config.rt-v2.json
+    - contract_api/**
+    - dapp_user/**
+    - lambda_layers/**
+    - notification/**
+    - orchestrator/**
+    - payments/**
+    - registry/**
+    - event_pubsub/testcases/**
+    - event_pubsub/package.json
+    - event_pubsub/package-lock.json
+    - event_pubsub/serverless.yml
+    - event_pubsub/requirements.txt
+    - event_pubsub/documentation/**
+    - service_media/**
+    - service_status/**
+    - signer/**
+    - sql_script/**
+    - utility/**
+    - verification/**
+    - wallets/**
+    - .circleci/**
+    - .serverless/**
+    - node_modules/**
+    - package.json
+    - package-lock.json
+    - .gitignore
+    - serverless.yml
+    - README.md
+    - build.sh
+    - Dockerfile
+    - health_check.sh
+    - LICENSE
+    - config.rt-v2.json
 
 functions:
   rfai-event-publisher:
