@@ -34,27 +34,24 @@ class ChannelTransactionStatusService:
     def manage_channel_transaction_status(self):
         # UPDATE PENDING TRANSACTIONS
         pending_txns_db = channel_repo.get_channel_transaction_history_data(status=TransactionStatus.PENDING)
-        pending_txns = [txn.transaction_hash for txn in pending_txns_db]
-        logger.info(f"Pending transactions :: {pending_txns}")
-        for txn_hash in pending_txns:
-            txn_receipt = obj_blockchain_util.get_transaction_receipt_from_blockchain(
-                transaction_hash=txn_hash)
-            if txn_hash is not None:
-                new_status = TransactionStatus.PROCESSING if txn_receipt.status == 1 else TransactionStatus.FAILED
-                channel_repo.update_channel_transaction_history_status(
-                    transaction_hash=txn_hash,
-                    status=new_status
-                )
+        logger.info(f"Pending transactions :: {[txn for txn in pending_txns_db]}")
+        for txn_data in pending_txns_db:
+            if txn_data.transaction_hash:
+                txn_receipt = obj_blockchain_util.get_transaction_receipt_from_blockchain(
+                    transaction_hash=txn_data.transaction_hash)
+                txn_data.status = TransactionStatus.PROCESSING if txn_receipt.status == 1 else TransactionStatus.FAILED
+            else:
+                txn_data.status = TransactionStatus.NOT_SUBMITTED
+            channel_repo.update_channel_transaction_history_status(channel_txn_history=txn_data)
+
         # UPDATE PROCESSING TRANSACTIONS
         processing_txns_db = channel_repo.get_channel_transaction_history_data(status=TransactionStatus.PROCESSING)
-        processing_txns = [txn.transaction_hash for txn in processing_txns_db]
-        logger.info(f"Processing transactions :: {processing_txns}")
-        if processing_txns:
-            processed_transactions = self.get_mpe_processed_transactions_from_event_pub_sub(processing_txns)
+        logger.info(f"Processing transactions :: {[txn.transaction_hash for txn in processing_txns_db]}")
+        processing_txn = [txn.transaction_hash for txn in processing_txns_db]
+        if processing_txns_db:
+            processed_transactions = self.get_mpe_processed_transactions_from_event_pub_sub(processing_txn)
             for txn in processed_transactions:
                 if txn["processed"]:
-                    channel_repo.update_channel_transaction_history_status(
-                        transaction_hash=txn["transactionHash"],
-                        status=TransactionStatus.SUCCESS
-                    )
-
+                    txn_data = list(filter(lambda x: x.transaction_hash == txn["transactionHash"], processing_txns_db))[0]
+                    txn_data.status = TransactionStatus.SUCCESS
+                    channel_repo.update_channel_transaction_history_status(channel_txn_history=txn_data)

@@ -78,3 +78,51 @@ class ChannelTransactionHistory:
     @property
     def status(self):
         return self._status
+
+    @order_id.setter
+    def order_id(self, order_id):
+        self._order_id = order_id
+
+    @amount.setter
+    def amount(self, amount):
+        self._amount == amount
+
+    @currency.setter
+    def currency(self, currency):
+        self._currency == currency
+
+    @type.setter
+    def type(self, type):
+        self._type == type
+
+    @address.setter
+    def address(self, address):
+        self._address == address
+
+    @recipient.setter
+    def recipient(self, recipient):
+        self._recipient == recipient
+
+    @signature.setter
+    def signature(self, signature):
+        self._signature == signature
+
+    @org_id.setter
+    def org_id(self, org_id):
+        self._org_id == org_id
+
+    @group_id.setter
+    def group_id(self, group_id):
+        self._group_id == group_id
+
+    @request_parameters.setter
+    def request_parameters(self, request_parameters):
+        self._request_parameters = request_parameters
+
+    @transaction_hash.setter
+    def transaction_hash(self, transaction_hash):
+        self._transaction_hash = transaction_hash
+
+    @status.setter
+    def status(self, status):
+        self._status = status

@@ -19,6 +19,7 @@ class TransactionStatus:
     SUCCESS = "SUCCESS"
     FAILED = "FAILED"
     PROCESSING = "PROCESSING"
+    NOT_SUBMITTED = "NOT_SUBMITTED"
 
 
 class StatusCode:

@@ -135,6 +135,29 @@ class TestChannelService(unittest.TestCase):
         assert transaction[0].transaction_hash == "sample_1"
         assert transaction[0].status == TransactionStatus.FAILED
 
+        self.tearDown()
+        channel_repo.add_item(ChannelTransactionHistory(
+            order_id="sample_order_id",
+            amount=2,
+            currency="USD",
+            type="openChannelByThirdParty",
+            address="sample_address",
+            recipient="sample_recipient",
+            signature="sample_signature",
+            org_id="sample_org_id",
+            group_id="sample_group_id",
+            request_parameters="sample",
+            transaction_hash="",
+            status="PENDING",
+            row_updated="2021-05-19 13:51:53",
+            row_created="2021-05-19 13:51:53"
+        ))
+        mock_reciept.return_value = json.loads('{"status": 1}', object_hook=lambda d: Namespace(**d))
+        res = request_handler(event={}, context=None)
+        transaction = channel_repo.get_channel_transaction_history_data()
+        assert transaction[0].transaction_hash == ""
+        assert transaction[0].status == TransactionStatus.NOT_SUBMITTED
+
     def tearDown(self):
         channel_repo.session.query(ChannelTransactionHistory).delete()
         channel_repo.session.commit()
