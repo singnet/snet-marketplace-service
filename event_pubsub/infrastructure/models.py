@@ -66,7 +66,7 @@ class TokenStakesEventsRaw(Base):
     error_msg = Column("error_msg", VARCHAR(256), nullable=True, default=null)
     row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
     row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
-    UniqueConstraint(transactionHash, name="uq_st_ev")
+    UniqueConstraint(transactionHash, logIndex, name="uq_st_ev")
     Index("blk_no_idx", block_no)
 
 
