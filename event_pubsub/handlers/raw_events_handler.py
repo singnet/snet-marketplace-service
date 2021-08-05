@@ -1,3 +1,5 @@
+import sys
+sys.path.append('/opt')
 from common.constant import StatusCode
 from common.logger import get_logger
 from common.utils import handle_exception_with_slack_notification, generate_lambda_response

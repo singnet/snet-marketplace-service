@@ -5,6 +5,7 @@ from enum import Enum
 from urllib.parse import quote
 
 import boto3
+import requests
 from web3 import Web3
 
 from common.blockchain_util import BlockChainUtil
@@ -15,7 +16,8 @@ from common.utils import Utils
 from orchestrator.config import CREATE_ORDER_SERVICE_ARN, INITIATE_PAYMENT_SERVICE_ARN, \
     EXECUTE_PAYMENT_SERVICE_ARN, WALLETS_SERVICE_ARN, ORDER_DETAILS_ORDER_ID_ARN, ORDER_DETAILS_BY_USERNAME_ARN, \
     REGION_NAME, SIGNER_ADDRESS, EXECUTOR_ADDRESS, NETWORKS, NETWORK_ID, SIGNER_SERVICE_ARN, \
-    GET_GROUP_FOR_ORG_API_ARN, GET_ALL_ORG_API_ARN, USD_TO_COGS_CONVERSION_FACTOR
+    GET_GROUP_FOR_ORG_API_ARN, GET_ALL_ORG_API_ARN, USD_TO_COGS_CONVERSION_FACTOR, \
+    UPDATE_CHANNEL_TRANSACTION_HISTORY_ENDPOINT
 from orchestrator.dao.transaction_history_dao import TransactionHistoryDAO
 from orchestrator.exceptions import PaymentInitiateFailed, ChannelCreationFailed, FundChannelFailed
 from orchestrator.order_status import OrderStatus
@@ -338,6 +340,19 @@ class OrderService:
             wallet_details = wallet_create_response_body["data"]
 
             try:
+                self.insert_channel_transaction_history_table(channel_transaction_history_record={
+                    "order_id": order_id,
+                    "amount": amount,
+                    "currency": currency,
+                    "type": "",
+                    "address": sender,
+                    "recipient": recipient,
+                    "org_id": org_id,
+                    "group_id": group_id,
+                    "request_parameters": "",
+                    "transaction_hash": "",
+                    "status": "PENDING"
+                })
                 current_block_no = self.obj_blockchain_util.get_current_block_no()
                 # 1 block no is mined in 15 sec on average, setting expiration as 10 years
                 expiration = current_block_no + (10 * 365 * 24 * 60 * 4)
@@ -585,3 +600,12 @@ class OrderService:
                            f"{currency}/cogs": str(USD_TO_COGS_CONVERSION_FACTOR), "agi/cogs": str(COGS_TO_AGI)}
         logger.debug(f"currency_to_token::conversion_data {conversion_data}")
         return conversion_data
+
+    @staticmethod
+    def insert_channel_transaction_history_table(channel_transaction_history_record):
+        response = requests.post(
+            UPSERT_CHANNEL_TRANSACTION_HISTORY_ENDPOINT, data=json.dumps(channel_transaction_history_record))
+        if response.status_code != 200:
+            raise Exception(
+                f"Error updating channel transaction history payload :: {channel_transaction_history_record} response :: {response}")
+        return json.loads(response.text)["data"]
