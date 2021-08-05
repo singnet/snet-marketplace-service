@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 from common.constant import TransactionStatus
 from wallets.handlers.channel_transaction_status_handler import request_handler
-from wallets.handlers.wallet_handlers import add_or_update_channel_transaction_history
 from wallets.infrastructure.models import ChannelTransactionHistory
 from wallets.infrastructure.repositories.channel_repository import ChannelRepository
 
@@ -135,76 +134,6 @@ class TestChannelService(unittest.TestCase):
         transaction = channel_repo.get_channel_transaction_history_data()
         assert transaction[0].transaction_hash == "sample_1"
         assert transaction[0].status == TransactionStatus.FAILED
-
-    def test_add_or_update_channel_transaction_history(self):
-        self.tearDown()
-        event = {
-            "order_id": "bed8dd46-b89e-11eb-8e43-ca4f96114fea",
-            "amount": 2,
-            "currency": "USD",
-            "type": "openChannelByThirdParty",
-            "address": "",
-            "recipient": "",
-            "signature": "",
-            "org_id": "test_rt_v2",
-            "group_id": "JDdUEF1S+Ti/AdH7AhlIMGo1WbEp6T51b6tJGF0RTJg=",
-            "request_parameters": "",
-            "transaction_hash": "",
-            "status": "",
-            "row_created": "2020-08-04 00:00:03",
-            "row_updated": "2020-08-04 00:00:03"
-        }
-        res = add_or_update_channel_transaction_history(event=event, context=None)
-        assert res['statusCode'] == 200
-        assert json.loads(res["body"])["data"] == {
-            "order_id": "bed8dd46-b89e-11eb-8e43-ca4f96114fea",
-            "amount": 2,
-            "currency": "USD",
-            "type": "openChannelByThirdParty",
-            "address": "",
-            "recipient": "",
-            "signature": "",
-            "org_id": "test_rt_v2",
-            "group_id": "JDdUEF1S+Ti/AdH7AhlIMGo1WbEp6T51b6tJGF0RTJg=",
-            "request_parameters": "",
-            "transaction_hash": "",
-            "status": ""
-        }
-
-        event = {
-            "order_id": "bed8dd46-b89e-11eb-8e43-ca4f96114fea",
-            "amount": 2,
-            "currency": "USD",
-            "type": "openChannelByThirdParty",
-            "address": "",
-            "recipient": "",
-            "signature": "",
-            "org_id": "test_rt_v2",
-            "group_id": "JDdUEF1S+Ti/AdH7AhlIMGo1WbEp6T51b6tJGF0RTJg=",
-            "request_parameters": "",
-            "transaction_hash": "sample_update_test_hash",
-            "status": "update_status_check",
-            "row_created": "2020-08-04 00:00:03",
-            "row_updated": "2020-08-04 00:00:03"
-        }
-        res = add_or_update_channel_transaction_history(event=event, context=None)
-        assert res['statusCode'] == 200
-        assert json.loads(res["body"])["data"] == {
-            "order_id": "bed8dd46-b89e-11eb-8e43-ca4f96114fea",
-            "amount": 2,
-            "currency": "USD",
-            "type": "openChannelByThirdParty",
-            "address": "",
-            "recipient": "",
-            "signature": "",
-            "org_id": "test_rt_v2",
-            "group_id": "JDdUEF1S+Ti/AdH7AhlIMGo1WbEp6T51b6tJGF0RTJg=",
-            "request_parameters": "",
-            "transaction_hash": "sample_update_test_hash",
-            "status": "update_status_check"
-        }
-        data = ChannelRepository().get_channel_transaction_history_data(transaction_hash="sample_update_test_hash")
-        assert data[0].status == "update_status_check"
 
     def tearDown(self):
         channel_repo.session.query(ChannelTransactionHistory).delete()

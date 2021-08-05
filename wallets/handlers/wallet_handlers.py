@@ -3,8 +3,6 @@ from common.logger import get_logger
 from common.repository import Repository
 from common.utils import Utils, handle_exception_with_slack_notification, generate_lambda_response, make_response_body
 from wallets.config import NETWORKS, NETWORK_ID, SLACK_HOOK
-from wallets.service.channel_service import ChannelService
-from wallets.service.channel_transaction_status_service import ChannelTransactionStatusService
 from wallets.service.wallet_service import WalletService
 
 NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys())
@@ -23,11 +21,3 @@ def delete_user_wallet(event, context):
         ResponseStatus.SUCCESS, "OK", {}
     ), cors_enabled=False)
 
-
-@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
-def add_or_update_channel_transaction_history(event, context):
-    response = ChannelService().add_or_update_channel_transaction_history(transaction_record=event)
-    return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
-    )
