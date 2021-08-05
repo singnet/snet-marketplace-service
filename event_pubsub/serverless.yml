@@ -253,7 +253,7 @@ functions:
     events:
       - schedule:
           rate: rate(2 minutes)
-          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-token_stake_event_listener
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-token-stake-event-listener
           enabled: ${file(./config.${self:provider.stage}.json):token_stake_cron_status}
 
   token-stake-event-publisher:
