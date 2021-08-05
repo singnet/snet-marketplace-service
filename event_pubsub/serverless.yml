@@ -3,8 +3,9 @@ plugins:
   - serverless-python-requirements
   - serverless-plugin-tracing
   - serverless-prune-plugin
+  - serverless-latest-layer-version
 
-service: event-publisher-subscriber
+service: event-pubsub
 custom:
   pythonRequirements:
     fileName: event_pubsub/requirements.txt
@@ -36,30 +37,40 @@ provider:
 
 package:
   exclude:
-    - .circleci/**
-    - .gitignore/**
-    - .serverless/**
-    - requirements.txt
-    - venv/**
-    - config.ropsten.json
-    - test/**
-    - tests/**
-    - sql_script/**
-    - service_status/**
-    - contract_api/**
-    - dapp-user/**
-    - repository/**
-    - Readme.md
-    - parse_events.sh
-    - package.json
-    - Dockerfile
-    - License
-    - log_setup.py
-    - heath_check.sh
-    - payments/**
-    - wallets/**
-    - orchestrator/**
-    - node_modules/**
+    - common/**
+      - contract_api/**
+      - dapp_user/**
+      - lambda_layers/**
+      - notification/**
+      - orchestrator/**
+      - payments/**
+      - registry/**
+      - event_pubsub/testcases/**
+      - event_pubsub/package.json
+      - event_pubsub/package-lock.json
+      - event_pubsub/serverless.yml
+      - event_pubsub/requirements.txt
+      - event_pubsub/documentation/**
+      - service_media/**
+      - service_status/**
+      - signer/**
+      - sql_script/**
+      - utility/**
+      - verification/**
+      - wallets/**
+      - .circleci/**
+      - .serverless/**
+      - node_modules/**
+      - package.json
+      - package-lock.json
+      - .gitignore
+      - serverless.yml
+      - README.md
+      - build.sh
+      - Dockerfile
+      - health_check.sh
+      - LICENSE
+      - config.rt-v2.json
   include:
     - node_modules/singularitynet-platform-contracts/**
     - node_modules/singularitynet-rfai-contracts/**
@@ -81,6 +92,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
           rate: rate(2 minutes)
@@ -101,6 +117,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
           rate: rate(2 minutes)
@@ -121,6 +142,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
           rate: rate(2 minutes)
@@ -141,6 +167,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
           rate: rate(2 minutes)
@@ -161,6 +192,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
           rate: rate(2 minutes)
@@ -181,6 +217,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
           rate: rate(2 minutes)
@@ -201,6 +242,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
           rate: rate(2 minutes)
@@ -221,6 +267,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
           rate: rate(2 minutes)
@@ -241,6 +292,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
