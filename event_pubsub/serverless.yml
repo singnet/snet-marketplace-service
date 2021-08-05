@@ -71,10 +71,6 @@ package:
       - health_check.sh
       - LICENSE
       - config.rt-v2.json
-  include:
-    - node_modules/singularitynet-platform-contracts/**
-    - node_modules/singularitynet-rfai-contracts/**
-    - node_modules/singularitynet-stake-contracts/**
 
 functions:
   rfai-event-publisher:
@@ -100,7 +96,9 @@ functions:
     events:
       - schedule:
           rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-rfai-event-publisher
           enabled: ${file(./config.${self:provider.stage}.json):rfai_cron_status}
+
 
   mpe-event-publisher:
     warmup: true
@@ -125,6 +123,7 @@ functions:
     events:
       - schedule:
           rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-mpe-event-publisher
           enabled: ${file(./config.${self:provider.stage}.json):mpe_cron_status}
 
   registry-event-publisher:
@@ -150,6 +149,7 @@ functions:
     events:
       - schedule:
           rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-registry-event-pubisher
           enabled: ${file(./config.${self:provider.stage}.json):registry_cron_status}
 
   mpe-event-listener:
@@ -175,6 +175,7 @@ functions:
     events:
       - schedule:
           rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-mpe-event-listener
           enabled: ${file(./config.${self:provider.stage}.json):mpe_cron_status}
 
   registry-event-listener:
@@ -200,6 +201,7 @@ functions:
     events:
       - schedule:
           rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-registry-event-listener
           enabled: ${file(./config.${self:provider.stage}.json):registry_cron_status}
 
   rfai-event-listener:
@@ -225,9 +227,10 @@ functions:
     events:
       - schedule:
           rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-rfai-event-listener
           enabled: ${file(./config.${self:provider.stage}.json):rfai_cron_status}
 
-  token_stake_event_listener:
+  token-stake-event-listener:
     warmup: true
     handler: event_pubsub/handlers/event_listener_handlers.token_stake_event_listener_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -250,6 +253,7 @@ functions:
     events:
       - schedule:
           rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-token_stake_event_listener
           enabled: ${file(./config.${self:provider.stage}.json):token_stake_cron_status}
 
   token-stake-event-publisher:
@@ -275,6 +279,7 @@ functions:
     events:
       - schedule:
           rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-token-stake-event-publisher
           enabled: ${file(./config.${self:provider.stage}.json):token_stake_cron_status}
 
   get-raw-event-details:
