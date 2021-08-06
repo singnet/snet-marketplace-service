@@ -36,7 +36,7 @@ class TestChannelService(unittest.TestCase):
             row_created="2021-05-19 13:51:53"
         ))
         channel_repo.add_item(ChannelTransactionHistory(
-            order_id="sample_order_id",
+            order_id="sample_order_id_1",
             amount=2,
             currency="USD",
             type="openChannelByThirdParty",
@@ -52,7 +52,7 @@ class TestChannelService(unittest.TestCase):
             row_created="2021-05-19 13:51:53"
         ))
         channel_repo.add_item(ChannelTransactionHistory(
-            order_id="sample_order_id",
+            order_id="sample_order_id_2",
             amount=2,
             currency="USD",
             type="openChannelByThirdParty",
@@ -114,7 +114,7 @@ class TestChannelService(unittest.TestCase):
 
         self.tearDown()
         channel_repo.add_item(ChannelTransactionHistory(
-            order_id="sample_order_id",
+            order_id="sample_order_id_1",
             amount=2,
             currency="USD",
             type="openChannelByThirdParty",

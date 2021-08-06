@@ -56,3 +56,4 @@ class ChannelTransactionHistory(Base):
     status = Column("status", VARCHAR(255), nullable=True, default=null)
     row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
     row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    UniqueConstraint(order_id, name="uq_cht_hs")

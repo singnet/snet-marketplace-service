@@ -28,13 +28,10 @@ class ChannelRepository(BaseRepository):
                 WalletFactory().convert_channel_transaction_history_db_model_to_entity_model(history))
         return txn_history
 
-    def update_channel_transaction_history_status(self, channel_txn_history):
+    def update_channel_transaction_history_by_order_id(self, channel_txn_history):
         try:
             transaction_record_db = self.session.query(ChannelTransactionHistory). \
-                filter(ChannelTransactionHistory.transaction_hash == channel_txn_history.transaction_hash). \
-                filter(ChannelTransactionHistory.org_id == channel_txn_history.org_id).  \
-                filter(ChannelTransactionHistory.group_id == channel_txn_history.group_id). \
-                filter(ChannelTransactionHistory.order_id == channel_txn_history.order_id).  \
+                filter(ChannelTransactionHistory.order_id == channel_txn_history.order_id). \
                 first()
             if transaction_record_db:
                 transaction_record_db.order_id = channel_txn_history.order_id,
