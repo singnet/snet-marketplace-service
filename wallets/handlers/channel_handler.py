@@ -68,7 +68,7 @@ def record_create_channel_event(event, context):
                 order_id=payload["order_id"],
                 amount=payload["amount"],
                 currency=payload["currency"],
-                type=payload.get("type", ""),
+                type=payload.get("type", "openChannelByThirdParty"),
                 address=payload["sender"],
                 recipient=payload["recipient"],
                 signature=payload["signature"],
