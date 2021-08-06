@@ -8,10 +8,11 @@ from common.repository import Repository
 from wallets.handlers.channel_handler import record_create_channel_event
 from wallets.infrastructure.models import CreateChannelEvent, ChannelTransactionHistory
 from wallets.infrastructure.repositories.channel_repository import ChannelRepository
-from wallets.service.channel_service import channel_repo
 from wallets.service.manage_create_channel_event import ManageCreateChannelEvent
 from wallets.config import NETWORKS, NETWORK_ID
 from wallets.dao.channel_dao import ChannelDAO
+
+channel_repo = ChannelRepository()
 
 
 class TestCreateChannelConsumer(TestCase):
@@ -60,7 +61,7 @@ class TestCreateChannelConsumer(TestCase):
         })}
         res = record_create_channel_event(event=event, context=None)
         assert res["statusCode"] == 201
-        record = ChannelRepository().get_channel_transaction_history_data(status=TransactionStatus.NOT_SUBMITTED)
+        record = channel_repo.get_channel_transaction_history_data(status=TransactionStatus.NOT_SUBMITTED)
         assert record[0].to_dict() == {'order_id': 'sample_order_id', 'amount': 2, 'currency': 'USD', 'type': '',
                                        'address': 'sample_sender', 'recipient': 'sample_recipient',
                                        'signature': 'sample_signature',
