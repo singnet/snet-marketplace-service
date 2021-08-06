@@ -42,7 +42,7 @@ class ChannelTransactionStatusService:
                 txn_data.status = TransactionStatus.PROCESSING if txn_receipt.status == 1 else TransactionStatus.FAILED
             else:
                 txn_data.status = TransactionStatus.NOT_SUBMITTED
-            channel_repo.update_channel_transaction_history_by_order_id(channel_txn_history=txn_data)
+            channel_repo.update_channel_transaction_history_status_by_order_id(channel_txn_history=txn_data)
 
         # UPDATE PROCESSING TRANSACTIONS
         processing_txns_db = channel_repo.get_channel_transaction_history_data(status=TransactionStatus.PROCESSING)
@@ -54,4 +54,4 @@ class ChannelTransactionStatusService:
                 if txn["processed"]:
                     txn_data = list(filter(lambda x: x.transaction_hash == txn["transactionHash"], processing_txns_db))[0]
                     txn_data.status = TransactionStatus.SUCCESS
-                    channel_repo.update_channel_transaction_history_by_order_id(channel_txn_history=txn_data)
+                    channel_repo.update_channel_transaction_history_status_by_order_id(channel_txn_history=txn_data)
