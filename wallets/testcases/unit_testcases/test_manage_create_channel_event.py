@@ -67,7 +67,8 @@ class TestCreateChannelConsumer(TestCase):
                                        'signature': 'sample_signature',
                                        'org_id': 'sample_org_id', 'group_id': 'sample_group_id',
                                        'request_parameters': '',
-                                       'transaction_hash': '', 'status': 'NOT_SUBMITTED'}
+                                       'transaction_hash': '', 'type': 'openChannelByThirdParty',
+                                       'status': 'NOT_SUBMITTED'}
 
     def tearDown(self):
         channel_repo.session.query(CreateChannelEvent).delete()
