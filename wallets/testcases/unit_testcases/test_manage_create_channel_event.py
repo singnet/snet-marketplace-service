@@ -1,9 +1,14 @@
+import json
 from datetime import datetime
 from unittest import TestCase
 from unittest.mock import patch
 
 from common.constant import TransactionStatus
 from common.repository import Repository
+from wallets.handlers.channel_handler import record_create_channel_event
+from wallets.infrastructure.models import CreateChannelEvent, ChannelTransactionHistory
+from wallets.infrastructure.repositories.channel_repository import ChannelRepository
+from wallets.service.channel_service import channel_repo
 from wallets.service.manage_create_channel_event import ManageCreateChannelEvent
 from wallets.config import NETWORKS, NETWORK_ID
 from wallets.dao.channel_dao import ChannelDAO
@@ -36,5 +41,34 @@ class TestCreateChannelConsumer(TestCase):
     def test_create_channel_even_consumer_no_data(self):
         ManageCreateChannelEvent().manage_create_channel_event()
 
+    def test_record_create_channel_create(self):
+        self.tearDown()
+        event = {"body": json.dumps({
+            "order_id": "sample_order_id",
+            "sender": "sample_sender",
+            "signature": "sample_signature",
+            "r": "sample_r",
+            "s": "sample_s",
+            "v": 27,
+            "group_id": "sample_group_id",
+            "org_id": "sample_org_id",
+            "amount": 2,
+            "currency": "USD",
+            "recipient": "sample_recipient",
+            "current_block_no": 10764919,
+            "amount_in_cogs": 100000
+        })}
+        res = record_create_channel_event(event=event, context=None)
+        assert res["statusCode"] == 201
+        record = ChannelRepository().get_channel_transaction_history_data(status=TransactionStatus.NOT_SUBMITTED)
+        assert record[0].to_dict() == {'order_id': 'sample_order_id', 'amount': 2, 'currency': 'USD', 'type': '',
+                                       'address': 'sample_sender', 'recipient': 'sample_recipient',
+                                       'signature': 'sample_signature',
+                                       'org_id': 'sample_org_id', 'group_id': 'sample_group_id',
+                                       'request_parameters': '',
+                                       'transaction_hash': '', 'status': 'NOT_SUBMITTED'}
+
     def tearDown(self):
-        self.connection.execute("DELETE FROM create_channel_event")
+        channel_repo.session.query(CreateChannelEvent).delete()
+        channel_repo.session.query(ChannelTransactionHistory).delete()
+        channel_repo.session.commit()

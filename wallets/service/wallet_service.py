@@ -12,8 +12,10 @@ from wallets.config import NETWORK_ID, NETWORKS, SIGNER_ADDRESS, EXECUTOR_ADDRES
 from wallets.constant import GENERAL_WALLET_TYPE, MPE_ADDR_PATH, MPE_CNTRCT_PATH, WalletStatus
 from wallets.dao.channel_dao import ChannelDAO
 from wallets.dao.wallet_data_access_object import WalletDAO
+from wallets.domain.models.channel_transaction_history import ChannelTransactionHistory
+from wallets.infrastructure.repositories.channel_repository import ChannelRepository
 from wallets.wallet import Wallet
-
+channel_repo = ChannelRepository()
 logger = get_logger(__name__)
 
 
@@ -125,13 +127,16 @@ class WalletService:
 
         logger.info("openChannelByThirdParty::transaction_hash : %s for order_id : %s", transaction_hash, order_id)
 
-        self.channel_dao.insert_channel_history(
-            order_id=order_id, amount=amount, currency=currency,
-            group_id=group_id, org_id=org_id,
-            type=method_name, recipient=recipient,
-            address=sender, signature=signature,
-            request_parameters=str(positional_inputs),
-            transaction_hash=transaction_hash, status=TransactionStatus.PENDING
+        channel_repo.update_channel_transaction_history_status_by_order_id(
+            channel_txn_history=ChannelTransactionHistory(
+                order_id=order_id, amount=amount, currency=currency,
+                group_id=group_id, org_id=org_id,
+                type=method_name, recipient=recipient,
+                address=sender, signature=signature,
+                request_parameters=str(positional_inputs),
+                transaction_hash=transaction_hash,
+                status=TransactionStatus.PENDING
+            )
         )
 
         return {
@@ -166,13 +171,16 @@ class WalletService:
         transaction_hash = self.blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
         logger.info("channelAddFunds::transaction_hash: %s for order_id: %s", transaction_hash, order_id)
 
-        self.channel_dao.insert_channel_history(
-            order_id=order_id, amount=amount, currency=currency,
-            group_id=group_id, org_id=org_id,
-            type=method_name, recipient=recipient,
-            address=sender, signature=None,
-            request_parameters=str(positional_inputs),
-            transaction_hash=transaction_hash, status=TransactionStatus.PENDING
+        channel_repo.update_channel_transaction_history_status_by_order_id(
+            channel_txn_history=ChannelTransactionHistory(
+                order_id=order_id, amount=amount, currency=currency,
+                group_id=group_id, org_id=org_id,
+                type=method_name, recipient=recipient,
+                address=sender, signature=None,
+                request_parameters=str(positional_inputs),
+                transaction_hash=transaction_hash,
+                status=TransactionStatus.PENDING
+            )
         )
         return {"transaction_hash": transaction_hash, "amount_in_cogs": amount_in_cogs, "type": method_name}
 

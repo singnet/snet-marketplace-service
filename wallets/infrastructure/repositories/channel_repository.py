@@ -35,6 +35,7 @@ class ChannelRepository(BaseRepository):
                 first()
             if transaction_record_db:
                 transaction_record_db.transaction_hash = channel_txn_history.transaction_hash,
+                transaction_record_db.request_parameters = channel_txn_history.request_parameters,
                 transaction_record_db.status = channel_txn_history.status,
                 transaction_record_db.row_updated = dt.utcnow()
             self.session.commit()

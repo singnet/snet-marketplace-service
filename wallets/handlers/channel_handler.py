@@ -1,14 +1,16 @@
 import json
 import traceback
 
-from common.constant import StatusCode, ResponseStatus
+from common.constant import StatusCode, ResponseStatus, TransactionStatus
 from common.exception_handler import exception_handler
 from common.logger import get_logger
 from common.repository import Repository
 from common.utils import Utils, validate_dict, generate_lambda_response, make_response_body
 from wallets.config import NETWORK_ID, NETWORKS, SLACK_HOOK
+from wallets.domain.models.channel_transaction_history import ChannelTransactionHistory
 from wallets.error import Error
 from wallets.exceptions import EXCEPTIONS
+from wallets.infrastructure.repositories.channel_repository import ChannelRepository
 from wallets.service.manage_create_channel_event import ManageCreateChannelEvent
 from wallets.service.wallet_service import WalletService
 
@@ -62,6 +64,20 @@ def record_create_channel_event(event, context):
         required_keys = ["order_id", "sender", "signature", "r", "s", "v", "current_block_no",
                          "group_id", "org_id", "amount", "currency", "recipient", "amount_in_cogs"]
         if validate_dict(payload, required_keys):
+            ChannelRepository().add_channel_transaction_history_record(ChannelTransactionHistory(
+                order_id=payload["order_id"],
+                amount=payload["amount"],
+                currency=payload["currency"],
+                type=payload.get("type", ""),
+                address=payload["sender"],
+                recipient=payload["recipient"],
+                signature=payload["signature"],
+                org_id=payload["org_id"],
+                group_id=payload["group_id"],
+                request_parameters=payload.get("request_parameters", ""),
+                transaction_hash=payload.get("transaction_hash", ""),
+                status=TransactionStatus.NOT_SUBMITTED
+            ))
             logger.info(f"Payload for create channel: {payload}")
             response = wallet_service.record_create_channel_event(payload)
             return generate_lambda_response(StatusCode.CREATED, make_response_body(
