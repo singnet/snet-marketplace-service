@@ -33,7 +33,7 @@ def upgrade():
           `row_created` timestamp NULL DEFAULT NULL,
           PRIMARY KEY (`row_id`),
           KEY `blk_no_idx` (`block_no`),
-          UNIQUE KEY `uq_st_ev` (`block_no`,`transactionHash`)
+          UNIQUE KEY `uq_st_ev` (`transactionHash`, `logIndex`)
         ) ;
             """)
 

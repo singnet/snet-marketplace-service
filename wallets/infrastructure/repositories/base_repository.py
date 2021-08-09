@@ -1,7 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from common.logger import get_logger
-from registry.config import DB_DETAILS
+from wallets.config import DB_DETAILS
 
 driver = DB_DETAILS["driver"]
 user = DB_DETAILS["user"]
@@ -11,12 +10,10 @@ port = DB_DETAILS["port"]
 db_name = DB_DETAILS["name"]
 
 connection_string = f"{driver}://{user}:{password}@{host}:{port}/{db_name}"
-engine = create_engine(connection_string, pool_pre_ping=True, echo=True)
+engine = create_engine(connection_string, pool_pre_ping=True)
 
 Session = sessionmaker(bind=engine)
 default_session = Session()
-get_logger("sqlalchemy.engine").setLevel("INFO")
-get_logger("sqlalchemy.pool").setLevel("DEBUG")
 
 
 class BaseRepository:

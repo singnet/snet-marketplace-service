@@ -14,6 +14,14 @@ NETWORKS = {
     }
 }
 NETWORK_ID = 3
+DB_DETAILS = {
+    "driver": "mysql+pymysql",
+    "host": "localhost",
+    "user": "unittest_root",
+    "password": "unittest_pwd",
+    "name": "registry_unittest_db",
+    "port": 3306
+}
 SLACK_HOOK = {
     'hostname': 'https://hooks.slack.com',
     'path': ''

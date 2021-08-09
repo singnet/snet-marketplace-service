@@ -1,3 +1,5 @@
+import sys
+sys.path.append('/opt')
 import json
 
 from aws_xray_sdk.core import patch_all

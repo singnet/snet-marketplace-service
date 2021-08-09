@@ -18,6 +18,8 @@ class TransactionStatus:
     PENDING = "PENDING"
     SUCCESS = "SUCCESS"
     FAILED = "FAILED"
+    PROCESSING = "PROCESSING"
+    NOT_SUBMITTED = "NOT_SUBMITTED"
 
 
 class StatusCode:
