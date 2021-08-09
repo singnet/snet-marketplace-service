@@ -262,7 +262,7 @@ class TokenStakeEventProducer(BlockchainEventProducer):
             self._push_event(event)
 
     def _get_base_contract_path(self):
-        contract_package_name = "singularitynet-platform-contracts"
+        contract_package_name = "singularitynet-stake-contracts"
         return os.path.abspath(f"{CONTRACT_BASE_PATH}/{contract_package_name}")
 
     def produce_event(self, net_id):
