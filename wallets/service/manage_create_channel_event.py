@@ -23,7 +23,7 @@ class ManageCreateChannelEvent:
 
     @staticmethod
     def manage_create_channel_event():
-        create_channel_event_from_orchestrator = channel_dao.get_one_create_channel_event(TransactionStatus.NOT_SUBMITTED)
+        create_channel_event_from_orchestrator = channel_dao.get_one_create_channel_event(TransactionStatus.PENDING)
         if not bool(create_channel_event_from_orchestrator):
             return
         wallet_manager = WalletService(connection)
