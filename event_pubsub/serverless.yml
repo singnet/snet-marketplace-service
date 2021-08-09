@@ -4,7 +4,7 @@ plugins:
   - serverless-plugin-tracing
   - serverless-prune-plugin
 
-service: event-publisher-subscriber
+service: event-pub-sub
 custom:
   pythonRequirements:
     fileName: event_pubsub/requirements.txt
