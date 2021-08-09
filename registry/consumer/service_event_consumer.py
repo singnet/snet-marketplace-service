@@ -8,7 +8,7 @@ from common import blockchain_util, boto_utils
 from common import ipfs_util
 from common.constant import StatusCode
 from common.logger import get_logger
-from registry.config import NETWORK_ID, SERVICE_CURATE_ARN, REGION_NAME
+from registry.config import NETWORK_ID, SERVICE_CURATE_ARN, REGION_NAME, CONTRACT_BASE_PATH
 from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.models.service import Service
@@ -60,11 +60,14 @@ class ServiceEventConsumer(object):
         metadata_uri = Web3.toText(service_data['metadataURI'])[7:].rstrip("\u0000")
         return metadata_uri
 
+    def _get_base_contract_path(self):
+        contract_package_name = "singularitynet-platform-contracts"
+        return os.path.abspath(f"{CONTRACT_BASE_PATH}/{contract_package_name}")
+
     def _get_registry_contract(self):
         net_id = NETWORK_ID
-        base_contract_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '..', '..', 'node_modules', 'singularitynet-platform-contracts'))
-        registry_contract = self._blockchain_util.get_contract_instance(base_contract_path, "REGISTRY", net_id)
+        base_contract_path = self._get_base_contract_path()
+        registry_contract = self._blockchain_util.get_contract_instance(base_contract_path, "REGISTRY", net_id=net_id)
         return registry_contract
 
     def _get_service_details_from_blockchain(self, event):
