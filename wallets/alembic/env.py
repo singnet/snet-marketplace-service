@@ -1,15 +1,23 @@
 from logging.config import fileConfig
 
+from alembic import context
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
-from alembic import context
-from wallets.config import NETWORKS, NETWORK_ID
+from wallets.config import DB_DETAILS
+from wallets.infrastructure.models import Base
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-MYSQL_CONNECTION_STRING = f"mysql+pymysql://{NETWORKS[NETWORK_ID]['db']['DB_USER']}:{NETWORKS[NETWORK_ID]['db']['DB_PASSWORD']}" \
-                          f"@{NETWORKS[NETWORK_ID]['db']['DB_HOST']}:{NETWORKS[NETWORK_ID]['db']['DB_PORT']}/{NETWORKS[NETWORK_ID]['db']['DB_NAME']}"
+driver = DB_DETAILS["driver"]
+user = DB_DETAILS["user"]
+password = DB_DETAILS["password"]
+host = DB_DETAILS["host"]
+port = DB_DETAILS["port"]
+db_name = DB_DETAILS["name"]
+
+MYSQL_CONNECTION_STRING = f"{driver}://{user}:{password}@{host}:{port}/{db_name}"
 config.set_main_option('sqlalchemy.url', MYSQL_CONNECTION_STRING)
 
 # Interpret the config file for Python logging.
@@ -20,7 +28,7 @@ fileConfig(config.config_file_name)
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = None
+target_metadata = Base.metadata
 
 
 # other values from the config, defined by the needs of env.py,
