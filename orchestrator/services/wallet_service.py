@@ -1,5 +1,6 @@
 import json
 from common.boto_utils import BotoUtils
+from common.constant import TransactionStatus
 from common.logger import get_logger
 from orchestrator.config import REGION_NAME, WALLETS_SERVICE_ARN, GET_CHANNEL_API_OLD_ARN, \
     CREATE_CHANNEL_EVENT_ARN
@@ -51,6 +52,9 @@ class WalletService:
                     org_id=org_id,
                     group_id=group_id
                 )
+                for trxn_data in wallet["transactions"]:
+                    if trxn_data["status"] in [TransactionStatus.PROCESSING, TransactionStatus.NOT_SUBMITTED]:
+                        trxn_data["status"] = TransactionStatus.PENDING
             return wallet_response
         except Exception as e:
             print(repr(e))

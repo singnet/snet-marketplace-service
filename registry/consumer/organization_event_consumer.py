@@ -6,7 +6,7 @@ from web3 import Web3
 from common import blockchain_util
 from common import ipfs_util
 from common.logger import get_logger
-from registry.config import NETWORK_ID
+from registry.config import NETWORK_ID, CONTRACT_BASE_PATH
 from registry.constants import OrganizationMemberStatus, OrganizationStatus, Role, EnvironmentType
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization
@@ -34,11 +34,15 @@ class OrganizationEventConsumer(object):
         org_id = Web3.toText(org_id_bytes).rstrip("\x00")
         return org_id
 
+    @staticmethod
+    def _get_base_contract_path(self):
+        contract_package_name = "singularitynet-platform-contracts"
+        return os.path.abspath(f"{CONTRACT_BASE_PATH}/{contract_package_name}")
+
     def _get_registry_contract(self):
         net_id = NETWORK_ID
-        base_contract_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '..', '..', 'node_modules', 'singularitynet-platform-contracts'))
-        registry_contract = self._blockchain_util.get_contract_instance(base_contract_path, "REGISTRY", net_id)
+        base_contract_path = self._get_base_contract_path()
+        registry_contract = self._blockchain_util.get_contract_instance(base_contract_path, 'REGISTRY', net_id=net_id)
 
         return registry_contract
 
