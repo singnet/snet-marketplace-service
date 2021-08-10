@@ -13,7 +13,7 @@ class ChannelDAO:
         self.repo = repo
 
     def get_channel_transactions_for_username_recipient(self, username, org_id, group_id):
-        params = [username, group_id, org_id, TransactionStatus.FAILED, TransactionStatus.PENDING]
+        params = [username, group_id, org_id, TransactionStatus.SUCCESS]
         query = "SELECT W.username, W.address, W.type, W.is_default, CT.recipient, CT.amount, " \
                 "CT.`type` as transaction_type, CT.currency, CT.status, CT.row_created as created_at " \
                 "FROM " \
@@ -24,7 +24,7 @@ class ChannelDAO:
                 "(SELECT CT.address, CT.amount, CT.currency, CT.status, CT.recipient, CT.row_created, CT.`type`" \
                 "FROM channel_transaction_history as CT " \
                 "WHERE CT.group_id = %s AND CT.org_id = %s" \
-                "AND (CT.status = %s OR CT.status = %s)) CT " \
+                "AND  CT.status <> %s) CT " \
                 "ON W.address = CT.address"
         channel_data = self.repo.execute(query, params)
         return channel_data
@@ -60,7 +60,7 @@ class ChannelDAO:
 
     def get_one_create_channel_event(self, status):
         query = "SELECT row_id, payload, status, row_created FROM create_channel_event WHERE status = %s LIMIT 1"
-        create_channel_event = self.repo.execute(query, TransactionStatus.PENDING)
+        create_channel_event = self.repo.execute(query, status)
         if len(create_channel_event) == 0:
             return None
         return create_channel_event[0]
