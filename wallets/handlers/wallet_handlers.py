@@ -5,7 +5,6 @@ from common.utils import Utils, handle_exception_with_slack_notification, genera
 from wallets.config import NETWORKS, NETWORK_ID, SLACK_HOOK
 from wallets.service.wallet_service import WalletService
 
-
 NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys())
 repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
 utils = Utils()
@@ -19,5 +18,6 @@ def delete_user_wallet(event, context):
     username = query_parameters["username"]
     wallet_service.remove_user_wallet(username)
     return generate_lambda_response(StatusCode.CREATED, make_response_body(
-                ResponseStatus.SUCCESS, "OK", {}
-            ), cors_enabled=False)
+        ResponseStatus.SUCCESS, "OK", {}
+    ), cors_enabled=False)
+
