@@ -1,4 +1,5 @@
 import json
+import os
 from uuid import uuid4
 import requests
 
@@ -12,13 +13,12 @@ from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
 from common.utils import download_file_from_url, json_to_file, publish_zip_file_in_ipfs, send_email_notification
 from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH, NETWORKS, NETWORK_ID, NOTIFICATION_ARN, \
-    REGION_NAME, PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT, GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT
+    REGION_NAME, PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT, GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT, ASSETS_COMPONENT_BUCKET_NAME
 from registry.constants import EnvironmentType, ServiceAvailabilityStatus, ServiceStatus, \
     ServiceSupportType, UserType
 from registry.domain.factory.service_factory import ServiceFactory
-from registry.domain.models.service import Service
 from registry.domain.models.offchain_service_config import OffchainServiceConfig
-
+from registry.domain.models.service import Service
 from registry.domain.models.service_comment import ServiceComment
 from registry.domain.services.service_publisher_domain_service import ServicePublisherDomainService
 from registry.exceptions import EnvironmentNotFoundException, InvalidServiceStateException, \
@@ -392,7 +392,7 @@ class ServicePublisherService:
 
         status = {
             "publish_to_blockchain": publish_to_blockchain,
-            "publish_offchain_attributes": publish_offchain_attributes,
+            "publish_offchain_attributes": publish_offchain_attributes
         }
         if publish_to_blockchain:
             filename = f"{METADATA_FILE_PATH}/{current_service.uuid}_service_metadata.json"
@@ -404,4 +404,26 @@ class ServicePublisherService:
                 service_id=current_service.service_id,
                 payload=json.dumps(current_offchain_attributes.configs)
             )
+        if current_offchain_attributes.configs["demo_component_required"] == 1:
+            current_demo = current_service.assets["demo_files"]
+            demo_build_status = current_demo.get("status", "")
+            logger.info(f"publish demo file status :: {status} ")
+            if demo_build_status == "SUCCEEDED":
+                # upload demo component to component s3 bucket
+                logger.info("publishing demo component file")
+                new_component_path = utils.extract_zip_and_and_tar(s3_url=current_demo["url"])
+                boto_util.s3_upload_file(
+                    filename=new_component_path,
+                    bucket=ASSETS_COMPONENT_BUCKET_NAME,
+                    key=f"assets/{current_org.id}/{current_service.service_id}/{os.path.basename(new_component_path)}"
+                )
+                # clear current status key from db
+                del current_demo["status"]
+                service = ServicePublisherRepository().get_service_for_given_service_uuid(
+                    org_uuid=current_service.org_uuid, service_uuid=current_service.uuid
+                )
+                if service:
+                    service.assets.update({"demo_files": current_demo})
+                    ServicePublisherRepository().save_service(username=self._username, service=service,
+                                                              state=service.service_state.state)
         return status
