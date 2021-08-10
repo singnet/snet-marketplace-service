@@ -16,7 +16,6 @@ class UpdateServiceAssets:
     @staticmethod
     def trigger_demo_component_build(payload):
         file_path = payload["Records"][0]['s3']['object']['key']
-        bucket_name = payload["Records"][0]['s3']['bucket']['name']
         org_id, service_id = UpdateServiceAssets.extract_file_details_from_file_path(file_path=file_path)
         variables = ["org_id", "service_id"]
         env_variables = []
