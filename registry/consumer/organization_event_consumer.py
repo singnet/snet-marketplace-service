@@ -36,8 +36,7 @@ class OrganizationEventConsumer(object):
 
     @staticmethod
     def _get_base_contract_path():
-        contract_package_name = "singularitynet-platform-contracts"
-        return os.path.abspath(f"{CONTRACT_BASE_PATH}/{contract_package_name}")
+        return os.path.abspath(os.path.join(f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-stake-contracts"))
 
     def _get_registry_contract(self):
         net_id = NETWORK_ID
