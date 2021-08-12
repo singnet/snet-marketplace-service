@@ -137,6 +137,9 @@ class TestServiceMetadata(TestCase):
         )
 
     @patch(
+        "common.boto_utils.BotoUtils.get_objects_from_s3"
+    )
+    @patch(
         "common.boto_utils.BotoUtils.s3_upload_file")
     @patch(
         "common.utils.extract_zip_and_and_tar")
@@ -151,7 +154,9 @@ class TestServiceMetadata(TestCase):
     @patch("common.ipfs_util.IPFSUtil.read_file_from_ipfs")
     def test_validate_metadata(self, mock_read_ipfs, mock_publish_to_ipfs,
                                mock_existing_service_details_from_contract_api, mock_ipfs_hash,
-                               mock_publish_offchain_configs, mock_extract_zip_and_tar, mock_s3_upload):
+                               mock_publish_offchain_configs, mock_extract_zip_and_tar, mock_s3_upload,
+                               mock_s3_get_s3_object):
+        mock_s3_get_s3_object.return_value = [{"LastModified": "2020-08-12"}]
         event = {
             "path": "/org/test_org_uuid/service/test_service_uuid/publish",
             "requestContext": {
@@ -167,7 +172,6 @@ class TestServiceMetadata(TestCase):
 
         mock_publish_offchain_configs.return_value = False
         mock_extract_zip_and_tar.return_value = "sample_path"
-        mock_s3_upload.return_value = True
 
         # blockchain false offchain false
         mock_publish_to_ipfs.return_value = ServicePublisherRepository().get_service_for_given_service_uuid(
@@ -279,7 +283,9 @@ class TestServiceMetadata(TestCase):
                                                         'publish_offchain_attributes': True,
                                                         }
 
-        # offchain config true
+        # if published file is empty
+        mock_s3_upload.return_value = True
+        mock_s3_get_s3_object.return_value = []
         org_repo.session.query(OffchainServiceConfigDBModel).delete()
         org_repo.session.commit()
 
@@ -348,7 +354,6 @@ class TestServiceMetadata(TestCase):
         }
         response = publish_service(event=event, context=None)
         assert response["statusCode"] == 500
-
 
     def tearDown(self):
         org_repo.session.query(OrganizationStateDBModel).delete()

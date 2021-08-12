@@ -404,26 +404,25 @@ class ServicePublisherService:
                 service_id=current_service.service_id,
                 payload=json.dumps(current_offchain_attributes.configs)
             )
-        if current_offchain_attributes.configs["demo_component_required"] == 1:
-            current_demo = current_service.assets["demo_files"]
-            demo_build_status = current_demo.get("status", "")
-            logger.info(f"publish demo file status :: {status} ")
-            if demo_build_status == "SUCCEEDED":
-                # upload demo component to component s3 bucket
-                logger.info("publishing demo component file")
-                new_component_path = utils.extract_zip_and_and_tar(s3_url=current_demo["url"])
-                boto_util.s3_upload_file(
-                    filename=new_component_path,
-                    bucket=ASSETS_COMPONENT_BUCKET_NAME,
-                    key=f"assets/{current_org.id}/{current_service.service_id}/{os.path.basename(new_component_path)}"
-                )
-                # clear current status key from db
-                del current_demo["status"]
-                service = ServicePublisherRepository().get_service_for_given_service_uuid(
-                    org_uuid=current_service.org_uuid, service_uuid=current_service.uuid
-                )
-                if service:
-                    service.assets.update({"demo_files": current_demo})
-                    ServicePublisherRepository().save_service(username=self._username, service=service,
-                                                              state=service.service_state.state)
+        self.publish_demo_component_file(current_service.assets["demo_files"]["url"], current_org.id, current_service.service_id)
         return status
+
+    @staticmethod
+    def publish_demo_component_file(current_demo_url, org_id, service_id):
+        current_demo_bucket, current_demo_key = boto_util.get_bucket_and_key_from_url(current_demo_url)
+        current_s3_demo_file_details = boto_util.get_objects_from_s3(current_demo_bucket, current_demo_key)
+        published_s3_demo_file_details = boto_util.get_objects_from_s3(
+            bucket=ASSETS_COMPONENT_BUCKET_NAME,
+            key=f"assets/{org_id}/{service_id}/component.tar.gz"
+        )
+        print(f"current demo s3 details :: {current_s3_demo_file_details} :: published demo s3 details :: {published_s3_demo_file_details}")
+        if (not published_s3_demo_file_details) or \
+                (published_s3_demo_file_details and published_s3_demo_file_details[0]["LastModified"] >
+                 current_s3_demo_file_details[0]["LastModified"]):
+            new_component_path = utils.extract_zip_and_and_tar(
+                s3_url=current_demo_url)
+            boto_util.s3_upload_file(
+                filename=new_component_path,
+                bucket=ASSETS_COMPONENT_BUCKET_NAME,
+                key=f"assets/{org_id}/{service_id}/{os.path.basename(new_component_path)}"
+            )
