@@ -887,10 +887,10 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-      events:
-        - s3:
-            bucket: ${file(./config.${self:provider.stage}.json):COMPONENT_BUCKET}
-            event: s3:ObjectCreated:*
-            rules:
-              - suffix: component.tar.gz
-            existing: true
+    events:
+      - s3:
+          bucket: ${file(./config.${self:provider.stage}.json):COMPONENT_BUCKET}
+          event: s3:ObjectCreated:*
+          rules:
+            - suffix: component.tar.gz
+          existing: true
