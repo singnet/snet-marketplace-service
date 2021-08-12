@@ -11,8 +11,8 @@ logger = get_logger(__name__)
 
 
 class BlockchainEventProducer(EventProducer):
-    def __init__(self, ws_provider, repository=None, ):
-        self._blockchain_util = BlockChainUtil("HTTP_PROVIDER", ws_provider)
+    def __init__(self, http_provider, repository=None, ):
+        self._blockchain_util = BlockChainUtil("HTTP_PROVIDER", http_provider)
         self._event_repository = EventRepository(repository)
 
     def _get_base_contract_path(self):
@@ -56,8 +56,8 @@ class BlockchainEventProducer(EventProducer):
 class RegistryEventProducer(BlockchainEventProducer):
     REGISTRY_EVENT_READ_BATCH_LIMIT = 50000
 
-    def __init__(self, ws_provider, repository=None):
-        super().__init__(ws_provider, repository)
+    def __init__(self, http_provider, repository=None):
+        super().__init__(http_provider, repository)
         self._contract_name = "REGISTRY"
 
     def _push_event(self, event):
@@ -113,8 +113,8 @@ class RegistryEventProducer(BlockchainEventProducer):
 class MPEEventProducer(BlockchainEventProducer):
     MPE_EVENT_READ_BATCH_LIMIT = 50000
 
-    def __init__(self, ws_provider, repository=None):
-        super().__init__(ws_provider, repository)
+    def __init__(self, http_provider, repository=None):
+        super().__init__(http_provider, repository)
         self._contract_name = "MPE"
 
     def _push_event(self, event):
@@ -168,8 +168,8 @@ class MPEEventProducer(BlockchainEventProducer):
 class RFAIEventProducer(BlockchainEventProducer):
     RFAI_EVENT_READ_BATCH_LIMIT = 50000
 
-    def __init__(self, ws_provider, repository=None):
-        super().__init__(ws_provider, repository)
+    def __init__(self, http_provider, repository=None):
+        super().__init__(http_provider, repository)
         self._contract_name = "RFAI"
 
     def _push_event(self, event):
@@ -223,8 +223,8 @@ class RFAIEventProducer(BlockchainEventProducer):
 class TokenStakeEventProducer(BlockchainEventProducer):
     TOKEN_EVENT_READ_BATCH_LIMIT = 50000
 
-    def __init__(self, ws_provider, repository=None):
-        super().__init__(ws_provider, repository)
+    def __init__(self, http_provider, repository=None):
+        super().__init__(http_provider, repository)
         self._contract_name = "TokenStake"
 
     def _push_event(self, event):
