@@ -203,7 +203,7 @@ class RFAIEventProducer(BlockchainEventProducer):
                                                 transaction_hash, log_index, error_code, error_message)
 
     def _get_base_contract_path(self):
-        contract_package_name = "singularitynet-platform-contracts"
+        contract_package_name = "singularitynet-rfai-contracts"
         return os.path.abspath(f"{CONTRACT_BASE_PATH}/{contract_package_name}")
 
     def _push_events_to_repository(self, events):

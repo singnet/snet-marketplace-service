@@ -35,7 +35,7 @@ class OrganizationEventConsumer(object):
         return org_id
 
     @staticmethod
-    def _get_base_contract_path(self):
+    def _get_base_contract_path():
         contract_package_name = "singularitynet-platform-contracts"
         return os.path.abspath(f"{CONTRACT_BASE_PATH}/{contract_package_name}")
 
