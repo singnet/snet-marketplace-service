@@ -19,7 +19,7 @@ class TestBlockchainEventProducer(unittest.TestCase):
     @patch('common.blockchain_util.BlockChainUtil.get_current_block_no')
     def test_produce_registry_events_from_blockchain(self, mock_get_current_block_no, mock_last_block_number,
                                                      mock_get_contract_instance):
-        registry_event_producer = RegistryEventProducer("wss://ropsten.infura.io/ws", Repository(NETWORKS))
+        registry_event_producer = RegistryEventProducer("https://ropsten.infura.io/", Repository(NETWORKS))
 
         org_created_event_object = Mock()
         event_repository = EventRepository(Repository(NETWORKS))
@@ -56,7 +56,7 @@ class TestBlockchainEventProducer(unittest.TestCase):
     @patch('common.blockchain_util.BlockChainUtil.get_current_block_no')
     def test_produce_mpe_events_from_blockchain(self, mock_get_current_block_no, mock_last_block_number,
                                                 mock_get_contract_instance):
-        mpe_event_producer = MPEEventProducer("wss://ropsten.infura.io/ws", Repository(NETWORKS))
+        mpe_event_producer = MPEEventProducer("https://ropsten.infura.io/", Repository(NETWORKS))
         event_repository = EventRepository(Repository(NETWORKS))
 
         deposit_fund_Event_object = Mock()

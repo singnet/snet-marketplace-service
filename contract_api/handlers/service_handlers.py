@@ -8,6 +8,7 @@ from common.logger import get_logger
 from common.repository import Repository
 from common.utils import Utils, generate_lambda_response
 from common.utils import handle_exception_with_slack_notification
+from contract_api.application.service.update_assets_service import UpdateServiceAssets
 from contract_api.config import NETWORKS, NETWORK_ID, SLACK_HOOK
 from contract_api.registry import Registry
 
@@ -97,4 +98,14 @@ def service_deployment_status_notification_handler(event, context):
     return generate_lambda_response(
         StatusCode.CREATED,
         {"status": "success", "data": "Build failure notified", "error": {}}, cors_enabled=True
+    )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def trigger_demo_component_build(event, context):
+    logger.info(f"trigger_demo_component_build event :: {event}")
+    response = UpdateServiceAssets().trigger_demo_component_build(payload=event)
+    return generate_lambda_response(
+        StatusCode.CREATED,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )

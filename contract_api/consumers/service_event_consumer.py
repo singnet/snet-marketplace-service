@@ -282,32 +282,6 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
 
         return proto_file_s3_path, component_files_s3_path
 
-    def _trigger_code_build_for_marketplace_dapp(self, org_id, service_id):
-        cb = boto3.client('codebuild')
-        build = {
-            'projectName': MARKETPLACE_DAPP_BUILD,
-            'environmentVariablesOverride': [
-                {
-                    'name': 'org_id',
-                    'value': f"{org_id}",
-                    'type': 'PLAINTEXT'
-                },
-                {
-                    'name': 'service_id',
-                    'value': f"{service_id}",
-                    'type': 'PLAINTEXT'
-                },
-            ]
-        }
-
-        try:
-            build = cb.start_build(**build)
-
-            logger.info('Codebuild returned: {}'.format(build))
-        except Exception as e:
-            logger.error(f"Failed BUild for {org_id} {service_id}")
-            raise e
-
     @staticmethod
     def compile_proto_stubs(org_id, service_id):
         boto_utils = BotoUtils(region_name=REGION_NAME)
@@ -383,15 +357,6 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
 
     def process_service_deployment(self, org_id, service_id, update_proto_stubs, proto_hash):
         logger.info(f"Processing Service deployment for {org_id} {service_id}")
-        proto_file_s3_path, component_files_s3_path = self._get_s3_path_url_for_proto_and_component(org_id, service_id)
-
-        if component_files_s3_path:
-            component_files_tar_path = self._extract_zip_and_and_tar(org_id, service_id, component_files_s3_path)
-            self._s3_util.push_file_to_s3(component_files_tar_path, ASSETS_COMPONENT_BUCKET_NAME,
-                                          f"assets/{org_id}/{service_id}/{component_files_tar_path.split('/')[-1]}")
-
-        self._trigger_code_build_for_marketplace_dapp(org_id, service_id)
-
         if update_proto_stubs:
             self.upload_proto_file_from_hash_to_bucket(org_id=org_id, service_id=service_id, asset_hash=proto_hash)
             proto_stubs = self.compile_proto_stubs(org_id=org_id, service_id=service_id)
