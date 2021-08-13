@@ -11,8 +11,8 @@ logger = get_logger(__name__)
 
 
 class BlockchainEventProducer(EventProducer):
-    def __init__(self, ws_provider, repository=None, ):
-        self._blockchain_util = BlockChainUtil("HTTP_PROVIDER", ws_provider)
+    def __init__(self, http_provider, repository=None, ):
+        self._blockchain_util = BlockChainUtil("HTTP_PROVIDER", http_provider)
         self._event_repository = EventRepository(repository)
 
     def _get_base_contract_path(self):
@@ -56,8 +56,8 @@ class BlockchainEventProducer(EventProducer):
 class RegistryEventProducer(BlockchainEventProducer):
     REGISTRY_EVENT_READ_BATCH_LIMIT = 50000
 
-    def __init__(self, ws_provider, repository=None):
-        super().__init__(ws_provider, repository)
+    def __init__(self, http_provider, repository=None):
+        super().__init__(http_provider, repository)
         self._contract_name = "REGISTRY"
 
     def _push_event(self, event):
@@ -95,8 +95,7 @@ class RegistryEventProducer(BlockchainEventProducer):
             self._push_event(event)
 
     def _get_base_contract_path(self):
-        contract_package_name = "singularitynet-platform-contracts"
-        return os.path.abspath(f"{CONTRACT_BASE_PATH}/{contract_package_name}")
+        return os.path.abspath(os.path.join(f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-platform-contracts"))
 
     def produce_event(self, net_id):
         last_block_number = self._event_repository.read_last_read_block_number_for_event(self._contract_name)
@@ -113,8 +112,8 @@ class RegistryEventProducer(BlockchainEventProducer):
 class MPEEventProducer(BlockchainEventProducer):
     MPE_EVENT_READ_BATCH_LIMIT = 50000
 
-    def __init__(self, ws_provider, repository=None):
-        super().__init__(ws_provider, repository)
+    def __init__(self, http_provider, repository=None):
+        super().__init__(http_provider, repository)
         self._contract_name = "MPE"
 
     def _push_event(self, event):
@@ -148,8 +147,7 @@ class MPEEventProducer(BlockchainEventProducer):
                                                 transaction_hash, log_index, error_code, error_message)
 
     def _get_base_contract_path(self):
-        contract_package_name = "singularitynet-platform-contracts"
-        return os.path.abspath(f"{CONTRACT_BASE_PATH}/{contract_package_name}")
+        return os.path.abspath(os.path.join(f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-platform-contracts"))
 
     def _push_events_to_repository(self, events):
         for event in events:
@@ -168,8 +166,8 @@ class MPEEventProducer(BlockchainEventProducer):
 class RFAIEventProducer(BlockchainEventProducer):
     RFAI_EVENT_READ_BATCH_LIMIT = 50000
 
-    def __init__(self, ws_provider, repository=None):
-        super().__init__(ws_provider, repository)
+    def __init__(self, http_provider, repository=None):
+        super().__init__(http_provider, repository)
         self._contract_name = "RFAI"
 
     def _push_event(self, event):
@@ -203,8 +201,7 @@ class RFAIEventProducer(BlockchainEventProducer):
                                                 transaction_hash, log_index, error_code, error_message)
 
     def _get_base_contract_path(self):
-        contract_package_name = "singularitynet-platform-contracts"
-        return os.path.abspath(f"{CONTRACT_BASE_PATH}/{contract_package_name}")
+        return os.path.abspath(os.path.join(f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-rfai-contracts"))
 
     def _push_events_to_repository(self, events):
         for event in events:
@@ -223,8 +220,8 @@ class RFAIEventProducer(BlockchainEventProducer):
 class TokenStakeEventProducer(BlockchainEventProducer):
     TOKEN_EVENT_READ_BATCH_LIMIT = 50000
 
-    def __init__(self, ws_provider, repository=None):
-        super().__init__(ws_provider, repository)
+    def __init__(self, http_provider, repository=None):
+        super().__init__(http_provider, repository)
         self._contract_name = "TokenStake"
 
     def _push_event(self, event):
@@ -262,8 +259,7 @@ class TokenStakeEventProducer(BlockchainEventProducer):
             self._push_event(event)
 
     def _get_base_contract_path(self):
-        contract_package_name = "singularitynet-stake-contracts"
-        return os.path.abspath(f"{CONTRACT_BASE_PATH}/{contract_package_name}")
+        return os.path.abspath(os.path.join(f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-stake-contracts"))
 
     def produce_event(self, net_id):
         last_block_number = self._event_repository.read_last_read_block_number_for_event(self._contract_name)
