@@ -5,6 +5,7 @@ from common.logger import get_logger
 from common.utils import Utils
 from contract_api.constant import GET_ALL_SERVICE_LIMIT, GET_ALL_SERVICE_OFFSET_LIMIT
 from contract_api.dao.service_repository import ServiceRepository
+from contract_api.domain.models.offchain_service_attribute import OffchainServiceAttribute
 from contract_api.infrastructure.repositories.service_media_repository import ServiceMediaRepository
 from contract_api.infrastructure.repositories.service_repository import ServiceRepository as NewServiceRepository, \
     OffchainServiceConfigRepository
@@ -24,17 +25,19 @@ class Registry:
     @staticmethod
     def service_build_status_notifier(org_id, service_id, build_status):
         is_curated = False
-        demo_component_available = False
         if build_status == BUILD_CODE['SUCCESS']:
             is_curated = True
-            demo_component_available = True
         service = new_service_repo.get_service(org_id=org_id, service_id=service_id)
         if service:
             service.is_curated = is_curated
-            service.service_metadata.demo_component_available = demo_component_available
             new_service_repo.create_or_update_service(service=service)
         else:
             raise Exception(f"Unable to find service for service_id {service_id} and org_id {org_id}")
+        demo_build_status = "SUCCESS" if build_status == BUILD_CODE['SUCCESS'] else "FAILED"
+        offchain_attributes = OffchainServiceAttribute(
+            org_id, service_id, {"demo_component_status": demo_build_status}
+        )
+        OffchainServiceConfigRepository().save_offchain_service_attribute(offchain_attributes)
 
     def _get_all_service(self):
         """ Method to generate org_id and service mapping."""
