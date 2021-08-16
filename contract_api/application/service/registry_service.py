@@ -1,3 +1,4 @@
+from datetime import datetime as dt
 from common.utils import Utils
 from common.boto_utils import BotoUtils
 from contract_api.config import REGION_NAME, ASSETS_COMPONENT_BUCKET_NAME
@@ -30,4 +31,5 @@ class RegistryService:
             boto_utils.s3_upload_file(filename=tar_file_path, bucket=ASSETS_COMPONENT_BUCKET_NAME, key=key)
             attributes.update({"demo_component_status": "PENDING"})
             attributes.update({"demo_component_url": f"https://{ASSETS_COMPONENT_BUCKET_NAME}.s3.amazonaws.com/{key}"})
+            attributes.update({"demo_component_last_updated": dt.utcnow()})
         return attributes
