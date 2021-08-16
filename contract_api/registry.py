@@ -5,6 +5,7 @@ from common.logger import get_logger
 from common.utils import Utils
 from contract_api.constant import GET_ALL_SERVICE_LIMIT, GET_ALL_SERVICE_OFFSET_LIMIT
 from contract_api.dao.service_repository import ServiceRepository
+from contract_api.domain.models.demo_component import DemoComponent
 from contract_api.domain.models.offchain_service_attribute import OffchainServiceAttribute
 from contract_api.infrastructure.repositories.service_media_repository import ServiceMediaRepository
 from contract_api.infrastructure.repositories.service_repository import ServiceRepository as NewServiceRepository, \
@@ -398,12 +399,7 @@ class Registry:
 
             self._convert_service_metadata_str_to_json(result)
 
-            offchain_service_config_repo = OffchainServiceConfigRepository()
-            offchain_service_config = offchain_service_config_repo.get_offchain_service_config(
-                org_id=org_id,
-                service_id=service_id
-            )
-            offchain_attributes = offchain_service_config.to_dict()
+            offchain_service_configs = Registry.prepare_offchain_service_attributes(org_id, service_id)
 
             for rec in org_group_data:
                 org_groups_dict[rec['group_id']] = {
@@ -422,11 +418,31 @@ class Registry:
                 rec.update(org_groups_dict.get(rec['group_id'], {}))
 
             result.update({"is_available": is_available, "groups": service_group_data, "tags": tags, "media": media})
-            result.update(offchain_attributes["attributes"])
+            result.update(offchain_service_configs)
             return result
         except Exception as e:
             print(repr(e))
             raise e
+
+    @staticmethod
+    def prepare_offchain_service_attributes(org_id, service_id):
+        offchain_attributes = {}
+        offchain_service_config_repo = OffchainServiceConfigRepository()
+        offchain_service_config = offchain_service_config_repo.get_offchain_service_config(
+            org_id=org_id,
+            service_id=service_id
+        )
+        offchain_attributes_db = offchain_service_config.attributes
+        demo_component_required = offchain_attributes_db.get("demo_component_required", 0)
+        demo_component = DemoComponent(
+            required=demo_component_required,
+            status=offchain_attributes_db.get("demo_component_status", None),
+            url=offchain_attributes_db.get("demo_component_url", None),
+            last_modified=offchain_attributes_db.get("demo_component_last_updated", None)
+        )
+        offchain_attributes.update({"demo_component": demo_component.to_dict()})
+        offchain_attributes.update({"demo_component_required": demo_component_required})
+        return offchain_attributes
 
     def get_org_details(self, org_id):
         """ Method to get org details for given org_id. """

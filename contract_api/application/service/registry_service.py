@@ -31,5 +31,5 @@ class RegistryService:
             boto_utils.s3_upload_file(filename=tar_file_path, bucket=ASSETS_COMPONENT_BUCKET_NAME, key=key)
             attributes.update({"demo_component_status": "PENDING"})
             attributes.update({"demo_component_url": f"https://{ASSETS_COMPONENT_BUCKET_NAME}.s3.amazonaws.com/{key}"})
-            attributes.update({"demo_component_last_updated": dt.utcnow()})
+            attributes.update({"demo_component_last_updated": str(dt.utcnow())})
         return attributes

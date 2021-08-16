@@ -59,11 +59,9 @@ class TestRegistryService(TestCase):
         response = save_offchain_attribute(event=event, context=None)
         assert (response["statusCode"] == 200)
         offchain_values = offchain_repo.get_offchain_service_config("test_org_id", "test_service_id")
-        assert offchain_values.to_dict()["attributes"] == {
-                'demo_component_required': 1,
-                'demo_component_status': 'PENDING',
-                'demo_component_url': f'https://{ASSETS_COMPONENT_BUCKET_NAME}.s3.amazonaws.com/assets/test_org_id/test_service_id/component.tar.gz'
-            }
+        assert offchain_values.to_dict()["attributes"]["demo_component_status"] == "PENDING"
+        assert offchain_values.to_dict()["attributes"]["demo_component_required"] == 1
+        assert offchain_values.to_dict()["attributes"]["demo_component_url"] == f'https://{ASSETS_COMPONENT_BUCKET_NAME}.s3.amazonaws.com/assets/test_org_id/test_service_id/component.tar.gz'
 
     def tearDown(self):
         service_repository.session.query(OffchainServiceConfig).delete()
