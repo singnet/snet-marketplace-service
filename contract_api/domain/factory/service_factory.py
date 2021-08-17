@@ -1,3 +1,4 @@
+from contract_api.domain.models.demo_component import DemoComponent
 from contract_api.domain.models.service import Service
 from contract_api.domain.models.service_metadata import ServiceMetadata
 from contract_api.domain.models.service_media import ServiceMedia
@@ -77,4 +78,15 @@ class ServiceFactory:
             org_id=org_id,
             service_id=service_id,
             attributes=attributes
+        )
+
+    @staticmethod
+    def create_demo_component_domain_model(offchain_attributes):
+        if not offchain_attributes:
+            return {}
+        return DemoComponent(
+            demo_component_url=offchain_attributes.get("demo_component_url", ""),
+            demo_component_status=offchain_attributes.get("demo_component_status", ""),
+            demo_component_last_modified=offchain_attributes.get("demo_component_last_modified", ""),
+            demo_component_required=offchain_attributes.get("demo_component_required", 0)
         )

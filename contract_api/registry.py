@@ -1,10 +1,12 @@
 import json
 from collections import defaultdict
 
+from common.constant import BuildStatus
 from common.logger import get_logger
 from common.utils import Utils
 from contract_api.constant import GET_ALL_SERVICE_LIMIT, GET_ALL_SERVICE_OFFSET_LIMIT
 from contract_api.dao.service_repository import ServiceRepository
+from contract_api.domain.factory.service_factory import ServiceFactory
 from contract_api.domain.models.demo_component import DemoComponent
 from contract_api.domain.models.offchain_service_attribute import OffchainServiceAttribute
 from contract_api.infrastructure.repositories.service_media_repository import ServiceMediaRepository
@@ -16,6 +18,7 @@ logger = get_logger(__name__)
 BUILD_CODE = {"SUCCESS": 1, "FAILED": 0}
 new_service_repo = NewServiceRepository()
 service_media_repo = ServiceMediaRepository()
+service_factory = ServiceFactory()
 
 
 class Registry:
@@ -34,7 +37,7 @@ class Registry:
             new_service_repo.create_or_update_service(service=service)
         else:
             raise Exception(f"Unable to find service for service_id {service_id} and org_id {org_id}")
-        demo_build_status = "SUCCESS" if build_status == BUILD_CODE['SUCCESS'] else "FAILED"
+        demo_build_status = BuildStatus.SUCCESS if build_status == BUILD_CODE['SUCCESS'] else BuildStatus.FAILED
         offchain_attributes = OffchainServiceAttribute(
             org_id, service_id, {"demo_component_status": demo_build_status}
         )
@@ -434,14 +437,9 @@ class Registry:
         )
         offchain_attributes_db = offchain_service_config.attributes
         demo_component_required = offchain_attributes_db.get("demo_component_required", 0)
-        demo_component = DemoComponent(
-            required=demo_component_required,
-            status=offchain_attributes_db.get("demo_component_status", None),
-            url=offchain_attributes_db.get("demo_component_url", None),
-            last_modified=offchain_attributes_db.get("demo_component_last_updated", None)
-        )
-        offchain_attributes.update({"demo_component": demo_component.to_dict()})
+        demo_component = service_factory.create_demo_component_domain_model(offchain_service_config.attributes)
         offchain_attributes.update({"demo_component_required": demo_component_required})
+        offchain_attributes.update({"demo_component": demo_component.to_dict() if demo_component else demo_component})
         return offchain_attributes
 
     def get_org_details(self, org_id):

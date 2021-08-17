@@ -22,3 +22,7 @@ class OffchainServiceAttribute:
     @property
     def attributes(self):
         return self._attributes
+
+    @attributes.setter
+    def attributes(self, attributes):
+        self._attributes = attributes

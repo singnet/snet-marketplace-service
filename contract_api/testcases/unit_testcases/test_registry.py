@@ -126,7 +126,7 @@ class TestRegistry(TestCase):
                                  'url': 'https://test-s3-push', 'order': 5, 'file_type': 'image',
                                  'asset_type': 'hero_image', 'alt_text': 'data is missing'}
                             ],
-                            "demo_component": {'url': None, 'required': 0, 'status': None, 'last_modified': None},
+                            "demo_component": {},
                             "demo_component_required": 0
                             }
 
@@ -180,8 +180,11 @@ class TestRegistry(TestCase):
                                  'url': 'https://test-s3-push', 'order': 5, 'file_type': 'image',
                                  'asset_type': 'hero_image', 'alt_text': 'data is missing'}
                             ],
-                            "demo_component": {'url': 'sample_demo_url', 'required': 1, 'status': 'PENDING',
-                                               'last_modified': "2020-02-05T00:00:34"},
+                            "demo_component": {'demo_component_url': 'sample_demo_url',
+                                               'demo_component_required': 1,
+                                               'demo_component_status': 'PENDING',
+                                               'demo_component_last_modified': None
+                                               },
                             "demo_component_required": 1
                             }
 
@@ -237,7 +240,7 @@ class TestRegistry(TestCase):
                             'groups': [],
                             'tags': [],
                             'media': [],
-                            "demo_component": {'url': None, 'required': 0, 'status': None, 'last_modified': None},
+                            "demo_component": {},
                             "demo_component_required": 0
                             }
 

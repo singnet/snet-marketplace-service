@@ -14,6 +14,12 @@ class PaymentStatus:
     FAILED = "FAILED"
 
 
+class BuildStatus:
+    PENDING = "PENDING"
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
+
+
 class TransactionStatus:
     PENDING = "PENDING"
     SUCCESS = "SUCCESS"
@@ -34,5 +40,6 @@ class StatusCode:
 class ResponseStatus:
     FAILED = "failed"
     SUCCESS = "success"
+
 
 COGS_TO_AGI = "0.00000001"

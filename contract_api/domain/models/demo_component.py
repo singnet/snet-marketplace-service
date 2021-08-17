@@ -3,48 +3,49 @@ from datetime import datetime as dt
 
 
 class DemoComponent:
-    def __init__(self, url, required, status, last_modified):
-        self._url = url
-        self._required = required
-        self._status = status
-        self._last_modified = last_modified
+    def __init__(self, demo_component_required, demo_component_url=None, demo_component_status=None,
+                 demo_component_last_modified=None):
+        self._demo_component_url = demo_component_url
+        self._demo_component_required = demo_component_required
+        self._demo_component_status = demo_component_status
+        self._demo_component_last_modified = demo_component_last_modified
 
     def to_dict(self):
         return {
-            "url": self._url,
-            "required": self._required,
-            "status": self._status,
-            "last_modified": dt.isoformat(dt.fromisoformat(self._last_modified)) if self._last_modified else None
+            "demo_component_url": self._demo_component_url,
+            "demo_component_required": self._demo_component_required,
+            "demo_component_status": self._demo_component_status,
+            "demo_component_last_modified": dt.isoformat(dt.fromisoformat(self._demo_component_last_modified)) if self._demo_component_last_modified else None
         }
 
     @property
-    def url(self):
-        return self._url
+    def demo_component_url(self):
+        return self._demo_component_url
 
-    @url.setter
-    def url(self, url):
-        self._url = url
-
-    @property
-    def required(self):
-        return self._required
-
-    @required.setter
-    def org_id(self, required):
-        self._required = required
+    @demo_component_url.setter
+    def demo_component_url(self, demo_component_url):
+        self._demo_component_url = demo_component_url
 
     @property
-    def status(self):
-        return self._status
+    def demo_component_required(self):
+        return self._demo_component_required
 
-    @status.setter
-    def service_id(self, status):
-        self._status = status
+    @demo_component_required.setter
+    def demo_component_required(self, demo_component_required):
+        self._demo_component_required = demo_component_required
 
     @property
-    def last_modified(self):
-        return self._last_modified
+    def demo_component_status(self):
+        return self._demo_component_status
 
-    @last_modified.setter
-    def service_row_id(self, last_modified):
-        self._last_modified = last_modified
+    @demo_component_status.setter
+    def demo_component_status(self, demo_component_status):
+        self._demo_component_status = demo_component_status
+
+    @property
+    def demo_component_last_modified(self):
+        return self._demo_component_last_modified
+
+    @demo_component_last_modified.setter
+    def demo_component_last_modified(self, demo_component_last_modified):
+        self._demo_component_last_modified = demo_component_last_modified
