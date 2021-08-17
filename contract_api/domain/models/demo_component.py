@@ -1,3 +1,4 @@
+import json
 from datetime import datetime as dt
 
 
@@ -13,7 +14,7 @@ class DemoComponent:
             "url": self._url,
             "required": self._required,
             "status": self._status,
-            "last_modified": dt.fromisoformat(self._last_modified) if self._last_modified else None
+            "last_modified": dt.isoformat(dt.fromisoformat(self._last_modified)) if self._last_modified else None
         }
 
     @property

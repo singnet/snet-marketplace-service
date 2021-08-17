@@ -181,7 +181,7 @@ class TestRegistry(TestCase):
                                  'asset_type': 'hero_image', 'alt_text': 'data is missing'}
                             ],
                             "demo_component": {'url': 'sample_demo_url', 'required': 1, 'status': 'PENDING',
-                                               'last_modified': datetime.datetime(2020, 2, 5, 0, 0, 34)},
+                                               'last_modified': "2020-02-05T00:00:34"},
                             "demo_component_required": 1
                             }
 
