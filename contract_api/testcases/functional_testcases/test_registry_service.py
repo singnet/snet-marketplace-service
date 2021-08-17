@@ -15,12 +15,10 @@ class TestRegistryService(TestCase):
     def setUp(self):
         pass
 
-    @patch("common.boto_utils.BotoUtils.s3_upload_file")
-    @patch("common.utils.Utils.extract_zip_and_and_tar")
-    def test_save_offchain_attribute(self, mock_prepare_tar, mock_s3_upload):
+    @patch("contract_api.application.service.registry_service.RegistryService.publish_demo_component")
+    def test_save_offchain_attribute(self, mock_publish_demo_files):
         self.tearDown()
-        mock_prepare_tar.return_value = "tar_file_path"
-        mock_s3_upload.return_value = "s3_url"
+        mock_publish_demo_files.return_value = "sample_url"
         event = {
             "pathParameters": {
                 "orgId": "test_org_id",
@@ -61,7 +59,7 @@ class TestRegistryService(TestCase):
         offchain_values = offchain_repo.get_offchain_service_config("test_org_id", "test_service_id")
         assert offchain_values.to_dict()["attributes"]["demo_component_status"] == "PENDING"
         assert offchain_values.to_dict()["attributes"]["demo_component_required"] == 1
-        assert offchain_values.to_dict()["attributes"]["demo_component_url"] == f'https://{ASSETS_COMPONENT_BUCKET_NAME}.s3.amazonaws.com/assets/test_org_id/test_service_id/component.tar.gz'
+        assert offchain_values.to_dict()["attributes"]["demo_component_url"] == f'sample_url'
 
     def tearDown(self):
         service_repository.session.query(OffchainServiceConfig).delete()

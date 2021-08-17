@@ -78,17 +78,6 @@ class Utils:
             agi = decimal.Decimal(cogs) * decimal.Decimal(COGS_TO_AGI)
             return agi
 
-    def extract_zip_and_and_tar(self, s3_url):
-        root_directory = os.path.join(tempfile.gettempdir(), str(uuid.uuid4()))
-        if not Path.exists(Path(root_directory)):
-            os.mkdir(root_directory)
-        component_name = download_file_from_url(s3_url, root_directory)
-        extracted_file = os.path.join(root_directory, component_name.split(".")[0].split("_")[1])
-        extract_zip_file(os.path.join(root_directory, component_name), extracted_file)
-        output_path = os.path.join(root_directory, component_name.split(".")[0].split("_")[1] + '.tar.gz')
-        make_tarfile(source_dir=extracted_file, output_filename=output_path)
-        return output_path
-
 
 def make_response(status_code, body, header=None):
     return {
