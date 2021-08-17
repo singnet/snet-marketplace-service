@@ -236,7 +236,9 @@ class TestRegistry(TestCase):
                             'is_available': 0,
                             'groups': [],
                             'tags': [],
-                            'media': []
+                            'media': [],
+                            "demo_component": {'url': None, 'required': 0, 'status': None, 'last_modified': None},
+                            "demo_component_required": 0
                             }
 
     def tearDown(self):
