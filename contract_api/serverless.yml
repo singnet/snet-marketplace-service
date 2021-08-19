@@ -878,7 +878,7 @@ functions:
               - x-requested-with
 
   trigger-demo-component-build:
-    handler: contract_api/application/handler/service_handler.trigger_demo_component_build
+    handler: contract_api/handlers.service_handlers.trigger_demo_component_build
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
