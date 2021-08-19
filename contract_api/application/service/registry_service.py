@@ -1,7 +1,6 @@
 import os
 import tempfile
 import uuid
-from datetime import datetime as dt
 from pathlib import Path
 
 from common.boto_utils import BotoUtils
@@ -9,7 +8,7 @@ from common.constant import BuildStatus
 from common.utils import Utils, extract_zip_file, make_tarfile, download_file_from_url
 from contract_api.config import REGION_NAME, ASSETS_COMPONENT_BUCKET_NAME
 from contract_api.domain.factory.service_factory import ServiceFactory
-from contract_api.domain.models.demo_component import DemoComponent
+from contract_api.domain.models.offchain_service_attribute import OffchainServiceAttribute
 from contract_api.infrastructure.repositories.service_repository import OffchainServiceConfigRepository
 
 utils = Utils()
@@ -23,46 +22,28 @@ class RegistryService:
         self.org_id = org_id
         self.service_id = service_id
 
-
-
-    def publish_offline_assets(self, attributes):
-        # publish demo component file
-        if attributes.get("demo_component_url", ""):
-            new_demo_url = self.publish_demo_component(attributes["demo_component_url"])
-            attributes.update({"demo_component_status": "PENDING"})
-            attributes.update({"demo_component_url": new_demo_url})
-            attributes.update({"demo_component_last_updated": str(dt.utcnow())})
-        return attributes
-
     def save_offchain_service_attribute(self, new_offchain_attributes):
-        existing_offchain_attributes = offchain_service_config_repo.get_offchain_service_config(self.org_id,
-                                                                                                self.service_id)
-        demo_component = self.create_or_update_demo_component_domain_model(new_offchain_attributes,
-                                                                           existing_offchain_attributes.to_dict()[
-                                                                               "attributes"])
-        existing_offchain_attributes.attributes = demo_component.to_dict()
-        offchain_service_attribute = offchain_service_config_repo.save_offchain_service_attribute(
-            existing_offchain_attributes)
-        return offchain_service_attribute.to_dict()
-
-    def create_or_update_demo_component_domain_model(self, new_offchain_attributes, existing_offchain_attributes):
-        existing_demo_component = service_factory.create_demo_component_domain_model(existing_offchain_attributes)
-        if existing_demo_component:
-            demo_component = existing_demo_component
-            if new_offchain_attributes.get("demo_component_required", None) is not None:
-                demo_component.demo_component_required = new_offchain_attributes.get("demo_component_required")
-        else:
-            demo_component = DemoComponent(
-                demo_component_required=new_offchain_attributes["demo_component_required"]
-            )
-        if demo_component.demo_component_required:
-            if new_offchain_attributes["demo_component_url"]:
-                demo_component.demo_component_url = self.publish_demo_component(
-                    demo_component.demo_component_url
+        updated_offchain_attributes = {}
+        if "demo_component" in new_offchain_attributes:
+            new_demo_component = ServiceFactory.create_demo_component_domain_model(
+                new_offchain_attributes["demo_component"])
+            # publish and update demo only on change_in_demo_component = 1 and required = 1
+            if new_offchain_attributes["demo_component"].get("change_in_demo_component", 0) and \
+                    new_demo_component.demo_component_required:
+                new_demo_component.demo_component_url = self.publish_demo_component(
+                    new_demo_component.demo_component_url
                 )
-                demo_component.demo_component_status = BuildStatus.PENDING
-                demo_component.demo_component_last_modified = str(dt.utcnow())
-        return demo_component
+                new_demo_component.demo_component_status = BuildStatus.PENDING
+            # update and save new changes
+            updated_offchain_attributes = OffchainServiceAttribute(
+                org_id=self.org_id,
+                service_id=self.service_id,
+                attributes=new_demo_component.to_dict()
+            )
+            offchain_service_attribute = offchain_service_config_repo.save_offchain_service_attribute(
+                updated_offchain_attributes)
+            updated_offchain_attributes = offchain_service_attribute.to_dict()
+        return updated_offchain_attributes
 
     def publish_demo_component(self, demo_file_url):
         # download zip component file

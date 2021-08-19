@@ -3,19 +3,17 @@ from datetime import datetime as dt
 
 
 class DemoComponent:
-    def __init__(self, demo_component_required, demo_component_url=None, demo_component_status=None,
-                 demo_component_last_modified=None):
+    def __init__(self, demo_component_required, demo_component_url="", demo_component_status=""):
         self._demo_component_url = demo_component_url
         self._demo_component_required = demo_component_required
         self._demo_component_status = demo_component_status
-        self._demo_component_last_modified = demo_component_last_modified
 
-    def to_dict(self):
+    def to_dict(self, last_modified=None):
         return {
             "demo_component_url": self._demo_component_url,
             "demo_component_required": self._demo_component_required,
             "demo_component_status": self._demo_component_status,
-            "demo_component_last_modified": dt.isoformat(dt.fromisoformat(self._demo_component_last_modified)) if self._demo_component_last_modified else None
+            "demo_component_last_modified": last_modified if last_modified else ""
         }
 
     @property
@@ -41,11 +39,3 @@ class DemoComponent:
     @demo_component_status.setter
     def demo_component_status(self, demo_component_status):
         self._demo_component_status = demo_component_status
-
-    @property
-    def demo_component_last_modified(self):
-        return self._demo_component_last_modified
-
-    @demo_component_last_modified.setter
-    def demo_component_last_modified(self, demo_component_last_modified):
-        self._demo_component_last_modified = demo_component_last_modified

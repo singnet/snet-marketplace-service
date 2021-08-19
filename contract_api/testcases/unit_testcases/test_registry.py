@@ -126,17 +126,38 @@ class TestRegistry(TestCase):
                                  'url': 'https://test-s3-push', 'order': 5, 'file_type': 'image',
                                  'asset_type': 'hero_image', 'alt_text': 'data is missing'}
                             ],
-                            "demo_component": {},
+                            "demo_component": {
+                                'demo_component_url': '',
+                                'demo_component_required': '',
+                                'demo_component_status': '',
+                                'demo_component_last_modified': ''
+                                },
                             "demo_component_required": 0
                             }
 
-        offchain_service_repo.save_offchain_service_attribute(OffchainServiceAttribute(
-            org_id="snet", service_id="gene-annotation-service", attributes={
-                "demo_component_url": "sample_demo_url",
-                "demo_component_status": "PENDING",
-                "demo_component_last_updated": "2020-02-05 00:00:34",
-                "demo_component_required": 1
-            }
+        offchain_service_repo.add_item(OffchainServiceConfigDB(
+            org_id="snet",
+            service_id="gene-annotation-service",
+            parameter_name="demo_component_url",
+            parameter_value="sample_demo_url",
+            created_on="2021-08-19 00:01:20",
+            updated_on="2021-08-19 00:01:20",
+        ))
+        offchain_service_repo.add_item(OffchainServiceConfigDB(
+            org_id="snet",
+            service_id="gene-annotation-service",
+            parameter_name="demo_component_status",
+            parameter_value="PENDING",
+            created_on="2021-08-19 00:01:20",
+            updated_on="2021-08-19 00:01:20",
+        ))
+        offchain_service_repo.add_item(OffchainServiceConfigDB(
+            org_id="snet",
+            service_id="gene-annotation-service",
+            parameter_name="demo_component_required",
+            parameter_value=1,
+            created_on="2021-08-19 00:01:20",
+            updated_on="2021-08-19 00:01:20",
         ))
 
         response = registry.get_service_data_by_org_id_and_service_id('snet', 'gene-annotation-service')
@@ -183,7 +204,7 @@ class TestRegistry(TestCase):
                             "demo_component": {'demo_component_url': 'sample_demo_url',
                                                'demo_component_required': 1,
                                                'demo_component_status': 'PENDING',
-                                               'demo_component_last_modified': None
+                                               'demo_component_last_modified': "2021-08-19T00:01:20"
                                                },
                             "demo_component_required": 1
                             }

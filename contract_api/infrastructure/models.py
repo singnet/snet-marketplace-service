@@ -231,7 +231,7 @@ class OffchainServiceConfig(Base):
     org_id = Column("org_id", VARCHAR(128), nullable=False)
     service_id = Column("service_id", VARCHAR(128), nullable=False)
     parameter_name = Column("parameter_name", VARCHAR(128), nullable=False)
-    parameter_value = Column("parameter_value", VARCHAR(512), nullable=True)
+    parameter_value = Column("parameter_value", VARCHAR(512), nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
     updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=datetime.utcnow())
     UniqueConstraint(org_id, service_id, parameter_name, name="uq_off")
