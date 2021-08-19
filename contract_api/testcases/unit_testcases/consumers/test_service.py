@@ -1,13 +1,15 @@
 import unittest
 from datetime import datetime as dt
 
-from contract_api.infrastructure.repositories.service_repository import ServiceRepository
+from contract_api.infrastructure.repositories.service_repository import ServiceRepository, \
+    OffchainServiceConfigRepository
 
 service_repo = ServiceRepository
 from contract_api.handlers.service_handlers import service_deployment_status_notification_handler
-from contract_api.infrastructure.models import ServiceMetadata, Service
+from contract_api.infrastructure.models import ServiceMetadata, Service, OffchainServiceConfig
 
 service_repo = ServiceRepository()
+offchain_service_repo = OffchainServiceConfigRepository()
 
 
 class TestService(unittest.TestCase):
@@ -59,7 +61,10 @@ class TestService(unittest.TestCase):
         assert response['statusCode'] == 201
         service = service_repo.get_service(org_id="snet", service_id="gene-annotation-service")
         assert service.is_curated == 1
-        assert service.service_metadata.demo_component_available == 1
+        offchain_response = offchain_service_repo.get_offchain_service_config(org_id="snet",
+                                                                              service_id="gene-annotation-service")
+        assert offchain_response.to_dict() == {'org_id': 'snet', 'service_id': 'gene-annotation-service',
+                                     'attributes': {'demo_component_status': 'SUCCESS'}}
 
         event = {
             "org_id": "snet",
@@ -70,9 +75,13 @@ class TestService(unittest.TestCase):
         assert response['statusCode'] == 201
         service = service_repo.get_service(org_id="snet", service_id="gene-annotation-service")
         assert service.is_curated == 0
-        assert service.service_metadata.demo_component_available == 0
+        offchain_response = offchain_service_repo.get_offchain_service_config(org_id="snet",
+                                                                              service_id="gene-annotation-service")
+        assert offchain_response.to_dict() == {'org_id': 'snet', 'service_id': 'gene-annotation-service',
+                                     'attributes': {'demo_component_status': 'FAILED'}}
 
     def tearDown(self):
+        offchain_service_repo.session.query(OffchainServiceConfig).delete()
         service_repo.session.query(Service).delete()
         service_repo.session.query(ServiceMetadata).delete()
         service_repo.session.commit()
