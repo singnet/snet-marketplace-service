@@ -46,7 +46,7 @@ jobs:
       - run:
           name: Install required packages.
           command: |
-            sudo apt update
+            sudo apt update --allow-releaseinfo-change
             sudo apt install default-mysql-client
             sudo pip install coverage coveralls pytest alembic
             mysql -h 127.0.0.1 -u root -punittest_pwd -e "create database registry_unittest_db"
