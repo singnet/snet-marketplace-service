@@ -261,7 +261,12 @@ class TestRegistry(TestCase):
                             'groups': [],
                             'tags': [],
                             'media': [],
-                            "demo_component": {},
+                            "demo_component": {
+                                'demo_component_url': '',
+                                'demo_component_required': '',
+                                'demo_component_status': '',
+                                'demo_component_last_modified': ''
+                            },
                             "demo_component_required": 0
                             }
 
