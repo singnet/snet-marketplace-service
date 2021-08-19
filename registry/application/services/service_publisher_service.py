@@ -17,7 +17,7 @@ from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH, NETWORKS, N
 from registry.constants import EnvironmentType, ServiceAvailabilityStatus, ServiceStatus, \
     ServiceSupportType, UserType
 from registry.domain.factory.service_factory import ServiceFactory
-from registry.domain.models.demo_componeny import DemoComponent
+from registry.domain.models.demo_component import DemoComponent
 from registry.domain.models.offchain_service_config import OffchainServiceConfig
 from registry.domain.models.service import Service
 from registry.domain.models.service_comment import ServiceComment
