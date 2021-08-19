@@ -11,9 +11,7 @@ import re
 import shutil
 import sys
 import tarfile
-import tempfile
 import traceback
-import uuid
 import zipfile
 from pathlib import Path
 from urllib.parse import urlparse
