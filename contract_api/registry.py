@@ -438,10 +438,12 @@ class Registry:
         offchain_attributes_db = offchain_service_config.attributes
         demo_component_required = offchain_attributes_db.get("demo_component_required", 0)
         demo_component = service_factory.create_demo_component_domain_model(offchain_service_config.attributes)
+        demo_component = demo_component.to_dict()
+        # prepare format
+        demo_last_modified = offchain_attributes_db.get("demo_component_last_modified", "")
+        demo_component.update({"demo_component_last_modified": demo_last_modified if demo_last_modified else ""})
         offchain_attributes.update({"demo_component_required": demo_component_required})
-        offchain_attributes.update({"demo_component": demo_component.to_dict(
-                    last_modified=offchain_attributes_db.get("demo_component_last_modified", {}))
-                if demo_component else demo_component})
+        offchain_attributes.update({"demo_component": demo_component})
         return offchain_attributes
 
     def get_org_details(self, org_id):
