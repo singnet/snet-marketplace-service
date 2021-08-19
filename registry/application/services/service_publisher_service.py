@@ -1,5 +1,5 @@
 import json
-import os
+from datetime import datetime as dt
 from uuid import uuid4
 import requests
 
@@ -17,6 +17,7 @@ from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH, NETWORKS, N
 from registry.constants import EnvironmentType, ServiceAvailabilityStatus, ServiceStatus, \
     ServiceSupportType, UserType
 from registry.domain.factory.service_factory import ServiceFactory
+from registry.domain.models.demo_componeny import DemoComponent
 from registry.domain.models.offchain_service_config import OffchainServiceConfig
 from registry.domain.models.service import Service
 from registry.domain.models.service_comment import ServiceComment
@@ -334,9 +335,9 @@ class ServicePublisherService:
 
     def get_existing_offchain_configs(self, existing_service_data):
         existing_offchain_configs = {}
-        if "demo_component_required" in existing_service_data:
+        if "demo_component" in existing_service_data:
             existing_offchain_configs.update(
-                {"demo_component_required": existing_service_data["demo_component_required"]})
+                {"demo_component": existing_service_data["demo_component"]})
         return existing_offchain_configs
 
     def are_blockchain_attributes_got_updated(self, existing_metadata, current_service_metadata):
@@ -346,12 +347,22 @@ class ServicePublisherService:
             return True
         return False
 
-    def are_offchain_attributes_got_updated(self, existing_offchain_configs, current_offchain_attributes):
-        change = DeepDiff(current_offchain_attributes, existing_offchain_configs)
-        logger.info(f"Change in offchain attributes::{change}")
-        if change:
-            return True
-        return False
+    def get_offchain_changes(self, current_offchain_config, existing_offchain_config, current_service):
+        changes = {}
+        existing_demo = existing_offchain_config.get("demo_component", {})
+        new_demo = DemoComponent(
+            demo_component_required=current_offchain_config["demo_component_required"],
+            demo_component_url=current_service.assets["demo_files"]["url"]
+        )
+        demo_changes = new_demo.to_dict()
+        demo_last_modifed = existing_demo.get("demo_component_last_modified", "")
+        # if last_modified not there publish if it there and is greater than current last modifed publish
+        demo_changes.update({"change_in_demo_component": 1})
+        if demo_last_modifed and dt.fromisoformat(
+                demo_last_modifed) > dt.fromisoformat(current_service.assets["demo_files"]["last_modified"]):
+            demo_changes.update({"change_in_demo_component": 0})
+        changes.update({"demo_component": demo_changes})
+        return changes
 
     def publish_offchain_service_configs(self, org_id, service_id, payload):
         response = requests.post(
@@ -386,43 +397,21 @@ class ServicePublisherService:
         existing_offchain_configs = self.get_existing_offchain_configs(existing_service_data)
         current_offchain_attributes = ServicePublisherRepository().get_offchain_service_config(org_uuid=self._org_uuid,
                                                                                                service_uuid=self._service_uuid)
-        publish_offchain_attributes = self.are_offchain_attributes_got_updated(
-            existing_offchain_configs,
-            current_offchain_attributes.configs)
+        new_offchain_attributes = self.get_offchain_changes(
+            current_offchain_config=current_offchain_attributes.configs,
+            existing_offchain_config=existing_offchain_configs,
+            current_service=current_service)
 
         status = {
-            "publish_to_blockchain": publish_to_blockchain,
-            "publish_offchain_attributes": publish_offchain_attributes
+            "publish_to_blockchain": publish_to_blockchain
         }
         if publish_to_blockchain:
             filename = f"{METADATA_FILE_PATH}/{current_service.uuid}_service_metadata.json"
             ipfs_hash = ServicePublisherService.publish_to_ipfs(filename, current_service.to_metadata())
             status["service_metadata_ipfs_hash"] = "ipfs://" + ipfs_hash
-        if publish_offchain_attributes:
-            self.publish_offchain_service_configs(
-                org_id=current_org.id,
-                service_id=current_service.service_id,
-                payload=json.dumps(current_offchain_attributes.configs)
-            )
-        self.publish_demo_component_file(current_service.assets["demo_files"]["url"], current_org.id, current_service.service_id)
-        return status
-
-    @staticmethod
-    def publish_demo_component_file(current_demo_url, org_id, service_id):
-        current_demo_bucket, current_demo_key = boto_util.get_bucket_and_key_from_url(current_demo_url)
-        current_s3_demo_file_details = boto_util.get_objects_from_s3(current_demo_bucket, current_demo_key)
-        published_s3_demo_file_details = boto_util.get_objects_from_s3(
-            bucket=ASSETS_COMPONENT_BUCKET_NAME,
-            key=f"assets/{org_id}/{service_id}/component.tar.gz"
+        self.publish_offchain_service_configs(
+            org_id=current_org.id,
+            service_id=current_service.service_id,
+            payload=json.dumps(new_offchain_attributes)
         )
-        print(f"current demo s3 details :: {current_s3_demo_file_details} :: published demo s3 details :: {published_s3_demo_file_details}")
-        if (not published_s3_demo_file_details) or \
-                (published_s3_demo_file_details and published_s3_demo_file_details[0]["LastModified"] >
-                 current_s3_demo_file_details[0]["LastModified"]):
-            new_component_path = utils.extract_zip_and_and_tar(
-                s3_url=current_demo_url)
-            boto_util.s3_upload_file(
-                filename=new_component_path,
-                bucket=ASSETS_COMPONENT_BUCKET_NAME,
-                key=f"assets/{org_id}/{service_id}/{os.path.basename(new_component_path)}"
-            )
+        return status
