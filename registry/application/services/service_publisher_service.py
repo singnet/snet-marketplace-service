@@ -1,4 +1,5 @@
 import json
+from datetime import datetime as dt
 from uuid import uuid4
 import requests
 
@@ -12,13 +13,13 @@ from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
 from common.utils import download_file_from_url, json_to_file, publish_zip_file_in_ipfs, send_email_notification
 from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH, NETWORKS, NETWORK_ID, NOTIFICATION_ARN, \
-    REGION_NAME, PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT, GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT
+    REGION_NAME, PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT, GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT, ASSETS_COMPONENT_BUCKET_NAME
 from registry.constants import EnvironmentType, ServiceAvailabilityStatus, ServiceStatus, \
     ServiceSupportType, UserType
 from registry.domain.factory.service_factory import ServiceFactory
-from registry.domain.models.service import Service
+from registry.domain.models.demo_component import DemoComponent
 from registry.domain.models.offchain_service_config import OffchainServiceConfig
-
+from registry.domain.models.service import Service
 from registry.domain.models.service_comment import ServiceComment
 from registry.domain.services.service_publisher_domain_service import ServicePublisherDomainService
 from registry.exceptions import EnvironmentNotFoundException, InvalidServiceStateException, \
@@ -334,9 +335,9 @@ class ServicePublisherService:
 
     def get_existing_offchain_configs(self, existing_service_data):
         existing_offchain_configs = {}
-        if "demo_component_required" in existing_service_data:
+        if "demo_component" in existing_service_data:
             existing_offchain_configs.update(
-                {"demo_component_required": existing_service_data["demo_component_required"]})
+                {"demo_component": existing_service_data["demo_component"]})
         return existing_offchain_configs
 
     def are_blockchain_attributes_got_updated(self, existing_metadata, current_service_metadata):
@@ -346,12 +347,23 @@ class ServicePublisherService:
             return True
         return False
 
-    def are_offchain_attributes_got_updated(self, existing_offchain_configs, current_offchain_attributes):
-        change = DeepDiff(current_offchain_attributes, existing_offchain_configs)
-        logger.info(f"Change in offchain attributes::{change}")
-        if change:
-            return True
-        return False
+    def get_offchain_changes(self, current_offchain_config, existing_offchain_config, current_service):
+        changes = {}
+        existing_demo = existing_offchain_config.get("demo_component", {})
+        new_demo = DemoComponent(
+            demo_component_required=current_offchain_config["demo_component_required"],
+            demo_component_url=current_service.assets["demo_files"]["url"],
+            demo_component_status=current_service.assets["demo_files"]["status"]
+        )
+        demo_changes = new_demo.to_dict()
+        demo_last_modifed = existing_demo.get("demo_component_last_modified", "")
+        # if last_modified not there publish if it there and is greater than current last modifed publish
+        demo_changes.update({"change_in_demo_component": 1})
+        if demo_last_modifed and dt.fromisoformat(
+                demo_last_modifed) > dt.fromisoformat(current_service.assets["demo_files"]["last_modified"]):
+            demo_changes.update({"change_in_demo_component": 0})
+        changes.update({"demo_component": demo_changes})
+        return changes
 
     def publish_offchain_service_configs(self, org_id, service_id, payload):
         response = requests.post(
@@ -386,22 +398,21 @@ class ServicePublisherService:
         existing_offchain_configs = self.get_existing_offchain_configs(existing_service_data)
         current_offchain_attributes = ServicePublisherRepository().get_offchain_service_config(org_uuid=self._org_uuid,
                                                                                                service_uuid=self._service_uuid)
-        publish_offchain_attributes = self.are_offchain_attributes_got_updated(
-            existing_offchain_configs,
-            current_offchain_attributes.configs)
+        new_offchain_attributes = self.get_offchain_changes(
+            current_offchain_config=current_offchain_attributes.configs,
+            existing_offchain_config=existing_offchain_configs,
+            current_service=current_service)
 
         status = {
-            "publish_to_blockchain": publish_to_blockchain,
-            "publish_offchain_attributes": publish_offchain_attributes,
+            "publish_to_blockchain": publish_to_blockchain
         }
         if publish_to_blockchain:
             filename = f"{METADATA_FILE_PATH}/{current_service.uuid}_service_metadata.json"
             ipfs_hash = ServicePublisherService.publish_to_ipfs(filename, current_service.to_metadata())
             status["service_metadata_ipfs_hash"] = "ipfs://" + ipfs_hash
-        if publish_offchain_attributes:
-            self.publish_offchain_service_configs(
-                org_id=current_org.id,
-                service_id=current_service.service_id,
-                payload=json.dumps(current_offchain_attributes.configs)
-            )
+        self.publish_offchain_service_configs(
+            org_id=current_org.id,
+            service_id=current_service.service_id,
+            payload=json.dumps(new_offchain_attributes)
+        )
         return status

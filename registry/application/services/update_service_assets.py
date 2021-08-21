@@ -1,12 +1,12 @@
 import json
 import os.path
-from copy import deepcopy
+from datetime import datetime as dt
 
 from common import utils
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from registry.config import REGION_NAME, DEMO_COMPONENT_CODE_BUILD_NAME, \
-    MANAGE_PROTO_COMPILATION_LAMBDA_ARN, ALLOWED_HERO_IMAGE_FORMATS, UPDATE_DEMO_COMPONENT_BUILD_STATUS_LAMBDA_ARN
+    MANAGE_PROTO_COMPILATION_LAMBDA_ARN, UPDATE_DEMO_COMPONENT_BUILD_STATUS_LAMBDA_ARN
 from registry.constants import ServiceStatus, ServiceAssetsRegex
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 
@@ -44,6 +44,7 @@ class UpdateServiceAssets:
             demo_details.update({"url": f"https://{bucket_name}.s3.{REGION_NAME}.amazonaws.com/{file_path}"})
             demo_details.update({"build_id": build_id})
             demo_details.update({"status": "PENDING"})
+            demo_details.update({"last_modified": dt.isoformat(dt.utcnow())})
             service.assets.update({"demo_files": demo_details})
             response = {'build_id': build_id}
         elif utils.match_regex_string(path=file_path, regex_pattern=ServiceAssetsRegex.HERO_IMAGE_URL.value):
