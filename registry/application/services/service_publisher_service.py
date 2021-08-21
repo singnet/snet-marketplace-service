@@ -352,15 +352,15 @@ class ServicePublisherService:
         existing_demo = existing_offchain_config.get("demo_component", {})
         new_demo = DemoComponent(
             demo_component_required=current_offchain_config["demo_component_required"],
-            demo_component_url=current_service.assets["demo_files"]["url"],
-            demo_component_status=current_service.assets["demo_files"]["status"]
+            demo_component_url=current_service.assets.get("demo_files", {}).get("url", ""),
+            demo_component_status=current_service.assets.get("demo_files", {}).get("status", "")
         )
         demo_changes = new_demo.to_dict()
         demo_last_modifed = existing_demo.get("demo_component_last_modified", "")
         # if last_modified not there publish if it there and is greater than current last modifed publish
         demo_changes.update({"change_in_demo_component": 1})
         if demo_last_modifed and dt.fromisoformat(
-                demo_last_modifed) > dt.fromisoformat(current_service.assets["demo_files"]["last_modified"]):
+                demo_last_modifed) > dt.fromisoformat(current_service.assets.get("demo_files", {}).get("last_modified", "")):
             demo_changes.update({"change_in_demo_component": 0})
         changes.update({"demo_component": demo_changes})
         return changes
