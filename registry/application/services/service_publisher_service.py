@@ -352,7 +352,8 @@ class ServicePublisherService:
         existing_demo = existing_offchain_config.get("demo_component", {})
         new_demo = DemoComponent(
             demo_component_required=current_offchain_config["demo_component_required"],
-            demo_component_url=current_service.assets["demo_files"]["url"]
+            demo_component_url=current_service.assets["demo_files"]["url"],
+            demo_component_status=current_service.assets["demo_files"]["status"]
         )
         demo_changes = new_demo.to_dict()
         demo_last_modifed = existing_demo.get("demo_component_last_modified", "")

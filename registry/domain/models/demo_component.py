@@ -1,7 +1,8 @@
 class DemoComponent:
-    def __init__(self, demo_component_required, demo_component_url):
+    def __init__(self, demo_component_required, demo_component_url, demo_component_status):
         self._demo_component_url = demo_component_url
         self._demo_component_required = demo_component_required
+        self._demo_component_status = demo_component_status
 
     def to_dict(self):
         return {
@@ -24,4 +25,12 @@ class DemoComponent:
     @demo_component_required.setter
     def demo_component_required(self, demo_component_required):
         self._demo_component_required = demo_component_required
+
+    @property
+    def demo_component_status(self):
+        return self._demo_component_status
+
+    @demo_component_status.setter
+    def demo_component_status(self, demo_component_status):
+        self._demo_component_status = demo_component_status
 
