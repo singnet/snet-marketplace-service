@@ -252,7 +252,7 @@ class TestService(TestCase):
         event = {"Records": [{"eventVersion": "2.1", "eventSource": "aws:s3", "awsRegion": "us-east-1",
                               "eventTime": "2021-06-16T15:49:00.312Z", "eventName": "ObjectCreated:Put",
                               "userIdentity": {"principalId": "AWS:AIDAXYSEM4MOPXXLSNUMO"},
-                              "requestParameters": {"sourceIPAddress": "117.213.142.222"},
+                              "requestParameters": {"sourceIPAddress": "0"},
                               "responseElements": {"x-amz-request-id": "XNESWXSYFNZA8HKK",
                                                    "x-amz-id-2": "ir/3JEviL89t07LOtI2+oQE6X+EMtHWFOWyojXXNkNF/p2ZcsgeBg9X81dbZA2sj4gJw/CI8mhEfyJNcXdpPhkjcRqBYpwRHYH7vzMvrRsU="},
                               "s3": {"s3SchemaVersion": "1.0",
