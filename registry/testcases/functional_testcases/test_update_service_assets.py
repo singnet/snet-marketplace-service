@@ -249,20 +249,10 @@ class TestService(TestCase):
     @patch("common.boto_utils.BotoUtils.trigger_code_build")
     def test_validate_demo_component(self, mock_code_build):
         mock_code_build.return_value = {"build": {"id": "test_build_id"}}
-        event = {"Records": [{"eventVersion": "2.1", "eventSource": "aws:s3", "awsRegion": "us-east-1",
-                              "eventTime": "2021-06-16T15:49:00.312Z", "eventName": "ObjectCreated:Put",
-                              "userIdentity": {"principalId": "AWS:AIDAXYSEM4MOPXXLSNUMO"},
-                              "requestParameters": {"sourceIPAddress": "0"},
-                              "responseElements": {"x-amz-request-id": "XNESWXSYFNZA8HKK",
-                                                   "x-amz-id-2": "ir/3JEviL89t07LOtI2+oQE6X+EMtHWFOWyojXXNkNF/p2ZcsgeBg9X81dbZA2sj4gJw/CI8mhEfyJNcXdpPhkjcRqBYpwRHYH7vzMvrRsU="},
-                              "s3": {"s3SchemaVersion": "1.0",
-                                     "configurationId": "b2733823-1355-4982-abdd-8f14cb7ddba4",
-                                     "bucket": {"name": "ropsten-marketplace-service-assets",
-                                                "ownerIdentity": {"principalId": "A1AEOFBS4PX33"},
-                                                "arn": "arn:aws:s3:::ropsten-marketplace-service-assets"}, "object": {
-                                      "key": "test_org_uuid/services/test_service_uuid/component/example_service_component.zip",
-                                      "size": 5248, "eTag": "54ea849194040b43601f44ed53e5dc1b",
-                                      "sequencer": "0060CA1D6C80321671"}}}]}
+        event = {"Records": [{
+            "s3": {"bucket": {"name": "ropsten-marketplace-service-assets"},
+                   "object": {"key": "test_org_uuid/services/test_service_uuid/component/example_service_component.zip"}}}]
+        }
         response = update_service_assets(event=event, context=None)
         service = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid="test_org_uuid",
                                                                                   service_uuid="test_service_uuid")
