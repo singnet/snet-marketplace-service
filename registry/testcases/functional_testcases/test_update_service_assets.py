@@ -108,21 +108,13 @@ class TestService(TestCase):
                 {
                     "s3": {
                         "bucket": {
-                            "name": "ropsten-marketplace-service-assets",
-                            "ownerIdentity": {
-                                "principalId": "A1AEOFBS4PX33"
-                            },
-                            "arn": "arn:aws:s3:::ropsten-marketplace-service-assets"
+                            "name": "ropsten-marketplace-service-assets"
                         },
                         "object": {
-                            "key": "test_org_uuid/services/test_service_uuid/assets/20210127060155_asset.jpeg",
-                            "size": 6949,
-                            "eTag": "c80928fa72a7ceb972b54a214c2181b3",
-                            "sequencer": "0060CCFC79D1D7CCDF"
+                            "key": "test_org_uuid/services/test_service_uuid/assets/20210127060155_asset.jpeg"
                         }
                     }
-                }
-            ]
+                }]
         }
         response = update_service_assets(event=event, context=None)
         assert response["statusCode"] == 200
@@ -145,22 +137,19 @@ class TestService(TestCase):
     @patch("common.boto_utils.BotoUtils.invoke_lambda")
     def test_validate_proto(self, mock_proto_compile_response):
         mock_proto_compile_response.return_value = {"statusCode": 200}
-        event = {"Records":
-                     [{"eventVersion": "2.1", "eventSource": "aws:s3", "awsRegion": "us-east-1",
-                       "eventTime": "2021-06-18T11:49:39.596Z",
-                       "eventName": "ObjectCreated:Put",
-                       "userIdentity": {"principalId": "AWS:AROAIJDMM5CI656XV7AOY:common-utility-rt-v2-upload"},
-                       "requestParameters": {"sourceIPAddress": "18.210.102.181"},
-                       "responseElements": {"x-amz-request-id": "CK234N3ZN84W1TZ5",
-                                            "x-amz-id-2": "9lHUaMDKbuCB9C6YnI6CjJuuWWhSiunQgXSnHHDK1+6ETaAjq95qSuYsqQGUhfbSOGStTohI3qiWpCjNrg36mFh4uTvh+PdW"},
-                       "s3": {"s3SchemaVersion": "1.0", "configurationId": "31f60a9a-a853-406c-b697-495098f6257d",
-                              "bucket": {"name": "ropsten-marketplace-service-assets",
-                                         "ownerIdentity": {"principalId": "A1AEOFBS4PX33"},
-                                         "arn": "arn:aws:s3:::ropsten-marketplace-service-assets"},
-                              "object": {
-                                  "key": "test_org_uuid/services/test_service_uuid/proto/20210618114940_proto_files.zip",
-                                  "size": 374, "eTag": "57a5f8d4130aab3172c6aac7b898c4d7",
-                                  "sequencer": "0060CC8854D23C18E7"}}}]}
+        event = {
+            "Records": [
+                {
+                    "s3": {
+                        "bucket": {
+                            "name": "ropsten-marketplace-service-assets"
+                        },
+                        "object": {
+                            "key": "test_org_uuid/services/test_service_uuid/proto/20210618114940_proto_files.zip"
+                        }
+                    }
+                }]
+        }
         response = update_service_assets(event=event, context=None)
         service = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid="test_org_uuid",
                                                                                   service_uuid="test_service_uuid")
@@ -249,9 +238,17 @@ class TestService(TestCase):
     @patch("common.boto_utils.BotoUtils.trigger_code_build")
     def test_validate_demo_component(self, mock_code_build):
         mock_code_build.return_value = {"build": {"id": "test_build_id"}}
-        event = {"Records": [{
-            "s3": {"bucket": {"name": "ropsten-marketplace-service-assets"},
-                   "object": {"key": "test_org_uuid/services/test_service_uuid/component/example_service_component.zip"}}}]
+        event = {
+            "Records": [{
+                "s3": {
+                    "bucket": {
+                        "name": "ropsten-marketplace-service-assets"
+                    },
+                    "object": {
+                        "key": "test_org_uuid/services/test_service_uuid/component/example_service_component.zip"
+                    }
+                }
+            }]
         }
         response = update_service_assets(event=event, context=None)
         service = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid="test_org_uuid",
@@ -278,8 +275,6 @@ class TestService(TestCase):
             "builds": [
                 {
                     "id": "sample_build_id",
-                    "arn": "arn:aws:codebuild:us-east-1:533793137436:build/ropstenstagingv2codebuildtr-LwN9IM20ho2d:08444f51-ed99-47d8-ba08-565ae1dc28ef",
-                    "currentPhase": "COMPLETED",
                     "buildStatus": "SUCCEEDED"
                 }
             ]
