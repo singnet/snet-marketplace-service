@@ -192,6 +192,9 @@ class TestServiceMetadata(TestCase):
         response = publish_service(event=event, context=None)
         assert response["statusCode"] == 200
         assert json.loads(response["body"])["data"] == {'publish_to_blockchain': False}
+        service = ServicePublisherRepository().get_service_for_given_service_uuid(
+            org_uuid="test_org_uuid", service_uuid="test_service_uuid")
+        assert service.service_state.state == ServiceStatus.PUBLISHED.value
 
         # blockchain true
         mock_ipfs_hash.return_value = "sample_hash"
