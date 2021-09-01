@@ -415,4 +415,12 @@ class ServicePublisherService:
             service_id=current_service.service_id,
             payload=json.dumps(new_offchain_attributes)
         )
+        # if there is no blockchain change update state as published
+        # else status will be marked based event received from blockchain
+        if not publish_to_blockchain:
+            ServicePublisherRepository().save_service(
+                username=self._username,
+                service=current_service,
+                state=ServiceStatus.PUBLISHED.value
+            )
         return status
