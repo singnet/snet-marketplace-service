@@ -8,7 +8,6 @@ from registry.application.handlers.service_handlers import publish_service
 from registry.constants import OrganizationMemberStatus
 from registry.constants import Role
 from registry.constants import ServiceStatus
-from registry.domain.models.service import Service
 from registry.infrastructure.models import OffchainServiceConfig as OffchainServiceConfigDBModel
 from registry.infrastructure.models import Organization as OrganizationDBModel
 from registry.infrastructure.models import OrganizationMember as OrganizationMemberDBModel
@@ -86,7 +85,12 @@ class TestServiceMetadata(TestCase):
                 short_description="test_short_description",
                 description="test_description",
                 project_url="https://dummy.io",
-                assets={},
+                assets={"demo_files": {
+                    "url": f"https://ropsten-marketplace-service-assets.s3.amazonaws.com/test_org_uuid/services/test_service_uuid/component/20210809094640_component.zip",
+                    "status": "SUCCEEDED",
+                    "required": "1",
+                    "last_modified": "2020-08-18T00:10:20"
+                }},
                 rating={},
                 ranking=1,
                 contributors=[],
@@ -142,7 +146,9 @@ class TestServiceMetadata(TestCase):
     @patch(
         "registry.application.services.service_publisher_service.ServicePublisherService.publish_service_data_to_ipfs")
     @patch("common.ipfs_util.IPFSUtil.read_file_from_ipfs")
-    def test_validate_metadata(self, mock_read_ipfs, mock_publish_to_ipfs,mock_existing_service_details_from_contract_api, mock_ipfs_hash, mock_publish_offchain_configs):
+    def test_validate_metadata(self, mock_read_ipfs, mock_publish_to_ipfs,
+                               mock_existing_service_details_from_contract_api, mock_ipfs_hash,
+                               mock_publish_offchain_configs):
         event = {
             "path": "/org/test_org_uuid/service/test_service_uuid/publish",
             "requestContext": {
@@ -158,8 +164,9 @@ class TestServiceMetadata(TestCase):
 
         mock_publish_offchain_configs.return_value = False
 
-        # blockchain false offchain false
-        mock_publish_to_ipfs.return_value = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid="test_org_uuid", service_uuid="test_service_uuid")
+        # blockchain false
+        mock_publish_to_ipfs.return_value = ServicePublisherRepository().get_service_for_given_service_uuid(
+            org_uuid="test_org_uuid", service_uuid="test_service_uuid")
         mock_read_ipfs.return_value = {'version': 1,
                                        'display_name': 'test_display_name',
                                        'encoding': 'proto',
@@ -177,14 +184,19 @@ class TestServiceMetadata(TestCase):
                                        'tags': []}
         mock_existing_service_details_from_contract_api.return_value = {
             'ipfs_hash': 'QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf',
-            "demo_component_required": 0
+            "demo_component_required": 0,
+            "demo_component": {
+                "demo_component_required": 0,
+            }
         }
         response = publish_service(event=event, context=None)
         assert response["statusCode"] == 200
-        assert json.loads(response["body"])["data"] == {'publish_to_blockchain': False,
-                                                        'publish_offchain_attributes': False}
+        assert json.loads(response["body"])["data"] == {'publish_to_blockchain': False}
+        service = ServicePublisherRepository().get_service_for_given_service_uuid(
+            org_uuid="test_org_uuid", service_uuid="test_service_uuid")
+        assert service.service_state.state == ServiceStatus.PUBLISHED.value
 
-        # blockchain true offchain false
+        # blockchain true
         mock_ipfs_hash.return_value = "sample_hash"
         mock_read_ipfs.return_value = {'version': 1,
                                        'display_name': 'test_display_name',
@@ -208,11 +220,10 @@ class TestServiceMetadata(TestCase):
         response = publish_service(event=event, context=None)
         assert response["statusCode"] == 200
         assert json.loads(response["body"])["data"] == {'publish_to_blockchain': True,
-                                                        'publish_offchain_attributes': False,
                                                         "service_metadata_ipfs_hash": "ipfs://sample_hash"
                                                         }
 
-        # blockchain true offchain true
+        # blockchain true --> [publish demo component]
         mock_ipfs_hash.return_value = "sample_hash"
         mock_read_ipfs.return_value = {'version': 1,
                                        'display_name': 'test_display_name',
@@ -231,40 +242,16 @@ class TestServiceMetadata(TestCase):
                                        'tags': ["tag1"]}
         mock_existing_service_details_from_contract_api.return_value = {
             'ipfs_hash': 'QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf',
-            "demo_component_required": 1
+            "demo_component_required": 0,
+            "demo_component": {
+                "demo_component_required": 1,
+                "demo_component_last_modified": "2020-08-19T04:10:21"
+            }
         }
         response = publish_service(event=event, context=None)
         assert response["statusCode"] == 200
         assert json.loads(response["body"])["data"] == {'publish_to_blockchain': True,
-                                                        'publish_offchain_attributes': True,
                                                         "service_metadata_ipfs_hash": "ipfs://sample_hash"
-                                                        }
-
-        # blockchain false offchain true
-        mock_ipfs_hash.return_value = "sample_hash"
-        mock_read_ipfs.return_value = {'version': 1,
-                                       'display_name': 'test_display_name',
-                                       'encoding': 'proto',
-                                       'service_type': 'grpc',
-                                       'model_ipfs_hash': 'QmcdTYvTxEJrv18Ui1vo1wNDisw8BMoFRMQyM13rz1ok5B',
-                                       'mpe_address': '#12345678', 'groups': [
-                {'free_calls': 10, 'free_call_signer_address': '0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F',
-                 'daemon_addresses': ['0xq2w3e4rr5t6y7u8i9'],
-                 'pricing': [{'default': True, 'price_model': 'fixed_price', 'price_in_cogs': 1}],
-                 'endpoints': ['https://dummydaemonendpoint.io'], 'group_id': 'test_group_id',
-                 'group_name': 'default_group'}], 'service_description': {'url': 'https://dummy.io',
-                                                                          'short_description': 'test_short_description',
-                                                                          'description': 'test_description'},
-                                       'media': [], 'contributors': [],
-                                       'tags': []}
-        mock_existing_service_details_from_contract_api.return_value = {
-            'ipfs_hash': 'QmdGjaVYPMSGpC1qT3LDALSNCCu7JPf7j51H1GQirvQJYf',
-            "demo_component_required": 1
-        }
-        response = publish_service(event=event, context=None)
-        assert response["statusCode"] == 200
-        assert json.loads(response["body"])["data"] == {'publish_to_blockchain': False,
-                                                        'publish_offchain_attributes': True,
                                                         }
 
         # Validate meta
@@ -294,7 +281,6 @@ class TestServiceMetadata(TestCase):
         }
         response = publish_service(event=event, context=None)
         assert response["statusCode"] == 500
-
 
     def tearDown(self):
         org_repo.session.query(OrganizationStateDBModel).delete()
