@@ -11,7 +11,6 @@ boto_utils = BotoUtils(region_name=REGION_NAME)
 
 
 class UpdateServiceAssets:
-    pass
 
     @staticmethod
     def trigger_demo_component_build(payload):
@@ -30,6 +29,7 @@ class UpdateServiceAssets:
         logger.info(f"Build triggered details :: {build_details} build_id :: {build_id}")
         return build_id
 
+    @staticmethod
     def extract_file_details_from_file_path(file_path):
         if utils.match_regex_string(path=file_path, regex_pattern=ServiceAssetsRegex.DEMO_FILE_PATH.value):
             path_values = file_path.split('/')
