@@ -6,7 +6,6 @@ from contract_api.handlers.service_handlers import trigger_demo_component_build
 
 
 class TestServiceAssets(TestCase):
-    pass
 
     @patch("common.boto_utils.BotoUtils.trigger_code_build")
     def test_trigger_demo_component_build(self, mock_code_build_trigger):
