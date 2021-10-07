@@ -87,6 +87,7 @@ package:
     - registry/**
   include:
     - node_modules/singularitynet-platform-contracts/**
+    - resources/**
 
 functions:
   initiate:

@@ -10,6 +10,7 @@ from grpc_health.v1 import health_pb2_grpc as heartb_pb2_grpc
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from common.utils import Utils
+from resources.certificates.root_certificate import certificate
 from service_status.config import REGION_NAME, NOTIFICATION_ARN, SLACK_HOOK, NETWORKS, NETWORK_ID, \
     MAXIMUM_INTERVAL_IN_HOUR, MINIMUM_INTERVAL_IN_HOUR, NETWORK_NAME, BASE_URL_TO_RESET_SERVICE_HEALTH
 from service_status.constant import SRVC_STATUS_GRPC_TIMEOUT, LIMIT
@@ -31,7 +32,7 @@ class ServiceStatus:
         try:
             if secure:
                 channel = grpc.secure_channel(
-                    url, grpc.ssl_channel_credentials())
+                    url, grpc.ssl_channel_credentials(root_certificates=certificate))
             else:
                 channel = grpc.insecure_channel(url)
 

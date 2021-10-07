@@ -208,6 +208,9 @@ package:
     - health_check.sh
     - LICENSE
     - config.rt-v2.json
+  include:
+    - resources/**
+
 
 functions:
   get_all_org:
