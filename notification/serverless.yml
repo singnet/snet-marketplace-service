@@ -70,6 +70,9 @@ package:
     - heath_check.sh
     - node_modules/**
     - signer/**
+  include:
+    - resources/**
+
 
 functions:
 

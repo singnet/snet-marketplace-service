@@ -97,6 +97,9 @@ package:
     - cli2/**
     - node_modules/**
     - dapp_user/**
+  include:
+    - resources/**
+
 
 functions:
   create-order:

@@ -3,7 +3,6 @@ import boto3
 import grpc
 from urllib.parse import unquote, urlparse
 from common.boto_utils import BotoUtils
-from common.constant import root_certificate
 from common.logger import get_logger
 from common.utils import generate_lambda_response
 from dapp_user.config import DELETE_USER_WALLET_ARN, GET_FREE_CALLS_METERING_ARN, \
@@ -13,7 +12,7 @@ from dapp_user.domain.factory.user_factory import UserFactory
 from dapp_user.infrastructure.repositories.user_repository import UserRepository
 from dapp_user.stubs import state_service_pb2, state_service_pb2_grpc
 from dapp_user.exceptions import EmailNotVerifiedException
-
+from resources.certificates.root_certificate import certificate
 
 logger = get_logger(__name__)
 
@@ -93,7 +92,7 @@ class UserService:
         if endpoint_object.scheme == "http":
             channel = grpc.insecure_channel(channel_endpoint)
         elif endpoint_object.scheme == "https":
-            channel = grpc.secure_channel(channel_endpoint, grpc.ssl_channel_credentials(root_certificates=root_certificate))
+            channel = grpc.secure_channel(channel_endpoint, grpc.ssl_channel_credentials(root_certificates=certificate))
         else:
             raise ValueError('Unsupported scheme in service metadata ("{}")'.format(endpoint_object.scheme))
 

@@ -7,7 +7,7 @@ from unittest import TestCase
 from datetime import datetime as dt
 from datetime import timedelta
 
-from common.constant import root_certificate
+from resources.certificates.root_certificate import certificate
 from service_status.handlers.monitor_service_handlers import monitor_service_certificates_expiry_handler, \
     reset_service_health_next_check_time
 from unittest.mock import patch
@@ -80,7 +80,7 @@ class TestMonitorService(TestCase):
         try:
             if secure:
                 channel = grpc.secure_channel(
-                    url, grpc.ssl_channel_credentials(root_certificates=root_certificate))
+                    url, grpc.ssl_channel_credentials(root_certificates=certificate))
             else:
                 channel = grpc.insecure_channel(url)
 
