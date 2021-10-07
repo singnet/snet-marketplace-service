@@ -65,6 +65,9 @@ package:
     - log_setup.py
     - heath_check.sh
     - node_modules/**
+  include:
+    - resources/**
+
 
 functions:
   service-status:

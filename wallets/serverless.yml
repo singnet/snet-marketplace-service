@@ -111,6 +111,9 @@ package:
     - License
     - log_setup.py
     - heath_check.sh
+  include:
+    - resources/**
+
 
 functions:
   wallets:

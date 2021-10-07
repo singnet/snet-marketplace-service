@@ -10,6 +10,7 @@ from web3 import Web3
 from common.blockchain_util import BlockChainUtil
 from common.logger import get_logger
 from common.utils import Utils
+from resources.certificates.root_certificate import certificate
 from signer.config import GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_ARN, METERING_ARN, NETWORKS, \
     PREFIX_FREE_CALL, REGION_NAME, SIGNER_ADDRESS, SIGNER_KEY
 from signer.constant import MPE_ADDR_PATH
@@ -239,7 +240,7 @@ class Signer:
         if endpoint_object.scheme == "http":
             channel = grpc.insecure_channel(channel_endpoint)
         elif endpoint_object.scheme == "https":
-            channel = grpc.secure_channel(channel_endpoint, grpc.ssl_channel_credentials())
+            channel = grpc.secure_channel(channel_endpoint, grpc.ssl_channel_credentials(root_certificates=certificate))
         else:
             raise ValueError('Unsupported scheme in service metadata ("{}")'.format(endpoint_object.scheme))
 
