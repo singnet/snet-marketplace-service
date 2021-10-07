@@ -8,6 +8,7 @@ from grpc_health.v1 import health_pb2 as heartb_pb2
 from grpc_health.v1 import health_pb2_grpc as heartb_pb2_grpc
 
 from common.boto_utils import BotoUtils
+from common.constant import root_certificate
 from common.logger import get_logger
 from common.utils import Utils
 from service_status.config import REGION_NAME, NOTIFICATION_ARN, SLACK_HOOK, NETWORKS, NETWORK_ID, \
@@ -31,7 +32,7 @@ class ServiceStatus:
         try:
             if secure:
                 channel = grpc.secure_channel(
-                    url, grpc.ssl_channel_credentials())
+                    url, grpc.ssl_channel_credentials(root_certificates=root_certificate))
             else:
                 channel = grpc.insecure_channel(url)
 

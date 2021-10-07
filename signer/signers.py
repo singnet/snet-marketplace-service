@@ -8,6 +8,7 @@ from eth_account.messages import defunct_hash_message
 from web3 import Web3
 
 from common.blockchain_util import BlockChainUtil
+from common.constant import root_certificate
 from common.logger import get_logger
 from common.utils import Utils
 from signer.config import GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_ARN, METERING_ARN, NETWORKS, \
@@ -239,7 +240,7 @@ class Signer:
         if endpoint_object.scheme == "http":
             channel = grpc.insecure_channel(channel_endpoint)
         elif endpoint_object.scheme == "https":
-            channel = grpc.secure_channel(channel_endpoint, grpc.ssl_channel_credentials())
+            channel = grpc.secure_channel(channel_endpoint, grpc.ssl_channel_credentials(root_certificates=root_certificate))
         else:
             raise ValueError('Unsupported scheme in service metadata ("{}")'.format(endpoint_object.scheme))
 
