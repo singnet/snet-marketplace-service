@@ -127,6 +127,8 @@ class EventRepository(object):
             insert_query = insert_query.format("rfai_events_raw")
         elif event_type == EventType.TOKEN_STAKE.value:
             insert_query = insert_query.format("token_stake_events_raw")
+        elif event_type == EventType.SINGULARITYNET_AIRDROP.value:
+            insert_query = insert_query.format("airdrop_events_raw")
         else:
             logger.info(f"Invalid event type {event_type}")
             raise EventTypeNotFoundException()
