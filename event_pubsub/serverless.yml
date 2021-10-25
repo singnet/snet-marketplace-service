@@ -307,7 +307,7 @@ functions:
     events:
       - schedule:
           rate: rate(2 minutes)
-          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-token-stake-event-publisher
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-airdrop-event-publisher
           enabled: ${file(./config.${self:provider.stage}.json):token_stake_cron_status}
 
   get-raw-event-details:
