@@ -274,11 +274,11 @@ class TokenStakeEventProducer(BlockchainEventProducer):
 
 
 class AirdropEventProducer(BlockchainEventProducer):
-    TOKEN_EVENT_READ_BATCH_LIMIT = 50000
+    AIRDROP_EVENT_READ_BATCH_LIMIT = 50000
 
     def __init__(self, http_provider, repository=None):
         super().__init__(http_provider, repository)
-        self._contract_name = "SingularityNetAirdrop"
+        self._contract_name = "SingularityAirdrop"
 
     def _push_event(self, event):
         """
@@ -320,7 +320,7 @@ class AirdropEventProducer(BlockchainEventProducer):
     def produce_event(self, net_id):
         last_block_number = self._event_repository.read_last_read_block_number_for_event(self._contract_name)
         end_block_number = self._get_end_block_number(
-            last_block_number, AirdropEventProducer.TOKEN_EVENT_READ_BATCH_LIMIT)
+            last_block_number, AirdropEventProducer.AIRDROP_EVENT_READ_BATCH_LIMIT)
         logger.info(f"reading airdrop event from {last_block_number} to {end_block_number}")
         events = self._produce_contract_events(last_block_number, end_block_number, net_id)
         self._push_events_to_repository(events)
