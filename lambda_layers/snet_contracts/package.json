@@ -6,6 +6,7 @@
   "dependencies": {
     "singularitynet-platform-contracts": "1.0.1",
     "singularitynet-stake-contracts": "1.0.0",
-    "singularitynet-rfai-contracts": "1.0.0"
+    "singularitynet-rfai-contracts": "1.0.0",
+    "singularitynet-airdrop-contracts": "https://github.com/rajeevbbqq/airdrop-contract.git"
   }
 }
