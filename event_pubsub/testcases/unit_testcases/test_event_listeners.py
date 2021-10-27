@@ -54,7 +54,7 @@ class TestBlockchainEventSubscriber(unittest.TestCase):
                                                   'row_created': now}]
         mock_push_event.return_value = {"statusCode": 200}
 
-        error_map, success_list = AirdropEventListener().listen_and_publish_registry_events()
+        error_map, success_list = AirdropEventListener().listen_and_publish_airdrop_events()
         assert success_list == [526]
 
     @patch('event_pubsub.event_repository.EventRepository.read_airdrop_events')
