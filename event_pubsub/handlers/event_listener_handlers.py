@@ -5,7 +5,7 @@ from common.utils import handle_exception_with_slack_notification
 from common.exception_handler import exception_handler
 from event_pubsub.config import NETWORK_ID, SLACK_HOOK
 from event_pubsub.listeners.event_listeners import MPEEventListener, RFAIEventListener, RegistryEventListener, \
-    TokenStakeEventListener
+    TokenStakeEventListener, AirdropEventListener
 
 logger = get_logger(__name__)
 
@@ -28,3 +28,8 @@ def rfai_event_listener_handler(event, context):
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def token_stake_event_listener_handler(event, context):
     TokenStakeEventListener().listen_and_publish_token_stake_events()
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def airdrop_event_listener_handler(event, context):
+    AirdropEventListener().listen_and_publish_token_stake_events()
