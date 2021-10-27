@@ -67,7 +67,7 @@ class EventRepository(object):
 
         self.connection.begin_transaction()
         try:
-            query = 'select * from airdrop_events_raw where processed = 0 and event = "Claim" order by block_no asc ' \
+            query = 'select * from airdrop_events_raw where processed = 0 order by block_no asc ' \
                     'limit ' + str(
                 EventRepository.EVENTS_LIMIT)
             events = self.connection.execute(query)
