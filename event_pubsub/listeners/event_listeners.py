@@ -130,3 +130,19 @@ class TokenStakeEventListener(EventListener):
             logger.debug(f"Updated event process status for success {row_id} ")
             self._event_repository.update_token_stake_raw_events(1, row_id, 200, "")
         return error_map, success_map
+
+
+class AirdropEventListener(EventListener):
+    EVENTS_LIMIT = 30
+
+    def listen_and_publish_airdrop_events(self):
+        airdrop_events = self._event_repository.read_airdrop_events()
+        error_map, success_map = self._publish_events(airdrop_events)
+        for row_id, error in error_map.items():
+            logger.debug(f"Updated event process status for error {row_id} {error}")
+            self._event_repository.update_airdrop_raw_events(1, row_id, error['error_code'], error['error_message'])
+
+        for row_id in success_map:
+            logger.debug(f"Updated event process status for success {row_id} ")
+            self._event_repository.update_airdrop_raw_events(1, row_id, 200, "")
+        return error_map, success_map

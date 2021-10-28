@@ -82,6 +82,8 @@ EVENT_SUBSCRIPTIONS = {
                     "url": "arn:aws"}],
     "WithdrawStake": [{"name": "", "type": "lambda_arn",
                        "url": "arn:aws"}],
+    "Claim": [{"name": "", "type": "lambda_arn",
+               "url": "arn:aws"}],
 
 }
 TRANSACTION_HASH_LIMIT = 20
