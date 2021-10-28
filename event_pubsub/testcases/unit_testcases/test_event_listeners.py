@@ -45,10 +45,10 @@ class TestBlockchainEventSubscriber(unittest.TestCase):
     @patch('event_pubsub.listeners.listener_handlers.LambdaArnHandler.push_event')
     def test_airdrop_event_publisher_success(self, mock_push_event, mock_read_airdrop_event):
         now = datetime.utcnow()
-        mock_read_airdrop_event.return_value = [{'row_id': 526, 'block_no': 6247992, 'event': 'ServiceCreated',
-                                                  'json_str': "{'orgId': b'snet\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'serviceId': b'freecall\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'metadataURI': b'ipfs://QmQtm73kmKhv6mKTkn7qW3uMPtgK6c5Qytb11sCxY98s5j\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'}",
+        mock_read_airdrop_event.return_value = [{'row_id': 526, 'block_no': 6247992, 'event': 'Claim',
+                                                  'json_str': "{'authorizer': '0xD93209FDC420e8298bDFA3dBe340F366Faf1E7bc', 'claimer': '0x35d603B1433C9fFf79B61c905b07822684834542', 'amount': 0, 'airDropId': 1, 'airDropWindowId': 1}",
                                                   'processed': 0,
-                                                  'transactionHash': "b'~\\xb5\\x0c\\x93\\xe7y\\xc1\\x9d\\xf2I\\xef3\\xc6H\\x16\\xbd\\xab \\xa4\\xb5\\r\\xaau5eb\\x82B\\xe0\\x1c\\xf7\\xdd'",
+                                                  'transactionHash': "0x62a730ef8a537d09ee9064da3f57ad3ff3027399c91daa531e41a6c4e10af45a",
                                                   'logIndex': '43', 'error_code': 200, 'error_msg': '',
                                                   'row_updated': now,
                                                   'row_created': now}]
@@ -62,9 +62,9 @@ class TestBlockchainEventSubscriber(unittest.TestCase):
     def test_airdrop_event_publisher_failure(self, mock_lambda_handler, mock_read_airdrop_event):
         now = datetime.utcnow()
         mock_read_airdrop_event.return_value = [{'row_id': 526, 'block_no': 6247992, 'event': 'Claim',
-                                                  'json_str': "{'orgId': b'snet\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'serviceId': b'freecall\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00', 'metadataURI': b'ipfs://QmQtm73kmKhv6mKTkn7qW3uMPtgK6c5Qytb11sCxY98s5j\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'}",
+                                                  'json_str': "{'authorizer': '0xD93209FDC420e8298bDFA3dBe340F366Faf1E7bc', 'claimer': '0x35d603B1433C9fFf79B61c905b07822684834542', 'amount': 0, 'airDropId': 1, 'airDropWindowId': 1}",
                                                   'processed': 0,
-                                                  'transactionHash': "b'~\\xb5\\x0c\\x93\\xe7y\\xc1\\x9d\\xf2I\\xef3\\xc6H\\x16\\xbd\\xab \\xa4\\xb5\\r\\xaau5eb\\x82B\\xe0\\x1c\\xf7\\xdd'",
+                                                  'transactionHash': "0x62a730ef8a537d09ee9064da3f57ad3ff3027399c91daa531e41a6c4e10af45a",
                                                   'logIndex': '43', 'error_code': 200, 'error_msg': '',
                                                   'row_updated': now,
                                                   'row_created': now}]
