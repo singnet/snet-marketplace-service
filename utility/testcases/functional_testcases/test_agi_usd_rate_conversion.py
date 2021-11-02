@@ -65,7 +65,7 @@ class TestAGIUSDConversion(unittest.TestCase):
                                                          multiplier=multiplier)
 
         self.assertEqual(rate, None)
- 
+
     @patch("common.boto_utils.BotoUtils.get_parameter_value_from_secrets_manager")
     @patch("utility.services.crypto_to_fiat.cmc_rate_converter")
     def test_invalid_agi_fiat_rate(self, mock_cmc_rate_converter, mock_secret_manager):
