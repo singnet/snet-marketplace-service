@@ -32,12 +32,12 @@ SLACK_FEEDBACK_HOOK = {
 }
 CRYPTO_FIAT_CONVERSION = {
     'EXCHANGE': 'COINMARKETCAP',
-    'RATE_THRESHOLD': '',
-    'MULTIPLIER': '',
-    'CURRENT_AGI_USD_RATE': '',
-    'LIMIT': '',
+    'RATE_THRESHOLD': 0,
+    'MULTIPLIER': '1',
+    'CURRENT_AGI_USD_RATE': '3',
+    'LIMIT': '10',
     'COINMARKETCAP': {
-        'API_ENDPOINT': ''
+        'API_ENDPOINT': 'https://'
     }
 }
 SUPPORTED_ENVIRONMENT = []
