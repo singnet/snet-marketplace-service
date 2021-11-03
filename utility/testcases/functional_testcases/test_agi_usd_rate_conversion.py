@@ -1,7 +1,6 @@
 import json
 import unittest
 from unittest.mock import patch
-
 from utility.application.handlers.crypto_fiat_handler import calculate_latest_agi_rate, get_agi_fiat_rate, \
     get_agi_usd_rate
 from utility.infrastructure.repository.crypto_fiat_rate import CryptoFiatRates
@@ -20,7 +19,6 @@ class TestAGIUSDConversion(unittest.TestCase):
         mock_cmc_rate_converter.return_value = "AGIX", "3.5", "1", "USD"
         crypto = "AGIX"
         fiat = "USD"
-
         event = {}
         context = None
         get_agi_usd_rate(event=event, context=context)
@@ -75,7 +73,6 @@ class TestAGIUSDConversion(unittest.TestCase):
         mock_cmc_rate_converter.return_value = "AGIX", "3.5", "1", "USD"
         crypto = "AGIX"
         fiat = "INR"
-
         event = {}
         context = None
         calculate_latest_agi_rate(event=event, context=context)
@@ -86,8 +83,6 @@ class TestAGIUSDConversion(unittest.TestCase):
     def test_get_agi_fiat_rate(self):
         event = {"pathParameters": {"currency": "USD"}, "queryStringParameters": {"amount": "100"}}
         response = get_agi_fiat_rate(event=event, context=None)
-
-        print(response)
 
         assert (response["statusCode"] == 200)
         response_body = json.loads(response["body"])
