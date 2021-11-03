@@ -1,7 +1,7 @@
 import os
 
 os.environ["LOG_LEVEL"] = "DEBUG"
-LAMBDA_ARN_FORMAT = "aws_arn"
+LAMBDA_ARN_FORMAT = "arn:aws"
 NETWORK_ID = 0
 NETWORKS = {
     'name': 'ropsten',
