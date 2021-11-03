@@ -60,8 +60,8 @@ class S3Util(object):
     def push_io_bytes_to_s3(self, key, bucket_name, io_bytes):
         s3_url = 'https://{}.s3.amazonaws.com/{}'.format(bucket_name, key)
         s3_resource = self.get_s3_resource_from_key()
-        object = s3_resource.Object(bucket_name, key)
-        result = object.upload_fileobj(io_bytes)
+        obj = s3_resource.Object(bucket_name, key)
+        obj.upload_fileobj(io_bytes)
         return s3_url
 
     def get_bucket_and_key_from_url(self, url):

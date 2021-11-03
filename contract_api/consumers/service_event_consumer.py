@@ -38,6 +38,7 @@ class ServiceEventConsumer(EventConsumer):
         self._ipfs_util = IPFSUtil(ipfs_url, ipfs_port)
 
     def on_event(self, event):
+        # abstract method
         pass
 
     def _get_org_id_from_event(self, event):

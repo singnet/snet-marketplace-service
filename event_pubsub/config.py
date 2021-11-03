@@ -1,6 +1,7 @@
 import os
 
 os.environ["LOG_LEVEL"] = "DEBUG"
+LAMBDA_ARN_FORMAT = "aws_arn"
 NETWORK_ID = 0
 NETWORKS = {
     'name': 'ropsten',
@@ -40,50 +41,50 @@ EVENT_SUBSCRIPTIONS = {
                               "url": "arn:aws:"}],
 
     "OrganizationDeleted": [{"name": "", "type": "lambda_arn",
-                             "url": "arn:aws"}],
+                             "url": LAMBDA_ARN_FORMAT}],
     "ServiceCreated": [{"name": "", "type": "lambda_arn",
-                        "url": "arn:aws"}],
+                        "url": LAMBDA_ARN_FORMAT}],
 
     "ServiceMetadataModified": [{"name": "", "type": "lambda_arn",
                                  "url": "arn:aws:"}],
 
     "ServiceTagsModified": [{"name": "", "type": "lambda_arn",
-                             "url": "arn:aws"}],
+                             "url": LAMBDA_ARN_FORMAT}],
     "ServiceDeleted": [{"name": "", "type": "lambda_arn",
-                        "url": "arn:aws"}],
+                        "url": LAMBDA_ARN_FORMAT}],
 
     "ChannelOpen": [{"name": "", "type": "lambda_arn",
-                     "url": "arn:aws"}],
+                     "url": LAMBDA_ARN_FORMAT}],
 
     "ChannelOpen": [{"name": "", "type": "lambda_arn",
-                     "url": "arn:aws"}],
+                     "url": LAMBDA_ARN_FORMAT}],
     "ChannelExtend": [{"name": "", "type": "lambda_arn",
-                       "url": "arn:aws"}],
+                       "url": LAMBDA_ARN_FORMAT}],
 
     "ChannelAddFunds": [{"name": "", "type": "lambda_arn",
                          "url": "arn:awser"}],
     "ChannelSenderClaim": [{"name": "", "type": "lambda_arn",
-                            "url": "arn:aws"}],
+                            "url": LAMBDA_ARN_FORMAT}],
     "OpenForStake": [{"name": "", "type": "lambda_arn",
-                      "url": "arn:aws"}],
+                      "url": LAMBDA_ARN_FORMAT}],
     "SubmitStake": [{"name": "", "type": "lambda_arn",
-                     "url": "arn:aws"}],
+                     "url": LAMBDA_ARN_FORMAT}],
     "UpdateAutoRenewal": [{"name": "", "type": "lambda_arn",
-                           "url": "arn:aws"}],
+                           "url": LAMBDA_ARN_FORMAT}],
     "ClaimStake": [{"name": "", "type": "lambda_arn",
-                    "url": "arn:aws"}],
+                    "url": LAMBDA_ARN_FORMAT}],
     "ApproveStake": [{"name": "", "type": "lambda_arn",
-                      "url": "arn:aws"}],
+                      "url": LAMBDA_ARN_FORMAT}],
     "RejectStake": [{"name": "", "type": "lambda_arn",
-                     "url": "arn:aws"}],
+                     "url": LAMBDA_ARN_FORMAT}],
     "AutoRenewStake": [{"name": "", "type": "lambda_arn",
-                        "url": "arn:aws"}],
+                        "url": LAMBDA_ARN_FORMAT}],
     "RenewStake": [{"name": "", "type": "lambda_arn",
-                    "url": "arn:aws"}],
+                    "url": LAMBDA_ARN_FORMAT}],
     "WithdrawStake": [{"name": "", "type": "lambda_arn",
-                       "url": "arn:aws"}],
+                       "url": LAMBDA_ARN_FORMAT}],
     "Claim": [{"name": "", "type": "lambda_arn",
-               "url": "arn:aws"}],
+               "url": LAMBDA_ARN_FORMAT}],
 
 }
 TRANSACTION_HASH_LIMIT = 20

@@ -37,6 +37,15 @@ class StatusCode:
     FOUND = 302
 
 
+class StatusDescription:
+    BAD_REQUEST = "Bad Request"
+
+
+class ErrorDescription:
+    METHOD_NOT_ALLOWED = "Method Not Allowed"
+    NOT_FOUND = "Not Found"
+
+
 class ResponseStatus:
     FAILED = "failed"
     SUCCESS = "success"

@@ -30,6 +30,7 @@ class OrganizationEventConsumer(EventConsumer):
         self._s3_util = S3Util(S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY)
 
     def on_event(self, event):
+        # abstract method
         pass
 
     def _push_asset_to_s3_using_hash(self, hash, org_id, service_id):

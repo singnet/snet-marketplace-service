@@ -47,7 +47,7 @@ class ServiceRepository(CommonRepository):
                                          assets_hash,
                                          assets_url_str, contributors]
 
-        query_response = self.connection.execute(upsrt_servicec_metadata, upsrt_service_metadata_params)
+        self.connection.execute(upsrt_servicec_metadata, upsrt_service_metadata_params)
 
     def create_endpoints(self, service_row_id, org_id, service_id, endpt_data):
         insert_endpoints = "INSERT INTO service_endpoint (service_row_id, org_id, service_id, group_id, endpoint, " \
@@ -69,7 +69,7 @@ class ServiceRepository(CommonRepository):
 
     def delete_tags(self, org_id, service_id):
         delete_service_tags = 'DELETE FROM service_tags WHERE service_id = %s AND org_id = %s '
-        delete_service_tags_count = self.connection.execute(delete_service_tags, [service_id, org_id])
+        self.connection.execute(delete_service_tags, [service_id, org_id])
 
     def delete_service_dependents(self, org_id, service_id):
         self.delete_service_group(org_id, service_id)
@@ -80,16 +80,16 @@ class ServiceRepository(CommonRepository):
     def delete_service_endpoint(self, org_id, service_id):
 
         delete_service_endpoint = 'DELETE FROM service_endpoint WHERE service_id = %s AND org_id = %s '
-        del_srvc_endpts_count = self.connection.execute(
+        self.connection.execute(
             delete_service_endpoint, [service_id, org_id])
 
     def delete_service_group(self, org_id, service_id):
         delete_service_groups = 'DELETE FROM service_group WHERE service_id = %s AND org_id = %s '
-        delete_service_group_count = self.connection.execute(delete_service_groups, [service_id, org_id])
+        self.connection.execute(delete_service_groups, [service_id, org_id])
 
     def delete_service(self, org_id, service_id):
         delete_service = 'DELETE FROM service WHERE service_id = %s AND org_id = %s '
-        query_response = self.connection.execute(delete_service, [service_id, org_id])
+        self.connection.execute(delete_service, [service_id, org_id])
 
     def get_service_row_id(self, org_id, service_id):
         query = 'SELECT row_id FROM service WHERE service_id = %s AND org_id = %s '
@@ -183,5 +183,5 @@ class ServiceRepository(CommonRepository):
         if file_types:
             delete_service_media = delete_service_media +  " AND file_type IN %s"
             parameters = (service_id, org_id, file_types)
-        response = self.connection.execute(delete_service_media, parameters)
+        self.connection.execute(delete_service_media, parameters)
 
