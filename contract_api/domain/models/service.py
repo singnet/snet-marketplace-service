@@ -70,8 +70,8 @@ class Service:
         return self._row_id
 
     @row_id.setter
-    def row_id(self):
-        return self._row_id
+    def row_id(self, row_id):
+        self._row_id = row_id
 
 
 

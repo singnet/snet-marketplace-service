@@ -238,7 +238,7 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
 
     def on_event(self, event):
         org_id, service_id = self._get_service_details_from_blockchain(event)
-        self.process_service_deployment(org_id=org_id, service_id=service_id)
+        self.process_service_deployment(org_id=org_id, service_id=service_id, update_proto_stubs=None, proto_hash=None)
 
     def _extract_zip_and_and_tar(self, org_id, service_id, s3_url):
         root_directory = ASSET_TEMP_EXTRACT_DIRECTORY
