@@ -35,11 +35,11 @@ class OrganizationRepository(CommonRepository):
                          org_name, owner_address, org_metadata_uri,
                          datetime.utcnow(), is_curated, description, assets_hash, assets_url, contacts]
 
-        reposne = self.connection.execute(upsert_query, upsert_params)
+        self.connection.execute(upsert_query, upsert_params)
 
     def delete_organization(self, org_id):
         del_org = 'DELETE FROM organization WHERE org_id = %s '
-        qry_res = self.connection.execute(del_org, [org_id])
+        self.connection.execute(del_org, [org_id])
 
     def create_organization_groups(self, org_id, groups):
         insert_qry = "Insert into org_group (org_id, group_id, group_name, payment, row_updated, row_created) " \
@@ -52,8 +52,7 @@ class OrganizationRepository(CommonRepository):
             count = count + query_response[0]
 
     def delete_organization_groups(self, org_id):
-        delete_query = self.connection.execute(
-            "DELETE FROM org_group WHERE org_id = %s ", [org_id])
+        self.connection.execute("DELETE FROM org_group WHERE org_id = %s ", [org_id])
 
     def create_or_update_members(self, org_id, members):
         upsrt_members = "INSERT INTO members ( org_id, member, row_created, row_updated ) " \
@@ -68,7 +67,7 @@ class OrganizationRepository(CommonRepository):
 
     def del_members(self, org_id):
         del_org = 'DELETE FROM members WHERE org_id = %s '
-        qry_res = self.connection.execute(del_org, org_id)
+        self.connection.execute(del_org, org_id)
 
     def read_registry_events(self):
         query = 'select * from registry_events_raw where processed = 0 order by block_no asc '

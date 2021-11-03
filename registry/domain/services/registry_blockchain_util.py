@@ -12,11 +12,9 @@ logger = get_logger(__name__)
 
 class RegistryBlockChainUtil:
     def __init__(self, env_type):
-        self.__env_type = env_type
         if env_type == EnvironmentType.MAIN.value:
             self.__network_id = NETWORK_ID
             self.__contract_path = REG_CNTRCT_PATH
-            self.__executor_address = ""
             self.__contract_address_path = REG_ADDR_PATH
             self.__blockchain_util = BlockChainUtil(provider_type="HTTP_PROVIDER",
                                                     provider=NETWORKS[self.__network_id]['http_provider'])

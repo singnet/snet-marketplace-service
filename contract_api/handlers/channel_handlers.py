@@ -110,7 +110,7 @@ def update_consumed_balance(event, context):
         logger.error(response)
         logger.info(event)
         logger.error(e)
-        error = Error.undefined_error(repr(e))
+        error = Error.handle_undefined_error(repr(e))
         utils.report_slack(str(error), SLACK_HOOK)
         traceback.print_exc()
         return generate_lambda_response(

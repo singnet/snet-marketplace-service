@@ -50,9 +50,6 @@ class FileService:
                 raise FileNotFoundException()
             raise Exception("Failed to delete files")
 
-        if not unsuccessful_deletes:
-            return response
-
         self.send_slack_alert(unsuccessful_files)
         return response
 
