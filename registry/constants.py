@@ -119,6 +119,7 @@ DEFAULT_SERVICE_RANKING = 1
 
 
 class ServiceAssetsRegex(Enum):
+    ORGANIZATION_FILE_PATH = "([a-zA-Z0-9_]*(\/assets\/)[^\/.]*)"
     COMMON_FILE_PATH = "[a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/).*"
     DEMO_COMPONENT_URL = "([a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/component\/)[^\/.]*(_component.zip))"
     PROTO_FILE_URL = "([a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/proto\/)[^\/.]*(_proto_files.zip))"

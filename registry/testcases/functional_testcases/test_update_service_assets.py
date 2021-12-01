@@ -29,7 +29,7 @@ class TestService(TestCase):
             OrganizationDBModel(
                 name="test_org",
                 org_id="test_org_id",
-                uuid="test_org_uuid",
+                uuid="testorguuid",
                 org_type="organization",
                 description="that is the dummy org for testcases",
                 short_description="that is the short description",
@@ -52,7 +52,7 @@ class TestService(TestCase):
         org_repo.add_all_items(
             [OrganizationMemberDBModel(
                 username=member["username"],
-                org_uuid="test_org_uuid",
+                org_uuid="testorguuid",
                 role=Role.MEMBER.value,
                 address=member["address"],
                 status=OrganizationMemberStatus.ACCEPTED.value,
@@ -63,8 +63,8 @@ class TestService(TestCase):
             ) for member in new_org_members])
         service_repo.add_item(
             ServiceDBModel(
-                org_uuid="test_org_uuid",
-                uuid="test_service_uuid",
+                org_uuid="testorguuid",
+                uuid="testserviceuuid",
                 display_name="test_display_name",
                 service_id="test_service_id",
                 metadata_uri="Qasdfghjklqwertyuiopzxcvbnm",
@@ -93,8 +93,8 @@ class TestService(TestCase):
         service_repo.add_item(
             ServiceStateDBModel(
                 row_id=1000,
-                org_uuid="test_org_uuid",
-                service_uuid="test_service_uuid",
+                org_uuid="testorguuid",
+                service_uuid="testserviceuuid",
                 state=ServiceStatus.APPROVED.value,
                 created_by="dummy_user",
                 updated_by="dummy_user",
@@ -111,15 +111,15 @@ class TestService(TestCase):
                             "name": "ropsten-marketplace-service-assets"
                         },
                         "object": {
-                            "key": "test_org_uuid/services/test_service_uuid/assets/20210127060155_asset.jpeg"
+                            "key": "testorguuid/services/testserviceuuid/assets/20210127060155_asset.jpeg"
                         }
                     }
                 }]
         }
         response = update_service_assets(event=event, context=None)
         assert response["statusCode"] == 200
-        service = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid="test_org_uuid",
-                                                                                  service_uuid="test_service_uuid")
+        service = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid="testorguuid",
+                                                                                  service_uuid="testserviceuuid")
         print(service.to_dict())
         assert service.assets == {
             "demo_files": {
@@ -128,7 +128,7 @@ class TestService(TestCase):
                 "ipfs_hash": "QmUKfyv5c8Ru93xyxTcXGswnNzuBTCBU9NGjMV7SMwLSgy"
             },
             "hero_image": {
-                "url": "https://ropsten-marketplace-service-assets.s3.us-east-1.amazonaws.com/test_org_uuid/services/test_service_uuid/assets/20210127060155_asset.jpeg"},
+                "url": "https://ropsten-marketplace-service-assets.s3.us-east-1.amazonaws.com/testorguuid/services/testserviceuuid/assets/20210127060155_asset.jpeg"},
             "proto_files": {
                 "url": "https://marketplace-registry-assets.s3.amazonaws.com/6509581150c8446e8a73b3fa71ebdb69/services/05676ad531cd40a889841ff1f3c5608b/proto/20210131042033_proto_files.zip",
                 "ipfs_hash": "QmUKfyv5c8Ru93xyxTcXGswnNzuBTCBU9NGjMV7SMwLSgy"}
@@ -145,14 +145,14 @@ class TestService(TestCase):
                             "name": "ropsten-marketplace-service-assets"
                         },
                         "object": {
-                            "key": "test_org_uuid/services/test_service_uuid/proto/20210618114940_proto_files.zip"
+                            "key": "testorguuid/services/testserviceuuid/proto/20210618114940_proto_files.zip"
                         }
                     }
                 }]
         }
         response = update_service_assets(event=event, context=None)
-        service = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid="test_org_uuid",
-                                                                                  service_uuid="test_service_uuid")
+        service = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid="testorguuid",
+                                                                                  service_uuid="testserviceuuid")
         assert response["statusCode"] == 200
         assert service.assets == {"demo_files": {
             "url": "https://marketplace-registry-assets.s3.amazonaws.com/6509581150c8446e8a73b3fa71ebdb69/services/05676ad531cd40a889841ff1f3c5608b/component/20210228000436_component.zip",
@@ -161,17 +161,40 @@ class TestService(TestCase):
                 "url": "https://marketplace-registry-assets.s3.amazonaws.com/6509581150c8446e8a73b3fa71ebdb69/services/05676ad531cd40a889841ff1f3c5608b/assets/20210127060152_asset.png",
                 "ipfs_hash": "QmdSh54XcNPJo8v89LRFDN5FAoGL92mn174rKFzoHwUCM1/20210127060152_asset.png"},
             "proto_files": {
-                "url": "https://ropsten-marketplace-service-assets.s3.us-east-1.amazonaws.com/test_org_uuid/services/test_service_uuid/proto/20210618114940_proto_files.zip",
+                "url": "https://ropsten-marketplace-service-assets.s3.us-east-1.amazonaws.com/testorguuid/services/testserviceuuid/proto/20210618114940_proto_files.zip",
                 "status": "SUCCEEDED"}
         }
 
+        paths = [
+            "testorguuid/assets/any",
+            "testorguuid/assets/any/link/",
+            "testorguuid/assets/any/val_ue"
+        ]
+        for path in paths:
+            event = {
+                "Records": [
+                    {
+                        "s3": {
+                            "bucket": {
+                                "name": "ropsten-marketplace-service-assets"
+                            },
+                            "object": {
+                                "key": path
+                            }
+                        }
+                    }]
+            }
+            response = update_service_assets(event=event, context=None)
+            self.assertEqual(response["statusCode"], 200)
+            self.assertEqual(json.loads(response["body"])["data"], None)
+
     def test_demo_component_build_status_update(self):
-        event = {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid", "build_status": "0",
+        event = {"org_uuid": "testorguuid", "service_uuid": "testserviceuuid", "build_status": "0",
                  "build_id": "sample_build_id", "filename": "incorrect_name.zip"}
         response = update_demo_component_build_status(event=event, context=None)
         assert response["statusCode"] == 200
-        service = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid="test_org_uuid",
-                                                                                  service_uuid="test_service_uuid")
+        service = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid="testorguuid",
+                                                                                  service_uuid="testserviceuuid")
 
         assert service.assets == {
             "demo_files": {
@@ -189,12 +212,12 @@ class TestService(TestCase):
             }
         }
 
-        event = {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid", "build_status": "0",
+        event = {"org_uuid": "testorguuid", "service_uuid": "testserviceuuid", "build_status": "0",
                  "build_id": "sample_build_id", "filename": "20210228000436_component.zip"}
         response = update_demo_component_build_status(event=event, context=None)
         assert response["statusCode"] == 200
-        service = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid="test_org_uuid",
-                                                                                  service_uuid="test_service_uuid")
+        service = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid="testorguuid",
+                                                                                  service_uuid="testserviceuuid")
         assert service.assets == {
             "demo_files": {
                 "url": "https://marketplace-registry-assets.s3.amazonaws.com/6509581150c8446e8a73b3fa71ebdb69/services/05676ad531cd40a889841ff1f3c5608b/component/20210228000436_component.zip",
@@ -210,18 +233,18 @@ class TestService(TestCase):
 
         service_state = ServicePublisherRepository().get_service_state(
             status=ServiceStatus.CHANGE_REQUESTED.value)
-        assert service_state[0].org_uuid == "test_org_uuid"
-        assert service_state[0].service_uuid == "test_service_uuid"
+        assert service_state[0].org_uuid == "testorguuid"
+        assert service_state[0].service_uuid == "testserviceuuid"
 
-        ServicePublisherRepository().update_service_status(service_uuid_list=["test_service_uuid"],
+        ServicePublisherRepository().update_service_status(service_uuid_list=["testserviceuuid"],
                                                            prev_state=ServiceStatus.CHANGE_REQUESTED.value,
                                                            next_state=ServiceStatus.APPROVAL_PENDING.value)
-        event = {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid", "build_status": "1",
+        event = {"org_uuid": "testorguuid", "service_uuid": "testserviceuuid", "build_status": "1",
                  "build_id": "sample_build_id", "filename": "20210228000436_component.zip"}
         response = update_demo_component_build_status(event=event, context=None)
         assert response["statusCode"] == 200
-        service = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid="test_org_uuid",
-                                                                                  service_uuid="test_service_uuid")
+        service = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid="testorguuid",
+                                                                                  service_uuid="testserviceuuid")
         assert service.assets == {
             "demo_files": {
                 "url": "https://marketplace-registry-assets.s3.amazonaws.com/6509581150c8446e8a73b3fa71ebdb69/services/05676ad531cd40a889841ff1f3c5608b/component/20210228000436_component.zip",
@@ -245,14 +268,14 @@ class TestService(TestCase):
                         "name": "ropsten-marketplace-service-assets"
                     },
                     "object": {
-                        "key": "test_org_uuid/services/test_service_uuid/component/example_service_component.zip"
+                        "key": "testorguuid/services/testserviceuuid/component/example_service_component.zip"
                     }
                 }
             }]
         }
         response = update_service_assets(event=event, context=None)
-        service = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid="test_org_uuid",
-                                                                                  service_uuid="test_service_uuid")
+        service = ServicePublisherRepository().get_service_for_given_service_uuid(org_uuid="testorguuid",
+                                                                                  service_uuid="testserviceuuid")
         assert response["statusCode"] == 200
         assert json.loads(response["body"])["data"]["build_id"] == "test_build_id"
         assert service.assets["hero_image"] == {
@@ -264,7 +287,7 @@ class TestService(TestCase):
             'ipfs_hash': 'QmUKfyv5c8Ru93xyxTcXGswnNzuBTCBU9NGjMV7SMwLSgy'
         }
         assert service.assets["demo_files"][
-                   "url"] == "https://ropsten-marketplace-service-assets.s3.us-east-1.amazonaws.com/test_org_uuid/services/test_service_uuid/component/example_service_component.zip"
+                   "url"] == "https://ropsten-marketplace-service-assets.s3.us-east-1.amazonaws.com/testorguuid/services/testserviceuuid/component/example_service_component.zip"
         assert service.assets["demo_files"]["status"] == "PENDING"
         assert service.assets["demo_files"]["build_id"] == "test_build_id"
         assert True if (service.assets["demo_files"]["last_modified"]) else False == True
@@ -279,7 +302,7 @@ class TestService(TestCase):
                 }
             ]
         }
-        event = {"pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"}}
+        event = {"pathParameters": {"org_uuid": "testorguuid", "service_uuid": "testserviceuuid"}}
         response = get_code_build_status_for_service(event=event, context=None)
         assert (response["statusCode"] == 200)
         body = json.loads(response["body"])

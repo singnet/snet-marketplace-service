@@ -23,6 +23,9 @@ class UpdateServiceAssets:
     def validate_and_process_service_assets(payload):
         file_path = payload["Records"][0]['s3']['object']['key']
         bucket_name = payload["Records"][0]['s3']['bucket']['name']
+        if utils.match_regex_string(path=file_path, regex_pattern=ServiceAssetsRegex.ORGANIZATION_FILE_PATH.value):
+            logger.info(f"file uploaded to organization assets is ignored. file_path {file_path} ")
+            return None
         org_uuid, service_uuid, filename = UpdateServiceAssets. \
             extract_file_details_from_file_path(file_path=file_path)
         service = service_repo.get_service_for_given_service_uuid(org_uuid=org_uuid, service_uuid=service_uuid)
