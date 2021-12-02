@@ -23,48 +23,54 @@ class UpdateServiceAssets:
     def validate_and_process_service_assets(payload):
         file_path = payload["Records"][0]['s3']['object']['key']
         bucket_name = payload["Records"][0]['s3']['bucket']['name']
-        org_uuid, service_uuid, filename = UpdateServiceAssets. \
-            extract_file_details_from_file_path(file_path=file_path)
-        service = service_repo.get_service_for_given_service_uuid(org_uuid=org_uuid, service_uuid=service_uuid)
-        if not service:
-            raise Exception(f"Service with org_uuid {org_uuid} and service_uuid {service_uuid} not found")
-        if utils.match_regex_string(path=file_path, regex_pattern=ServiceAssetsRegex.PROTO_FILE_URL.value):
-            proto_compile_status = UpdateServiceAssets.validate_proto(file_path, bucket_name, org_uuid=org_uuid, service_uuid=service_uuid)
-            proto_details = {
-                "url": f"https://{bucket_name}.s3.{REGION_NAME}.amazonaws.com/{file_path}",
-                "status": proto_compile_status
-            }
-            service.assets.update({"proto_files": proto_details})
-            response = {}
-        elif utils.match_regex_string(path=file_path, regex_pattern=ServiceAssetsRegex.DEMO_COMPONENT_URL.value):
-            build_id = UpdateServiceAssets.trigger_demo_component_code_build(org_uuid=org_uuid,
-                                                                             service_uuid=service_uuid,
-                                                                             filename=filename)
-            demo_details = service.assets.get("demo_details", {})
-            demo_details.update({"url": f"https://{bucket_name}.s3.{REGION_NAME}.amazonaws.com/{file_path}"})
-            demo_details.update({"build_id": build_id})
-            demo_details.update({"status": "PENDING"})
-            demo_details.update({"last_modified": dt.isoformat(dt.utcnow())})
-            service.assets.update({"demo_files": demo_details})
-            response = {'build_id': build_id}
-        elif utils.match_regex_string(path=file_path, regex_pattern=ServiceAssetsRegex.HERO_IMAGE_URL.value):
-            hero_image_details = {
-                "url": f"https://{bucket_name}.s3.{REGION_NAME}.amazonaws.com/{file_path}"
-            }
-            service.assets.update({"hero_image": hero_image_details})
-            response = {}
+        logger.info(f"payload :: {payload}")
+        if utils.match_regex_string(path=file_path, regex_pattern=ServiceAssetsRegex.ORGANIZATION_FILE_PATH.value):
+            # Files uploaded to organization assets is ignored.
+            return None
+        # If asset belongs to service. Validate and process asset
+        elif utils.match_regex_string(path=file_path, regex_pattern=ServiceAssetsRegex.SERVICE_FILE_PATH.value):
+            org_uuid, service_uuid, filename = UpdateServiceAssets. \
+                extract_file_details_from_file_path(file_path=file_path)
+            service = service_repo.get_service_for_given_service_uuid(org_uuid=org_uuid, service_uuid=service_uuid)
+            if not service:
+                raise Exception(f"Service with org_uuid {org_uuid} and service_uuid {service_uuid} not found")
+            if utils.match_regex_string(path=file_path, regex_pattern=ServiceAssetsRegex.PROTO_FILE_URL.value):
+                proto_compile_status = UpdateServiceAssets.validate_proto(file_path, bucket_name, org_uuid=org_uuid, service_uuid=service_uuid)
+                proto_details = {
+                    "url": f"https://{bucket_name}.s3.{REGION_NAME}.amazonaws.com/{file_path}",
+                    "status": proto_compile_status
+                }
+                service.assets.update({"proto_files": proto_details})
+                response = {}
+            elif utils.match_regex_string(path=file_path, regex_pattern=ServiceAssetsRegex.DEMO_COMPONENT_URL.value):
+                build_id = UpdateServiceAssets.trigger_demo_component_code_build(org_uuid=org_uuid,
+                                                                                 service_uuid=service_uuid,
+                                                                                 filename=filename)
+                demo_details = service.assets.get("demo_details", {})
+                demo_details.update({"url": f"https://{bucket_name}.s3.{REGION_NAME}.amazonaws.com/{file_path}"})
+                demo_details.update({"build_id": build_id})
+                demo_details.update({"status": "PENDING"})
+                demo_details.update({"last_modified": dt.isoformat(dt.utcnow())})
+                service.assets.update({"demo_files": demo_details})
+                response = {'build_id': build_id}
+            elif utils.match_regex_string(path=file_path, regex_pattern=ServiceAssetsRegex.HERO_IMAGE_URL.value):
+                hero_image_details = {
+                    "url": f"https://{bucket_name}.s3.{REGION_NAME}.amazonaws.com/{file_path}"
+                }
+                service.assets.update({"hero_image": hero_image_details})
+                response = {}
+            else:
+                raise Exception(f"Invalid file path for service :: {file_path}")
+            service_repo.save_service(username=f"Lambda|update-service-assets", service=service, state=service.service_state.state)
+            return response
         else:
-            raise Exception(f"Invalid file :: {file_path}")
-        service_repo.save_service(username=f"Lambda|update-service-assets", service=service, state=service.service_state.state)
-        return response
+            raise Exception(f"Invalid file path :: {file_path}")
 
     @staticmethod
     def extract_file_details_from_file_path(file_path):
-        if utils.match_regex_string(path=file_path, regex_pattern=ServiceAssetsRegex.COMMON_FILE_PATH.value):
-            path_values = file_path.split('/')
-            return path_values[0], path_values[2], os.path.basename(file_path)
-        else:
-            raise Exception(f"Invalid file path :: {file_path}")
+        path_values = file_path.split('/')
+        return path_values[0], path_values[2], os.path.basename(file_path)
+
 
     @staticmethod
     def trigger_demo_component_code_build(org_uuid, service_uuid, filename):
