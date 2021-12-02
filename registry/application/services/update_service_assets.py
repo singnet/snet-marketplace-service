@@ -24,9 +24,8 @@ class UpdateServiceAssets:
         file_path = payload["Records"][0]['s3']['object']['key']
         bucket_name = payload["Records"][0]['s3']['bucket']['name']
         logger.info(f"bucket name :: {bucket_name} :: file path :: {file_path}")
-        # If asset belongs to organization. No action is required
+        # File uploaded to organization assets is ignored.
         if utils.match_regex_string(path=file_path, regex_pattern=ServiceAssetsRegex.ORGANIZATION_FILE_PATH.value):
-            # file uploaded to organization assets is ignored.
             logger.info(f"file uploaded to organization assets is ignored.")
             return None
         # If asset belongs to service. Validate and process asset
