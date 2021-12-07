@@ -11,6 +11,7 @@ from utility.config import CRYPTO_FIAT_CONVERSION
 
 class TestAGIUSDConversion(unittest.TestCase):
     def setUp(self):
+        # No setup required
         pass
 
     @patch("common.boto_utils.BotoUtils.get_parameter_value_from_secrets_manager")

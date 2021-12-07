@@ -1,4 +1,4 @@
-import boto3
+import ast
 
 from common import utils
 from common.boto_utils import BotoUtils
@@ -20,7 +20,7 @@ class UpdateServiceAssets:
         variables = ["org_id", "service_id"]
         env_variables = []
         for variable in variables:
-            env_variables.append({"name": variable, "type": "PLAINTEXT", "value": eval(variable)})
+            env_variables.append({"name": variable, "type": "PLAINTEXT", "value": ast.literal_eval(variable)})
         build_details = {
             'projectName': MARKETPLACE_DAPP_BUILD,
             'environmentVariablesOverride': env_variables

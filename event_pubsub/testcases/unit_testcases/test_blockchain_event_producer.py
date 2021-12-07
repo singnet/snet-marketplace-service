@@ -10,6 +10,7 @@ from event_pubsub.producers.blockchain_event_producer import MPEEventProducer, R
     AirdropEventProducer
 from event_pubsub.repository import Repository
 
+infura_endpoint = "https://ropsten.infura.io/"
 
 class TestBlockchainEventProducer(unittest.TestCase):
     def setUp(self):
@@ -20,7 +21,7 @@ class TestBlockchainEventProducer(unittest.TestCase):
     @patch('common.blockchain_util.BlockChainUtil.get_current_block_no')
     def test_produce_registry_events_from_blockchain(self, mock_get_current_block_no, mock_last_block_number,
                                                      mock_get_contract_instance):
-        registry_event_producer = RegistryEventProducer("https://ropsten.infura.io/", Repository(NETWORKS))
+        registry_event_producer = RegistryEventProducer(infura_endpoint, Repository(NETWORKS))
 
         org_created_event_object = Mock()
         event_repository = EventRepository(Repository(NETWORKS))
@@ -57,7 +58,7 @@ class TestBlockchainEventProducer(unittest.TestCase):
     @patch('common.blockchain_util.BlockChainUtil.get_current_block_no')
     def test_produce_mpe_events_from_blockchain(self, mock_get_current_block_no, mock_last_block_number,
                                                 mock_get_contract_instance):
-        mpe_event_producer = MPEEventProducer("https://ropsten.infura.io/", Repository(NETWORKS))
+        mpe_event_producer = MPEEventProducer(infura_endpoint, Repository(NETWORKS))
         event_repository = EventRepository(Repository(NETWORKS))
 
         deposit_fund_Event_object = Mock()
@@ -86,7 +87,7 @@ class TestBlockchainEventProducer(unittest.TestCase):
              'blockNumber': 6286405})]
 
         # Testing Airdrop events
-        airdrop_event_producer = AirdropEventProducer("https://ropsten.infura.io/", Repository(NETWORKS))
+        airdrop_event_producer = AirdropEventProducer(infura_endpoint, Repository(NETWORKS))
         blockchain_events = airdrop_event_producer.produce_event(3)
         assert blockchain_events == [AttributeDict(
             {'args': AttributeDict({'sender': '0xabd2cCb3828b4428bBde6C2031A865b0fb272a5A', 'amount': 30000000}),
