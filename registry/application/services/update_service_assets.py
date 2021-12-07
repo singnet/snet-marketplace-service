@@ -75,10 +75,12 @@ class UpdateServiceAssets:
     @staticmethod
     def trigger_demo_component_code_build(org_uuid, service_uuid, filename):
         lambda_function = UPDATE_DEMO_COMPONENT_BUILD_STATUS_LAMBDA_ARN
-        variables = ["org_uuid", "service_uuid", "filename", "lambda_function"]
+        variables = {
+            "org_uuid": org_uuid, "service_uuid": service_uuid, "filename": filename, "lambda_function": lambda_function
+        }
         env_variables = []
         for variable in variables:
-            env_variables.append({"name": variable, "type": "PLAINTEXT", "value": eval(variable)})
+            env_variables.append({"name": variable, "type": "PLAINTEXT", "value": variables[variable]})
         build_details = {
             'projectName': DEMO_COMPONENT_CODE_BUILD_NAME,
             'environmentVariablesOverride': env_variables
