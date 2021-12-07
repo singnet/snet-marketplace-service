@@ -17,10 +17,10 @@ class UpdateServiceAssets:
     def trigger_demo_component_build(payload):
         file_path = payload["Records"][0]['s3']['object']['key']
         org_id, service_id = UpdateServiceAssets.extract_file_details_from_file_path(file_path=file_path)
-        variables = ["org_id", "service_id"]
+        variables = {"org_id": org_id, "service_id": service_id}
         env_variables = []
         for variable in variables:
-            env_variables.append({"name": variable, "type": "PLAINTEXT", "value": ast.literal_eval(variable)})
+            env_variables.append({"name": variable, "type": "PLAINTEXT", "value": variables[variable]})
         build_details = {
             'projectName': MARKETPLACE_DAPP_BUILD,
             'environmentVariablesOverride': env_variables
