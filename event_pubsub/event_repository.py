@@ -106,8 +106,8 @@ class EventRepository(object):
         try:
             self.connection.begin_transaction()
             update_events = 'UPDATE token_stake_events_raw SET processed = %s, error_code = %s, error_msg = %s WHERE row_id = %s '
-            update_events_response = self.connection.execute(update_events,
-                                                             [processed, error_code, error_message, row_id])
+            self.connection.execute(update_events,
+                                    [processed, error_code, error_message, row_id])
             self.connection.commit_transaction()
 
         except Exception as e:
@@ -119,8 +119,8 @@ class EventRepository(object):
         try:
             self.connection.begin_transaction()
             update_events = 'UPDATE airdrop_events_raw SET processed = %s, error_code = %s, error_msg = %s WHERE row_id = %s '
-            update_events_response = self.connection.execute(update_events,
-                                                             [processed, error_code, error_message, row_id])
+            self.connection.execute(update_events,
+                                    [processed, error_code, error_message, row_id])
             self.connection.commit_transaction()
 
         except Exception as e:
@@ -132,8 +132,8 @@ class EventRepository(object):
         try:
             self.connection.begin_transaction()
             update_events = 'UPDATE rfai_events_raw SET processed = %s, error_code = %s, error_msg = %s WHERE row_id = %s '
-            update_events_reponse = self.connection.execute(update_events,
-                                                            [processed, error_code, error_message, row_id])
+            self.connection.execute(update_events,
+                                    [processed, error_code, error_message, row_id])
             self.connection.commit_transaction()
 
         except Exception as e:

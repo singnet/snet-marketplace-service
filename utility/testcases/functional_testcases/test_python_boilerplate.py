@@ -7,6 +7,7 @@ from utility.constants import PYTHON_BOILERPLATE_TEMPLATE
 
 class TestPythonBoilerplate(unittest.TestCase):
     def setUp(self):
+        # No setup required
         pass
 
     def test_boilerplate_content(self):
