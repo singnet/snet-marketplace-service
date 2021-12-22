@@ -1,3 +1,4 @@
+import ast
 import json
 import os
 from uuid import uuid4
@@ -39,7 +40,7 @@ class ServiceEventConsumer(object):
 
     def _get_org_id_from_event(self, event):
         event_data = event['data']
-        service_data = eval(event_data['json_str'])
+        service_data = ast.literal_eval(event_data['json_str'])
         org_id_bytes = service_data['orgId']
         org_id = Web3.toText(org_id_bytes).rstrip("\x00")
         return org_id
@@ -49,14 +50,14 @@ class ServiceEventConsumer(object):
 
     def _get_service_id_from_event(self, event):
         event_data = event['data']
-        service_data = eval(event_data['json_str'])
+        service_data = ast.literal_eval(event_data['json_str'])
         service_id_bytes = service_data['serviceId']
         service_id = Web3.toText(service_id_bytes).rstrip("\x00")
         return service_id
 
     def _get_metadata_uri_from_event(self, event):
         event_data = event['data']
-        service_data = eval(event_data['json_str'])
+        service_data = ast.literal_eval(event_data['json_str'])
         metadata_uri = Web3.toText(service_data['metadataURI'])[7:].rstrip("\u0000")
         return metadata_uri
 

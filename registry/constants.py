@@ -3,13 +3,13 @@ from enum import Enum
 
 from registry.config import ALLOWED_HERO_IMAGE_FORMATS, CONTRACT_BASE_PATH
 
-COMMON_CNTRCT_PATH = os.path.abspath(f"{CONTRACT_BASE_PATH}/singularitynet-platform-contracts")
+COMMON_CNTRCT_PATH = os.path.abspath(f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-platform-contracts")
 REG_CNTRCT_PATH = os.path.join(COMMON_CNTRCT_PATH, 'abi', 'Registry.json')
 MPE_CNTRCT_PATH = os.path.join(COMMON_CNTRCT_PATH, "abi", "MultiPartyEscrow.json")
 REG_ADDR_PATH = os.path.join(COMMON_CNTRCT_PATH, "networks", "Registry.json")
 MPE_ADDR_PATH = os.path.join(COMMON_CNTRCT_PATH, "networks", "MultiPartyEscrow.json")
 
-TEST_COMMON_CNTRCT_PATH = os.path.abspath(f"{CONTRACT_BASE_PATH}/singularitynet-platform-contracts")
+TEST_COMMON_CNTRCT_PATH = os.path.abspath(f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-platform-contracts")
 TEST_REG_CNTRCT_PATH = os.path.join(TEST_COMMON_CNTRCT_PATH, 'abi', 'Registry.json')
 TEST_REG_ADDR_PATH = os.path.join(TEST_COMMON_CNTRCT_PATH, "networks", "Registry.json")
 
@@ -119,7 +119,8 @@ DEFAULT_SERVICE_RANKING = 1
 
 
 class ServiceAssetsRegex(Enum):
-    COMMON_FILE_PATH = "[a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/).*"
+    ORGANIZATION_FILE_PATH = "([a-zA-Z0-9_]*(\/assets\/)[^\/.]*)"
+    SERVICE_FILE_PATH = "[a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/).*"
     DEMO_COMPONENT_URL = "([a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/component\/)[^\/.]*(_component.zip))"
     PROTO_FILE_URL = "([a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/proto\/)[^\/.]*(_proto_files.zip))"
     HERO_IMAGE_URL = "[a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/assets\/)[0-9]*(_asset.)(" + "|".join(

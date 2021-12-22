@@ -1,6 +1,7 @@
 import traceback
 from enum import Enum
 
+from common.constant import StatusDescription, ErrorDescription
 from common.logger import get_logger
 from common.repository import Repository
 from common.utils import Utils, generate_lambda_response, extract_payload, validate_dict, format_error_message
@@ -93,13 +94,13 @@ def request_handler(event, context):
     try:
         valid_event = validate_dict(data_dict=event, required_keys=REQUIRED_KEYS_FOR_LAMBDA_EVENT)
         if not valid_event:
-            return generate_lambda_response(400, "Bad Request")
+            return generate_lambda_response(400, StatusDescription.BAD_REQUEST)
 
         path = event['path'].lower()
         method = event['httpMethod']
         method_found, path_parameters, payload_dict = extract_payload(method=method, event=event)
         if not method_found:
-            return generate_lambda_response(405, "Method Not Allowed")
+            return generate_lambda_response(405, ErrorDescription.METHOD_NOT_ALLOWED)
 
         path_exist, response_data = route_path(
             path=path, method=method,
@@ -108,17 +109,17 @@ def request_handler(event, context):
         )
 
         if not path_exist:
-            return generate_lambda_response(404, "Not Found")
+            return generate_lambda_response(404, ErrorDescription.NOT_FOUND)
 
         if response_data is None:
-            error_message = format_error_message(status="failed", error="Bad Request", resource=path,
+            error_message = format_error_message(status="failed", error=StatusDescription.BAD_REQUEST, resource=path,
                                                  payload=payload_dict, net_id=NETWORK_ID)
             util.report_slack(error_message, SLACK_HOOK)
             response = generate_lambda_response(500, error_message)
         else:
             response = generate_lambda_response(200, {"status": "success", "data": response_data})
     except Exception as e:
-        error_message = format_error_message(status="failed", error="Bad Request", resource=path,
+        error_message = format_error_message(status="failed", error=StatusDescription.BAD_REQUEST, resource=path,
                                              payload=payload_dict, net_id=NETWORK_ID)
         util.report_slack(error_message, SLACK_HOOK)
         response = generate_lambda_response(500, error_message)

@@ -284,6 +284,56 @@ functions:
           rate: rate(2 minutes)
           name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-token-stake-event-publisher
           enabled: ${file(./config.${self:provider.stage}.json):token_stake_cron_status}
+  airdrop-event-publisher:
+    warmup: true
+    handler:  event_pubsub/handlers/event_producer_handlers.airdrop_event_producer_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
+    events:
+      - schedule:
+          rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-airdrop-event-publisher
+          enabled: ${file(./config.${self:provider.stage}.json):token_stake_cron_status}
+  airdrop-event-listener:
+    warmup: true
+    handler: event_pubsub/handlers/event_listener_handlers.airdrop_event_listener_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
+    events:
+      - schedule:
+          rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-airdrop-event-listener
+          enabled: ${file(./config.${self:provider.stage}.json):token_stake_cron_status}
 
   get-raw-event-details:
     warmup: true

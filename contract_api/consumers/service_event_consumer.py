@@ -1,3 +1,4 @@
+import ast
 import json
 import os
 import tempfile
@@ -38,25 +39,26 @@ class ServiceEventConsumer(EventConsumer):
         self._ipfs_util = IPFSUtil(ipfs_url, ipfs_port)
 
     def on_event(self, event):
+        # abstract method
         pass
 
     def _get_org_id_from_event(self, event):
         event_data = event['data']
-        service_data = eval(event_data['json_str'])
+        service_data = ast.literal_eval(event_data['json_str'])
         org_id_bytes = service_data['orgId']
         org_id = Web3.toText(org_id_bytes).rstrip("\x00")
         return org_id
 
     def _get_service_id_from_event(self, event):
         event_data = event['data']
-        service_data = eval(event_data['json_str'])
+        service_data = ast.literal_eval(event_data['json_str'])
         service_id_bytes = service_data['serviceId']
         service_id = Web3.toText(service_id_bytes).rstrip("\x00")
         return service_id
 
     def _get_metadata_uri_from_event(self, event):
         event_data = event['data']
-        service_data = eval(event_data['json_str'])
+        service_data = ast.literal_eval(event_data['json_str'])
         metadata_uri = Web3.toText(service_data['metadataURI'])[7:].rstrip("\u0000")
         return metadata_uri
 
@@ -238,7 +240,7 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
 
     def on_event(self, event):
         org_id, service_id = self._get_service_details_from_blockchain(event)
-        self.process_service_deployment(org_id=org_id, service_id=service_id)
+        self.process_service_deployment(org_id=org_id, service_id=service_id, update_proto_stubs=None, proto_hash=None)
 
     def _extract_zip_and_and_tar(self, org_id, service_id, s3_url):
         root_directory = ASSET_TEMP_EXTRACT_DIRECTORY

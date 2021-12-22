@@ -1,8 +1,9 @@
 import unittest
 import unittest
 from unittest.mock import patch, Mock
+from datetime import datetime
 
-from event_pubsub.listeners.event_listeners import EventListener, RegistryEventListener
+from event_pubsub.listeners.event_listeners import EventListener, RegistryEventListener, AirdropEventListener
 
 
 class TestBlockchainEventSubscriber(unittest.TestCase):
@@ -38,4 +39,37 @@ class TestBlockchainEventSubscriber(unittest.TestCase):
         mock_lambda_handler.return_value = {"statusCode": 500}
 
         error_map, success_list = RegistryEventListener().listen_and_publish_registry_events()
+        assert error_map == {526: {'error_code': 500, 'error_message': 'for listener arn:aws got error Test Error'}}
+
+    @patch('event_pubsub.event_repository.EventRepository.read_airdrop_events')
+    @patch('event_pubsub.listeners.listener_handlers.LambdaArnHandler.push_event')
+    def test_airdrop_event_publisher_success(self, mock_push_event, mock_read_airdrop_event):
+        now = datetime.utcnow()
+        mock_read_airdrop_event.return_value = [{'row_id': 526, 'block_no': 6247992, 'event': 'Claim',
+                                                  'json_str': "{'authorizer': '0xD93209FDC420e8298bDFA3dBe340F366Faf1E7bc', 'claimer': '0x35d603B1433C9fFf79B61c905b07822684834542', 'amount': 0, 'airDropId': 1, 'airDropWindowId': 1}",
+                                                  'processed': 0,
+                                                  'transactionHash': "0x62a730ef8a537d09ee9064da3f57ad3ff3027399c91daa531e41a6c4e10af45a",
+                                                  'logIndex': '43', 'error_code': 200, 'error_msg': '',
+                                                  'row_updated': now,
+                                                  'row_created': now}]
+        mock_push_event.return_value = {"statusCode": 200}
+
+        error_map, success_list = AirdropEventListener().listen_and_publish_airdrop_events()
+        assert success_list == [526]
+
+    @patch('event_pubsub.event_repository.EventRepository.read_airdrop_events')
+    @patch('event_pubsub.listeners.listener_handlers.LambdaArnHandler.push_event', side_effect=Exception('Test Error'))
+    def test_airdrop_event_publisher_failure(self, mock_lambda_handler, mock_read_airdrop_event):
+        now = datetime.utcnow()
+        mock_read_airdrop_event.return_value = [{'row_id': 526, 'block_no': 6247992, 'event': 'Claim',
+                                                  'json_str': "{'authorizer': '0xD93209FDC420e8298bDFA3dBe340F366Faf1E7bc', 'claimer': '0x35d603B1433C9fFf79B61c905b07822684834542', 'amount': 0, 'airDropId': 1, 'airDropWindowId': 1}",
+                                                  'processed': 0,
+                                                  'transactionHash': "0x62a730ef8a537d09ee9064da3f57ad3ff3027399c91daa531e41a6c4e10af45a",
+                                                  'logIndex': '43', 'error_code': 200, 'error_msg': '',
+                                                  'row_updated': now,
+                                                  'row_created': now}]
+
+        mock_lambda_handler.return_value = {"statusCode": 500}
+
+        error_map, success_list = AirdropEventListener().listen_and_publish_airdrop_events()
         assert error_map == {526: {'error_code': 500, 'error_message': 'for listener arn:aws got error Test Error'}}

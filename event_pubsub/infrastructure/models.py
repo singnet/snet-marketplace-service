@@ -7,6 +7,24 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 
+class AirdropEventsRaw(Base):
+    __tablename__ = "airdrop_events_raw"
+    row_id = Column("row_id", Integer, autoincrement=True, primary_key=True)
+    block_no = Column("block_no", Integer, nullable=False)
+    uncle_block_no = Column("uncle_block_no", Integer, nullable=True, default=null)
+    event = Column("event", VARCHAR(256), nullable=False)
+    event_data = Column("json_str", VARCHAR(256), nullable=True)
+    processed = Column("processed", BIT, nullable=True, default=null)
+    transactionHash = Column("transactionHash", VARCHAR(256), nullable=True, default=null)
+    logIndex = Column("logIndex", VARCHAR(256), nullable=True, default=null)
+    error_code = Column("error_code", Integer, nullable=True, default=null)
+    error_msg = Column("error_msg", VARCHAR(256), nullable=True, default=null)
+    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    UniqueConstraint(transactionHash, logIndex, name="uq_txnhash_logindex")
+    Index("blk_no_idx", block_no)
+
+
 class MpeEventsRaw(Base):
     __tablename__ = "mpe_events_raw"
     row_id = Column("row_id", Integer, autoincrement=True, primary_key=True)

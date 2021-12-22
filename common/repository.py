@@ -1,5 +1,8 @@
 import pymysql
 
+from common.logger import get_logger
+
+logger = get_logger(__name__)
 
 class Repository:
     connection = None
@@ -17,15 +20,16 @@ class Repository:
         return self.__execute_query(query, params)
 
     def __get_connection(self):
-        open = True
+        connection_open = True
         if self.connection is not None:
             try:
                 self.execute("select 1")
-                open = False
+                connection_open = False
             except Exception as e:
-                open = True
+                logger.info(f"Error while connecting to database :: {repr(e)}")
+                connection_open = True
 
-        if open:
+        if connection_open:
             self.connection = pymysql.connect(self.DB_HOST, user=self.DB_USER,
                                               passwd=self.DB_PASSWORD, db=self.DB_NAME, port=self.DB_PORT)
         return self.connection
@@ -48,7 +52,7 @@ class Repository:
                     self.connection.commit()
         except Exception as e:
             self.connection.rollback()
-            print("DB Error in %s, error: %s" % (str(query), repr(e)))
+            logger.info("DB Error in %s, error: %s" % (str(query), repr(e)))
             raise e
         return result
 
@@ -60,7 +64,7 @@ class Repository:
                 return result
         except Exception as err:
             self.connection.rollback()
-            print("DB Error in %s, error: %s" % (str(query), repr(err)))
+            logger.info("DB Error in %s, error: %s" % (str(query), repr(err)))
 
     def begin_transaction(self):
         self.connection.begin()
