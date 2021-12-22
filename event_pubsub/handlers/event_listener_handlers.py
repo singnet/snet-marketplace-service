@@ -32,4 +32,4 @@ def token_stake_event_listener_handler(event, context):
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def airdrop_event_listener_handler(event, context):
-    AirdropEventListener().listen_and_publish_token_stake_events()
+    AirdropEventListener().listen_and_publish_airdrop_events()
