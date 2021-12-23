@@ -333,7 +333,7 @@ class OccamAirdropEventProducer(BlockchainEventProducer):
 
     def __init__(self, http_provider, repository=None):
         super().__init__(http_provider, repository)
-        self._contract_name = "SingularityAirdrop"
+        self._contract_name = "SingularityOccamAirdrop"
 
     def _push_event(self, event):
         """
@@ -370,7 +370,7 @@ class OccamAirdropEventProducer(BlockchainEventProducer):
             self._push_event(event)
 
     def _get_base_contract_path(self):
-        return os.path.abspath(os.path.join(f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-airdrop-contracts"))
+        return os.path.abspath(os.path.join(f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-occam-airdrop-contracts"))
 
     def produce_event(self, net_id):
         event_type = EventType.OCCAM_SNET_AIRDROP.value
