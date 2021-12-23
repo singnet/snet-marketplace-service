@@ -17,6 +17,7 @@ class ContractType(Enum):
     RFAI = "RFAI"
     TokenStake = "TokenStake"
     SingularityAirdrop = 'SingularityAirdrop'
+    SingularityOccamAirdrop = 'SingularityOccamAirdrop'
 
 
 class BlockChainUtil(object):
@@ -137,6 +138,8 @@ class BlockChainUtil(object):
             json_file = "TokenStake.json"
         elif contract_name == ContractType.SingularityAirdrop.value:
             json_file = "SingularityAirdrop.json"
+        elif contract_name == ContractType.SingularityOccamAirdrop.value:
+            json_file = "SingularityOccamAirdrop.json"
         else:
             raise Exception("Invalid contract Type {}".format(contract_name))
 
