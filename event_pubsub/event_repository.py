@@ -77,6 +77,20 @@ class EventRepository(object):
             self.connection.rollback_transaction()
             raise e
 
+    def read_occam_airdrop_events(self):
+
+        self.connection.begin_transaction()
+        try:
+            query = 'select * from occam_airdrop_events_raw where processed = 0 order by block_no asc ' \
+                    'limit ' + str(
+                EventRepository.EVENTS_LIMIT)
+            events = self.connection.execute(query)
+            self.connection.commit_transaction()
+            return events
+        except Exception as e:
+            self.connection.rollback_transaction()
+            raise e
+
     def update_mpe_raw_events(self, processed, row_id, error_code, error_message):
         try:
             self.connection.begin_transaction()
@@ -128,6 +142,19 @@ class EventRepository(object):
             self.connection.rollback_transaction()
             raise e
 
+    def update_occam_airdrop_raw_events(self, processed, row_id, error_code, error_message):
+        try:
+            self.connection.begin_transaction()
+            update_events = 'UPDATE occam_airdrop_events_raw SET processed = %s, error_code = %s, error_msg = %s WHERE row_id = %s '
+            self.connection.execute(update_events,
+                                    [processed, error_code, error_message, row_id])
+            self.connection.commit_transaction()
+
+        except Exception as e:
+            logger.exception(f"Error while updating the token_stake_raw_event {str(e)}")
+            self.connection.rollback_transaction()
+            raise e
+
     def update_rfai_raw_events(self, processed, row_id, error_code, error_message):
         try:
             self.connection.begin_transaction()
@@ -156,6 +183,8 @@ class EventRepository(object):
             insert_query = insert_query.format("token_stake_events_raw")
         elif event_type == EventType.SINGULARITYNET_AIRDROP.value:
             insert_query = insert_query.format("airdrop_events_raw")
+        elif event_type == EventType.OCCAM_SNET_AIRDROP.value:
+            insert_query = insert_query.format("occam_airdrop_events_raw")
         else:
             logger.info(f"Invalid event type {event_type}")
             raise EventTypeNotFoundException()

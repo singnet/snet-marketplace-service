@@ -1,11 +1,12 @@
 import sys
+
 sys.path.append('/opt')
 from common.logger import get_logger
 from common.utils import handle_exception_with_slack_notification
 from common.exception_handler import exception_handler
 from event_pubsub.config import NETWORK_ID, SLACK_HOOK
 from event_pubsub.listeners.event_listeners import MPEEventListener, RFAIEventListener, RegistryEventListener, \
-    TokenStakeEventListener, AirdropEventListener
+    TokenStakeEventListener, AirdropEventListener, OccamAirdropEventListener
 
 logger = get_logger(__name__)
 
@@ -33,3 +34,8 @@ def token_stake_event_listener_handler(event, context):
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def airdrop_event_listener_handler(event, context):
     AirdropEventListener().listen_and_publish_airdrop_events()
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def occam_airdrop_event_listener_handler(event, context):
+    OccamAirdropEventListener().listen_and_publish_occam_airdrop_events()
