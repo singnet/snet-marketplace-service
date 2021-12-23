@@ -146,3 +146,19 @@ class AirdropEventListener(EventListener):
             logger.debug(f"Updated event process status for success {row_id} ")
             self._event_repository.update_airdrop_raw_events(1, row_id, 200, "")
         return error_map, success_map
+
+
+class OccamAirdropEventListener(EventListener):
+    EVENTS_LIMIT = 30
+
+    def listen_and_publish_occam_airdrop_events(self):
+        occam_airdrop_events = self._event_repository.read_occam_airdrop_events()
+        error_map, success_map = self._publish_events(occam_airdrop_events)
+        for row_id, error in error_map.items():
+            logger.debug(f"Updated event process status for error {row_id} {error}")
+            self._event_repository.update_occam_airdrop_raw_events(1, row_id, error['error_code'], error['error_message'])
+
+        for row_id in success_map:
+            logger.debug(f"Updated event process status for success {row_id} ")
+            self._event_repository.update_occam_airdrop_raw_events(1, row_id, 200, "")
+        return error_map, success_map
