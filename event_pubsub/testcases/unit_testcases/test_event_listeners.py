@@ -3,7 +3,8 @@ import unittest
 from unittest.mock import patch, Mock
 from datetime import datetime
 
-from event_pubsub.listeners.event_listeners import EventListener, RegistryEventListener, AirdropEventListener
+from event_pubsub.listeners.event_listeners import EventListener, RegistryEventListener, AirdropEventListener, \
+    OccamAirdropEventListener
 
 
 class TestBlockchainEventSubscriber(unittest.TestCase):
@@ -73,3 +74,20 @@ class TestBlockchainEventSubscriber(unittest.TestCase):
 
         error_map, success_list = AirdropEventListener().listen_and_publish_airdrop_events()
         assert error_map == {526: {'error_code': 500, 'error_message': 'for listener arn:aws got error Test Error'}}
+
+    @patch('event_pubsub.event_repository.EventRepository.read_occam_airdrop_events')
+    @patch('event_pubsub.listeners.listener_handlers.LambdaArnHandler.push_event', side_effect=Exception('Test Error'))
+    def test_airdrop_event_publisher_failure(self, mock_lambda_handler, mock_read_occam_airdrop_event):
+        now = datetime.utcnow()
+        mock_read_occam_airdrop_event.return_value = [{'row_id': 1, 'block_no': 11624692, 'event': 'Claim',
+                                                 'json_str': "{'authorizer': '0xD93209FDC420e8298bDFA3dBe340F366Faf1E7bc', 'claimer': '0x176133a958449C28930970989dB5fFFbEdd9F447', 'amount': 1000, 'airDropId': 2, 'airDropWindowId': 4}",
+                                                 'processed': 0,
+                                                 'transactionHash': "0x805bec29d6f72eea170a748e4bc14e21bfce9f50c229db7ba006bccfafbded34",
+                                                 'logIndex': '2', 'error_code': 0, 'error_msg': '',
+                                                 'row_updated': now,
+                                                 'row_created': now}]
+
+        mock_lambda_handler.return_value = {"statusCode": 500}
+
+        error_map, success_list = OccamAirdropEventListener().listen_and_publish_occam_airdrop_events()
+        assert error_map == {1: {'error_code': 500, 'error_message': 'for listener arn:aws got error Test Error'}}
