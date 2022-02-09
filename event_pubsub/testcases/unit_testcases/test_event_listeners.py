@@ -4,7 +4,7 @@ from unittest.mock import patch, Mock
 from datetime import datetime
 
 from event_pubsub.listeners.event_listeners import EventListener, RegistryEventListener, AirdropEventListener, \
-    OccamAirdropEventListener
+    OccamAirdropEventListener, ConverterAGIXEventListener
 
 
 class TestBlockchainEventSubscriber(unittest.TestCase):
@@ -56,6 +56,22 @@ class TestBlockchainEventSubscriber(unittest.TestCase):
         mock_push_event.return_value = {"statusCode": 200}
 
         error_map, success_list = AirdropEventListener().listen_and_publish_airdrop_events()
+        assert success_list == [526]
+
+    @patch('event_pubsub.event_repository.EventRepository.read_converter_agix_events')
+    @patch('event_pubsub.listeners.listener_handlers.LambdaArnHandler.push_event')
+    def test_converter_agix_event_publisher_success(self, mock_push_event, mock_read_converter_agix_events):
+        now = datetime.utcnow()
+        mock_read_converter_agix_events.return_value = [{'row_id': 526, 'block_no': 6247992, 'event': 'Claim',
+                                                 'json_str': "{'authorizer': '0xD93209FDC420e8298bDFA3dBe340F366Faf1E7bc', 'claimer': '0x35d603B1433C9fFf79B61c905b07822684834542', 'amount': 0, 'conversion_id':'B61c905b07822684834542'}",
+                                                 'processed': 0,
+                                                 'transactionHash': "0x62a730ef8a537d09ee9064da3f57ad3ff3027399c91daa531e41a6c4e10af45a",
+                                                 'logIndex': '43', 'error_code': 200, 'error_msg': '',
+                                                 'row_updated': now,
+                                                 'row_created': now}]
+        mock_push_event.return_value = {"statusCode": 200}
+
+        error_map, success_list = ConverterAGIXEventListener().listen_and_publish_converter_agix_events()
         assert success_list == [526]
 
     @patch('event_pubsub.event_repository.EventRepository.read_airdrop_events')

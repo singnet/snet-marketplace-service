@@ -327,6 +327,56 @@ functions:
           name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-occam-airdrop-event-publisher
           enabled: ${file(./config.${self:provider.stage}.json):occam_airdrop_cron_status}
 
+  converter-agix-event-publisher:
+    handler: event_pubsub/handlers/event_producer_handlers.converter_agix_event_producer_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
+    events:
+      - schedule:
+          rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-converter-agix-event-publisher
+          enabled: ${file(./config.${self:provider.stage}.json):converter_agix_cron_status}
+
+  converter-agix-event-listener:
+    handler: event_pubsub/handlers/event_listener_handlers.converter_agix_event_listener_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
+    events:
+      - schedule:
+          rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-converter-agix-event-listener
+          enabled: ${file(./config.${self:provider.stage}.json):converter_agix_cron_status}
+
   airdrop-event-listener:
     handler: event_pubsub/handlers/event_listener_handlers.airdrop_event_listener_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}

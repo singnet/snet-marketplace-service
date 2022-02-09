@@ -6,7 +6,7 @@ from common.utils import handle_exception_with_slack_notification
 from common.exception_handler import exception_handler
 from event_pubsub.config import NETWORK_ID, SLACK_HOOK
 from event_pubsub.listeners.event_listeners import MPEEventListener, RFAIEventListener, RegistryEventListener, \
-    TokenStakeEventListener, AirdropEventListener, OccamAirdropEventListener
+    TokenStakeEventListener, AirdropEventListener, OccamAirdropEventListener, ConverterAGIXEventListener
 
 logger = get_logger(__name__)
 
@@ -39,3 +39,8 @@ def airdrop_event_listener_handler(event, context):
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def occam_airdrop_event_listener_handler(event, context):
     OccamAirdropEventListener().listen_and_publish_occam_airdrop_events()
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def converter_agix_event_listener_handler(event, context):
+    ConverterAGIXEventListener().listen_and_publish_converter_agix_events()
