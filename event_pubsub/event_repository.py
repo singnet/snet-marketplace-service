@@ -212,7 +212,7 @@ class EventRepository(object):
             insert_query = insert_query.format("airdrop_events_raw")
         elif event_type == EventType.OCCAM_SNET_AIRDROP.value:
             insert_query = insert_query.format("occam_airdrop_events_raw")
-        elif event_type == EventType.SINGULARITY_CONVERTER_AGIX.value:
+        elif event_type == EventType.CONVERTER_AGIX.value:
             insert_query = insert_query.format("converter_agix_events_raw")
         else:
             logger.info(f"Invalid event type {event_type}")
