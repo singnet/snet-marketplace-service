@@ -18,6 +18,7 @@ class ContractType(Enum):
     TokenStake = "TokenStake"
     SingularityAirdrop = 'SingularityAirdrop'
     SingularityOccamAirdrop = 'SingularityOccamAirdrop'
+    ConverterAGIX = 'ConverterAGIX'
 
 
 class BlockChainUtil(object):
@@ -140,6 +141,8 @@ class BlockChainUtil(object):
             json_file = "SingularityAirdrop.json"
         elif contract_name == ContractType.SingularityOccamAirdrop.value:
             json_file = "SingularityOccamAirdrop.json"
+        elif contract_name == ContractType.ConverterAGIX.value:
+            json_file = "TokenConversionManager.json"
         else:
             raise Exception("Invalid contract Type {}".format(contract_name))
 
