@@ -6,7 +6,7 @@ custom:
   prune:
     automatic: true
     includeLayers: true
-    number: 1
+    number: 10
 
 provider:
   name: aws
