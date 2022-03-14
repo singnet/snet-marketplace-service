@@ -105,6 +105,19 @@ class EventRepository(object):
             self.connection.rollback_transaction()
             raise e
 
+    def read_converter_ntx_events(self):
+
+        self.connection.begin_transaction()
+        try:
+            query = 'select * from converter_ntx_events_raw where processed = 0 order by block_no asc ' \
+                    'limit ' + str(EventRepository.EVENTS_LIMIT)
+            events = self.connection.execute(query)
+            self.connection.commit_transaction()
+            return events
+        except Exception as e:
+            self.connection.rollback_transaction()
+            raise e
+
     def update_mpe_raw_events(self, processed, row_id, error_code, error_message):
         try:
             self.connection.begin_transaction()
@@ -182,6 +195,19 @@ class EventRepository(object):
             self.connection.rollback_transaction()
             raise e
 
+    def update_converter_ntx_raw_events(self, processed, row_id, error_code, error_message):
+        try:
+            self.connection.begin_transaction()
+            update_events = 'UPDATE converter_ntx_events_raw SET processed = %s, error_code = %s, error_msg = %s ' \
+                            'WHERE row_id = %s '
+            self.connection.execute(update_events,
+                                    [processed, error_code, error_message, row_id])
+            self.connection.commit_transaction()
+        except Exception as e:
+            logger.exception(f"Error while updating the converter_ntx_raw_event {str(e)}")
+            self.connection.rollback_transaction()
+            raise e
+
     def update_rfai_raw_events(self, processed, row_id, error_code, error_message):
         try:
             self.connection.begin_transaction()
@@ -214,6 +240,8 @@ class EventRepository(object):
             insert_query = insert_query.format("occam_airdrop_events_raw")
         elif event_type == EventType.CONVERTER_AGIX.value:
             insert_query = insert_query.format("converter_agix_events_raw")
+        elif event_type == EventType.CONVERTER_NTX.value:
+            insert_query = insert_query.format("converter_ntx_events_raw")
         else:
             logger.info(f"Invalid event type {event_type}")
             raise EventTypeNotFoundException()

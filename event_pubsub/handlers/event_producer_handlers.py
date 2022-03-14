@@ -6,7 +6,8 @@ from common.logger import get_logger
 from common.utils import handle_exception_with_slack_notification
 from event_pubsub.config import NETWORKS, NETWORK_ID, SLACK_HOOK
 from event_pubsub.producers.blockchain_event_producer import MPEEventProducer, RFAIEventProducer, RegistryEventProducer, \
-    TokenStakeEventProducer, AirdropEventProducer, OccamAirdropEventProducer, ConverterAGIXEventProducer
+    TokenStakeEventProducer, AirdropEventProducer, OccamAirdropEventProducer, ConverterAGIXEventProducer, \
+    ConverterNTXEventProducer
 from event_pubsub.repository import Repository
 
 registry_event_producer = RegistryEventProducer(NETWORKS["http_provider"], Repository(NETWORKS))
@@ -16,6 +17,8 @@ token_stake_event_producer = TokenStakeEventProducer(NETWORKS["http_provider"], 
 airdrop_event_producer = AirdropEventProducer(NETWORKS["http_provider"], Repository(NETWORKS))
 occam_airdrop_event_producer = OccamAirdropEventProducer(NETWORKS["http_provider"], Repository(NETWORKS))
 converter_agix_event_producer = ConverterAGIXEventProducer(NETWORKS["http_provider"], Repository(NETWORKS))
+converter_ntx_event_producer = ConverterNTXEventProducer(NETWORKS["http_provider"], Repository(NETWORKS))
+
 
 logger = get_logger(__name__)
 
@@ -72,5 +75,13 @@ def occam_airdrop_event_producer_handler(event, context):
 def converter_agix_event_producer_handler(event, context):
     try:
         converter_agix_event_producer.produce_event(NETWORK_ID)
+    except Exception as e:
+        raise e
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def converter_ntx_event_producer_handler(event, context):
+    try:
+        converter_ntx_event_producer.produce_event(NETWORK_ID)
     except Exception as e:
         raise e
