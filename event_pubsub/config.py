@@ -85,10 +85,10 @@ EVENT_SUBSCRIPTIONS = {
                        "url": LAMBDA_ARN_FORMAT}],
     "Claim": [{"name": "", "type": "lambda_arn",
                "url": LAMBDA_ARN_FORMAT}],
-    "Mint": [{"name": "", "type": "lambda_arn",
-              "url": LAMBDA_ARN_FORMAT}],
-    "Burn": [{"name": "", "type": "lambda_arn",
-              "url": LAMBDA_ARN_FORMAT}],
+    "ConversionOut": [{"name": "", "type": "lambda_arn",
+                       "url": LAMBDA_ARN_FORMAT}],
+    "ConversionIn": [{"name": "", "type": "lambda_arn",
+                      "url": LAMBDA_ARN_FORMAT}]
 
 }
 TRANSACTION_HASH_LIMIT = 20
