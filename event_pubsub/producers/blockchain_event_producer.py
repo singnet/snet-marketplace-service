@@ -2,7 +2,7 @@ import os
 
 from common.blockchain_util import BlockChainUtil, ContractType
 from common.logger import get_logger
-from event_pubsub.config import CONTRACT_BASE_PATH
+from event_pubsub.config import CONTRACT_BASE_PATH, READ_EVENTS_WITH_BLOCK_DIFFERENCE
 from event_pubsub.event_repository import EventRepository
 from event_pubsub.producers.event_producer import EventProducer
 from event_pubsub.constants import EventType
@@ -43,9 +43,16 @@ class BlockchainEventProducer(EventProducer):
 
     def _get_end_block_number(self, last_processed_block_number, batch_limit):
         current_block_number = self._blockchain_util.get_current_block_no()
+        logger.info(f"Current block number={current_block_number}")
+
+        if READ_EVENTS_WITH_BLOCK_DIFFERENCE:
+            block_number_with_difference = current_block_number - READ_EVENTS_WITH_BLOCK_DIFFERENCE
+        else:
+            block_number_with_difference = current_block_number
+
         end_block_number = last_processed_block_number + batch_limit
-        if current_block_number <= end_block_number:
-            end_block_number = current_block_number
+        if block_number_with_difference <= end_block_number:
+            end_block_number = block_number_with_difference
 
         return end_block_number
 
