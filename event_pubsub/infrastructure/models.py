@@ -105,6 +105,7 @@ class AirdropEventsRaw(Base):
     UniqueConstraint(transactionHash, logIndex, name="uq_txnhash_logindex")
     Index("blk_no_idx", block_no)
 
+
 class OccamAirdropEventsRaw(Base):
     __tablename__ = "occam_airdrop_events_raw"
     row_id = Column("row_id", Integer, autoincrement=True, primary_key=True)
@@ -120,4 +121,40 @@ class OccamAirdropEventsRaw(Base):
     row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
     row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
     UniqueConstraint(transactionHash, logIndex, name="uq_oaer")
+    Index("blk_no_idx", block_no)
+
+
+class ConverterAGIXEventsRaw(Base):
+    __tablename__ = "converter_agix_events_raw"
+    row_id = Column("row_id", Integer, autoincrement=True, primary_key=True)
+    block_no = Column("block_no", Integer, nullable=False)
+    uncle_block_no = Column("uncle_block_no", Integer, nullable=True, default=null)
+    event = Column("event", VARCHAR(256), nullable=False)
+    event_data = Column("json_str", VARCHAR(256), nullable=True)
+    processed = Column("processed", BIT, nullable=True, default=null)
+    transactionHash = Column("transactionHash", VARCHAR(256), nullable=True, default=null)
+    logIndex = Column("logIndex", VARCHAR(256), nullable=True, default=null)
+    error_code = Column("error_code", Integer, nullable=True, default=null)
+    error_msg = Column("error_msg", VARCHAR(256), nullable=True, default=null)
+    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    UniqueConstraint(transactionHash, logIndex, name="uq_converter_agix_ev")
+    Index("blk_no_idx", block_no)
+
+
+class ConverterNTXEventsRaw(Base):
+    __tablename__ = "converter_ntx_events_raw"
+    row_id = Column("row_id", Integer, autoincrement=True, primary_key=True)
+    block_no = Column("block_no", Integer, nullable=False)
+    uncle_block_no = Column("uncle_block_no", Integer, nullable=True, default=null)
+    event = Column("event", VARCHAR(256), nullable=False)
+    event_data = Column("json_str", VARCHAR(256), nullable=True)
+    processed = Column("processed", BIT, nullable=True, default=null)
+    transactionHash = Column("transactionHash", VARCHAR(256), nullable=True, default=null)
+    logIndex = Column("logIndex", VARCHAR(256), nullable=True, default=null)
+    error_code = Column("error_code", Integer, nullable=True, default=null)
+    error_msg = Column("error_msg", VARCHAR(256), nullable=True, default=null)
+    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    UniqueConstraint(transactionHash, logIndex, name="uq_converter_ntx_ev")
     Index("blk_no_idx", block_no)

@@ -85,7 +85,13 @@ EVENT_SUBSCRIPTIONS = {
                        "url": LAMBDA_ARN_FORMAT}],
     "Claim": [{"name": "", "type": "lambda_arn",
                "url": LAMBDA_ARN_FORMAT}],
+    "ConversionOut": [{"name": "", "type": "lambda_arn",
+                       "url": LAMBDA_ARN_FORMAT}],
+    "ConversionIn": [{"name": "", "type": "lambda_arn",
+                      "url": LAMBDA_ARN_FORMAT}]
 
 }
 TRANSACTION_HASH_LIMIT = 20
 CONTRACT_BASE_PATH = ""
+
+READ_EVENTS_WITH_BLOCK_DIFFERENCE = 0
