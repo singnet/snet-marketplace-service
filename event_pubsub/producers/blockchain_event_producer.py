@@ -5,7 +5,7 @@ from common.logger import get_logger
 from event_pubsub.config import CONTRACT_BASE_PATH, READ_EVENTS_WITH_BLOCK_DIFFERENCE
 from event_pubsub.event_repository import EventRepository
 from event_pubsub.producers.event_producer import EventProducer
-from event_pubsub.constants import EventType
+from event_pubsub.constants import EventType, NodeModulesPackagePath
 
 logger = get_logger(__name__)
 
@@ -439,7 +439,7 @@ class ConverterAGIXEventProducer(BlockchainEventProducer):
 
     def _get_base_contract_path(self):
         return os.path.abspath(
-            os.path.join(f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-converter-agix-contracts"))
+            os.path.join(f"{CONTRACT_BASE_PATH}/{NodeModulesPackagePath.BRIDGE.value}"))
 
     def produce_event(self, net_id):
         last_block_number = self._event_repository.read_last_read_block_number_for_event(self._contract_name)
@@ -496,13 +496,13 @@ class ConverterNTXEventProducer(BlockchainEventProducer):
 
     def _get_base_contract_path(self):
         return os.path.abspath(
-            os.path.join(f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-converter-ntx-contracts"))
+            os.path.join(f"{CONTRACT_BASE_PATH}/{NodeModulesPackagePath.BRIDGE.value}"))
 
     def produce_event(self, net_id):
         last_block_number = self._event_repository.read_last_read_block_number_for_event(self._contract_name)
         end_block_number = self._get_end_block_number(
             last_block_number, ConverterNTXEventProducer.CONVERTER_NTX_EVENT_READ_BATCH_LIMIT)
-        logger.info(f"reading converter ntx event from {last_block_number} to {end_block_number}")
+        logger.info(f"Reading converter ntx event from {last_block_number} to {end_block_number}")
         events = self._produce_contract_events(last_block_number, end_block_number, net_id)
         self._push_events_to_repository(events)
         self._event_repository.update_last_read_block_number_for_event(self._contract_name, end_block_number)

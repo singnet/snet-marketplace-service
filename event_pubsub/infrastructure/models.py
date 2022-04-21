@@ -138,7 +138,7 @@ class ConverterAGIXEventsRaw(Base):
     error_msg = Column("error_msg", VARCHAR(256), nullable=True, default=null)
     row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
     row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
-    UniqueConstraint(transactionHash, logIndex, name="uq_converter_agix_ev")
+    UniqueConstraint(transactionHash, name="uq_converter_agix_ev")
     Index("blk_no_idx", block_no)
 
 
@@ -156,5 +156,5 @@ class ConverterNTXEventsRaw(Base):
     error_msg = Column("error_msg", VARCHAR(256), nullable=True, default=null)
     row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
     row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
-    UniqueConstraint(transactionHash, logIndex, name="uq_converter_ntx_ev")
+    UniqueConstraint(transactionHash,  name="uq_converter_ntx_ev")
     Index("blk_no_idx", block_no)
