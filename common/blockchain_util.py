@@ -6,8 +6,9 @@ import web3
 from eth_account.messages import defunct_hash_message
 from web3 import Web3
 from websockets.exceptions import ConnectionClosed
+
+from common.constant import TokenSymbol
 from common.logger import get_logger
-from event_pubsub.constants import TokenSymbol
 
 logger = get_logger(__name__)
 

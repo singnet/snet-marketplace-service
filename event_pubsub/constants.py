@@ -14,8 +14,3 @@ class EventType(Enum):
 
 class NodeModulesPackagePath(Enum):
     BRIDGE = "node_modules/singularitynet-bridge"
-
-
-class TokenSymbol(Enum):
-    AGIX = "AGIX"
-    NTX = "NTX"
