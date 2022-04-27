@@ -10,3 +10,7 @@ class EventType(Enum):
     OCCAM_SNET_AIRDROP = 'OCCAM_SNET_AIRDROP'
     CONVERTER_AGIX = 'CONVERTER_AGIX'
     CONVERTER_NTX = 'CONVERTER_NTX'
+
+
+class NodeModulesPackagePath(Enum):
+    BRIDGE = "node_modules/singularitynet-bridge"
