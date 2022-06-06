@@ -1,3 +1,4 @@
+import ast
 import base64
 import os
 
@@ -26,13 +27,10 @@ class MPEEventConsumer(EventConsumer):
         logger.info(f"processing mpe event {event}")
         event_name = event["name"]
         event_data = event["data"]
-        mpe_data = eval(event_data['json_str'])
+        mpe_data = ast.literal_eval(event_data['json_str'])
 
         if event_name == 'ChannelOpen':
-            channel_id = int(mpe_data['channelId'])
             self._mpe_repository.create_channel(mpe_data)
-        elif event_name == 'DepositFunds':
-            pass
         else:
             channel_id = int(mpe_data['channelId'])
             channel_data = mpe_contract.functions.channels(

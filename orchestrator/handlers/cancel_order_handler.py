@@ -40,7 +40,7 @@ def request_handler(event, context):
             net_id=NETWORK_ID,
             handler="cancel_order_handler"
         )
-        obj_util.report_slack(1, error_message, SLACK_HOOK)
+        obj_util.report_slack(error_message, SLACK_HOOK)
         response = generate_lambda_response(500, error_message, cors_enabled=True)
         traceback.print_exc()
     return response

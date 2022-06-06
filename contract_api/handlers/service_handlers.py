@@ -8,6 +8,7 @@ from common.logger import get_logger
 from common.repository import Repository
 from common.utils import Utils, generate_lambda_response
 from common.utils import handle_exception_with_slack_notification
+from contract_api.application.service.update_assets_service import UpdateServiceAssets
 from contract_api.config import NETWORKS, NETWORK_ID, SLACK_HOOK
 from contract_api.registry import Registry
 
@@ -31,6 +32,7 @@ def get_service_get(event, context):
 
 @handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
 def get_service_post(event, context):
+    logger.info(f"Got service post:: {event}")
     obj_reg = Registry(obj_repo=db)
     payload_dict = json.loads(event['body'])
     response_data = obj_reg.get_all_srvcs(qry_param=payload_dict)
@@ -40,6 +42,7 @@ def get_service_post(event, context):
 
 @handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
 def get_service_for_given_org(event, context):
+    logger.info(f"Got service for given org :: {event}")
     obj_reg = Registry(obj_repo=db)
     org_id = event['pathParameters']['orgId']
     service_id = event['pathParameters']['serviceId']
@@ -51,6 +54,7 @@ def get_service_for_given_org(event, context):
 
 @handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
 def get_group_for_service(event, context):
+    logger.info(f"Got group fpr service event :: {event}")
     obj_reg = Registry(obj_repo=db)
     org_id = event['pathParameters']['orgId']
     service_id = event['pathParameters']['serviceId']
@@ -62,6 +66,7 @@ def get_group_for_service(event, context):
 
 @handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
 def post_rating_for_given_service(event, context):
+    logger.info(f"Got post rating for given service event :: {event}")
     obj_reg = Registry(obj_repo=db)
     org_id = event['pathParameters']['orgId']
     service_id = event['pathParameters']['serviceId']
@@ -72,6 +77,7 @@ def post_rating_for_given_service(event, context):
 
 @exception_handler(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
 def service_curation(event, context):
+    logger.info(f"Got service curation event :: {event}")
     registry = Registry(obj_repo=db)
     org_id = event['pathParameters']['orgId']
     service_id = event['pathParameters']['serviceId']
@@ -92,4 +98,14 @@ def service_deployment_status_notification_handler(event, context):
     return generate_lambda_response(
         StatusCode.CREATED,
         {"status": "success", "data": "Build failure notified", "error": {}}, cors_enabled=True
+    )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def trigger_demo_component_build(event, context):
+    logger.info(f"trigger_demo_component_build event :: {event}")
+    response = UpdateServiceAssets().trigger_demo_component_build(payload=event)
+    return generate_lambda_response(
+        StatusCode.CREATED,
+        {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )

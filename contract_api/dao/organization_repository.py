@@ -25,20 +25,21 @@ class OrganizationRepository(CommonRepository):
         return response
 
     def create_or_updatet_organization(self, org_id, org_name, owner_address, org_metadata_uri, description,
-                                       assets_hash, assets_url,contacts):
-        upsert_query = "Insert into organization (org_id, organization_name, owner_address, org_metadata_uri,description, assets_hash,org_assets_url, contacts, row_updated, row_created) " \
-                       "VALUES ( %s, %s, %s, %s, %s , %s ,%s ,%s, %s ,%s) " \
-                       "ON DUPLICATE KEY UPDATE organization_name = %s, owner_address = %s, org_metadata_uri = %s, row_updated = %s  ,description = %s ,assets_hash =%s , org_assets_url = %s , contacts = %s"
-        upsert_params = [org_id, org_name, owner_address, org_metadata_uri, description, assets_hash, assets_url,contacts,
+                                       is_curated, assets_hash, assets_url, contacts):
+        upsert_query = "Insert into organization (org_id, organization_name, owner_address, org_metadata_uri, is_curated, description, assets_hash,org_assets_url, contacts, row_updated, row_created) " \
+                       "VALUES ( %s, %s, %s, %s, %s , %s ,%s ,%s, %s ,%s, %s) " \
+                       "ON DUPLICATE KEY UPDATE organization_name = %s, owner_address = %s, org_metadata_uri = %s, row_updated = %s, is_curated=%s, description = %s ,assets_hash =%s , org_assets_url = %s , contacts = %s"
+        upsert_params = [org_id, org_name, owner_address, org_metadata_uri, is_curated, description, assets_hash,
+                         assets_url, contacts,
                          datetime.utcnow(), datetime.utcnow(),
                          org_name, owner_address, org_metadata_uri,
-                         datetime.utcnow(), description, assets_hash, assets_url,contacts]
+                         datetime.utcnow(), is_curated, description, assets_hash, assets_url, contacts]
 
-        reposne = self.connection.execute(upsert_query, upsert_params)
+        self.connection.execute(upsert_query, upsert_params)
 
     def delete_organization(self, org_id):
         del_org = 'DELETE FROM organization WHERE org_id = %s '
-        qry_res = self.connection.execute(del_org, [org_id])
+        self.connection.execute(del_org, [org_id])
 
     def create_organization_groups(self, org_id, groups):
         insert_qry = "Insert into org_group (org_id, group_id, group_name, payment, row_updated, row_created) " \
@@ -51,8 +52,7 @@ class OrganizationRepository(CommonRepository):
             count = count + query_response[0]
 
     def delete_organization_groups(self, org_id):
-        delete_query = self.connection.execute(
-            "DELETE FROM org_group WHERE org_id = %s ", [org_id])
+        self.connection.execute("DELETE FROM org_group WHERE org_id = %s ", [org_id])
 
     def create_or_update_members(self, org_id, members):
         upsrt_members = "INSERT INTO members ( org_id, member, row_created, row_updated ) " \
@@ -67,7 +67,7 @@ class OrganizationRepository(CommonRepository):
 
     def del_members(self, org_id):
         del_org = 'DELETE FROM members WHERE org_id = %s '
-        qry_res = self.connection.execute(del_org, org_id)
+        self.connection.execute(del_org, org_id)
 
     def read_registry_events(self):
         query = 'select * from registry_events_raw where processed = 0 order by block_no asc '

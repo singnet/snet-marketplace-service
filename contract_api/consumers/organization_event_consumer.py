@@ -1,3 +1,4 @@
+import ast
 from common.logger import get_logger
 from web3 import Web3
 import json
@@ -30,6 +31,7 @@ class OrganizationEventConsumer(EventConsumer):
         self._s3_util = S3Util(S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY)
 
     def on_event(self, event):
+        # abstract method
         pass
 
     def _push_asset_to_s3_using_hash(self, hash, org_id, service_id):
@@ -59,7 +61,7 @@ class OrganizationEventConsumer(EventConsumer):
         return new_assets_url_mapping
 
     def _get_org_id_from_event(self, event):
-        event_org_data = eval(event['data']['json_str'])
+        event_org_data = ast.literal_eval(event['data']['json_str'])
         org_id_bytes = event_org_data['orgId']
         org_id = Web3.toText(org_id_bytes).rstrip("\x00")
         return org_id
@@ -80,6 +82,7 @@ class OrganizationEventConsumer(EventConsumer):
 
         blockchain_org_data = registry_contract.functions.getOrganizationById(org_id.encode('utf-8')).call()
         org_metadata_uri = Web3.toText(blockchain_org_data[2]).rstrip("\x00").lstrip("ipfs://")
+        logger.info(f"Ipfs hash:: {org_metadata_uri}")
         ipfs_org_metadata = self._ipfs_util.read_file_from_ipfs(org_metadata_uri)
 
         return org_id, blockchain_org_data, ipfs_org_metadata, org_metadata_uri
@@ -106,7 +109,7 @@ class OrganizationCreatedEventConsumer(OrganizationEventConsumer):
 
                 self._organization_repository.create_or_updatet_organization(
                     org_id=org_id, org_name=ipfs_org_metadata["org_name"], owner_address=org_data[3],
-                    org_metadata_uri=org_metadata_uri, description=json.dumps(description),
+                    org_metadata_uri=org_metadata_uri, is_curated=1, description=json.dumps(description),
                     assets_hash=json.dumps(new_assets_hash),
                     assets_url=json.dumps(new_assets_url_mapping),contacts=json.dumps(contacts))
                 self._organization_repository.delete_organization_groups(org_id=org_id)

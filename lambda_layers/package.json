@@ -1,0 +1,9 @@
+{
+  "name": "serverless-dependencies",
+  "version": "1.0.0",
+  "description": "",
+  "author": "SingularityNet",
+  "dependencies": {
+    "serverless-prune-plugin": "1.4.1"
+  }
+}

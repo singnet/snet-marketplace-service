@@ -8,7 +8,8 @@
     "serverless-plugin-tracing": "2.0.0",
     "serverless-prune-plugin": "1.4.1",
     "serverless-python-requirements": "5.0.0",
-    "singularitynet-platform-contracts": "0.3.4"
+    "singularitynet-platform-contracts": "1.0.1",
+    "serverless-aws-documentation": "1.1.0"
 
   }
 }

@@ -1,14 +1,24 @@
 import json
 from collections import defaultdict
 
+from common.constant import BuildStatus
 from common.logger import get_logger
 from common.utils import Utils
 from contract_api.constant import GET_ALL_SERVICE_LIMIT, GET_ALL_SERVICE_OFFSET_LIMIT
 from contract_api.dao.service_repository import ServiceRepository
+from contract_api.domain.factory.service_factory import ServiceFactory
+from contract_api.domain.models.demo_component import DemoComponent
+from contract_api.domain.models.offchain_service_attribute import OffchainServiceAttribute
+from contract_api.infrastructure.repositories.service_media_repository import ServiceMediaRepository
+from contract_api.infrastructure.repositories.service_repository import ServiceRepository as NewServiceRepository, \
+    OffchainServiceConfigRepository
 from contract_api.filter import Filter
 
 logger = get_logger(__name__)
 BUILD_CODE = {"SUCCESS": 1, "FAILED": 0}
+new_service_repo = NewServiceRepository()
+service_media_repo = ServiceMediaRepository()
+service_factory = ServiceFactory()
 
 
 class Registry:
@@ -16,14 +26,22 @@ class Registry:
         self.repo = obj_repo
         self.obj_utils = Utils()
 
-    def service_build_status_notifier(self, org_id, service_id, build_status):
-        logger.info(f"received event for service_id: {service_id} org_id:{org_id}")
-        if build_status == BUILD_CODE['FAILED']:
-            self.curate_service(org_id, service_id, curated=False)
-        elif build_status == BUILD_CODE['SUCCESS']:
-            self.curate_service(org_id, service_id, curated=True)
+    @staticmethod
+    def service_build_status_notifier(org_id, service_id, build_status):
+        is_curated = False
+        if build_status == BUILD_CODE['SUCCESS']:
+            is_curated = True
+        service = new_service_repo.get_service(org_id=org_id, service_id=service_id)
+        if service:
+            service.is_curated = is_curated
+            new_service_repo.create_or_update_service(service=service)
         else:
-            raise Exception("invalid build status")
+            raise Exception(f"Unable to find service for service_id {service_id} and org_id {org_id}")
+        demo_build_status = BuildStatus.SUCCESS if build_status == BUILD_CODE['SUCCESS'] else BuildStatus.FAILED
+        offchain_attributes = OffchainServiceAttribute(
+            org_id, service_id, {"demo_component_status": demo_build_status}
+        )
+        OffchainServiceConfigRepository().save_offchain_service_attribute(offchain_attributes)
 
     def _get_all_service(self):
         """ Method to generate org_id and service mapping."""
@@ -110,9 +128,7 @@ class Registry:
 
     def _convert_service_metadata_str_to_json(self, record):
         record["service_rating"] = json.loads(record["service_rating"])
-        record["assets_url"] = json.loads(record["assets_url"])
         record["org_assets_url"] = json.loads(record["org_assets_url"])
-        record["assets_hash"] = json.loads(record["assets_hash"])
         record["contributors"] = json.loads(record.get("contributors", "[]"))
         record["contacts"] = json.loads(record.get("contacts", "[]"))
 
@@ -148,12 +164,22 @@ class Registry:
                 rslt[org_id][service_id]["tags"] = tags
             qry_part = " AND (S.org_id, S.service_id) IN " + \
                        str(org_srvc_tuple).replace(',)', ')')
+            qry_part_where = " AND (org_id, service_id) IN " + \
+                             str(org_srvc_tuple).replace(',)', ')')
             print("qry_part::", qry_part)
             sort_by = sort_by.replace("org_id", "M.org_id")
-            services = self.repo.execute(
-                "SELECT DISTINCT M.*,O.organization_name,O.org_assets_url FROM service_endpoint E, service_metadata M, service S "
-                ", organization O WHERE O.org_id = S.org_id AND S.row_id = M.service_row_id AND "
-                "S.row_id = E.service_row_id " + qry_part + "ORDER BY E.is_available DESC, " + sort_by + " " + order_by)
+            if org_srvc_tuple:
+                services = self.repo.execute(
+                    "SELECT DISTINCT M.row_id, M.service_row_id, M.org_id, M.service_id, M.display_name, M.description, M.url, M.json, M.model_ipfs_hash, M.encoding, M.`type`,"
+                    " M.mpe_address,M.service_rating, M.ranking, M.contributors, M.short_description,"
+                    "O.organization_name,O.org_assets_url FROM service_endpoint E, service_metadata M, service S "
+                    ", organization O WHERE O.org_id = S.org_id AND S.row_id = M.service_row_id AND "
+                    "S.row_id = E.service_row_id " + qry_part + "ORDER BY E.is_available DESC, " + sort_by + " " + order_by)
+                services_media = self.repo.execute(
+                    "select org_id ,service_id,file_type ,asset_type,url,alt_text ,`order`,row_id from service_media where asset_type = 'hero_image' " + qry_part_where)
+            else:
+                services = []
+                services_media = []
             obj_utils = Utils()
             obj_utils.clean(services)
             available_service = self._get_is_available_service()
@@ -168,8 +194,14 @@ class Registry:
                     tags = rslt[org_id][service_id]["tags"].split(",")
                 if (org_id, service_id) in available_service:
                     is_available = 1
+                asset_media = []
+                if len(services_media) > 0:
+                    asset_media = [x for x in services_media if x['service_id'] == service_id]
+                    if len(asset_media) > 0:
+                        asset_media = asset_media[0]
                 rec.update({"tags": tags})
                 rec.update({"is_available": is_available})
+                rec.update({"media": asset_media})
 
             return services
         except Exception as err:
@@ -343,8 +375,10 @@ class Registry:
             tags = []
             org_groups_dict = {}
             basic_service_data = self.repo.execute(
-                "SELECT M.*, S.*, O.org_id, O.organization_name, O.owner_address, O.org_metadata_uri, O.org_email, "
-                "O.org_assets_url, O.assets_hash, O.description as org_description, O.contacts "
+                "SELECT M.row_id, M.service_row_id, M.org_id, M.service_id, M.display_name, M.description, M.url, M.json, M.model_ipfs_hash, M.encoding, M.`type`,"
+                " M.mpe_address,M.service_rating, M.ranking, M.contributors, M.short_description, M.demo_component_available,"
+                " S.*, O.org_id, O.organization_name, O.owner_address, O.org_metadata_uri, O.org_email, "
+                "O.org_assets_url, O.description as org_description, O.contacts "
                 "FROM service_metadata M, service S, organization O "
                 "WHERE O.org_id = S.org_id AND S.row_id = M.service_row_id AND S.org_id = %s "
                 "AND S.service_id = %s AND S.is_curated = 1", [org_id, service_id])
@@ -362,9 +396,13 @@ class Registry:
             tags = self.repo.execute("SELECT tag_name FROM service_tags WHERE org_id = %s AND service_id = %s",
                                      [org_id, service_id])
 
+            service_media = service_media_repo.get_service_media(org_id=org_id, service_id=service_id)
+            media = [media_data.to_dict() for media_data in service_media]
             result = basic_service_data[0]
 
             self._convert_service_metadata_str_to_json(result)
+
+            offchain_service_configs = Registry.prepare_offchain_service_attributes(org_id, service_id)
 
             for rec in org_group_data:
                 org_groups_dict[rec['group_id']] = {
@@ -382,11 +420,31 @@ class Registry:
                             break
                 rec.update(org_groups_dict.get(rec['group_id'], {}))
 
-            result.update({"is_available": is_available, "groups": service_group_data, "tags": tags})
+            result.update({"is_available": is_available, "groups": service_group_data, "tags": tags, "media": media})
+            result.update(offchain_service_configs)
             return result
         except Exception as e:
             print(repr(e))
             raise e
+
+    @staticmethod
+    def prepare_offchain_service_attributes(org_id, service_id):
+        offchain_attributes = {}
+        offchain_service_config_repo = OffchainServiceConfigRepository()
+        offchain_service_config = offchain_service_config_repo.get_offchain_service_config(
+            org_id=org_id,
+            service_id=service_id
+        )
+        offchain_attributes_db = offchain_service_config.attributes
+        demo_component_required = offchain_attributes_db.get("demo_component_required", 0)
+        demo_component = service_factory.create_demo_component_domain_model(offchain_service_config.attributes)
+        demo_component = demo_component.to_dict()
+        # prepare format
+        demo_last_modified = offchain_attributes_db.get("demo_component_last_modified", "")
+        demo_component.update({"demo_component_last_modified": demo_last_modified if demo_last_modified else ""})
+        offchain_attributes.update({"demo_component_required": demo_component_required})
+        offchain_attributes.update({"demo_component": demo_component})
+        return offchain_attributes
 
     def get_org_details(self, org_id):
         """ Method to get org details for given org_id. """

@@ -1,0 +1,43 @@
+{
+  "InitiateInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "InitiateInput",
+    "type": "object",
+    "properties": {
+      "error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "InitiateOutput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "InitiateOutput",
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "data": {
+      },
+      "error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

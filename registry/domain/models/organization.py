@@ -15,8 +15,9 @@ from registry.domain.models.organization_address import OrganizationAddress
 logger = get_logger(__name__)
 
 BLOCKCHAIN_EXCLUDE_PATHS = [
-    "root._Organization__uuid", "root._Organization__duns_no", "root._Organization__origin", "root._Organization__state"
-                                                                                             "root._Organization__addresses",
+    "root._Organization__uuid", "root._Organization__duns_no",
+    "root._Organization__registration_id", "root._Organization__registration_type", "root._Organization__origin",
+    "root._Organization__state", "root._Organization__addresses",
     "root._Organization__assets['hero_image']['url']"]
 
 BLOCKCHAIN_EXCLUDE_REGEX_PATH = ["root\._Organization__groups\[.*\]\.status"]
@@ -24,7 +25,7 @@ BLOCKCHAIN_EXCLUDE_REGEX_PATH = ["root\._Organization__groups\[.*\]\.status"]
 ORGANIZATION_MINOR_CHANGES = [
     "root._Organization__state", "root._Organization__assets['hero_image']['url']",
     "root._Organization__assets['hero_image']['ipfs_hash']", "root._Organization__metadata_ipfs_uri",
-    "root._Organization__contacts"]
+    "root._Organization__contacts", "root._Organization__registration_id", "root._Organization__registration_type"]
 
 GROUP_MINOR_CHANGES = [
     "root\._Organization__groups\[.*\]\.status",
@@ -291,40 +292,22 @@ class Organization:
         elif action == OrganizationActions.SUBMIT.value:
             next_state = Organization.next_state_for_update(current_organization, updated_organization)
         elif action == OrganizationActions.CREATE.value:
-            next_state = OrganizationStatus.ONBOARDING.value
+            next_state = OrganizationStatus.ONBOARDING_APPROVED.value
         else:
             raise Exception("Invalid Action for Organization")
         return next_state
 
     @staticmethod
     def next_state_for_update(current_organization, updated_organization):
-        if current_organization.get_status() in [OrganizationStatus.ONBOARDING_REJECTED.value,
-                                                 OrganizationStatus.REJECTED.value]:
-            raise OperationNotAllowed()
-
-        if current_organization.get_status() in [OrganizationStatus.CHANGE_REQUESTED.value,
-                                                 OrganizationStatus.ONBOARDING.value]:
-            next_state = OrganizationStatus.ONBOARDING.value
+        if current_organization.get_status() in [OrganizationStatus.CHANGE_REQUESTED.value, OrganizationStatus.ONBOARDING.value]:
+            next_state = OrganizationStatus.ONBOARDING_APPROVED.value
             return next_state
-
-        is_major_update, diff = current_organization.is_major_change(updated_organization)
-        if not is_major_update:
-            if current_organization.get_status() in \
-                    [OrganizationStatus.APPROVED.value, OrganizationStatus.PUBLISHED.value]:
-                next_state = OrganizationStatus.APPROVED.value
-            elif current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
-                next_state = OrganizationStatus.ONBOARDING_APPROVED.value
-            else:
-                raise OperationNotAllowed()
+        elif current_organization.get_status() in [OrganizationStatus.APPROVED.value, OrganizationStatus.PUBLISHED.value]:
+            next_state = OrganizationStatus.APPROVED.value
+        elif current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
+            next_state = OrganizationStatus.ONBOARDING_APPROVED.value
         else:
-            if "values_changed" in diff and "root._Organization__id" in diff["values_changed"]:
-                logger.error("org_id update not allowed")
-                raise OperationNotAllowed()
-            elif current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
-                next_state = OrganizationStatus.ONBOARDING_APPROVED.value
-                return next_state
-            else:
-                raise OperationNotAllowed()
+            raise OperationNotAllowed()
         return next_state
 
     def _get_all_contact_for_organization(self):

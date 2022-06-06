@@ -7,10 +7,13 @@ import io
 import json
 import os
 import os.path
+import re
+import shutil
 import sys
 import tarfile
 import traceback
 import zipfile
+from pathlib import Path
 from urllib.parse import urlparse
 from zipfile import ZipFile
 
@@ -27,23 +30,12 @@ logger = get_logger(__name__)
 
 
 class Utils:
-    def __init__(self):
-        self.msg_type = {
-            0: 'info:: ',
-            1: 'err:: '
-        }
 
-    def report_slack(self, type, slack_msg, SLACK_HOOK):
+    def report_slack(self, slack_msg, SLACK_HOOK):
         url = SLACK_HOOK['hostname'] + SLACK_HOOK['path']
-        prefix = self.msg_type.get(type, "")
-        slack_channel = SLACK_HOOK.get("channel", "contract-index-alerts")
-        payload = {"channel": f"#{slack_channel}",
-                   "username": "webhookbot",
-                   "text": prefix + slack_msg,
-                   "icon_emoji": ":ghost:"
-                   }
-
-        resp = requests.post(url=url, data=json.dumps(payload))
+        payload = {"username": "webhookbot", "text": slack_msg, "icon_emoji": ":ghost:"}
+        slack_response = requests.post(url=url, data=json.dumps(payload))
+        logger.info(f"slack response :: {slack_response.status_code}, {slack_response.text}")
 
     def clean(self, value_list):
         for value in value_list:
@@ -202,7 +194,7 @@ def handle_exception_with_slack_notification(*decorator_args, **decorator_kwargs
                             f"error_description: {repr(traceback.format_tb(tb=exc_tb))}```"
 
                 logger.exception(f"{slack_msg}")
-                Utils().report_slack(type=0, slack_msg=slack_msg, SLACK_HOOK=SLACK_HOOK)
+                Utils().report_slack(slack_msg=slack_msg, SLACK_HOOK=SLACK_HOOK)
                 return generate_lambda_response(
                     status_code=500,
                     message=format_error_message(
@@ -278,9 +270,14 @@ def convert_zip_file_to_tar_bytes(file_dir, filename):
     tar_bytes = io.BytesIO()
     tar = tarfile.open(fileobj=tar_bytes, mode="w")
     for f in files:
-        tar.add(f, os.path.basename(f))
+        tar.add(f, os.path.basename(f), filter=reset)
     tar.close()
     return tar_bytes
+
+
+def reset(tarinfo):
+    tarinfo.mtime = 123456781234
+    return tarinfo
 
 
 def send_email_notification(recipients, notification_subject, notification_message, notification_arn, boto_util):
@@ -299,19 +296,30 @@ def send_email_notification(recipients, notification_subject, notification_messa
             logger.error(f"Error happened while sending email to recipient {recipient}")
 
 
-def send_slack_notification(slack_msg, slack_url, slack_channel):
-    payload = {"channel": f"#{slack_channel}",
-               "username": "webhookbot",
-               "text": slack_msg,
-               "icon_emoji": ":ghost:"
-               }
-    slack_response = requests.post(url=slack_url, data=json.dumps(payload))
-    logger.info(f"slack response :: {slack_response.status_code}, {slack_response.text}")
-
-
 def extract_zip_file(zip_file_path, extracted_path):
-    with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
-        zip_ref.extractall(extracted_path)
+    if zip_file_path.endswith(".zip"):
+        with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+            zip_ref.extractall(extracted_path)
+    if zip_file_path.endswith("tar.gz"):
+        tar = tarfile.open(zip_file_path, "r:gz")
+        tar.extractall(path=extracted_path)
+        tar.close()
+    if zip_file_path.endswith("tar"):
+        tar = tarfile.open(zip_file_path, "r:")
+        tar.extractall(path=extracted_path)
+        tar.close()
+
+
+def zip_file(source_path, zipped_path):
+    outZipFile = zipfile.ZipFile(zipped_path, 'w', zipfile.ZIP_DEFLATED)
+    for dir_path, dir_names, filenames in os.walk(source_path):
+        for filename in filenames:
+            filepath = os.path.join(dir_path, filename)
+            parent_path = os.path.relpath(filepath, source_path)
+            arc_name = parent_path
+            outZipFile.write(filepath, arc_name)
+    outZipFile.close()
+    return zipped_path
 
 
 def make_tarfile(output_filename, source_dir):
@@ -323,3 +331,31 @@ def validate_signature(signature, message, key, opt_params):
     derived_signature = opt_params.get("slack_signature_prefix", "") \
                         + hmac.new(key.encode(), message.encode(), hashlib.sha256).hexdigest()
     return hmac.compare_digest(derived_signature, signature)
+
+
+def match_regex_string(path, regex_pattern):
+    key_pattern = re.compile(regex_pattern)
+    match = re.match(key_pattern, path)
+    return match
+
+
+def get_file_name_and_extension_from_path(path):
+    base = os.path.basename(path)
+    return os.path.splitext(base)
+
+
+def if_external_link(link):
+    return link.startswith("https://") or link.startswith("http://")
+
+
+def copy_directory(source, target):
+    if not os.path.exists(target):
+        os.makedirs(target)
+    for filename in os.listdir(source):
+        shutil.copy(os.path.join(source, filename), target)
+
+
+def create_text_file(target_path, context):
+    f = open(target_path, "a")
+    f.write(context)
+    f.close()

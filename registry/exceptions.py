@@ -50,6 +50,13 @@ class ServiceProtoNotFoundException(CustomException):
         super().__init__({})
 
 
+class InvalidOrganizationType(CustomException):
+    error_message = "Invalid Organization Type"
+
+    def __init__(self):
+        super().__init__({})
+
+
 class OrganizationNotPublishedException(CustomException):
     error_message = "ORGANIZATION IS NOT PUBLISHED"
 
@@ -118,4 +125,4 @@ EXCEPTIONS = (BadRequestException, OrganizationNotFoundException, InvalidOriginE
               ServiceProtoNotFoundException, OrganizationNotPublishedException,
               ServiceNotFoundException, ServiceGroupNotFoundException, EnvironmentNotFoundException,
               InvalidSlackUserException, InvalidSlackChannelException, InvalidSlackSignatureException,
-              InvalidFileTypeException, FileNotFoundException, OperationNotAllowed)
+              InvalidFileTypeException, FileNotFoundException, OperationNotAllowed, InvalidOrganizationType)

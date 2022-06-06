@@ -16,12 +16,7 @@ NETWORKS = {
 NETWORK_ID = 3
 SLACK_HOOK = {
     'hostname': '',
-    'port': 443,
-    'path': '',
-    'method': 'POST',
-    'headers': {
-        'Content-Type': 'application/json'
-    }
+    'path': ''
 }
 REGION_NAME = ""
 UPLOAD_BUCKET = {
@@ -35,3 +30,18 @@ SLACK_FEEDBACK_HOOK = {
     "RFAI": "",
     "STAKING": ""
 }
+CRYPTO_FIAT_CONVERSION = {
+    'EXCHANGE': 'COINMARKETCAP',
+    'RATE_THRESHOLD': 0,
+    'MULTIPLIER': '1',
+    'CURRENT_AGI_USD_RATE': '3',
+    'LIMIT': '10',
+    'COINMARKETCAP': {
+        'API_ENDPOINT': 'https://'
+    }
+}
+SUPPORTED_ENVIRONMENT = []
+PROTO_DIRECTORY_REGEX_PATTERN = ""
+NODEJS_PROTO_LAMBDA_ARN = ""
+PYTHON_PROTO_LAMBDA_ARN = ""
+NETWORK_NAME = ""

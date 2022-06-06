@@ -3,6 +3,7 @@ plugins:
   - serverless-python-requirements
   - serverless-plugin-tracing
   - serverless-prune-plugin
+  - serverless-aws-documentation
 
 service: orchestrator
 custom:
@@ -15,7 +16,66 @@ custom:
   prune:
     automatic: true
     includeLayers: true
-    number: 5
+    number: 2
+  documentation:
+    models:
+      - name: "ErrorMessage"
+        contentType: "application/json"
+        schema: ${file(orchestrator/documentation/models/error.json)}
+      - name: "WalletRegisterOutput"
+        contentType: "application/json"
+        schema: ${file(orchestrator/documentation/models/waller_register.json):WalletRegisterOutput}
+      - name: "WalletRegisterInput"
+        contentType: "application/json"
+        schema: ${file(orchestrator/documentation/models/waller_register.json):WalletRegisterInput}
+      - name: "WalletStatusOutput"
+        contentType: "application/json"
+        schema: ${file(orchestrator/documentation/models/wallet_status.json):WalletStatusOutput}
+      - name: "WalletStatusInput"
+        contentType: "application/json"
+        schema: ${file(orchestrator/documentation/models/wallet_status.json):WalletStatusInput}
+      - name: "WalletChannelOutput"
+        contentType: "application/json"
+        schema: ${file(orchestrator/documentation/models/wallet_channel.json):WalletChannelOutput}
+      - name: "GetWalletOutput"
+        contentType: "application/json"
+        schema: ${file(orchestrator/documentation/models/get_wallet.json):GetWalletOutput}
+      - name: "GetOrderOutput"
+        contentType: "application/json"
+        schema: ${file(orchestrator/documentation/models/get_order.json):GetOrderOutput}
+      - name: "GetOrderByOrderIdOutput"
+        contentType: "application/json"
+        schema: ${file(orchestrator/documentation/models/get_order_by_order_id.json):GetOrderByOrderIdOutput}
+      - name: "InitiateOrderOutput"
+        contentType: "application/json"
+        schema: ${file(orchestrator/documentation/models/initate_order.json):InitiateOrderOutput}
+      - name: "InitiateOrderInput"
+        contentType: "application/json"
+        schema: ${file(orchestrator/documentation/models/initate_order.json):InitiateOrderInput}
+      - name: "ExecuteOrderOutput"
+        contentType: "application/json"
+        schema: ${file(orchestrator/documentation/models/execute_order.json):ExecuteOrderOutput}
+      - name: "ExecuteOrderInput"
+        contentType: "application/json"
+        schema: ${file(orchestrator/documentation/models/execute_order.json):ExecuteOrderInput}
+      - name: "CancelOrderOutput"
+        contentType: "application/json"
+        schema: ${file(orchestrator/documentation/models/cancel_order.json):CancelOrderOutput}
+      - name: "GetTokenOutput"
+        contentType: "application/json"
+        schema: ${file(orchestrator/documentation/models/currency_to_token_conversion.json):GetTokenOutput}
+      - name: "CreateOrganizationOutput"
+        contentType: "application/json"
+        schema: ${file(orchestrator/documentation/models/create_org.json):CreateOrganizationOutput}
+      - name: "CreateOrganizationInput"
+        contentType: "application/json"
+        schema: ${file(orchestrator/documentation/models/create_org.json):CreateOrganizationInput}
+      - name: "RegisterOrgMemberOutput"
+        contentType: "application/json"
+        schema: ${file(orchestrator/documentation/models/register_org_member.json):RegisterOrgMemberOutput}
+      - name: "RegisterOrgMemberInput"
+        contentType: "application/json"
+        schema: ${file(orchestrator/documentation/models/register_org_member.json):RegisterOrgMemberInput}
 
 provider:
   name: aws
@@ -57,6 +117,9 @@ package:
     - log_setup.py
     - heath_check.sh
     - node_modules/**
+  include:
+    - resources/**
+
 
 functions:
   orchestrator:
@@ -93,6 +156,25 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Register wallet"
+            description: "Register wallet"
+            tags:
+              - "wallet"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestModels:
+              "application/json": "WalletRegisterInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Wallet Data"
+                responseModels:
+                  "application/json": "WalletRegisterOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
 
       - http:
           method: POST
@@ -112,6 +194,26 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Wallet status"
+            description: "Wallet status"
+            tags:
+              - "wallet"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestModels:
+              "application/json": "WalletStatusInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Wallet Data"
+                responseModels:
+                  "application/json": "WalletStatusOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
+
 
       - http:
           method: GET
@@ -131,6 +233,23 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Wallet channel"
+            description: "Wallet channel"
+            tags:
+              - "wallet"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Wallet Data"
+                responseModels:
+                  "application/json": "WalletChannelOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
 
       - http:
           method: GET
@@ -150,6 +269,24 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Get wallet"
+            description: "Get wallet"
+            tags:
+              - "wallet"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Wallet Data"
+                responseModels:
+                  "application/json": "GetWalletOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
+
 
   get-order:
     warmup: true
@@ -185,6 +322,23 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Get order"
+            description: "Get order "
+            tags:
+              - "wallet"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Order Data"
+                responseModels:
+                  "application/json": "GetOrderOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
 
       - http:
           method: GET
@@ -204,6 +358,27 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Get order by order_id"
+            description: "Get order for given order_id"
+            tags:
+              - "order"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            pathParams:
+              - name: "order_id"
+                description: "Enter order_id"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Order Data"
+                responseModels:
+                  "application/json": "GetOrderByOrderIdOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
+
 
   initiate-order:
     warmup: true
@@ -239,6 +414,27 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Initiate order"
+            description: "Initiate order"
+            tags:
+              - "order"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestBody:
+                description: "request body"
+            requestModels:
+              "application/json": "InitiateOrderInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Order Data"
+                responseModels:
+                  "application/json": "InitiateOrderOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
 
   execute-order:
     warmup: true
@@ -275,6 +471,25 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Execute order"
+            description: "Initiate order"
+            tags:
+              - "order"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestModels:
+              "application/json": "ExecuteOrderInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Order Data"
+                responseModels:
+                  "application/json": "ExecuteOrderOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
 
   cancel-order:
     warmup: true
@@ -310,6 +525,21 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          requestHeaders:
+            - name: "Content-Type"
+              description: "application/json"
+          pathParams:
+              - name: "order_id"
+                description: "Enter order_id"
+          methodResponses:
+            - statusCode: "200"
+              responseBody:
+                description: "Order Data"
+              responseModels:
+                "application/json": "CancelOrderOutput"
+            - statusCode: "500"
+              responseModels:
+                 "application/json": "ErrorMessage"
   currency-to-token-conversion:
     warmup: true
     handler: orchestrator/handlers.order_handler.currency_to_token_conversion
@@ -339,6 +569,26 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Get token by currency"
+            description: "Get token by given currency"
+            tags:
+              - "order"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            pathParams:
+              - name: "currency"
+                description: "Enter currency"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Token Data"
+                responseModels:
+                  "application/json": "GetTokenOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
 
   register-org-member:
     warmup: true
@@ -370,6 +620,25 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Register member"
+            description: "Register member"
+            tags:
+              - "member"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestModels:
+                "application/json": "RegisterOrgMemberInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Member Data"
+                responseModels:
+                  "application/json": "RegisterOrgMemberOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
 
   create-org:
     handler: orchestrator.publisher.application.handlers.organization_handlers.create_org
@@ -400,6 +669,25 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+          documentation:
+            summary: "Create organization"
+            description: "Create organization"
+            tags:
+              - "organization"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestModels:
+              "application/json": "CreateOrganizationInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "organization Data"
+                responseModels:
+                  "application/json": "CreateOrganizationOutput"
+              - statusCode: "500"
+                responseModels:
+                  "application/json": "ErrorMessage"
 
   updateTxnStatus:
     warmup: true

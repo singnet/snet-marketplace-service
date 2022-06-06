@@ -1,3 +1,5 @@
+from enum import Enum
+
 COMMON_CNTRCT_PATH = './common/node_modules/singularitynet-platform-contracts'
 REG_CNTRCT_PATH = COMMON_CNTRCT_PATH + '/abi/Registry.json'
 MPE_CNTRCT_PATH = COMMON_CNTRCT_PATH + '/abi/MultiPartyEscrow.json'
@@ -14,10 +16,18 @@ class PaymentStatus:
     FAILED = "FAILED"
 
 
+class BuildStatus:
+    PENDING = "PENDING"
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
+
+
 class TransactionStatus:
     PENDING = "PENDING"
     SUCCESS = "SUCCESS"
     FAILED = "FAILED"
+    PROCESSING = "PROCESSING"
+    NOT_SUBMITTED = "NOT_SUBMITTED"
 
 
 class StatusCode:
@@ -29,8 +39,23 @@ class StatusCode:
     FOUND = 302
 
 
+class StatusDescription:
+    BAD_REQUEST = "Bad Request"
+
+
+class ErrorDescription:
+    METHOD_NOT_ALLOWED = "Method Not Allowed"
+    NOT_FOUND = "Not Found"
+
+
 class ResponseStatus:
     FAILED = "failed"
     SUCCESS = "success"
 
+
 COGS_TO_AGI = "0.00000001"
+
+
+class TokenSymbol(Enum):
+    AGIX = "AGIX"
+    NTX = "NTX"

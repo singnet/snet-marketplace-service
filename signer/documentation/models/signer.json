@@ -1,0 +1,34 @@
+{
+  "SignerInput":  {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "SignerInput",
+    "type": "object",
+    "properties": {
+      "data": {
+      }
+    }
+  },
+  "SignerOutput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "SignerOutput",
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "data": {
+      },
+      "error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

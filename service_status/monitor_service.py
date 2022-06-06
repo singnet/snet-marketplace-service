@@ -33,7 +33,7 @@ class MonitorService:
 
     def _get_service_endpoint_data(self, limit):
         query = "SELECT row_id, org_id, service_id, endpoint, is_available, failed_status_count FROM service_endpoint WHERE " \
-                "next_check_timestamp < UTC_TIMESTAMP AND endpoint not regexp %s ORDER BY last_check_timestamp ASC"
+                "next_check_timestamp < UTC_TIMESTAMP AND endpoint not regexp %s AND (org_id,service_id) IN (SELECT org_id, service_id FROM service WHERE service.is_curated=1) ORDER BY last_check_timestamp ASC"
         if limit is not None:
             query = query + " LIMIT %s"
             result = self.repo.execute(query, [self.rex_for_pb_ip, limit])
@@ -70,7 +70,7 @@ class MonitorService:
 
     @staticmethod
     def _send_slack_notification(slack_message):
-        util.report_slack(type=0, slack_msg=slack_message, SLACK_HOOK=SLACK_HOOK)
+        util.report_slack(slack_msg=slack_message, SLACK_HOOK=SLACK_HOOK)
 
     def _get_service_provider_email(self, org_id, service_id=None):
         emails = []

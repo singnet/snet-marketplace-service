@@ -6,6 +6,8 @@ import web3
 from eth_account.messages import defunct_hash_message
 from web3 import Web3
 from websockets.exceptions import ConnectionClosed
+
+from common.constant import TokenSymbol
 from common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -16,6 +18,10 @@ class ContractType(Enum):
     MPE = "MPE"
     RFAI = "RFAI"
     TokenStake = "TokenStake"
+    SingularityAirdrop = 'SingularityAirdrop'
+    SingularityOccamAirdrop = 'SingularityOccamAirdrop'
+    ConverterAGIX = 'ConverterAGIX'
+    ConverterNTX = 'ConverterNTX'
 
 
 class BlockChainUtil(object):
@@ -134,11 +140,23 @@ class BlockChainUtil(object):
             json_file = "ServiceRequest.json"
         elif contract_name == ContractType.TokenStake.value:
             json_file = "TokenStake.json"
+        elif contract_name == ContractType.SingularityAirdrop.value:
+            json_file = "SingularityAirdrop.json"
+        elif contract_name == ContractType.SingularityOccamAirdrop.value:
+            json_file = "SingularityOccamAirdrop.json"
+        elif contract_name == ContractType.ConverterAGIX.value or contract_name == ContractType.ConverterNTX.value:
+            json_file = "TokenConversionManager.json"
         else:
             raise Exception("Invalid contract Type {}".format(contract_name))
 
-        contract_network_path = base_path + "/{}/{}".format("networks", json_file)
         contract_abi_path = base_path + "/{}/{}".format("abi", json_file)
+
+        if contract_name == ContractType.ConverterAGIX.value:
+            contract_network_path = base_path + "/{}/{}/{}".format("networks", TokenSymbol.AGIX.value, json_file)
+        elif contract_name == ContractType.ConverterNTX.value:
+            contract_network_path = base_path + "/{}/{}/{}".format("networks", TokenSymbol.NTX.value, json_file)
+        else:
+            contract_network_path = base_path + "/{}/{}".format("networks", json_file)
 
         return contract_network_path, contract_abi_path
 

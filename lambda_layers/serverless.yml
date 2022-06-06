@@ -1,0 +1,29 @@
+plugins:
+  - serverless-prune-plugin
+
+service: marketplace-lambda-layer
+custom:
+  prune:
+    automatic: true
+    includeLayers: true
+    number: 3
+
+provider:
+  name: aws
+  runtime: python3.7
+  stage: ${opt:stage,'dev'}
+  region: ${file(./config.${self:provider.stage}.json):REGION}
+
+layers:
+  MplaceCommonCode:
+    path: ./common_marketplace_code
+    description: "Common code for all the microservices"
+  MplaceCommonPythonLib:
+    path: ./common_python_libraries
+    description: "Common python dependency for all the microservices."
+  SnetContract:
+    path: ./snet_contracts
+    description: "Includes SingularityNet platform, staking and RFAI contract."
+  MplacePythonWeb3AndGrpc:
+    path: ./web3_and_grpc_libraries
+    description: "Web3 and Grpc dependency."

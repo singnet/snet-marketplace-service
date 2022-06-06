@@ -4,6 +4,7 @@ NETWORKS = {
         "http_provider": "https://ropsten.infura.io",
         "ws_provider": "wss://ropsten.infura.io/ws",
         "db": {
+            "DB_DRIVER": "mysql+pymysql",
             "DB_HOST": "localhost",
             "DB_USER": "unittest_root",
             "DB_PASSWORD": "unittest_pwd",
@@ -15,12 +16,7 @@ NETWORKS = {
 
 SLACK_HOOK = {
     'hostname': 'https://hooks.slack.com',
-    'port': 443,
-    'path': '',
-    'method': 'POST',
-    'headers': {
-        'Content-Type': 'application/json'
-    }
+    'path': ''
 }
 IPFS_URL = {
     'url': '',
@@ -38,3 +34,4 @@ GET_SERVICE_FROM_ORGID_SERVICE_ID_REGISTRY_ARN = ""
 MARKETPLACE_DAPP_BUILD = ""
 ASSET_TEMP_EXTRACT_DIRECTORY = "/var/task/"
 ASSETS_COMPONENT_BUCKET_NAME = ""
+MANAGE_PROTO_COMPILATION = ""

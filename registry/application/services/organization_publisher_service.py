@@ -1,14 +1,14 @@
 import json
 from datetime import datetime
 
-from aws_xray_sdk.core import patch_all
 from web3 import Web3
 
 from common import utils
 from common.boto_utils import BotoUtils
 from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
-from registry.config import NOTIFICATION_ARN, REGION_NAME, SLACK_HOOK, SLACK_CHANNEL_FOR_APPROVAL_TEAM, EMAILS
+from common.utils import Utils
+import registry.config
 from registry.constants import EnvironmentType, ORG_STATUS_LIST, ORG_TYPE_VERIFICATION_TYPE_MAPPING, \
     OrganizationActions, OrganizationIDAvailabilityStatus, OrganizationMemberStatus, OrganizationStatus, \
     OrganizationType, Role
@@ -33,20 +33,20 @@ class OrganizationPublisherService:
     def __init__(self, org_uuid, username):
         self.org_uuid = org_uuid
         self.username = username
-        self.boto_utils = BotoUtils(region_name=REGION_NAME)
+        self.boto_utils = BotoUtils(region_name=registry.config.REGION_NAME)
 
     def get_approval_pending_organizations(self, limit, type=None):
         status = OrganizationStatus.ONBOARDING.value
-        organizations = org_repo.get_org(status, limit, type)
+        organizations = org_repo.get_organizations(status, limit, type)
         return [org.to_response() for org in organizations]
 
     def get_all_org_for_user(self):
         logger.info(f"get organization for user: {self.username}")
-        organizations = org_repo.get_org_for_user(username=self.username)
+        organizations = org_repo.get_all_orgs_for_user(username=self.username)
         return [org.to_response() for org in organizations]
 
     def get_all_org_id(self):
-        organizations = org_repo.get_org()
+        organizations = org_repo.get_organizations()
         return [org.id for org in organizations]
 
     def get_org_id_availability_status(self, org_id):
@@ -76,28 +76,17 @@ class OrganizationPublisherService:
             raise Exception("Org_id already exists")
         updated_state = Organization.next_state(None, None, OrganizationActions.CREATE.value)
         org_repo.add_organization(organization, self.username, updated_state)
+        organization = org_repo.get_organization(org_id=organization.id)
         return organization.to_response()
 
     def update_organization(self, payload, action):
         logger.info(f"update organization for user: {self.username} org_uuid: {self.org_uuid} action: {action}")
         updated_organization = OrganizationFactory.org_domain_entity_from_payload(payload)
-        current_organization = org_repo.get_org_for_org_uuid(self.org_uuid)
-
+        current_organization = org_repo.get_organization(org_uuid=self.org_uuid)
         self._archive_current_organization(current_organization)
         updated_state = Organization.next_state(current_organization, updated_organization, action)
-        if updated_state == OrganizationStatus.ONBOARDING.value:
-            self.notify_approval_team(updated_organization.id, updated_organization.name)
-            self.notify_user_on_start_of_onboarding_process(updated_organization.id, recipients=[self.username])
         org_repo.update_organization(updated_organization, self.username, updated_state)
         return "OK"
-
-    def notify_approval_team(self, org_id, org_name):
-        slack_msg = f"Organization with org_id {org_id} is submitted for approval"
-        mail_template = get_org_approval_mail(org_id, org_name)
-        utils.send_slack_notification(slack_msg=slack_msg, slack_url=SLACK_HOOK['hostname'] + SLACK_HOOK['path'],
-                                      slack_channel=SLACK_CHANNEL_FOR_APPROVAL_TEAM)
-        utils.send_email_notification([EMAILS["ORG_APPROVERS_DLIST"]], mail_template["subject"],
-                                      mail_template["body"], NOTIFICATION_ARN, self.boto_utils)
 
     def notify_user_on_start_of_onboarding_process(self, org_id, recipients):
         if not recipients:
@@ -110,7 +99,7 @@ class OrganizationPublisherService:
                 "subject": mail_template["subject"],
                 "notification_type": "support",
                 "recipient": recipient})}
-            self.boto_utils.invoke_lambda(lambda_function_arn=NOTIFICATION_ARN, invocation_type="RequestResponse",
+            self.boto_utils.invoke_lambda(lambda_function_arn=registry.config.NOTIFICATION_ARN, invocation_type="RequestResponse",
                                           payload=json.dumps(send_notification_payload))
             logger.info(f"Recipient {recipient} notified for successfully starting onboarding process.")
 
@@ -120,7 +109,7 @@ class OrganizationPublisherService:
 
     def publish_org_to_ipfs(self):
         logger.info(f"publish organization to ipfs org_uuid: {self.org_uuid}")
-        organization = org_repo.get_org_for_org_uuid(self.org_uuid)
+        organization = org_repo.get_organization(org_uuid=self.org_uuid)
         organization.publish_to_ipfs()
         org_repo.store_ipfs_hash(organization, self.username)
         return organization.to_response()
@@ -193,7 +182,7 @@ class OrganizationPublisherService:
             org_member.set_invited_on(current_time)
             org_member.set_updated_on(current_time)
 
-        organization = org_repo.get_org_for_org_uuid(self.org_uuid)
+        organization = org_repo.get_organization(org_uuid=self.org_uuid)
         org_name = organization.name
         self._send_email_notification_for_inviting_organization_member(eligible_invite_member_list, org_name)
         org_repo.add_member(eligible_invite_member_list)
@@ -212,7 +201,7 @@ class OrganizationPublisherService:
                 "subject": mail_template["subject"],
                 "notification_type": "support",
                 "recipient": recipient})}
-            self.boto_utils.invoke_lambda(lambda_function_arn=NOTIFICATION_ARN, invocation_type="RequestResponse",
+            self.boto_utils.invoke_lambda(lambda_function_arn=registry.config.NOTIFICATION_ARN, invocation_type="RequestResponse",
                                           payload=json.dumps(send_notification_payload))
             logger.info(f"Org Membership Invite sent to {recipient}")
 
@@ -231,7 +220,7 @@ class OrganizationPublisherService:
                 comment = verification_details["comment"]
                 if status in ORG_STATUS_LIST:
                     org_repo.update_organization_status(org_uuid, status, updated_by)
-                    organization = org_repo.get_org_for_org_uuid(org_uuid)
+                    organization = org_repo.get_organization(org_uuid=org_uuid)
                     owner = org_repo.get_org_member(org_uuid=org_uuid, role=Role.OWNER.value)
                     owner_username = owner[0].username
                     self.send_mail_to_owner(owner_username, comment, organization.id, status)
@@ -258,4 +247,4 @@ class OrganizationPublisherService:
             raise InvalidOrganizationStateException()
 
         utils.send_email_notification([owner_email_address], mail_template["subject"],
-                                      mail_template["body"], NOTIFICATION_ARN, self.boto_utils)
+                                      mail_template["body"], registry.config.NOTIFICATION_ARN, self.boto_utils)

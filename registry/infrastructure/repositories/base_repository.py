@@ -1,16 +1,22 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from common.logger import get_logger
+from registry.config import DB_DETAILS
 
-from registry.config import NETWORKS, NETWORK_ID
+driver = DB_DETAILS["driver"]
+user = DB_DETAILS["user"]
+password = DB_DETAILS["password"]
+host = DB_DETAILS["host"]
+port = DB_DETAILS["port"]
+db_name = DB_DETAILS["name"]
 
-engine = create_engine(
-    f"{NETWORKS[NETWORK_ID]['db']['DB_DRIVER']}://{NETWORKS[NETWORK_ID]['db']['DB_USER']}:"
-    f"{NETWORKS[NETWORK_ID]['db']['DB_PASSWORD']}"
-    f"@{NETWORKS[NETWORK_ID]['db']['DB_HOST']}:"
-    f"{NETWORKS[NETWORK_ID]['db']['DB_PORT']}/{NETWORKS[NETWORK_ID]['db']['DB_NAME']}", echo=False)
+connection_string = f"{driver}://{user}:{password}@{host}:{port}/{db_name}"
+engine = create_engine(connection_string, pool_pre_ping=True, echo=True)
 
 Session = sessionmaker(bind=engine)
 default_session = Session()
+get_logger("sqlalchemy.engine").setLevel("INFO")
+get_logger("sqlalchemy.pool").setLevel("DEBUG")
 
 
 class BaseRepository:

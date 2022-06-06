@@ -47,24 +47,7 @@ class ServiceRepository(CommonRepository):
                                          assets_hash,
                                          assets_url_str, contributors]
 
-        query_response = self.connection.execute(upsrt_servicec_metadata, upsrt_service_metadata_params)
-
-    def update_tags(self, org_id, service_id, tags_data):
-        try:
-            self.delete_tags(org_id=org_id, service_id=service_id)
-            if (tags_data is not None and tags_data[0]):
-                tags = tags_data[3]
-                service_data = self.get_service_row_id(
-                    service_id=service_id, org_id=org_id)
-                service_row_id = service_data[0]['row_id']
-                for tag in tags:
-                    tag = tag.decode('utf-8')
-                    tag = tag.rstrip("\u0000")
-                    self.create_tags(srvc_rw_id=service_row_id, org_id=org_id, service_id=service_id, tag_name=tag)
-                    self.commit_transaction()
-        except Exception as e:
-
-            self.rollback_transaction()
+        self.connection.execute(upsrt_servicec_metadata, upsrt_service_metadata_params)
 
     def create_endpoints(self, service_row_id, org_id, service_id, endpt_data):
         insert_endpoints = "INSERT INTO service_endpoint (service_row_id, org_id, service_id, group_id, endpoint, " \
@@ -86,7 +69,7 @@ class ServiceRepository(CommonRepository):
 
     def delete_tags(self, org_id, service_id):
         delete_service_tags = 'DELETE FROM service_tags WHERE service_id = %s AND org_id = %s '
-        delete_service_tags_count = self.connection.execute(delete_service_tags, [service_id, org_id])
+        self.connection.execute(delete_service_tags, [service_id, org_id])
 
     def delete_service_dependents(self, org_id, service_id):
         self.delete_service_group(org_id, service_id)
@@ -97,16 +80,16 @@ class ServiceRepository(CommonRepository):
     def delete_service_endpoint(self, org_id, service_id):
 
         delete_service_endpoint = 'DELETE FROM service_endpoint WHERE service_id = %s AND org_id = %s '
-        del_srvc_endpts_count = self.connection.execute(
+        self.connection.execute(
             delete_service_endpoint, [service_id, org_id])
 
     def delete_service_group(self, org_id, service_id):
         delete_service_groups = 'DELETE FROM service_group WHERE service_id = %s AND org_id = %s '
-        delete_service_group_count = self.connection.execute(delete_service_groups, [service_id, org_id])
+        self.connection.execute(delete_service_groups, [service_id, org_id])
 
     def delete_service(self, org_id, service_id):
         delete_service = 'DELETE FROM service WHERE service_id = %s AND org_id = %s '
-        query_response = self.connection.execute(delete_service, [service_id, org_id])
+        self.connection.execute(delete_service, [service_id, org_id])
 
     def get_service_row_id(self, org_id, service_id):
         query = 'SELECT row_id FROM service WHERE service_id = %s AND org_id = %s '
@@ -172,3 +155,33 @@ class ServiceRepository(CommonRepository):
         except:
             self.rollback_transaction()
             raise
+
+    def get_service_media(self,service_id,org_id):
+        query = "SELECT `row_id`, org_id, service_id, url, `order`, file_type, asset_type, alt_text,ipfs_url FROM service_media where service_id = %s and org_id = %s order by `order` "
+        service_media = self.connection.execute(query, (service_id, org_id))
+
+        if len(service_media) > 0:
+            return service_media
+        return None
+
+    def insert_service_media(self,org_id,service_id,service_row_id,media_data):
+        url = media_data.get('url',"")
+        ipfs_url = media_data.get('ipfs_url',"")
+        order = media_data.get('order',0)
+        file_type = media_data.get('file_type',"")
+        asset_type = media_data.get('asset_type',"")
+        alt_text = media_data.get('alt_text',"")
+
+        query = "INSERT INTO service_media (org_id, service_id, url, `order`, file_type, asset_type, alt_text,ipfs_url,service_row_id,created_on, updated_on) VALUES(%s, %s, %s, %s, %s, %s, %s, %s,%s, %s,%s)"
+        insert_media_parameters = (org_id,service_id,url,order,file_type,asset_type,alt_text,ipfs_url,service_row_id,datetime.now(),datetime.now())
+
+        self.connection.execute(query,insert_media_parameters)
+
+    def delete_service_media(self,org_id,service_id, file_types=None):
+        delete_service_media = 'DELETE FROM service_media WHERE service_id = %s AND org_id = %s '
+        parameters = (service_id, org_id)
+        if file_types:
+            delete_service_media = delete_service_media +  " AND file_type IN %s"
+            parameters = (service_id, org_id, file_types)
+        self.connection.execute(delete_service_media, parameters)
+

@@ -1,3 +1,4 @@
+import ast
 import os
 import traceback
 
@@ -6,7 +7,7 @@ from web3 import Web3
 from common import blockchain_util
 from common import ipfs_util
 from common.logger import get_logger
-from registry.config import NETWORK_ID
+from registry.config import NETWORK_ID, CONTRACT_BASE_PATH
 from registry.constants import OrganizationMemberStatus, OrganizationStatus, Role, EnvironmentType
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization
@@ -29,16 +30,19 @@ class OrganizationEventConsumer(object):
         pass
 
     def _get_org_id_from_event(self, event):
-        event_org_data = eval(event['data']['json_str'])
+        event_org_data = ast.literal_eval(event['data']['json_str'])
         org_id_bytes = event_org_data['orgId']
         org_id = Web3.toText(org_id_bytes).rstrip("\x00")
         return org_id
 
+    @staticmethod
+    def _get_base_contract_path():
+        return os.path.abspath(os.path.join(f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-platform-contracts"))
+
     def _get_registry_contract(self):
         net_id = NETWORK_ID
-        base_contract_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '..', '..', 'node_modules', 'singularitynet-platform-contracts'))
-        registry_contract = self._blockchain_util.get_contract_instance(base_contract_path, "REGISTRY", net_id)
+        base_contract_path = self._get_base_contract_path()
+        registry_contract = self._blockchain_util.get_contract_instance(base_contract_path, 'REGISTRY', net_id=net_id)
 
         return registry_contract
 
@@ -127,8 +131,7 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
 
     def _get_existing_organization_records(self, org_id):
         try:
-            existing_publish_in_progress_organization = self._organization_repository.get_org_for_org_id(
-                org_id)
+            existing_publish_in_progress_organization = self._organization_repository.get_organization(org_id=org_id)
         except OrganizationNotFoundException:
             return None
         except Exception as e:
@@ -153,25 +156,19 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
         try:
 
             existing_publish_in_progress_organization = self._get_existing_organization_records(org_id)
+
             org_id = ipfs_org_metadata.get("org_id", None)
             org_name = ipfs_org_metadata.get("org_name", None)
             org_type = ipfs_org_metadata.get("org_type", None)
-            description = ipfs_org_metadata.get("description", None)
-            short_description = ""
-            url = ""
-            long_description = ""
-
-            if description:
-                short_description = description.get("short_description", None)
-                long_description = description.get("description", None)
-                url = description.get("url", None)
-
+            description = ipfs_org_metadata.get("description", {})
+            short_description = description.get("short_description", "")
+            long_description = description.get("description", "")
+            url = description.get("url", "")
             contacts = ipfs_org_metadata.get("contacts", None)
-            assets = OrganizationFactory.parse_organization_metadata_assets(ipfs_org_metadata.get("assets", None),
-                                                                            None)
-
-            groups = OrganizationFactory.group_domain_entity_from_group_list_metadata(
-                ipfs_org_metadata.get("groups", []))
+            raw_assets = ipfs_org_metadata.get("assets", {})
+            assets = OrganizationFactory.parse_organization_metadata_assets(raw_assets, {})
+            raw_groups = ipfs_org_metadata.get("groups", [])
+            groups = OrganizationFactory.group_domain_entity_from_group_list_metadata(raw_groups)
 
             org_uuid = ""
             origin = ""
@@ -187,15 +184,12 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                                                        OrganizationStatus.DRAFT.value,
                                                        members)
 
-            test_transaction_hash = RegistryBlockChainUtil(EnvironmentType.TEST.value) \
-                .publish_organization_to_test_network(received_organization_event)
-
             if not existing_publish_in_progress_organization:
                 existing_members = []
 
                 received_organization_event.setup_id()
                 org_uuid = received_organization_event.uuid
-                self._create_event_outside_publisher_portal(received_organization_event, test_transaction_hash)
+                self._create_event_outside_publisher_portal(received_organization_event, "")
 
             elif existing_publish_in_progress_organization.org_state.transaction_hash != transaction_hash \
                     and existing_publish_in_progress_organization.is_blockchain_major_change(received_organization_event)[0]:
@@ -206,13 +200,12 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                     org_uuid=existing_publish_in_progress_organization.uuid)
                 self._organization_repository.store_organization(
                     existing_publish_in_progress_organization, BLOCKCHAIN_USER,
-                    OrganizationStatus.APPROVAL_PENDING.value, test_transaction_hash=test_transaction_hash)
+                    OrganizationStatus.APPROVAL_PENDING.value, test_transaction_hash="")
             else:
                 org_uuid = existing_publish_in_progress_organization.uuid
                 existing_members = self._organization_repository.get_org_member(
                     org_uuid=existing_publish_in_progress_organization.uuid)
-                self._mark_existing_publish_in_progress_as_published(existing_publish_in_progress_organization,
-                                                                     test_transaction_hash)
+                self._mark_existing_publish_in_progress_as_published(existing_publish_in_progress_organization, "")
             owner = OrganizationFactory.parser_org_owner_from_metadata(org_uuid, owner,
                                                                        OrganizationMemberStatus.PUBLISHED.value)
             recieved_members = OrganizationFactory.parser_org_members_from_metadata(org_uuid, recieved_members_list,

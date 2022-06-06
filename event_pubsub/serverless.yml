@@ -3,8 +3,9 @@ plugins:
   - serverless-python-requirements
   - serverless-plugin-tracing
   - serverless-prune-plugin
+  - serverless-latest-layer-version
 
-service: event-publisher-subscriber
+service: event-pubsub
 custom:
   pythonRequirements:
     fileName: event_pubsub/requirements.txt
@@ -15,7 +16,7 @@ custom:
   prune:
     automatic: true
     includeLayers: true
-    number: 5
+    number: 2
 
 provider:
   name: aws
@@ -36,38 +37,46 @@ provider:
 
 package:
   exclude:
-    - .circleci/**
-    - .gitignore/**
-    - .serverless/**
-    - requirements.txt
-    - venv/**
-    - config.ropsten.json
-    - test/**
-    - tests/**
-    - sql_script/**
-    - service_status/**
+    - common/**
     - contract_api/**
-    - dapp-user/**
-    - repository/**
-    - Readme.md
-    - parse_events.sh
-    - package.json
-    - Dockerfile
-    - License
-    - log_setup.py
-    - heath_check.sh
-    - payments/**
-    - wallets/**
+    - dapp_user/**
+    - lambda_layers/**
+    - notification/**
     - orchestrator/**
+    - payments/**
+    - registry/**
+    - event_pubsub/testcases/**
+    - event_pubsub/package.json
+    - event_pubsub/package-lock.json
+    - event_pubsub/serverless.yml
+    - event_pubsub/requirements.txt
+    - event_pubsub/documentation/**
+    - service_media/**
+    - service_status/**
+    - signer/**
+    - sql_script/**
+    - utility/**
+    - verification/**
+    - wallets/**
+    - .circleci/**
+    - .serverless/**
     - node_modules/**
+    - package.json
+    - package-lock.json
+    - .gitignore
+    - serverless.yml
+    - README.md
+    - build.sh
+    - Dockerfile
+    - health_check.sh
+    - LICENSE
+    - config.rt-v2.json
   include:
-    - node_modules/singularitynet-platform-contracts/**
-    - node_modules/singularitynet-rfai-contracts/**
-    - node_modules/singularitynet-stake-contracts/**
+    - resources/**
+
 
 functions:
-  rfai_event_publisher:
-    warmup: true
+  rfai-event-publisher:
     handler: event_pubsub/handlers/event_producer_handlers.rfai_event_producer_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
@@ -81,13 +90,19 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
           rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-rfai-event-publisher
           enabled: ${file(./config.${self:provider.stage}.json):rfai_cron_status}
 
-  mpe_event_publisher:
-    warmup: true
+
+  mpe-event-publisher:
     handler: event_pubsub/handlers/event_producer_handlers.mpe_event_producer_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
@@ -101,13 +116,18 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
           rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-mpe-event-publisher
           enabled: ${file(./config.${self:provider.stage}.json):mpe_cron_status}
 
-  registry_event_publisher:
-    warmup: true
+  registry-event-publisher:
     handler:  event_pubsub/handlers/event_producer_handlers.registry_event_producer_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
@@ -121,13 +141,18 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
           rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-registry-event-pubisher
           enabled: ${file(./config.${self:provider.stage}.json):registry_cron_status}
 
-  mpe_event_listener:
-    warmup: true
+  mpe-event-listener:
     handler: event_pubsub/handlers/event_listener_handlers.mpe_event_listener_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
@@ -141,13 +166,18 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
           rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-mpe-event-listener
           enabled: ${file(./config.${self:provider.stage}.json):mpe_cron_status}
 
-  registry_event_listener:
-    warmup: true
+  registry-event-listener:
     handler: event_pubsub/handlers/event_listener_handlers.registry_event_listener_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
@@ -161,13 +191,18 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
           rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-registry-event-listener
           enabled: ${file(./config.${self:provider.stage}.json):registry_cron_status}
 
-  rfai_event_listener:
-    warmup: true
+  rfai-event-listener:
     handler: event_pubsub/handlers/event_listener_handlers.rfai_event_listener_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
@@ -181,13 +216,18 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
           rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-rfai-event-listener
           enabled: ${file(./config.${self:provider.stage}.json):rfai_cron_status}
 
-  token_stake_event_listener:
-    warmup: true
+  token-stake-event-listener:
     handler: event_pubsub/handlers/event_listener_handlers.token_stake_event_listener_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
@@ -201,13 +241,18 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
           rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-token-stake-event-listener
           enabled: ${file(./config.${self:provider.stage}.json):token_stake_cron_status}
 
-  token_stake_event_publisher:
-    warmup: true
+  token-stake-event-publisher:
     handler:  event_pubsub/handlers/event_producer_handlers.token_stake_event_producer_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
@@ -221,11 +266,251 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
           rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-token-stake-event-publisher
           enabled: ${file(./config.${self:provider.stage}.json):token_stake_cron_status}
 
+  airdrop-event-publisher:
+    handler:  event_pubsub/handlers/event_producer_handlers.airdrop_event_producer_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
+    events:
+      - schedule:
+          rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-airdrop-event-publisher
+          enabled: ${file(./config.${self:provider.stage}.json):airdrop_cron_status}
+
+  occam_airdrop-event-publisher:
+    handler:  event_pubsub/handlers/event_producer_handlers.occam_airdrop_event_producer_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
+    events:
+      - schedule:
+          rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-occam-airdrop-event-publisher
+          enabled: ${file(./config.${self:provider.stage}.json):occam_airdrop_cron_status}
+
+  converter-agix-event-publisher:
+    handler: event_pubsub/handlers/event_producer_handlers.converter_agix_event_producer_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
+    events:
+      - schedule:
+          rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-converter-agix-event-publisher
+          enabled: ${file(./config.${self:provider.stage}.json):converter_agix_cron_status}
+
+  converter-agix-event-listener:
+    handler: event_pubsub/handlers/event_listener_handlers.converter_agix_event_listener_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
+    events:
+      - schedule:
+          rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-converter-agix-event-listener
+          enabled: ${file(./config.${self:provider.stage}.json):converter_agix_cron_status}
+
+  converter-ntx-event-publisher:
+    handler: event_pubsub/handlers/event_producer_handlers.converter_ntx_event_producer_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
+    events:
+      - schedule:
+          rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-converter-ntx-event-publisher
+          enabled: ${file(./config.${self:provider.stage}.json):converter_ntx_cron_status}
+
+  converter-ntx-event-listener:
+    handler: event_pubsub/handlers/event_listener_handlers.converter_ntx_event_listener_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
+    events:
+      - schedule:
+          rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-converter-ntx-event-listener
+          enabled: ${file(./config.${self:provider.stage}.json):converter_ntx_cron_status}
+
+  airdrop-event-listener:
+    handler: event_pubsub/handlers/event_listener_handlers.airdrop_event_listener_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
+    events:
+      - schedule:
+          rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-airdrop-event-listener
+          enabled: ${file(./config.${self:provider.stage}.json):airdrop_cron_status}
+
+  occam-airdrop-event-listener:
+    handler: event_pubsub/handlers/event_listener_handlers.occam_airdrop_event_listener_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
+    events:
+      - schedule:
+          rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-occam-airdrop-event-listener
+          enabled: ${file(./config.${self:provider.stage}.json):occam_airdrop_cron_status}
+
+  get-raw-event-details:
+    warmup: true
+    handler: event_pubsub/handlers/raw_events_handler.get_raw_event_details
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+        - ${file(./config.${self:provider.stage}.json):SnetContract}
+    events:
+      - http:
+          method: POST
+          path: /event_details
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
 
 
 

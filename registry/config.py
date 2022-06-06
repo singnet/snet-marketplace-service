@@ -14,15 +14,17 @@ NETWORKS = {
     }
 }
 NETWORK_ID = 3
+DB_DETAILS = {
+    "driver": "mysql+pymysql",
+    "host": "localhost",
+    "user": "unittest_root",
+    "password": "unittest_pwd",
+    "name": "registry_unittest_db",
+    "port": 3306
+}
 SLACK_HOOK = {
-    "channel": "",
-    'hostname': '',
-    'port': 443,
-    'path': '',
-    'method': 'POST',
-    'headers': {
-        'Content-Type': 'application/json'
-    }
+    'hostname': 'https://hooks.slack.com',
+    'path': ''
 }
 IPFS_URL = {
     'url': 'ipfs.singularitynet.io',
@@ -36,25 +38,6 @@ ASSET_BUCKET = ""
 ASSET_DIR = "/tmp"
 NOTIFICATION_ARN = ""
 PUBLISHER_PORTAL_DAPP_URL = ""
-ORG_ID_FOR_TESTING_AI_SERVICE = ""
-BLOCKCHAIN_TEST_ENV = {
-    "network_id": 3,
-    "network_name": "test",
-    "http_provider": "https://ropsten.infura.io",
-    "ws_provider": "wss://ropsten.infura.io/ws",
-    "publisher_private_key": "",
-    "publisher_address": "",
-    "free_calls": 100
-}
-SLACK_CHANNEL_FOR_APPROVAL_TEAM = ""
-SIGNING_SECRET = ""
-STAGING_URL = ""
-ALLOWED_SLACK_CHANNEL_ID = ["dummy_channel_id"]
-ALLOWED_SLACK_USER = ['dummy_name']
-SERVICE_REVIEW_API_ENDPOINT = ""
-SLACK_APPROVAL_CHANNEL_URL = ""
-MAX_SERVICES_SLACK_LISTING = 5
-SLACK_APPROVAL_OAUTH_ACCESS_TOKEN = ""
 UPLOAD_BUCKET = {
     "ORG_BUCKET": "org_bucket"
 }
@@ -68,3 +51,15 @@ EMAILS = {
     "SERVICE_APPROVERS_DLIST": ""
 }
 SERVICE_CURATE_ARN = ""
+APPROVAL_SLACK_HOOK = {
+    'hostname': 'https://hooks.slack.com',
+    'path': ''
+}
+DEMO_COMPONENT_CODE_BUILD_NAME = ""
+UPDATE_DEMO_COMPONENT_BUILD_STATUS_LAMBDA_ARN = ""
+MANAGE_PROTO_COMPILATION_LAMBDA_ARN = ""
+ALLOWED_HERO_IMAGE_FORMATS = ['.jpg', '.jpeg', '.png']
+PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT = ""
+GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT = ""
+ASSETS_COMPONENT_BUCKET_NAME = ""
+CONTRACT_BASE_PATH = ""

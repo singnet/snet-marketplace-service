@@ -17,8 +17,6 @@ class TestOrganizationService(unittest.TestCase):
     def setUp(self):
         self.org_repo = OrganizationPublisherRepository()
 
-    @patch("registry.domain.services.registry_blockchain_util."
-           "RegistryBlockChainUtil.publish_organization_to_test_network", return_value="0x123")
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
     @patch('common.ipfs_util.IPFSUtil.read_file_from_ipfs')
@@ -26,9 +24,7 @@ class TestOrganizationService(unittest.TestCase):
     @patch('common.blockchain_util.BlockChainUtil')
     @patch('registry.consumer.organization_event_consumer.OrganizationEventConsumer._get_org_details_from_blockchain')
     def test_organization_create_event(self, mock_get_org_details_from_blockchain, mock_blockchain_util,
-                                       mock_read_bytesio_from_ipfs,
-                                       mock_ipfs_read, mock_s3_push,
-                                       mock_ipfs_write, mock_org_test_publish):
+                                       mock_read_bytesio_from_ipfs, mock_ipfs_read, mock_s3_push, mock_ipfs_write):
         test_org_uuid = uuid4().hex
         test_org_id = "org_id"
         username = "karl@cryptonian.io"
@@ -99,7 +95,7 @@ class TestOrganizationService(unittest.TestCase):
                                                                          80, self.org_repo)
 
         org_event_consumer.on_event({})
-        published_org = self.org_repo.get_org_for_org_id(test_org_id)
+        published_org = self.org_repo.get_organization(org_id=test_org_id)
         org_owner = self.org_repo.session.query(OrganizationMember).filter(
             OrganizationMember.org_uuid == test_org_uuid).filter(OrganizationMember.role == Role.OWNER.value).all()
         if len(org_owner) != 1:
@@ -116,8 +112,7 @@ class TestOrganizationService(unittest.TestCase):
         assert published_org.duns_no == '123456789'
         assert published_org.org_state.state == "PUBLISHED"
 
-    @patch("registry.domain.services.registry_blockchain_util."
-           "RegistryBlockChainUtil.publish_organization_to_test_network", return_value="0x123")
+
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
     @patch('common.ipfs_util.IPFSUtil.read_file_from_ipfs')
@@ -127,7 +122,7 @@ class TestOrganizationService(unittest.TestCase):
     def test_organization_create_event_from_snet_cli(self, mock_get_org_details_from_blockchain, mock_block_chain_util,
                                                      mock_read_bytesio_from_ipfs,
                                                      mock_ipfs_read, mock_s3_push,
-                                                     mock_ipfs_write, mock_org_test_publish):
+                                                     mock_ipfs_write):
         username = "karl@dummy.com"
         test_org_uuid = uuid4().hex
         test_org_id = "org_id"
@@ -183,7 +178,7 @@ class TestOrganizationService(unittest.TestCase):
                                                                          80, self.org_repo)
         org_event_consumer.on_event(event)
 
-        published_org = self.org_repo.get_org_for_org_id(test_org_id)
+        published_org = self.org_repo.get_organization(org_id=test_org_id)
 
         assert published_org.name == "test_org"
         assert published_org.id == "org_id"
@@ -195,8 +190,6 @@ class TestOrganizationService(unittest.TestCase):
         assert published_org.groups[0].payment_address == "0x123"
         assert published_org.org_state.state == OrganizationStatus.PUBLISHED_UNAPPROVED.value
 
-    @patch("registry.domain.services.registry_blockchain_util."
-           "RegistryBlockChainUtil.publish_organization_to_test_network", return_value="0x123")
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
     @patch('common.ipfs_util.IPFSUtil.read_file_from_ipfs')
@@ -206,7 +199,7 @@ class TestOrganizationService(unittest.TestCase):
     def test_organization_owner_change_event(self, mock_get_org_details_from_blockchain, mock_blockchain_util,
                                              mock_read_bytesio_from_ipfs,
                                              mock_ipfs_read, mock_s3_push,
-                                             mock_ipfs_write, mock_org_test_publish):
+                                             mock_ipfs_write):
         username = "karl@dummy.com"
         test_org_uuid = uuid4().hex
         test_org_id = "org_id"
@@ -285,7 +278,7 @@ class TestOrganizationService(unittest.TestCase):
                                                                          80, self.org_repo)
 
         org_event_consumer.on_event({})
-        published_org = self.org_repo.get_org_for_org_id(test_org_id)
+        published_org = self.org_repo.get_organization(org_id=test_org_id)
         owner = self.org_repo.session.query(OrganizationMember).filter(
             OrganizationMember.org_uuid == test_org_uuid).filter(OrganizationMember.role == Role.OWNER.value).all()
         if len(owner) != 1:

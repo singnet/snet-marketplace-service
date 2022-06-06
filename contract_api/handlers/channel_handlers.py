@@ -36,7 +36,7 @@ def get_channels(event, context):
     except Exception as e:
         logger.info(event)
         response = repr(e)
-        utils.report_slack(1, str(response), SLACK_HOOK)
+        utils.report_slack(str(response), SLACK_HOOK)
         logger.error(e)
         status_code = StatusCode.INTERNAL_SERVER_ERROR
     return generate_lambda_response(
@@ -110,8 +110,8 @@ def update_consumed_balance(event, context):
         logger.error(response)
         logger.info(event)
         logger.error(e)
-        error = Error.undefined_error(repr(e))
-        utils.report_slack(1, str(error), SLACK_HOOK)
+        error = Error.handle_undefined_error(repr(e))
+        utils.report_slack(str(error), SLACK_HOOK)
         traceback.print_exc()
         return generate_lambda_response(
             StatusCode.INTERNAL_SERVER_ERROR,

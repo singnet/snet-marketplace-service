@@ -72,5 +72,5 @@ def register_user_post_aws_cognito_signup(event, context):
         for exc_lines in exc_tb_lines:
             slack_message = slack_message + exc_lines
         slack_message = f"```{slack_message}```"
-        Utils().report_slack(type=0, slack_msg=slack_message, SLACK_HOOK=SLACK_HOOK)
+        Utils().report_slack(slack_msg=slack_message, SLACK_HOOK=SLACK_HOOK)
     return event

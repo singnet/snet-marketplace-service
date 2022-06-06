@@ -4,5 +4,5 @@ class Error:
     NO_ERROR = {}
 
     @staticmethod
-    def undefined_error(error_message):
+    def handle_undefined_error(error_message):
         return {"code": 0, "message": error_message}

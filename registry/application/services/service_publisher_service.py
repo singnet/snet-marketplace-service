@@ -1,7 +1,10 @@
 import json
+from datetime import datetime as dt
 from uuid import uuid4
+import requests
 
 from aws_xray_sdk.core import patch_all
+from cerberus import Validator
 
 from common import utils
 from common.boto_utils import BotoUtils
@@ -9,19 +12,21 @@ from common.constant import StatusCode
 from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
 from common.utils import download_file_from_url, json_to_file, publish_zip_file_in_ipfs, send_email_notification
-from registry.config import ASSET_DIR, BLOCKCHAIN_TEST_ENV, EMAILS, IPFS_URL, METADATA_FILE_PATH, NETWORKS, NETWORK_ID, \
-    NOTIFICATION_ARN, REGION_NAME, SLACK_CHANNEL_FOR_APPROVAL_TEAM, SLACK_HOOK
-from registry.constants import EnvironmentType, OrganizationStatus, ServiceAvailabilityStatus, ServiceStatus, \
+from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH, NETWORKS, NETWORK_ID, NOTIFICATION_ARN, \
+    REGION_NAME, PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT, GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT, ASSETS_COMPONENT_BUCKET_NAME
+from registry.constants import EnvironmentType, ServiceAvailabilityStatus, ServiceStatus, \
     ServiceSupportType, UserType
 from registry.domain.factory.service_factory import ServiceFactory
+from registry.domain.models.demo_component import DemoComponent
+from registry.domain.models.offchain_service_config import OffchainServiceConfig
+from registry.domain.models.service import Service
 from registry.domain.models.service_comment import ServiceComment
 from registry.domain.services.service_publisher_domain_service import ServicePublisherDomainService
-from registry.exceptions import EnvironmentNotFoundException, InvalidOrganizationStateException, \
-    InvalidServiceStateException, OrganizationNotFoundException, OrganizationNotPublishedException, \
-    ServiceNotFoundException, ServiceProtoNotFoundException
+from registry.exceptions import EnvironmentNotFoundException, InvalidServiceStateException, \
+    OrganizationNotFoundException, ServiceNotFoundException, ServiceProtoNotFoundException, InvalidMetadataException
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
-from registry.mail_templates import get_service_approval_mail_template
+from deepdiff import DeepDiff
 
 patch_all()
 ALLOWED_ATTRIBUTES_FOR_SERVICE_SEARCH = ["display_name"]
@@ -37,6 +42,8 @@ BUILD_FAILURE_CODE = 0
 logger = get_logger(__name__)
 service_factory = ServiceFactory()
 boto_util = BotoUtils(region_name=REGION_NAME)
+validator = Validator()
+ipfs_util = IPFSUtil(IPFS_URL["url"], IPFS_URL["port"])
 
 
 class ServicePublisherService:
@@ -83,22 +90,63 @@ class ServicePublisherService:
             return {}
         return service.to_dict()
 
+    @staticmethod
+    def _get_valid_service_contributors(contributors):
+        for contributor in contributors:
+            email_id = contributor.get("email_id", None)
+            name = contributor.get("name", None)
+            if (email_id is None or len(email_id) == 0) and (name is None or len(name) == 0):
+                contributors.remove(contributor)
+        return contributors
+
+    def _save_service_comment(self, support_type, user_type, comment):
+        service_provider_comment = ServiceFactory. \
+            create_service_comment_entity_model(org_uuid=self._org_uuid,
+                                                service_uuid=self._service_uuid,
+                                                support_type=support_type,
+                                                user_type=user_type,
+                                                commented_by=self._username,
+                                                comment=comment)
+        ServicePublisherRepository().save_service_comments(service_provider_comment)
+
+    def save_offline_service_configs(self, payload):
+        demo_component_required = payload.get("assets", {}).get("demo_files", {}).get("required", -1)
+        if demo_component_required == -1:
+            return
+        offchain_service_config = OffchainServiceConfig(
+            org_uuid=self._org_uuid,
+            service_uuid=self._service_uuid,
+            configs={
+                "demo_component_required": str(demo_component_required)
+            }
+        )
+        ServicePublisherRepository().add_or_update_offline_service_config(offchain_service_config)
+        return
+
     def save_service(self, payload):
-        service = ServiceFactory().create_service_entity_model(self._org_uuid, self._service_uuid, payload,
-                                                               ServiceStatus.DRAFT.value)
-        service = ServicePublisherRepository().save_service(self._username, service, ServiceStatus.DRAFT.value)
-        comments = payload.get("comments", {}).get(UserType.SERVICE_PROVIDER.value, "")
-        if bool(comments):
-            service_provider_comment = service_factory. \
-                create_service_comment_entity_model(org_uuid=self._org_uuid,
-                                                    service_uuid=self._service_uuid,
-                                                    support_type="SERVICE_APPROVAL",
-                                                    user_type="SERVICE_PROVIDER",
-                                                    commented_by=self._username,
-                                                    comment=comments)
-            ServicePublisherRepository().save_service_comments(service_provider_comment)
-            service.comments = self.get_service_comments()
-        return service.to_dict()
+        service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
+        service.service_id = payload["service_id"]
+        service.proto = payload.get("proto", {})
+        service.short_description = payload.get("short_description", "")
+        service.description = payload.get("description", "")
+        service.project_url = payload.get("project_url", "")
+        service.contributors = ServicePublisherService. \
+            _get_valid_service_contributors(contributors=payload.get("contributors", []))
+        service.tags = payload.get("tags", [])
+        service.mpe_address = payload.get("mpe_address", "")
+        groups = []
+        for group in payload["groups"]:
+            service_group = ServiceFactory.create_service_group_entity_model(self._org_uuid, self._service_uuid, group)
+            groups.append(service_group)
+        service.groups = groups
+        service.service_state.transaction_hash = payload.get("transaction_hash", None)
+        ServicePublisherRepository().save_service(self._username, service, ServiceStatus.APPROVED.value)
+        comment = payload.get("comments", {}).get(UserType.SERVICE_PROVIDER.value, "")
+        if len(comment) > 0:
+            self._save_service_comment(support_type="SERVICE_APPROVAL", user_type="SERVICE_PROVIDER", comment=comment)
+        self.save_offline_service_configs(payload=payload)
+        service = self.get_service_for_given_service_uuid()
+        return service
 
     def save_service_attributes(self, payload):
         VALID_PATCH_ATTRIBUTE = ["groups"]
@@ -151,7 +199,8 @@ class ServicePublisherService:
             "sort_by": sort_by if sort_by in ALLOWED_ATTRIBUTES_FOR_SERVICE_SORT_BY else DEFAULT_ATTRIBUTES_FOR_SERVICE_SORT_BY,
             "order_by": order_by if order_by in ALLOWED_ATTRIBUTES_FOR_SERVICE_SORT_BY else DEFAULT_ATTRIBUTES_FOR_SERVICE_ORDER_BY
         }
-        search_result = ServicePublisherRepository().get_services_for_organization(self._org_uuid, filter_parameters)
+        services = ServicePublisherRepository().get_services_for_organization(self._org_uuid, filter_parameters)
+        search_result = [service.to_dict() for service in services]
         search_count = ServicePublisherRepository().get_total_count_of_services_for_organization(self._org_uuid,
                                                                                                  filter_parameters)
         return {"total_count": search_count, "offset": offset, "limit": limit, "result": search_result}
@@ -168,12 +217,26 @@ class ServicePublisherService:
             UserType.SERVICE_APPROVER.value: "<div></div>" if not approver_comment else f"<div>{approver_comment.comment}</div>"
         }
 
+    def map_offchain_service_config(self, offchain_service_config, service):
+        # update demo component flag in service assets
+        if "demo_files" not in service["media"]:
+            service["media"]["demo_files"] = {}
+        service["media"]["demo_files"].update({"required": offchain_service_config.configs["demo_component_required"]})
+        return service
+
     def get_service_for_given_service_uuid(self):
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
         if not service:
             return None
         service.comments = self.get_service_comments()
-        return service.to_dict()
+        offchain_service_config = ServicePublisherRepository().get_offchain_service_config(
+            org_uuid=self._org_uuid,
+            service_uuid=self._service_uuid
+        )
+        service_data = service.to_dict()
+        if offchain_service_config.configs:
+            service_data = self.map_offchain_service_config(offchain_service_config, service_data)
+        return service_data
 
     def publish_service_data_to_ipfs(self):
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
@@ -194,71 +257,9 @@ class ServicePublisherService:
             service.assets["proto_files"]["ipfs_hash"] = asset_ipfs_hash
             ServicePublisherDomainService.publish_assets(service)
             service = ServicePublisherRepository().save_service(self._username, service, service.service_state.state)
-            service_metadata = service.to_metadata()
-            filename = f"{METADATA_FILE_PATH}/{service.uuid}_service_metadata.json"
-            service.metadata_ipfs_hash = ServicePublisherService.publish_to_ipfs(filename, service_metadata)
-            return {"service_metadata": service.to_metadata(),
-                    "metadata_ipfs_hash": "ipfs://" + service.metadata_ipfs_hash}
+            return service
         logger.info(f"Service status needs to be {ServiceStatus.APPROVED.value} to be eligible for publishing.")
         raise InvalidServiceStateException()
-
-    def approve_service(self):
-        pass
-
-    @staticmethod
-    def get_list_of_orgs_with_services_submitted_for_approval():
-        list_of_orgs_with_services = []
-        services_review = ServicePublisherRepository().get_all_services_review_data()
-        for service_review in services_review:
-            list_of_orgs_with_services.append({
-                "org_uuid": service_review.org_uuid,
-                "services": [
-                    {
-                        "service_uuid": service_review.service_uuid
-                    }
-                ],
-            })
-        return list_of_orgs_with_services
-
-    @staticmethod
-    def organization_exist_in_blockchain(org_id):
-        # get list of organization from blockchain
-        return True
-        orgs = []
-        if org_id in orgs:
-            return True
-        return False
-
-    @staticmethod
-    def service_exist_in_blockchain(org_id, service_id):
-        # get list of services
-        services = []
-        if service_id in services:
-            return True
-        return False
-
-    @staticmethod
-    def unregister_service_in_blockchain(org_id, service_id):
-        return ""
-        # blockchain_util = BlockChainUtil(provider=NETWORKS[NETWORK_ID]["http_provider"], provider_type="http_provider")
-        # method_name = "deleteServiceRegistration"
-        # positional_inputs = (org_id, service_id)
-        # transaction_object = blockchain_util.create_transaction_object(*positional_inputs, method_name=method_name,
-        #                                                                address=EXECUTOR_ADDRESS,
-        #                                                                contract_path=REG_CNTRCT_PATH,
-        #                                                                contract_address_path=REG_ADDR_PATH,
-        #                                                                net_id=NETWORK_ID)
-        # raw_transaction = blockchain_util.sign_transaction_with_private_key(transaction_object=transaction_object,
-        #                                                                     private_key=EXECUTOR_KEY)
-        # transaction_hash = blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
-        # return transaction_hash
-
-    @staticmethod
-    def unregister_service_in_blockchain_after_service_is_approved(org_id, service_id):
-        transaction_hash = ServicePublisherService.unregister_service_in_blockchain(
-            org_id=org_id, service_id=service_id)
-        logger.info(
-            f"Transaction hash {transaction_hash} generated while unregistering service_id {service_id} in blockchain")
 
     @staticmethod
     def notify_service_contributor_when_user_submit_for_approval(org_id, service_id, contributors):
@@ -274,14 +275,6 @@ class ServicePublisherService:
         utils.send_email_notification(recipients, notification_subject, notification_message, NOTIFICATION_ARN,
                                       boto_util)
 
-    def notify_approval_team(self, service_id, service_name, org_id, org_name):
-        slack_msg = f"Service {service_id} under org_id {org_id} is submitted for approval"
-        utils.send_slack_notification(slack_msg=slack_msg, slack_url=SLACK_HOOK['hostname'] + SLACK_HOOK['path'],
-                                      slack_channel=SLACK_CHANNEL_FOR_APPROVAL_TEAM)
-        mail = get_service_approval_mail_template(service_id, service_name, org_id, org_name)
-        send_email_notification([EMAILS["SERVICE_APPROVERS_DLIST"]], mail["subject"],
-                                mail["body"], NOTIFICATION_ARN, boto_util)
-
     def send_email(self, mail, recipient):
         send_notification_payload = {"body": json.dumps({
             "message": mail["body"],
@@ -291,50 +284,6 @@ class ServicePublisherService:
         boto_util.invoke_lambda(lambda_function_arn=NOTIFICATION_ARN, invocation_type="RequestResponse",
                                 payload=json.dumps(send_notification_payload))
 
-    def submit_service_for_approval(self, payload):
-
-        user_as_contributor = [{"email_id": self._username, "name": ""}]
-        payload["contributors"] = payload.get("contributors", user_as_contributor) + user_as_contributor
-
-        organization = OrganizationPublisherRepository().get_org_for_org_uuid(self._org_uuid)
-        if not organization:
-            raise OrganizationNotFoundException()
-        if not organization.org_state:
-            raise InvalidOrganizationStateException()
-        if not organization.org_state.state == OrganizationStatus.PUBLISHED.value:
-            raise OrganizationNotPublishedException()
-
-        service = service_factory.create_service_entity_model(
-            self._org_uuid, self._service_uuid, payload, ServiceStatus.APPROVAL_PENDING.value)
-
-        # publish service data with test config on ipfs
-        service = self.obj_service_publisher_domain_service.publish_service_data_to_ipfs(service,
-                                                                                         EnvironmentType.TEST.value)
-
-        comments = payload.get("comments", {}).get(UserType.SERVICE_PROVIDER.value, "")
-        if bool(comments):
-            service_provider_comment = service_factory. \
-                create_service_comment_entity_model(org_uuid=self._org_uuid,
-                                                    service_uuid=self._service_uuid,
-                                                    support_type="SERVICE_APPROVAL",
-                                                    user_type="SERVICE_PROVIDER",
-                                                    commented_by=self._username,
-                                                    comment=comments)
-            ServicePublisherRepository().save_service_comments(service_provider_comment)
-        service = ServicePublisherRepository().save_service(self._username, service, service.service_state.state)
-
-        # publish service on test network
-        response = self.obj_service_publisher_domain_service.publish_service_on_blockchain(
-            org_id=organization.id, service=service, environment=EnvironmentType.TEST.value)
-
-        # notify service contributors via email
-        self.notify_service_contributor_when_user_submit_for_approval(organization.id, service.service_id,
-                                                                      service.contributors)
-
-        # notify approval team via slack
-        self.notify_approval_team(service.service_id, service.display_name, organization.id, organization.name)
-        return response
-
     @staticmethod
     def publish_to_ipfs(filename, data):
         json_to_file(data, filename)
@@ -343,7 +292,7 @@ class ServicePublisherService:
         return service_metadata_ipfs_hash
 
     def daemon_config(self, environment):
-        organization = OrganizationPublisherRepository().get_org_for_org_uuid(self._org_uuid)
+        organization = OrganizationPublisherRepository().get_organization(org_uuid=self._org_uuid)
         if not organization:
             raise OrganizationNotFoundException()
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
@@ -353,18 +302,7 @@ class ServicePublisherService:
         network_name = NETWORKS[NETWORK_ID]["name"].lower()
         # this is how network name is set in daemon for mainnet
         network_name = "main" if network_name == "mainnet" else network_name
-        if environment is EnvironmentType.TEST.value:
-            daemon_config = {
-                "allowed_user_flag": True,
-                "allowed_user_addresses": [member.address for member in organization_members] + [
-                    BLOCKCHAIN_TEST_ENV["publisher_address"]],
-                "authentication_addresses": [member.address for member in organization_members],
-                "blockchain_enabled": False,
-                "passthrough_enabled": True,
-                "organization_id": organization.id,
-                "service_id": service.service_id
-            }
-        elif environment is EnvironmentType.MAIN.value:
+        if environment is EnvironmentType.MAIN.value:
             daemon_config = {
                 "ipfs_end_point": f"{IPFS_URL['url']}:{IPFS_URL['port']}",
                 "blockchain_network_selected": network_name,
@@ -379,19 +317,110 @@ class ServicePublisherService:
             raise EnvironmentNotFoundException()
         return daemon_config
 
-    @staticmethod
-    def get_list_of_service_pending_for_approval(limit):
-        list_of_services = []
-        services = ServicePublisherRepository().get_list_of_service_pending_for_approval(limit)
-        for service in services:
-            org = OrganizationPublisherRepository().get_org_for_org_uuid(org_uuid=service.org_uuid)
-            list_of_services.append({
-                "org_uuid": service.org_uuid,
-                "org_id": org.id,
-                "service_uuid": service.uuid,
-                "service_id": service.service_id,
-                "display_name": service.display_name,
-                "requested_at": None
-            })
+    def get_service_demo_component_build_status(self):
+        try:
+            service = self.get_service_for_given_service_uuid()
+            if service:
+                build_id = service["media"]["demo_files"]["build_id"]
+                build_response = boto_util.get_code_build_details(build_ids=[build_id])
+                build_data = [data for data in build_response['builds'] if data['id'] == build_id]
+                status = build_data[0]['buildStatus']
+            else:
+                raise Exception(f"service for org {self._org_uuid} and service {service} is not found")
+            return {"build_status": status}
+        except Exception as e:
+            logger.info(
+                f"error in triggering build_id {build_id} for service {self._service_uuid} and org {self._org_uuid} :: error {repr(e)}")
+            raise e
 
-        return list_of_services
+    def get_existing_offchain_configs(self, existing_service_data):
+        existing_offchain_configs = {}
+        if "demo_component" in existing_service_data:
+            existing_offchain_configs.update(
+                {"demo_component": existing_service_data["demo_component"]})
+        return existing_offchain_configs
+
+    def are_blockchain_attributes_got_updated(self, existing_metadata, current_service_metadata):
+        change = DeepDiff(current_service_metadata, existing_metadata)
+        logger.info(f"Change in blockchain attributes::{change}")
+        if change:
+            return True
+        return False
+
+    def get_offchain_changes(self, current_offchain_config, existing_offchain_config, current_service):
+        changes = {}
+        existing_demo = existing_offchain_config.get("demo_component", {})
+        new_demo = DemoComponent(
+            demo_component_required=current_offchain_config["demo_component_required"],
+            demo_component_url=current_service.assets.get("demo_files", {}).get("url", ""),
+            demo_component_status=current_service.assets.get("demo_files", {}).get("status", "")
+        )
+        demo_changes = new_demo.to_dict()
+        demo_last_modifed = existing_demo.get("demo_component_last_modified", "")
+        # if last_modified not there publish if it there and is greater than current last modifed publish
+        demo_changes.update({"change_in_demo_component": 1})
+        if demo_last_modifed and dt.fromisoformat(
+                demo_last_modifed) > dt.fromisoformat(current_service.assets.get("demo_files", {}).get("last_modified", "")):
+            demo_changes.update({"change_in_demo_component": 0})
+        changes.update({"demo_component": demo_changes})
+        return changes
+
+    def publish_offchain_service_configs(self, org_id, service_id, payload):
+        response = requests.post(
+            PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT.format(org_id, service_id), data=payload)
+        if response.status_code != 200:
+            raise Exception(f"Error in updating offchain service attributes")
+
+    def get_existing_service_details_from_contract_api(self, service_id, org_id):
+        response = requests.get(
+            GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT.format(org_id, service_id))
+        if response.status_code != 200:
+            raise Exception(f"Error getting service details for org_id :: {org_id} service_id :: {service_id}")
+        return json.loads(response.text)["data"]
+
+    def publish_service_data(self):
+        # Validate service metadata
+        current_service = self.publish_service_data_to_ipfs()
+
+        is_valid = Service.is_metadata_valid(service_metadata=current_service.to_metadata())
+        logger.info(f"is_valid :: {is_valid} :: validated current_metadata :: {current_service.to_metadata()}")
+        if not is_valid:
+            raise InvalidMetadataException()
+
+        # Monitor blockchain and offchain changes
+        current_org = OrganizationPublisherRepository().get_organization(org_uuid=self._org_uuid)
+        existing_service_data = self.get_existing_service_details_from_contract_api(current_service.service_id, current_org.id)
+        if existing_service_data:
+            existing_metadata = ipfs_util.read_file_from_ipfs(existing_service_data["ipfs_hash"])
+        else:
+            existing_metadata = {}
+        publish_to_blockchain = self.are_blockchain_attributes_got_updated(existing_metadata, current_service.to_metadata())
+        existing_offchain_configs = self.get_existing_offchain_configs(existing_service_data)
+        current_offchain_attributes = ServicePublisherRepository().get_offchain_service_config(org_uuid=self._org_uuid,
+                                                                                               service_uuid=self._service_uuid)
+        new_offchain_attributes = self.get_offchain_changes(
+            current_offchain_config=current_offchain_attributes.configs,
+            existing_offchain_config=existing_offchain_configs,
+            current_service=current_service)
+
+        status = {
+            "publish_to_blockchain": publish_to_blockchain
+        }
+        if publish_to_blockchain:
+            filename = f"{METADATA_FILE_PATH}/{current_service.uuid}_service_metadata.json"
+            ipfs_hash = ServicePublisherService.publish_to_ipfs(filename, current_service.to_metadata())
+            status["service_metadata_ipfs_hash"] = "ipfs://" + ipfs_hash
+        self.publish_offchain_service_configs(
+            org_id=current_org.id,
+            service_id=current_service.service_id,
+            payload=json.dumps(new_offchain_attributes)
+        )
+        # if there is no blockchain change update state as published
+        # else status will be marked based event received from blockchain
+        if not publish_to_blockchain:
+            ServicePublisherRepository().save_service(
+                username=self._username,
+                service=current_service,
+                state=ServiceStatus.PUBLISHED.value
+            )
+        return status
