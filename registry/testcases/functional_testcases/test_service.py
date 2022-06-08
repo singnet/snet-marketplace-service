@@ -272,8 +272,8 @@ class TestService(TestCase):
                 service_uuid="test_service_uuid",
                 state="DRAFT",
                 transaction_hash=None,
-                created_by="dummy_user",
-                updated_by="dummy_user",
+                created_by="dummy_user1@dummy.io",
+                updated_by="dummy_user1@dummy.io",
                 created_on=dt.utcnow()
             )
         )
@@ -282,6 +282,86 @@ class TestService(TestCase):
                 row_id="1000",
                 org_uuid="test_org_uuid",
                 service_uuid="test_service_uuid",
+                group_id="test_group_id",
+                pricing={},
+                endpoints={"https://dummydaemonendpoint.io": {"verfied": True}},
+                daemon_address=["0xq2w3e4rr5t6y7u8i9"],
+                free_calls=10,
+                free_call_signer_address="",
+                created_on=dt.utcnow()
+            )
+        )
+        service_repo.add_item(
+            ServiceDBModel(
+                org_uuid="test_org_uuid",
+                uuid="test_service_uuid1",
+                display_name="test_display_name",
+                service_id="test_service_id",
+                metadata_uri="Qasdfghjklqwertyuiopzxcvbnm",
+                short_description="test_short_description",
+                description="test_description",
+                project_url="https://dummy.io",
+                ranking=1,
+                created_on=dt.utcnow()
+            )
+        )
+        service_repo.add_item(
+            ServiceStateDBModel(
+                row_id=1001,
+                org_uuid="test_org_uuid",
+                service_uuid="test_service_uuid1",
+                state="DRAFT",
+                transaction_hash=None,
+                created_by="dummy_user1@dummy.io",
+                updated_by="dummy_user1@dummy.io",
+                created_on=dt.utcnow()
+            )
+        )
+        service_repo.add_item(
+            ServiceGroupDBModel(
+                row_id="1001",
+                org_uuid="test_org_uuid",
+                service_uuid="test_service_uuid1",
+                group_id="test_group_id",
+                pricing={},
+                endpoints={"https://dummydaemonendpoint.io": {"verfied": True}},
+                daemon_address=["0xq2w3e4rr5t6y7u8i9"],
+                free_calls=10,
+                free_call_signer_address="",
+                created_on=dt.utcnow()
+            )
+        )
+        service_repo.add_item(
+            ServiceDBModel(
+                org_uuid="test_org_uuid",
+                uuid="test_service_uuid2",
+                display_name="test_display_name",
+                service_id="test_service_id",
+                metadata_uri="Qasdfghjklqwertyuiopzxcvbnm",
+                short_description="test_short_description",
+                description="test_description",
+                project_url="https://dummy.io",
+                ranking=1,
+                created_on=dt.utcnow()
+            )
+        )
+        service_repo.add_item(
+            ServiceStateDBModel(
+                row_id=1002,
+                org_uuid="test_org_uuid",
+                service_uuid="test_service_uuid2",
+                state="DRAFT",
+                transaction_hash=None,
+                created_by="dummy_user1@dummy.io",
+                updated_by="dummy_user1@dummy.io",
+                created_on=dt.utcnow()
+            )
+        )
+        service_repo.add_item(
+            ServiceGroupDBModel(
+                row_id="1002",
+                org_uuid="test_org_uuid",
+                service_uuid="test_service_uuid2",
                 group_id="test_group_id",
                 pricing={},
                 endpoints={"https://dummydaemonendpoint.io": {"verfied": True}},
@@ -304,7 +384,7 @@ class TestService(TestCase):
             "body": json.dumps({
                 "q": "display",
                 "limit": 10,
-                "offset": 0,
+                "offset": 1,
                 "s": "all",
                 "sort_by": "display_name",
                 "order_by": "desc",
@@ -315,10 +395,10 @@ class TestService(TestCase):
         assert (response["statusCode"] == 200)
         response_body = json.loads(response["body"])
         assert (response_body["status"] == "success")
-        assert (response_body["data"]["total_count"] == 1)
-        assert (response_body["data"]["offset"] == 0)
+        assert (response_body["data"]["total_count"] == 3)
+        assert (response_body["data"]["offset"] == 1)
         assert (response_body["data"]["limit"] == 10)
-        assert (len(response_body["data"]["result"]) == 1)
+        assert (len(response_body["data"]["result"]) == 2)
 
     def test_save_service(self):
         org_repo.add_item(
