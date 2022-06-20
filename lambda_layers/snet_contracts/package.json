@@ -8,8 +8,8 @@
     "singularitynet-stake-contracts": "1.0.0",
     "singularitynet-rfai-contracts": "1.0.0",
     "singularitynet-bridge": "0.1.1",
-    "singularitynet-token-contracts": "^3.0.0",
-    "@singularitydao/v1-farming-contracts": "^1.0.1",
-    "singularitydao-token-contracts": "^1.0.0"
+    "singularitynet-token-contracts": "3.0.0",
+    "@singularitydao/v1-farming-contracts": "1.0.1",
+    "singularitydao-token-contracts": "1.0.0"
   }
 }
