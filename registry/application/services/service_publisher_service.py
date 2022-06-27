@@ -28,7 +28,7 @@ from registry.infrastructure.repositories.organization_repository import Organiz
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 from deepdiff import DeepDiff
 
-patch_all()
+#patch_all()
 ALLOWED_ATTRIBUTES_FOR_SERVICE_SEARCH = ["display_name"]
 DEFAULT_ATTRIBUTE_FOR_SERVICE_SEARCH = "display_name"
 ALLOWED_ATTRIBUTES_FOR_SERVICE_SORT_BY = ["ranking", "service_id"]
@@ -191,18 +191,37 @@ class ServicePublisherService:
         search_attribute = payload["s"]
         sort_by = payload["sort_by"].lower()
         order_by = payload["order_by"].lower()
+        filter_parameters_total_count = {  "search_string": search_string,
+                                           "search_attribute": search_attribute if search_attribute in
+                                                                                   ALLOWED_ATTRIBUTES_FOR_SERVICE_SEARCH
+                                           else DEFAULT_ATTRIBUTE_FOR_SERVICE_SEARCH}
+        search_count = ServicePublisherRepository().\
+            get_total_count_of_services_for_organization(self._org_uuid,filter_parameters_total_count)
+        # a = ("a", "b", "c", "d", "e", "f", "g", "h")
+        # x = slice(3, 5)  , so 3 is the offset , which means starting a[3] and 2 elements after (2 is the limit)
+        # which is a[5]
+        # front end will send the offset as 3 and limit as 2 , hence we need adjust
+        # print(a[x]) , ('d', 'e')
+        revised_offset = offset
+        if revised_offset > search_count:
+            revised_offset = search_count
+        revised_limit = offset + limit
+        if revised_limit > search_count :
+            revised_limit = search_count
+
         filter_parameters = {
-            "offset": offset,
-            "limit": limit,
+            "offset": revised_offset,
+            "limit": revised_limit,
             "search_string": search_string,
             "search_attribute": search_attribute if search_attribute in ALLOWED_ATTRIBUTES_FOR_SERVICE_SEARCH else DEFAULT_ATTRIBUTE_FOR_SERVICE_SEARCH,
             "sort_by": sort_by if sort_by in ALLOWED_ATTRIBUTES_FOR_SERVICE_SORT_BY else DEFAULT_ATTRIBUTES_FOR_SERVICE_SORT_BY,
             "order_by": order_by if order_by in ALLOWED_ATTRIBUTES_FOR_SERVICE_SORT_BY else DEFAULT_ATTRIBUTES_FOR_SERVICE_ORDER_BY
         }
+
+
         services = ServicePublisherRepository().get_services_for_organization(self._org_uuid, filter_parameters)
         search_result = [service.to_dict() for service in services]
-        search_count = ServicePublisherRepository().get_total_count_of_services_for_organization(self._org_uuid,
-                                                                                                 filter_parameters)
+
         return {"total_count": search_count, "offset": offset, "limit": limit, "result": search_result}
 
     def get_service_comments(self):
