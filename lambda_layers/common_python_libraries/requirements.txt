@@ -15,3 +15,4 @@ setuptools==57.4.0
 dxlmispservice==0.1.5
 setuptools-rust==0.12.1
 cryptography==3.4.7
+jsonschema==3.2.0
