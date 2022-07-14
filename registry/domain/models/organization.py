@@ -307,7 +307,7 @@ class Organization:
         elif current_organization.get_status() == OrganizationStatus.ONBOARDING_APPROVED.value:
             next_state = OrganizationStatus.ONBOARDING_APPROVED.value
         elif current_organization.get_status() == OrganizationStatus.APPROVAL_PENDING.value:
-            next_state = OrganizationStatus.APPROVAL_PENDING.value
+            next_state = OrganizationStatus.APPROVED.value
         else:
             raise OperationNotAllowed()
         return next_state

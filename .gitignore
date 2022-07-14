@@ -110,6 +110,7 @@ setting*py
 
 /contract_api/node_modules/
 event_pubsub/node_modules/
+/registry/node_modules/
 
 #IDE files
 .idea/
