@@ -28,7 +28,7 @@ SLACK_HOOK = {
 }
 IPFS_URL = {
     'url': 'ipfs.singularitynet.io',
-    'port': '80',
+    'port': '443',
 
 }
 ALLOWED_ORIGIN = ["PUBLISHER"]

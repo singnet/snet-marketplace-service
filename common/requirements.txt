@@ -4,3 +4,4 @@ requests==2.22.0
 PyMySQL==0.10.1
 boto3==1.15.9
 ipfsapi==0.4.3
+ipfshttpclient==0.7.0

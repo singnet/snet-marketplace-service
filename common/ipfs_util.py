@@ -2,13 +2,26 @@ import io
 import json
 import logging
 
-import ipfsapi
+import ipfshttpclient
 
 
 class IPFSUtil(object):
 
     def __init__(self, ipfs_url, port):
-        self.ipfs_conn = ipfsapi.connect(host=ipfs_url, port=port)
+        #
+        # Please refer to the documentation given at  https://libraries.io/pypi/ipfsapi
+        # The API deamon location is now described using MultiAddr,
+        # hence rather than doing ipfshttpclient.connect(host, port) to pass the network address parameters,
+        # use:ipfshttpclient.connect("/dns/<host>/tcp/<port>/http"),
+        # Please note that https://ipfs.singularitynet.io/api/v0/version
+        # {
+        # "Version": "0.4.19",
+        # "Commit": "",
+        # "Repo": "7",
+        # "System": "amd64/linux",
+        # "Golang": "go1.11.5"
+        # }
+        self.ipfs_conn = ipfshttpclient.connect(f'/dns/{ipfs_url}/tcp/{port}/https', session=True)
 
     def read_bytesio_from_ipfs(self, ipfs_hash):
 
@@ -35,3 +48,6 @@ class IPFSUtil(object):
 
         ipfs_data = self.ipfs_conn.cat(ipfs_hash)
         return json.loads(ipfs_data.decode('utf8'))
+
+    def close(self):  # Call this when you're done
+        self.ipfs_conn.close()
