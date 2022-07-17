@@ -21,7 +21,7 @@ class IPFSUtil(object):
         # "System": "amd64/linux",
         # "Golang": "go1.11.5"
         # }
-        self.ipfs_conn = ipfshttpclient.connect(f'/dns/{ipfs_url}/tcp/{port}/https', session=True)
+        self.ipfs_conn = ipfshttpclient.connect(f'/dns/{ipfs_url}/tcp/{port}/https', session=False)
 
     def read_bytesio_from_ipfs(self, ipfs_hash):
 
