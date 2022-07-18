@@ -236,14 +236,19 @@ def ipfsuri_to_bytesuri(uri):
 def publish_file_in_ipfs(file_url, file_dir, ipfs_client, wrap_with_directory=True):
     filename = download_file_from_url(file_url=file_url, file_dir=file_dir)
     file_type = os.path.splitext(filename)[1]
+    logger.info(f" file type is  = '{file_type.lower()}` ")
     if file_type.lower() == ".zip":
         return publish_zip_file_in_ipfs(filename, file_dir, ipfs_client)
+    #todo , you need to tar the folder and add that to the ipfs hash
+    logger.info(f"writing the file on ipfs {file_dir}/{filename} ")
     ipfs_hash = ipfs_client.write_file_in_ipfs(f"{file_dir}/{filename}", wrap_with_directory)
     return ipfs_hash
 
 
 def publish_zip_file_in_ipfs(filename, file_dir, ipfs_client):
+    logger.info(f"publish_zip_file_in_ipfs {file_dir}/{filename} ")
     file_in_tar_bytes = convert_zip_file_to_tar_bytes(file_dir=file_dir, filename=filename)
+    logger.info(f"file_in_tar_bytes {file_in_tar_bytes} ")
     return ipfs_client.ipfs_conn.add_bytes(file_in_tar_bytes.getvalue())
 
 
@@ -267,9 +272,11 @@ def convert_zip_file_to_tar_bytes(file_dir, filename):
     if len(files) == 0:
         raise Exception("Cannot find any %s files" % (os.path.join(file_dir, "*.proto")))
     files.sort()
+    logger.info(f"files to tar  '{files}` ")
     tar_bytes = io.BytesIO()
     tar = tarfile.open(fileobj=tar_bytes, mode="w")
     for f in files:
+        logger.info(f"file being added to tar  '{f}` ")
         tar.add(f, os.path.basename(f), filter=reset)
     tar.close()
     return tar_bytes
