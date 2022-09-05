@@ -27,3 +27,6 @@ layers:
   MplacePythonWeb3AndGrpc:
     path: ./web3_and_grpc_libraries
     description: "Web3 and Grpc dependency."
+  EthEventListener:
+    path: ./eth_event_listener
+    description: "Eth event listener dependency."
