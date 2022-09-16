@@ -4,6 +4,7 @@ from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from enum import Enum
+from urllib.parse import urlparse
 
 import boto3
 import requests
@@ -49,7 +50,9 @@ def send_email_with_attachment(recipient: str, subject: str, body_html: str, sen
 
         for attachment_url in attachment_urls:
             logger.info(f"Downloading the file from url={attachment_url}")
-            filename = os.path.basename(attachment_url)
+            parsed_url = urlparse(attachment_url)
+            filename = os.path.basename(parsed_url.path)
+
             try:
                 response = requests.get(attachment_url)
                 filepath = f"/tmp/{filename}"
