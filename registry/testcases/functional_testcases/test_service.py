@@ -383,7 +383,7 @@ class TestService(TestCase):
             "pathParameters": {"org_uuid": "test_org_uuid"},
             "body": json.dumps({
                 "q": "display",
-                "limit": 10,
+                "limit": 1,
                 "offset": 1,
                 "s": "all",
                 "sort_by": "display_name",
@@ -397,9 +397,64 @@ class TestService(TestCase):
         assert (response_body["status"] == "success")
         assert (response_body["data"]["total_count"] == 3)
         assert (response_body["data"]["offset"] == 1)
-        assert (response_body["data"]["limit"] == 10)
-        assert (len(response_body["data"]["result"]) == 2)
-
+        assert (response_body["data"]["limit"] == 1)
+        assert (len(response_body["data"]["result"]) == 1)
+        event = {
+            "requestContext": {
+                "authorizer": {
+                    "claims": {
+                        "email": "dummy_user1@dummy.io"
+                    }
+                }
+            },
+            "httpMethod": "GET",
+            "pathParameters": {"org_uuid": "test_org_uuid"},
+            "body": json.dumps({
+                "q": "display",
+                "limit": 2,
+                "offset": 2,
+                "s": "all",
+                "sort_by": "display_name",
+                "order_by": "desc",
+                "filters": []
+            })
+        }
+        response = get_services_for_organization(event=event, context=None)
+        assert (response["statusCode"] == 200)
+        response_body = json.loads(response["body"])
+        assert (response_body["status"] == "success")
+        assert (response_body["data"]["total_count"] == 3)
+        assert (response_body["data"]["offset"] == 2)
+        assert (response_body["data"]["limit"] == 2)
+        assert (len(response_body["data"]["result"]) == 1)
+        event = {
+            "requestContext": {
+                "authorizer": {
+                    "claims": {
+                        "email": "dummy_user1@dummy.io"
+                    }
+                }
+            },
+            "httpMethod": "GET",
+            "pathParameters": {"org_uuid": "test_org_uuid"},
+            "body": json.dumps({
+                "q": "display",
+                "limit": 12,
+                "offset": 0,
+                "s": "all",
+                "sort_by": "display_name",
+                "order_by": "desc",
+                "filters": []
+            })
+        }
+        response = get_services_for_organization(event=event, context=None)
+        assert (response["statusCode"] == 200)
+        response_body = json.loads(response["body"])
+        assert (response_body["status"] == "success")
+        assert (response_body["data"]["total_count"] == 3)
+        assert (response_body["data"]["offset"] == 0)
+        assert (response_body["data"]["limit"] == 12)
+        assert (len(response_body["data"]["result"]) == 3)
     def test_save_service(self):
         org_repo.add_item(
             OrganizationDBModel(
