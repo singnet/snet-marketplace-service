@@ -1,5 +1,5 @@
 rlp==1.2.0
-protobuf==3.10.0
+protobuf==3.15.0
 web3==5.10.0
 grpcio==1.30.0
 grpcio-health-checking==1.19.0
