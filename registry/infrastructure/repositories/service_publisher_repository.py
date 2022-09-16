@@ -21,7 +21,8 @@ class ServicePublisherRepository(BaseRepository):
                 filter(getattr(Service, payload["search_attribute"]).like("%" + payload["search_string"] + "%")). \
                 filter(Service.org_uuid == org_uuid). \
                 order_by(getattr(getattr(Service, payload["sort_by"]), payload["order_by"])()). \
-                slice(payload["offset"], payload["limit"]).all()
+                offset(payload["offset"]).limit(payload["limit"]).all()
+
             self.session.commit()
         except Exception as e:
             self.session.rollback()
