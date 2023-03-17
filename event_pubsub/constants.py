@@ -10,6 +10,7 @@ class EventType(Enum):
     OCCAM_SNET_AIRDROP = 'OCCAM_SNET_AIRDROP'
     CONVERTER_AGIX = 'CONVERTER_AGIX'
     CONVERTER_NTX = 'CONVERTER_NTX'
+    CONVERTER_RJV = 'CONVERTER_RJV'
 
 
 class NodeModulesPackagePath(Enum):
