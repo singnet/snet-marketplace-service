@@ -1,5 +1,5 @@
 plugins:
-  - serverless-offline
+  #- serverless-offline
   - serverless-python-requirements
   - serverless-plugin-tracing
   - serverless-prune-plugin
