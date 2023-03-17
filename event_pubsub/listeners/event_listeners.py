@@ -196,3 +196,20 @@ class ConverterNTXEventListener(EventListener):
             self._event_repository.update_converter_ntx_raw_events(1, row_id, 200, "")
 
         return error_map, success_map
+
+
+class ConverterRJVEventListener(EventListener):
+    EVENTS_LIMIT = 30
+
+    def listen_and_publish_converter_rjv_events(self):
+        converter_rjv_events = self._event_repository.read_converter_rjv_events()
+        error_map, success_map = self._publish_events(converter_rjv_events)
+        for row_id, error in error_map.items():
+            logger.debug(f"Updated event process status for error {row_id} {error}")
+            self._event_repository.update_converter_rjv_raw_events(1, row_id, error['error_code'], error['error_message'])
+
+        for row_id in success_map:
+            logger.debug(f"Updated event process status for success {row_id} ")
+            self._event_repository.update_converter_rjv_raw_events(1, row_id, 200, "")
+
+        return error_map, success_map
