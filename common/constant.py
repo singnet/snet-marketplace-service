@@ -59,3 +59,4 @@ COGS_TO_AGI = "0.00000001"
 class TokenSymbol(Enum):
     AGIX = "AGIX"
     NTX = "NTX"
+    RJV = "RJV"
