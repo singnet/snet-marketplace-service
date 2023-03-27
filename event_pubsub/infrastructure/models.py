@@ -156,5 +156,23 @@ class ConverterNTXEventsRaw(Base):
     error_msg = Column("error_msg", VARCHAR(256), nullable=True, default=null)
     row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
     row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
-    UniqueConstraint(transactionHash,  name="uq_converter_ntx_ev")
+    UniqueConstraint(transactionHash, name="uq_converter_ntx_ev")
+    Index("blk_no_idx", block_no)
+
+
+class ConverterRJVEventsRaw(Base):
+    __tablename__ = "converter_rjv_events_raw"
+    row_id = Column("row_id", Integer, autoincrement=True, primary_key=True)
+    block_no = Column("block_no", Integer, nullable=False)
+    uncle_block_no = Column("uncle_block_no", Integer, nullable=True, default=null)
+    event = Column("event", VARCHAR(256), nullable=False)
+    event_data = Column("json_str", VARCHAR(256), nullable=True)
+    processed = Column("processed", BIT, nullable=True, default=null)
+    transactionHash = Column("transactionHash", VARCHAR(256), nullable=True, default=null)
+    logIndex = Column("logIndex", VARCHAR(256), nullable=True, default=null)
+    error_code = Column("error_code", Integer, nullable=True, default=null)
+    error_msg = Column("error_msg", VARCHAR(256), nullable=True, default=null)
+    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    UniqueConstraint(transactionHash, name="uq_converter_rjv_ev")
     Index("blk_no_idx", block_no)
