@@ -158,6 +158,8 @@ class BlockChainUtil(object):
             contract_network_path = base_path + "/{}/{}/{}".format("networks", TokenSymbol.NTX.value, json_file)
         elif contract_name == ContractType.ConverterRJV.value:
             contract_network_path = base_path + "/{}/{}/{}".format("networks", TokenSymbol.RJV.value, json_file)
+        elif contract_name == ContractType.ConverterCGV.value:
+            contract_network_path = base_path + "/{}/{}/{}".format("networks", TokenSymbol.CGV.value, json_file)
         else:
             contract_network_path = base_path + "/{}/{}".format("networks", json_file)
 
