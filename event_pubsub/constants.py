@@ -11,6 +11,7 @@ class EventType(Enum):
     CONVERTER_AGIX = 'CONVERTER_AGIX'
     CONVERTER_NTX = 'CONVERTER_NTX'
     CONVERTER_RJV = 'CONVERTER_RJV'
+    CONVERTER_CGV = 'CONVERTER_CGV'
 
 
 class NodeModulesPackagePath(Enum):
