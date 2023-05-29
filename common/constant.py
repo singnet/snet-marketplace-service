@@ -60,3 +60,4 @@ class TokenSymbol(Enum):
     AGIX = "AGIX"
     NTX = "NTX"
     RJV = "RJV"
+    CGV = "CGV"

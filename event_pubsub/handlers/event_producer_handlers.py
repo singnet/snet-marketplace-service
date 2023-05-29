@@ -19,6 +19,7 @@ occam_airdrop_event_producer = OccamAirdropEventProducer(NETWORKS["http_provider
 converter_agix_event_producer = ConverterAGIXEventProducer(NETWORKS["http_provider"], Repository(NETWORKS))
 converter_ntx_event_producer = ConverterNTXEventProducer(NETWORKS["http_provider"], Repository(NETWORKS))
 converter_rjv_event_producer = ConverterRJVEventProducer(NETWORKS["http_provider"], Repository(NETWORKS))
+converter_cgv_event_producer = ConverterCGVEventProducer(NETWORKS["http_provider"], Repository(NETWORKS))
 
 
 logger = get_logger(__name__)
@@ -92,5 +93,13 @@ def converter_ntx_event_producer_handler(event, context):
 def converter_rjv_event_producer_handler(event, context):
     try:
         converter_rjv_event_producer.produce_event(NETWORK_ID)
+    except Exception as e:
+        raise e
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def converter_cgv_event_producer_handler(event, context):
+    try:
+        converter_cgv_event_producer.produce_event(NETWORK_ID)
     except Exception as e:
         raise e
