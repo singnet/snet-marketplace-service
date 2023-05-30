@@ -616,7 +616,7 @@ class ConverterCGVEventProducer(BlockchainEventProducer):
         last_block_number = self._event_repository.read_last_read_block_number_for_event(self._contract_name)
         end_block_number = self._get_end_block_number(
             last_block_number, ConverterCGVEventProducer.CONVERTER_CGV_EVENT_READ_BATCH_LIMIT)
-        logger.info(f"Reading converter CGV event from {last_block_number} to {end_block_number}")
+        logger.info(f"Reading converter cgv event from {last_block_number} to {end_block_number}")
         events = self._produce_contract_events(last_block_number, end_block_number, net_id)
         self._push_events_to_repository(events)
         self._event_repository.update_last_read_block_number_for_event(self._contract_name, end_block_number)

@@ -7,7 +7,7 @@ from common.utils import handle_exception_with_slack_notification
 from event_pubsub.config import NETWORKS, NETWORK_ID, SLACK_HOOK
 from event_pubsub.producers.blockchain_event_producer import MPEEventProducer, RFAIEventProducer, RegistryEventProducer, \
     TokenStakeEventProducer, AirdropEventProducer, OccamAirdropEventProducer, ConverterAGIXEventProducer, \
-    ConverterNTXEventProducer, ConverterRJVEventProducer
+    ConverterNTXEventProducer, ConverterRJVEventProducer, ConverterCGVEventProducer
 from event_pubsub.repository import Repository
 
 registry_event_producer = RegistryEventProducer(NETWORKS["http_provider"], Repository(NETWORKS))

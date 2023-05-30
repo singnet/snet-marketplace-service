@@ -59,4 +59,4 @@ def converter_rjv_event_listener_handler(event, context):
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def converter_cgv_event_listener_handler(event, context):
-    ConverterCGVEventListener().listen_and_publish_converter_CGV_events()
+    ConverterCGVEventListener().listen_and_publish_converter_cgv_events()
