@@ -7,7 +7,7 @@ from common.exception_handler import exception_handler
 from event_pubsub.config import NETWORK_ID, SLACK_HOOK
 from event_pubsub.listeners.event_listeners import MPEEventListener, RFAIEventListener, RegistryEventListener, \
     TokenStakeEventListener, AirdropEventListener, OccamAirdropEventListener, ConverterAGIXEventListener, \
-    ConverterNTXEventListener, ConverterRJVEventListener
+    ConverterNTXEventListener, ConverterRJVEventListener, ConverterCGVEventListener
 
 logger = get_logger(__name__)
 
@@ -55,3 +55,8 @@ def converter_ntx_event_listener_handler(event, context):
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def converter_rjv_event_listener_handler(event, context):
     ConverterRJVEventListener().listen_and_publish_converter_rjv_events()
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def converter_cgv_event_listener_handler(event, context):
+    ConverterCGVEventListener().listen_and_publish_converter_cgv_events()

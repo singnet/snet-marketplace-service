@@ -565,3 +565,60 @@ class ConverterRJVEventProducer(BlockchainEventProducer):
         self._event_repository.update_last_read_block_number_for_event(self._contract_name, end_block_number)
 
         return events
+
+
+class ConverterCGVEventProducer(BlockchainEventProducer):
+    CONVERTER_CGV_EVENT_READ_BATCH_LIMIT = 500000
+
+    def __init__(self, http_provider, repository=None):
+        super().__init__(http_provider, repository)
+        self._contract_name = "ConverterCGV"
+
+    def _push_event(self, event):
+        """
+          `row_id` int(11) NOT NULL AUTO_INCREMENT,
+          `block_no` int(11) NOT NULL,
+          `event` varchar(256) NOT NULL,
+          `json_str` text,
+          `processed` bit(1) DEFAULT NULL,
+          `transactionHash` varchar(256) DEFAULT NULL,
+          `logIndex` varchar(256) DEFAULT NULL,
+          `error_code` int(11) DEFAULT NULL,
+          `error_msg` varchar(256) DEFAULT NULL,
+          `row_updated` timestamp NULL DEFAULT NULL,
+          `row_created` timestamp NULL DEFAULT NULL,
+        :param event:
+        :return:
+        """
+
+        block_number = event.blockNumber
+        event_name = event.event
+        json_str = str(dict(event.args))
+        processed = 0
+        transaction_hash = event.transactionHash.hex()
+        log_index = event.logIndex
+        error_code = 0
+        error_message = ""
+        event_type = EventType.CONVERTER_CGV.value
+
+        self._event_repository.insert_raw_event(event_type, block_number, event_name, json_str, processed,
+                                                transaction_hash, log_index, error_code, error_message)
+
+    def _push_events_to_repository(self, events):
+        for event in events:
+            self._push_event(event)
+
+    def _get_base_contract_path(self):
+        return os.path.abspath(
+            os.path.join(f"{CONTRACT_BASE_PATH}/{NodeModulesPackagePath.BRIDGE.value}"))
+
+    def produce_event(self, net_id):
+        last_block_number = self._event_repository.read_last_read_block_number_for_event(self._contract_name)
+        end_block_number = self._get_end_block_number(
+            last_block_number, ConverterCGVEventProducer.CONVERTER_CGV_EVENT_READ_BATCH_LIMIT)
+        logger.info(f"Reading converter cgv event from {last_block_number} to {end_block_number}")
+        events = self._produce_contract_events(last_block_number, end_block_number, net_id)
+        self._push_events_to_repository(events)
+        self._event_repository.update_last_read_block_number_for_event(self._contract_name, end_block_number)
+
+        return events
