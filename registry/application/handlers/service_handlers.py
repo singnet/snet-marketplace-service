@@ -150,11 +150,12 @@ def get_service_for_service_uuid(event, context):
 def publish_service_metadata_to_ipfs(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
+    payload = json.loads(event.get("body")) if event.get("body") is not None else {}
     if "org_uuid" not in path_parameters and "service_uuid" not in path_parameters:
         raise BadRequestException()
     org_uuid = path_parameters["org_uuid"]
     service_uuid = path_parameters["service_uuid"]
-    response = ServicePublisherService(username, org_uuid, service_uuid).publish_service_data_to_ipfs()
+    response = ServicePublisherService(username, org_uuid, service_uuid).publish_service_data_to_ipfs(service_type=payload.get("service_type"))
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True

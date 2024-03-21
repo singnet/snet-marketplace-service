@@ -15,7 +15,7 @@ from common.utils import download_file_from_url, json_to_file, publish_zip_file_
 from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH, NETWORKS, NETWORK_ID, NOTIFICATION_ARN, \
     REGION_NAME, PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT, GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT, ASSETS_COMPONENT_BUCKET_NAME
 from registry.constants import EnvironmentType, ServiceAvailabilityStatus, ServiceStatus, \
-    ServiceSupportType, UserType
+    ServiceSupportType, UserType, ServiceType
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.models.demo_component import DemoComponent
 from registry.domain.models.offchain_service_config import OffchainServiceConfig
@@ -85,7 +85,7 @@ class ServicePublisherService:
 
     @staticmethod
     def get_service_for_org_id_and_service_id(org_id, service_id):
-        org_uuid, service = ServicePublisherRepository().get_service_for_given_service_id_and_org_id(org_id, service_id)
+        _, service = ServicePublisherRepository().get_service_for_given_service_id_and_org_id(org_id, service_id)
         if not service:
             return {}
         return service.to_dict()
@@ -238,7 +238,7 @@ class ServicePublisherService:
             service_data = self.map_offchain_service_config(offchain_service_config, service_data)
         return service_data
 
-    def publish_service_data_to_ipfs(self):
+    def publish_service_data_to_ipfs(self, service_type=ServiceType.GRPC.value):
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
         if service.service_state.state == ServiceStatus.APPROVED.value:
             proto_url = service.assets.get("proto_files", {}).get("url", None)
@@ -253,7 +253,7 @@ class ServicePublisherService:
             service.proto = {
                 "model_ipfs_hash": asset_ipfs_hash,
                 "encoding": "proto",
-                "service_type": "grpc"
+                "service_type": service_type if service_type else ServiceType.GRPC.value
             }
             service.assets["proto_files"]["ipfs_hash"] = asset_ipfs_hash
             ServicePublisherDomainService.publish_assets(service)
@@ -379,9 +379,9 @@ class ServicePublisherService:
             raise Exception(f"Error getting service details for org_id :: {org_id} service_id :: {service_id}")
         return json.loads(response.text)["data"]
 
-    def publish_service_data(self):
+    def publish_service_data(self, service_type=ServiceType.GRPC.value):
         # Validate service metadata
-        current_service = self.publish_service_data_to_ipfs()
+        current_service = self.publish_service_data_to_ipfs(service_type=service_type)
 
         is_valid = Service.is_metadata_valid(service_metadata=current_service.to_metadata())
         logger.info(f"is_valid :: {is_valid} :: validated current_metadata :: {current_service.to_metadata()}")
