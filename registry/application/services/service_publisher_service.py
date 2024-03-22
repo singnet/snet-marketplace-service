@@ -183,6 +183,7 @@ class ServicePublisherService:
         service_uuid = uuid4().hex
         service = ServiceFactory().create_service_entity_model(self._org_uuid, service_uuid, payload,
                                                                ServiceStatus.DRAFT.value)
+        logger.info(f"Creating service :: {service.to_dict()}")
         ServicePublisherRepository().add_service(service, self._username)
         return {"org_uuid": self._org_uuid, "service_uuid": service_uuid}
 
