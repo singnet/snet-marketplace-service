@@ -124,6 +124,7 @@ class ServicePublisherService:
         return
 
     def save_service(self, payload):
+        logger.info(f"Save service with payload :: {payload}")
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
         service.service_id = payload["service_id"]
         service.proto = payload.get("proto", {})
@@ -140,6 +141,7 @@ class ServicePublisherService:
             groups.append(service_group)
         service.groups = groups
         service.service_state.transaction_hash = payload.get("transaction_hash", None)
+        logger.info(f"Save service data with proto: {service.proto} and assets: {service.assets}")
         ServicePublisherRepository().save_service(self._username, service, ServiceStatus.APPROVED.value)
         comment = payload.get("comments", {}).get(UserType.SERVICE_PROVIDER.value, "")
         if len(comment) > 0:
