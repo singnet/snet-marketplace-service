@@ -64,6 +64,7 @@ def create_organization(event, context):
 @secured(action=Action.UPDATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def update_org(event, context):
+    logger.debug(f"Update org, event : {event}")
     payload = json.loads(event["body"])
     path_parameters = event["pathParameters"]
     required_keys = []
@@ -87,6 +88,7 @@ def update_org(event, context):
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def publish_org_on_ipfs(event, context):
+    logger.debug(f"Publish org on ipfs, event : {event}")
     path_parameters = event["pathParameters"]
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     if "org_uuid" not in path_parameters:
@@ -121,6 +123,7 @@ def save_transaction_hash_for_publish_org(event, context):
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def get_all_members(event, context):
+    logger.debug(f"Get all members, event : {event}")
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
     query_parameters = event["queryStringParameters"]
@@ -140,6 +143,7 @@ def get_all_members(event, context):
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def get_member(event, context):
+    logger.debug(f"Get member, event : {event}")
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
     org_uuid = path_parameters["org_uuid"]

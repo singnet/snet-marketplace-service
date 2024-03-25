@@ -67,7 +67,7 @@ class OrganizationPublisherService:
         }
 
     def create_organization(self, payload):
-        logger.info(f"create organization for user: {self.username}")
+        logger.info(f"create organization for user: {self.username}, payload: {payload}")
         organization = OrganizationFactory.org_domain_entity_from_payload(payload)
         organization.setup_id()
         logger.info(f"assigned org_uuid : {organization.uuid}")
