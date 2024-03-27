@@ -157,16 +157,25 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                 service_metadata.get("groups", [])]
 
         recieved_service = Service(
-            org_uuid, str(uuid4()), service_id, display_name, short_description,
-            description, project_url,
-            proto, assets,
-            DEFAULT_SERVICE_RANKING,
-            {}, contributors,
-            tags_data,
-            mpe_address, metadata_uri,
-            groups,
-            service_type,
-            state)
+            org_uuid=org_uuid,
+            uuid=str(uuid4()),
+            service_id=service_id,
+            display_name=display_name,
+            short_description=short_description,
+            description=description,
+            project_url=project_url,
+            proto=proto,
+            assets=assets,
+            ranking=DEFAULT_SERVICE_RANKING,
+            rating={},
+            contributors=contributors,
+            tags=tags_data,
+            mpe_address=mpe_address,
+            metadata_uri=metadata_uri,
+            service_type=service_type,
+            groups=groups,
+            service_state=state
+        )
 
         if not existing_service:
             self._service_repository.add_service(recieved_service, BLOCKCHAIN_USER)
