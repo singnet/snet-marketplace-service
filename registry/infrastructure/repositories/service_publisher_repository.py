@@ -4,9 +4,8 @@ import sqlalchemy
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 
-from registry.constants import ServiceStatus
 from registry.domain.factory.service_factory import ServiceFactory
-from registry.infrastructure.models import Service, ServiceGroup, ServiceState, ServiceReviewHistory, Organization, \
+from registry.infrastructure.models import Service, ServiceGroup, ServiceState, Organization, \
     ServiceComment, OffchainServiceConfig
 from registry.infrastructure.repositories.base_repository import BaseRepository
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
@@ -229,3 +228,12 @@ class ServicePublisherRepository(BaseRepository):
                     created_on=dt.utcnow(),
                     updated_on=dt.utcnow()
                 ))
+    
+    def update_service_type(self, org_uuid, service_uuid, service_type):
+        try:
+            serivce_db = self.session.query(Service).filter_by(org_uuid=org_uuid, uuid=service_uuid).first()
+            serivce_db.service_type = service_type
+            self.session.commit()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
