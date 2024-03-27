@@ -320,14 +320,18 @@ class Service:
     def comments(self):
         return self._comments
 
-    @property
-    def service_type(self):
-        return self._service_type
-
     @comments.setter
     def comments(self, comments):
         self._comments[UserType.SERVICE_PROVIDER.value] = comments.get(UserType.SERVICE_PROVIDER.value, "")
         self._comments[UserType.SERVICE_APPROVER.value] = comments.get(UserType.SERVICE_APPROVER.value, "")
+
+    @property
+    def service_type(self):
+        return self._service_type
+
+    @service_type.setter
+    def service_type(self, value):
+        self._service_type = value
 
     @staticmethod
     def is_metadata_valid(service_metadata):
