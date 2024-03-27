@@ -242,7 +242,8 @@ class ServicePublisherService:
         return service_data
 
     def publish_service_data_to_ipfs(self, service_type=ServiceType.GRPC.value):
-        service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
+        service_publisher_repo = ServicePublisherRepository()
+        service = service_publisher_repo.get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
         if service.service_state.state == ServiceStatus.APPROVED.value:
             proto_url = service.assets.get("proto_files", {}).get("url", None)
             if proto_url is None:
@@ -260,7 +261,8 @@ class ServicePublisherService:
             }
             service.assets["proto_files"]["ipfs_hash"] = asset_ipfs_hash
             ServicePublisherDomainService.publish_assets(service)
-            service = ServicePublisherRepository().save_service(self._username, service, service.service_state.state)
+            service.service_type = service_type
+            service = service_publisher_repo.save_service(self._username, service, service.service_state.state)
             return service
         logger.info(f"Service status needs to be {ServiceStatus.APPROVED.value} to be eligible for publishing.")
         raise InvalidServiceStateException()
@@ -400,8 +402,13 @@ class ServicePublisherService:
             existing_metadata = {}
         publish_to_blockchain = self.are_blockchain_attributes_got_updated(existing_metadata, current_service.to_metadata())
         existing_offchain_configs = self.get_existing_offchain_configs(existing_service_data)
-        current_offchain_attributes = ServicePublisherRepository().get_offchain_service_config(org_uuid=self._org_uuid,
+
+        service_publisher_repo = ServicePublisherRepository()
+
+        current_offchain_attributes = service_publisher_repo.get_offchain_service_config(org_uuid=self._org_uuid,
                                                                                                service_uuid=self._service_uuid)
+        service_publisher_repo.update_service_type(org_uuid=self._org_uuid, service_uuid=self._service_uuid, service_type=service_type)
+
         new_offchain_attributes = self.get_offchain_changes(
             current_offchain_config=current_offchain_attributes.configs,
             existing_offchain_config=existing_offchain_configs,

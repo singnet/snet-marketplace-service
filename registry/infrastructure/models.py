@@ -129,6 +129,7 @@ class Service(Base):
     contributors = Column("contributors", JSON, nullable=False, default=[])
     tags = Column("tags", JSON, nullable=False, default=[])
     mpe_address = Column("mpe_address", VARCHAR(128), nullable=False, default="")
+    service_type = Column("service_type", VARCHAR(128))
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
     updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=datetime.utcnow())
     groups = relationship("ServiceGroup", uselist=True)
