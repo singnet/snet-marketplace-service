@@ -231,7 +231,7 @@ class ServicePublisherRepository(BaseRepository):
     
     def update_service_type(self, org_uuid, service_uuid, service_type):
         try:
-            serivce_db = self.session.query(Service).filter_by(org_uuid=org_uuid, service_uuid=service_uuid).first()
+            serivce_db = self.session.query(Service).filter_by(org_uuid=org_uuid, uuid=service_uuid).first()
             serivce_db.service_type = service_type
             self.session.commit()
         except SQLAlchemyError as e:

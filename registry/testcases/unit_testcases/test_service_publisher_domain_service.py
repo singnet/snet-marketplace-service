@@ -30,7 +30,7 @@ class TestServicePublisherDomainService(TestCase):
             ranking=1,
             rating={}, contributors=[{'name': 'df', 'email_id': '123@mail.io'}], tags=["1234", "4321"],
             mpe_address="0x123",
-            metadata_uri="", groups=[
+            metadata_uri="", service_type="grpc", groups=[
                 ServiceGroup(
                     org_uuid="test_org_uuid", service_uuid="test_service_uuid",
                     group_id="test", group_name="test_name",
