@@ -85,6 +85,7 @@ class ServicePublisherRepository(BaseRepository):
             service_db.updated_on = dt.utcnow()
             service_db.groups = service_group_db_model
             service_db.service_state.state = state
+            service_db.service_type = service.service_type
             service_db.service_state.transaction_hash = service.service_state.transaction_hash
             service_db.service_state.updated_by = username
             service_db.service_state.updated_on = dt.utcnow()
@@ -228,12 +229,3 @@ class ServicePublisherRepository(BaseRepository):
                     created_on=dt.utcnow(),
                     updated_on=dt.utcnow()
                 ))
-    
-    def update_service_type(self, org_uuid, service_uuid, service_type):
-        try:
-            serivce_db = self.session.query(Service).filter_by(org_uuid=org_uuid, uuid=service_uuid).first()
-            serivce_db.service_type = service_type
-            self.session.commit()
-        except SQLAlchemyError as e:
-            self.session.rollback()
-            raise e
