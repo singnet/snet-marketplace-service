@@ -1,7 +1,7 @@
 from functools import reduce
 
 from common.logger import get_logger
-from common.utils import generate_lambda_response
+from registry.exceptions import ForbiddenException
 from registry.constants import Action, Role
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 
@@ -40,7 +40,7 @@ def secured(*decorator_args, **decorator_kwargs):
                 username = reduce(dict.get, username_path, event)
             if is_access_allowed(username, action, org_uuid):
                 return func(*args, **kwargs)
-            raise generate_lambda_response(403, "Access Denied for the given User")
+            raise ForbiddenException()
 
         return wrapper
 
