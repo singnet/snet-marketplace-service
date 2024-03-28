@@ -194,7 +194,6 @@ def publish_members(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     payload = json.loads(event["body"])
     path_parameters = event["pathParameters"]
-
     if "org_uuid" not in path_parameters or not validate_dict(payload, ["transaction_hash", "members"]):
         raise BadRequestException()
     org_uuid = path_parameters["org_uuid"]
