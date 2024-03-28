@@ -63,7 +63,7 @@ def save_service(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
     payload = json.loads(event["body"])
-    if not path_parameters.get("org_uuid", "") and not path_parameters.get("service_uuid", ""):
+    if not path_parameters.get("org_uuid") and not path_parameters.get("service_uuid"):
         raise BadRequestException()
     org_uuid = path_parameters["org_uuid"]
     service_uuid = path_parameters["service_uuid"]
@@ -150,12 +150,11 @@ def get_service_for_service_uuid(event, context):
 def publish_service_metadata_to_ipfs(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
-    payload = json.loads(event.get("body")) if event.get("body") is not None else {}
     if "org_uuid" not in path_parameters and "service_uuid" not in path_parameters:
         raise BadRequestException()
     org_uuid = path_parameters["org_uuid"]
     service_uuid = path_parameters["service_uuid"]
-    response = ServicePublisherService(username, org_uuid, service_uuid).publish_service_data_to_ipfs(service_type=payload.get("service_type"))
+    response = ServicePublisherService(username, org_uuid, service_uuid).publish_service_data_to_ipfs()
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
@@ -175,7 +174,6 @@ def get_daemon_config_for_current_network(event, context):
         raise BadRequestException()
     org_uuid = path_parameters["org_uuid"]
     service_uuid = path_parameters["service_uuid"]
-    group_id = path_parameters["group_id"]
     if query_parameters["network"] == EnvironmentType.TEST.value:
         response = ServicePublisherService(username, org_uuid, service_uuid).daemon_config(
             environment=EnvironmentType.TEST.value)
@@ -274,12 +272,11 @@ def publish_service(event, context):
     logger.info(f"Publish service event::{event}")
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
-    payload = json.loads(event.get("body")) if event.get("body") is not None else {}
     if "org_uuid" not in path_parameters and "service_uuid" not in path_parameters:
         raise BadRequestException()
     org_uuid = path_parameters["org_uuid"]
     service_uuid = path_parameters["service_uuid"]
-    response = ServicePublisherService(username, org_uuid, service_uuid).publish_service_data(service_type=payload.get("service_type"))
+    response = ServicePublisherService(username, org_uuid, service_uuid).publish_service_data()
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
