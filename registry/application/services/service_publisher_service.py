@@ -142,7 +142,7 @@ class ServicePublisherService:
             groups.append(service_group)
         service.groups = groups
         service.service_state.transaction_hash = payload.get("transaction_hash", None)
-        logger.info(f"Save service data with proto: {service.proto} and assets: {service.assets}")
+        logger.info(f"Save service data with proto: {service.proto}, assets: {service.assets}, groups: {groups}")
         ServicePublisherRepository().save_service(self._username, service, ServiceStatus.APPROVED.value)
         comment = payload.get("comments", {}).get(UserType.SERVICE_PROVIDER.value, "")
         if len(comment) > 0:

@@ -61,12 +61,8 @@ class ServicePublisherRepository(BaseRepository):
                                   service.groups]
         try:
             self.session.query(ServiceGroup).filter(ServiceGroup.org_uuid == service.org_uuid).filter(
-                ServiceGroup.service_uuid == service.uuid).delete(synchronize_session='fetch')
-            self.session.commit()
-        except Exception as e:
-            self.session.rollback()
-            raise e
-        try:
+                ServiceGroup.service_uuid == service.uuid).delete()
+
             service_db = self.session.query(Service).filter(Service.org_uuid == service.org_uuid).filter(
                 Service.uuid == service.uuid).first()
             service_db.display_name = service.display_name
@@ -95,8 +91,7 @@ class ServicePublisherRepository(BaseRepository):
             raise e
         if not service_db:
             return None
-        service = ServiceFactory().convert_service_db_model_to_entity_model(service_db)
-        return service
+        return ServiceFactory().convert_service_db_model_to_entity_model(service_db)
 
     def get_service_for_given_service_uuid(self, org_uuid, service_uuid):
         try:
