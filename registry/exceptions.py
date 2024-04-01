@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from common.exceptions import CustomException, MethodNotImplemented, OperationNotAllowed
 
 
@@ -119,10 +120,17 @@ class FileNotFoundException(CustomException):
     def __init__(self):
         super().__init__({})
 
+class ForbiddenException(CustomException):
+    error_message = "FORBIDDEN_ERROR"
+
+    def __init__(self):
+        super().__init__(
+            http_code=HTTPStatus.FORBIDDEN
+        )
 
 EXCEPTIONS = (BadRequestException, OrganizationNotFoundException, InvalidOriginException, MethodNotImplemented,
               InvalidOrganizationStateException, InvalidMetadataException, InvalidServiceStateException,
-              ServiceProtoNotFoundException, OrganizationNotPublishedException,
+              ServiceProtoNotFoundException, OrganizationNotPublishedException, ForbiddenException,
               ServiceNotFoundException, ServiceGroupNotFoundException, EnvironmentNotFoundException,
               InvalidSlackUserException, InvalidSlackChannelException, InvalidSlackSignatureException,
               InvalidFileTypeException, FileNotFoundException, OperationNotAllowed, InvalidOrganizationType)
