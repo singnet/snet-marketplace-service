@@ -95,7 +95,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
         organization_repository.delete_organization(org_id='snet')
         organization_repository.delete_organization_groups(org_id='snet')
         org_event_consumer = OrganizationCreatedEventConsumer("wss://ropsten.infura.io/ws",
-                                                              "http://ipfs.singularitynet.io",
+                                                              "ipfs.singularitynet.io",
                                                               80)
         org_event_consumer.on_event(event=event)
 
