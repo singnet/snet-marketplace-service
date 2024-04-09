@@ -1,8 +1,8 @@
 NETWORKS = {
-    3: {
+    11155111: {
         "name": "test",
-        "http_provider": "https://ropsten.infura.io",
-        "ws_provider": "wss://ropsten.infura.io/ws",
+        "http_provider": "https://sepolia.infura.io",
+        "ws_provider": "wss://sepolia.infura.io/ws",
         "db": {
             "DB_DRIVER": "mysql+pymysql",
             "DB_HOST": "localhost",
@@ -23,7 +23,7 @@ IPFS_URL = {
     'port': '80',
 
 }
-NETWORK_ID = 3
+NETWORK_ID = 11155111
 REGION_NAME = "us-east-2"
 S3_BUCKET_ACCESS_KEY = ""
 S3_BUCKET_SECRET_KEY = ""
