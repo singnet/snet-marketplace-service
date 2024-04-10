@@ -1,5 +1,5 @@
 from functools import wraps
-from typing import Callable, Any, TypeVar, List
+from typing import Callable, Any, List
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -18,17 +18,24 @@ engine = create_engine(connection_string, pool_pre_ping=True, echo=True)
 
 Session = sessionmaker(bind=engine)
 default_session = Session()
-logger = get_logger("sqlalchemy.engine").setLevel("INFO")
+get_logger("sqlalchemy.engine").setLevel("INFO")
 get_logger("sqlalchemy.pool").setLevel("DEBUG")
-
-T = TypeVar("T")
+logger = get_logger(__name__)
 
 class BaseRepository:
 
     def __init__(self):
         self.session = default_session
 
-    @staticmethod
+    class callable_staticmethod(staticmethod):
+        """
+        Callable version of staticmethod.
+        TODO: Shoud be removed after upgrade Python version >= 3.10.
+        """
+        def __call__(self, *args, **kwargs):
+            return self.__func__(*args, **kwargs)
+
+    @callable_staticmethod
     def write_ops(method: Callable) -> Callable:
         @wraps(method)
         def wrapper(self, *args, **kwargs) -> Callable[..., Any]:
@@ -44,11 +51,11 @@ class BaseRepository:
         return wrapper
 
     @write_ops
-    def add_item(self, item: T):
+    def add_item(self, item: object):
         self.session.add(item)
         self.session.commit()
 
     @write_ops
-    def add_all_items(self, items: List[T]):
+    def add_all_items(self, items: List[object]):
         self.session.add_all(items)
         self.session.commit()
