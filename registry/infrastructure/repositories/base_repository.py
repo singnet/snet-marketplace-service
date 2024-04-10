@@ -1,3 +1,6 @@
+from functools import wraps
+from typing import Callable, Any, TypeVar, List
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from common.logger import get_logger
@@ -15,27 +18,37 @@ engine = create_engine(connection_string, pool_pre_ping=True, echo=True)
 
 Session = sessionmaker(bind=engine)
 default_session = Session()
-get_logger("sqlalchemy.engine").setLevel("INFO")
+logger = get_logger("sqlalchemy.engine").setLevel("INFO")
 get_logger("sqlalchemy.pool").setLevel("DEBUG")
 
+T = TypeVar("T")
 
 class BaseRepository:
 
     def __init__(self):
         self.session = default_session
 
-    def add_item(self, item):
-        try:
-            self.session.add(item)
-            self.session.commit()
-        except Exception as e:
-            self.session.rollback()
-            raise e
+    @staticmethod
+    def write_ops(method: Callable) -> Callable:
+        @wraps(method)
+        def wrapper(self, *args, **kwargs) -> Callable[..., Any]:
+            try:
+                return method(self, *args, **kwargs)
+            except SQLAlchemyError as e:
+                logger.exception("Database error on write operations", exc_info=True)
+                self.session.rollback()
+                raise e
+            except Exception as e:
+                self.session.rollback()
+                raise e
+        return wrapper
 
-    def add_all_items(self, items):
-        try:
-            self.session.add_all(items)
-            self.session.commit()
-        except Exception as e:
-            self.session.rollback()
-            raise e
+    @write_ops
+    def add_item(self, item: T):
+        self.session.add(item)
+        self.session.commit()
+
+    @write_ops
+    def add_all_items(self, items: List[T]):
+        self.session.add_all(items)
+        self.session.commit()
