@@ -132,3 +132,8 @@ class ServiceType(Enum):
     GRPC = "grpc"
     JSONRPC = "jsonrpc"
     PROCESS = "process"
+
+
+class OrganizationMemberRole(Enum):
+    OWNER = "OWNER"
+    MEMBER = "MEMBER"
