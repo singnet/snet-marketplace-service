@@ -137,6 +137,7 @@ class ServicePublisherService:
             _get_valid_service_contributors(contributors=payload.get("contributors", []))
         service.tags = payload.get("tags", [])
         service.mpe_address = payload.get("mpe_address", "")
+        service.assets = payload.get("assets", {})
         groups = []
         for group in payload["groups"]:
             service_group = ServiceFactory.create_service_group_entity_model(self._org_uuid, self._service_uuid, group)
