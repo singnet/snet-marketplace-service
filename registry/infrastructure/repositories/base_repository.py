@@ -1,3 +1,6 @@
+from functools import wraps
+from typing import Callable, Any, List
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from common.logger import get_logger
@@ -17,25 +20,42 @@ Session = sessionmaker(bind=engine)
 default_session = Session()
 get_logger("sqlalchemy.engine").setLevel("INFO")
 get_logger("sqlalchemy.pool").setLevel("DEBUG")
-
+logger = get_logger(__name__)
 
 class BaseRepository:
 
     def __init__(self):
         self.session = default_session
 
-    def add_item(self, item):
-        try:
-            self.session.add(item)
-            self.session.commit()
-        except Exception as e:
-            self.session.rollback()
-            raise e
+    class callable_staticmethod(staticmethod):
+        """
+        Callable version of staticmethod.
+        TODO: Shoud be removed after upgrade Python version >= 3.10.
+        """
+        def __call__(self, *args, **kwargs):
+            return self.__func__(*args, **kwargs)
 
-    def add_all_items(self, items):
-        try:
-            self.session.add_all(items)
-            self.session.commit()
-        except Exception as e:
-            self.session.rollback()
-            raise e
+    @callable_staticmethod
+    def write_ops(method: Callable) -> Callable:
+        @wraps(method)
+        def wrapper(self, *args, **kwargs) -> Callable[..., Any]:
+            try:
+                return method(self, *args, **kwargs)
+            except SQLAlchemyError as e:
+                logger.exception("Database error on write operations", exc_info=True)
+                self.session.rollback()
+                raise e
+            except Exception as e:
+                self.session.rollback()
+                raise e
+        return wrapper
+
+    @write_ops
+    def add_item(self, item: object):
+        self.session.add(item)
+        self.session.commit()
+
+    @write_ops
+    def add_all_items(self, items: List[object]):
+        self.session.add_all(items)
+        self.session.commit()

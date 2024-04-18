@@ -1,9 +1,7 @@
 from datetime import datetime
 from uuid import uuid4
 
-from sqlalchemy.exc import SQLAlchemyError
-
-from registry.constants import Role, OrganizationMemberStatus, OrganizationStatus, VerificationStatus
+from registry.constants import Role, OrganizationMemberStatus, OrganizationStatus, VerificationStatus, OrganizationMemberRole
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.exceptions import OrganizationNotFoundException
 from registry.infrastructure.models import Organization, OrganizationMember, OrganizationState, Group, \
@@ -14,20 +12,15 @@ from registry.infrastructure.repositories.base_repository import BaseRepository
 class OrganizationPublisherRepository(BaseRepository):
 
     def get_organizations(self, status=None, limit=None, org_type=None):
-        try:
-            organization_query = self.session.query(Organization) \
-                .join(OrganizationState, Organization.uuid == OrganizationState.org_uuid)
-            if status:
-                organization_query = organization_query.filter(OrganizationState.state == status)
-            if org_type:
-                organization_query = organization_query.filter(Organization.org_type == org_type)
-            if limit:
-                organization_query = organization_query.limit(limit)
-            organizations_db = organization_query.all()
-            self.session.commit()
-        except SQLAlchemyError as e:
-            self.session.rollback()
-            raise e
+        organization_query = self.session.query(Organization) \
+            .join(OrganizationState, Organization.uuid == OrganizationState.org_uuid)
+        if status:
+            organization_query = organization_query.filter(OrganizationState.state == status)
+        if org_type:
+            organization_query = organization_query.filter(Organization.org_type == org_type)
+        if limit:
+            organization_query = organization_query.limit(limit)
+        organizations_db = organization_query.all()
         organizations = []
         for organization_db in organizations_db:
             organization = OrganizationFactory.org_domain_entity_from_repo_model(organization_db)
@@ -35,32 +28,25 @@ class OrganizationPublisherRepository(BaseRepository):
         return organizations
 
     def get_organization(self, org_id=None, org_uuid=None):
-        try:
-            organization_query = self.session.query(Organization) \
-                .join(OrganizationState, Organization.uuid == OrganizationState.org_uuid)
-            if org_id:
-                organization_query = organization_query.filter(Organization.org_id == org_id)
-            if org_uuid:
-                organization_query = organization_query.filter(Organization.uuid == org_uuid)
-            organization_db = organization_query.first()
-            self.session.commit()
-        except SQLAlchemyError as e:
-            self.session.rollback()
-            raise e
+        organization_query = self.session.query(Organization) \
+            .join(OrganizationState, Organization.uuid == OrganizationState.org_uuid)
+        if org_id:
+            organization_query = organization_query.filter(Organization.org_id == org_id)
+        if org_uuid:
+            organization_query = organization_query.filter(Organization.uuid == org_uuid)
+        organization_db = organization_query.first()
         if organization_db is None:
             return None
         organization = OrganizationFactory.org_domain_entity_from_repo_model(organization_db)
         return organization
 
-    def get_all_orgs_for_user(self, username):
-        try:
-            organizations_db = self.session.query(Organization) \
-                .join(OrganizationMember, Organization.uuid == OrganizationMember.org_uuid) \
-                .filter(OrganizationMember.username == username).all()
-            self.session.commit()
-        except SQLAlchemyError as e:
-            self.session.rollback()
-            raise e
+    def get_all_orgs_for_user(self, username, is_owner=False):
+        query = self.session.query(Organization) \
+            .join(OrganizationMember, Organization.uuid == OrganizationMember.org_uuid) \
+            .filter(OrganizationMember.username == username)
+        if is_owner:
+            query.filter(OrganizationMember.status == OrganizationMemberRole.OWNER)
+        organizations_db = query.all()
         organizations = []
         for organization_db in organizations_db:
             organization = OrganizationFactory.org_domain_entity_from_repo_model(organization_db)
@@ -68,48 +54,37 @@ class OrganizationPublisherRepository(BaseRepository):
         return organizations
 
     def get_groups_for_org(self, org_uuid):
-        try:
-            groups_db = self.session.query(Group).filter(Group.org_uuid == org_uuid).all()
-            self.session.commit()
-        except SQLAlchemyError as e:
-            self.session.rollback()
-            raise e
+        groups_db = self.session.query(Group).filter(Group.org_uuid == org_uuid).all()
+        self.session.commit()
         groups = OrganizationFactory.parse_group_data_model(groups_db)
         return groups
 
+    @BaseRepository.write_ops
     def store_ipfs_hash(self, organization, username):
-        try:
-            organization_db = self.session.query(Organization).filter(Organization.uuid == organization.uuid).first()
-            organization_db.assets = organization.assets
-            organization_db.metadata_ipfs_uri = organization.metadata_ipfs_uri
-            organization_db.org_state[0].updated_on = datetime.utcnow()
-            organization_db.org_state[0].updated_by = username
-            self.session.commit()
-        except SQLAlchemyError as e:
-            self.session.rollback()
-            raise e
+        organization_db = self.session.query(Organization).filter(Organization.uuid == organization.uuid).first()
+        organization_db.assets = organization.assets
+        organization_db.metadata_ipfs_uri = organization.metadata_ipfs_uri
+        organization_db.org_state[0].updated_on = datetime.utcnow()
+        organization_db.org_state[0].updated_by = username
 
+    @BaseRepository.write_ops
     def persist_publish_org_transaction_hash(self, org_uuid, transaction_hash, wallet_address, nonce, username):
-        try:
-            organization = self.session.query(Organization).filter(Organization.uuid == org_uuid).first()
-            org_owner = self.session.query(OrganizationMember).filter(OrganizationMember.role == Role.OWNER.value) \
-                .filter(OrganizationMember.org_uuid == org_uuid).first()
-            if organization is None or org_owner is None:
-                raise OrganizationNotFoundException()
-            organization.org_state[0].wallet_address = wallet_address
-            organization.org_state[0].state = OrganizationStatus.PUBLISH_IN_PROGRESS.value
-            organization.org_state[0].updated_on = datetime.utcnow()
-            organization.org_state[0].updated_by = username
-            organization.org_state[0].transaction_hash = transaction_hash
-            organization.org_state[0].nonce = nonce
-            org_owner.address = wallet_address
-            org_owner.transaction_hash = transaction_hash
-            if org_owner != OrganizationMemberStatus.PUBLISHED.value:
-                org_owner.status = OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value
-            self.session.commit()
-        except Exception:
-            self.session.rollback()
-            raise
+        organization = self.session.query(Organization).filter(Organization.uuid == org_uuid).first()
+        org_owner = self.session.query(OrganizationMember).filter(OrganizationMember.role == Role.OWNER.value) \
+            .filter(OrganizationMember.org_uuid == org_uuid).first()
+        if organization is None or org_owner is None:
+            raise OrganizationNotFoundException()
+        organization.org_state[0].wallet_address = wallet_address
+        organization.org_state[0].state = OrganizationStatus.PUBLISH_IN_PROGRESS.value
+        organization.org_state[0].updated_on = datetime.utcnow()
+        organization.org_state[0].updated_by = username
+        organization.org_state[0].transaction_hash = transaction_hash
+        organization.org_state[0].nonce = nonce
+        org_owner.address = wallet_address
+        org_owner.transaction_hash = transaction_hash
+        if org_owner != OrganizationMemberStatus.PUBLISHED.value:
+            org_owner.status = OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value
+        self.session.commit()
 
     def store_organization(self, organization, username, state, test_transaction_hash=None):
         if state in [OrganizationStatus.DRAFT.value, OrganizationStatus.APPROVAL_PENDING.value,
@@ -130,27 +105,24 @@ class OrganizationPublisherRepository(BaseRepository):
         self._update_organization(organization_db_model, organization, username, state,
                                   test_transaction_hash=test_transaction_hash)
 
+    @BaseRepository.write_ops
     def update_organization_status(self, org_uuid, status, updated_by, comment=None):
-        try:
-            organization = self.session.query(Organization).filter(Organization.uuid == org_uuid).first()
-            if organization.org_state[0].state in [OrganizationStatus.ONBOARDING.value,
-                                                   OrganizationStatus.ONBOARDING_REJECTED.value,
-                                                   OrganizationStatus.ONBOARDING_APPROVED.value]:
-                if status == OrganizationStatus.REJECTED.value:
-                    status = OrganizationStatus.ONBOARDING_REJECTED.value
-                elif status == OrganizationStatus.APPROVED.value:
-                    status = OrganizationStatus.ONBOARDING_APPROVED.value
-            organization.org_state[0].state = status
-            organization.org_state[0].updated_by = updated_by
-            organization.org_state[0].updated_on = datetime.utcnow()
-            if comment is not None:
-                comments = list(organization.org_state[0].comments)
-                comments.append(comment.to_dict())
-                organization.org_state[0].comments = comments
-            self.session.commit()
-        except Exception:
-            self.session.rollback()
-            raise
+        organization = self.session.query(Organization).filter(Organization.uuid == org_uuid).first()
+        if organization.org_state[0].state in [OrganizationStatus.ONBOARDING.value,
+                                                OrganizationStatus.ONBOARDING_REJECTED.value,
+                                                OrganizationStatus.ONBOARDING_APPROVED.value]:
+            if status == OrganizationStatus.REJECTED.value:
+                status = OrganizationStatus.ONBOARDING_REJECTED.value
+            elif status == OrganizationStatus.APPROVED.value:
+                status = OrganizationStatus.ONBOARDING_APPROVED.value
+        organization.org_state[0].state = status
+        organization.org_state[0].updated_by = updated_by
+        organization.org_state[0].updated_on = datetime.utcnow()
+        if comment is not None:
+            comments = list(organization.org_state[0].comments)
+            comments.append(comment.to_dict())
+            organization.org_state[0].comments = comments
+
 
     def add_organization(self, organization, username, state, address="", test_transaction_hash=None):
         current_time = datetime.utcnow()
@@ -190,6 +162,7 @@ class OrganizationPublisherRepository(BaseRepository):
             address=address, status=OrganizationMemberStatus.ACCEPTED.value, transaction_hash="",
             invited_on=current_time, created_on=current_time, updated_on=current_time))
 
+    @BaseRepository.write_ops
     def _update_organization(self, organization_db_model, organization, username, state, test_transaction_hash=None):
         current_time = datetime.utcnow()
         organization_db_model.name = organization.name
@@ -292,17 +265,17 @@ class OrganizationPublisherRepository(BaseRepository):
             .filter(OrganizationMember.status == OrganizationMemberStatus.PENDING.value) \
             .all()
         if len(org_members) == 0:
-            self.session.commit()
             return False
-        self.session.commit()
         return True
 
+    @BaseRepository.write_ops
     def delete_members(self, org_member_list, member_status):
         member_username_list = [member.username for member in org_member_list]
         self.session.query(OrganizationMember).filter(OrganizationMember.username.in_(member_username_list)) \
             .filter(OrganizationMember.status.in_(member_status)).delete(synchronize_session='fetch')
         self.session.commit()
 
+    @BaseRepository.write_ops
     def delete_published_members(self, member_list):
         member_address_list = [member.address for member in member_list]
         self.session.query(OrganizationMember).filter(OrganizationMember.address.in_(member_address_list)) \
@@ -310,6 +283,7 @@ class OrganizationPublisherRepository(BaseRepository):
             .delete(synchronize_session='fetch')
         self.session.commit()
 
+    @BaseRepository.write_ops
     def persist_publish_org_member_transaction_hash(self, org_member, transaction_hash, org_uuid):
         member_username_list = [member.username for member in org_member]
         org_members_db_items = self.session.query(OrganizationMember) \
@@ -322,6 +296,7 @@ class OrganizationPublisherRepository(BaseRepository):
             org_member.updated_on = datetime.utcnow()
         self.session.commit()
 
+    @BaseRepository.write_ops
     def update_org_member(self, username, wallet_address, invite_code):
         org_member = self.session.query(OrganizationMember) \
             .filter(OrganizationMember.invite_code == invite_code) \
@@ -329,8 +304,7 @@ class OrganizationPublisherRepository(BaseRepository):
             .filter(OrganizationMember.status == OrganizationMemberStatus.PENDING.value) \
             .first()
         if org_member is None:
-            raise Exception(f"No member found")
-
+            raise Exception("No member found")
         if org_member.status == OrganizationMemberStatus.PUBLISHED.value and org_member.address == wallet_address:
             org_member.username = username
         elif org_member.status == OrganizationMemberStatus.PENDING.value and org_member.username == username:
@@ -339,18 +313,19 @@ class OrganizationPublisherRepository(BaseRepository):
         org_member.updated_on = datetime.utcnow()
         self.session.commit()
 
+    @BaseRepository.write_ops
     def update_org_member_using_address(self, org_uuid, member, wallet_address):
         org_member = self.session.query(OrganizationMember) \
             .filter(OrganizationMember.address == wallet_address) \
             .filter(OrganizationMember.org_uuid == org_uuid) \
             .first()
         if org_member is None:
-            raise Exception(f"No existing member found")
-
+            raise Exception("No existing member found")
         org_member.status = member.status
         org_member.updated_on = datetime.utcnow()
         self.session.commit()
 
+    @BaseRepository.write_ops
     def update_all_individual_organization_for_user(self, username, status, updated_by):
         organizations_db = self.session.query(Organization) \
             .join(OrganizationMember, Organization.uuid == OrganizationMember.org_uuid) \
@@ -371,9 +346,9 @@ class OrganizationPublisherRepository(BaseRepository):
     def get_org_state_with_status(self, status):
         organization_state_db = self.session.query(OrganizationState).filter(OrganizationState.state == status).all()
         organization_state = OrganizationFactory.parse_organization_state_from_db_list(organization_state_db)
-        self.session.commit()
         return organization_state
 
+    @BaseRepository.write_ops
     def update_org_status(self, org_uuid_list, prev_state, next_state):
         self.session.query(OrganizationState).filter(OrganizationState.org_uuid.in_(org_uuid_list)).filter(
             OrganizationState.state == prev_state).update({OrganizationState.state: next_state},
