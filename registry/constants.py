@@ -132,3 +132,9 @@ class ServiceType(Enum):
     GRPC = "grpc"
     JSONRPC = "jsonrpc"
     PROCESS = "process"
+
+
+class AssetsStatus(Enum):
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
+    PENDING = "PENDING"
