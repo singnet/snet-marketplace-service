@@ -37,7 +37,7 @@ class UpdateServiceAssets:
             if utils.match_regex_string(path=file_path, regex_pattern=ServiceAssetsRegex.PROTO_FILE_URL.value):
                 #add pending status before proto file validation
                 service.assets.update({
-                    "proto_files": {"url": None, "status": AssetsStatus.PENDING.value()}
+                    "proto_files": {"url": None, "status": AssetsStatus.PENDING.value}
                 })
                 service_repo.save_service(username="Lambda|update-service-assets", service=service, state=service.service_state.state)
                 #proto file validation
