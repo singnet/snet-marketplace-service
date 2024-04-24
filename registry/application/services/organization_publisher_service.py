@@ -40,9 +40,9 @@ class OrganizationPublisherService:
         organizations = org_repo.get_organizations(status, limit, type)
         return [org.to_response() for org in organizations]
 
-    def get_all_org_for_user(self):
+    def get_all_org_for_user(self, is_owner=False):
         logger.info(f"get organization for user: {self.username}")
-        organizations = org_repo.get_all_orgs_for_user(username=self.username)
+        organizations = org_repo.get_all_orgs_for_user(username=self.username, is_owner=is_owner)
         return [org.to_response() for org in organizations]
 
     def get_all_org_id(self):

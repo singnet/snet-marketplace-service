@@ -23,7 +23,8 @@ logger = get_logger(__name__)
 def get_all_org(event, context):
     logger.info(event)
     username = event["requestContext"]["authorizer"]["claims"]["email"]
-    response = OrganizationPublisherService(None, username).get_all_org_for_user()
+    is_owner = event["queryStringParameters"].get("is_owner", False)
+    response = OrganizationPublisherService(None, username).get_all_org_for_user(is_owner=is_owner)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
