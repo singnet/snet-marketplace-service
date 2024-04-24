@@ -13,7 +13,7 @@ from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
 from common.utils import download_file_from_url, json_to_file, publish_zip_file_in_ipfs, send_email_notification
 from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH, NETWORKS, NETWORK_ID, NOTIFICATION_ARN, \
-    REGION_NAME, PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT, GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT, ASSETS_COMPONENT_BUCKET_NAME
+    REGION_NAME, PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT, GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT
 from registry.constants import EnvironmentType, ServiceAvailabilityStatus, ServiceStatus, \
     ServiceSupportType, UserType, ServiceType
 from registry.domain.factory.service_factory import ServiceFactory
@@ -363,11 +363,13 @@ class ServicePublisherService:
             demo_component_status=current_service.assets.get("demo_files", {}).get("status", "")
         )
         demo_changes = new_demo.to_dict()
-        demo_last_modifed = existing_demo.get("demo_component_last_modified", "")
+        demo_last_modified = existing_demo.get("demo_component_last_modified", "")
         # if last_modified not there publish if it there and is greater than current last modifed publish
         demo_changes.update({"change_in_demo_component": 1})
-        if demo_last_modifed and dt.fromisoformat(
-                demo_last_modifed) > dt.fromisoformat(current_service.assets.get("demo_files", {}).get("last_modified", "")):
+        current_demo_last_modified = current_service.assets.get("demo_files", {}).get("last_modified")
+        if demo_last_modified and \
+            (current_demo_last_modified is None or \
+             dt.fromisoformat(demo_last_modified) > dt.fromisoformat(current_demo_last_modified)):
             demo_changes.update({"change_in_demo_component": 0})
         changes.update({"demo_component": demo_changes})
         return changes
@@ -376,7 +378,7 @@ class ServicePublisherService:
         response = requests.post(
             PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT.format(org_id, service_id), data=payload)
         if response.status_code != 200:
-            raise Exception(f"Error in updating offchain service attributes")
+            raise Exception("Error in updating offchain service attributes")
 
     def get_existing_service_details_from_contract_api(self, service_id, org_id):
         response = requests.get(
