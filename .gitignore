@@ -120,3 +120,6 @@ orchestrator/node_modules/*
 orchestrator/package-lock.json
 utility/node_modules/*
 utility/package-lock.json
+
+*Pipfile
+*Pipfile.lock
