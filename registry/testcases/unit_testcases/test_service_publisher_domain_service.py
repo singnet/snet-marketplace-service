@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from registry.constants import EnvironmentType
-from registry.domain.models.service import Service
+from registry.domain.models.service import Service as ServiceEntityModel
 from registry.domain.models.service_group import ServiceGroup
 from registry.domain.services.service_publisher_domain_service import ServicePublisherDomainService
 
@@ -9,7 +9,7 @@ from registry.domain.services.service_publisher_domain_service import ServicePub
 class TestServicePublisherDomainService(TestCase):
 
     def test_get_service_metadata(self):
-        service = Service(
+        service = ServiceEntityModel(
             org_uuid="test_org_uuid", uuid="test_service_uuid", service_id="test_service_id",
             display_name="test_display_name", short_description="test_short_description",
             description="test_description", project_url="https://dummy.io",

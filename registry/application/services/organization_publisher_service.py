@@ -7,7 +7,6 @@ from common import utils
 from common.boto_utils import BotoUtils
 from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
-from common.utils import Utils
 import registry.config
 from registry.constants import EnvironmentType, ORG_STATUS_LIST, ORG_TYPE_VERIFICATION_TYPE_MAPPING, \
     OrganizationActions, OrganizationIDAvailabilityStatus, OrganizationMemberStatus, OrganizationStatus, \
@@ -20,7 +19,7 @@ from registry.infrastructure.repositories.organization_repository import Organiz
 from registry.mail_templates import \
     get_notification_mail_template_for_service_provider_when_org_is_submitted_for_onboarding, \
     get_owner_mail_for_org_rejected, get_owner_mail_for_org_changes_requested, get_owner_mail_for_org_approved
-from registry.mail_templates import get_org_member_invite_mail, get_org_approval_mail
+from registry.mail_templates import get_org_member_invite_mail
 
 org_repo = OrganizationPublisherRepository()
 
@@ -127,6 +126,7 @@ class OrganizationPublisherService:
         return "OK"
 
     def get_all_member(self, status, role, pagination_details):
+        #TODO pagination
         offset = pagination_details.get("offset", None)
         limit = pagination_details.get("limit", None)
         sort = pagination_details.get("sort", None)

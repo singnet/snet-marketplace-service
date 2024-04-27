@@ -128,9 +128,9 @@ class UpdateServiceAssets:
                 demo_details.update({'status': status})
                 assets.update({'demo_files': demo_details})
                 if status == "SUCCEEDED":
-                    next_state = ServiceStatus.APPROVED.value
+                    next_state = ServiceStatus.APPROVED
                 else:
-                    next_state = ServiceStatus.CHANGE_REQUESTED.value
+                    next_state = ServiceStatus.CHANGE_REQUESTED
                 service_repo.save_service(username=f"CodeBuild :: {DEMO_COMPONENT_CODE_BUILD_NAME}", service=service,
                                           state=next_state)
         else:

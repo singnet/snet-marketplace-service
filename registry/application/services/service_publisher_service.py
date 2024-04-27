@@ -19,7 +19,7 @@ from registry.constants import EnvironmentType, ServiceAvailabilityStatus, Servi
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.models.demo_component import DemoComponent
 from registry.domain.models.offchain_service_config import OffchainServiceConfig
-from registry.domain.models.service import Service
+from registry.domain.models.service import Service as ServiceEntityModel
 from registry.domain.models.service_comment import ServiceComment
 from registry.domain.services.service_publisher_domain_service import ServicePublisherDomainService
 from registry.exceptions import EnvironmentNotFoundException, InvalidServiceStateException, \
@@ -65,7 +65,7 @@ class ServicePublisherService:
             service_comment = ServiceComment(org_uuid, service.uuid, "SERVICE_APPROVAL", "SERVICE_APPROVER",
                                              self._username, BUILD_FAIL_MESSAGE)
             ServicePublisherRepository().save_service_comments(service_comment)
-            ServicePublisherRepository().save_service(self._username, service, ServiceStatus.CHANGE_REQUESTED.value)
+            ServicePublisherRepository().save_service(self._username, service, ServiceStatus.CHANGE_REQUESTED)
             logger.info(f"Build failed for org_id {org_id}  and service_id {service_id}")
             try:
                 BUILD_STATUS_SUBJECT = "Build failed for your service {}"
@@ -144,7 +144,7 @@ class ServicePublisherService:
         service.groups = groups
         service.service_state.transaction_hash = payload.get("transaction_hash", None)
         logger.info(f"Save service data with proto: {service.proto} and assets: {service.assets}")
-        ServicePublisherRepository().save_service(self._username, service, ServiceStatus.APPROVED.value)
+        ServicePublisherRepository().save_service(self._username, service, ServiceStatus.APPROVED)
         comment = payload.get("comments", {}).get(UserType.SERVICE_PROVIDER.value, "")
         if len(comment) > 0:
             self._save_service_comment(support_type="SERVICE_APPROVAL", user_type="SERVICE_PROVIDER", comment=comment)
@@ -173,12 +173,12 @@ class ServicePublisherService:
 
     def save_transaction_hash_for_published_service(self, payload):
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
-        if service.service_state.state == ServiceStatus.APPROVED.value:
+        if service.service_state.state == ServiceStatus.APPROVED:
             service.service_state = \
                 ServiceFactory().create_service_state_entity_model(
-                    self._org_uuid, self._service_uuid, ServiceStatus.PUBLISH_IN_PROGRESS.value,
+                    self._org_uuid, self._service_uuid, ServiceStatus.PUBLISH_IN_PROGRESS,
                     payload.get("transaction_hash", ""))
-            ServicePublisherRepository().save_service(self._username, service, ServiceStatus.PUBLISH_IN_PROGRESS.value)
+            ServicePublisherRepository().save_service(self._username, service, ServiceStatus.PUBLISH_IN_PROGRESS)
         return StatusCode.OK
 
     def create_service(self, payload):
@@ -246,7 +246,7 @@ class ServicePublisherService:
     def publish_service_data_to_ipfs(self):
         service_publisher_repo = ServicePublisherRepository()
         service = service_publisher_repo.get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
-        if service.service_state.state == ServiceStatus.APPROVED.value:
+        if service.service_state.state == ServiceStatus.APPROVED:
             proto_url = service.assets.get("proto_files", {}).get("url", None)
             if proto_url is None:
                 raise ServiceProtoNotFoundException
@@ -391,7 +391,7 @@ class ServicePublisherService:
         # Validate service metadata
         current_service = self.publish_service_data_to_ipfs()
 
-        is_valid = Service.is_metadata_valid(service_metadata=current_service.to_metadata())
+        is_valid = ServiceEntityModel.is_metadata_valid(service_metadata=current_service.to_metadata())
         logger.info(f"is_valid :: {is_valid} :: validated current_metadata :: {current_service.to_metadata()}")
         if not is_valid:
             raise InvalidMetadataException()
@@ -432,6 +432,6 @@ class ServicePublisherService:
             ServicePublisherRepository().save_service(
                 username=self._username,
                 service=current_service,
-                state=ServiceStatus.PUBLISHED.value
+                state=ServiceStatus.PUBLISHED
             )
         return status

@@ -28,7 +28,7 @@ def generate_python_stubs(input_s3_path, output_s3_path, org_id, service_id):
         boto_utils.download_folder_contents_from_s3(bucket=input_bucket, key=input_key, target=tmp_paths["proto"])
         proto_location = None
         proto_names = []
-        for subdir, dirs, files in os.walk(tmp_paths["proto"]):
+        for subdir, _, files in os.walk(tmp_paths["proto"]):
             for file in files:
                 filepath = subdir + os.sep + file
                 if filepath.endswith(".proto"):

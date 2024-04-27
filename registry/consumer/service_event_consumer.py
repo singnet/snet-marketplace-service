@@ -12,7 +12,7 @@ from common.logger import get_logger
 from registry.config import NETWORK_ID, SERVICE_CURATE_ARN, REGION_NAME, CONTRACT_BASE_PATH
 from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus
 from registry.domain.factory.service_factory import ServiceFactory
-from registry.domain.models.service import Service
+from registry.domain.models.service import Service as ServiceEntityModel
 
 logger = get_logger(__name__)
 BLOCKCHAIN_USER = "BLOCKCHAIN_USER"
@@ -72,7 +72,7 @@ class ServiceEventConsumer(object):
 
     def _get_service_details_from_blockchain(self, event):
         logger.info(f"processing service event {event}")
-
+        #TODO
         registry_contract = self._get_registry_contract()
         org_id = self._get_org_id_from_event(event)
         service_id = self._get_service_id_from_event(event)
@@ -156,7 +156,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                 ServiceFactory.create_service_group_entity_model(org_uuid, existing_service.uuid, group) for group in
                 service_metadata.get("groups", [])]
 
-        recieved_service = Service(
+        recieved_service = ServiceEntityModel(
             org_uuid=org_uuid,
             uuid=str(uuid4()),
             service_id=service_id,
