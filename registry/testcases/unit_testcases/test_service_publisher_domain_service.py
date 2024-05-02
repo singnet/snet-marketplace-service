@@ -1,6 +1,5 @@
 from unittest import TestCase
 
-from registry.constants import EnvironmentType
 from registry.domain.models.service import Service as ServiceEntityModel
 from registry.domain.models.service_group import ServiceGroup
 from registry.domain.services.service_publisher_domain_service import ServicePublisherDomainService
@@ -58,8 +57,7 @@ class TestServicePublisherDomainService(TestCase):
             service_state=None,
             trainig_indicator=False
         )
-        service_metadata = ServicePublisherDomainService("", "", "").get_service_metadata(service,
-                                                                                          EnvironmentType.MAIN.value)
+        service_metadata = ServicePublisherDomainService("", "", "").get_service_metadata(service)
         self.assertDictEqual.__self__.maxDiff = None
         self.assertDictEqual(
             {'version': 1, 'display_name': 'test_display_name', 'encoding': 'proto', 'service_type': 'grpc',
