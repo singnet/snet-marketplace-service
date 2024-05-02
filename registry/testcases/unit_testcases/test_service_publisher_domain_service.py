@@ -36,7 +36,8 @@ class TestServicePublisherDomainService(TestCase):
             },
             ranking=1,
             rating={},
-            contributors=[{'name': 'df', 'email_id': '123@mail.io'}], tags=["1234", "4321"],
+            contributors=[{'name': 'df', 'email_id': '123@mail.io'}],
+            tags=["1234", "4321"],
             mpe_address="0x123",
             metadata_uri="",
             service_type="grpc",
@@ -71,4 +72,4 @@ class TestServicePublisherDomainService(TestCase):
                                      'description': 'test_description'}, 'media': [
                 {'order': 1, 'url': 'QmUfDprFisFeaRnmLEqks1AFN6iam5MmTh49KcomXHEiQY/20200323130126_asset.png',
                  'file_type': 'image', 'asset_type': 'hero_image', 'alt_text': ''}],
-             'contributors': [{'name': 'df', 'email_id': '123@mail.io'}], 'tags': ['1234', '4321']}, service_metadata)
+             'contributors': [{'name': 'df', 'email_id': '123@mail.io'}], 'tags': ['1234', '4321'], "training_indicator": False}, service_metadata)
