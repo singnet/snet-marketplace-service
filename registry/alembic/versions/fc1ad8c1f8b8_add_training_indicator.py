@@ -1,8 +1,8 @@
 """add training_indicator
 
-Revision ID: 15bbbaaba5f7
-Revises: 57deaf9ab42f
-Create Date: 2024-03-22 12:19:51.299812
+Revision ID: fc1ad8c1f8b8
+Revises: 3312b862c6cb
+Create Date: 2024-05-02 11:08:39.254329
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '15bbbaaba5f7'
-down_revision = '57deaf9ab42f'
+revision = 'fc1ad8c1f8b8'
+down_revision = '3312b862c6cb'
 branch_labels = None
 depends_on = None
 
