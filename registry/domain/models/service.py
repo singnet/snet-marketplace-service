@@ -22,6 +22,10 @@ SERVICE_METADATA_SCHEMA = {
         "type": "string",
         "empty": False
     },
+    "training_indicator": {
+        "type": "boolean",
+        "empty": False
+    },
     "model_ipfs_hash": {
         "type": "string",
         "empty": False

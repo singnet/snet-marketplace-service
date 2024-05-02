@@ -132,6 +132,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         contributors = service_metadata.get("contributors", [])
         tags_data = service_metadata.get("tags", [])
         service_type = service_metadata.get("service_type", "grpc")
+        training_indicator = service_metadata.get("training_indicator", False)
         state = \
             ServiceFactory.create_service_state_entity_model(org_uuid, service_uuid,
                                                              getattr(ServiceStatus, "PUBLISHED_UNAPPROVED").value)
@@ -174,7 +175,8 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             metadata_uri=metadata_uri,
             service_type=service_type,
             groups=groups,
-            service_state=state
+            service_state=state,
+            training_indicator=training_indicator
         )
 
         if not existing_service:
