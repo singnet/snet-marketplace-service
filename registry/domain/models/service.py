@@ -137,7 +137,7 @@ REQUIRED_ASSETS_FOR_METADATA = ['hero_image']
 
 class Service:
     def __init__(self, org_uuid, uuid, service_id, display_name, short_description, description, project_url, proto,
-                 assets, ranking, rating, contributors, tags, mpe_address, metadata_uri, service_type, groups, service_state, trainig_indicator):
+                 assets, ranking, rating, contributors, tags, mpe_address, metadata_uri, service_type, groups, service_state, training_indicator):
         self._org_uuid = org_uuid
         self._uuid = uuid
         self._service_id = service_id
@@ -156,7 +156,7 @@ class Service:
         self._service_type = service_type
         self._groups = groups
         self._service_state = service_state
-        self._training_indicator = trainig_indicator
+        self._training_indicator = training_indicator
         self._comments = {UserType.SERVICE_PROVIDER.value: "", UserType.SERVICE_APPROVER.value: ""}
 
     def to_dict(self):
