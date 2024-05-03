@@ -38,7 +38,7 @@ class ServiceFactory:
             tags=service.tags,
             mpe_address=service.mpe_address,
             service_type=service.service_type,
-            trainig_indicator=service.training_indicator,
+            training_indicator=service.training_indicator,
             service_state=ServiceFactory.convert_service_state_from_db(service.service_state),
             groups=[ServiceGroup(org_uuid=group.org_uuid, service_uuid=group.service_uuid, group_id=group.group_id,
                                  group_name=group.group_name, endpoints=group.endpoints,

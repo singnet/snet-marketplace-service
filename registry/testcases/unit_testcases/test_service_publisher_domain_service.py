@@ -55,7 +55,7 @@ class TestServicePublisherDomainService(TestCase):
                 )
             ],
             service_state=None,
-            trainig_indicator=False
+            training_indicator=False
         )
         service_metadata = ServicePublisherDomainService("", "", "").get_service_metadata(service)
         self.assertDictEqual.__self__.maxDiff = None
