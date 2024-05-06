@@ -951,7 +951,7 @@ class TestService(TestCase):
                    "comments": {"SERVICE_PROVIDER": "", "SERVICE_APPROVER": "<div></div>"},
                    "mpe_address": "0x8fb1dc8df86b388c7e00689d1ecb533a160b4d0c"}
 
-        service = ServiceFactory.create_service_entity_model("", "", payload, ServiceStatus.APPROVED.value)
+        service = ServiceFactory.create_service_entity_model("", "", payload, ServiceStatus.APPROVED)
         service_metadata = service.to_metadata()
         assert service_metadata == {
             "version": 1,

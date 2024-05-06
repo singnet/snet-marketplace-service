@@ -232,13 +232,13 @@ class TestService(TestCase):
         }
 
         service_state = ServicePublisherRepository().get_service_state(
-            status=ServiceStatus.CHANGE_REQUESTED.value)
+            status=ServiceStatus.CHANGE_REQUESTED)
         assert service_state[0].org_uuid == "testorguuid"
         assert service_state[0].service_uuid == "testserviceuuid"
 
         ServicePublisherRepository().update_service_status(service_uuid_list=["testserviceuuid"],
-                                                           prev_state=ServiceStatus.CHANGE_REQUESTED.value,
-                                                           next_state=ServiceStatus.APPROVAL_PENDING.value)
+                                                           prev_state=ServiceStatus.CHANGE_REQUESTED,
+                                                           next_state=ServiceStatus.APPROVAL_PENDING)
         event = {"org_uuid": "testorguuid", "service_uuid": "testserviceuuid", "build_status": "1",
                  "build_id": "sample_build_id", "filename": "20210228000436_component.zip"}
         response = update_demo_component_build_status(event=event, context=None)

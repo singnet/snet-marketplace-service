@@ -166,9 +166,9 @@ class ServicePublisherRepository(BaseRepository):
         service_comment = ServiceFactory().convert_service_comment_db_model_to_entity_model(service_comment_db)
         return service_comment
 
-    def get_service_state(self, status):
+    def get_service_state(self, status: ServiceStatus):
         try:
-            services_state_db = self.session.query(ServiceState).filter(ServiceState.state == status).all()
+            services_state_db = self.session.query(ServiceState).filter(ServiceState.state == status.value).all()
             self.session.commit()
         except SQLAlchemyError as error:
             self.session.rollback()
@@ -179,10 +179,10 @@ class ServicePublisherRepository(BaseRepository):
             services_state.append(service_state)
         return services_state
 
-    def update_service_status(self, service_uuid_list, prev_state, next_state):
+    def update_service_status(self, service_uuid_list, prev_state: ServiceStatus, next_state: ServiceStatus):
         try:
             self.session.query(ServiceState).filter(ServiceState.service_uuid.in_(service_uuid_list)) \
-                .filter(ServiceState.state == prev_state).update({ServiceState.state: next_state},
+                .filter(ServiceState.state == prev_state.value).update({ServiceState.state: next_state.value},
                                                                  synchronize_session=False)
             self.session.commit()
         except SQLAlchemyError as error:
