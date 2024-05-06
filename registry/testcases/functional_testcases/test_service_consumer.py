@@ -106,7 +106,7 @@ class TestServiceEventConsumer(unittest.TestCase):
         published_service = service_repo.get_service_for_given_service_uuid(org_uuid, service_uuid)
 
         self.assertEqual([], published_service.tags)
-        self.assertEqual(ServiceStatus.DRAFT, published_service.service_state.state)
+        self.assertEqual(ServiceStatus.DRAFT.value, published_service.service_state.state.value)
         self.assertEqual(service_metadata["display_name"], published_service.display_name)
         self.assertEqual(service_metadata["service_description"]["description"], published_service.description)
         self.assertEqual(service_metadata["service_description"]["short_description"],
@@ -191,7 +191,7 @@ class TestServiceEventConsumer(unittest.TestCase):
         org_uuid, published_service = service_repo.get_service_for_given_service_id_and_org_id("test_org_id",
                                                                                                     "test_service_id")
         self.assertEqual([], published_service.tags)
-        self.assertEqual(ServiceStatus.PUBLISHED_UNAPPROVED, published_service.service_state.state)
+        self.assertEqual(ServiceStatus.PUBLISHED_UNAPPROVED.value, published_service.service_state.state.value)
         self.assertEqual(service_metadata["display_name"], published_service.display_name)
         self.assertEqual(service_metadata["service_description"]["description"], published_service.description)
         self.assertEqual(service_metadata["service_description"]["short_description"],
@@ -275,7 +275,7 @@ class TestServiceEventConsumer(unittest.TestCase):
         org_uuid, published_service = service_repo.get_service_for_given_service_id_and_org_id("test_org_id",
                                                                                                     "test_service_id")
         self.assertEqual([], published_service.tags)
-        self.assertEqual(ServiceStatus.PUBLISHED_UNAPPROVED, published_service.service_state.state)
+        self.assertEqual(ServiceStatus.PUBLISHED_UNAPPROVED.value, published_service.service_state.state.value)
         self.assertEqual(service_metadata["display_name"], published_service.display_name)
         self.assertEqual(service_metadata["service_description"]["description"], published_service.description)
         self.assertEqual(service_metadata["service_description"]["short_description"],

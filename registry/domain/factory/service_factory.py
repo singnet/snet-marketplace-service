@@ -126,13 +126,8 @@ class ServiceFactory:
 
     @staticmethod
     def create_service_entity_model(org_uuid: str, service_uuid: str, payload: dict, service_status: ServiceStatus) -> Service:
-        try:
-            service_state = service_status.value
-        except AttributeError as _:
-            raise InvalidServiceStateException()
-
         service_state_entity_model = ServiceFactory.create_service_state_entity_model(
-            org_uuid, service_uuid, service_state)
+            org_uuid, service_uuid, service_status)
 
         service_group_entity_model_list = [
             ServiceFactory.create_service_group_entity_model(org_uuid, service_uuid, group) for group in
