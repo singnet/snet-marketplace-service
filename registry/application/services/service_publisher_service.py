@@ -158,7 +158,7 @@ class ServicePublisherService:
                                                                                      self._service_uuid)
         service = ServiceFactory.convert_service_db_model_to_entity_model(service_db)
 
-        for attribute, value in payload.items():
+        for attribute, _ in payload.items():
             if attribute in VALID_PATCH_ATTRIBUTE:
                 if attribute == "groups":
                     service.groups = [
