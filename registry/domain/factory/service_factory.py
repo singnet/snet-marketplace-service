@@ -171,7 +171,7 @@ class ServiceFactory:
         return True
 
     @staticmethod
-    def create_service_state_entity_model(org_uuid: str, service_uuid: str, state: str, transaction_hash:str = None) -> ServiceState:
+    def create_service_state_entity_model(org_uuid: str, service_uuid: str, state: ServiceStatus, transaction_hash:str = None) -> ServiceState:
         return ServiceState(
             org_uuid=org_uuid,
             service_uuid=service_uuid,
@@ -211,8 +211,7 @@ class ServiceFactory:
     def create_service_from_service_metadata(org_uuid: str, service_uuid: str, service_id: int, service_metadata: dict,
                                              tags_data, ranking, rating, status) -> Service:
         service_state_entity_model = \
-            ServiceFactory.create_service_state_entity_model(org_uuid, service_uuid,
-                                                             getattr(ServiceStatus, status).value)
+            ServiceFactory.create_service_state_entity_model(org_uuid, service_uuid, ServiceStatus(status))
         service_group_entity_model_list = [
             ServiceFactory.create_service_group_entity_model("", service_uuid, group) for group in
             service_metadata.get("groups", [])]

@@ -134,8 +134,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         service_type = service_metadata.get("service_type", "grpc")
         training_indicator = service_metadata.get("training_indicator", False)
         state = \
-            ServiceFactory.create_service_state_entity_model(org_uuid, service_uuid,
-                                                             getattr(ServiceStatus, "PUBLISHED_UNAPPROVED").value)
+            ServiceFactory.create_service_state_entity_model(org_uuid, service_uuid, ServiceStatus.PUBLISHED_UNAPPROVED)
 
         self._add_validation_attribute_to_endpoint(service_metadata.get("groups", []))
         groups = [
