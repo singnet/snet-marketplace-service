@@ -125,9 +125,9 @@ class ServiceFactory:
         )
 
     @staticmethod
-    def create_service_entity_model(org_uuid: str, service_uuid: str, payload: dict, status: str) -> Service:
+    def create_service_entity_model(org_uuid: str, service_uuid: str, payload: dict, service_status: ServiceStatus) -> Service:
         try:
-            service_state = getattr(ServiceStatus, status).value
+            service_state = service_status.value
         except AttributeError as _:
             raise InvalidServiceStateException()
 
