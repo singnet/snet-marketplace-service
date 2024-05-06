@@ -1,5 +1,8 @@
+from registry.constants import ServiceStatus
+
+
 class ServiceState:
-    def __init__(self, org_uuid, service_uuid, state, transaction_hash):
+    def __init__(self, org_uuid: str, service_uuid: str, state: ServiceStatus, transaction_hash: str):
         self._org_uuid = org_uuid
         self._service_uuid = service_uuid
         self._state = state
@@ -9,7 +12,7 @@ class ServiceState:
         return {
             "org_uuid": self._org_uuid,
             "service_uuid": self._service_uuid,
-            "state": self._state,
+            "state": self._state.value,
             "transaction_hash": self._transaction_hash
         }
 

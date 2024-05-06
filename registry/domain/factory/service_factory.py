@@ -49,8 +49,8 @@ class ServiceFactory:
         )
 
     @staticmethod
-    def convert_service_state_from_db(service_state):
-        return ServiceState(service_state.org_uuid, service_state.service_uuid, service_state.state,
+    def convert_service_state_from_db(service_state: ServiceStateDBModel):
+        return ServiceState(service_state.org_uuid, service_state.service_uuid, ServiceStatus(service_state.state),
                             service_state.transaction_hash)
 
     @staticmethod
