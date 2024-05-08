@@ -19,8 +19,8 @@ provider:
     serverSideEncryption: AES256
     tags:
       key1: registry
-    deploymentPrefix: serverless
-    tracing: true
+  deploymentPrefix: serverless
+  tracing: true
 
 custom:
   pythonRequirements:
