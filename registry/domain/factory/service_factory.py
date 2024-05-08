@@ -8,7 +8,6 @@ from registry.domain.models.service import Service
 from registry.domain.models.service_comment import ServiceComment
 from registry.domain.models.service_group import ServiceGroup
 from registry.domain.models.service_state import ServiceState
-from registry.exceptions import InvalidServiceStateException
 from registry.infrastructure.models import (
     Service as ServiceDBModel, ServiceGroup as ServiceGroupDBModel,
     ServiceReviewHistory as ServiceReviewHistoryDBModel, ServiceState as ServiceStateDBModel,
@@ -102,13 +101,12 @@ class ServiceFactory:
         return ServiceStateDBModel(
             org_uuid=service_state.org_uuid,
             service_uuid=service_state.service_uuid,
-            state=service_state.state,
+            state=service_state.state.value,
             transaction_hash=service_state.transaction_hash,
             created_by=username,
             updated_by=username,
             approved_by="",
             created_on=dt.utcnow()
-
         )
 
     @staticmethod
