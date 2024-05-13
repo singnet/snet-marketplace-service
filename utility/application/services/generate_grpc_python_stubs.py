@@ -1,6 +1,7 @@
 import os
 import tempfile
 import uuid
+import re
 from pathlib import Path
 
 import pkg_resources
@@ -28,6 +29,7 @@ def generate_python_stubs(input_s3_path, output_s3_path, org_id, service_id):
         boto_utils.download_folder_contents_from_s3(bucket=input_bucket, key=input_key, target=tmp_paths["proto"])
         proto_location = None
         proto_names = []
+        training_indicator = False
         for subdir, _, files in os.walk(tmp_paths["proto"]):
             for file in files:
                 filepath = subdir + os.sep + file
@@ -39,6 +41,7 @@ def generate_python_stubs(input_s3_path, output_s3_path, org_id, service_id):
                         codegen_dir=os.path.join(tmp_paths["stubs"]),
                         proto_file_path=proto_location
                     )
+                    training_indicator = find_training_indicator(proto_path=proto_location)
         if proto_location is None:
             raise ProtoNotFound
 
@@ -52,9 +55,9 @@ def generate_python_stubs(input_s3_path, output_s3_path, org_id, service_id):
 
         if output_s3_path:
             utils.zip_file(source_path=Path(tmp_paths["base"]), zipped_path=Path(tmp_paths["result"]))
-            boto_utils.s3_upload_file(filename=tmp_paths["result"], bucket=output_bucket, key=output_key + f"python.zip")
-        return {"message": "success"}
-    except ProtoNotFound as protoException:
+            boto_utils.s3_upload_file(filename=tmp_paths["result"], bucket=output_bucket, key=output_key + "python.zip")
+        return {"message": "success", "training_indicator": {training_indicator}}
+    except ProtoNotFound as _:
         message = f"Proto file is not found for location :: {input_s3_path}"
         logger.info(message)
         utils.report_slack(slack_msg=message, SLACK_HOOK=SLACK_HOOK)
@@ -100,3 +103,10 @@ def prepare_readme_file(target_path, service_id):
               f"NOTE:Please follow instructions provided in the python tab of install and run on how to invoke " \
               f"the service."
     utils.create_text_file(target_path=target_path, context=context)
+
+
+def find_training_indicator(proto_path: str) -> bool:
+    with open(proto_path, "r") as file:
+        text_data = file.read().decode("utf-8")
+        pattern = r'option \(training\.my_method_option\)\.trainingMethodIndicator\s*=\s*"true"'
+        return bool(re.search(pattern, text_data))
