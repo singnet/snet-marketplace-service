@@ -110,7 +110,6 @@ class UpdateServiceAssets:
             invocation_type="RequestResponse",
             lambda_function_arn=MANAGE_PROTO_COMPILATION_LAMBDA_ARN
         )
-        logger.debug(f"Getting response from MANAGE_PROTO_COMPILATION_LAMBDA :: {response}")
 
         status = AssetsStatus.SUCCESS.value if response["statusCode"] else AssetsStatus.FAILED.value
         data = response.json()

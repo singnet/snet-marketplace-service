@@ -65,21 +65,19 @@ class GenerateStubService:
         })
         response = {}
         for environment in SUPPORTED_ENVIRONMENT:
-            if environment in 'python':
+            if environment in "python":
                 response = boto_utils.invoke_lambda(
                     invocation_type="RequestResponse",
                     payload=lambda_payload,
                     lambda_function_arn=PYTHON_PROTO_LAMBDA_ARN
                 )
-                logger.debug(f"Getting response from PYTHON_PROTO_LAMBDA_ARN :: {response}")
-            elif environment in 'nodejs':
+            elif environment in "nodejs":
                 response = boto_utils.invoke_lambda(
                     invocation_type="RequestResponse",
                     payload=lambda_payload,
                     lambda_function_arn=NODEJS_PROTO_LAMBDA_ARN
                 )
-                logger.debug(f"Getting response from NODEJS_PROTO_LAMBDA_ARN :: {response}")
-            if response.get('statusCode', {}) != 200:
+            if response.get("statusCode", {}) != 200:
                 raise Exception(f"Invalid proto file found on given path :: {input_s3_path} :: response :: {response}")
 
         #get training indicator if it exist
@@ -120,7 +118,7 @@ class GenerateStubService:
 
     @staticmethod
     def handle_extraction_path(filename, extracted):
-        if filename.endswith('tar.gz'):
-            sub_folder_name = filename.replace('.tar.gz', '')
+        if filename.endswith("tar.gz"):
+            sub_folder_name = filename.replace(".tar.gz", "")
             extracted = os.path.join(extracted, sub_folder_name)
         return extracted
