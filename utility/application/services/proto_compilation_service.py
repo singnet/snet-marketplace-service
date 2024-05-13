@@ -81,8 +81,8 @@ class GenerateStubService:
                 raise Exception(f"Invalid proto file found on given path :: {input_s3_path} :: response :: {response}")
 
         #get training indicator if it exist
-        data = response.json()
-        training_indicator = data.get("training_indicator") if data.get("training_indicator") else False
+        data = response.get("data")
+        training_indicator = data.get("training_indicator") if data and data.get("training_indicator") else False
 
         # Move objects from temp folder to output if success
         # if no output path only remove temp extracted proto

@@ -78,7 +78,6 @@ class UpdateServiceAssets:
         path_values = file_path.split("/")
         return path_values[0], path_values[2], os.path.basename(file_path)
 
-
     @staticmethod
     def trigger_demo_component_code_build(org_uuid, service_uuid, filename):
         lambda_function = UPDATE_DEMO_COMPONENT_BUILD_STATUS_LAMBDA_ARN
@@ -112,12 +111,10 @@ class UpdateServiceAssets:
         )
 
         status = AssetsStatus.SUCCESS.value if response["statusCode"] else AssetsStatus.FAILED.value
-        data = response.json()
 
-        return status, data["training_indicator"]
+        return status, response["data"]["training_indicator"]
 
     # update_demo_component_build_status LAMBDA
-
     @staticmethod
     def update_demo_component_build_status(org_uuid, service_uuid, build_status, build_id, filename):
         status = "SUCCEEDED" if int(build_status) else "FAILED"
