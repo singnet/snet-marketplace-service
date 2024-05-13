@@ -25,7 +25,7 @@ class BotoUtils:
         lambda_client = boto3.client("lambda", region_name=self.region_name, config=config)
         lambda_response = lambda_client.invoke(FunctionName=lambda_function_arn, InvocationType=invocation_type,
                                                Payload=payload)
-        logger.debug(f"Get lambda response body :: {lambda_response.get("Payload").read()}")
+        logger.debug(f"Get lambda response body :: {lambda_response.get('Payload').read()}")
         if invocation_type == "Event":
             return lambda_response
         return json.loads(lambda_response.get("Payload").read())
