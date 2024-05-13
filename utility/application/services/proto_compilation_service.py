@@ -71,14 +71,19 @@ class GenerateStubService:
                     payload=lambda_payload,
                     lambda_function_arn=PYTHON_PROTO_LAMBDA_ARN
                 )
+                logger.debug(f"Getting response from PYTHON_PROTO_LAMBDA_ARN :: {response}")
             elif environment in 'nodejs':
                 response = boto_utils.invoke_lambda(
                     invocation_type="RequestResponse",
                     payload=lambda_payload,
                     lambda_function_arn=NODEJS_PROTO_LAMBDA_ARN
                 )
+                logger.debug(f"Getting response from NODEJS_PROTO_LAMBDA_ARN :: {response}")
             if response.get('statusCode', {}) != 200:
                 raise Exception(f"Invalid proto file found on given path :: {input_s3_path} :: response :: {response}")
+
+        #get training indicator if it exist
+        training_indicator = response.get("training_indicator") if response.get("training_indicator") else False
 
         # Move objects from temp folder to output if success
         # if no output path only remove temp extracted proto
@@ -99,7 +104,7 @@ class GenerateStubService:
             )
         else:
             self.clear_s3_files(bucket=input_bucket_name, key=temp_proto_file_path)
-        return {"message": "success"}
+        return {"message": "success", "training_indicator": training_indicator}
 
     @staticmethod
     def clear_s3_files(bucket, key):

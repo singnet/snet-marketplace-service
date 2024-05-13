@@ -110,6 +110,7 @@ class UpdateServiceAssets:
             invocation_type="RequestResponse",
             lambda_function_arn=MANAGE_PROTO_COMPILATION_LAMBDA_ARN
         )
+        logger.debug(f"Getting response from MANAGE_PROTO_COMPILATION_LAMBDA :: {response}")
         if response["statusCode"] == 200:
             status = "SUCCEEDED"
         else:
