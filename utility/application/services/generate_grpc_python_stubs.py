@@ -56,7 +56,7 @@ def generate_python_stubs(input_s3_path, output_s3_path, org_id, service_id):
         if output_s3_path:
             utils.zip_file(source_path=Path(tmp_paths["base"]), zipped_path=Path(tmp_paths["result"]))
             boto_utils.s3_upload_file(filename=tmp_paths["result"], bucket=output_bucket, key=output_key + "python.zip")
-        return {"message": "success", "training_indicator": training_indicator}
+        return {"training_indicator": training_indicator}
     except ProtoNotFound as _:
         message = f"Proto file is not found for location :: {input_s3_path}"
         logger.info(message)
