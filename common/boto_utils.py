@@ -21,11 +21,11 @@ class BotoUtils:
 
     def invoke_lambda(self, lambda_function_arn, invocation_type, payload, config=Config(retries={"max_attempts": 1})):
         """ Format config=Config(connect_timeout=1, read_timeout=0.1, retries={"max_attempts": 1}) """
-        logger.debug(f"Invoke lambda :: {lambda_function_arn}")
+        logger.info(f"Invoke lambda :: {lambda_function_arn}")
         lambda_client = boto3.client("lambda", region_name=self.region_name, config=config)
         lambda_response = lambda_client.invoke(FunctionName=lambda_function_arn, InvocationType=invocation_type,
                                                Payload=payload)
-        logger.debug(f"Get lambda response body :: {lambda_response.get('Payload').read()}")
+        logger.info(f"Get lambda response body :: {lambda_response.get('Payload').read()}")
         if invocation_type == "Event":
             return lambda_response
         return json.loads(lambda_response.get("Payload").read())
