@@ -112,7 +112,7 @@ class UpdateServiceAssets:
 
         status = AssetsStatus.SUCCESS.value if response["statusCode"] else AssetsStatus.FAILED.value
 
-        return status, response["data"]["training_indicator"]
+        return status, response["body"]["data"]["training_indicator"]
 
     # update_demo_component_build_status LAMBDA
     @staticmethod

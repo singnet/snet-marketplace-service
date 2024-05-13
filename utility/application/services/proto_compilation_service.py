@@ -80,10 +80,6 @@ class GenerateStubService:
             if response.get("statusCode", {}) != 200:
                 raise Exception(f"Invalid proto file found on given path :: {input_s3_path} :: response :: {response}")
 
-        #get training indicator if it exist
-        data = response.get("data")
-        training_indicator = data.get("training_indicator") if data and data.get("training_indicator") else False
-
         # Move objects from temp folder to output if success
         # if no output path only remove temp extracted proto
         if output_s3_path:
@@ -103,7 +99,7 @@ class GenerateStubService:
             )
         else:
             self.clear_s3_files(bucket=input_bucket_name, key=temp_proto_file_path)
-        return {"training_indicator": training_indicator}
+        return {"training_indicator": response["body"]["data"]["training_indicator"]}
 
     @staticmethod
     def clear_s3_files(bucket, key):

@@ -13,9 +13,7 @@ import sys
 import tarfile
 import traceback
 import zipfile
-from pathlib import Path
 from urllib.parse import urlparse
-from zipfile import ZipFile
 
 import requests
 import web3
@@ -236,7 +234,7 @@ def ipfsuri_to_bytesuri(uri):
 def publish_file_in_ipfs(file_url, file_dir, ipfs_client, wrap_with_directory=True):
     filename = download_file_from_url(file_url=file_url, file_dir=file_dir)
     file_type = os.path.splitext(filename)[1]
-    logger.info(f" file type is  = '{file_type.lower()}` ")
+    logger.info(f" file type is  = '{file_type.lower()}' ")
     if file_type.lower() == ".zip":
         return publish_zip_file_in_ipfs(filename, file_dir, ipfs_client)
     #todo , you need to tar the folder and add that to the ipfs hash
@@ -263,7 +261,7 @@ def download_file_from_url(file_url, file_dir):
 
 
 def convert_zip_file_to_tar_bytes(file_dir, filename):
-    with ZipFile(f"{file_dir}/{filename}", 'r') as zipObj:
+    with zipfile.ZipFile(f"{file_dir}/{filename}", 'r') as zipObj:
         listOfFileNames = zipObj.namelist()
         zipObj.extractall(file_dir, listOfFileNames)
     if not os.path.isdir(file_dir):
