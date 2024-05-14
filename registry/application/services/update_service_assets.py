@@ -98,6 +98,7 @@ class UpdateServiceAssets:
 
     @staticmethod
     def validate_proto(file_path, bucket_name, org_uuid, service_uuid):
+        logger.info(f"Validate proto:: org_uuid: {org_uuid}, service_uuid: {service_uuid}")
         payload = {
             "input_s3_path": f"s3://{bucket_name}/{file_path}",
             "output_s3_path": "",
@@ -109,6 +110,7 @@ class UpdateServiceAssets:
             invocation_type="RequestResponse",
             lambda_function_arn=MANAGE_PROTO_COMPILATION_LAMBDA_ARN
         )
+        logger.info(f"Getting response from manage proto compilation lambda :: {response}")
 
         status = AssetsStatus.SUCCESS.value if response["statusCode"] else AssetsStatus.FAILED.value
 

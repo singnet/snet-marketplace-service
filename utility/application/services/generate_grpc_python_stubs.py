@@ -21,6 +21,7 @@ logger = get_logger(__name__)
 
 
 def generate_python_stubs(input_s3_path, output_s3_path, org_id, service_id):
+    logger.info(f"Generate python stubs :: org_id: {org_id}, {service_id}")
     try:
         input_bucket, input_key = boto_utils.get_bucket_and_key_from_url(url=input_s3_path)
         if output_s3_path:

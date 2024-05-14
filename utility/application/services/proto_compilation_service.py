@@ -37,6 +37,7 @@ class GenerateStubService:
         )
 
     def manage_proto_compilation(self, input_s3_path, output_s3_path, org_id, service_id):
+        logger.info(f"Start manage proto compilation :: org_id: {org_id}, service_id: {service_id}")
         input_bucket_name, input_file_path = boto_utils.get_bucket_and_key_from_url(url=input_s3_path)
         if output_s3_path:
             output_bucket_name, output_file_path = boto_utils.get_bucket_and_key_from_url(url=output_s3_path)
