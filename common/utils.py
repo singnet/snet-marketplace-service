@@ -13,6 +13,7 @@ import sys
 import tarfile
 import traceback
 import zipfile
+from http import HTTPStatus
 from urllib.parse import urlparse
 
 import requests
@@ -364,3 +365,13 @@ def create_text_file(target_path, context):
     f = open(target_path, "a")
     f.write(context)
     f.close()
+
+
+def daemon_health_check(daemon_endpoint: str) -> dict:
+    try:
+        response = requests.get(f"{daemon_endpoint}/heartbeat")
+        if response.status_code == HTTPStatus.OK:
+            return response.json()
+    except Exception:
+        logger.warning(f"Daemon endpoint {daemon_endpoint} is not available")
+    return None

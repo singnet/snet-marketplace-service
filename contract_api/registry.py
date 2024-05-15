@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from common.constant import BuildStatus
 from common.logger import get_logger
-from common.utils import Utils
+from common.utils import Utils, daemon_health_check
 from contract_api.constant import GET_ALL_SERVICE_LIMIT, GET_ALL_SERVICE_OFFSET_LIMIT
 from contract_api.dao.service_repository import ServiceRepository
 from contract_api.domain.factory.service_factory import ServiceFactory
@@ -409,13 +409,21 @@ class Registry:
                     "payment": json.loads(rec["payment"])}
 
             is_available = 0
+
+            result["training_endpoint"] = None
+            result["training_proto"] = False
+
             # Hard Coded Free calls in group data
             for rec in service_group_data:
                 rec["free_calls"] = rec.get("free_calls", 0)
                 if is_available == 0:
-                    endpoints = rec['endpoints']
+                    endpoints = rec["endpoints"]
                     for endpoint in endpoints:
-                        is_available = endpoint['is_available']
+                        is_available = endpoint["is_available"]
+                        daemon_health_check_response = daemon_health_check(endpoint)
+                        if daemon_health_check_response is not None:
+                            result["training_endpoint"] = endpoint if daemon_health_check_response["trainingInProto"] else None
+                            result["training_enabled"] = daemon_health_check_response["trainingEnabled"]
                         if is_available == 1:
                             break
                 rec.update(org_groups_dict.get(rec['group_id'], {}))
