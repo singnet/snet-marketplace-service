@@ -101,7 +101,7 @@ class GenerateStubService:
         else:
             self.clear_s3_files(bucket=input_bucket_name, key=temp_proto_file_path)
         logger.debug(f"Getting response from proto lambda :: {response}")
-        return {"training_indicator": response["body"]["data"]["training_indicator"]}
+        return {"training_indicator": response["data"]["training_indicator"]}
 
     @staticmethod
     def clear_s3_files(bucket, key):

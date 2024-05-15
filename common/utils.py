@@ -298,7 +298,7 @@ def send_email_notification(recipients, notification_subject, notification_messa
                 boto_util.invoke_lambda(lambda_function_arn=notification_arn, invocation_type="RequestResponse",
                                         payload=json.dumps(send_notification_payload))
                 logger.info(f"email_sent to {recipient}")
-        except:
+        except Exception:
             logger.error(f"Error happened while sending email to recipient {recipient}")
 
 
