@@ -17,9 +17,9 @@ def manage_proto_compilation(event, context):
     output_s3_path = event['output_s3_path']
     org_id = event['org_id']
     service_id = event['service_id']
+    return None
     lambda_response = GenerateStubService(). \
         manage_proto_compilation(input_s3_path=input_s3_path, output_s3_path=output_s3_path, org_id=org_id, service_id=service_id)
-    return {"test": "Test"}
     # return {"statusCode": HTTPStatus.OK, "status": ResponseStatus.SUCCESS, "data": lambda_response}
 
 
@@ -30,5 +30,6 @@ def generate_grpc_python_stubs(event, context):
     output_s3_path = event['output_s3_path']
     org_id = event['org_id']
     service_id = event['service_id']
+    return None
     lambda_response = generate_python_stubs(input_s3_path=input_s3_path, output_s3_path=output_s3_path, org_id=org_id, service_id=service_id)
     return {"statusCode": HTTPStatus.OK, "status": ResponseStatus.SUCCESS, "data": lambda_response}
