@@ -154,6 +154,8 @@ class TestRegistry(TestCase):
         db.execute(insert_metadata_query)
 
         response = registry.get_service_data_by_org_id_and_service_id(TEST_ORG_ID, TEST_SERVICE_ID)
+        print(response)
+        print(GET_SERVICE_RESPONSE["BASE"])
         self.assertDictEqual(response, GET_SERVICE_RESPONSE["BASE"])
 
     def tearDown(self):
