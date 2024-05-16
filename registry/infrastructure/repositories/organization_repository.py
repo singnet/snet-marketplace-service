@@ -329,7 +329,7 @@ class OrganizationPublisherRepository(BaseRepository):
             .filter(OrganizationMember.status == OrganizationMemberStatus.PENDING.value) \
             .first()
         if org_member is None:
-            raise Exception(f"No member found")
+            raise Exception("No member found")
 
         if org_member.status == OrganizationMemberStatus.PUBLISHED.value and org_member.address == wallet_address:
             org_member.username = username
@@ -345,7 +345,7 @@ class OrganizationPublisherRepository(BaseRepository):
             .filter(OrganizationMember.org_uuid == org_uuid) \
             .first()
         if org_member is None:
-            raise Exception(f"No existing member found")
+            raise Exception("No existing member found")
 
         org_member.status = member.status
         org_member.updated_on = datetime.utcnow()

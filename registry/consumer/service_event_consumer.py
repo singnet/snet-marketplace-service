@@ -12,7 +12,7 @@ from common.logger import get_logger
 from registry.config import NETWORK_ID, SERVICE_CURATE_ARN, REGION_NAME, CONTRACT_BASE_PATH
 from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus
 from registry.domain.factory.service_factory import ServiceFactory
-from registry.domain.models.service import Service
+from registry.domain.models.service import Service as ServiceEntityModel
 
 logger = get_logger(__name__)
 BLOCKCHAIN_USER = "BLOCKCHAIN_USER"
@@ -72,7 +72,7 @@ class ServiceEventConsumer(object):
 
     def _get_service_details_from_blockchain(self, event):
         logger.info(f"processing service event {event}")
-
+        #TODO
         registry_contract = self._get_registry_contract()
         org_id = self._get_org_id_from_event(event)
         service_id = self._get_service_id_from_event(event)
@@ -132,9 +132,9 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         contributors = service_metadata.get("contributors", [])
         tags_data = service_metadata.get("tags", [])
         service_type = service_metadata.get("service_type", "grpc")
+        training_indicator = service_metadata.get("training_indicator", False)
         state = \
-            ServiceFactory.create_service_state_entity_model(org_uuid, service_uuid,
-                                                             getattr(ServiceStatus, "PUBLISHED_UNAPPROVED").value)
+            ServiceFactory.create_service_state_entity_model(org_uuid, service_uuid, ServiceStatus.PUBLISHED_UNAPPROVED)
 
         self._add_validation_attribute_to_endpoint(service_metadata.get("groups", []))
         groups = [
@@ -156,7 +156,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                 ServiceFactory.create_service_group_entity_model(org_uuid, existing_service.uuid, group) for group in
                 service_metadata.get("groups", [])]
 
-        recieved_service = Service(
+        recieved_service = ServiceEntityModel(
             org_uuid=org_uuid,
             uuid=str(uuid4()),
             service_id=service_id,
@@ -174,19 +174,20 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             metadata_uri=metadata_uri,
             service_type=service_type,
             groups=groups,
-            service_state=state
+            service_state=state,
+            training_indicator=training_indicator
         )
 
         if not existing_service:
             self._service_repository.add_service(recieved_service, BLOCKCHAIN_USER)
         elif existing_service.service_state.transaction_hash is None:
-            self._service_repository.save_service(BLOCKCHAIN_USER, existing_service, ServiceStatus.DRAFT.value)
+            self._service_repository.save_service(BLOCKCHAIN_USER, existing_service, ServiceStatus.DRAFT)
         elif existing_service.service_state.transaction_hash != transaction_hash:
             # TODO:  Implement major & minor changes
-            self._service_repository.save_service(BLOCKCHAIN_USER, existing_service, ServiceStatus.DRAFT.value)
+            self._service_repository.save_service(BLOCKCHAIN_USER, existing_service, ServiceStatus.DRAFT)
         elif existing_service.service_state.transaction_hash == transaction_hash:
             self.__curate_service_in_marketplace(service_id, org_id, curated=True)
-            self._service_repository.save_service(BLOCKCHAIN_USER, existing_service, ServiceStatus.PUBLISHED.value)
+            self._service_repository.save_service(BLOCKCHAIN_USER, existing_service, ServiceStatus.PUBLISHED)
 
     @staticmethod
     def __curate_service_in_marketplace(service_id, org_id, curated):

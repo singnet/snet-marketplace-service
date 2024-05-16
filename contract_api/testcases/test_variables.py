@@ -39,7 +39,9 @@ GET_SERVICE_RESPONSE = {
                  'demo_component_status': '',
                  'demo_component_last_modified': ''
              },
-             "demo_component_required": 0
+             "demo_component_required": 0,
+             "training_endpoint": None,
+             "training_enabled": False,
              },
     "MEDIA": {
         'media': [

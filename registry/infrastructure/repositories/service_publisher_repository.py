@@ -1,14 +1,17 @@
 from datetime import datetime as dt
+from typing import Union
 
 import sqlalchemy
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 
+from registry.domain.models.service import Service as ServiceEntityModel
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.infrastructure.models import Service, ServiceGroup, ServiceState, Organization, \
     ServiceComment, OffchainServiceConfig
 from registry.infrastructure.repositories.base_repository import BaseRepository
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
+from registry.constants import ServiceStatus
 
 org_repo = OrganizationPublisherRepository()
 
@@ -52,11 +55,11 @@ class ServicePublisherRepository(BaseRepository):
             raise e
         return record_exist
 
-    def add_service(self, service, username):
+    def add_service(self, service: ServiceEntityModel, username: str) -> None:
         service_db_model = ServiceFactory().convert_service_entity_model_to_db_model(username, service)
         self.add_item(service_db_model)
 
-    def save_service(self, username, service, state):
+    def save_service(self, username: str, service: ServiceEntityModel, state: ServiceStatus) -> Union[None, ServiceEntityModel]:
         service_group_db_model = [ServiceFactory().convert_service_group_entity_model_to_db_model(group) for group in
                                   service.groups]
         try:
@@ -84,7 +87,7 @@ class ServicePublisherRepository(BaseRepository):
             service_db.mpe_address = service.mpe_address
             service_db.updated_on = dt.utcnow()
             service_db.groups = service_group_db_model
-            service_db.service_state.state = state
+            service_db.service_state.state = state.value
             service_db.service_type = service.service_type
             service_db.service_state.transaction_hash = service.service_state.transaction_hash
             service_db.service_state.updated_by = username
@@ -163,9 +166,9 @@ class ServicePublisherRepository(BaseRepository):
         service_comment = ServiceFactory().convert_service_comment_db_model_to_entity_model(service_comment_db)
         return service_comment
 
-    def get_service_state(self, status):
+    def get_service_state(self, status: ServiceStatus):
         try:
-            services_state_db = self.session.query(ServiceState).filter(ServiceState.state == status).all()
+            services_state_db = self.session.query(ServiceState).filter(ServiceState.state == status.value).all()
             self.session.commit()
         except SQLAlchemyError as error:
             self.session.rollback()
@@ -176,10 +179,10 @@ class ServicePublisherRepository(BaseRepository):
             services_state.append(service_state)
         return services_state
 
-    def update_service_status(self, service_uuid_list, prev_state, next_state):
+    def update_service_status(self, service_uuid_list, prev_state: ServiceStatus, next_state: ServiceStatus):
         try:
             self.session.query(ServiceState).filter(ServiceState.service_uuid.in_(service_uuid_list)) \
-                .filter(ServiceState.state == prev_state).update({ServiceState.state: next_state},
+                .filter(ServiceState.state == prev_state.value).update({ServiceState.state: next_state.value},
                                                                  synchronize_session=False)
             self.session.commit()
         except SQLAlchemyError as error:
@@ -229,3 +232,8 @@ class ServicePublisherRepository(BaseRepository):
                     created_on=dt.utcnow(),
                     updated_on=dt.utcnow()
                 ))
+    
+    def update_service_training_indicator(self, service: ServiceEntityModel, training_indicator: bool) -> None:
+        self.session.query(Service).filter_by(uuid=service.uuid).update({
+            "training_indicator": training_indicator
+        })

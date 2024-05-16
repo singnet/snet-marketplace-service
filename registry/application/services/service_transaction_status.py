@@ -14,7 +14,7 @@ class ServiceTransactionStatus:
                                                                   provider=NETWORKS[NETWORK_ID]['http_provider'])
 
     def update_transaction_status(self):
-        org_transaction_data = service_repo.get_service_state(ServiceStatus.PUBLISH_IN_PROGRESS.value)
+        org_transaction_data = service_repo.get_service_state(ServiceStatus.PUBLISH_IN_PROGRESS)
         failed_service_transactions = []
         for service_state in org_transaction_data:
             service_uuid = service_state.service_uuid
@@ -27,5 +27,5 @@ class ServiceTransactionStatus:
                 failed_service_transactions.append(service_uuid)
                 logger.info(f"Failed service_uuid:{service_uuid} transaction_hash:{transaction_hash}")
         if len(failed_service_transactions) > 0:
-            service_repo.update_service_status(failed_service_transactions, ServiceStatus.PUBLISH_IN_PROGRESS.value,
-                                               ServiceStatus.FAILED.value)
+            service_repo.update_service_status(failed_service_transactions, ServiceStatus.PUBLISH_IN_PROGRESS,
+                                               ServiceStatus.FAILED)

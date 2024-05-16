@@ -37,6 +37,7 @@ class GenerateStubService:
         )
 
     def manage_proto_compilation(self, input_s3_path, output_s3_path, org_id, service_id):
+        logger.info(f"Start manage proto compilation :: org_id: {org_id}, service_id: {service_id}")
         input_bucket_name, input_file_path = boto_utils.get_bucket_and_key_from_url(url=input_s3_path)
         if output_s3_path:
             output_bucket_name, output_file_path = boto_utils.get_bucket_and_key_from_url(url=output_s3_path)
@@ -65,19 +66,19 @@ class GenerateStubService:
         })
         response = {}
         for environment in SUPPORTED_ENVIRONMENT:
-            if environment in 'python':
+            if environment in "python":
                 response = boto_utils.invoke_lambda(
                     invocation_type="RequestResponse",
                     payload=lambda_payload,
                     lambda_function_arn=PYTHON_PROTO_LAMBDA_ARN
                 )
-            elif environment in 'nodejs':
+            elif environment in "nodejs":
                 response = boto_utils.invoke_lambda(
                     invocation_type="RequestResponse",
                     payload=lambda_payload,
                     lambda_function_arn=NODEJS_PROTO_LAMBDA_ARN
                 )
-            if response.get('statusCode', {}) != 200:
+            if response.get("statusCode", {}) != 200:
                 raise Exception(f"Invalid proto file found on given path :: {input_s3_path} :: response :: {response}")
 
         # Move objects from temp folder to output if success
@@ -99,7 +100,8 @@ class GenerateStubService:
             )
         else:
             self.clear_s3_files(bucket=input_bucket_name, key=temp_proto_file_path)
-        return {"message": "success"}
+        logger.debug(f"Getting response from proto lambda :: {response}")
+        return {"training_indicator": response["data"]["training_indicator"]}
 
     @staticmethod
     def clear_s3_files(bucket, key):
@@ -114,7 +116,7 @@ class GenerateStubService:
 
     @staticmethod
     def handle_extraction_path(filename, extracted):
-        if filename.endswith('tar.gz'):
-            sub_folder_name = filename.replace('.tar.gz', '')
+        if filename.endswith("tar.gz"):
+            sub_folder_name = filename.replace(".tar.gz", "")
             extracted = os.path.join(extracted, sub_folder_name)
         return extracted

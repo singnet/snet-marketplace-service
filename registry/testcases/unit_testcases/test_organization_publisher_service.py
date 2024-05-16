@@ -4,8 +4,6 @@ from datetime import datetime
 from unittest.mock import Mock, patch
 from uuid import uuid4
 
-from common.exceptions import OperationNotAllowed
-from common.utils import datetime_to_string
 from registry.application.handlers.organization_handlers import update_org
 from registry.application.services.organization_publisher_service import OrganizationPublisherService, org_repo
 from registry.constants import OrganizationStatus, OrganizationActions, OrganizationType, OrganizationMemberStatus, \
@@ -36,7 +34,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
             "org_address": ORG_ADDRESS, "groups": json.loads(ORG_GROUPS),
             "state": {}
         }
-        response = OrganizationPublisherService(None, username).create_organization(payload)
+        _ = OrganizationPublisherService(None, username).create_organization(payload)
         org_db_model = org_repo.session.query(Organization).first()
         if org_db_model is not None:
             assert True

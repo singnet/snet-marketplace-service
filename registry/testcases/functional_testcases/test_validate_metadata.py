@@ -172,6 +172,7 @@ class TestServiceMetadata(TestCase):
                                        'display_name': 'test_display_name',
                                        'encoding': 'proto',
                                        'service_type': 'grpc',
+                                       'training_indicator': False,
                                        'model_ipfs_hash': 'QmcdTYvTxEJrv18Ui1vo1wNDisw8BMoFRMQyM13rz1ok5B',
                                        'mpe_address': '#12345678', 'groups': [
                 {'free_calls': 10, 'free_call_signer_address': '0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F',
@@ -195,7 +196,7 @@ class TestServiceMetadata(TestCase):
         assert json.loads(response["body"])["data"] == {'publish_to_blockchain': False}
         service = ServicePublisherRepository().get_service_for_given_service_uuid(
             org_uuid="test_org_uuid", service_uuid="test_service_uuid")
-        assert service.service_state.state == ServiceStatus.PUBLISHED.value
+        assert service.service_state.state == ServiceStatus.PUBLISHED
 
         # blockchain true
         mock_ipfs_hash.return_value = "sample_hash"
@@ -203,6 +204,7 @@ class TestServiceMetadata(TestCase):
                                        'display_name': 'test_display_name',
                                        'encoding': 'proto',
                                        'service_type': 'grpc',
+                                       'training_indicator': False,
                                        'model_ipfs_hash': 'QmcdTYvTxEJrv18Ui1vo1wNDisw8BMoFRMQyM13rz1ok5B',
                                        'mpe_address': '#12345678', 'groups': [
                 {'free_calls': 10, 'free_call_signer_address': '0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F',

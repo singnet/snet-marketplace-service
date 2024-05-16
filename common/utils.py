@@ -13,9 +13,8 @@ import sys
 import tarfile
 import traceback
 import zipfile
-from pathlib import Path
+from http import HTTPStatus
 from urllib.parse import urlparse
-from zipfile import ZipFile
 
 import requests
 import web3
@@ -236,7 +235,7 @@ def ipfsuri_to_bytesuri(uri):
 def publish_file_in_ipfs(file_url, file_dir, ipfs_client, wrap_with_directory=True):
     filename = download_file_from_url(file_url=file_url, file_dir=file_dir)
     file_type = os.path.splitext(filename)[1]
-    logger.info(f" file type is  = '{file_type.lower()}` ")
+    logger.info(f" file type is  = '{file_type.lower()}' ")
     if file_type.lower() == ".zip":
         return publish_zip_file_in_ipfs(filename, file_dir, ipfs_client)
     #todo , you need to tar the folder and add that to the ipfs hash
@@ -263,7 +262,7 @@ def download_file_from_url(file_url, file_dir):
 
 
 def convert_zip_file_to_tar_bytes(file_dir, filename):
-    with ZipFile(f"{file_dir}/{filename}", 'r') as zipObj:
+    with zipfile.ZipFile(f"{file_dir}/{filename}", 'r') as zipObj:
         listOfFileNames = zipObj.namelist()
         zipObj.extractall(file_dir, listOfFileNames)
     if not os.path.isdir(file_dir):
@@ -299,7 +298,7 @@ def send_email_notification(recipients, notification_subject, notification_messa
                 boto_util.invoke_lambda(lambda_function_arn=notification_arn, invocation_type="RequestResponse",
                                         payload=json.dumps(send_notification_payload))
                 logger.info(f"email_sent to {recipient}")
-        except:
+        except Exception:
             logger.error(f"Error happened while sending email to recipient {recipient}")
 
 
@@ -366,3 +365,13 @@ def create_text_file(target_path, context):
     f = open(target_path, "a")
     f.write(context)
     f.close()
+
+
+def daemon_health_check(daemon_endpoint: str) -> dict:
+    try:
+        response = requests.get(f"{daemon_endpoint}/heartbeat")
+        if response.status_code == HTTPStatus.OK:
+            return response.json()
+    except Exception:
+        logger.warning(f"Daemon endpoint {daemon_endpoint} is not available")
+    return None
