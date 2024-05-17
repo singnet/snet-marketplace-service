@@ -109,10 +109,10 @@ def prepare_readme_file(target_path, service_id):
 
 
 def find_training_indicator(proto_path: str) -> bool:
-     with open(proto_path, "r") as file:
-         text_data = file.read().decode("utf-8")
-         pattern = r'option \(training\.my_method_option\)\.trainingMethodIndicator\s*=\s*"true"'
-         return bool(re.search(pattern, text_data))
+    with open(proto_path, "r") as file:
+        text_data = file.read().decode("utf-8")
+        pattern = r'option \(training\.my_method_option\)\.trainingMethodIndicator\s*=\s*"true"'
+        return bool(re.search(pattern, text_data))
 
 
 def daemon_health_check(daemon_endpoint: str) -> dict:

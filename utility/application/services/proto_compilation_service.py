@@ -81,7 +81,7 @@ class GenerateStubService:
             if response.get("statusCode", {}) != 200:
                 raise Exception(f"Invalid proto file found on given path :: {input_s3_path} :: response :: {response}")
 
-        logger.debug(f"Getting response from proto compilation lambda :: {response}")
+        logger.info(f"Getting response from proto compilation lambda :: {response}")
 
         # Move objects from temp folder to output if success
         # if no output path only remove temp extracted proto
