@@ -109,8 +109,8 @@ class UpdateServiceAssets:
             invocation_type="RequestResponse",
             lambda_function_arn=MANAGE_PROTO_COMPILATION_LAMBDA_ARN
         )
-        if response['statusCode'] == 200:
-            status = 'SUCCEEDED'
+        if response["statusCode"] == 200:
+            status = "SUCCEEDED"
         else:
             status = "FAILED"
         return status
