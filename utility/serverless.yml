@@ -81,7 +81,7 @@ package:
 
 functions:
   upload:
-    handler: utility.application.handlers.upload_handlers.upload_file
+    handler: utility/application/handlers/upload_handlers.upload_file
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -129,7 +129,7 @@ functions:
                 responseModels:
                   "application/json": "ErrorMessage"
   agi-usd-rates:
-    handler: utility.application.handlers.crypto_fiat_handler.get_agi_usd_rate
+    handler: utility/application/handlers/crypto_fiat_handler.get_agi_usd_rate
     role: ${file(./config.${self:provider.stage}.json):AGI_ROLE}
     vpc:
       securityGroupIds:
@@ -143,7 +143,7 @@ functions:
           rate: cron(55 23 * * ? *)
           enabled: true
   calculate-latest-agi-rate:
-    handler: utility.application.handlers.crypto_fiat_handler.calculate_latest_agi_rate
+    handler: utility/application/handlers/crypto_fiat_handler.calculate_latest_agi_rate
     role: ${file(./config.${self:provider.stage}.json):AGI_ROLE}
     vpc:
       securityGroupIds:
@@ -158,7 +158,7 @@ functions:
           enabled: true
   currency-to-token-conversion:
     warmup: true
-    handler: utility/application/handlers.crypto_fiat_handler.py.get_agi_fiat_rate
+    handler: utility/application/handlers/crypto_fiat_handler.py.get_agi_fiat_rate
     role: ${file(./config.${self:provider.stage}.json):AGI_ROLE}
     vpc:
       securityGroupIds:
@@ -199,7 +199,7 @@ functions:
                 responseModels:
                   "application/json": "ErrorMessage"
   slack-auth-wrapper:
-    handler: utility.application.handlers.slack_feedback_handler.main
+    handler: utility/application/handlers/slack_feedback_handler.main
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -248,7 +248,7 @@ functions:
                   "application/json": "ErrorMessage"
 
   manage-proto-compilation:
-    handler: utility.application.handlers.proto_stubs_handler.manage_proto_compilation
+    handler: utility/application/handlers/proto_stubs_handler.manage_proto_compilation
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -259,7 +259,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
   generate-grpc-python-stubs:
-    handler: utility.application.handlers.proto_stubs_handler.generate_grpc_python_stubs
+    handler: utility/application/handlers/proto_stubs_handler.generate_grpc_python_stubs
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
