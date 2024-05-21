@@ -62,19 +62,6 @@ package:
     - requirements.txt
     - serverless.yml
     - node_modules/**
-    - venv/**
-    - wallets/**
-    - payments/**
-    - service_status/**
-    - orchestrator/**
-    - notification/**
-    - dapp_user/**
-    - registry/**
-    - event_pubsub/**
-    - contract_api/**
-    - notification/**
-    - verification/**
-    - signer/**
   include:
     - node_modules/singularitynet-platform-contracts/**
     - resources/**
