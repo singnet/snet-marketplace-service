@@ -109,8 +109,8 @@ def prepare_readme_file(target_path, service_id):
 
 
 def find_training_indicator(proto_path: str) -> bool:
-    with open(proto_path, "r") as file:
-        text_data = file.read().decode("utf-8")
+    with open(proto_path, "r", encoding="utf-8") as file:
+        text_data = file.read()
         pattern = r'option \(training\.my_method_option\)\.trainingMethodIndicator\s*=\s*"true"'
         return bool(re.search(pattern, text_data))
 
