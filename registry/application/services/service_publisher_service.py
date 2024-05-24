@@ -13,9 +13,9 @@ from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
 from common.utils import download_file_from_url, json_to_file, publish_zip_file_in_ipfs, send_email_notification
 from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH, NETWORKS, NETWORK_ID, NOTIFICATION_ARN, \
-    REGION_NAME, PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT, GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT, ASSETS_COMPONENT_BUCKET_NAME
+    REGION_NAME, PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT, GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT
 from registry.constants import EnvironmentType, ServiceAvailabilityStatus, ServiceStatus, \
-    ServiceSupportType, UserType
+    ServiceSupportType, UserType, ServiceType
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.models.demo_component import DemoComponent
 from registry.domain.models.offchain_service_config import OffchainServiceConfig
@@ -85,7 +85,7 @@ class ServicePublisherService:
 
     @staticmethod
     def get_service_for_org_id_and_service_id(org_id, service_id):
-        org_uuid, service = ServicePublisherRepository().get_service_for_given_service_id_and_org_id(org_id, service_id)
+        _, service = ServicePublisherRepository().get_service_for_given_service_id_and_org_id(org_id, service_id)
         if not service:
             return {}
         return service.to_dict()
@@ -124,12 +124,15 @@ class ServicePublisherService:
         return
 
     def save_service(self, payload):
+        logger.info(f"Save service with payload :: {payload}")
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
         service.service_id = payload["service_id"]
         service.proto = payload.get("proto", {})
+        service.display_name = payload.get("display_name", "")
         service.short_description = payload.get("short_description", "")
         service.description = payload.get("description", "")
         service.project_url = payload.get("project_url", "")
+        service.service_type = payload.get("service_type", ServiceType.GRPC.value)
         service.contributors = ServicePublisherService. \
             _get_valid_service_contributors(contributors=payload.get("contributors", []))
         service.tags = payload.get("tags", [])
@@ -140,6 +143,7 @@ class ServicePublisherService:
             groups.append(service_group)
         service.groups = groups
         service.service_state.transaction_hash = payload.get("transaction_hash", None)
+        logger.info(f"Save service data with proto: {service.proto} and assets: {service.assets}")
         ServicePublisherRepository().save_service(self._username, service, ServiceStatus.APPROVED.value)
         comment = payload.get("comments", {}).get(UserType.SERVICE_PROVIDER.value, "")
         if len(comment) > 0:
@@ -181,6 +185,7 @@ class ServicePublisherService:
         service_uuid = uuid4().hex
         service = ServiceFactory().create_service_entity_model(self._org_uuid, service_uuid, payload,
                                                                ServiceStatus.DRAFT.value)
+        logger.info(f"Creating service :: {service.to_dict()}")
         ServicePublisherRepository().add_service(service, self._username)
         return {"org_uuid": self._org_uuid, "service_uuid": service_uuid}
 
@@ -239,7 +244,8 @@ class ServicePublisherService:
         return service_data
 
     def publish_service_data_to_ipfs(self):
-        service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
+        service_publisher_repo = ServicePublisherRepository()
+        service = service_publisher_repo.get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
         if service.service_state.state == ServiceStatus.APPROVED.value:
             proto_url = service.assets.get("proto_files", {}).get("url", None)
             if proto_url is None:
@@ -253,11 +259,11 @@ class ServicePublisherService:
             service.proto = {
                 "model_ipfs_hash": asset_ipfs_hash,
                 "encoding": "proto",
-                "service_type": "grpc"
+                "service_type": service.service_type
             }
             service.assets["proto_files"]["ipfs_hash"] = asset_ipfs_hash
             ServicePublisherDomainService.publish_assets(service)
-            service = ServicePublisherRepository().save_service(self._username, service, service.service_state.state)
+            service = service_publisher_repo.save_service(self._username, service, service.service_state.state)
             return service
         logger.info(f"Service status needs to be {ServiceStatus.APPROVED.value} to be eligible for publishing.")
         raise InvalidServiceStateException()
@@ -357,11 +363,13 @@ class ServicePublisherService:
             demo_component_status=current_service.assets.get("demo_files", {}).get("status", "")
         )
         demo_changes = new_demo.to_dict()
-        demo_last_modifed = existing_demo.get("demo_component_last_modified", "")
+        demo_last_modified = existing_demo.get("demo_component_last_modified", "")
         # if last_modified not there publish if it there and is greater than current last modifed publish
         demo_changes.update({"change_in_demo_component": 1})
-        if demo_last_modifed and dt.fromisoformat(
-                demo_last_modifed) > dt.fromisoformat(current_service.assets.get("demo_files", {}).get("last_modified", "")):
+        current_demo_last_modified = current_service.assets.get("demo_files", {}).get("last_modified")
+        if demo_last_modified and \
+            (current_demo_last_modified is None or \
+             dt.fromisoformat(demo_last_modified) > dt.fromisoformat(current_demo_last_modified)):
             demo_changes.update({"change_in_demo_component": 0})
         changes.update({"demo_component": demo_changes})
         return changes
@@ -370,7 +378,7 @@ class ServicePublisherService:
         response = requests.post(
             PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT.format(org_id, service_id), data=payload)
         if response.status_code != 200:
-            raise Exception(f"Error in updating offchain service attributes")
+            raise Exception("Error in updating offchain service attributes")
 
     def get_existing_service_details_from_contract_api(self, service_id, org_id):
         response = requests.get(
@@ -397,8 +405,10 @@ class ServicePublisherService:
             existing_metadata = {}
         publish_to_blockchain = self.are_blockchain_attributes_got_updated(existing_metadata, current_service.to_metadata())
         existing_offchain_configs = self.get_existing_offchain_configs(existing_service_data)
+
         current_offchain_attributes = ServicePublisherRepository().get_offchain_service_config(org_uuid=self._org_uuid,
                                                                                                service_uuid=self._service_uuid)
+
         new_offchain_attributes = self.get_offchain_changes(
             current_offchain_config=current_offchain_attributes.configs,
             existing_offchain_config=existing_offchain_configs,

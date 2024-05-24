@@ -131,6 +131,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         metadata_uri = "ipfs://" + metadata_uri
         contributors = service_metadata.get("contributors", [])
         tags_data = service_metadata.get("tags", [])
+        service_type = service_metadata.get("service_type", "grpc")
         state = \
             ServiceFactory.create_service_state_entity_model(org_uuid, service_uuid,
                                                              getattr(ServiceStatus, "PUBLISHED_UNAPPROVED").value)
@@ -156,15 +157,25 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                 service_metadata.get("groups", [])]
 
         recieved_service = Service(
-            org_uuid, str(uuid4()), service_id, display_name, short_description,
-            description, project_url,
-            proto, assets,
-            DEFAULT_SERVICE_RANKING,
-            {}, contributors,
-            tags_data,
-            mpe_address, metadata_uri,
-            groups,
-            state)
+            org_uuid=org_uuid,
+            uuid=str(uuid4()),
+            service_id=service_id,
+            display_name=display_name,
+            short_description=short_description,
+            description=description,
+            project_url=project_url,
+            proto=proto,
+            assets=assets,
+            ranking=DEFAULT_SERVICE_RANKING,
+            rating={},
+            contributors=contributors,
+            tags=tags_data,
+            mpe_address=mpe_address,
+            metadata_uri=metadata_uri,
+            service_type=service_type,
+            groups=groups,
+            service_state=state
+        )
 
         if not existing_service:
             self._service_repository.add_service(recieved_service, BLOCKCHAIN_USER)

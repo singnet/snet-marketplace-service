@@ -1,6 +1,6 @@
 from datetime import datetime as dt
 
-from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus
+from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus, ServiceType
 from registry.domain.models.offchain_service_config import OffchainServiceConfig
 from registry.domain.models.service import Service
 from registry.domain.models.service_comment import ServiceComment
@@ -33,6 +33,7 @@ class ServiceFactory:
             contributors=service.contributors,
             tags=service.tags,
             mpe_address=service.mpe_address,
+            service_type=service.service_type,
             service_state=ServiceFactory.convert_service_state_from_db(service.service_state),
             groups=[ServiceGroup(org_uuid=group.org_uuid, service_uuid=group.service_uuid, group_id=group.group_id,
                                  group_name=group.group_name, endpoints=group.endpoints,
@@ -65,6 +66,7 @@ class ServiceFactory:
             contributors=service.contributors,
             tags=service.tags,
             mpe_address=service.mpe_address,
+            service_type=service.service_type,
             created_on=dt.utcnow(),
             groups=[ServiceFactory.convert_service_group_entity_model_to_db_model(group) for group in service.groups],
             service_state=ServiceFactory.convert_service_state_entity_model_to_db_model(username,
@@ -147,10 +149,11 @@ class ServiceFactory:
 
         tags = payload.get("tags", [])
         mpe_address = payload.get("mpe_address", "")
+        service_type = payload.get("service_type", ServiceType.GRPC.value)
         metadata_uri = payload.get("metadata_uri", "")
         return Service(
             org_uuid, service_uuid, service_id, display_name, short_description, description, project_url, proto,
-            assets, ranking, rating, contributors, tags, mpe_address, metadata_uri, service_group_entity_model_list,
+            assets, ranking, rating, contributors, tags, mpe_address, metadata_uri, service_type, service_group_entity_model_list,
             service_state_entity_model)
 
     @staticmethod

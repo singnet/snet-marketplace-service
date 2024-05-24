@@ -125,3 +125,16 @@ class ServiceAssetsRegex(Enum):
     PROTO_FILE_URL = "([a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/proto\/)[^\/.]*(_proto_files.zip))"
     HERO_IMAGE_URL = "[a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/assets\/)[0-9]*(_asset.)(" + "|".join(
         format[1:] for format in ALLOWED_HERO_IMAGE_FORMATS) + ")"
+
+
+class ServiceType(Enum):
+    HTTP = "http"
+    GRPC = "grpc"
+    JSONRPC = "jsonrpc"
+    PROCESS = "process"
+
+
+class AssetsStatus(Enum):
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
+    PENDING = "PENDING"

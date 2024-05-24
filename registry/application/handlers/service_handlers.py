@@ -63,7 +63,7 @@ def save_service(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
     payload = json.loads(event["body"])
-    if not path_parameters.get("org_uuid", "") and not path_parameters.get("service_uuid", ""):
+    if not path_parameters.get("org_uuid") and not path_parameters.get("service_uuid"):
         raise BadRequestException()
     org_uuid = path_parameters["org_uuid"]
     service_uuid = path_parameters["service_uuid"]
@@ -174,7 +174,6 @@ def get_daemon_config_for_current_network(event, context):
         raise BadRequestException()
     org_uuid = path_parameters["org_uuid"]
     service_uuid = path_parameters["service_uuid"]
-    group_id = path_parameters["group_id"]
     if query_parameters["network"] == EnvironmentType.TEST.value:
         response = ServicePublisherService(username, org_uuid, service_uuid).daemon_config(
             environment=EnvironmentType.TEST.value)

@@ -60,6 +60,7 @@ class TestServiceEventConsumer(unittest.TestCase):
                 project_url="https://dummy.io",
                 ranking=1,
                 tags=["tag1", "tag2"],
+                service_type = "grpc",
                 created_on=dt.utcnow(), updated_on=dt.utcnow()
             )
         )

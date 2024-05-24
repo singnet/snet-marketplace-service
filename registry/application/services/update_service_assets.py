@@ -7,7 +7,7 @@ from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from registry.config import REGION_NAME, DEMO_COMPONENT_CODE_BUILD_NAME, \
     MANAGE_PROTO_COMPILATION_LAMBDA_ARN, UPDATE_DEMO_COMPONENT_BUILD_STATUS_LAMBDA_ARN
-from registry.constants import ServiceStatus, ServiceAssetsRegex
+from registry.constants import ServiceStatus, ServiceAssetsRegex, AssetsStatus
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 
 logger = get_logger(__name__)
@@ -35,6 +35,12 @@ class UpdateServiceAssets:
             if not service:
                 raise Exception(f"Service with org_uuid {org_uuid} and service_uuid {service_uuid} not found")
             if utils.match_regex_string(path=file_path, regex_pattern=ServiceAssetsRegex.PROTO_FILE_URL.value):
+                #add pending status before proto file validation
+                service.assets.update({
+                    "proto_files": {"url": None, "status": AssetsStatus.PENDING.value}
+                })
+                service_repo.save_service(username="Lambda|update-service-assets", service=service, state=service.service_state.state)
+                #proto file validation
                 proto_compile_status = UpdateServiceAssets.validate_proto(file_path, bucket_name, org_uuid=org_uuid, service_uuid=service_uuid)
                 proto_details = {
                     "url": f"https://{bucket_name}.s3.{REGION_NAME}.amazonaws.com/{file_path}",
@@ -61,7 +67,7 @@ class UpdateServiceAssets:
                 response = {}
             else:
                 raise Exception(f"Invalid file path for service :: {file_path}")
-            service_repo.save_service(username=f"Lambda|update-service-assets", service=service, state=service.service_state.state)
+            service_repo.save_service(username="Lambda|update-service-assets", service=service, state=service.service_state.state)
             return response
         else:
             raise Exception(f"Invalid file path :: {file_path}")
@@ -92,6 +98,7 @@ class UpdateServiceAssets:
 
     @staticmethod
     def validate_proto(file_path, bucket_name, org_uuid, service_uuid):
+        logger.info(f"Validate proto :: org_uuid: {org_uuid}, service_uuid: {service_uuid}")
         payload = {
             "input_s3_path": f"s3://{bucket_name}/{file_path}",
             "output_s3_path": "",
@@ -103,8 +110,9 @@ class UpdateServiceAssets:
             invocation_type="RequestResponse",
             lambda_function_arn=MANAGE_PROTO_COMPILATION_LAMBDA_ARN
         )
-        if response['statusCode'] == 200:
-            status = 'SUCCEEDED'
+        logger.info(f"Getting response from manage proto compilation lambda :: {response}")
+        if response["statusCode"] == 200:
+            status = "SUCCEEDED"
         else:
             status = "FAILED"
         return status

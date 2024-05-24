@@ -95,6 +95,7 @@ class TestServiceMetadata(TestCase):
                 ranking=1,
                 contributors=[],
                 mpe_address="#12345678",
+                service_type="grpc", 
                 created_on=dt.utcnow(),
                 updated_on=dt.utcnow()
             )

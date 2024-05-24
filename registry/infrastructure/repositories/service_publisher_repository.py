@@ -4,9 +4,8 @@ import sqlalchemy
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 
-from registry.constants import ServiceStatus
 from registry.domain.factory.service_factory import ServiceFactory
-from registry.infrastructure.models import Service, ServiceGroup, ServiceState, ServiceReviewHistory, Organization, \
+from registry.infrastructure.models import Service, ServiceGroup, ServiceState, Organization, \
     ServiceComment, OffchainServiceConfig
 from registry.infrastructure.repositories.base_repository import BaseRepository
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
@@ -86,6 +85,7 @@ class ServicePublisherRepository(BaseRepository):
             service_db.updated_on = dt.utcnow()
             service_db.groups = service_group_db_model
             service_db.service_state.state = state
+            service_db.service_type = service.service_type
             service_db.service_state.transaction_hash = service.service_state.transaction_hash
             service_db.service_state.updated_by = username
             service_db.service_state.updated_on = dt.utcnow()
