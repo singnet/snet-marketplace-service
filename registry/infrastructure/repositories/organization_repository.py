@@ -1,6 +1,7 @@
 from datetime import datetime
 from uuid import uuid4
 
+from sqlalchemy.sql import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from registry.constants import Role, OrganizationMemberStatus, OrganizationStatus, VerificationStatus
@@ -39,7 +40,7 @@ class OrganizationPublisherRepository(BaseRepository):
             organization_query = self.session.query(Organization) \
                 .join(OrganizationState, Organization.uuid == OrganizationState.org_uuid)
             if org_id:
-                organization_query = organization_query.filter(Organization.org_id == org_id)
+                organization_query = organization_query.filter(text("org_id COLLATE utf8mb4_bin = :org_id")).params(org_id=org_id)
             if org_uuid:
                 organization_query = organization_query.filter(Organization.uuid == org_uuid)
             organization_db = organization_query.first()
@@ -176,19 +177,23 @@ class OrganizationPublisherRepository(BaseRepository):
                 created_by=username, created_on=current_time, test_transaction_hash=test_transaction_hash,
                 updated_by=username, updated_on=current_time, reviewed_by="")]
 
-        self.add_item(Organization(
+        organization_db = Organization(
             uuid=organization.uuid, name=organization.name, org_id=organization.id,
             org_type=organization.org_type, origin=organization.origin, description=organization.description,
             short_description=organization.short_description, url=organization.url,
             duns_no=organization.duns_no, contacts=organization.contacts,
             assets=organization.assets, metadata_ipfs_uri=organization.metadata_ipfs_uri,
             org_state=org_state, groups=groups, addresses=addresses
-        ))
+        )
 
+        self.add_item(organization_db)
         self.add_item(OrganizationMember(
             invite_code=uuid4().hex, org_uuid=organization.uuid, role=Role.OWNER.value, username=username,
             address=address, status=OrganizationMemberStatus.ACCEPTED.value, transaction_hash="",
             invited_on=current_time, created_on=current_time, updated_on=current_time))
+
+        organization_entity = OrganizationFactory.org_domain_entity_from_repo_model(organization_db)
+        return organization_entity
 
     def _update_organization(self, organization_db_model, organization, username, state, test_transaction_hash=None):
         current_time = datetime.utcnow()
