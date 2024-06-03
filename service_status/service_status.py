@@ -122,9 +122,9 @@ class ServiceStatus:
         return 1
 
     def _calculate_next_check_timestamp(self, failed_status_count):
-        time_delta_in_hours = MINIMUM_INTERVAL_IN_HOUR * (2 ** (failed_status_count - 1))
-        if time_delta_in_hours > MAXIMUM_INTERVAL_IN_HOUR:
-            time_delta_in_hours = MAXIMUM_INTERVAL_IN_HOUR
+        time_delta_in_hours = MAXIMUM_INTERVAL_IN_HOUR
+        if failed_status_count < 6:
+            time_delta_in_hours = MINIMUM_INTERVAL_IN_HOUR * (2 ** (failed_status_count - 1))
         next_check_timestamp = dt.utcnow() + timedelta(hours=time_delta_in_hours)
         return next_check_timestamp
 
