@@ -1,36 +1,15 @@
-class CTA(object):
-    def __init__(self, id, text, url, type, variant,
-                 rank):
-        self.__id = id
-        self.__text = text
-        self.__url = url
-        self.__type = type
-        self.__variant = variant
-        self.__rank = rank
+from dataclasses import dataclass
 
-    @property
-    def id(self):
-        return self.__id
 
-    @property
-    def text(self):
-        return self.__text
+@dataclass
+class CTAEntityModel:
 
-    @property
-    def url(self):
-        return self.__url
-
-    @property
-    def type(self):
-        return self.__type
-
-    @property
-    def variant(self):
-        return self.__variant
-
-    @property
-    def rank(self):
-        return self.__rank
+    id: int
+    text: str
+    url: str
+    type: str
+    variant: str
+    rank: int
 
     def to_dict(self):
         response = {

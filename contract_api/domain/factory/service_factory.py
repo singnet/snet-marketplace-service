@@ -1,18 +1,25 @@
 from datetime import datetime as dt
-from contract_api.domain.models.demo_component import DemoComponent
-from contract_api.domain.models.service import Service
-from contract_api.domain.models.service_metadata import ServiceMetadata
-from contract_api.domain.models.service_media import ServiceMedia
-from contract_api.domain.models.offchain_service_attribute import OffchainServiceAttribute
+from typing import Dict
+from contract_api.domain.models.demo_component import DemoComponentEntityModel
+from contract_api.domain.models.service import ServiceEntityModel
+from contract_api.domain.models.service_metadata import ServiceMetadataEntityModel
+from contract_api.domain.models.service_media import ServiceMediaEntityModel
+from contract_api.domain.models.offchain_service_attribute import OffchainServiceAttributeEntityModel
+from contract_api.infrastructure.models import (
+    Service,
+    ServiceMetadata,
+    ServiceMedia,
+    OffchainServiceConfig,
+)
 
 
 class ServiceFactory:
 
     @staticmethod
-    def convert_service_db_model_to_entity_model(service_db):
+    def convert_service_db_model_to_entity_model(service_db: Service) -> ServiceEntityModel:
         if not service_db:
             return None
-        return Service(
+        return ServiceEntityModel(
             row_id=service_db.row_id,
             org_id=service_db.org_id,
             service_id=service_db.service_id,
@@ -25,10 +32,10 @@ class ServiceFactory:
         )
 
     @staticmethod
-    def convert_service_metadata_db_model_to_entity_model(service_metadata_db):
+    def convert_service_metadata_db_model_to_entity_model(service_metadata_db: ServiceMetadata) -> ServiceMetadataEntityModel:
         if not service_metadata_db:
             return None
-        return ServiceMetadata(
+        return ServiceMetadataEntityModel(
             service_row_id=service_metadata_db.service_row_id,
             org_id=service_metadata_db.org_id,
             service_id=service_metadata_db.service_id,
@@ -50,10 +57,10 @@ class ServiceFactory:
         )
 
     @staticmethod
-    def convert_service_media_db_model_to_entity_model(service_media_db):
+    def convert_service_media_db_model_to_entity_model(service_media_db: ServiceMedia) -> ServiceMediaEntityModel:
         if not service_media_db:
             return None
-        return ServiceMedia(
+        return ServiceMediaEntityModel(
             service_row_id=service_media_db.service_row_id,
             org_id=service_media_db.org_id,
             service_id=service_media_db.service_id,
@@ -66,7 +73,11 @@ class ServiceFactory:
         )
 
     @staticmethod
-    def convert_offchain_service_configs_db_model_to_entity_model(org_id, service_id, offchain_service_configs_db):
+    def convert_offchain_service_configs_db_model_to_entity_model(
+        org_id: str,
+        service_id: str,
+        offchain_service_configs_db: OffchainServiceConfig
+    ) -> OffchainServiceAttributeEntityModel:
         attributes = {}
         for offchain_service_config_db in offchain_service_configs_db:
             parameter_name = offchain_service_config_db.parameter_name
@@ -79,15 +90,15 @@ class ServiceFactory:
             else:
                 parameter_value = offchain_service_config_db.parameter_value
             attributes.update({parameter_name: parameter_value})
-        return OffchainServiceAttribute(
+        return OffchainServiceAttributeEntityModel(
             org_id=org_id,
             service_id=service_id,
             attributes=attributes
         )
 
     @staticmethod
-    def create_demo_component_domain_model(offchain_attributes):
-        return DemoComponent(
+    def create_demo_component_domain_model(offchain_attributes: Dict[str, str]):
+        return DemoComponentEntityModel(
             demo_component_url=offchain_attributes.get("demo_component_url", ""),
             demo_component_status=offchain_attributes.get("demo_component_status", ""),
             demo_component_required=offchain_attributes.get("demo_component_required", "")

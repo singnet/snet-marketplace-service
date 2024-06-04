@@ -111,6 +111,7 @@ custom:
         name: "MarketplaceCarousel"
         contentType: "application/json"
         schema: ${file(contract_api/documentation/models/get_marketplace_carousel.json):MarketplaceCarouselOutput}
+
 package:
   exclude:
     - .circleci/**
@@ -147,10 +148,9 @@ package:
 
 functions:
 
-
   get_all_org:
     warmup: true
-    handler: contract_api/handlers.organization_handlers.get_all_org
+    handler: contract_api/application/handlers.organization_handlers.get_all_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -190,9 +190,10 @@ functions:
               - statusCode: "500"
                 responseModels:
                   "application/json": "ErrorMessage"
+
   get_org_for_org_id:
     warmup: true
-    handler: contract_api/handlers.organization_handlers.get_org_for_org_id
+    handler: contract_api/application/handlers.organization_handlers.get_org_for_org_id
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -236,9 +237,10 @@ functions:
               - statusCode: "500"
                 responseModels:
                   "application/json": "ErrorMessage"
+
   get_all_group_for_org:
     warmup: true
-    handler: contract_api/handlers.organization_handlers.get_all_group_for_org
+    handler: contract_api/application/handlers.organization_handlers.get_all_group_for_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -282,9 +284,10 @@ functions:
               - statusCode: "500"
                 responseModels:
                   "application/json": "ErrorMessage"
+
   get_group_for_org_id:
     warmup: true
-    handler:  contract_api/handlers.organization_handlers.get_group_for_org_id
+    handler:  contract_api/application/handlers.organization_handlers.get_group_for_org_id
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -328,9 +331,10 @@ functions:
               - statusCode: "500"
                 responseModels:
                   "application/json": "ErrorMessage"
+
   get_service_get:
     warmup: true
-    handler: contract_api/handlers.service_handlers.get_service_get
+    handler: contract_api/application/handlers.service_handlers.get_service_get
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -373,9 +377,10 @@ functions:
               - statusCode: "500"
                 responseModels:
                   "application/json": "ErrorMessage"
+
   get_service_post:
     warmup: true
-    handler: contract_api/handlers.service_handlers.get_service_post
+    handler: contract_api/application/handlers.service_handlers.get_service_post
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -417,9 +422,10 @@ functions:
               - statusCode: "500"
                 responseModels:
                   "application/json": "ErrorMessage"
+
   get_group_for_service:
     warmup: true
-    handler:  contract_api/handlers.service_handlers.get_group_for_service
+    handler:  contract_api/application/handlers.service_handlers.get_group_for_service
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -464,9 +470,10 @@ functions:
               - statusCode: "500"
                 responseModels:
                   "application/json": "ErrorMessage"
+
   get_service_for_given_org:
     warmup: true
-    handler: contract_api/handlers.service_handlers.get_service_for_given_org
+    handler: contract_api/application/handlers.service_handlers.get_service_for_given_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -511,9 +518,10 @@ functions:
               - statusCode: "500"
                 responseModels:
                   "application/json": "ErrorMessage"
+
   post_rating_for_given_service:
     warmup: true
-    handler: contract_api/handlers.service_handlers.post_rating_for_given_service
+    handler: contract_api/application/handlers.service_handlers.post_rating_for_given_service
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -550,9 +558,10 @@ functions:
               - statusCode: "500"
                 responseModels:
                   "application/json": "ErrorMessage"
+
   get_channels_for_group:
     warmup: true
-    handler: contract_api/handlers.channel_handlers.get_channels_for_group
+    handler: contract_api/application/handlers.channel_handlers.get_channels_for_group
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -605,7 +614,7 @@ functions:
 
   get_channels_old_api:
     warmup: true
-    handler: contract_api/handlers.channel_handlers.get_channels_old_api
+    handler: contract_api/application/handlers.channel_handlers.get_channels_old_api
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -645,9 +654,10 @@ functions:
               - statusCode: "500"
                 responseModels:
                   "application/json": "ErrorMessage"
+
   get_channel:
     warmup: true
-    handler: contract_api/handlers.channel_handlers.get_channels
+    handler: contract_api/application/handlers.channel_handlers.get_channels
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -689,7 +699,7 @@ functions:
                   "application/json": "ErrorMessage"
 
   update-consumed-balance:
-    handler: contract_api/handlers.channel_handlers.update_consumed_balance
+    handler: contract_api/applciation/handlers.channel_handlers.update_consumed_balance
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -741,7 +751,7 @@ functions:
                   "application/json": "ErrorMessage"
 
   get_marketplace_carousel:
-    handler: contract_api/handlers.ui_content_handlers.get_marketplace_carousel
+    handler: contract_api/application/handlers.ui_content_handlers.get_marketplace_carousel
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -783,7 +793,7 @@ functions:
                   "application/json": "ErrorMessage"
 
   service-curation:
-    handler: contract_api.handlers.service_handlers.service_curation
+    handler: contract_api/application/handlers.service_handlers.service_curation
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -795,7 +805,7 @@ functions:
 
   organization_event_consumer:
     warmup: true
-    handler: contract_api/handlers.consumer_handlers.organization_event_consumer_handler
+    handler: contract_api/application/handlers.consumer_handlers.organization_event_consumer_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -807,7 +817,7 @@ functions:
 
   service_event_consumer:
     warmup: true
-    handler: contract_api/handlers.consumer_handlers.service_event_consumer_handler
+    handler: contract_api/application/handlers.consumer_handlers.service_event_consumer_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     timeout: 60
     vpc:
@@ -820,7 +830,7 @@ functions:
 
   mpe_event_consumer:
     warmup: true
-    handler: contract_api/handlers.consumer_handlers.mpe_event_consumer_handler
+    handler: contract_api/application/handlers.consumer_handlers.mpe_event_consumer_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -832,7 +842,7 @@ functions:
 
   service_create_deployment_handler:
     warmup: true
-    handler: contract_api/handlers.consumer_handlers.service_create_deployment_handler
+    handler: contract_api/application/handlers.consumer_handlers.service_create_deployment_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE1}
     vpc:
       securityGroupIds:
@@ -843,7 +853,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
   service_deploy_status_notify:
-    handler: contract_api/handlers.service_handlers.service_deployment_status_notification_handler
+    handler: contract_api/application/handlers.service_handlers.service_deployment_status_notification_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -854,7 +864,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
   save-offchain-attribute:
-    handler: contract_api/application/handler/service_handler.save_offchain_attribute
+    handler: contract_api/application/handler/service_handlers.save_offchain_attribute
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -879,7 +889,7 @@ functions:
               - x-requested-with
 
   trigger-demo-component-build:
-    handler: contract_api/handlers.service_handlers.trigger_demo_component_build
+    handler: contract_api/application/handler.service_handlers.trigger_demo_component_build
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:

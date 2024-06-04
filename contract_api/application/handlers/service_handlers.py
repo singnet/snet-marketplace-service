@@ -8,7 +8,8 @@ from common.logger import get_logger
 from common.repository import Repository
 from common.utils import Utils, generate_lambda_response
 from common.utils import handle_exception_with_slack_notification
-from contract_api.application.service.update_assets_service import UpdateServiceAssets
+from contract_api.application.services.update_assets_service import UpdateServiceAssets
+from contract_api.application.services.registry_service import RegistryService
 from contract_api.config import NETWORKS, NETWORK_ID, SLACK_HOOK
 from contract_api.registry import Registry
 
@@ -109,3 +110,15 @@ def trigger_demo_component_build(event, context):
         StatusCode.CREATED,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
+
+@handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
+def save_offchain_attribute(event, context):
+    logger.info(f"Got save offchain attribute event:: {event}")
+    org_id = event["pathParameters"]["orgId"]
+    service_id = event["pathParameters"]["serviceId"]
+    attributes = json.loads(event["body"])
+    response = RegistryService(org_id=org_id, service_id=service_id).save_offchain_service_attribute(
+        new_offchain_attributes=attributes)
+    return generate_lambda_response(
+        200, {"status": "success", "data": response}, cors_enabled=True)
+
