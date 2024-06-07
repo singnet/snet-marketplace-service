@@ -75,8 +75,7 @@ class OrganizationPublisherService:
         if organization.id in org_ids:
             raise Exception("Org_id already exists")
         updated_state = Organization.next_state(None, None, OrganizationActions.CREATE.value)
-        org_repo.add_organization(organization, self.username, updated_state)
-        organization = org_repo.get_organization(org_id=organization.id)
+        organization = org_repo.add_organization(organization, self.username, updated_state)
         return organization.to_response()
 
     def update_organization(self, payload, action):
