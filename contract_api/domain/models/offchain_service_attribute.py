@@ -1,8 +1,12 @@
-class OffchainServiceAttribute:
-    def __init__(self, org_id, service_id, attributes):
-        self._org_id = org_id
-        self._service_id = service_id
-        self._attributes = attributes
+from typing import Dict
+from dataclasses import dataclass
+
+@dataclass
+class OffchainServiceAttributeEntityModel:
+
+    org_id: str
+    service_id: str
+    attributes: Dict[str, str]
 
     def to_dict(self):
         return {
@@ -10,19 +14,3 @@ class OffchainServiceAttribute:
             "service_id": self._service_id,
             "attributes": self._attributes
         }
-
-    @property
-    def org_id(self):
-        return self._org_id
-
-    @property
-    def service_id(self):
-        return self._service_id
-
-    @property
-    def attributes(self):
-        return self._attributes
-
-    @attributes.setter
-    def attributes(self, attributes):
-        self._attributes = attributes

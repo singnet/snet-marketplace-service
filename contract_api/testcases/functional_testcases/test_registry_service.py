@@ -1,9 +1,8 @@
 import json
-from datetime import datetime as dt
 from unittest import TestCase
 from unittest.mock import patch
 
-from contract_api.application.handler.service_handler import save_offchain_attribute
+from contract_api.application.handlers.service_handlers import save_offchain_attribute
 from contract_api.infrastructure.models import OffchainServiceConfig
 from contract_api.infrastructure.repositories.service_repository import ServiceRepository, \
     OffchainServiceConfigRepository
