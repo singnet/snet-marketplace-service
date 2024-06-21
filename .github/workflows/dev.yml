@@ -50,7 +50,7 @@ jobs:
       - name: clone repo
         uses: actions/checkout@v3
 
-      - name: check bd
+      - name: check db
         run: |
             for i in `seq 1 30`;
             do
@@ -70,11 +70,11 @@ jobs:
           pip3 install -r lambda_layers/common_python_libraries/requirements.txt
           pip3 install -r registry/migration/requirements.txt
           
-      - name: install required packages 5
+      - name: install npm packages
         run: |
           # export PIP_BREAK_SYSTEM_PACKAGES=1
           # export CFLAGS="-I${PREFIX}/include/python3.11/cpython"
-          #for requirement_file in `ls */*/requirement*.txt`;do pip3 install -r $requirement_file ;done
+          # for requirement_file in `ls */*/requirement*.txt`;do pip3 install -r $requirement_file ;done
           # for requirement_file in `ls */requirement*.txt`;do echo "=============$requirement_file=================="; pip3 install -r $requirement_file ;done
           # pip3 install -r reqs.txt
           for package_file in `ls */package*.json | cut -d '/' -f1`;do npm install $package_file/;done
@@ -90,45 +90,34 @@ jobs:
           export PYTHONPATH=$PWD
           for alembic_file in `ls */alembic*.ini | cut -d '/' -f1`;do cd $alembic_file; echo $alembic_file; alembic upgrade head; cd .. ;done
           mysql -h 127.0.0.1 -P 3306 -u unittest_root -punittest_pwd unittest_db < orchestrator/testcases/script.sql
-
-      # - name: run tests
-      #   run: |
-      #     export PIP_BREAK_SYSTEM_PACKAGES=1
-      #     export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-      #     export AWS_XRAY_SDK_ENABLED=false
-      #     pip3 install pymysql==1.0.2
-      #     PYTHONPATH=$PWD python3 -m coverage run -m pytest */testcases/integration_testcases/*.py */testcases/unit_testcases/*.py */testcases/unit_testcases/*/*.py */testcases/functional_testcases/*.py
-      #     python3 -m coverage report -m
-      #     coverage xml -i
-      #     # sonar-scanner-4.6.2.2472-linux/bin/sonar-scanner -Dsonar.host.url=https://sonarqube.singularitynet.io -Dsonar.login=${SONAR_TOKEN} $SONAR_SCANNER_OPTS_CUSTOM
       
-      - name: common
+      - name: common tests
         run: |
           export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
           export AWS_XRAY_SDK_ENABLED=false
           pip3 install -r common/requirements.txt
 
-      - name: dapp_user
+      - name: dapp_user tests
         run: |
           export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
           export AWS_XRAY_SDK_ENABLED=false
           pip3 install -r dapp_user/requirements.txt
           PYTHONPATH=$PWD python3 -m coverage run -m pytest dapp_user/testcases/unit_testcases/*.py dapp_user/testcases/functional_testcases/*.py
 
-      - name: notification
+      - name: notification tests
         run: |
           export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
           export AWS_XRAY_SDK_ENABLED=false
           pip3 install -r notification/requirements.txt
 
-      - name: payments
+      - name: payments tests
         run: |
           export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
           export AWS_XRAY_SDK_ENABLED=false
           pip3 install -r payments/requirements.txt
           PYTHONPATH=$PWD python3 -m coverage run -m pytest payments/testcases/unit_testcases/*.py
 
-      - name: service_status
+      - name: service_status tests
         run: |
           export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
           export AWS_XRAY_SDK_ENABLED=false
@@ -136,7 +125,7 @@ jobs:
           pip3 install --upgrade protobuf
           PYTHONPATH=$PWD python3 -m coverage run -m pytest service_status/testcases/unit_testcases/*.py service_status/testcases/functional_testcases/*.py
 
-      - name: utility
+      - name: utility tests
         run: |
           export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
           export AWS_XRAY_SDK_ENABLED=false
@@ -145,14 +134,14 @@ jobs:
           pip3 install -r utility/requirements.txt
           PYTHONPATH=$PWD python3 -m coverage run -m pytest utility/testcases/functional_testcases/*.py
           
-      - name: contract_api
+      - name: contract_api tests
         run: |
           export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
           export AWS_XRAY_SDK_ENABLED=false
           pip3 install -r contract_api/requirements.txt
           PYTHONPATH=$PWD python3 -m coverage run -m pytest contract_api/testcases/unit_testcases/*.py contract_api/testcases/unit_testcases/*/*.py contract_api/testcases/functional_testcases/*.py
 
-      - name: event_pubsub
+      - name: event_pubsub tests
         run: |
           export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
           export AWS_XRAY_SDK_ENABLED=false
@@ -161,14 +150,14 @@ jobs:
           pip3 install -r event_pubsub/requirements.txt
           PYTHONPATH=$PWD python3 -m coverage run -m pytest event_pubsub/testcases/unit_testcases/*.py
 
-      - name: orchestrator
+      - name: orchestrator tests
         run: |
           export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
           export AWS_XRAY_SDK_ENABLED=false
           pip3 install -r orchestrator/requirements.txt
           PYTHONPATH=$PWD python3 -m coverage run -m pytest orchestrator/testcases/integration_testcases/*.py orchestrator/testcases/unit_testcases/*.py
 
-      - name: registry
+      - name: registry tests
         run: |
           export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
           export AWS_XRAY_SDK_ENABLED=false
@@ -178,21 +167,21 @@ jobs:
           pip3 install -r registry/requirements.txt
           PYTHONPATH=$PWD python3 -m coverage run -m pytest registry/testcases/unit_testcases/*.py registry/testcases/functional_testcases/*.py
 
-      - name: signer
+      - name: signer tests
         run: |
           export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
           export AWS_XRAY_SDK_ENABLED=false
           pip3 install -r signer/requirements.txt
           PYTHONPATH=$PWD python3 -m coverage run -m pytest signer/testcases/integration_testcases/*.py
 
-      - name: verification
+      - name: verification tests
         run: |
           export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
           export AWS_XRAY_SDK_ENABLED=false
           pip3 install -r verification/requirements.txt
           PYTHONPATH=$PWD python3 -m coverage run -m pytest verification/testcases/unit_testcases/*.py verification/testcases/functional_testcases/*.py
 
-      - name: wallets
+      - name: wallets tests
         run: |
           export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
           export AWS_XRAY_SDK_ENABLED=false
