@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from domain.models.service_metadata import ServiceMetadata
+from contract_api.domain.models.service_metadata import ServiceMetadataEntityModel
 
 
 @dataclass
@@ -11,4 +11,4 @@ class ServiceEntityModel:
     ipfs_hash: str
     is_curated: int
     service_email: str
-    service_metadata: ServiceMetadata = None
+    service_metadata: ServiceMetadataEntityModel = None

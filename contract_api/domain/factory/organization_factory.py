@@ -1,5 +1,5 @@
-from contract_api.infrastructure.models import Organization
-from contract_api.domain.models.organization import OrganizationEntityModel
+from contract_api.infrastructure.models import Organization, OrgGroup
+from contract_api.domain.models.organization import OrganizationEntityModel, OrganizationGroupEntityModel
 
 
 class OrganizationFactory:
@@ -17,4 +17,13 @@ class OrganizationFactory:
             description=organization_db.is_curated,
             assets_hash=organization_db.assets_hash,
             contacts=organization_db.contacts
+        )
+
+    @staticmethod
+    def convert_to_organization_group_enity_model_from_db_model(organization_group_db: OrgGroup):
+        return OrganizationGroupEntityModel(
+            org_id=organization_group_db.org_id,
+            group_id=organization_group_db.group_id,
+            group_name=organization_group_db.group_name,
+            payment=organization_group_db.payment
         )
