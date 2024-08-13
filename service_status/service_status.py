@@ -72,6 +72,11 @@ class ServiceStatus:
                        "next_check_timestamp = %s, failed_status_count = %s WHERE row_id = %s "
         response = self.repo.execute(update_query, [status, next_check_timestamp, failed_status_count, row_id])
         return response
+    
+    def _update_service_failed_status_count(self, failed_status_count, row_id):
+        update_query = "UPDATE service_endpoint SET failed_status_count = %s WHERE row_id = %s "
+        response = self.repo.execute(update_query, [failed_status_count, row_id])
+        return response
 
     def _update_service_status_stats(self, org_id, service_id, old_status, status):
         previous_state = "UP" if (old_status == 1) else "DOWN"
@@ -105,14 +110,17 @@ class ServiceStatus:
                                                                 row_id=record["row_id"])
             if old_status != status:
                 self._update_service_status_stats(record["org_id"], record["service_id"], old_status, status)
+                if status == 1:
+                    query_data = self._update_service_failed_status_count(failed_status_count=0, row_id=record["row_id"])
 
             if status == 0:
                 org_id = record["org_id"]
                 service_id = record["service_id"]
                 recipients = self._get_service_provider_email(org_id=org_id, service_id=service_id)
-                self._send_notification(org_id=org_id, service_id=service_id, recipients=recipients,
-                                        endpoint=record["endpoint"], error_details=error_details,
-                                        debug_error_string=debug_error_string)
+                if failed_status_count <= 10:
+                    self._send_notification(org_id=org_id, service_id=service_id, recipients=recipients,
+                                            endpoint=record["endpoint"], error_details=error_details,
+                                            debug_error_string=debug_error_string)
             rows_updated = rows_updated + query_data[0]
         logger.info(f"no of rows updated: {rows_updated}")
 
@@ -151,9 +159,8 @@ class ServiceStatus:
 
     def _get_slack_message(self, org_id, service_id, endpoint, recipients, error_details, debug_error_string):
         slack_message = f"```Alert!\n\nService {service_id} under organization {org_id} is down for {NETWORK_NAME} " \
-                        f"network.\nEndpoint: {endpoint}\nError Details: {error_details}\nDebug Error String: " \
-                        f"{debug_error_string}\nContributors: {recipients}  \n\nFor any queries please email at " \
-                        f"cs-marketplace@singularitynet.io. \n\nWarmest regards, \nSingularityNET Marketplace Team```"
+                        f"network.\nEndpoint: {endpoint}\nDebug Error String: " \
+                        f"{debug_error_string}```"
         return slack_message
 
     def _send_email_notification(self, org_id, service_id, recipient, endpoint):
