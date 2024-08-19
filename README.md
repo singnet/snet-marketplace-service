@@ -1,7 +1,5 @@
 # snet-marketplace-service
 
-[![CircleCI](https://circleci.com/gh/singnet/snet-cli.svg?style=svg)](https://circleci.com/gh/singnet/snet-marketplace-service)
-[![Coverage Status](https://coveralls.io/repos/github/singnet/snet-marketplace-service/badge.svg?branch=master)](https://coveralls.io/github/singnet/snet-marketplace-service?branch=master)
 ## Getting Started  
 ### SingularityNET Marketplace Services
 The best way to get started is by understanding the marketplace services that powers the decentralized Blockchain marketplace. Here is a high level view on how SingularityNet's services works.
