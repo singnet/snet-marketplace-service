@@ -2,7 +2,7 @@ import json
 import re
 from datetime import datetime as dt
 from datetime import timedelta
-
+from opensearchpy import OpenSearch
 import grpc
 from grpc_health.v1 import health_pb2 as heartb_pb2
 from grpc_health.v1 import health_pb2_grpc as heartb_pb2_grpc
@@ -11,7 +11,7 @@ from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from common.utils import Utils
 from resources.certificates.root_certificate import certificate
-from service_status.config import REGION_NAME, NOTIFICATION_ARN, SLACK_HOOK, NETWORKS, NETWORK_ID, \
+from service_status.config import REGION_NAME, NOTIFICATION_ARN, SLACK_HOOK, NETWORKS, NETWORK_ID, HOST, AUTH, \
     MAXIMUM_INTERVAL_IN_HOUR, MINIMUM_INTERVAL_IN_HOUR, NETWORK_NAME, BASE_URL_TO_RESET_SERVICE_HEALTH
 from service_status.constant import SRVC_STATUS_GRPC_TIMEOUT, LIMIT
 
@@ -78,6 +78,40 @@ class ServiceStatus:
         response = self.repo.execute(update_query, [failed_status_count, row_id])
         return response
 
+    def _send_logs_to_opensearch(self, service_id, debug_error_string, endpoint):
+        client = OpenSearch(
+            http_compress = True,
+            hosts = [{'host': HOST, 'port': 443}],
+            http_auth = AUTH,
+            use_ssl = True,
+            verify_certs = True,
+            ssl_assert_hostname = False,
+            ssl_show_warn = False,
+        )
+        timestamp = dt.datetime.now(dt.timezone.utc)
+        index_name = f"services-logs-{NETWORKS[NETWORK_ID]['name']}-{timestamp.strftime('%Y.%m.%d')}"
+        if not client.indices.exists(index_name):
+            index_body = {
+                'settings': {
+                    'index': {
+                        'number_of_shards': 1
+                    }
+                }
+            }
+            response = client.indices.create(index_name, body=index_body)
+        document = {
+            '@timestamp': timestamp,
+            'Log': debug_error_string,
+            'Service': service_id,
+            'Endpoint': endpoint
+        }
+        response = client.index(
+            index = index_name,
+            body = document,
+            refresh = True
+        )    
+        return response
+
     def _update_service_status_stats(self, org_id, service_id, old_status, status):
         previous_state = "UP" if (old_status == 1) else "DOWN"
         current_state = "UP" if (status == 1) else "DOWN"
@@ -117,6 +151,7 @@ class ServiceStatus:
                 org_id = record["org_id"]
                 service_id = record["service_id"]
                 recipients = self._get_service_provider_email(org_id=org_id, service_id=service_id)
+                self._send_logs_to_opensearch(service_id=service_id, debug_error_string=debug_error_string, endpoint=record["endpoint"])
                 if failed_status_count <= 10:
                     self._send_notification(org_id=org_id, service_id=service_id, recipients=recipients,
                                             endpoint=record["endpoint"], error_details=error_details,

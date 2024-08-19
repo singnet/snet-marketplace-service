@@ -9,3 +9,4 @@ pymysql==0.10.1
 aws-xray-sdk==2.4.2
 grpcio-tools==1.32.0
 grpcio-health-checking==1.32.0
+opensearch-py
