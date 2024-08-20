@@ -88,7 +88,7 @@ class ServiceStatus:
             ssl_assert_hostname = False,
             ssl_show_warn = False,
         )
-        timestamp = dt.datetime.now(dt.timezone.utc)
+        timestamp = dt.utcnow()
         index_name = f"services-logs-{NETWORKS[NETWORK_ID]['name']}-{timestamp.strftime('%Y.%m.%d')}"
         if not client.indices.exists(index_name):
             index_body = {
