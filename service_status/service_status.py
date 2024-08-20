@@ -193,9 +193,7 @@ class ServiceStatus:
                     logger.info(f"Invalid email_id: {recipient}")
 
     def _get_slack_message(self, org_id, service_id, endpoint, recipients, error_details, debug_error_string):
-        slack_message = f"Alert!\n\nService {service_id} under organization {org_id} is down for {NETWORK_NAME} " \
-                        f"network.\nEndpoint: {endpoint}\nDebug Error String: " \
-                        f"{debug_error_string}"
+        slack_message = f"Service {service_id} under organization {org_id} is down for {NETWORK_NAME} network."
         return slack_message
 
     def _send_email_notification(self, org_id, service_id, recipient, endpoint):
