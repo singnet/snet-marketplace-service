@@ -1,15 +1,20 @@
 from datetime import datetime as dt
-from typing import Dict
+from typing import Dict, List
 from contract_api.domain.models.demo_component import DemoComponentEntityModel
-from contract_api.domain.models.service import ServiceEntityModel
-from contract_api.domain.models.service_metadata import ServiceMetadataEntityModel
-from contract_api.domain.models.service_media import ServiceMediaEntityModel
+from contract_api.domain.factory.organization_factory import OrganizationFactory
+from contract_api.domain.models.service import (
+    ServiceEntityModel,
+    ServiceMetadataEntityModel,
+    ServiceMediaEntityModel,
+    ServiceFullInfoEntityModel
+)
 from contract_api.domain.models.offchain_service_attribute import OffchainServiceAttributeEntityModel
 from contract_api.infrastructure.models import (
     Service,
     ServiceMetadata,
     ServiceMedia,
     OffchainServiceConfig,
+    Organization
 )
 
 
@@ -20,7 +25,6 @@ class ServiceFactory:
         if not service_db:
             return None
         return ServiceEntityModel(
-            row_id=service_db.row_id,
             org_id=service_db.org_id,
             service_id=service_db.service_id,
             service_path=service_db.service_path,
@@ -36,7 +40,6 @@ class ServiceFactory:
         if not service_metadata_db:
             return None
         return ServiceMetadataEntityModel(
-            service_row_id=service_metadata_db.service_row_id,
             org_id=service_metadata_db.org_id,
             service_id=service_metadata_db.service_id,
             display_name=service_metadata_db.display_name,
@@ -61,7 +64,6 @@ class ServiceFactory:
         if not service_media_db:
             return None
         return ServiceMediaEntityModel(
-            service_row_id=service_media_db.service_row_id,
             org_id=service_media_db.org_id,
             service_id=service_media_db.service_id,
             url=service_media_db.url,
@@ -102,4 +104,22 @@ class ServiceFactory:
             demo_component_url=offchain_attributes.get("demo_component_url", ""),
             demo_component_status=offchain_attributes.get("demo_component_status", ""),
             demo_component_required=offchain_attributes.get("demo_component_required", "")
+        )
+    
+    @staticmethod
+    def create_service_full_info_entity_model(
+        service_db: Service,
+        service_metadata_db: ServiceMetadata,
+        organization_db: Organization,
+        service_media_db: ServiceMedia,
+        tags: List[str],
+        is_available: int,
+    ) -> ServiceFullInfoEntityModel:
+        return ServiceFullInfoEntityModel(
+            service=ServiceFactory.convert_service_db_model_to_entity_model(service_db),
+            service_metadata=ServiceFactory.convert_service_metadata_db_model_to_entity_model(service_metadata_db),
+            organization=OrganizationFactory.convert_to_organization_entity_model_from_db_model(organization_db),
+            service_media=ServiceFactory.convert_service_media_db_model_to_entity_model(service_media_db),
+            tags=tags,
+            is_available=is_available
         )

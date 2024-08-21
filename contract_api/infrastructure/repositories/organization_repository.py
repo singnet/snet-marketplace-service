@@ -1,11 +1,17 @@
+import json
 from collections import defaultdict
+from typing import Any, Optional, List, Dict
+
+from sqlalchemy.sql import func
+
 from contract_api.infrastructure.repositories.base_repository import BaseRepository
 from contract_api.infrastructure.models import Organization, Service, Members
 from contract_api.domain.factory.organization_factory import OrganizationFactory
-from contract_api.domain.models.organization import OrganizationEntityModel, OrganizationGroupEntityModel
-from typing import Optional, List, Dict
-from sqlalchemy.sql import func
+from contract_api.domain.models.organization import (OrganizationEntityModel,
+                                                     OrganizationGroupEntityModel)
+from common.logger import get_logger 
 
+logger = get_logger(__name__)
 
 class OrganizationRepository(BaseRepository):
 
@@ -14,10 +20,9 @@ class OrganizationRepository(BaseRepository):
 
         if org_id is not None:
             query = query.filter_by(org_id = org_id)
-        elif org_name is not None:
+
+        if org_name is not None:
             query = query.filter_by(org_name = org_name)
-        else:
-            return None
 
         organization = query.first()
         return OrganizationFactory.convert_to_organization_entity_model_from_db_model(organization) \
@@ -70,3 +75,27 @@ class OrganizationRepository(BaseRepository):
         return OrganizationFactory.convert_to_organization_group_enity_model_from_db_model(
             organization_group_db=organization_group
         )
+    
+    def get_group_details_for_org_id(self, org_id: int, group_id: int) -> Dict[str, Any]:
+        """
+        Method to get group data for a given org_id and group_id. This includes group data at the org level.
+        """
+
+        group_data = self.session.query(Organization).filter_by(org_id=org_id, group_id=group_id).all()
+
+        groups = []
+        for group_record in group_data:
+            try:
+                group_record_dict = {
+                    "group_id": group_record.group_id,
+                    "group_name": group_record.group_name,
+                    "payment": json.loads(group_record.payment),
+                    "org_id": group_record.org_id
+                }
+            except json.JSONDecodeError as e:
+                logger.Error(f"Error decoding JSON for payment: {e}")
+                group_record_dict["payment"] = None
+
+            groups.append(group_record_dict)
+
+        return {"groups": groups}

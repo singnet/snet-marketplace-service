@@ -2,7 +2,7 @@ plugins:
   - serverless-offline
   - serverless-python-requirements
   - serverless-plugin-tracing
-  - serverless-prune-plugin
+  # - serverless-prune-plugin
   - serverless-aws-documentation
 
 service: contract-api
@@ -24,93 +24,93 @@ provider:
 
 custom:
   pythonRequirements:
-    fileName: contract_api/requirements.txt
+    fileName: ./contract_api/requirements.txt
     dockerizePip: true
     useDownloadCache: true
     useStaticCache: true
     cacheLocation: "/var/cache/serverless"
-  prune:
-    automatic: true
-    includeLayers: true
-    number: 2
+  # prune:
+  #   automatic: true
+  #   includeLayers: true
+  #   number: 2
   documentation:
     models:
       -
         name: "ErrorMessage"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/error.json)}
+        schema: ${file(./documentation/models/error.json)}
       -
         name: "GetAllGroupForOrgOutput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_all_group_for_org.json):GetAllGroupForOrgOutput}
+        schema: ${file(./documentation/models/get_all_group_for_org.json):GetAllGroupForOrgOutput}
       -
         name: "GetAllOrgOutput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_all_org.json):GetAllOrgOutput}
+        schema: ${file(./documentation/models/get_all_org.json):GetAllOrgOutput}
       -
         name: "GetChannelOutput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_channel.json):GetChannelOutput}
+        schema: ${file(./documentation/models/get_channel.json):GetChannelOutput}
       -
         name: "GetChannelsForGroupOutput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_channels_for_group.json):GetChannelsForGroupOutput}
+        schema: ${file(./documentation/models/get_channels_for_group.json):GetChannelsForGroupOutput}
       -
         name: "GetChannelsOldApiOutput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_channels_old_api.json):GetChannelsOldApiOutput}
+        schema: ${file(./documentation/models/get_channels_old_api.json):GetChannelsOldApiOutput}
       -
         name: "GetGroupForOrgIdOutput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_group_for_org_id.json):GetGroupForOrgIdOutput}
+        schema: ${file(./documentation/models/get_group_for_org_id.json):GetGroupForOrgIdOutput}
       -
         name: "GetGroupForServiceOutput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_group_for_service.json):GetGroupForServiceOutput}
+        schema: ${file(./documentation/models/get_group_for_service.json):GetGroupForServiceOutput}
       -
         name: "GetOrgForOrgIdOutput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_org_for_org_id.json):GetOrgForOrgIdOutput}
+        schema: ${file(./documentation/models/get_org_for_org_id.json):GetOrgForOrgIdOutput}
       -
         name: "GetServiceForGivenOrgOutput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_service_for_given_org.json):GetServiceForGivenOrgOutput}
+        schema: ${file(./documentation/models/get_service_for_given_org.json):GetServiceForGivenOrgOutput}
       -
         name: "GetServiceForGivenOrgInput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_service_for_given_org.json):GetServiceForGivenOrgInput}
+        schema: ${file(./documentation/models/get_service_for_given_org.json):GetServiceForGivenOrgInput}
       -
         name: "GetServiceGetOutput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_service_get.json):GetServiceGetOutput}
+        schema: ${file(./documentation/models/get_service_get.json):GetServiceGetOutput}
       -
         name: "GetServicePostOutput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_service_post.json):GetServicePostOutput}
+        schema: ${file(./documentation/models/get_service_post.json):GetServicePostOutput}
       -
         name: "GetServicePostInput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_service_post.json):GetServicePostInput}
+        schema: ${file(./documentation/models/get_service_post.json):GetServicePostInput}
       -
         name: "PostRatingForGivenServiceOutput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/post_rating_for_given_service.json):PostRatingForGivenServiceOutput}
+        schema: ${file(./documentation/models/post_rating_for_given_service.json):PostRatingForGivenServiceOutput}
       -
         name: "ServiceCurationOutput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/service_curation.json):ServiceCurationOutput}
+        schema: ${file(./documentation/models/service_curation.json):ServiceCurationOutput}
       -
         name: "UpdateConsumedBalanceOutput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/update_consumed_balance.json):UpdateConsumedBalanceOutput}
+        schema: ${file(./documentation/models/update_consumed_balance.json):UpdateConsumedBalanceOutput}
       -
         name: "UpdateConsumedBalanceInput"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/update_consumed_balance.json):UpdateConsumedBalanceInput}
+        schema: ${file(./documentation/models/update_consumed_balance.json):UpdateConsumedBalanceInput}
       -
         name: "MarketplaceCarousel"
         contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_marketplace_carousel.json):MarketplaceCarouselOutput}
+        schema: ${file(./documentation/models/get_marketplace_carousel.json):MarketplaceCarouselOutput}
 
 package:
   exclude:
@@ -332,9 +332,9 @@ functions:
                 responseModels:
                   "application/json": "ErrorMessage"
 
-  get_service_get:
+  get_services_filter:
     warmup: true
-    handler: contract_api/application/handlers.service_handlers.get_service_get
+    handler: contract_api/application/handlers.service_handlers.get_services_filter_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -346,7 +346,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /service
+          path: /services_filter
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -378,9 +378,9 @@ functions:
                 responseModels:
                   "application/json": "ErrorMessage"
 
-  get_service_post:
+  get_services:
     warmup: true
-    handler: contract_api/application/handlers.service_handlers.get_service_post
+    handler: contract_api/application/handlers.service_handlers.get_services_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:

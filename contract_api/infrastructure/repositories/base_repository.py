@@ -34,7 +34,7 @@ class BaseRepository:
             self.session.add_all(items)
             self.session.commit()
         except Exception as e:
-            self.session.commit()
+            self.session.rollback()
             raise e
 
     @staticmethod

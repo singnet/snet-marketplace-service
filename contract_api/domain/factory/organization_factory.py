@@ -10,7 +10,7 @@ class OrganizationFactory:
             org_id=organization_db.org_id,
             organization_name=organization_db.organization_name,
             owner_address=organization_db.owner_address,
-            org_metadata_uri=organization_db.org_metadata,
+            org_metadata_uri=organization_db.org_metadata_uri,
             org_email=organization_db.org_email,
             org_assets_url=organization_db.org_assets_url,
             is_currated=organization_db.is_curated,
