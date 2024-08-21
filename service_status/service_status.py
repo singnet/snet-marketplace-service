@@ -78,7 +78,7 @@ class ServiceStatus:
         response = self.repo.execute(update_query, [failed_status_count, row_id])
         return response
 
-    def _send_logs_to_opensearch(self, service_id, debug_error_string, endpoint):
+    def _send_logs_to_opensearch(self, service_id, debug_error_string, org_id, endpoint):
         client = OpenSearch(
             http_compress = True,
             hosts = [{'host': HOST, 'port': 443}],
@@ -103,6 +103,7 @@ class ServiceStatus:
             '@timestamp': timestamp,
             'Log': debug_error_string,
             'Service': service_id,
+            'Organization': org_id,
             'Endpoint': endpoint
         }
         response = client.index(
@@ -151,7 +152,7 @@ class ServiceStatus:
                 org_id = record["org_id"]
                 service_id = record["service_id"]
                 recipients = self._get_service_provider_email(org_id=org_id, service_id=service_id)
-                self._send_logs_to_opensearch(service_id=service_id, debug_error_string=debug_error_string, endpoint=record["endpoint"])
+                self._send_logs_to_opensearch(service_id=service_id, debug_error_string=debug_error_string, org_id=org_id, endpoint=record["endpoint"])
                 if failed_status_count <= 10:
                     self._send_notification(org_id=org_id, service_id=service_id, recipients=recipients,
                                             endpoint=record["endpoint"], error_details=error_details,
