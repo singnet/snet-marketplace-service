@@ -158,7 +158,7 @@ class MonitorServiceCertificate(MonitorService):
 
     @staticmethod
     def _get_certificate_expiration_slack_notification_message(org_id, service_id, endpoint, days_left_for_expiration):
-        return CERT_EXP_SLACK_NOTIFICATION_MSG % (service_id, org_id, NETWORK_NAME, days_left_for_expiration, endpoint)
+        return CERT_EXP_SLACK_NOTIFICATION_MSG % (service_id, org_id, NETWORK_NAME, days_left_for_expiration)
 
 
 class MonitorServiceHealth(MonitorService):
