@@ -1,5 +1,8 @@
 class BadRequestException(Exception):
-    pass
+    error_message = "BAD_REQQUEST"
+
+    def __init__(self):
+        super().__init__({})
 
 
 class OrganizationNotFound(Exception):

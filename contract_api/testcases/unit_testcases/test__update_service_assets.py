@@ -2,7 +2,7 @@ import json
 from unittest import TestCase
 from unittest.mock import patch
 
-from contract_api.handlers.service_handlers import trigger_demo_component_build
+from contract_api.application.handlers.service_handlers import trigger_demo_component_build
 
 
 class TestServiceAssets(TestCase):

@@ -119,4 +119,11 @@ event_pubsub/node_modules/
 orchestrator/node_modules/*
 orchestrator/package-lock.json
 utility/node_modules/*
-utility/package-lock.json
+*/package-lock.json
+
+#pipenv
+Pipfile
+Pipfile.lock
+
+# configs
+**/config.py

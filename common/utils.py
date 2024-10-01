@@ -13,7 +13,6 @@ import sys
 import tarfile
 import traceback
 import zipfile
-from pathlib import Path
 from urllib.parse import urlparse
 from zipfile import ZipFile
 
@@ -75,7 +74,6 @@ class Utils:
             """ 1 AGI equals to 100000000 cogs"""
             agi = decimal.Decimal(cogs) * decimal.Decimal(COGS_TO_AGI)
             return agi
-
 
 def make_response(status_code, body, header=None):
     return {

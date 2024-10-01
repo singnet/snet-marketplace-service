@@ -1,12 +1,11 @@
 import unittest
 from datetime import datetime as dt
 
+from contract_api.application.handlers.service_handlers import service_deployment_status_notification_handler
+from contract_api.infrastructure.models import ServiceMetadata, Service, OffchainServiceConfig
 from contract_api.infrastructure.repositories.service_repository import ServiceRepository, \
     OffchainServiceConfigRepository
 
-service_repo = ServiceRepository
-from contract_api.handlers.service_handlers import service_deployment_status_notification_handler
-from contract_api.infrastructure.models import ServiceMetadata, Service, OffchainServiceConfig
 
 service_repo = ServiceRepository()
 offchain_service_repo = OffchainServiceConfigRepository()

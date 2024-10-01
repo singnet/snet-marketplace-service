@@ -1,16 +1,22 @@
+from http import HTTPStatus
 import json
 
 from aws_xray_sdk.core import patch_all
+from pydantic import ValidationError
 
-from common.constant import StatusCode
+from common.constant import StatusCode, HttpRequestParamType
 from common.exception_handler import exception_handler
+from common.exceptions import BadRequestException
 from common.logger import get_logger
 from common.repository import Repository
 from common.utils import Utils, generate_lambda_response
 from common.utils import handle_exception_with_slack_notification
-from contract_api.application.service.update_assets_service import UpdateServiceAssets
-from contract_api.config import NETWORKS, NETWORK_ID, SLACK_HOOK
+from contract_api.application.services.update_assets_service import UpdateServiceAssets
+from contract_api.application.services.registry_service import RegistryService
+from contract_api.application.services.service_service import ServiceService
+from contract_api.config import NETWORK_ID, NETWORKS, SLACK_HOOK
 from contract_api.registry import Registry
+from contract_api.application.schema.service import GetServiceRequest, AttributeNameEnum, ApiParameters
 
 patch_all()
 
@@ -20,36 +26,48 @@ logger = get_logger(__name__)
 
 
 @handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
-def get_service_get(event, context):
-    logger.info(f"get_service_get:: {event}")
-    obj_reg = Registry(obj_repo=db)
-    payload_dict = event.get('queryStringParameters')
-    response_data = obj_reg.get_filter_attribute(
-        attribute=payload_dict["attribute"])
-    return generate_lambda_response(
-        200, {"status": "success", "data": response_data}, cors_enabled=True)
+def get_services_handler(event, context):
+    logger.info(f"Get services :: {event}")
+    try:
+        body = json.loads(event[HttpRequestParamType.REQUEST_BODY])
+        get_services_request = GetServiceRequest.model_validate(body)
+    except ValidationError as e:
+        logger.error(f"Request parsing error: {e}")
+        raise BadRequestException(str(e))
+    response = ServiceService().get_services(get_services_request)
+    return generate_lambda_response(HTTPStatus.OK, response, cors_enabled=True)
 
 
 @handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
-def get_service_post(event, context):
-    logger.info(f"Got service post:: {event}")
-    obj_reg = Registry(obj_repo=db)
-    payload_dict = json.loads(event['body'])
-    response_data = obj_reg.get_all_srvcs(qry_param=payload_dict)
-    return generate_lambda_response(
-        200, {"status": "success", "data": response_data}, cors_enabled=True)
+def get_services_filter_handler(event, context):
+    logger.info(f"Get services filter :: {event}")
+    try:
+        query_parameters = event.get(HttpRequestParamType.REQUEST_PARAM_QUERY_STRING)
+        assert query_parameters is not None, "Invalid query string parameters"
+        attribute_str = query_parameters.get(ApiParameters.ATTRIBUTE.value)
+        assert attribute_str is not None, "Attribute is not provided in query string parameters"
+        attribute_enum = AttributeNameEnum.map_string_to_enum(attribute_str)
+    except (AssertionError, ValueError) as e:
+        logger.error(f"Request parsing error: {e}")
+        raise BadRequestException(str(e))
+    response = ServiceService().get_services_filter(attribute_enum)
+    return generate_lambda_response(HTTPStatus.OK, response, cors_enabled=True)
 
 
 @handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
-def get_service_for_given_org(event, context):
-    logger.info(f"Got service for given org :: {event}")
-    obj_reg = Registry(obj_repo=db)
-    org_id = event['pathParameters']['orgId']
-    service_id = event['pathParameters']['serviceId']
-    response_data = obj_reg.get_service_data_by_org_id_and_service_id(
-        org_id=org_id, service_id=service_id)
-    return generate_lambda_response(
-        200, {"status": "success", "data": response_data}, cors_enabled=True)
+def get_service_for_given_org_handler(event, context):
+    logger.info(f"Get services for given org :: {event}")
+    try:
+        path_params = event.get(HttpRequestParamType.REQUEST_PARAM_PATH.value)
+        assert path_params is not None, "Invalid path parameters"
+        org_id = path_params.get(ApiParameters.ORG_ID.value)
+        assert org_id is not None, "Invalid org_id"
+        service_id = path_params.get(ApiParameters.SERVICE_ID.value)
+        assert service_id is not None, "Invalid service_id"
+    except AssertionError as e:
+        raise BadRequestException(str(e))
+    response = ServiceService().get_services()
+    return generate_lambda_response(200, {"status": "success", "data": response}, cors_enabled=True)
 
 
 @handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
@@ -109,3 +127,15 @@ def trigger_demo_component_build(event, context):
         StatusCode.CREATED,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
+
+@handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
+def save_offchain_attribute(event, context):
+    logger.info(f"Got save offchain attribute event:: {event}")
+    org_id = event["pathParameters"]["orgId"]
+    service_id = event["pathParameters"]["serviceId"]
+    attributes = json.loads(event["body"])
+    response = RegistryService(org_id=org_id, service_id=service_id).save_offchain_service_attribute(
+        new_offchain_attributes=attributes)
+    return generate_lambda_response(
+        200, {"status": "success", "data": response}, cors_enabled=True)
+

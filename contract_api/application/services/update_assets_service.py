@@ -1,5 +1,3 @@
-import ast
-
 from common import utils
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
