@@ -99,7 +99,7 @@ class ServiceFactory:
         )
 
     @staticmethod
-    def create_demo_component_domain_model(offchain_attributes: Dict[str, str]):
+    def create_demo_component_entity_model(offchain_attributes: Dict[str, str]):
         return DemoComponentEntityModel(
             demo_component_url=offchain_attributes.get("demo_component_url", ""),
             demo_component_status=offchain_attributes.get("demo_component_status", ""),
@@ -115,6 +115,8 @@ class ServiceFactory:
         tags: List[str],
         is_available: int,
     ) -> ServiceFullInfoEntityModel:
+        if not service_db:
+            return None
         return ServiceFullInfoEntityModel(
             service=ServiceFactory.convert_service_db_model_to_entity_model(service_db),
             service_metadata=ServiceFactory.convert_service_metadata_db_model_to_entity_model(service_metadata_db),

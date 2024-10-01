@@ -1,3 +1,4 @@
+import json
 from contract_api.infrastructure.models import Organization, OrgGroup
 from contract_api.domain.models.organization import OrganizationEntityModel, OrganizationGroupEntityModel
 
@@ -25,5 +26,5 @@ class OrganizationFactory:
             org_id=organization_group_db.org_id,
             group_id=organization_group_db.group_id,
             group_name=organization_group_db.group_name,
-            payment=organization_group_db.payment
+            payment=json.loads(organization_group_db.payment)
         )

@@ -473,7 +473,7 @@ functions:
 
   get_service_for_given_org:
     warmup: true
-    handler: contract_api/application/handlers.service_handlers.get_service_for_given_org
+    handler: contract_api/application/handlers.service_handlers.get_service_for_given_org_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -485,12 +485,12 @@ functions:
     events:
       - http:
           method: GET
-          path: /org/{orgId}/service/{serviceId}
+          path: /org/{org_id}/service/{service_id}
           request:
             parameters:
               paths:
-                orgId: true
-                serviceId: true
+                org_id: true
+                service_id: true
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:

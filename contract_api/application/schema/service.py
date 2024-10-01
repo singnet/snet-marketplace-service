@@ -62,3 +62,8 @@ class AttributeNameEnum(Enum):
             return AttributeNameEnum(attribute)
         except ValueError:
             raise BadRequestException(f"Invalid attribute: {attribute}")
+
+class ApiParameters(Enum):
+    ORG_ID = "org_id"
+    SERVICE_ID = "service_id"
+    ATTRIBUTE = "attribute"

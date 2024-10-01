@@ -1,11 +1,20 @@
+from collections import defaultdict
 from datetime import datetime as dt
-from typing import List, Union
+import json
+from typing import List
 
 from sqlalchemy import and_, asc, desc, func, select
 from sqlalchemy.orm import Query
+from sqlalchemy.sql import Subquery
 
 from contract_api.domain.models.offchain_service_attribute import OffchainServiceAttributeEntityModel
-from contract_api.infrastructure.models import Organization, Service, ServiceEndpoint, ServiceMedia, ServiceMetadata, ServiceTags
+from contract_api.infrastructure.models import (Organization,
+                                                Service,
+                                                ServiceEndpoint,
+                                                ServiceMedia,
+                                                ServiceMetadata,
+                                                ServiceTags,
+                                                ServiceGroup)
 from contract_api.infrastructure.models import OffchainServiceConfig
 from contract_api.infrastructure.repositories.base_repository import BaseRepository
 from contract_api.domain.factory.service_factory import ServiceFactory
@@ -72,8 +81,7 @@ class ServiceRepository(BaseRepository):
 
         return query
 
-    def __map_sorting(self, sort_params: Sort):
-        print(sort_params)
+    def __map_sorting(self, sort_params: Sort) -> Subquery:
         if sort_params is None:
             return asc(Service.service_id)
         elif sort_params.order == OrderEnum.DESC:
@@ -151,10 +159,82 @@ class ServiceRepository(BaseRepository):
 
         return services, total_count
 
+    def get_service_group_data(self, org_id: int, service_id: int):
+        group_data = (
+            self.repo.query(ServiceGroup, ServiceEndpoint)
+            .join(ServiceEndpoint, ServiceGroup.group_id == ServiceEndpoint.group_id)
+            .filter(ServiceGroup.org_id == org_id, ServiceGroup.service_id == service_id)
+            .all()
+        )
+
+        # Initialize the groups dictionary
+        groups = defaultdict(lambda: {
+            "group_id": None,
+            "group_name": "",
+            "pricing": {},
+            "endpoints": [],
+            "free_calls": 0,
+            "free_call_signer_address": ""
+        })
+
+        # Process the query results
+        for group in group_data:
+            group_id = group.group_id
+
+            if groups[group_id]["group_id"] is None:
+                # Initialize group info
+                groups[group_id]["group_id"] = group.group_id
+                groups[group_id]["group_name"] = group.group_name
+                groups[group_id]["pricing"] = json.loads(group.pricing)
+                groups[group_id]["free_calls"] = group.free_calls or 0
+                groups[group_id]["free_call_signer_address"] = group.free_call_signer_address or ""
+
+            # Append endpoint info
+            groups[group_id]["endpoints"].append({
+                "endpoint": group.service_endpoint.endpoint,
+                "is_available": group.service_endpoint.is_available,
+                "last_check_timestamp": group.service_endpoint.last_check_timestamp
+            })
+
+        return list(groups.values())
+
+
+    def get_service_full_data(self, org_id: int, service_id: int):
+
+        subquery = self.__make_subquery_service_metadata()
+
+        query = (
+            self.session.query(
+                Service,
+                ServiceMetadata,
+                Organization,
+                ServiceMedia,
+                subquery.c.is_available,
+                subquery.c.tags,
+            )
+            .join(ServiceMetadata)
+            .join(Organization, Service.org_id == Organization.org_id)
+            .join(subquery, and_(Service.org_id == subquery.c.org_id, Service.service_id == subquery.c.service_id))
+            .join(ServiceMedia, and_(Service.org_id == ServiceMedia.org_id,
+                                     Service.service_id == ServiceMedia.service_id,
+                                     ServiceMedia.order == 1))
+            .filter(Service.org_id == org_id, Service.service_id == service_id)
+        )
+
+        service_db = self.session.execute(query).fetchone()
+
+        return ServiceFactory.create_service_full_info_entity_model(
+            service_db=service_db.Service,
+            service_metadata_db=service_db.ServiceMetadata,
+            organization_db=service_db.Organization,
+            service_media_db=service_db.ServiceMedia,
+            tags=service_db.tags.split(",") if service_db.tags else [],
+            is_available=service_db.is_available
+        )
+
 
 class OffchainServiceConfigRepository(BaseRepository):
 
-    @BaseRepository.write_ops
     def get_offchain_service_config(self, org_id, service_id) -> OffchainServiceAttributeEntityModel:
         offchain_service_configs_db = self.session.query(OffchainServiceConfig). \
             filter(OffchainServiceConfig.org_id == org_id). \

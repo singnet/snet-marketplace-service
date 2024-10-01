@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Dict
 
 
-@dataclass
+@dataclass(frozen=True)
 class OrganizationEntityModel:
     org_id: str
     organization_name: str
@@ -16,9 +16,17 @@ class OrganizationEntityModel:
     contacts: Dict[str, str]
 
 
-@dataclass
+@dataclass(frozen=True)
 class OrganizationGroupEntityModel:
     org_id: str
     group_id: str
     group_name: str
     payment: Dict[str, str]
+
+    def to_dict(self):
+        return {
+            "org_id": self.org_id,
+            "group_id": self.group_id,
+            "group_name": self.group_name,
+            "payment": self.payment
+        }

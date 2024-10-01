@@ -61,3 +61,12 @@ class TokenSymbol(Enum):
     NTX = "NTX"
     RJV = "RJV"
     CGV = "CGV"
+
+
+class HttpRequestParamType(Enum):
+    REQUEST_PARAM_QUERY_STRING = "queryStringParameters"
+    REQUEST_PARAM_PATH = "pathParameters"
+    REQUEST_BODY = "body"
+    REQUEST_HEADER = "headers"
+    REQUEST_PARAM_MULTI_VALUE_QUERY_STRING = "multiValueQueryStringParameters"
+    REQUEST_CONTEXT = "requestContext"

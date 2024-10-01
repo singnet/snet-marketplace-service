@@ -7,3 +7,4 @@ boto3
 SQLAlchemy
 pymysql
 aws-xray-sdk
+pydantic

@@ -5,7 +5,7 @@ from typing import Any, Optional, List, Dict
 from sqlalchemy.sql import func
 
 from contract_api.infrastructure.repositories.base_repository import BaseRepository
-from contract_api.infrastructure.models import Organization, Service, Members
+from contract_api.infrastructure.models import Organization, Service, Members, OrgGroup
 from contract_api.domain.factory.organization_factory import OrganizationFactory
 from contract_api.domain.models.organization import (OrganizationEntityModel,
                                                      OrganizationGroupEntityModel)
@@ -70,7 +70,7 @@ class OrganizationRepository(BaseRepository):
         return all_orgs_members
 
     def get_group_by_org_id(self, org_id: str) -> OrganizationGroupEntityModel:
-        organization_group = self.session.query(Organization). \
+        organization_group = self.session.query(OrgGroup). \
             filter_by(org_id=org_id).first()
         return OrganizationFactory.convert_to_organization_group_enity_model_from_db_model(
             organization_group_db=organization_group
