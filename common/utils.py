@@ -233,21 +233,21 @@ def ipfsuri_to_bytesuri(uri):
     return uri.encode("ascii").ljust(32 * (len(uri) // 32 + 1), b"\0")
 
 
-def publish_file_in_ipfs(file_url, file_dir, ipfs_client, wrap_with_directory=True):
+def publish_file_in_ipfs(file_url, file_dir, ipfs_client, wrap_with_directory=True, ignored_files=[]):
     filename = download_file_from_url(file_url=file_url, file_dir=file_dir)
     file_type = os.path.splitext(filename)[1]
     logger.info(f" file type is  = '{file_type.lower()}` ")
     if file_type.lower() == ".zip":
-        return publish_zip_file_in_ipfs(filename, file_dir, ipfs_client)
+        return publish_zip_file_in_ipfs(filename, file_dir, ipfs_client, ingored_files=ignored_files)
     #todo , you need to tar the folder and add that to the ipfs hash
     logger.info(f"writing the file on ipfs {file_dir}/{filename} ")
     ipfs_hash = ipfs_client.write_file_in_ipfs(f"{file_dir}/{filename}", wrap_with_directory)
     return ipfs_hash
 
 
-def publish_zip_file_in_ipfs(filename, file_dir, ipfs_client):
+def publish_zip_file_in_ipfs(filename, file_dir, ipfs_client, ingored_files=[]):
     logger.info(f"publish_zip_file_in_ipfs {file_dir}/{filename} ")
-    file_in_tar_bytes = convert_zip_file_to_tar_bytes(file_dir=file_dir, filename=filename)
+    file_in_tar_bytes = convert_zip_file_to_tar_bytes(file_dir=file_dir, filename=filename, ingored_files=ingored_files)
     logger.info(f"file_in_tar_bytes {file_in_tar_bytes} ")
     return ipfs_client.ipfs_conn.add_bytes(file_in_tar_bytes.getvalue())
 
@@ -262,13 +262,16 @@ def download_file_from_url(file_url, file_dir):
     return filename
 
 
-def convert_zip_file_to_tar_bytes(file_dir, filename):
+def convert_zip_file_to_tar_bytes(file_dir, filename, ignored_files=[]):
     with ZipFile(f"{file_dir}/{filename}", 'r') as zipObj:
         listOfFileNames = zipObj.namelist()
         zipObj.extractall(file_dir, listOfFileNames)
     if not os.path.isdir(file_dir):
         raise Exception("Directory %s doesn't exists" % file_dir)
-    files = glob.glob(os.path.join(file_dir, "*.proto"))
+    files = sorted(
+        f for f in glob.glob(os.path.join(file_dir, "*.proto"))
+        if os.path.basename(f) not in ignored_files
+    )
     if len(files) == 0:
         raise Exception("Cannot find any %s files" % (os.path.join(file_dir, "*.proto")))
     files.sort()
