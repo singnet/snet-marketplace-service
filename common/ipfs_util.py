@@ -8,7 +8,7 @@ import ipfshttpclient
 class IPFSUtil(object):
 
     def __init__(self, ipfs_url, port):
-        self.ipfs_conn = ipfshttpclient.connect(f"/dns4/{ipfs_url}/tcp/{port}/http")
+        self.ipfs_conn = ipfshttpclient.connect(f"/dns/{ipfs_url}/tcp/{port}/http")
 
     def read_bytesio_from_ipfs(self, ipfs_hash):
         ipfs_data = self.ipfs_conn.cat(ipfs_hash)
