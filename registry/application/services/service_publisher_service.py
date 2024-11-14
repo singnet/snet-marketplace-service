@@ -257,7 +257,7 @@ class ServicePublisherService:
                 filename=filename,
                 file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}",
                 ipfs_client=IPFSUtil(IPFS_URL['url'], IPFS_URL['port']),
-                ingored_files=["pricing.proto", "training.proto"]
+                ignored_files=["pricing.proto", "training.proto"]
             )
             service.proto = {
                 "model_ipfs_hash": asset_ipfs_hash,

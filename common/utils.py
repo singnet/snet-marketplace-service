@@ -238,16 +238,16 @@ def publish_file_in_ipfs(file_url, file_dir, ipfs_client, wrap_with_directory=Tr
     file_type = os.path.splitext(filename)[1]
     logger.info(f" file type is  = '{file_type.lower()}` ")
     if file_type.lower() == ".zip":
-        return publish_zip_file_in_ipfs(filename, file_dir, ipfs_client, ingored_files=ignored_files)
+        return publish_zip_file_in_ipfs(filename, file_dir, ipfs_client, ignored_files=ignored_files)
     #todo , you need to tar the folder and add that to the ipfs hash
     logger.info(f"writing the file on ipfs {file_dir}/{filename} ")
     ipfs_hash = ipfs_client.write_file_in_ipfs(f"{file_dir}/{filename}", wrap_with_directory)
     return ipfs_hash
 
 
-def publish_zip_file_in_ipfs(filename, file_dir, ipfs_client, ingored_files=[]):
+def publish_zip_file_in_ipfs(filename, file_dir, ipfs_client, ignored_files=[]):
     logger.info(f"publish_zip_file_in_ipfs {file_dir}/{filename} ")
-    file_in_tar_bytes = convert_zip_file_to_tar_bytes(file_dir=file_dir, filename=filename, ingored_files=ingored_files)
+    file_in_tar_bytes = convert_zip_file_to_tar_bytes(file_dir=file_dir, filename=filename, ignored_files=ignored_files)
     logger.info(f"file_in_tar_bytes {file_in_tar_bytes} ")
     return ipfs_client.ipfs_conn.add_bytes(file_in_tar_bytes.getvalue())
 
