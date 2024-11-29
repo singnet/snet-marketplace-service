@@ -135,6 +135,8 @@ class ServiceStatus:
             logger.info(f"error_details: {error_details}")
             logger.info(f"debug_error_string: {debug_error_string}")
             old_status = int.from_bytes(record["is_available"], "big")
+            logger.info(f"Service to check: row_id={record['row_id']}, status={status}, old_status={old_status}")
+            logger.info(f"Service endpoint: {record['endpoint']}")
             failed_status_count = self._calculate_failed_status_count(
                 current_status=status, old_status=old_status,
                 old_failed_status_count=record["failed_status_count"])
