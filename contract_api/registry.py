@@ -7,8 +7,7 @@ from common.utils import Utils
 from contract_api.constant import GET_ALL_SERVICE_LIMIT, GET_ALL_SERVICE_OFFSET_LIMIT
 from contract_api.dao.service_repository import ServiceRepository
 from contract_api.domain.factory.service_factory import ServiceFactory
-from contract_api.domain.models.demo_component import DemoComponent
-from contract_api.domain.models.offchain_service_attribute import OffchainServiceAttribute
+from contract_api.domain.models.offchain_service_attribute import OffchainServiceAttributeEntityModel
 from contract_api.infrastructure.repositories.service_media_repository import ServiceMediaRepository
 from contract_api.infrastructure.repositories.service_repository import ServiceRepository as NewServiceRepository, \
     OffchainServiceConfigRepository
@@ -38,7 +37,7 @@ class Registry:
         else:
             raise Exception(f"Unable to find service for service_id {service_id} and org_id {org_id}")
         demo_build_status = BuildStatus.SUCCESS if build_status == BUILD_CODE['SUCCESS'] else BuildStatus.FAILED
-        offchain_attributes = OffchainServiceAttribute(
+        offchain_attributes = OffchainServiceAttributeEntityModel(
             org_id, service_id, {"demo_component_status": demo_build_status}
         )
         OffchainServiceConfigRepository().save_offchain_service_attribute(offchain_attributes)
@@ -230,7 +229,6 @@ class Registry:
             sub_qry = self._prepare_subquery(s=s, q=q, fm=fields_mapping)
             print("get_all_srvcs::sub_qry: ", sub_qry)
 
-            filter_qry = ""
             if qry_param.get("filters", None) is not None:
                 filter_query, values = self._filters_to_query(
                     qry_param.get("filters"))

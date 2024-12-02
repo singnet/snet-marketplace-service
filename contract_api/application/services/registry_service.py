@@ -8,7 +8,7 @@ from common.constant import BuildStatus
 from common.utils import Utils, extract_zip_file, make_tarfile, download_file_from_url
 from contract_api.config import REGION_NAME, ASSETS_COMPONENT_BUCKET_NAME
 from contract_api.domain.factory.service_factory import ServiceFactory
-from contract_api.domain.models.offchain_service_attribute import OffchainServiceAttribute
+from contract_api.domain.models.offchain_service_attribute import OffchainServiceAttributeEntityModel
 from contract_api.infrastructure.repositories.service_repository import OffchainServiceConfigRepository
 
 utils = Utils()
@@ -35,7 +35,7 @@ class RegistryService:
                 )
                 new_demo_component.demo_component_status = BuildStatus.PENDING
             # update and save new changes
-            updated_offchain_attributes = OffchainServiceAttribute(
+            updated_offchain_attributes = OffchainServiceAttributeEntityModel(
                 org_id=self.org_id,
                 service_id=self.service_id,
                 attributes=new_demo_component.to_dict()

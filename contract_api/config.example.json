@@ -1,0 +1,37 @@
+{
+  "SG1": "",
+  "SG2": "",
+  "VPC1": "",
+  "VPC2": "",
+  "AUTHORIZER": "",
+  "ROLE": "",
+  "ROLE1": "",
+  "SERVICE_ID": "",
+  "ENVIRONMENT": "",
+  "OWNER": "",
+  "TEAM": "",
+  "REGION": "us-east-1",
+  "ORIGIN": "*",
+  "SIGN_AUTHORIZER": "",
+  "SIGN_HEADERS": "",
+  "DOMAIN_NAME": "",
+  "JUMIO_POLICY": {
+    "Effect": "Allow",
+    "Principal": "*",
+    "Action": "execute-api:Invoke",
+    "Resource": ["execute-api:/*/*/*"],
+    "Condition": {
+        "IpAddress": {
+            "aws:SourceIp": []
+        }
+    }
+  },
+  "rfai_cron_status": true,
+  "mpe_cron_status": true,
+  "registry_cron_status": true,
+  "token_stake_cron_status": true,
+  "service_status_cron_status": false,
+  "monitor_service_cert_expiry_cron_status": true,
+  "SERVICE_EVENT_CONSUMER_TIMEOUT": 90,
+  "COMPONENT_BUCKET": "ropsten-service-components"
+}
