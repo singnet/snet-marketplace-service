@@ -253,9 +253,12 @@ class ServicePublisherService:
             filename = download_file_from_url(file_url=proto_url,
                                               file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}")
             logger.info(f"proto file Name Retrieved  = '{filename}` ")
-            asset_ipfs_hash = publish_zip_file_in_ipfs(filename=filename,
-                                                       file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}",
-                                                       ipfs_client=IPFSUtil(IPFS_URL['url'], IPFS_URL['port']))
+            asset_ipfs_hash = publish_zip_file_in_ipfs(
+                filename=filename,
+                file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}",
+                ipfs_client=IPFSUtil(IPFS_URL['url'], IPFS_URL['port']),
+                ignored_files=["pricing.proto", "training.proto"]
+            )
             service.proto = {
                 "model_ipfs_hash": asset_ipfs_hash,
                 "encoding": "proto",
