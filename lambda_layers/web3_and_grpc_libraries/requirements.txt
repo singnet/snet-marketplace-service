@@ -1,6 +1,8 @@
 rlp==1.2.0
 protobuf==3.10.0
 web3==5.10.0
+ipfshttpclient==0.4.13.2
+ipfsapi==0.4.4
 grpcio==1.30.0
 grpcio-health-checking==1.19.0
 grpcio-tools==1.19.0
