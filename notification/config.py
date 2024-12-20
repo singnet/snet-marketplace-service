@@ -1,1 +1,6 @@
 EMAIL_FOR_SENDING_NOTIFICATION = ""
+
+S3_DOWNLOAD_API = {
+    "HOST": "",
+    "TOKEN": ""
+}

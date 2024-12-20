@@ -11,7 +11,7 @@ import requests
 from botocore.exceptions import ClientError
 
 from common.logger import get_logger
-from notification.config import EMAIL_FOR_SENDING_NOTIFICATION
+from notification.config import EMAIL_FOR_SENDING_NOTIFICATION, S3_DOWNLOAD_API
 
 logger = get_logger(__name__)
 
@@ -34,6 +34,23 @@ BODY_HTMLS = {NotificationType.SUPPORT.value: """<html>
 client = boto3.client('ses')
 
 
+def check_and_fetch_s3_url(attachment_url: str):
+    """
+    Intermediate function to download attachment from specific S3 Bucket by pre-signed links API
+    Checks attachment url and fetches temporary link to download file from S3 Bucket
+    If attachment url is not link on S3 download API it will be returned without changes
+    """
+    parsed_url = urlparse(attachment_url)
+    if not parsed_url.hostname == S3_DOWNLOAD_API["HOST"]:
+        return attachment_url
+    headers = {"Authorization": S3_DOWNLOAD_API["TOKEN"]}
+    response = requests.get(attachment_url, headers=headers)
+    body = response.json()
+    key, download_url = body["key"], body["downloadURL"]
+    logger.info(f"Got a link to download {key} file from S3")
+    return download_url
+
+
 def send_email_with_attachment(recipient: str, subject: str, body_html: str, sender: str, attachment_urls: list):
     logger.info(f"Receipent={recipient}, subject={subject}, body={body_html}, sender={sender}, "
                 f"attachment_urls={attachment_urls}")
@@ -50,17 +67,17 @@ def send_email_with_attachment(recipient: str, subject: str, body_html: str, sen
 
         for attachment_url in attachment_urls:
             logger.info(f"Downloading the file from url={attachment_url}")
-            parsed_url = urlparse(attachment_url)
-            filename = os.path.basename(parsed_url.path)
-
             try:
+                attachment_url = check_and_fetch_s3_url(attachment_url)
+                parsed_url = urlparse(attachment_url)
+                filename = os.path.basename(parsed_url.path)
                 response = requests.get(attachment_url)
                 filepath = f"/tmp/{filename}"
                 open(filepath, "wb").write(response.content)
                 attachment_filepaths.append(filepath)
                 logger.info(f"Download completed for the file from url={attachment_url}")
             except Exception as e:
-                logger.error(f"Unable to download the file from the url={attachment_url} and error={e}")
+                logger.exception(f"Unable to download the file from the url={attachment_url} and error={e}")
 
         logger.info(f"Attachment file path={attachment_filepaths}")
         for attachment_filepath in attachment_filepaths:
