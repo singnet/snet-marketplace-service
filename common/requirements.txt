@@ -3,4 +3,5 @@ web3==5.10.0
 requests==2.22.0
 PyMySQL==0.10.1
 boto3==1.15.9
-ipfsapi==0.4.3
+ipfsapi==0.4.4
+ipfshttpclient==0.4.13.2
