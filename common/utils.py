@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 import decimal
 import glob
 import hashlib
@@ -13,7 +13,6 @@ import sys
 import tarfile
 import traceback
 import zipfile
-from pathlib import Path
 from urllib.parse import urlparse
 from zipfile import ZipFile
 
@@ -216,7 +215,7 @@ def datetime_to_string(given_time):
 
 
 def date_time_for_filename():
-    return datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
+    return dt.datetime.now(dt.UTC).strftime("%Y%m%d%H%M%S")
 
 
 def hash_to_bytesuri(s):

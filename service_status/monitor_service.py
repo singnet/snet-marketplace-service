@@ -1,9 +1,8 @@
 import re
 import json
-from datetime import datetime as dt
-from datetime import timedelta
-from urllib.request import Request, urlopen, ssl, socket
-from common.utils import Utils
+import datetime as dt
+import ssl
+import socket
 from service_status.config import REGION_NAME, NOTIFICATION_ARN, SLACK_HOOK, NETWORKS, NETWORK_ID, \
     CERTIFICATION_EXPIRATION_THRESHOLD
 from common.boto_utils import BotoUtils
@@ -28,10 +27,15 @@ NO_OF_ENDPOINT_TO_TEST_LIMIT = 5
 
 
 class MonitorService:
+    def __init__(self, repo, rex_for_pb_ip=""):
+        self.repo = repo
+        # regex helps to check url is localhost or external address.
+        self.rex_for_pb_ip = rex_for_pb_ip
 
     def _get_service_endpoint_data(self, limit):
-        query = "SELECT row_id, org_id, service_id, endpoint, is_available, failed_status_count FROM service_endpoint WHERE " \
-                "next_check_timestamp < UTC_TIMESTAMP AND endpoint not regexp %s AND (org_id,service_id) IN (SELECT org_id, service_id FROM service WHERE service.is_curated=1) ORDER BY last_check_timestamp ASC"
+        query = "SELECT row_id, org_id, service_id, endpoint FROM service_endpoint WHERE " \
+                "is_available=1 AND endpoint not regexp %s AND (org_id,service_id) IN " \
+                "(SELECT org_id, service_id FROM service WHERE service.is_curated=1)"
         if limit is not None:
             query = query + " LIMIT %s"
             result = self.repo.execute(query, [self.rex_for_pb_ip, limit])
@@ -95,25 +99,33 @@ class MonitorService:
 
 class MonitorServiceCertificate(MonitorService):
     def __init__(self, repo):
-        self.repo = repo
+        rex_for_pb_ip = "^(http://)*(https://)*127.0.0.1|^(http://)*(https://)*localhost|^(http://)*" \
+                        "(https://)*192.|^(http://)*(https://)*172.|^(http://)*(https://)*10."
+        super().__init__(repo, rex_for_pb_ip)
         self.route = "/encoding"
         self.obj_util = Utils()
-        # regex helps to check url is localhost or external address.
-        self.rex_for_pb_ip = "^(http://)*(https://)*127.0.0.1|^(http://)*(https://)*localhost|^(http://)*" \
-                             "(https://)*192.|^(http://)*(https://)*172.|^(http://)*(https://)*10."
 
     def notify_service_contributors_for_certificate_expiration(self):
         service_endpoint_data = self._get_service_endpoint_data(limit=None)
+        logger.info(f"Number of services to check: {len(service_endpoint_data)}.")
         for record in service_endpoint_data:
             org_id = record["org_id"]
             service_id = record["service_id"]
             endpoint = record["endpoint"]
+            logger.info(f"Checking certificate expiration for: org_id={org_id}, service_id={service_id}, endpoint={endpoint}.")
             expiration_date = self._get_certification_expiration_date_for_given_service(endpoint=endpoint)
-            days_left_for_expiration = (expiration_date - dt.utcnow()).days
+            if expiration_date is None:
+                logger.info("Unable to fetch expiration date.")
+                continue
+            datetime_now = dt.datetime.now(dt.UTC).replace(tzinfo=None)
+            days_left_for_expiration = (expiration_date - datetime_now).days
+            logger.info(f"Expiration date: {expiration_date}. Certificate will expire in {days_left_for_expiration} days.")
             if days_left_for_expiration < CERTIFICATION_EXPIRATION_THRESHOLD:
-                self._send_notification_for_certificate_expiration(org_id=org_id, service_id=service_id,
-                                                                   endpoint=endpoint,
-                                                                   days_left_for_expiration=days_left_for_expiration)
+                logger.info("Sending notification.")
+                ...
+                # self._send_notification_for_certificate_expiration(org_id=org_id, service_id=service_id,
+                #                                                    endpoint=endpoint,
+                #                                                    days_left_for_expiration=days_left_for_expiration)
 
     def _send_notification_for_certificate_expiration(self, org_id, service_id, endpoint, days_left_for_expiration):
 
@@ -146,7 +158,7 @@ class MonitorServiceCertificate(MonitorService):
                     with context.wrap_socket(sock, server_hostname=hostname) as ssock:
                         data = json.dumps(ssock.getpeercert())
                         expiration_date = json.loads(data)["notAfter"]
-                        return dt.strptime(expiration_date, "%b %d %H:%M:%S %Y %Z")
+                        return dt.datetime.strptime(expiration_date, "%b %d %H:%M:%S %Y %Z")
 
     @staticmethod
     def _get_certificate_expiration_email_notification_subject(org_id, service_id, endpoint):
@@ -163,8 +175,8 @@ class MonitorServiceCertificate(MonitorService):
 
 class MonitorServiceHealth(MonitorService):
     def __init__(self, repo):
-        self.repo = repo
+        super().__init__(repo)
 
     def reset_next_service_health_check_timestamp(self, org_id, service_id):
-        response = self._update_next_service_health_check_timestamp(dt.utcnow(), org_id, service_id)
+        response = self._update_next_service_health_check_timestamp(dt.datetime.now(dt.UTC), org_id, service_id)
         return response

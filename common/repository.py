@@ -30,8 +30,8 @@ class Repository:
                 connection_open = True
 
         if connection_open:
-            self.connection = pymysql.connect(self.DB_HOST, user=self.DB_USER,
-                                              passwd=self.DB_PASSWORD, db=self.DB_NAME, port=self.DB_PORT)
+            self.connection = pymysql.connect(host=self.DB_HOST, user=self.DB_USER,
+                                              password=self.DB_PASSWORD, db=self.DB_NAME, port=self.DB_PORT)
         return self.connection
 
     def __execute_query(self, query, params=None):

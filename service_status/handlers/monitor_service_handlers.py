@@ -8,6 +8,8 @@ from service_status.exceptions import BadRequestException
 from service_status.service_status import ServiceStatus
 from service_status.monitor_service import MonitorServiceCertificate, MonitorServiceHealth
 
+from datetime import datetime
+
 obj_util = Utils()
 db = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
 logger = get_logger(__name__)
@@ -17,6 +19,7 @@ logger = get_logger(__name__)
 def request_handler(event, context):
     service_status = ServiceStatus(repo=db, net_id=NETWORK_ID)
     service_status.update_service_status()
+    return "success"
 
 
 @handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
