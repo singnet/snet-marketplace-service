@@ -46,7 +46,7 @@ class Utils:
                 del row[item]
 
         for key in row:
-            if isinstance(row[key], decimal.Decimal) or isinstance(row[key], datetime.datetime):
+            if isinstance(row[key], decimal.Decimal) or isinstance(row[key], dt.datetime):
                 row[key] = str(row[key])
             elif isinstance(row[key], bytes):
                 if row[key] == b'\x01':
