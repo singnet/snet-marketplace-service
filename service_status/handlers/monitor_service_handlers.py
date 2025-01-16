@@ -8,7 +8,6 @@ from service_status.exceptions import BadRequestException
 from service_status.service_status import ServiceStatus
 from service_status.monitor_service import MonitorServiceCertificate, MonitorServiceHealth
 
-from datetime import datetime
 
 obj_util = Utils()
 db = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
