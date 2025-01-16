@@ -152,6 +152,7 @@ class MonitorServiceCertificate(MonitorService):
                 endpoint = self.obj_util.remove_http_https_prefix(url=endpoint)
                 hostname = endpoint.split(":")[0]
                 port = endpoint.split(":")[1]
+                port = port.rstrip("/")
                 context = ssl.create_default_context()
                 with socket.create_connection((hostname, port)) as sock:
                     with context.wrap_socket(sock, server_hostname=hostname) as ssock:
