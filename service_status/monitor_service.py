@@ -122,10 +122,9 @@ class MonitorServiceCertificate(MonitorService):
             logger.info(f"Expiration date: {expiration_date}. Certificate will expire in {days_left_for_expiration} days.")
             if days_left_for_expiration < CERTIFICATION_EXPIRATION_THRESHOLD:
                 logger.info("Sending notification.")
-                ...
-                # self._send_notification_for_certificate_expiration(org_id=org_id, service_id=service_id,
-                #                                                    endpoint=endpoint,
-                #                                                    days_left_for_expiration=days_left_for_expiration)
+                self._send_notification_for_certificate_expiration(org_id=org_id, service_id=service_id,
+                                                                   endpoint=endpoint,
+                                                                   days_left_for_expiration=days_left_for_expiration)
 
     def _send_notification_for_certificate_expiration(self, org_id, service_id, endpoint, days_left_for_expiration):
 
