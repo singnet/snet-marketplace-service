@@ -3,6 +3,7 @@ import json
 import datetime as dt
 import ssl
 import socket
+from urllib.parse import urlparse
 from service_status.config import REGION_NAME, NOTIFICATION_ARN, SLACK_HOOK, NETWORKS, NETWORK_ID, \
     CERTIFICATION_EXPIRATION_THRESHOLD
 from common.boto_utils import BotoUtils
@@ -146,19 +147,22 @@ class MonitorServiceCertificate(MonitorService):
         self._send_slack_notification(slack_message=slack_message)
 
     def _get_certification_expiration_date_for_given_service(self, endpoint):
-        endpoint = endpoint.lstrip()
-        if self._valid_url(url=endpoint):
-            if self._is_https_endpoint(endpoint):
-                endpoint = self.obj_util.remove_http_https_prefix(url=endpoint)
-                hostname = endpoint.split(":")[0]
-                port = endpoint.split(":")[1]
-                port = port.rstrip("/")
-                context = ssl.create_default_context()
-                with socket.create_connection((hostname, port)) as sock:
-                    with context.wrap_socket(sock, server_hostname=hostname) as ssock:
-                        data = json.dumps(ssock.getpeercert())
-                        expiration_date = json.loads(data)["notAfter"]
-                        return dt.datetime.strptime(expiration_date, "%b %d %H:%M:%S %Y %Z")
+        try:
+            endpoint = endpoint.lstrip()
+            if self._valid_url(url=endpoint):
+                if self._is_https_endpoint(endpoint):
+                    url = urlparse(endpoint).netloc
+                    hostname, port = url.split(":")
+                    port = int(port)
+                    context = ssl.create_default_context()
+                    with socket.create_connection((hostname, port)) as sock:
+                        with context.wrap_socket(sock, server_hostname=hostname) as ssock:
+                            data = json.dumps(ssock.getpeercert())
+                            expiration_date = json.loads(data)["notAfter"]
+                            return dt.datetime.strptime(expiration_date, "%b %d %H:%M:%S %Y %Z")
+        except Exception as e:
+            logger.exception(e)
+            return None
 
     @staticmethod
     def _get_certificate_expiration_email_notification_subject(org_id, service_id, endpoint):
