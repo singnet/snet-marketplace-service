@@ -71,7 +71,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - schedule:
-          rate: rate(1 minutes)
+          rate: rate(5 minutes)
           enabled: ${file(./config.${self:provider.stage}.json):service_status_cron_status}
 
   monitor-service-cert-expiry:
@@ -86,7 +86,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - schedule:
-          rate: rate(2 minutes)
+          rate: rate(3 days)
           enabled: ${file(./config.${self:provider.stage}.json):monitor_service_cert_expiry_cron_status}
 
   reset-service-health-next-check-time:
