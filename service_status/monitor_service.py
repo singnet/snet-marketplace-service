@@ -151,9 +151,9 @@ class MonitorServiceCertificate(MonitorService):
             endpoint = endpoint.lstrip()
             if self._valid_url(url=endpoint):
                 if self._is_https_endpoint(endpoint):
-                    url = urlparse(endpoint).netloc
-                    hostname, port = url.split(":")
-                    port = int(port)
+                    url = urlparse(endpoint)
+                    hostname = url.hostname
+                    port = url.port
                     context = ssl.create_default_context()
                     with socket.create_connection((hostname, port)) as sock:
                         with context.wrap_socket(sock, server_hostname=hostname) as ssock:
