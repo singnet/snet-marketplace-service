@@ -183,98 +183,98 @@ jobs:
     run_tests_development_upg:
     # tests for services moved to updated environment (node22, python3.12)
       runs-on: ubuntu-24.04
-        services:
-          mysql:
-            image: mysql:8.0.21
-            env:
-              MYSQL_ROOT_PASSWORD: unittest_pwd
-              MYSQL_HOST: '%'
-              MYSQL_DATABASE: unittest_db
-              MYSQL_USER: unittest_root
-              MYSQL_PASSWORD: unittest_pwd
-            ports:
-              - 3306:3306
+      services:
+        mysql:
+          image: mysql:8.0.21
+          env:
+            MYSQL_ROOT_PASSWORD: unittest_pwd
+            MYSQL_HOST: '%'
+            MYSQL_DATABASE: unittest_db
+            MYSQL_USER: unittest_root
+            MYSQL_PASSWORD: unittest_pwd
+          ports:
+          - 3306:3306
 
         steps:
-          - uses: actions/setup-node@v4
-            with:
-              node-version: 22
+        - uses: actions/setup-node@v4
+          with:
+            node-version: 22
 
-          - uses: actions/setup-python@v5
-            with:
-              python-version: '3.12'
+        - uses: actions/setup-python@v5
+          with:
+            python-version: '3.12'
 
-          - name: install pip
-            run: |
-              sudo apt update
-              sudo apt install -y python3-pip netcat-traditional socat iputils-ping
+        - name: install pip
+          run: |
+            sudo apt update
+            sudo apt install -y python3-pip netcat-traditional socat iputils-ping
 
-          - name: install packs
-            run: |
-              export PIP_BREAK_SYSTEM_PACKAGES=1
-              sudo apt update --allow-releaseinfo-change
-              sudo apt install unzip -y
-              wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.2.2472-linux.zip
-              unzip sonar-scanner-cli-4.6.2.2472-linux.zip
-              sudo apt install default-mysql-client -y
-              # pip3 install coverage coveralls pytest alembic
-              pip3 install pytest setuptools
+        - name: install packs
+          run: |
+            export PIP_BREAK_SYSTEM_PACKAGES=1
+            sudo apt update --allow-releaseinfo-change
+            sudo apt install unzip -y
+            wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.2.2472-linux.zip
+            unzip sonar-scanner-cli-4.6.2.2472-linux.zip
+            sudo apt install default-mysql-client -y
+            # pip3 install coverage coveralls pytest alembic
+            pip3 install pytest setuptools
 
-          - name: clone repo
-            uses: actions/checkout@v3
+        - name: clone repo
+          uses: actions/checkout@v3
 
-          - name: check db
-            run: |
-              for i in `seq 1 30`;
-              do
-                nc -z 172.17.0.1 3306 && echo Success && exit 0
-                echo -n .
-                sleep 1
-              done
-              echo Failed waiting for MySQL && exit 1
+        - name: check db
+          run: |
+            for i in `seq 1 30`;
+            do
+              nc -z 172.17.0.1 3306 && echo Success && exit 0
+              echo -n .
+              sleep 1
+            done
+            echo Failed waiting for MySQL && exit 1
 
-#          - name: eth_event_listener layers packages test
-#              run: |
-#                pip3 install -r lambda_layers/eth_event_listener/requirements.txt
+#        - name: eth_event_listener layers packages test
+#            run: |
+#              pip3 install -r lambda_layers/eth_event_listener/requirements.txt
 #
-#          - name: install other side packages and layers
-#            run: |
-#              pip3 install -r lambda_layers/web3_and_grpc_libraries/requirements.txt
-#              pip3 install -r lambda_layers/common_python_libraries/requirements.txt
-#              pip3 install -r registry/migration/requirements.txt
+#        - name: install other side packages and layers
+#          run: |
+#            pip3 install -r lambda_layers/web3_and_grpc_libraries/requirements.txt
+#            pip3 install -r lambda_layers/common_python_libraries/requirements.txt
+#            pip3 install -r registry/migration/requirements.txt
 
-          - name: install npm packages
-            run: |
-              # export PIP_BREAK_SYSTEM_PACKAGES=1
-              # export CFLAGS="-I${PREFIX}/include/python3.11/cpython"
-              # for requirement_file in `ls */*/requirement*.txt`;do pip3 install -r $requirement_file ;done
-              # for requirement_file in `ls */requirement*.txt`;do echo "=============$requirement_file=================="; pip3 install -r $requirement_file ;done
-              # pip3 install -r reqs.txt
-              # for package_file in `ls */package*.json | cut -d '/' -f1`;do npm install $package_file/;done
-              npm install service_status/
+        - name: install npm packages
+          run: |
+            # export PIP_BREAK_SYSTEM_PACKAGES=1
+            # export CFLAGS="-I${PREFIX}/include/python3.11/cpython"
+            # for requirement_file in `ls */*/requirement*.txt`;do pip3 install -r $requirement_file ;done
+            # for requirement_file in `ls */requirement*.txt`;do echo "=============$requirement_file=================="; pip3 install -r $requirement_file ;done
+            # pip3 install -r reqs.txt
+            # for package_file in `ls */package*.json | cut -d '/' -f1`;do npm install $package_file/;done
+            npm install service_status/
 
-          - name: create db
-            run: |
-              # export PIP_BREAK_SYSTEM_PACKAGES=1
-              # socat TCP-LISTEN:3306,fork TCP:mysql:3306 &
-              # mysql -h 172.17.0.1 -u root -punittest_pwd -e "create database registry_unittest_db"
-              mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "create database registry_unittest_db"
-              mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "create database verification_unittest_db"
-              mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "GRANT ALL PRIVILEGES ON *.* TO 'unittest_root'@'%';"
-              export PYTHONPATH=$PWD
-              for alembic_file in `ls */alembic*.ini | cut -d '/' -f1`;do cd $alembic_file; echo $alembic_file; alembic upgrade head; cd .. ;done
-              mysql -h 127.0.0.1 -P 3306 -u unittest_root -punittest_pwd unittest_db < orchestrator/testcases/script.sql
+        - name: create db
+          run: |
+            # export PIP_BREAK_SYSTEM_PACKAGES=1
+            # socat TCP-LISTEN:3306,fork TCP:mysql:3306 &
+            # mysql -h 172.17.0.1 -u root -punittest_pwd -e "create database registry_unittest_db"
+            mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "create database registry_unittest_db"
+            mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "create database verification_unittest_db"
+            mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "GRANT ALL PRIVILEGES ON *.* TO 'unittest_root'@'%';"
+            export PYTHONPATH=$PWD
+            for alembic_file in `ls */alembic*.ini | cut -d '/' -f1`;do cd $alembic_file; echo $alembic_file; alembic upgrade head; cd .. ;done
+            mysql -h 127.0.0.1 -P 3306 -u unittest_root -punittest_pwd unittest_db < orchestrator/testcases/script.sql
 
-#          - name: common tests
-#            run: |
-#              export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-#              export AWS_XRAY_SDK_ENABLED=false
-#              pip3 install -r common/requirements.txt
+#        - name: common tests
+#          run: |
+#            export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+#            export AWS_XRAY_SDK_ENABLED=false
+#            pip3 install -r common/requirements.txt
 
-          - name: service_status tests
-            run: |
-              export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-              export AWS_XRAY_SDK_ENABLED=false
-              pip3 install -r service_status/requirements.txt
-              pip3 install --upgrade protobuf
-              PYTHONPATH=$PWD python3 -m coverage run -m pytest service_status/testcases/unit_testcases/*.py service_status/testcases/functional_testcases/*.py
+        - name: service_status tests
+          run: |
+            export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+            export AWS_XRAY_SDK_ENABLED=false
+            pip3 install -r service_status/requirements.txt
+            pip3 install --upgrade protobuf
+            PYTHONPATH=$PWD python3 -m coverage run -m pytest service_status/testcases/unit_testcases/*.py service_status/testcases/functional_testcases/*.py
