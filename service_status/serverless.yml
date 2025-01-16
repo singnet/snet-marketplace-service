@@ -1,8 +1,7 @@
 plugins:
   - serverless-offline
-  - serverless-python-requirements
   - serverless-prune-plugin
-  - serverless-aws-documentation
+  - serverless-python-requirements
 
 service: service-status
 custom:
@@ -16,20 +15,11 @@ custom:
     automatic: true
     includeLayers: true
     number: 2
-  documentation:
-    models:
-      - name: "ErrorMessage"
-        contentType: "application/json"
-        schema: ${file(service_status/documentation/models/error.json)}
-      - name: "ResetServiceHealthNextCheckTimeOutput"
-        contentType: "application/json"
-        schema: ${file(service_status/documentation/models/reset_service_health_next_check_time.json):ResetServiceHealthNextCheckTimeOutput}
 
 
 provider:
   name: aws
   runtime: python3.12
-  description: Service status service # optional, Description to publish to AWS
   memorySize: 128
   timeout: 60
   region: ${file(./config.${self:provider.stage}.json):REGION}
@@ -70,7 +60,6 @@ package:
 
 functions:
   service-status:
-    warmup: true
     handler: service_status/handlers/monitor_service_handlers.request_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -86,7 +75,6 @@ functions:
           enabled: ${file(./config.${self:provider.stage}.json):service_status_cron_status}
 
   monitor-service-cert-expiry:
-    warmup: true
     handler: service_status/handlers/monitor_service_handlers.monitor_service_certificates_expiry_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -102,7 +90,6 @@ functions:
           enabled: ${file(./config.${self:provider.stage}.json):monitor_service_cert_expiry_cron_status}
 
   reset-service-health-next-check-time:
-    warmup: true
     handler: service_status/handlers/monitor_service_handlers.reset_service_health_next_check_time
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -126,25 +113,3 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-          documentation:
-            summary: "Reset service health "
-            description: "Reset service health next check time by given org_id and service_id"
-            tags:
-              - "service health"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            pathParams:
-              - name: "org_id"
-                description: "Enter org_id"
-              - name: "service_id"
-                description: "Enter service_id"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "response"
-                responseModels:
-                  "application/json": "ResetServiceHealthNextCheckTimeOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
