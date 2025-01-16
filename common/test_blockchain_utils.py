@@ -4,7 +4,7 @@ import unittest
 from web3 import Web3
 
 from common.blockchain_util import BlockChainUtil
-from common.config import EXECUTOR_ADDRESS, EXECUTOR_KEY, SIGNER_ADDRESS, NETWORKS
+from common.config import EXECUTOR_ADDRESS, EXECUTOR_KEY, SIGNER_ADDRESS, NETWORKS, SIGNER_KEY
 from common.constant import MPE_CNTRCT_PATH, MPE_ADDR_PATH
 
 

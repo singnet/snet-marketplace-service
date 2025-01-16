@@ -16,8 +16,8 @@ from service_status.config import NETWORK_ID, NETWORKS
 
 
 class TestMonitorService(TestCase):
-    def setUp(self):
-        self.repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
+    # def setUp(self):
+    #     self.repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
 
     # @patch("service_status.monitor_service.MonitorServiceCertificate._get_service_endpoint_data")
     # @patch(
@@ -95,6 +95,6 @@ class TestMonitorService(TestCase):
             # logger.info(f"error in making grpc call::url: {url}, |error: {e}")
             return 0
 
-    def tearDown(self):
-        self.repo.execute("DELETE FROM service")
-        self.repo.execute("DELETE FROM service_endpoint")
+    # def tearDown(self):
+    #     self.repo.execute("DELETE FROM service")
+    #     self.repo.execute("DELETE FROM service_endpoint")
