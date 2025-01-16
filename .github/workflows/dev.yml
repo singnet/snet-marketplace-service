@@ -233,10 +233,11 @@ jobs:
           done
           echo Failed waiting for MySQL && exit 1
 
-#      - name: eth_event_listener layers packages test
-#        run: |
-#          pip3 install -r lambda_layers/eth_event_listener/requirements.txt
-#
+      - name: eth_event_listener layers packages test
+        run: |
+          # pip3 install -r lambda_layers/eth_event_listener/requirements.txt
+          pip3 install -r service_status/requirements.txt
+
 #      - name: install other side packages and layers
 #        run: |
 #          pip3 install -r lambda_layers/web3_and_grpc_libraries/requirements.txt
