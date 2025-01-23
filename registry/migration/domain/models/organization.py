@@ -1,6 +1,6 @@
 class Organization:
     def __init__(self, uuid, org_id, name, org_type, origin, description, short_description, url,
-                 contacts, assets, metadata_ipfs_uri, duns_no, members, groups):
+                 contacts, assets, metadata_uri, duns_no, members, groups):
         self.name = name
         self.id = org_id
         self.uuid = uuid
@@ -12,7 +12,7 @@ class Organization:
         self.origin = origin
         self.contacts = contacts
         self.assets = assets
-        self.metadata_ipfs_uri = metadata_ipfs_uri
+        self.metadata_uri = metadata_uri
         self.members = members
         self.groups = groups
 

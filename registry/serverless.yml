@@ -509,9 +509,9 @@ functions:
 
 
 
-  publish-org-ipfs:
+  publish-organization:
     warmup: true
-    handler: registry.application.handlers.organization_handlers.publish_org_on_ipfs
+    handler: registry.application.handlers.organization_handlers.publish_organization
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -528,7 +528,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /org/{org_uuid}/ipfs_publish
+          path: /org/{org_uuid}/publish/{provider_storage}
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
