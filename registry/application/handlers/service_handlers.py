@@ -150,11 +150,14 @@ def get_service_for_service_uuid(event, context):
 def publish_service_metadata_to_ipfs(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
-    if "org_uuid" not in path_parameters and "service_uuid" not in path_parameters:
+    if "org_uuid" not in path_parameters and \
+        "service_uuid" not in path_parameters and "provider_storage" not in path_parameters:
         raise BadRequestException()
-    org_uuid = path_parameters["org_uuid"]
-    service_uuid = path_parameters["service_uuid"]
-    response = ServicePublisherService(username, org_uuid, service_uuid).publish_service_data_to_ipfs()
+    response = ServicePublisherService(
+        username,
+        path_parameters["org_uuid"],
+        path_parameters["service_uuid"]
+    ).publish_service_data_to_ipfs()
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
@@ -272,11 +275,14 @@ def publish_service(event, context):
     logger.info(f"Publish service event::{event}")
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
-    if "org_uuid" not in path_parameters and "service_uuid" not in path_parameters:
+    if "org_uuid" not in path_parameters and \
+        "service_uuid" not in path_parameters and "provider_storage" not in path_parameters:
         raise BadRequestException()
-    org_uuid = path_parameters["org_uuid"]
-    service_uuid = path_parameters["service_uuid"]
-    response = ServicePublisherService(username, org_uuid, service_uuid).publish_service_data()
+    response = ServicePublisherService(
+        username,
+        path_parameters["org_uuid"],
+        path_parameters["service_uuid"]
+    ).publish_service(path_parameters["provider_storage"])
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True

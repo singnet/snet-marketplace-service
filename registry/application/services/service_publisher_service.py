@@ -1,8 +1,13 @@
+import os
 import json
+import tempfile
 from datetime import datetime as dt
+from typing import Dict, Union
+from urllib.request import urlretrieve
 from uuid import uuid4
-import requests
 
+import requests
+from deepdiff import DeepDiff
 from aws_xray_sdk.core import patch_all
 from cerberus import Validator
 
@@ -11,22 +16,35 @@ from common.boto_utils import BotoUtils
 from common.constant import StatusCode
 from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
-from common.utils import download_file_from_url, json_to_file, publish_zip_file_in_ipfs, send_email_notification
-from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH, NETWORKS, NETWORK_ID, NOTIFICATION_ARN, \
+from common.utils import json_to_file, send_email_notification
+from registry.config import (
+    IPFS_URL, METADATA_FILE_PATH, NETWORKS, NETWORK_ID, NOTIFICATION_ARN,
     REGION_NAME, PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT, GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT
-from registry.constants import EnvironmentType, ServiceAvailabilityStatus, ServiceStatus, \
-    ServiceSupportType, UserType, ServiceType
+)
+from registry.constants import (
+    EnvironmentType,
+    ServiceAvailabilityStatus,
+    ServiceStatus,
+    ServiceSupportType,
+    UserType,
+    ServiceType
+)
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.models.demo_component import DemoComponent
 from registry.domain.models.offchain_service_config import OffchainServiceConfig
 from registry.domain.models.service import Service
 from registry.domain.models.service_comment import ServiceComment
-from registry.domain.services.service_publisher_domain_service import ServicePublisherDomainService
-from registry.exceptions import EnvironmentNotFoundException, InvalidServiceStateException, \
-    OrganizationNotFoundException, ServiceNotFoundException, ServiceProtoNotFoundException, InvalidMetadataException
+from registry.exceptions import (
+    EnvironmentNotFoundException,
+    InvalidServiceStateException,
+    OrganizationNotFoundException,
+    ServiceNotFoundException,
+    ServiceProtoNotFoundException,
+    InvalidMetadataException
+)
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
-from deepdiff import DeepDiff
+from registry.infrastructure.storage_provider import validate_storage_provider, StorageProvider, StorageProviderType
 
 patch_all()
 ALLOWED_ATTRIBUTES_FOR_SERVICE_SEARCH = ["display_name"]
@@ -43,7 +61,6 @@ logger = get_logger(__name__)
 service_factory = ServiceFactory()
 boto_util = BotoUtils(region_name=REGION_NAME)
 validator = Validator()
-ipfs_util = IPFSUtil(IPFS_URL["url"], IPFS_URL["port"])
 
 
 class ServicePublisherService:
@@ -51,10 +68,9 @@ class ServicePublisherService:
         self._username = username
         self._org_uuid = org_uuid
         self._service_uuid = service_uuid
-        self.obj_service_publisher_domain_service = ServicePublisherDomainService(username, org_uuid, service_uuid)
+        self._storage_provider = StorageProvider()
 
     def service_build_status_notifier(self, org_id, service_id, build_status):
-
         if build_status == BUILD_FAILURE_CODE:
             BUILD_FAIL_MESSAGE = "Build failed please check your components"
             org_uuid, service = ServicePublisherRepository().get_service_for_given_service_id_and_org_id(org_id,
@@ -74,7 +90,7 @@ class ServicePublisherService:
                                         BUILD_STATUS_SUBJECT.format(service_id),
                                         BUILD_STATUS_MESSAGE.format(org_id, service_id), NOTIFICATION_ARN,
                                         boto_util)
-            except:
+            except Exception:
                 logger.info(f"Error happened while sending build_status mail for {org_id} and contacts {contacts}")
 
     def get_service_id_availability_status(self, service_id):
@@ -243,33 +259,113 @@ class ServicePublisherService:
             service_data = self.map_offchain_service_config(offchain_service_config, service_data)
         return service_data
 
-    def publish_service_data_to_ipfs(self):
-        service_publisher_repo = ServicePublisherRepository()
-        service = service_publisher_repo.get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
-        if service.service_state.state == ServiceStatus.APPROVED.value:
-            proto_url = service.assets.get("proto_files", {}).get("url", None)
-            if proto_url is None:
-                raise ServiceProtoNotFoundException
-            filename = download_file_from_url(file_url=proto_url,
-                                              file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}")
-            logger.info(f"proto file Name Retrieved  = '{filename}` ")
-            asset_ipfs_hash = publish_zip_file_in_ipfs(
-                filename=filename,
-                file_dir=f"{ASSET_DIR}/{service.org_uuid}/{service.uuid}",
-                ipfs_client=IPFSUtil(IPFS_URL['url'], IPFS_URL['port']),
-                ignored_files=["pricing.proto", "training.proto"]
-            )
-            service.proto = {
-                "model_ipfs_hash": asset_ipfs_hash,
-                "encoding": "proto",
-                "service_type": service.service_type
-            }
-            service.assets["proto_files"]["ipfs_hash"] = asset_ipfs_hash
-            ServicePublisherDomainService.publish_assets(service)
-            service = service_publisher_repo.save_service(self._username, service, service.service_state.state)
-            return service
-        logger.info(f"Service status needs to be {ServiceStatus.APPROVED.value} to be eligible for publishing.")
-        raise InvalidServiceStateException()
+    def publish_assets(self, service: Service, storage_provider_enum: StorageProviderType):
+        """
+        Publishes supported service assets to the specified storage provider.
+
+        :param service: Service object containing assets.
+        :param storage_provider_enum: Enum value for the storage provider.
+        """
+        ASSETS_SUPPORTED = ["hero_image", "demo_files"]
+        supported_assets = {k: v for k, v in service.assets.items() if k in ASSETS_SUPPORTED}
+
+        for asset_name, asset_data in supported_assets.items():
+            try:
+                asset_url = asset_data.get("url")
+                if not asset_url:
+                    logger.warning(f"Asset URL for '{asset_name}' is missing. Skipping...")
+                    continue
+
+                source_path = self._download_file(asset_url)
+                logger.info(f"Downloaded asset '{asset_name}' to: {source_path}")
+
+                asset_hash = self._storage_provider.publish(source_path, storage_provider_enum)
+                logger.info(f"Published asset '{asset_name}'. Hash: {asset_hash}")
+
+                service.assets[asset_name]["hash"] = asset_hash
+
+            except Exception as e:
+                logger.error(f"Failed to process asset '{asset_name}': {str(e)}")
+
+    def publish_service_data_to_storage_provider(self, storage_provider_enum: StorageProviderType) -> Service:
+        """
+        Publishes the service's assets and protos to storage provider and updates the service's metadata.
+
+        :param storage_provider_enum: Enum value for the storage provider (e.g., IPFS, Filecoin).
+        :return: Updated Service object.
+        :raises ServiceProtoNotFoundException: If the proto files are not found in the service assets.
+        :raises InvalidServiceStateException: If the service is not in the APPROVED state.
+        """
+        service = self._get_approved_service()
+
+        proto_url = service.assets.get("proto_files", {}).get("url")
+        if not proto_url:
+            raise ServiceProtoNotFoundException("Proto file URL not found in service assets.")
+
+        proto_file_path = self._download_file(proto_url)
+        logger.info(f"Proto file downloaded to: {proto_file_path}")
+        print(f"Proto file downloaded to: {proto_file_path}")
+
+        asset_hash = self._storage_provider.publish(proto_file_path, storage_provider_enum, zip_archive=True)
+        logger.info(f"Published proto files. Hash: {asset_hash}")
+        print(f"Published proto files. Hash: {asset_hash}")
+
+        return self._update_service_metadata(service, asset_hash, storage_provider_enum)
+
+    def _get_approved_service(self) -> Service:
+        """
+        Fetches the service from the repository and validates its state.
+
+        :return: Service object if it is in the APPROVED state.
+        :raises InvalidServiceStateException: If the service is not in the APPROVED state.
+        """
+        service_repo = ServicePublisherRepository()
+        service = service_repo.get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
+        if service.service_state.state != ServiceStatus.APPROVED.value:
+            logger.error(f"Service status must be {ServiceStatus.APPROVED.value} to publish.")
+            raise InvalidServiceStateException()
+        return service
+
+    def _download_file(self, url: str) -> str:
+        """
+        Downloads a file from the given URL to a temporary location.
+
+        :param url: URL of the file.
+        :return: Path to the downloaded temporary file.
+        """
+        try:
+            # Create a temporary file with a proper suffix based on the URL's file extension
+            file_suffix = os.path.splitext(url)[-1]  # Extract the file extension from the URL
+            with tempfile.NamedTemporaryFile(delete=False, suffix=file_suffix) as temp_file:
+                temp_file_path = temp_file.name
+
+            # Download the file to the temporary file location
+            urlretrieve(url, temp_file_path)  # Replace this with your download function if needed
+            logger.info(f"File downloaded to temporary location: {temp_file_path}")
+            return temp_file_path
+
+        except Exception as e:
+            logger.error(f"Failed to download file from URL '{url}': {str(e)}")
+            raise
+
+    def _update_service_metadata(self, service: Service, asset_hash: str, storage_provider_enum: StorageProviderType) -> Service:
+        """
+        Updates the service metadata and persists it in the repository.
+
+        :param service: Service object to update.
+        :param asset_hash: Hash of the published proto file.
+        :param storage_provider_enum: Enum value for the storage provider.
+        """
+        service.proto = {
+            "model_hash": asset_hash,
+            "encoding": "proto",
+            "service_type": service.service_type,
+        }
+        service.assets["proto_files"]["hash"] = asset_hash
+        self.publish_assets(service, storage_provider_enum)
+
+        service_repo = ServicePublisherRepository()
+        return service_repo.save_service(self._username, service, service.service_state.state)
 
     @staticmethod
     def notify_service_contributor_when_user_submit_for_approval(org_id, service_id, contributors):
@@ -390,47 +486,50 @@ class ServicePublisherService:
             raise Exception(f"Error getting service details for org_id :: {org_id} service_id :: {service_id}")
         return json.loads(response.text)["data"]
 
-    def publish_service_data(self):
-        # Validate service metadata
-        current_service = self.publish_service_data_to_ipfs()
+    def publish_new_offchain_configs(self, current_service: Service, storage_provider: StorageProvider) -> Dict[str, Union[bool, str]]:
+        organization = OrganizationPublisherRepository().get_organization(org_uuid=self._org_uuid)
+        existing_service_data = self.get_existing_service_details_from_contract_api(
+            current_service.service_id, organization.id
+        )
 
-        is_valid = Service.is_metadata_valid(service_metadata=current_service.to_metadata())
-        logger.info(f"is_valid :: {is_valid} :: validated current_metadata :: {current_service.to_metadata()}")
-        if not is_valid:
-            raise InvalidMetadataException()
+        self._storage_provider.get(existing_service_data["ipfs_hash"], )
+        existing_metadata = (
+            self._storage_provider.get(existing_service_data["ipfs_hash"])
+            if existing_service_data else {}
+        )
+        publish_to_blockchain = self.are_blockchain_attributes_got_updated(
+            existing_metadata, current_service.to_metadata()
+        )
 
-        # Monitor blockchain and offchain changes
-        current_org = OrganizationPublisherRepository().get_organization(org_uuid=self._org_uuid)
-        existing_service_data = self.get_existing_service_details_from_contract_api(current_service.service_id, current_org.id)
-        if existing_service_data:
-            existing_metadata = ipfs_util.read_file_from_ipfs(existing_service_data["ipfs_hash"])
-        else:
-            existing_metadata = {}
-        publish_to_blockchain = self.are_blockchain_attributes_got_updated(existing_metadata, current_service.to_metadata())
         existing_offchain_configs = self.get_existing_offchain_configs(existing_service_data)
+        current_offchain_configs = ServicePublisherRepository().get_offchain_service_config(
+            org_uuid=self._org_uuid, service_uuid=self._service_uuid
+        )
 
-        current_offchain_attributes = ServicePublisherRepository().get_offchain_service_config(org_uuid=self._org_uuid,
-                                                                                               service_uuid=self._service_uuid)
-
-        new_offchain_attributes = self.get_offchain_changes(
-            current_offchain_config=current_offchain_attributes.configs,
+        new_offchain_configs = self.get_offchain_changes(
+            current_offchain_config=current_offchain_configs.configs,
             existing_offchain_config=existing_offchain_configs,
-            current_service=current_service)
+            current_service=current_service
+        )
 
-        status = {
-            "publish_to_blockchain": publish_to_blockchain
-        }
+        status = self._prepare_publish_status(
+            current_service, storage_provider, publish_to_blockchain, new_offchain_configs
+        )
+        return status
+
+    def _prepare_publish_status(self, current_service, storage_provider, publish_to_blockchain, new_offchain_configs):
+        status = {"publish_to_blockchain": publish_to_blockchain}
+        
         if publish_to_blockchain:
             filename = f"{METADATA_FILE_PATH}/{current_service.uuid}_service_metadata.json"
-            ipfs_hash = ServicePublisherService.publish_to_ipfs(filename, current_service.to_metadata())
-            status["service_metadata_ipfs_hash"] = "ipfs://" + ipfs_hash
+            status["service_metadata_uri"] = self._storage_provider.publish(filename, storage_provider)
+        
         self.publish_offchain_service_configs(
-            org_id=current_org.id,
+            org_id=current_service.organization_id,
             service_id=current_service.service_id,
-            payload=json.dumps(new_offchain_attributes)
+            payload=json.dumps(new_offchain_configs)
         )
-        # if there is no blockchain change update state as published
-        # else status will be marked based event received from blockchain
+        
         if not publish_to_blockchain:
             ServicePublisherRepository().save_service(
                 username=self._username,
@@ -438,3 +537,12 @@ class ServicePublisherService:
                 state=ServiceStatus.PUBLISHED.value
             )
         return status
+
+    def publish_service(self, storage_provider: str):
+        storage_provider_enum = validate_storage_provider(storage_provider)
+        current_service = self.publish_service_data_to_storage_provider(storage_provider_enum=storage_provider_enum)
+
+        if not Service.is_metadata_valid(service_metadata=current_service.to_metadata()):
+            raise InvalidMetadataException()
+
+        return self.publish_new_offchain_configs(current_service, storage_provider_enum)
