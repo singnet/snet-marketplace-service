@@ -21,7 +21,7 @@ class Organization(Base):
     duns_no = Column("duns_no", VARCHAR(36))
     contacts = Column("contacts", JSON, nullable=False)
     assets = Column("assets", JSON, nullable=False)
-    metadata_ipfs_uri = Column("metadata_ipfs_uri", VARCHAR(255))
+    metadata_uri = Column("metadata_uri", VARCHAR(255))
     org_state = relationship("OrganizationState", backref='organization', lazy='joined')
     groups = relationship("Group", backref='organization', lazy='joined')
     addresses = relationship("OrganizationAddress", backref='organization', lazy='joined')
@@ -105,7 +105,7 @@ class OrganizationArchive(Base):
     duns_no = Column("duns_no", VARCHAR(36))
     contacts = Column("contacts", JSON, nullable=False)
     assets = Column("assets", JSON, nullable=False)
-    metadata_ipfs_uri = Column("metadata_ipfs_uri", VARCHAR(255))
+    metadata_uri = Column("metadata_uri", VARCHAR(255))
     groups = Column("groups", JSON, nullable=False)
     org_state = Column("org_state", JSON, nullable=False)
 
