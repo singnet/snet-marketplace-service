@@ -45,7 +45,7 @@ class TestServiceEventConsumer(unittest.TestCase):
                 origin="PUBLISHER_DAPP",
                 groups=[],
                 addresses=[],
-                metadata_ipfs_uri="#dummyhashdummyhash"
+                metadata_uri="#dummyhashdummyhash"
             )
         )
         service_repo.add_item(
@@ -156,7 +156,7 @@ class TestServiceEventConsumer(unittest.TestCase):
                 origin="PUBLISHER_DAPP",
                 groups=[],
                 addresses=[],
-                metadata_ipfs_uri="#dummyhashdummyhash"
+                metadata_uri="#dummyhashdummyhash"
             )
         )
 
@@ -240,7 +240,7 @@ class TestServiceEventConsumer(unittest.TestCase):
                 origin="PUBLISHER_DAPP",
                 groups=[],
                 addresses=[],
-                metadata_ipfs_uri="#dummyhashdummyhash"
+                metadata_uri="#dummyhashdummyhash"
             )
         )
         org_repo.add_item(
