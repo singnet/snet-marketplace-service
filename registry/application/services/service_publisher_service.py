@@ -304,11 +304,9 @@ class ServicePublisherService:
 
         proto_file_path = self._download_file(proto_url)
         logger.info(f"Proto file downloaded to: {proto_file_path}")
-        print(f"Proto file downloaded to: {proto_file_path}")
 
         asset_hash = self._storage_provider.publish(proto_file_path, storage_provider_enum, zip_archive=True)
         logger.info(f"Published proto files. Hash: {asset_hash}")
-        print(f"Published proto files. Hash: {asset_hash}")
 
         return self._update_service_metadata(service, asset_hash, storage_provider_enum)
 

@@ -128,7 +128,6 @@ class OrganizationPublisherService:
             org_repo.add_organization_archive(organization)
 
     def publish_assets_to_storage_provider(self, organization: Organization, provider_type: StorageProviderType):
-        print(organization.to_response())
         for asset_type in organization.assets:
             if "url" in organization.assets[asset_type]:
                 url = organization.assets[asset_type]["url"]

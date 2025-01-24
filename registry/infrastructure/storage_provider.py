@@ -169,7 +169,6 @@ class FileUtils:
                 # Create the tar file and write to the temporary tar path
                 with tarfile.open(tar_path, mode="w:gz") as tar:
                     for file_path in glob.glob(temp_dir):
-                        print(f"Adding file to tar: {file_path}")
                         logger.info(f"Adding file to tar: {file_path}")
                         tar.add(file_path, arcname=os.path.basename(file_path), filter=FileUtils.reset)
 
