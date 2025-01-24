@@ -4,7 +4,7 @@ from enum import EnumMeta, Enum
 import os
 import tarfile
 import tempfile
-from typing import List, Tuple
+from typing import List, Tuple, Union
 from zipfile import ZipFile
 
 from common.exceptions import BadRequestException
@@ -35,7 +35,9 @@ def validate_storage_provider(storage_provider: str) -> StorageProviderType:
 
 
 class StorageProvider:
-    def __init__(self, lighthouse_token: str = "read_ony_token"):
+    def __init__(self, lighthouse_token: Union[str, None] = "read_only_token"):
+        if lighthouse_token is None:
+            lighthouse_token = "read_only_token"
         self.__ipfs_util = IPFSUtil(IPFS_URL["url"], IPFS_URL["port"])
         self.__lighthouse_client = Lighthouse(lighthouse_token)
 
