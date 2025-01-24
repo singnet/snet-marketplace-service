@@ -1,26 +1,46 @@
 import json
 from datetime import datetime
+import tempfile
+from typing import Dict, Union
+from urllib.parse import urlparse
 
+import requests
 from web3 import Web3
 
 from common import utils
 from common.boto_utils import BotoUtils
 from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
-from common.utils import Utils
-import registry.config
-from registry.constants import EnvironmentType, ORG_STATUS_LIST, ORG_TYPE_VERIFICATION_TYPE_MAPPING, \
-    OrganizationActions, OrganizationIDAvailabilityStatus, OrganizationMemberStatus, OrganizationStatus, \
-    OrganizationType, Role
+from registry.config import REGION_NAME, NOTIFICATION_ARN
+from registry.constants import (
+    EnvironmentType,
+    ORG_STATUS_LIST,
+    ORG_TYPE_VERIFICATION_TYPE_MAPPING,
+    OrganizationActions,
+    OrganizationIDAvailabilityStatus,
+    OrganizationMemberStatus,
+    OrganizationStatus,
+    OrganizationType, 
+    Role
+)
+from registry.infrastructure.storage_provider import (
+    validate_storage_provider,
+    StorageProvider,
+    StorageProviderType,
+    FileUtils
+)
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization
 from registry.domain.services.registry_blockchain_util import RegistryBlockChainUtil
 from registry.exceptions import InvalidOrganizationStateException, BadRequestException
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
-from registry.mail_templates import \
-    get_notification_mail_template_for_service_provider_when_org_is_submitted_for_onboarding, \
-    get_owner_mail_for_org_rejected, get_owner_mail_for_org_changes_requested, get_owner_mail_for_org_approved
-from registry.mail_templates import get_org_member_invite_mail, get_org_approval_mail
+from registry.mail_templates import (
+    get_notification_mail_template_for_service_provider_when_org_is_submitted_for_onboarding,
+    get_owner_mail_for_org_rejected,
+    get_owner_mail_for_org_changes_requested,
+    get_owner_mail_for_org_approved
+)
+from registry.mail_templates import get_org_member_invite_mail
 
 org_repo = OrganizationPublisherRepository()
 
@@ -30,10 +50,11 @@ ORG_APPROVE_MESSAGE = "You organization  {} has been approved"
 
 
 class OrganizationPublisherService:
-    def __init__(self, org_uuid, username):
+    def __init__(self, org_uuid: str, username: str, lighthouse_token: Union[str, None] = None):
         self.org_uuid = org_uuid
         self.username = username
-        self.boto_utils = BotoUtils(region_name=registry.config.REGION_NAME)
+        self.boto_utils = BotoUtils(region_name=REGION_NAME)
+        self.storage_provider = StorageProvider(lighthouse_token)
 
     def get_approval_pending_organizations(self, limit, type=None):
         status = OrganizationStatus.ONBOARDING.value
@@ -98,7 +119,7 @@ class OrganizationPublisherService:
                 "subject": mail_template["subject"],
                 "notification_type": "support",
                 "recipient": recipient})}
-            self.boto_utils.invoke_lambda(lambda_function_arn=registry.config.NOTIFICATION_ARN, invocation_type="RequestResponse",
+            self.boto_utils.invoke_lambda(lambda_function_arn=NOTIFICATION_ARN, invocation_type="RequestResponse",
                                           payload=json.dumps(send_notification_payload))
             logger.info(f"Recipient {recipient} notified for successfully starting onboarding process.")
 
@@ -106,11 +127,37 @@ class OrganizationPublisherService:
         if organization.get_status() == OrganizationStatus.PUBLISHED.value:
             org_repo.add_organization_archive(organization)
 
-    def publish_org_to_ipfs(self):
-        logger.info(f"publish organization to ipfs org_uuid: {self.org_uuid}")
+    def publish_assets_to_storage_provider(self, organization: Organization, provider_type: StorageProviderType):
+        for asset_type in organization.assets:
+            if "url" in organization.assets[asset_type]:
+                url = organization.assets[asset_type]["url"]
+                filename = urlparse(url).path.split("/")[-1]
+
+                response = requests.get(url)
+                response.raise_for_status()
+
+                with tempfile.NamedTemporaryFile(mode='wb', suffix=f"_{filename}", delete=True) as temp_asset_file:
+                    temp_asset_file.write(response.content)
+                    temp_asset_file.flush()
+
+                    asset_hash = self.storage_provider.publish(temp_asset_file.name, provider_type)
+
+                    organization.assets[asset_type]["hash"] = asset_hash
+
+    def publish_metadata_to_storage_provider(self, organization: Organization, storage_type: StorageProviderType) -> str:
+        self.publish_assets_to_storage_provider(organization, storage_type)
+        filepath = FileUtils.crete_temp_json_file(organization.to_metadata())
+        return self.storage_provider.publish(filepath, storage_type)
+
+    def publish_organization(self, storage_provider: str) -> Dict[str, any]:
+        logger.info(f"Publish organization {self.org_uuid} to {storage_provider}")
+
+        storage_provider_enum = validate_storage_provider(storage_provider)
         organization = org_repo.get_organization(org_uuid=self.org_uuid)
-        organization.publish_to_ipfs()
-        org_repo.store_ipfs_hash(organization, self.username)
+
+        organization.metadata_uri = self.publish_metadata_to_storage_provider(organization, storage_provider_enum)
+        org_repo.store_metadata_uri(organization, self.username)
+
         return organization.to_response()
 
     def save_transaction_hash_for_publish_org(self, payload):
@@ -126,9 +173,9 @@ class OrganizationPublisherService:
         return "OK"
 
     def get_all_member(self, status, role, pagination_details):
-        offset = pagination_details.get("offset", None)
-        limit = pagination_details.get("limit", None)
-        sort = pagination_details.get("sort", None)
+        # offset = pagination_details.get("offset", None)
+        # limit = pagination_details.get("limit", None)
+        # sort = pagination_details.get("sort", None)
         org_members_list = org_repo.get_org_member(org_uuid=self.org_uuid, status=status, role=role)
         return [member.to_response() for member in org_members_list]
 
@@ -200,7 +247,7 @@ class OrganizationPublisherService:
                 "subject": mail_template["subject"],
                 "notification_type": "support",
                 "recipient": recipient})}
-            self.boto_utils.invoke_lambda(lambda_function_arn=registry.config.NOTIFICATION_ARN, invocation_type="RequestResponse",
+            self.boto_utils.invoke_lambda(lambda_function_arn=NOTIFICATION_ARN, invocation_type="RequestResponse",
                                           payload=json.dumps(send_notification_payload))
             logger.info(f"Org Membership Invite sent to {recipient}")
 
@@ -246,4 +293,4 @@ class OrganizationPublisherService:
             raise InvalidOrganizationStateException()
 
         utils.send_email_notification([owner_email_address], mail_template["subject"],
-                                      mail_template["body"], registry.config.NOTIFICATION_ARN, self.boto_utils)
+                                      mail_template["body"], NOTIFICATION_ARN, self.boto_utils)

@@ -358,3 +358,5 @@ class Service:
                 })
                 order += 1
         return metadata_assets
+
+        

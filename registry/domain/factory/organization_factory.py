@@ -1,5 +1,5 @@
 from registry.config import ALLOWED_ORIGIN
-from registry.constants import OrganizationStatus, Role, OrganizationAddressType
+from registry.constants import Role, OrganizationAddressType
 from registry.domain.models.comment import Comment
 from registry.domain.models.group import Group
 from registry.domain.models.organization import Organization, OrganizationState
@@ -26,13 +26,13 @@ class OrganizationFactory:
             raise InvalidOriginException()
         contacts = payload["contacts"]
         assets = payload["assets"]
-        metadata_ipfs_uri = payload["metadata_ipfs_uri"]
+        metadata_uri = payload["metadata_uri"]
         groups = OrganizationFactory.group_domain_entity_from_group_list_payload(payload["groups"])
         addresses = OrganizationFactory \
             .domain_address_entity_from_address_list_payload(payload["org_address"]["addresses"])
         organization = Organization(
             org_uuid, org_id, org_name, org_type, origin, description, short_description, url, contacts,
-            assets, metadata_ipfs_uri, duns_no, groups, addresses, None, [])
+            assets, metadata_uri, duns_no, groups, addresses, None, [])
         return organization
 
     @staticmethod
@@ -92,7 +92,7 @@ class OrganizationFactory:
             url=organization_repo_model.url,
             contacts=organization_repo_model.contacts,
             assets=organization_repo_model.assets,
-            metadata_ipfs_uri=organization_repo_model.metadata_ipfs_uri,
+            metadata_uri=organization_repo_model.metadata_uri,
             duns_no=organization_repo_model.duns_no,
             groups=OrganizationFactory.parse_group_data_model(organization_repo_model.groups),
             addresses=OrganizationFactory.parse_organization_address_data_model(organization_repo_model.addresses),
