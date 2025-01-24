@@ -50,7 +50,7 @@ ORG_APPROVE_MESSAGE = "You organization  {} has been approved"
 
 
 class OrganizationPublisherService:
-    def __init__(self, org_uuid: str, username: str, lighthouse_token: Union[str, None]):
+    def __init__(self, org_uuid: str, username: str, lighthouse_token: Union[str, None] = None):
         self.org_uuid = org_uuid
         self.username = username
         self.boto_utils = BotoUtils(region_name=REGION_NAME)

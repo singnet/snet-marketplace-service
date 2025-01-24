@@ -64,7 +64,7 @@ validator = Validator()
 
 
 class ServicePublisherService:
-    def __init__(self, username: str, org_uuid: str, service_uuid: str, lighthouse_token: Union[str, None]):
+    def __init__(self, username: str, org_uuid: str, service_uuid: str, lighthouse_token: Union[str, None] = None):
         self._username = username
         self._org_uuid = org_uuid
         self._service_uuid = service_uuid
