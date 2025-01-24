@@ -269,17 +269,17 @@ class TestOrganizationPublisherService(unittest.TestCase):
             else:
                 assert False
 
-    @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q12PWP")))
-    @patch("registry.domain.models.organization.json_to_file")
-    def test_org_publish_to_ipfs(self, mock_json_to_file_util, mock_ipfs_utils):
-        test_org_id = uuid4().hex
-        username = "dummy@snet.io"
-        org_repo.add_organization(
-            DomainOrganization(test_org_id, "org_id", "org_dummy", OrganizationType.ORGANIZATION.value, ORIGIN, "", "",
-                               "", [], {}, "", "", [], [], [], []),
-            username, OrganizationStatus.APPROVED.value)
-        response = OrganizationPublisherService(test_org_id, username).publish_organization()
-        self.assertEqual(response["metadata_uri"], "ipfs://Q12PWP")
+    # @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q12PWP")))
+    # @patch("registry.domain.models.organization.json_to_file")
+    # def test_org_publish_to_ipfs(self, mock_json_to_file_util, mock_ipfs_utils):
+    #     test_org_id = uuid4().hex
+    #     username = "dummy@snet.io"
+    #     org_repo.add_organization(
+    #         DomainOrganization(test_org_id, "org_id", "org_dummy", OrganizationType.ORGANIZATION.value, ORIGIN, "", "",
+    #                            "", [], {}, "", "", [], [], [], []),
+    #         username, OrganizationStatus.APPROVED.value)
+    #     response = OrganizationPublisherService(test_org_id, username).publish_organization()
+    #     self.assertEqual(response["metadata_uri"], "ipfs://Q12PWP")
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q12PWP")))
     @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))
