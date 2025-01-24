@@ -10,7 +10,7 @@ plugins:
 service: registry
 provider:
   name: aws
-  runtime: python3.7
+  runtime: python3.8
   description: offchain information of organizations and services
   memorySize: 512
   timeout: 60
