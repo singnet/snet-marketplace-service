@@ -275,13 +275,17 @@ def publish_service(event, context):
     logger.info(f"Publish service event::{event}")
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     path_parameters = event["pathParameters"]
+    payload = json.loads(event["body"])
     if "org_uuid" not in path_parameters and \
         "service_uuid" not in path_parameters and "provider_storage" not in path_parameters:
+        raise BadRequestException()
+    if path_parameters["provider_storage"] == "filecoin" and payload.get("lighthouse_token") is None:
         raise BadRequestException()
     response = ServicePublisherService(
         username,
         path_parameters["org_uuid"],
-        path_parameters["service_uuid"]
+        path_parameters["service_uuid"],
+        payload.get("lighthouse_token")
     ).publish_service(path_parameters["provider_storage"])
     return generate_lambda_response(
         StatusCode.OK,

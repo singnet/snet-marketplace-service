@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 import tempfile
-from typing import Dict
+from typing import Dict, Union
 from urllib.parse import urlparse
 
 import requests
@@ -50,11 +50,11 @@ ORG_APPROVE_MESSAGE = "You organization  {} has been approved"
 
 
 class OrganizationPublisherService:
-    def __init__(self, org_uuid, username):
+    def __init__(self, org_uuid: str, username: str, lighthouse_token: Union[str, None]):
         self.org_uuid = org_uuid
         self.username = username
         self.boto_utils = BotoUtils(region_name=REGION_NAME)
-        self.storage_provider = StorageProvider()
+        self.storage_provider = StorageProvider(lighthouse_token)
 
     def get_approval_pending_organizations(self, limit, type=None):
         status = OrganizationStatus.ONBOARDING.value

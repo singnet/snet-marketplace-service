@@ -64,11 +64,11 @@ validator = Validator()
 
 
 class ServicePublisherService:
-    def __init__(self, username, org_uuid, service_uuid):
+    def __init__(self, username: str, org_uuid: str, service_uuid: str, lighthouse_token: Union[str, None]):
         self._username = username
         self._org_uuid = org_uuid
         self._service_uuid = service_uuid
-        self._storage_provider = StorageProvider()
+        self._storage_provider = StorageProvider(lighthouse_token)
 
     def service_build_status_notifier(self, org_id, service_id, build_status):
         if build_status == BUILD_FAILURE_CODE:

@@ -89,13 +89,17 @@ def update_org(event, context):
          username_path=("requestContext", "authorizer", "claims", "email"))
 def publish_organization(event, context):
     logger.debug(f"Publish org on ipfs, event : {event}")
+    payload = json.loads(event["body"])
     path_parameters = event["pathParameters"]
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     if "org_uuid" not in path_parameters and "provider_storage" not in path_parameters:
         raise BadRequestException()
+    if path_parameters["provider_storage"] == "filecoin" and payload.get("lighthouse_token") is None:
+        raise BadRequestException()
     response = OrganizationPublisherService(
         path_parameters["org_uuid"],
-        username
+        username,
+        payload.get("lighthouse_token")
     ).publish_organization(path_parameters["provider_storage"])
 
     return generate_lambda_response(

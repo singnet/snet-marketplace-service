@@ -8,7 +8,6 @@ from typing import List, Tuple
 from zipfile import ZipFile
 
 from common.exceptions import BadRequestException
-from registry.config import LIGHTHOUSE_TOKEN
 from registry.config import IPFS_URL
 from common.logger import get_logger
 
@@ -36,9 +35,9 @@ def validate_storage_provider(storage_provider: str) -> StorageProviderType:
 
 
 class StorageProvider:
-    def __init__(self):
+    def __init__(self, lighthouse_token: str = "read_ony_token"):
         self.__ipfs_util = IPFSUtil(IPFS_URL["url"], IPFS_URL["port"])
-        self.__lighthouse_client = Lighthouse(LIGHTHOUSE_TOKEN)
+        self.__lighthouse_client = Lighthouse(lighthouse_token)
 
     def get(self, data_uri: str) -> str:
         """
