@@ -81,7 +81,7 @@ class TestServiceMetadata(TestCase):
                 service_id="test_service_id",
                 metadata_uri="Qasdfghjklqwertyuiopzxcvbnm",
                 proto={"encoding": "proto", "service_type": "grpc",
-                       "model_ipfs_hash": "QmcdTYvTxEJrv18Ui1vo1wNDisw8BMoFRMQyM13rz1ok5B"},
+                       "model_hash": "ipfs://QmcdTYvTxEJrv18Ui1vo1wNDisw8BMoFRMQyM13rz1ok5B"},
                 short_description="test_short_description",
                 description="test_description",
                 project_url="https://dummy.io",

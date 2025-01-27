@@ -958,7 +958,7 @@ class TestService(TestCase):
             "display_name": "new_service_123",
             "encoding": "",
             "service_type": "",
-            "model_ipfs_hash": "",
+            "model_hash": "",
             "mpe_address": "0x8fb1dc8df86b388c7e00689d1ecb533a160b4d0c",
             "groups": [
                 {
