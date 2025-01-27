@@ -1,0 +1,45 @@
+plugins:
+  - serverless-prune-plugin
+
+service: registry-lambda-layers
+custom:
+  prune:
+    automatic: true
+    includeLayers: true
+    number: 3
+
+provider:
+  name: aws
+  stage: ${opt:stage,'dev'}
+  region: ${file(./config.${self:provider.stage}.json):REGION}
+
+layers:
+  RegistryDevLayerSegment1:
+    path: ./whole/segment1
+    compatibleRuntimes:
+      - python3.8
+    compatibleArchitectures:
+      - x86_64
+    retain: false 
+  RegistryDevLayerSegment2:
+    path: ./whole/segment2
+    compatibleRuntimes:
+      - python3.8
+    compatibleArchitectures:
+      - x86_64
+    retain: false 
+  RegistryDevLayerSegment3:
+    path: ./whole/segment3
+    compatibleRuntimes:
+      - python3.8
+    compatibleArchitectures:
+      - x86_64
+    retain: false
+resources:
+  Resources: 
+    RegistryDevLayerSegment1LambdaLayer:
+      UpdateReplacePolicy: Retain 
+    RegistryDevLayerSegment2LambdaLayer:
+      UpdateReplacePolicy: Retain 
+    RegistryDevLayerSegment3LambdaLayer:
+      UpdateReplacePolicy: Retain 

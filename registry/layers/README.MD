@@ -1,0 +1,1 @@
+This directory is used to create layers for registry service.
