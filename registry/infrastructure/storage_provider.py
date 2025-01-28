@@ -36,7 +36,7 @@ def validate_storage_provider(storage_provider: str) -> StorageProviderType:
 
 class StorageProvider:
     def __init__(self, lighthouse_token: Union[str, None] = "read_only_token"):
-        if lighthouse_token is None:
+        if lighthouse_token is None or lighthouse_token == "":
             lighthouse_token = "read_only_token"
         self.__ipfs_util = IPFSUtil(IPFS_URL["url"], IPFS_URL["port"])
         self.__lighthouse_client = Lighthouse(lighthouse_token)

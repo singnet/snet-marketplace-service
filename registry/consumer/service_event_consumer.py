@@ -13,6 +13,7 @@ from registry.config import NETWORK_ID, SERVICE_CURATE_ARN, REGION_NAME, CONTRAC
 from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.models.service import Service
+from registry.infrastructure.storage_provider import StorageProvider
 
 logger = get_logger(__name__)
 BLOCKCHAIN_USER = "BLOCKCHAIN_USER"
@@ -86,14 +87,20 @@ class ServiceEventConsumer(object):
 
 
 class ServiceCreatedEventConsumer(ServiceEventConsumer):
+    def __init__(self):
+        self.__storage_provider = StorageProvider()
 
     def on_event(self, event):
         org_id, service_id, transaction_hash = self._get_service_details_from_blockchain(event)
         metadata_uri = self._get_metadata_uri_from_event(event)
-        service_ipfs_data = self._ipfs_util.read_file_from_ipfs(metadata_uri)
+        service_data = self.__storage_provider.get(metadata_uri)
         self._process_service_data(
-            org_id=org_id, service_id=service_id, service_metadata=service_ipfs_data, transaction_hash=transaction_hash,
-            metadata_uri=metadata_uri)
+            org_id=org_id,
+            service_id=service_id,
+            service_metadata=service_data,
+            transaction_hash=transaction_hash,
+            metadata_uri=metadata_uri
+        )
 
     def _get_existing_service_details(self, org_id, service_id):
         org_uuid, existing_service = self._service_repository.get_service_for_given_service_id_and_org_id(org_id,
@@ -124,11 +131,10 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         proto = {
             "encoding": service_metadata.get("encoding", ""),
             "service_type": service_metadata.get("service_type", ""),
-            "model_ipfs_hash": service_metadata.get("model_ipfs_hash", "")
+            "model_hash": service_metadata.get("model_hash", "")
         }
         assets = service_metadata.get("assets", {})
         mpe_address = service_metadata.get("mpe_address", "")
-        metadata_uri = "ipfs://" + metadata_uri
         contributors = service_metadata.get("contributors", [])
         tags_data = service_metadata.get("tags", [])
         service_type = service_metadata.get("service_type", "grpc")
