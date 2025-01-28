@@ -27,6 +27,15 @@ class StorageProviderType(Enum, metaclass=MetaEnum):
     FILECOIN = "filecoin"
 
 
+def get_storage_provider_by_uri(uri: str) -> str:
+    if uri.startswith("ipfs://"):
+        return StorageProviderType.IPFS.value,
+    elif uri.startswith("filecoin://"):
+        return StorageProviderType.FILECOIN.value,
+    else:
+        return StorageProviderType.IPFS.value,
+
+
 def validate_storage_provider(storage_provider: str) -> StorageProviderType:
     if storage_provider not in StorageProviderType:
         logger.error(f"Invalid storage provider: {storage_provider}")

@@ -7,6 +7,7 @@ from common.logger import get_logger
 from common.utils import datetime_to_string
 from registry.constants import OrganizationActions, OrganizationAddressType, OrganizationStatus, OrganizationType
 from registry.domain.models.organization_address import OrganizationAddress
+from registry.infrastructure.storage_provider import get_storage_provider_by_uri
 
 logger = get_logger(__name__)
 
@@ -107,6 +108,7 @@ class Organization:
             "contacts": self.__contacts,
             "assets": self.__assets,
             "metadata_uri": self.__metadata_uri,
+            "storage_provider": get_storage_provider_by_uri(self.__metadata_uri),
             "groups": [group.to_response() for group in self.__groups],
             "org_address": {
                 "mail_address_same_hq_address": mail_address_same_hq_address,
