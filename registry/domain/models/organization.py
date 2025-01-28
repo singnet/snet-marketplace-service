@@ -53,16 +53,22 @@ class Organization:
         self.__state = org_state
         self.__members = members
 
-    # check metadata :filecoin
     def to_metadata(self):
+        ipfs_uri_prefix = "ipfs://"
+        filecoin_uri_prefix = "filecoin://"
         assets = {}
+
         for key in self.__assets:
-            ipfs_hash = ""
-            ipfs_uri = self.__assets[key]["ipfs_hash"]
-            uri_prefix = "ipfs://"
-            if ipfs_uri.startswith(uri_prefix):
-                ipfs_hash = ipfs_uri[len(uri_prefix):]
-            assets[key] = ipfs_hash
+            # Get the IPFS or generic hash (migration from single storage provider to multiple providers)
+            hash_uri = self.__assets[key].get("ipfs_hash") or self.__assets[key].get("hash")
+
+            # Ensure the hash URI includes the correct prefix (IPFS or Filecoin)
+            # This is needed due to migration from a single provider (IPFS) to multiple providers (e.g., IPFS, Filecoin)
+            if not hash_uri.startswith(ipfs_uri_prefix) and not hash_uri.startswith(filecoin_uri_prefix):
+                hash_uri = ipfs_uri_prefix + hash_uri
+
+            assets[key] = hash_uri
+
         return {
             "org_name": self.__name,
             "org_id": self.__id,

@@ -146,7 +146,7 @@ class OrganizationPublisherService:
 
     def publish_metadata_to_storage_provider(self, organization: Organization, storage_type: StorageProviderType) -> str:
         self.publish_assets_to_storage_provider(organization, storage_type)
-        filepath = FileUtils.crete_temp_json_file(organization.to_metadata())
+        filepath = FileUtils.create_temp_json_file(organization.to_metadata())
         return self.storage_provider.publish(filepath, storage_type)
 
     def publish_organization(self, storage_provider: str) -> Dict[str, any]:
