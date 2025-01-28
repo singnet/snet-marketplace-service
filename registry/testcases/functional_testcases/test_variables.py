@@ -3,7 +3,7 @@ service_metadata = {
     "display_name": "Service",
     "encoding": "proto",
     "service_type": "grpc",
-    "model_ipfs_hash": "QmXqonxB9EvNBe11J8oCYXMQAtPKAb2x8CyFLmQpkvVaLf",
+    "model_hash": "ipfs://QmXqonxB9EvNBe11J8oCYXMQAtPKAb2x8CyFLmQpkvVaLf",
     "mpe_address": "0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C",
     "groups": [
         {
