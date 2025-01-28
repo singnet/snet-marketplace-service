@@ -29,11 +29,11 @@ class StorageProviderType(Enum, metaclass=MetaEnum):
 
 def get_storage_provider_by_uri(uri: str) -> str:
     if uri.startswith("ipfs://"):
-        return StorageProviderType.IPFS.value,
+        return StorageProviderType.IPFS.value
     elif uri.startswith("filecoin://"):
-        return StorageProviderType.FILECOIN.value,
+        return StorageProviderType.FILECOIN.value
     else:
-        return StorageProviderType.IPFS.value,
+        return StorageProviderType.IPFS.value
 
 
 def validate_storage_provider(storage_provider: str) -> StorageProviderType:
