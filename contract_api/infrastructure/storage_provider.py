@@ -8,7 +8,7 @@ from typing import List, Tuple, Union
 from zipfile import ZipFile
 
 from common.exceptions import BadRequestException
-from registry.config import IPFS_URL
+from contract_api.config import IPFS_URL
 from common.logger import get_logger
 
 import ipfshttpclient

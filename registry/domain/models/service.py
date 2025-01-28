@@ -2,6 +2,7 @@ from cerberus import Validator
 
 from common.logger import get_logger
 from registry.constants import UserType
+from registry.infrastructure.storage_provider import get_storage_provider_by_uri
 
 logger = get_logger(__name__)
 
@@ -171,6 +172,7 @@ class Service:
             "tags": self._tags,
             "mpe_address": self._mpe_address,
             "metadata_uri": self._metadata_uri,
+            "storage_provider": get_storage_provider_by_uri(self._metadata_uri),
             "service_type": self._service_type,
             "groups": [group.to_dict() for group in self._groups],
             "service_state": self._service_state.to_dict(),
