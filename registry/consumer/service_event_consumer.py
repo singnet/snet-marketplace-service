@@ -21,12 +21,12 @@ BLOCKCHAIN_USER = "BLOCKCHAIN_USER"
 
 class ServiceEventConsumer(object):
 
-    def __init__(self, ws_provider, ipfs_url, ipfs_port, service_repository, organiztion_repository):
+    def __init__(self, ws_provider, service_repository, organiztion_repository):
         self._blockchain_util = blockchain_util.BlockChainUtil("WS_PROVIDER", ws_provider)
         self._service_repository = service_repository
         self._organiztion_repository = organiztion_repository
-        self._ipfs_util = ipfs_util.IPFSUtil(ipfs_url, ipfs_port)
-
+        self.__storage_provider = StorageProvider()
+        
     def on_event(self, event):
         pass
 
@@ -87,9 +87,6 @@ class ServiceEventConsumer(object):
 
 
 class ServiceCreatedEventConsumer(ServiceEventConsumer):
-    def __init__(self):
-        self.__storage_provider = StorageProvider()
-
     def on_event(self, event):
         org_id, service_id, transaction_hash = self._get_service_details_from_blockchain(event)
         metadata_uri = self._get_metadata_uri_from_event(event)
