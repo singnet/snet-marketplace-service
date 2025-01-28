@@ -4,7 +4,7 @@ from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.logger import get_logger
 from common.utils import generate_lambda_response
-from registry.config import IPFS_URL, NETWORKS, NETWORK_ID, SLACK_HOOK
+from registry.config import NETWORKS, NETWORK_ID, SLACK_HOOK
 from registry.consumer.organization_event_consumer import OrganizationCreatedAndModifiedEventConsumer
 from registry.consumer.service_event_consumer import ServiceCreatedEventConsumer
 from registry.exceptions import EXCEPTIONS
@@ -19,11 +19,9 @@ service_repository = ServicePublisherRepository()
 
 def get_event_consumer(event):
     if event['name'] in ["OrganizationCreated", 'OrganizationModified']:
-        return OrganizationCreatedAndModifiedEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"], IPFS_URL['url'],
-                                                           IPFS_URL['port'], org_repository)
+        return OrganizationCreatedAndModifiedEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"], org_repository)
     elif event['name'] in ['ServiceCreated', 'ServiceMetadataModified']:
-        return ServiceCreatedEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"], IPFS_URL['url'],
-                                           IPFS_URL['port'], service_repository, org_repository)
+        return ServiceCreatedEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"], service_repository, org_repository)
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)

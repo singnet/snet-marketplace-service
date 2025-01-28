@@ -193,7 +193,7 @@ class FileUtils:
         return tarinfo
 
     @staticmethod
-    def crete_temp_json_file(data: dict) -> str:
+    def create_temp_json_file(data: dict) -> str:
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as temp_file:
             json.dump(data, temp_file)
             temp_file_name = temp_file.name 

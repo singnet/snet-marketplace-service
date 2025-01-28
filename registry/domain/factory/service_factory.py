@@ -210,16 +210,24 @@ class ServiceFactory:
             ServiceFactory.create_service_group_entity_model("", service_uuid, group) for group in
             service_metadata.get("groups", [])]
         return Service(
-            org_uuid, service_uuid, service_id, service_metadata.get("display_name", ""),
-            service_metadata.get("short_description", ""), service_metadata.get("description", ""),
+            org_uuid,
+            service_uuid,
+            service_id,
+            service_metadata.get("display_name", ""),
+            service_metadata.get("short_description", ""),
+            service_metadata.get("description", ""),
             service_metadata.get("project_url", ""),
-            service_metadata.get("proto", {}), service_metadata.get("assets", {}),
+            service_metadata.get("proto", {}),
+            service_metadata.get("assets", {}),
             ranking,
-            rating, service_metadata.get("contributors", []),
+            rating,
+            service_metadata.get("contributors", []),
             tags_data,
-            service_metadata.get("mpe_address", ""), service_metadata.get("metadata_ipfs_hash", ""),
+            service_metadata.get("mpe_address", ""),
+            service_metadata.get("metadata_hash", ""),
             service_group_entity_model_list,
-            service_state_entity_model)
+            service_state_entity_model
+        )
 
     @staticmethod
     def create_service_comment_entity_model(org_uuid, service_uuid, support_type, user_type, commented_by, comment):
@@ -260,7 +268,7 @@ class ServiceFactory:
                 url = ""
 
             assets[key] = {
-                "ipfs_hash": value,
+                "hash": value,
                 "url": url
             }
         merged = {**existing_assets, **assets}
