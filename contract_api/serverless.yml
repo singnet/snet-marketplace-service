@@ -8,7 +8,7 @@ plugins:
 service: contract-api
 provider:
   name: aws
-  runtime: python3.7
+  runtime: python3.8
   description: Description of what the lambda function does # optional, Description to publish to AWS
   memorySize: 512
   timeout: 30
