@@ -120,6 +120,7 @@ ORG_RESPONSE_MODEL = json.dumps({
         }
     },
     "metadata_uri": "ipfs://Q12PWP",
+    "storage_provider": "ipfs",
     "groups": json.loads(ORG_GROUPS),
     "org_address": {
         "mail_address_same_hq_address": False,
