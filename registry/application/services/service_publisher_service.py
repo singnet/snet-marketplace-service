@@ -14,9 +14,8 @@ from cerberus import Validator
 from common import utils
 from common.boto_utils import BotoUtils
 from common.constant import StatusCode
-from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
-from common.utils import json_to_file, send_email_notification
+from common.utils import send_email_notification
 from registry.config import (
     IPFS_URL, METADATA_FILE_PATH, NETWORKS, NETWORK_ID, NOTIFICATION_ARN,
     REGION_NAME, PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT, GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT
@@ -73,8 +72,8 @@ class ServicePublisherService:
     def service_build_status_notifier(self, org_id, service_id, build_status):
         if build_status == BUILD_FAILURE_CODE:
             BUILD_FAIL_MESSAGE = "Build failed please check your components"
-            org_uuid, service = ServicePublisherRepository().get_service_for_given_service_id_and_org_id(org_id,
-                                                                                                         service_id)
+            org_uuid, service = ServicePublisherRepository() \
+                .get_service_for_given_service_id_and_org_id(org_id, service_id)
 
             contacts = [contributor.get("email_id", "") for contributor in service.contributors]
 
@@ -86,10 +85,10 @@ class ServicePublisherService:
             try:
                 BUILD_STATUS_SUBJECT = "Build failed for your service {}"
                 BUILD_STATUS_MESSAGE = "Build failed for your org_id {} and service_id {}"
-                send_email_notification(contacts,
-                                        BUILD_STATUS_SUBJECT.format(service_id),
-                                        BUILD_STATUS_MESSAGE.format(org_id, service_id), NOTIFICATION_ARN,
-                                        boto_util)
+                send_email_notification(
+                    contacts, BUILD_STATUS_SUBJECT.format(service_id),
+                    BUILD_STATUS_MESSAGE.format(org_id, service_id), NOTIFICATION_ARN, boto_util
+                )
             except Exception:
                 logger.info(f"Error happened while sending build_status mail for {org_id} and contacts {contacts}")
 
@@ -376,24 +375,7 @@ class ServicePublisherService:
         notification_message = f"Your service {service_id} under organization {org_id} has successfully been submitted " \
                                f"for approval. We will notify you once it is reviewed by our approval team. It usually " \
                                f"takes around five to ten business days for approval."
-        utils.send_email_notification(recipients, notification_subject, notification_message, NOTIFICATION_ARN,
-                                      boto_util)
-
-    def send_email(self, mail, recipient):
-        send_notification_payload = {"body": json.dumps({
-            "message": mail["body"],
-            "subject": mail["subject"],
-            "notification_type": "support",
-            "recipient": recipient})}
-        boto_util.invoke_lambda(lambda_function_arn=NOTIFICATION_ARN, invocation_type="RequestResponse",
-                                payload=json.dumps(send_notification_payload))
-
-    @staticmethod
-    def publish_to_ipfs(filename, data):
-        json_to_file(data, filename)
-        service_metadata_ipfs_hash = IPFSUtil(
-            IPFS_URL['url'], IPFS_URL['port']).write_file_in_ipfs(filename, wrap_with_directory=False)
-        return service_metadata_ipfs_hash
+        utils.send_email_notification(recipients, notification_subject, notification_message, NOTIFICATION_ARN, boto_util)
 
     def daemon_config(self, environment):
         organization = OrganizationPublisherRepository().get_organization(org_uuid=self._org_uuid)
@@ -478,10 +460,10 @@ class ServicePublisherService:
             raise Exception("Error in updating offchain service attributes")
 
     def get_existing_service_details_from_contract_api(self, service_id, org_id):
-        response = requests.get(
-            GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT.format(org_id, service_id))
+        response = requests.get(GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT.format(org_id, service_id))
         if response.status_code != 200:
             raise Exception(f"Error getting service details for org_id :: {org_id} service_id :: {service_id}")
+        logger.debug(f"Get service by org_id from contract_api :: {response}")
         return json.loads(response.text)["data"]
 
     def publish_new_offchain_configs(self, current_service: Service, storage_provider: StorageProvider) -> Dict[str, Union[bool, str]]:
@@ -489,6 +471,7 @@ class ServicePublisherService:
         existing_service_data = self.get_existing_service_details_from_contract_api(
             current_service.service_id, organization.id
         )
+        logger.debug(f"Existing service data :: {existing_service_data}")
 
         # TODO: Update this section to use `hash_uri` once provider storage is integrated into the contract API.
         # For now, it retrieves the existing metadata using the current IPFS hash.
