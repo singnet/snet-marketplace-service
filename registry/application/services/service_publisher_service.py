@@ -32,6 +32,7 @@ from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.models.demo_component import DemoComponent
 from registry.domain.models.offchain_service_config import OffchainServiceConfig
 from registry.domain.models.service import Service
+from registry.domain.models.organization import Organization
 from registry.domain.models.service_comment import ServiceComment
 from registry.exceptions import (
     EnvironmentNotFoundException,
@@ -468,6 +469,8 @@ class ServicePublisherService:
 
     def publish_new_offchain_configs(self, current_service: Service, storage_provider: StorageProvider) -> Dict[str, Union[bool, str]]:
         organization = OrganizationPublisherRepository().get_organization(org_uuid=self._org_uuid)
+        logger.debug(f"Current organization :: {organization.to_response()}")
+
         existing_service_data = self.get_existing_service_details_from_contract_api(
             current_service.service_id, organization.id
         )
@@ -498,13 +501,13 @@ class ServicePublisherService:
         logger.debug(f"New offchain configs :: {new_offchain_configs}")
 
         status = self._prepare_publish_status(
-            current_service, storage_provider, publish_to_blockchain, new_offchain_configs
+            organization, current_service, storage_provider, publish_to_blockchain, new_offchain_configs
         )
         logger.debug(f"Prepare publish status result :: {status}")
 
         return status
 
-    def _prepare_publish_status(self, current_service, storage_provider, publish_to_blockchain, new_offchain_configs):
+    def _prepare_publish_status(self, organization: Organization, current_service: Service, storage_provider: StorageProvider, publish_to_blockchain: bool, new_offchain_configs: Dict[str, any]):
         status = {"publish_to_blockchain": publish_to_blockchain}
 
         if publish_to_blockchain:
@@ -512,7 +515,7 @@ class ServicePublisherService:
             status["service_metadata_uri"] = self._storage_provider.publish(filename, storage_provider)
 
         self.publish_offchain_service_configs(
-            org_id=current_service.organization_id,
+            org_id=organization.id,
             service_id=current_service.service_id,
             payload=json.dumps(new_offchain_configs)
         )
