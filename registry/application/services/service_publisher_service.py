@@ -475,7 +475,6 @@ class ServicePublisherService:
 
         # TODO: Update this section to use `hash_uri` once provider storage is integrated into the contract API.
         # For now, it retrieves the existing metadata using the current IPFS hash.
-        self._storage_provider.get(existing_service_data["ipfs_hash"])
         existing_metadata = (
             self._storage_provider.get(existing_service_data["ipfs_hash"])
             if existing_service_data else {}
@@ -483,47 +482,54 @@ class ServicePublisherService:
         publish_to_blockchain = self.are_blockchain_attributes_got_updated(
             existing_metadata, current_service.to_metadata()
         )
+        logger.debug(f"Publish to blockchain :: {publish_to_blockchain}")
 
         existing_offchain_configs = self.get_existing_offchain_configs(existing_service_data)
         current_offchain_configs = ServicePublisherRepository().get_offchain_service_config(
             org_uuid=self._org_uuid, service_uuid=self._service_uuid
         )
+        logger.debug(f"Existing offchain confgis :: {existing_offchain_configs}")
 
         new_offchain_configs = self.get_offchain_changes(
             current_offchain_config=current_offchain_configs.configs,
             existing_offchain_config=existing_offchain_configs,
             current_service=current_service
         )
+        logger.debug(f"New offchain configs :: {new_offchain_configs}")
 
         status = self._prepare_publish_status(
             current_service, storage_provider, publish_to_blockchain, new_offchain_configs
         )
+        logger.debug(f"Prepare publish status result :: {status}")
+
         return status
 
     def _prepare_publish_status(self, current_service, storage_provider, publish_to_blockchain, new_offchain_configs):
         status = {"publish_to_blockchain": publish_to_blockchain}
-        
+
         if publish_to_blockchain:
             filename = f"{METADATA_FILE_PATH}/{current_service.uuid}_service_metadata.json"
             status["service_metadata_uri"] = self._storage_provider.publish(filename, storage_provider)
-        
+
         self.publish_offchain_service_configs(
             org_id=current_service.organization_id,
             service_id=current_service.service_id,
             payload=json.dumps(new_offchain_configs)
         )
-        
+
         if not publish_to_blockchain:
             ServicePublisherRepository().save_service(
                 username=self._username,
                 service=current_service,
                 state=ServiceStatus.PUBLISHED.value
             )
+
         return status
 
     def publish_service(self, storage_provider: str):
         storage_provider_enum = validate_storage_provider(storage_provider)
         current_service = self.publish_service_data_to_storage_provider(storage_provider_enum=storage_provider_enum)
+        logger.debug(f"Current service :: {current_service}")
 
         if not Service.is_metadata_valid(service_metadata=current_service.to_metadata()):
             raise InvalidMetadataException()
