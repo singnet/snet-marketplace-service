@@ -10,19 +10,29 @@ from web3 import Web3
 from common import utils
 from common.blockchain_util import BlockChainUtil
 from common.boto_utils import BotoUtils
-from common.ipfs_util import IPFSUtil
 from common.logger import get_logger
 from common.repository import Repository
 from common.s3_util import S3Util
 from common.utils import download_file_from_url, extract_zip_file, make_tarfile
-from contract_api.config import ASSETS_BUCKET_NAME, ASSETS_PREFIX, GET_SERVICE_FROM_ORGID_SERVICE_ID_REGISTRY_ARN, \
-    MARKETPLACE_DAPP_BUILD, NETWORKS, NETWORK_ID, REGION_NAME, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY, \
-    ASSET_TEMP_EXTRACT_DIRECTORY, ASSETS_COMPONENT_BUCKET_NAME, MANAGE_PROTO_COMPILATION, IPFS_URL
+from contract_api.config import (
+    ASSETS_BUCKET_NAME,
+    ASSETS_PREFIX,
+    GET_SERVICE_FROM_ORGID_SERVICE_ID_REGISTRY_ARN,
+    NETWORKS,
+    NETWORK_ID,
+    REGION_NAME,
+    S3_BUCKET_ACCESS_KEY,
+    S3_BUCKET_SECRET_KEY,
+    ASSET_TEMP_EXTRACT_DIRECTORY,
+    ASSETS_COMPONENT_BUCKET_NAME,
+    MANAGE_PROTO_COMPILATION,
+)
 from contract_api.consumers.event_consumer import EventConsumer
 from contract_api.dao.service_repository import ServiceRepository
 from contract_api.domain.models.service_media import ServiceMedia
 from contract_api.infrastructure.repositories.service_media_repository import ServiceMediaRepository
 from contract_api.infrastructure.repositories.service_repository import ServiceRepository as NewServiceRepository
+from contract_api.infrastructure.storage_provider import StorageProvider
 
 logger = get_logger(__name__)
 new_service_repo = NewServiceRepository()
@@ -36,7 +46,7 @@ class ServiceEventConsumer(EventConsumer):
     def __init__(self, ws_provider, ipfs_url, ipfs_port):
         self._blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
         self._s3_util = S3Util(S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY)
-        self._ipfs_util = IPFSUtil(ipfs_url, ipfs_port)
+        self._storage_provider = StorageProvider() 
 
     def on_event(self, event):
         # abstract method
@@ -81,10 +91,10 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
     def on_event(self, event):
         org_id, service_id = self._get_service_details_from_blockchain(event)
         metadata_uri = self._get_metadata_uri_from_event(event)
-        service_ipfs_data = self._ipfs_util.read_file_from_ipfs(metadata_uri)
-        self._process_service_data(org_id=org_id, service_id=service_id, new_ipfs_hash=metadata_uri,
-                                   new_ipfs_data=service_ipfs_data)
+        service_data = self._storage_provider.get(metadata_uri)
+        self._process_service_data(org_id, service_id, metadata_uri, service_data)
 
+    # TODO: Update for using universal storage provider
     def _push_asset_to_s3_using_hash(self, hash, org_id, service_id):
         io_bytes = self._ipfs_util.read_bytesio_from_ipfs(hash)
         filename = hash.split("/")[1]
@@ -98,16 +108,17 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         return new_url
 
     def _get_new_assets_url(self, org_id, service_id, new_ipfs_data, existing_service_metadata):
-        new_assets_hash = new_ipfs_data.get('assets', {})
+        new_assets_hash = new_ipfs_data.get("assets", {})
         existing_assets_hash = {}
         existing_assets_url = {}
 
         if existing_service_metadata:
             existing_assets_hash = json.loads(existing_service_metadata["assets_hash"])
             existing_assets_url = json.loads(existing_service_metadata["assets_url"])
-        assets_url_mapping = self._comapre_assets_and_push_to_s3(existing_assets_hash, new_assets_hash,
-                                                                 existing_assets_url, org_id,
-                                                                 service_id)
+        assets_url_mapping = self._compare_assets_and_push_to_s3(
+            existing_assets_hash, new_assets_hash, existing_assets_url, org_id, service_id
+        )
+
         return assets_url_mapping
 
     def create_service_media(self, org_id, service_id, service_media):
@@ -147,61 +158,72 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                                                     asset_types=['hero_image', 'media_gallery']
                                                     )
 
-    def _process_service_data(self, org_id, service_id, new_ipfs_hash, new_ipfs_data):
+    def _process_service_data(self, org_id, service_id, new_hash, new_data):
         try:
             self._connection.begin_transaction()
-            existing_service_metadata = self._service_repository.get_service_metadata(org_id=org_id,
-                                                                                      service_id=service_id)
-            assets_url = self._get_new_assets_url(org_id, service_id, new_ipfs_data, existing_service_metadata)
-            self._service_repository.delete_service_dependents(org_id=org_id, service_id=service_id)
-            service_data = self._service_repository.create_or_update_service(
-                org_id=org_id, service_id=service_id, ipfs_hash=new_ipfs_hash)
-            service_row_id = service_data['last_row_id']
-            logger.debug(f"Created service with service {service_row_id}")
-            self._service_repository.create_or_update_service_metadata(service_row_id=service_row_id, org_id=org_id,
-                                                                       service_id=service_id,
-                                                                       ipfs_data=new_ipfs_data, assets_url=assets_url)
+            existing_service_metadata = self._service_repository.get_service_metadata(org_id, service_id)
+            logger.debug(f"Existing service metadata :: {existing_service_metadata}")
 
-            groups = new_ipfs_data.get('groups', [])
+            assets_url = self._get_new_assets_url(org_id, service_id, new_data, existing_service_metadata)    
+            logger.debug(f"Get new assets url :: {assets_url}")
+
+            self._service_repository.delete_service_dependents(org_id=org_id, service_id=service_id)
+        
+            service_data = self._service_repository.create_or_update_service(org_id, service_id, new_hash)
+            service_row_id = service_data['last_row_id']
+            logger.debug(f"Created service with service :: {service_row_id}")
+
+            self._service_repository.create_or_update_service_metadata(
+                service_row_id=service_row_id,
+                org_id=org_id,
+                service_id=service_id,
+                ipfs_data=new_data,
+                assets_url=assets_url
+            )
+
+            groups = new_data.get("groups", [])
             group_insert_count = 0
             for group in groups:
-                service_group_data = self._service_repository.create_group(service_row_id=service_row_id, org_id=org_id,
-                                                                           service_id=service_id,
-                                                                           grp_data={
-                                                                               'free_calls': group.get("free_calls", 0),
-                                                                               'free_call_signer_address': group.get(
-                                                                                   "free_call_signer_address", ""),
-                                                                               'group_id': group['group_id'],
-                                                                               'group_name': group['group_name'],
-                                                                               'pricing': json.dumps(group['pricing'])
-                                                                           })
+                service_group_data = self._service_repository.create_group(
+                    service_row_id=service_row_id, org_id=org_id,
+                    service_id=service_id,
+                    grp_data = {
+                        "free_calls": group.get("free_calls", 0),
+                        "free_call_signer_address": group.get("free_call_signer_address", ""),
+                        "group_id": group["group_id"],
+                        "group_name": group["group_name"],
+                        "pricing": json.dumps(group["pricing"])
+                    }
+                )
                 group_insert_count = group_insert_count + service_group_data[0]
-                endpoints = group.get('endpoints', [])
+                endpoints = group.get("endpoints", [])
                 endpoint_insert_count = 0
                 for endpoint in endpoints:
-                    service_data = self._service_repository.create_endpoints(service_row_id=service_row_id,
-                                                                             org_id=org_id,
-                                                                             service_id=service_id,
-                                                                             endpt_data={
-                                                                                 'endpoint': endpoint,
-                                                                                 'group_id': group['group_id'],
-                                                                             })
+                    service_data = self._service_repository.create_endpoints(
+                        service_row_id=service_row_id,
+                        org_id=org_id,
+                        service_id=service_id,
+                        endpt_data={
+                            "endpoint": endpoint,
+                            "group_id": group["group_id"],
+                        }
+                    )
                     endpoint_insert_count = endpoint_insert_count + service_data[0]
 
-            tags_data = new_ipfs_data.get("tags", [])
+            tags_data = new_data.get("tags", [])
             for tag in tags_data:
                 self._service_repository.create_tags(service_row_id=service_row_id, org_id=org_id,
                                                      service_id=service_id,
                                                      tag_name=tag,
                                                      )
 
-            service_media = new_ipfs_data.get('media', [])
+            service_media = new_data.get("media", [])
             self.create_service_media(org_id=org_id, service_id=service_id,
                                       service_media=service_media)
 
             update_proto_stubs = False
             if not existing_service_metadata or (
-                    existing_service_metadata["model_ipfs_hash"] != new_ipfs_data["model_ipfs_hash"]):
+                    existing_service_metadata["model_hash"] != new_data["model_hash"]):
                 update_proto_stubs = True
 
             self._connection.commit_transaction()
@@ -210,11 +232,10 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             self._connection.rollback_transaction()
             raise e
 
-        ServiceCreatedDeploymentEventHandler(NETWORKS[NETWORK_ID]["ws_provider"],
-                                             IPFS_URL['url'], IPFS_URL['port']).process_service_deployment(
+        ServiceCreatedDeploymentEventHandler(NETWORKS[NETWORK_ID]["ws_provider"]).process_service_deployment(
             org_id=org_id,
             service_id=service_id,
-            proto_hash=new_ipfs_data["model_ipfs_hash"],
+            proto_hash=new_data["model_hash"],
             update_proto_stubs=update_proto_stubs
         )
 
@@ -224,18 +245,16 @@ class ServiceMetadataModifiedConsumer(ServiceCreatedEventConsumer):
 
 
 class SeviceDeletedEventConsumer(ServiceEventConsumer):
-
     def on_event(self, event):
         org_id, service_id = self._get_service_details_from_blockchain(event)
         self._service_repository.delete_service_dependents(org_id, service_id)
-        self._service_repository.delete_service(
-            org_id=org_id, service_id=service_id)
+        self._service_repository.delete_service(org_id, service_id)
 
 
 class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
 
-    def __init__(self, ws_provider, ipfs_url, ipfs_port):
-        super().__init__(ws_provider, ipfs_url, ipfs_port)
+    def __init__(self, ws_provider):
+        super().__init__(ws_provider)
         self.lambda_client = boto3.client("lambda", region_name=REGION_NAME)
 
     def on_event(self, event):
