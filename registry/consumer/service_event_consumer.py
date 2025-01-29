@@ -6,7 +6,6 @@ from uuid import uuid4
 from web3 import Web3
 
 from common import blockchain_util, boto_utils
-from common import ipfs_util
 from common.constant import StatusCode
 from common.logger import get_logger
 from registry.config import NETWORK_ID, SERVICE_CURATE_ARN, REGION_NAME, CONTRACT_BASE_PATH
