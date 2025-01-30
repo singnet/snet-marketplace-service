@@ -24,6 +24,7 @@ class OrganizationEventConsumer(EventConsumer):
     _service_repository = ServiceRepository(_connection)
 
     def __init__(self, ws_provider):
+        super().__init__(ws_provider)
         self._storage_provider = StorageProvider()
         self._blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
         self._s3_util = S3Util(S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY)
@@ -96,7 +97,7 @@ class OrganizationCreatedEventConsumer(OrganizationEventConsumer):
     def _process_organization_create_update_event(self, org_id, org_data, org_metadata, org_metadata_uri):
 
         try:
-            if (org_data is not None and org_data[0]):
+            if org_data is not None and org_data[0]:
                 self._organization_repository.begin_transaction()
 
                 new_assets_hash = org_metadata.get("assets", {})

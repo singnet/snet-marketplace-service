@@ -43,7 +43,8 @@ class ServiceEventConsumer(EventConsumer):
     _connection = Repository(NETWORK_ID, NETWORKS=NETWORKS)
     _service_repository = ServiceRepository(_connection)
 
-    def __init__(self, ws_provider, ipfs_url, ipfs_port):
+    def __init__(self, ws_provider):
+        super().__init__(ws_provider)
         self._blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
         self._s3_util = S3Util(S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY)
         self._storage_provider = StorageProvider() 
@@ -133,10 +134,10 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                     url = service_media_item.get("url", {})
                     if utils.if_external_link(link=url):
                         updated_url = url
-                        ipfs_url = ''
+                        hash_uri = ''
                     else:
                         updated_url = self._push_asset_to_s3_using_hash(org_id=org_id, service_id=service_id, hash=url)
-                        ipfs_url = service_media_item.get("url", "")
+                        hash_uri = service_media_item.get("url", "")
                     # insert service media data
                     asset_type = 'media_gallery' if service_media_item.get('asset_type', {}) != 'hero_image' else service_media_item.get('asset_type')
                     media_item = ServiceMedia(
@@ -148,7 +149,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                         order=service_media_item['order'],
                         asset_type=asset_type,
                         alt_text=service_media_item.get('alt_text', ""),
-                        ipfs_url=ipfs_url
+                        hash_uri=hash_uri
                     )
                     service_media_list.append(media_item)
                     if service_media_item.get('order', 0) > count:
@@ -244,7 +245,7 @@ class ServiceMetadataModifiedConsumer(ServiceCreatedEventConsumer):
     pass
 
 
-class SeviceDeletedEventConsumer(ServiceEventConsumer):
+class ServiceDeletedEventConsumer(ServiceEventConsumer):
     def on_event(self, event):
         org_id, service_id = self._get_service_details_from_blockchain(event)
         self._service_repository.delete_service_dependents(org_id, service_id)
@@ -348,7 +349,7 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
                 order=0,
                 asset_type=f"grpc-stub/{filename}",
                 alt_text="",
-                ipfs_url=""
+                hash_uri=""
             )
             proto_media_list.append(media_item)
         service_media_repo.update_service_media(org_id=org_id, service_id=service_id,

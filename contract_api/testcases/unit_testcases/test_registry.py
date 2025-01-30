@@ -66,7 +66,7 @@ class TestRegistry(TestCase):
             asset_type="grpc-stub",
             file_type="grpc-stub/nodejs",
             alt_text="",
-            ipfs_url="",
+            hash_uri="",
             created_on="2021-06-11 14:21:25",
             updated_on="2021-06-11 14:21:25"
         ))
@@ -81,7 +81,7 @@ class TestRegistry(TestCase):
             asset_type="hero_image",
             file_type="image",
             alt_text="data is missing",
-            ipfs_url="Qmbb7tmKZX2TSxDKsK6DEAbp3tPgNUYP11CC93Cft7EkFb",
+            hash_uri="Qmbb7tmKZX2TSxDKsK6DEAbp3tPgNUYP11CC93Cft7EkFb",
             created_on="2021-01-08 13:31:50",
             updated_on="2021-01-08 13:31:50"
         ))

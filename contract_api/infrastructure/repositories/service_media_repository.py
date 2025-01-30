@@ -31,7 +31,7 @@ class ServiceMediaRepository(BaseRepository):
             file_type=service_media.file_type,
             asset_type=service_media.asset_type,
             alt_text=service_media.alt_text,
-            ipfs_url=service_media.ipfs_url,
+            hash_uri=service_media.hash_uri,
             created_on=dt.utcnow(),
             updated_on=dt.utcnow()
         ))

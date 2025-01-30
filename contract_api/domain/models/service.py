@@ -1,10 +1,10 @@
 class Service:
-    def __init__(self, org_id, service_id, service_path, ipfs_hash, is_curated, service_email, service_metadata, row_id=None):
+    def __init__(self, org_id, service_id, service_path, hash_uri, is_curated, service_email, service_metadata, row_id=None):
         self._row_id = row_id
         self._org_id = org_id
         self._service_id = service_id
         self._service_path = service_path
-        self._ipfs_hash = ipfs_hash
+        self._hash_uri = hash_uri
         self._is_curated = is_curated
         self._service_email = service_email
         self._service_metadata = service_metadata
@@ -34,12 +34,12 @@ class Service:
         self._service_path = service_path
 
     @property
-    def ipfs_hash(self):
-        return self._ipfs_hash
+    def hash_uri(self):
+        return self._hash_uri
 
-    @ipfs_hash.setter
-    def ipfs_hash(self, ipfs_hash):
-        self._ipfs_hash = ipfs_hash
+    @hash_uri.setter
+    def hash_uri(self, hash_uri):
+        self._hash_uri = hash_uri
 
     @property
     def is_curated(self):

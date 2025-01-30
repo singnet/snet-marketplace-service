@@ -1,6 +1,6 @@
 class ServiceMetadata:
     def __init__(self, service_row_id, org_id, service_id, display_name, description, short_description,
-                 demo_component_available, url, json, model_ipfs_hash, encoding, type, mpe_address, assets_url,
+                 demo_component_available, url, json, model_hash, encoding, type, mpe_address, assets_url,
                  assets_hash, service_rating, ranking, contributors):
         self._service_row_id = service_row_id
         self._org_id = org_id
@@ -11,7 +11,7 @@ class ServiceMetadata:
         self._demo_component_available = demo_component_available
         self._url = url
         self._json = json
-        self._model_ipfs_hash = model_ipfs_hash
+        self._model_hash = model_hash
         self._encoding = encoding
         self._type = type
         self._mpe_address = mpe_address
@@ -58,8 +58,8 @@ class ServiceMetadata:
         return self._json
 
     @property
-    def model_ipfs_hash(self):
-        return self._model_ipfs_hash
+    def model_hash(self):
+        return self._model_hash
 
     @property
     def encoding(self):
@@ -129,9 +129,9 @@ class ServiceMetadata:
     def json(self, json):
         self._json = json
 
-    @model_ipfs_hash.setter
-    def model_ipfs_hash(self, model_ipfs_hash):
-        self._model_ipfs_hash = model_ipfs_hash
+    @model_hash.setter
+    def model_hash(self, model_hash):
+        self._model_hash = model_hash
 
     @encoding.setter
     def encoding(self, encoding):
