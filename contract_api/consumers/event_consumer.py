@@ -1,5 +1,8 @@
-from common.logger import get_logger
+import json
 
+from common.logger import get_logger
+from contract_api.infrastructure.storage_provider import StorageProvider
+from contract_api.config import ASSETS_BUCKET_NAME, ASSETS_PREFIX
 
 logger = get_logger(__name__)
 
@@ -7,6 +10,7 @@ logger = get_logger(__name__)
 class EventConsumer:
     def __init__(self, s3_util):
         self._s3_util = s3_util
+        self._storage_provider = StorageProvider()
 
     def _compare_assets_and_push_to_s3(
         self, existing_assets_hash, new_assets_hash, existing_assets_url, org_id, service_id
@@ -73,3 +77,20 @@ class EventConsumer:
 
     def on_event(self, event):
         pass
+
+    # TODO: check and change hash_uri parsing
+    def _push_asset_to_s3_using_hash(self, hash_uri, org_id, service_id):
+        asset_dict = self._storage_provider.get(hash_uri)
+        io_bytes = json.dumps(asset_dict).encode('utf-8')
+        filename = hash_uri.split("/")[1]
+        if service_id:
+            s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename
+        else:
+            s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + filename
+
+        new_url = self._s3_util.push_io_bytes_to_s3(s3_filename,
+                                                    ASSETS_BUCKET_NAME, io_bytes)
+        logger.info(f"Pushed asset to S3: new_url = {new_url}, s3_filename = {s3_filename}, "
+                    f"hash_uri = {hash_uri}, filename = {filename}")
+
+        return new_url

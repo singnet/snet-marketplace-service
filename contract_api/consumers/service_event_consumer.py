@@ -92,21 +92,8 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
     def on_event(self, event):
         org_id, service_id = self._get_service_details_from_blockchain(event)
         metadata_uri = self._get_metadata_uri_from_event(event)
-        service_data = self._storage_provider.get(metadata_uri)
-        self._process_service_data(org_id, service_id, metadata_uri, service_data)
-
-    # TODO: Update for using universal storage provider
-    def _push_asset_to_s3_using_hash(self, hash, org_id, service_id):
-        io_bytes = self._ipfs_util.read_bytesio_from_ipfs(hash)
-        filename = hash.split("/")[1]
-        if service_id:
-            s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename
-        else:
-            s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + filename
-
-        new_url = self._s3_util.push_io_bytes_to_s3(s3_filename,
-                                                    ASSETS_BUCKET_NAME, io_bytes)
-        return new_url
+        service_metadata = self._storage_provider.get(metadata_uri)
+        self._process_service_data(org_id, service_id, metadata_uri, service_metadata)
 
     def _get_new_assets_url(self, org_id, service_id, new_ipfs_data, existing_service_metadata):
         new_assets_hash = new_ipfs_data.get("assets", {})
@@ -136,7 +123,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                         updated_url = url
                         hash_uri = ''
                     else:
-                        updated_url = self._push_asset_to_s3_using_hash(org_id=org_id, service_id=service_id, hash=url)
+                        updated_url = self._push_asset_to_s3_using_hash(org_id=org_id, service_id=service_id, hash_uri=url)
                         hash_uri = service_media_item.get("url", "")
                     # insert service media data
                     asset_type = 'media_gallery' if service_media_item.get('asset_type', {}) != 'hero_image' else service_media_item.get('asset_type')
@@ -178,7 +165,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                 service_row_id=service_row_id,
                 org_id=org_id,
                 service_id=service_id,
-                ipfs_data=new_data,
+                service_metadata=new_data,
                 assets_url=assets_url
             )
 
