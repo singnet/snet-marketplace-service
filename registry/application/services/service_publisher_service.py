@@ -44,7 +44,8 @@ from registry.exceptions import (
 )
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
-from registry.infrastructure.storage_provider import validate_storage_provider, StorageProvider, StorageProviderType
+from registry.infrastructure.storage_provider import validate_storage_provider, StorageProvider, StorageProviderType, \
+    FileUtils
 
 patch_all()
 ALLOWED_ATTRIBUTES_FOR_SERVICE_SEARCH = ["display_name"]
@@ -491,6 +492,8 @@ class ServicePublisherService:
         current_offchain_configs = ServicePublisherRepository().get_offchain_service_config(
             org_uuid=self._org_uuid, service_uuid=self._service_uuid
         )
+
+        logger.debug(f"Current offchain configs :: {current_offchain_configs}")
         logger.debug(f"Existing offchain configs :: {existing_offchain_configs}")
 
         new_offchain_configs = self.get_offchain_changes(
@@ -507,13 +510,18 @@ class ServicePublisherService:
 
         return status
 
-    def _prepare_publish_status(self, organization: Organization, current_service: Service, storage_provider: StorageProviderType, publish_to_blockchain: bool, new_offchain_configs: Dict[str, any]):
+    def _prepare_publish_status(self, organization: Organization, current_service: Service,
+                                storage_provider: StorageProviderType, publish_to_blockchain: bool,
+                                new_offchain_configs: Dict[str, any]):
         status = {"publish_to_blockchain": publish_to_blockchain}
 
         if publish_to_blockchain:
-            filename = f"{METADATA_FILE_PATH}/{current_service.uuid}_service_metadata.json"
-            status["service_metadata_uri"] = self._storage_provider.publish(filename, storage_provider)
+            filepath = FileUtils.create_temp_json_file(current_service.to_metadata())
+            # filename = f"{METADATA_FILE_PATH}/{current_service.uuid}_service_metadata.json"
+            status["service_metadata_uri"] = self._storage_provider.publish(filepath, storage_provider)
+            current_service.metadata_uri = status["service_metadata_uri"]
 
+        logger.info("Publish offchain service configs to contract_api")
         self.publish_offchain_service_configs(
             org_id=organization.id,
             service_id=current_service.service_id,
@@ -532,7 +540,7 @@ class ServicePublisherService:
     def publish_service(self, storage_provider: str):
         storage_provider_enum = validate_storage_provider(storage_provider)
         current_service = self.publish_service_data_to_storage_provider(storage_provider_enum=storage_provider_enum)
-        logger.debug(f"Current service :: {current_service}")
+        logger.debug(f"Current service :: {current_service.to_dict()}")
 
         if not Service.is_metadata_valid(service_metadata=current_service.to_metadata()):
             raise InvalidMetadataException()
