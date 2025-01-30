@@ -448,7 +448,7 @@ class ServicePublisherService:
         demo_changes.update({"change_in_demo_component": 1})
         current_demo_last_modified = current_service.assets.get("demo_files", {}).get("last_modified")
         if demo_last_modified and \
-            (current_demo_last_modified is None or \
+            (current_demo_last_modified is None or
              dt.fromisoformat(demo_last_modified) > dt.fromisoformat(current_demo_last_modified)):
             demo_changes.update({"change_in_demo_component": 0})
         changes.update({"demo_component": demo_changes})
@@ -467,7 +467,7 @@ class ServicePublisherService:
         logger.debug(f"Get service by org_id from contract_api :: {response}")
         return json.loads(response.text)["data"]
 
-    def publish_new_offchain_configs(self, current_service: Service, storage_provider: StorageProvider) -> Dict[str, Union[bool, str]]:
+    def publish_new_offchain_configs(self, current_service: Service, storage_provider: StorageProviderType) -> Dict[str, Union[bool, str]]:
         organization = OrganizationPublisherRepository().get_organization(org_uuid=self._org_uuid)
         logger.debug(f"Current organization :: {organization.to_response()}")
 
@@ -491,7 +491,7 @@ class ServicePublisherService:
         current_offchain_configs = ServicePublisherRepository().get_offchain_service_config(
             org_uuid=self._org_uuid, service_uuid=self._service_uuid
         )
-        logger.debug(f"Existing offchain confgis :: {existing_offchain_configs}")
+        logger.debug(f"Existing offchain configs :: {existing_offchain_configs}")
 
         new_offchain_configs = self.get_offchain_changes(
             current_offchain_config=current_offchain_configs.configs,
@@ -507,7 +507,7 @@ class ServicePublisherService:
 
         return status
 
-    def _prepare_publish_status(self, organization: Organization, current_service: Service, storage_provider: StorageProvider, publish_to_blockchain: bool, new_offchain_configs: Dict[str, any]):
+    def _prepare_publish_status(self, organization: Organization, current_service: Service, storage_provider: StorageProviderType, publish_to_blockchain: bool, new_offchain_configs: Dict[str, any]):
         status = {"publish_to_blockchain": publish_to_blockchain}
 
         if publish_to_blockchain:

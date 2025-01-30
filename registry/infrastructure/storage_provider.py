@@ -50,17 +50,17 @@ class StorageProvider:
         self.__ipfs_util = IPFSUtil(IPFS_URL["url"], IPFS_URL["port"])
         self.__lighthouse_client = Lighthouse(lighthouse_token)
 
-    def get(self, data_uri: str) -> str:
+    def get(self, metadata_uri: str) -> str:
         """
         Get metadata json from provider storage rely on metadata_uri prefix
 
-        :param metdata_uri: str, provider storage prefix + hash
+        :param metadata_uri: str, provider storage prefix + hash
         """
-        provider_type, hash = self.uri_to_hash(data_uri)
+        provider_type, metadata_hash = self.uri_to_hash(metadata_uri)
         if provider_type == StorageProviderType.IPFS:
-            data_bytes = self.__ipfs_util.read_bytes_from_ipfs(hash)
+            data_bytes = self.__ipfs_util.read_bytes_from_ipfs(metadata_hash)
         elif provider_type == StorageProviderType.FILECOIN:
-            data_bytes = self.__lighthouse_client.download(hash)[0]
+            data_bytes = self.__lighthouse_client.download(metadata_hash)[0]
 
         return json.loads(data_bytes.decode("utf-8"))
  
@@ -99,7 +99,7 @@ class StorageProvider:
         else:
             return self.__upload_to_provider(source, provider_type)
 
-    def uri_to_hash(self, s: str) -> Tuple[str, str]:
+    def uri_to_hash(self, s: str) -> Tuple[StorageProviderType, str]:
         if s.startswith("ipfs://"):
             return StorageProviderType.IPFS, s[7:]
         elif s.startswith("filecoin://"):
@@ -107,11 +107,11 @@ class StorageProvider:
         else:
             return StorageProviderType.IPFS, s
 
-    def hash_to_uri(self, metada_hash: str, provider_type: StorageProviderType) -> str:
+    def hash_to_uri(self, metadata_hash: str, provider_type: StorageProviderType) -> str:
         if provider_type == StorageProviderType.IPFS:
-            metadata_uri = "ipfs://" + metada_hash
+            metadata_uri = "ipfs://" + metadata_hash
         elif provider_type == StorageProviderType.FILECOIN:
-            metadata_uri = "filecoin://" + metada_hash
+            metadata_uri = "filecoin://" + metadata_hash
 
         return metadata_uri
 
