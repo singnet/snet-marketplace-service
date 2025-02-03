@@ -477,10 +477,8 @@ class ServicePublisherService:
         )
         logger.debug(f"Existing service data :: {existing_service_data}")
 
-        # TODO: Update this section to use `hash_uri` once provider storage is integrated into the contract API.
-        # For now, it retrieves the existing metadata using the current IPFS hash.
         existing_metadata = (
-            self._storage_provider.get(existing_service_data["ipfs_hash"])
+            self._storage_provider.get(existing_service_data["model_hash"])
             if existing_service_data else {}
         )
         publish_to_blockchain = self.are_blockchain_attributes_got_updated(
