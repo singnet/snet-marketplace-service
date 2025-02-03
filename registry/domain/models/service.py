@@ -23,7 +23,7 @@ SERVICE_METADATA_SCHEMA = {
         "type": "string",
         "empty": False
     },
-    "model_hash": {
+    "service_api_source": {
         "type": "string",
         "empty": False
     },
@@ -185,7 +185,7 @@ class Service:
             "display_name": self._display_name,
             "encoding": self.proto.get("encoding", ""),
             "service_type": self.proto.get("service_type", ""),
-            "model_hash": self.proto.get("model_hash", ""),
+            "service_api_source": self.proto.get("model_hash", ""),
             "mpe_address": self._mpe_address,
             "groups": [group.to_metadata() for group in self._groups],
             "service_description": {
