@@ -19,7 +19,7 @@ SLACK_HOOK = {
     'path': ''
 }
 IPFS_URL = {
-    'url': '',
+    'url': 'ipfs.singularitynet.io',
     'port': '80',
 
 }

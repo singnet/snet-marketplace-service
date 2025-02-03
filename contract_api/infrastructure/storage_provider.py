@@ -50,17 +50,17 @@ class StorageProvider:
         self.__ipfs_util = IPFSUtil(IPFS_URL["url"], IPFS_URL["port"])
         self.__lighthouse_client = Lighthouse(lighthouse_token)
 
-    def get(self, data_uri: str) -> str:
+    def get(self, metadata_uri: str) -> dict:
         """
         Get metadata json from provider storage rely on metadata_uri prefix
 
-        :param metdata_uri: str, provider storage prefix + hash
+        :param metadata_uri: str, provider storage prefix + hash
         """
-        provider_type, hash = self.uri_to_hash(data_uri)
+        provider_type, hash_uri = self.uri_to_hash(metadata_uri)
         if provider_type == StorageProviderType.IPFS:
-            data_bytes = self.__ipfs_util.read_bytes_from_ipfs(hash)
+            data_bytes = self.__ipfs_util.read_bytes_from_ipfs(hash_uri)
         elif provider_type == StorageProviderType.FILECOIN:
-            data_bytes = self.__lighthouse_client.download(hash)[0]
+            data_bytes = self.__lighthouse_client.download(hash_uri)[0]
 
         return json.loads(data_bytes.decode("utf-8"))
  
@@ -99,7 +99,7 @@ class StorageProvider:
         else:
             return self.__upload_to_provider(source, provider_type)
 
-    def uri_to_hash(self, s: str) -> Tuple[str, str]:
+    def uri_to_hash(self, s: str) -> Tuple[StorageProviderType, str]:
         if s.startswith("ipfs://"):
             return StorageProviderType.IPFS, s[7:]
         elif s.startswith("filecoin://"):
@@ -118,12 +118,12 @@ class StorageProvider:
 
 class IPFSUtil:
     def __init__(self, ipfs_url: str, port: str):
-        self.ipfs_conn = ipfshttpclient.connect(f"/dns/{ipfs_url}/tcp/{port}/http")
+        self.ipfs_conn = ipfshttpclient.connect(f"/dns/{ipfs_url}/tcp/{port}/")
 
     def read_bytes_from_ipfs(self, ipfs_hash: str) -> bytes:
         return self.ipfs_conn.cat(ipfs_hash)
 
-    def write_file_in_ipfs(self, filepath: str, wrap_with_directory: bool=True) -> str:
+    def write_file_in_ipfs(self, filepath: str, wrap_with_directory: bool=False) -> str:
         """
         Push a file to IPFS given its path.
         """

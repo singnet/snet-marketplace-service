@@ -9,43 +9,43 @@ class ServiceRepository(CommonRepository):
     def __init__(self, connection):
         super().__init__(connection)
 
-    def create_or_update_service(self, org_id, service_id, ipfs_hash):
-        upsrt_service = "INSERT INTO service (org_id, service_id, is_curated, ipfs_hash, row_created, row_updated) " \
+    def create_or_update_service(self, org_id, service_id, hash_uri):
+        upsrt_service = "INSERT INTO service (org_id, service_id, is_curated, hash_uri, row_created, row_updated) " \
                         "VALUES (%s, %s, %s, %s, %s, %s) " \
-                        "ON DUPLICATE KEY UPDATE ipfs_hash = %s, row_updated = %s "
-        upsrt_service_params = [org_id, service_id, 0, ipfs_hash,
-                                datetime.utcnow(), datetime.utcnow(), ipfs_hash, datetime.utcnow()]
+                        "ON DUPLICATE KEY UPDATE hash_uri = %s, row_updated = %s "
+        upsrt_service_params = [org_id, service_id, 0, hash_uri,
+                                datetime.utcnow(), datetime.utcnow(), hash_uri, datetime.utcnow()]
         query_response = self.connection.execute(upsrt_service, upsrt_service_params)
         return query_response[len(query_response) - 1]
 
-    def create_or_update_service_metadata(self, service_row_id, org_id, service_id, ipfs_data, assets_url):
+    def create_or_update_service_metadata(self, service_row_id, org_id, service_id, service_metadata, assets_url):
         upsrt_servicec_metadata = "INSERT INTO service_metadata (service_row_id, org_id, service_id, " \
-                                  "display_name, model_ipfs_hash, description,short_description, url, json, encoding, type, " \
+                                  "display_name, model_hash, description,short_description, url, json, encoding, type, " \
                                   "mpe_address, assets_hash , assets_url, service_rating,contributors, row_updated, row_created) " \
                                   "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s ,%s ,%s ) " \
                                   "ON DUPLICATE KEY UPDATE service_row_id = %s, " \
-                                  "display_name = %s, model_ipfs_hash = %s, description = %s,short_description =%s, url = %s, json = %s, " \
+                                  "display_name = %s, model_hash = %s, description = %s,short_description =%s, url = %s, json = %s, " \
                                   "encoding = %s, type = %s, mpe_address = %s, row_updated = %s ,assets_hash = %s ,assets_url = %s , contributors =%s "
 
-        service_desc = ipfs_data.get('service_description', {})
+        service_desc = service_metadata.get('service_description', {})
         desc = service_desc.get('description', '')
         short_desc = service_desc.get('short_description', '')
         url = service_desc.get('url', '')
-        json_str = ipfs_data.get('json', '')
-        assets_hash = json.dumps(ipfs_data.get('assets', {}))
+        json_str = service_metadata.get('json', '')
+        assets_hash = json.dumps(service_metadata.get('assets', {}))
         assets_url_str = json.dumps(assets_url)
-        contributors = json.dumps(ipfs_data.get('contributors', {}))
-        upsrt_service_metadata_params = [service_row_id, org_id, service_id, ipfs_data['display_name'],
-                                         ipfs_data['model_ipfs_hash'], desc, short_desc,url, json_str, ipfs_data['encoding'],
-                                         ipfs_data['service_type'], ipfs_data['mpe_address'], assets_hash,
-                                         assets_url_str,
-                                         '{"rating": 0.0 , "total_users_rated": 0 }', contributors, datetime.utcnow(
-            ), datetime.utcnow(),
-                                         service_row_id, ipfs_data['display_name'],
-                                         ipfs_data['model_ipfs_hash'], desc, short_desc, url, json_str, ipfs_data['encoding'],
-                                         ipfs_data['service_type'], ipfs_data['mpe_address'], datetime.utcnow(),
-                                         assets_hash,
-                                         assets_url_str, contributors]
+        contributors = json.dumps(service_metadata.get('contributors', {}))
+        model_hash = service_metadata.get('service_api_source', '')
+        upsrt_service_metadata_params = [service_row_id, org_id, service_id, service_metadata['display_name'],
+                                         model_hash, desc, short_desc, url, json_str,
+                                         service_metadata['encoding'], service_metadata['service_type'],
+                                         service_metadata['mpe_address'], assets_hash, assets_url_str,
+                                         '{"rating": 0.0 , "total_users_rated": 0 }', contributors,
+                                         datetime.utcnow(), datetime.utcnow(),service_row_id,
+                                         service_metadata['display_name'], model_hash,
+                                         desc, short_desc, url, json_str, service_metadata['encoding'],
+                                         service_metadata['service_type'], service_metadata['mpe_address'],
+                                         datetime.utcnow(), assets_hash, assets_url_str, contributors]
 
         self.connection.execute(upsrt_servicec_metadata, upsrt_service_metadata_params)
 
@@ -97,7 +97,7 @@ class ServiceRepository(CommonRepository):
         return service_data
 
     def get_service(self,org_id,service_id):
-        query = 'SELECT org_id, service_id, service_path, ipfs_hash, is_curated FROM service WHERE service_id = %s AND org_id = %s '
+        query = 'SELECT org_id, service_id, service_path, hash_uri, is_curated FROM service WHERE service_id = %s AND org_id = %s '
         query_response = self.connection.execute(query, [service_id, org_id])
 
         return query_response[0]
@@ -109,7 +109,9 @@ class ServiceRepository(CommonRepository):
         return service_data
 
     def get_service_metadata(self, service_id, org_id):
-        query = "select org_id, service_id, display_name, description, short_description,url, json, model_ipfs_hash, encoding, `type`, mpe_address, assets_url, assets_hash, service_rating, ranking, contributors from service_metadata where service_id = %s and org_id = %s "
+        query = ("select org_id, service_id, display_name, description, short_description,url, json, model_hash, "
+                 "encoding, `type`, mpe_address, assets_url, assets_hash, service_rating, ranking, contributors from "
+                 "service_metadata where service_id = %s and org_id = %s ")
         service_metadata = self.connection.execute(query, (service_id, org_id))
 
         if len(service_metadata) > 0:
@@ -156,28 +158,31 @@ class ServiceRepository(CommonRepository):
             self.rollback_transaction()
             raise
 
-    def get_service_media(self,service_id,org_id):
-        query = "SELECT `row_id`, org_id, service_id, url, `order`, file_type, asset_type, alt_text,ipfs_url FROM service_media where service_id = %s and org_id = %s order by `order` "
+    def get_service_media(self,service_id, org_id):
+        query = ("SELECT `row_id`, org_id, service_id, url, `order`, file_type, asset_type, alt_text, hash_uri "
+                 "FROM service_media where service_id = %s and org_id = %s order by `order` ")
         service_media = self.connection.execute(query, (service_id, org_id))
 
         if len(service_media) > 0:
             return service_media
         return None
 
-    def insert_service_media(self,org_id,service_id,service_row_id,media_data):
+    def insert_service_media(self,org_id, service_id, service_row_id, media_data):
         url = media_data.get('url',"")
-        ipfs_url = media_data.get('ipfs_url',"")
+        hash_uri = media_data.get('hash_uri',"")
         order = media_data.get('order',0)
         file_type = media_data.get('file_type',"")
         asset_type = media_data.get('asset_type',"")
         alt_text = media_data.get('alt_text',"")
 
-        query = "INSERT INTO service_media (org_id, service_id, url, `order`, file_type, asset_type, alt_text,ipfs_url,service_row_id,created_on, updated_on) VALUES(%s, %s, %s, %s, %s, %s, %s, %s,%s, %s,%s)"
-        insert_media_parameters = (org_id,service_id,url,order,file_type,asset_type,alt_text,ipfs_url,service_row_id,datetime.now(),datetime.now())
+        query = ("INSERT INTO service_media (org_id, service_id, url, `order`, file_type, asset_type, alt_text, hash_uri, "
+                 "service_row_id ,created_on, updated_on) VALUES(%s, %s, %s, %s, %s, %s, %s, %s,%s, %s,%s)")
+        insert_media_parameters = (org_id,service_id,url,order,file_type,asset_type,alt_text,
+                                   hash_uri,service_row_id,datetime.now(),datetime.now())
 
         self.connection.execute(query,insert_media_parameters)
 
-    def delete_service_media(self,org_id,service_id, file_types=None):
+    def delete_service_media(self, org_id, service_id, file_types=None):
         delete_service_media = 'DELETE FROM service_media WHERE service_id = %s AND org_id = %s '
         parameters = (service_id, org_id)
         if file_types:

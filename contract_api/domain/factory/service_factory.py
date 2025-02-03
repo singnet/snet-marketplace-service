@@ -17,7 +17,7 @@ class ServiceFactory:
             org_id=service_db.org_id,
             service_id=service_db.service_id,
             service_path=service_db.service_path,
-            ipfs_hash=service_db.ipfs_hash,
+            hash_uri=service_db.hash_uri,
             is_curated=service_db.is_curated,
             service_email=service_db.service_email,
             service_metadata=ServiceFactory.convert_service_metadata_db_model_to_entity_model(
@@ -38,7 +38,7 @@ class ServiceFactory:
             demo_component_available=service_metadata_db.demo_component_available,
             url=service_metadata_db.url,
             json=service_metadata_db.json,
-            model_ipfs_hash=service_metadata_db.model_ipfs_hash,
+            model_hash=service_metadata_db.model_hash,
             encoding=service_metadata_db.encoding,
             type=service_metadata_db.type,
             mpe_address=service_metadata_db.mpe_address,
@@ -62,7 +62,7 @@ class ServiceFactory:
             file_type=service_media_db.file_type,
             asset_type=service_media_db.asset_type,
             alt_text=service_media_db.alt_text,
-            ipfs_url=service_media_db.ipfs_url
+            hash_uri=service_media_db.hash_uri
         )
 
     @staticmethod

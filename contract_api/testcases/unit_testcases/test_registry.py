@@ -17,7 +17,7 @@ modified_date = "2021-08-19 00:01:20"
 class TestRegistry(TestCase):
     def test_curation(self):
         registry = Registry(obj_repo=db)
-        insert_service_query = f"""INSERT INTO service (org_id,service_id,service_path,ipfs_hash,is_curated,service_email
+        insert_service_query = f"""INSERT INTO service (org_id,service_id,service_path,hash_uri,is_curated,service_email
         ,row_created,row_updated) VALUES ('{TEST_ORG_ID}','{TEST_SERVICE_ID}',NULL,'QmQtm73kmKhv6mKTkn7qW3uMPtgK6c5Qytb11sCxY98s5j',0,
         NULL,'2019-08-23 07:00:31','2020-03-18 13:07:55');"""
         db.execute(insert_service_query)
@@ -47,12 +47,12 @@ class TestRegistry(TestCase):
         db.execute(insert_organization_query)
 
         insert_service_query = f"""INSERT INTO service
-        (row_id ,org_id, service_id, service_path, ipfs_hash, is_curated, service_email, row_created, row_updated)
+        (row_id ,org_id, service_id, service_path, hash_uri, is_curated, service_email, row_created, row_updated)
         VALUES(10,'{TEST_ORG_ID}', '{TEST_SERVICE_ID}', """ + """ 'service_path', 'test_ipfs_hash', 1, 'email', '2021-01-08 05:48:26', '2021-01-08 05:48:26');"""
         db.execute(insert_service_query)
 
         insert_metadata_query = f"""INSERT INTO service_metadata
-        (row_id ,service_row_id, org_id, service_id, display_name, description, short_description,demo_component_available, url, json, model_ipfs_hash, encoding, `type`, mpe_address, assets_url, assets_hash, service_rating, ranking, contributors, row_created, row_updated)
+        (row_id ,service_row_id, org_id, service_id, display_name, description, short_description,demo_component_available, url, json, model_hash, encoding, `type`, mpe_address, assets_url, assets_hash, service_rating, ranking, contributors, row_created, row_updated)
         VALUES(10,10, '{TEST_ORG_ID}', '{TEST_SERVICE_ID}', """ + """ 'test_display_name', 'test_description', 'short description',0, 'test_url', '{"name":"test_name", "age":31, "city":"test_city"}', 'test_hash', 'proto', 'grpc', 'test_mpe_address','{"hero_image": "https://test-s3-push"}', '{"hero_image": "test_hero_image_hash"}','{"rating": 0.0, "total_users_rated": 0}', 1, '[{"name": "dummy dummy", "email_id": "dummy@dummy.io"}]', '2021-01-08 05:48:26', '2021-01-08 05:48:26')"""
         db.execute(insert_metadata_query)
 
@@ -66,7 +66,7 @@ class TestRegistry(TestCase):
             asset_type="grpc-stub",
             file_type="grpc-stub/nodejs",
             alt_text="",
-            ipfs_url="",
+            hash_uri="",
             created_on="2021-06-11 14:21:25",
             updated_on="2021-06-11 14:21:25"
         ))
@@ -81,7 +81,7 @@ class TestRegistry(TestCase):
             asset_type="hero_image",
             file_type="image",
             alt_text="data is missing",
-            ipfs_url="Qmbb7tmKZX2TSxDKsK6DEAbp3tPgNUYP11CC93Cft7EkFb",
+            hash_uri="Qmbb7tmKZX2TSxDKsK6DEAbp3tPgNUYP11CC93Cft7EkFb",
             created_on="2021-01-08 13:31:50",
             updated_on="2021-01-08 13:31:50"
         ))
@@ -142,14 +142,14 @@ class TestRegistry(TestCase):
         db.execute(insert_organization_query)
 
         insert_service_query = f"""INSERT INTO service
-        (row_id ,org_id, service_id, service_path, ipfs_hash, is_curated, service_email, row_created, row_updated)
+        (row_id ,org_id, service_id, service_path, hash_uri, is_curated, service_email, row_created, row_updated)
         VALUES(10,  '{TEST_ORG_ID}', '{TEST_SERVICE_ID}', """ + """'service_path', 'test_ipfs_hash',
          1, 'email', '2021-01-08 05:48:26', '2021-01-08 05:48:26');"""
         db.execute(insert_service_query)
 
         # intentionally omitted the value for demo_component_available inorder to test the default value
         insert_metadata_query = f"""INSERT INTO service_metadata
-        (row_id ,service_row_id, org_id, service_id, display_name, description, short_description, url, json, model_ipfs_hash, encoding, `type`, mpe_address, assets_url, assets_hash, service_rating, ranking, contributors, row_created, row_updated)
+        (row_id ,service_row_id, org_id, service_id, display_name, description, short_description, url, json, model_hash, encoding, `type`, mpe_address, assets_url, assets_hash, service_rating, ranking, contributors, row_created, row_updated)
         VALUES(10,10,  '{TEST_ORG_ID}', '{TEST_SERVICE_ID}', """ + """ 'test_display_name', 'test_description', 'short description', 'test_url', '{"name":"test_name", "age":31, "city":"test_city"}', 'test_hash', 'proto', 'grpc', 'test_mpe_address','{"hero_image": "https://test-s3-push"}', '{"hero_image": "test_hero_image_hash"}','{"rating": 0.0, "total_users_rated": 0}', 1, '[{"name": "dummy dummy", "email_id": "dummy@dummy.io"}]', '2021-01-08 05:48:26', '2021-01-08 05:48:26')"""
         db.execute(insert_metadata_query)
 
