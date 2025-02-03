@@ -936,11 +936,11 @@ class TestService(TestCase):
                    "proto": {},
                    "assets": {"proto_files": {
                        "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/9887ec2e099e4afd92c4a052737eaa97/services/7420bf47989e4afdb1797d1bba8090aa/proto/20200327130256_proto_files.zip",
-                       "ipfs_hash": "QmUfDprFisFeaRnmLEqks1AFN6iam5MmTh49KcomXHEiQY"}, "hero_image": {
+                       "model_hash": "QmUfDprFisFeaRnmLEqks1AFN6iam5MmTh49KcomXHEiQY"}, "hero_image": {
                        "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/9887ec2e099e4afd92c4a052737eaa97/services/7420bf47989e4afdb1797d1bba8090aa/assets/20200323130126_asset.png",
-                       "ipfs_hash": ""}, "demo_files": {
+                       "hash": ""}, "demo_files": {
                        "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/9887ec2e099e4afd92c4a052737eaa97/services/7420bf47989e4afdb1797d1bba8090aa/component/20200401121414_component.zip",
-                       "ipfs_hash": "QmUfDprFisFeaRnmLEqks1AFN6iam5MmTh49KcomXHEiQY"}},
+                       "hash": "QmUfDprFisFeaRnmLEqks1AFN6iam5MmTh49KcomXHEiQY"}},
                    "contributors": [{"name": "df", "email_id": ""}], "groups": [
                 {"group_name": "default_group", "group_id": "a+8V4tUs+DBnZfxoh2vBHVv1pAt8pkCac8mpuKFltTo=",
                  "free_calls": 23, "free_call_signer_address": "0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F",
@@ -958,7 +958,7 @@ class TestService(TestCase):
             "display_name": "new_service_123",
             "encoding": "",
             "service_type": "",
-            "model_hash": "",
+            "service_api_source": "",
             "mpe_address": "0x8fb1dc8df86b388c7e00689d1ecb533a160b4d0c",
             "groups": [
                 {

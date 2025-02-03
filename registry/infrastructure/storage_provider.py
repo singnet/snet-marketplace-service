@@ -50,17 +50,17 @@ class StorageProvider:
         self.__ipfs_util = IPFSUtil(IPFS_URL["url"], IPFS_URL["port"])
         self.__lighthouse_client = Lighthouse(lighthouse_token)
 
-    def get(self, data_uri: str) -> str:
+    def get(self, metadata_uri: str) -> dict:
         """
         Get metadata json from provider storage rely on metadata_uri prefix
 
-        :param metdata_uri: str, provider storage prefix + hash
+        :param metadata_uri: str, provider storage prefix + hash
         """
-        provider_type, hash = self.uri_to_hash(data_uri)
+        provider_type, metadata_hash = self.uri_to_hash(metadata_uri)
         if provider_type == StorageProviderType.IPFS:
-            data_bytes = self.__ipfs_util.read_bytes_from_ipfs(hash)
+            data_bytes = self.__ipfs_util.read_bytes_from_ipfs(metadata_hash)
         elif provider_type == StorageProviderType.FILECOIN:
-            data_bytes = self.__lighthouse_client.download(hash)[0]
+            data_bytes = self.__lighthouse_client.download(metadata_hash)[0]
 
         return json.loads(data_bytes.decode("utf-8"))
  
@@ -80,13 +80,15 @@ class StorageProvider:
             raise ValueError(f"Unsupported provider type: {provider_type}")
         return self.hash_to_uri(metadata_hash, provider_type)
 
-    def publish(self, source: str, provider_type: StorageProviderType, zip_archive: bool = False, ignored_files: List[str] = None) -> str:
+    def publish(self, source: str, provider_type: StorageProviderType,
+                zip_archive: bool = False, ignored_files: List[str] = None) -> str:
         """
         Publish metadata to a specific provider storage.
 
         :param source: str, file path to metadata JSON file or zip archive
         :param provider_type: StorageProviderType, type of the storage provider (e.g., IPFS, FILECOIN)
         :param zip_archive: bool, flag to indicate whether to publish a zip archive (default is False)
+        :param ignored_files: list[str], list of file names to be ignored when publishing a zip archive
         :return: str, the URI of the uploaded metadata
         """
         if zip_archive:
@@ -99,7 +101,7 @@ class StorageProvider:
         else:
             return self.__upload_to_provider(source, provider_type)
 
-    def uri_to_hash(self, s: str) -> Tuple[str, str]:
+    def uri_to_hash(self, s: str) -> Tuple[StorageProviderType, str]:
         if s.startswith("ipfs://"):
             return StorageProviderType.IPFS, s[7:]
         elif s.startswith("filecoin://"):
@@ -107,11 +109,11 @@ class StorageProvider:
         else:
             return StorageProviderType.IPFS, s
 
-    def hash_to_uri(self, metada_hash: str, provider_type: StorageProviderType) -> str:
+    def hash_to_uri(self, metadata_hash: str, provider_type: StorageProviderType) -> str:
         if provider_type == StorageProviderType.IPFS:
-            metadata_uri = "ipfs://" + metada_hash
+            metadata_uri = "ipfs://" + metadata_hash
         elif provider_type == StorageProviderType.FILECOIN:
-            metadata_uri = "filecoin://" + metada_hash
+            metadata_uri = "filecoin://" + metadata_hash
 
         return metadata_uri
 
@@ -123,7 +125,7 @@ class IPFSUtil:
     def read_bytes_from_ipfs(self, ipfs_hash: str) -> bytes:
         return self.ipfs_conn.cat(ipfs_hash)
 
-    def write_file_in_ipfs(self, filepath: str, wrap_with_directory: bool=True) -> str:
+    def write_file_in_ipfs(self, filepath: str, wrap_with_directory: bool=False) -> str:
         """
         Push a file to IPFS given its path.
         """
