@@ -170,7 +170,7 @@ class Registry:
             sort_by = sort_by.replace("org_id", "M.org_id")
             if org_srvc_tuple:
                 services = self.repo.execute(
-                    "SELECT DISTINCT M.row_id, M.service_row_id, M.org_id, M.service_id, M.display_name, M.description, M.url, M.json, M.model_ipfs_hash, M.encoding, M.`type`,"
+                    "SELECT DISTINCT M.row_id, M.service_row_id, M.org_id, M.service_id, M.display_name, M.description, M.url, M.json, M.model_hash, M.encoding, M.`type`,"
                     " M.mpe_address,M.service_rating, M.ranking, M.contributors, M.short_description,"
                     "O.organization_name,O.org_assets_url FROM service_endpoint E, service_metadata M, service S "
                     ", organization O WHERE O.org_id = S.org_id AND S.row_id = M.service_row_id AND "

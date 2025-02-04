@@ -2,6 +2,9 @@ import json
 from datetime import datetime
 
 from contract_api.dao.common_repository import CommonRepository
+from common.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class ServiceRepository(CommonRepository):
@@ -64,6 +67,7 @@ class ServiceRepository(CommonRepository):
                     "ON DUPLICATE KEY UPDATE tag_name = %s, row_updated = %s "
         insrt_tag_params = [service_row_id, org_id, service_id,
                             tag_name, datetime.utcnow(), datetime.utcnow(), tag_name, datetime.utcnow()]
+        logger.debug(f'insrt_tag_params: {" ".join(insrt_tag_params)}')
         qry_res = self.connection.execute(insrt_tag, insrt_tag_params)
         print('_create_tags::qry_res: ', qry_res)
 
