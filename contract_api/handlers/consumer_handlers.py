@@ -50,7 +50,6 @@ def mpe_event_consumer_handler(event, context):
 
 @handle_exception_with_slack_notification(logger=logger, SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID)
 def service_create_deployment_handler(event, context):
-    service_deployment_handler = ServiceCreatedDeploymentEventHandler(NETWORKS[NETWORK_ID]["ws_provider"],
-                                                                      IPFS_URL['url'], IPFS_URL['port'])
+    service_deployment_handler = ServiceCreatedDeploymentEventHandler(NETWORKS[NETWORK_ID]["ws_provider"])
     service_deployment_handler.on_event(event)
     return generate_lambda_response(200, StatusCode.OK)

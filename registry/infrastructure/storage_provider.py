@@ -57,11 +57,14 @@ class StorageProvider:
         :param metadata_uri: str, provider storage prefix + hash
         """
         provider_type, metadata_hash = self.uri_to_hash(metadata_uri)
+        logger.info(f"Get metadata from provider: {provider_type}, hash: {metadata_hash}")
+
         if provider_type == StorageProviderType.IPFS:
             data_bytes = self.__ipfs_util.read_bytes_from_ipfs(metadata_hash)
         elif provider_type == StorageProviderType.FILECOIN:
             data_bytes = self.__lighthouse_client.download(metadata_hash)[0]
 
+        logger.debug(f"Resulting data: data bytes = {data_bytes}, dict = {json.loads(data_bytes.decode('utf-8'))}")
         return json.loads(data_bytes.decode("utf-8"))
  
     def __upload_to_provider(self, file_path: str, provider_type: StorageProviderType) -> str:
@@ -91,15 +94,21 @@ class StorageProvider:
         :param ignored_files: list[str], list of file names to be ignored when publishing a zip archive
         :return: str, the URI of the uploaded metadata
         """
+        logger.info(f"Publishing file to storage: source = {source}, provider type = {provider_type}, zip_archive = {zip_archive}")
         if zip_archive:
             try:
                 temp_tar_path = FileUtils.convert_zip_to_temp_tar(source, ignored_files)
-                return self.__upload_to_provider(temp_tar_path, provider_type)
+                logger.info(f"temp_tar_path = {temp_tar_path}")
+                hash_uri = self.__upload_to_provider(temp_tar_path, provider_type)
+                logger.info(f"hash_uri = {hash_uri}")
+                return hash_uri
             finally:
                 if 'temp_tar_path' in locals() and os.path.exists(temp_tar_path):
                     os.remove(temp_tar_path)
         else:
-            return self.__upload_to_provider(source, provider_type)
+            hash_uri = self.__upload_to_provider(source, provider_type)
+            logger.info(f"hash_uri = {hash_uri}")
+            return hash_uri
 
     def uri_to_hash(self, s: str) -> Tuple[StorageProviderType, str]:
         if s.startswith("ipfs://"):
