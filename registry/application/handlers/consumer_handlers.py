@@ -24,7 +24,7 @@ def get_event_consumer(event):
     elif event['name'] in ['ServiceCreated', 'ServiceMetadataModified']:
         return ServiceCreatedEventConsumer(ws_provider = NETWORKS[NETWORK_ID]["ws_provider"],
                                            service_repository = service_repository,
-                                           organiztion_repository = org_repository)
+                                           organization_repository = org_repository)
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)

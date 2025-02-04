@@ -84,6 +84,9 @@ class OrganizationEventConsumer(EventConsumer):
 
 
 class OrganizationCreatedEventConsumer(OrganizationEventConsumer):
+    def __init__(self, ws_provider):
+        super().__init__(ws_provider)
+
     def on_event(self, event):
         org_id, blockchain_org_data, org_metadata, org_metadata_uri = (
             self._get_org_details_from_blockchain(event)
@@ -133,6 +136,8 @@ class OrganizationModifiedEventConsumer(OrganizationCreatedEventConsumer):
 
 
 class OrganizationDeletedEventConsumer(OrganizationEventConsumer):
+    def __init__(self, ws_provider):
+        super().__init__(ws_provider)
 
     def on_event(self, event):
         org_id, _, _, _ = self._get_org_details_from_blockchain(event)

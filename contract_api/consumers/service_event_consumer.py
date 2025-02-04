@@ -89,6 +89,9 @@ class ServiceEventConsumer(EventConsumer):
 
 class ServiceCreatedEventConsumer(ServiceEventConsumer):
 
+    def __init__(self, ws_provider):
+        super().__init__(ws_provider)
+
     def on_event(self, event):
         org_id, service_id = self._get_service_details_from_blockchain(event)
         metadata_uri = self._get_metadata_uri_from_event(event)
@@ -199,6 +202,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                     endpoint_insert_count = endpoint_insert_count + service_data[0]
 
             tags_data = new_data.get("tags", [])
+            logger.debug(f"Tags data: {' '.join(tags_data)}")
             for tag in tags_data:
                 self._service_repository.create_tags(service_row_id=service_row_id, org_id=org_id,
                                                      service_id=service_id,
@@ -233,6 +237,9 @@ class ServiceMetadataModifiedConsumer(ServiceCreatedEventConsumer):
 
 
 class ServiceDeletedEventConsumer(ServiceEventConsumer):
+    def __init__(self, ws_provider):
+        super().__init__(ws_provider)
+
     def on_event(self, event):
         org_id, service_id = self._get_service_details_from_blockchain(event)
         self._service_repository.delete_service_dependents(org_id, service_id)
