@@ -153,10 +153,11 @@ class ServiceFactory:
         mpe_address = payload.get("mpe_address", "")
         service_type = payload.get("service_type", ServiceType.GRPC.value)
         metadata_uri = payload.get("metadata_uri", "")
+        storage_provider = payload.get("storage_provider", "")
         return Service(
             org_uuid, service_uuid, service_id, display_name, short_description, description, project_url, proto,
-            assets, ranking, rating, contributors, tags, mpe_address, metadata_uri, service_type, service_group_entity_model_list,
-            service_state_entity_model)
+            assets, ranking, rating, contributors, tags, mpe_address, metadata_uri, storage_provider,
+            service_type, service_group_entity_model_list, service_state_entity_model)
 
     @staticmethod
     def is_valid_contributor(contributor):

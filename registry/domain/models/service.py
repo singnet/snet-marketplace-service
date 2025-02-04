@@ -337,6 +337,10 @@ class Service:
     def storage_provider(self):
         return self._storage_provider
 
+    @storage_provider.setter
+    def storage_provider(self, value):
+        self._storage_provider = value
+
     @service_type.setter
     def service_type(self, value):
         self._service_type = value
