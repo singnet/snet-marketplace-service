@@ -19,9 +19,12 @@ service_repository = ServicePublisherRepository()
 
 def get_event_consumer(event):
     if event['name'] in ["OrganizationCreated", 'OrganizationModified']:
-        return OrganizationCreatedAndModifiedEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"], org_repository)
+        return OrganizationCreatedAndModifiedEventConsumer(ws_provider = NETWORKS[NETWORK_ID]["ws_provider"],
+                                                           organization_repository = org_repository)
     elif event['name'] in ['ServiceCreated', 'ServiceMetadataModified']:
-        return ServiceCreatedEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"], service_repository, org_repository)
+        return ServiceCreatedEventConsumer(ws_provider = NETWORKS[NETWORK_ID]["ws_provider"],
+                                           service_repository = service_repository,
+                                           organiztion_repository = org_repository)
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)

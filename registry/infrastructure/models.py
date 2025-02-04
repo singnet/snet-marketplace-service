@@ -119,6 +119,7 @@ class Service(Base):
     display_name = Column("display_name", VARCHAR(128), nullable=False)
     service_id = Column("service_id", VARCHAR(128))
     metadata_uri = Column("metadata_uri", VARCHAR(255))
+    storage_provider = Column("storage_provider", VARCHAR(128))
     proto = Column("proto", JSON, nullable=False, default={})
     short_description = Column("short_description", VARCHAR(1024), nullable=False, default="")
     description = Column("description", VARCHAR(1024), nullable=False, default="")

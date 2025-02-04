@@ -1,7 +1,7 @@
 from contract_api.consumers.service_event_consumer import (
     ServiceCreatedEventConsumer,
     ServiceMetadataModifiedConsumer,
-    SeviceDeletedEventConsumer
+    ServiceDeletedEventConsumer
 )
 from contract_api.config import NETWORKS, NETWORK_ID
 from contract_api.consumers.organization_event_consumer import (
@@ -26,4 +26,4 @@ def get_service_event_consumer(event):
     elif event["name"] == "ServiceMetadataModified":
         return ServiceMetadataModifiedConsumer(NETWORKS[NETWORK_ID]["ws_provider"])
     elif event["name"] == "ServiceDeleted":
-        return SeviceDeletedEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"])
+        return ServiceDeletedEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"])

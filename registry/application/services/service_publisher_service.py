@@ -145,6 +145,7 @@ class ServicePublisherService:
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
         service.service_id = payload["service_id"]
         service.proto = payload.get("proto", {})
+        service.storage_provider = payload.get("storage_provider", "")
         service.display_name = payload.get("display_name", "")
         service.short_description = payload.get("short_description", "")
         service.description = payload.get("description", "")

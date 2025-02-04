@@ -20,10 +20,10 @@ BLOCKCHAIN_USER = "BLOCKCHAIN_USER"
 
 class ServiceEventConsumer(object):
 
-    def __init__(self, ws_provider, service_repository, organiztion_repository):
+    def __init__(self, ws_provider, service_repository, organization_repository):
         self._blockchain_util = blockchain_util.BlockChainUtil("WS_PROVIDER", ws_provider)
         self._service_repository = service_repository
-        self._organiztion_repository = organiztion_repository
+        self._organiztion_repository = organization_repository
         self.__storage_provider = StorageProvider()
         
     def on_event(self, event):
@@ -86,6 +86,9 @@ class ServiceEventConsumer(object):
 
 
 class ServiceCreatedEventConsumer(ServiceEventConsumer):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     def on_event(self, event):
         org_id, service_id, transaction_hash = self._get_service_details_from_blockchain(event)
         metadata_uri = self._get_metadata_uri_from_event(event)
@@ -127,7 +130,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         proto = {
             "encoding": service_metadata.get("encoding", ""),
             "service_type": service_metadata.get("service_type", ""),
-            "model_hash": service_metadata.get("model_hash", "")
+            "model_hash": service_metadata.get("service_api_source", "")
         }
         assets = service_metadata.get("assets", {})
         mpe_address = service_metadata.get("mpe_address", "")

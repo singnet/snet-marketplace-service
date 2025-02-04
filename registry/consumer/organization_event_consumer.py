@@ -57,7 +57,11 @@ class OrganizationEventConsumer(object):
         transaction_hash = self._get_tarnsaction_hash(event)
 
         blockchain_org_data = registry_contract.functions.getOrganizationById(org_id.encode('utf-8')).call()
+        logger.info(f"blockchain org data {blockchain_org_data}")
+
         org_metadata_uri = Web3.toText(blockchain_org_data[2]).rstrip("\x00").lstrip("ipfs://")
+        logger.info(f"org metadata uri {org_metadata_uri}")
+
         org_metadata = self.__storage_provider.get(org_metadata_uri)
         owner = blockchain_org_data[3]
         members = blockchain_org_data[4]
@@ -122,6 +126,9 @@ class OrganizationEventConsumer(object):
 
 
 class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def on_event(self, event):
         org_id, org_metadata, org_metadata_uri, transaction_hash, owner, recieved_members = self._get_org_details_from_blockchain(event)

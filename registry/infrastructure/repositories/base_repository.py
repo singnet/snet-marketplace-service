@@ -15,8 +15,8 @@ engine = create_engine(connection_string, pool_pre_ping=True, echo=True)
 
 Session = sessionmaker(bind=engine)
 default_session = Session()
-get_logger("sqlalchemy.engine").setLevel("INFO")
-get_logger("sqlalchemy.pool").setLevel("DEBUG")
+# get_logger("sqlalchemy.engine").setLevel("INFO")
+# get_logger("sqlalchemy.pool").setLevel("DEBUG")
 
 
 class BaseRepository:

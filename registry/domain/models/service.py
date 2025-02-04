@@ -133,8 +133,9 @@ REQUIRED_ASSETS_FOR_METADATA = ['hero_image']
 
 
 class Service:
-    def __init__(self, org_uuid, uuid, service_id, display_name, short_description, description, project_url, proto,
-                 assets, ranking, rating, contributors, tags, mpe_address, metadata_uri, service_type, groups, service_state):
+    def __init__(self, org_uuid, uuid, service_id, display_name, short_description, description,
+                 project_url, proto, assets, ranking, rating, contributors, tags, mpe_address,
+                 metadata_uri, storage_provider, service_type, groups, service_state):
         self._org_uuid = org_uuid
         self._uuid = uuid
         self._service_id = service_id
@@ -150,6 +151,7 @@ class Service:
         self._tags = tags
         self._mpe_address = mpe_address
         self._metadata_uri = metadata_uri
+        self._storage_provider = storage_provider
         self._service_type = service_type
         self._groups = groups
         self._service_state = service_state
@@ -172,7 +174,7 @@ class Service:
             "tags": self._tags,
             "mpe_address": self._mpe_address,
             "metadata_uri": self._metadata_uri,
-            "storage_provider": get_storage_provider_by_uri(self._metadata_uri),
+            "storage_provider": self._storage_provider,
             "service_type": self._service_type,
             "groups": [group.to_dict() for group in self._groups],
             "service_state": self._service_state.to_dict(),
@@ -330,6 +332,10 @@ class Service:
     @property
     def service_type(self):
         return self._service_type
+
+    @property
+    def storage_provider(self):
+        return self._storage_provider
 
     @service_type.setter
     def service_type(self, value):
