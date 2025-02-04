@@ -72,6 +72,8 @@ class ServicePublisherRepository(BaseRepository):
             service_db.display_name = service.display_name
             service_db.service_id = service.service_id
             service_db.metadata_uri = service.metadata_uri
+            if service.storage_provider:
+                service_db.storage_provider = service.storage_provider
             service_db.proto = service.proto
             service_db.short_description = service.short_description
             service_db.description = service.description
