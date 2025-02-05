@@ -153,16 +153,16 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         try:
             self._connection.begin_transaction()
             existing_service_metadata = self._service_repository.get_service_metadata(org_id, service_id)
-            logger.debug(f"Existing service metadata :: {existing_service_metadata}")
+            logger.info(f"Existing service metadata :: {existing_service_metadata}")
 
             assets_url = self._get_new_assets_url(org_id, service_id, new_data, existing_service_metadata)    
-            logger.debug(f"Get new assets url :: {assets_url}")
+            logger.info(f"Get new assets url :: {assets_url}")
 
             self._service_repository.delete_service_dependents(org_id=org_id, service_id=service_id)
         
             service_data = self._service_repository.create_or_update_service(org_id, service_id, new_hash)
             service_row_id = service_data['last_row_id']
-            logger.debug(f"Created service with service :: {service_row_id}")
+            logger.info(f"Created service with service :: {service_row_id}")
 
             self._service_repository.create_or_update_service_metadata(
                 service_row_id=service_row_id,
@@ -202,7 +202,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                     endpoint_insert_count = endpoint_insert_count + service_data[0]
 
             tags_data = new_data.get("tags", [])
-            logger.debug(f"Tags data: {' '.join(tags_data)}")
+            logger.info(f"Tags data: {' '.join(tags_data)}")
             for tag in tags_data:
                 self._service_repository.create_tags(service_row_id=service_row_id, org_id=org_id,
                                                      service_id=service_id,
@@ -215,7 +215,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
 
             update_proto_stubs = False
             if not existing_service_metadata or (
-                    existing_service_metadata["model_hash"] != new_data["model_hash"]):
+                    existing_service_metadata["model_hash"] != new_data["service_api_source"]):
                 update_proto_stubs = True
 
             self._connection.commit_transaction()
@@ -227,7 +227,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         ServiceCreatedDeploymentEventHandler(NETWORKS[NETWORK_ID]["ws_provider"]).process_service_deployment(
             org_id=org_id,
             service_id=service_id,
-            proto_hash=new_data["model_hash"],
+            proto_hash=new_data["service_api_source"],
             update_proto_stubs=update_proto_stubs
         )
 

@@ -64,7 +64,7 @@ class StorageProvider:
         elif provider_type == StorageProviderType.FILECOIN:
             data_bytes = self.__lighthouse_client.download(hash_uri)[0]
 
-        logger.debug(f"Resulting data: data bytes = {data_bytes}, dict = {json.loads(data_bytes.decode('utf-8'))}")
+        logger.info(f"Resulting data: data bytes = {data_bytes}, dict = {json.loads(data_bytes.decode('utf-8'))}")
         return json.loads(data_bytes.decode("utf-8"))
  
     def __upload_to_provider(self, file_path: str, provider_type: StorageProviderType) -> str:
