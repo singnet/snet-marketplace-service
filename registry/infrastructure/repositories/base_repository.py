@@ -1,5 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+import logging
+
 from common.logger import get_logger
 from registry.config import DB_DETAILS
 
@@ -17,6 +19,8 @@ Session = sessionmaker(bind=engine)
 default_session = Session()
 # get_logger("sqlalchemy.engine").setLevel("INFO")
 # get_logger("sqlalchemy.pool").setLevel("DEBUG")
+get_logger("sqlalchemy.engine").setLevel(logging.NOTSET)
+get_logger("sqlalchemy.pool").setLevel(logging.NOTSET)
 
 
 class BaseRepository:
