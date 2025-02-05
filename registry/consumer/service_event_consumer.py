@@ -23,8 +23,8 @@ class ServiceEventConsumer(object):
     def __init__(self, ws_provider, service_repository, organization_repository):
         self._blockchain_util = blockchain_util.BlockChainUtil("WS_PROVIDER", ws_provider)
         self._service_repository = service_repository
-        self._organiztion_repository = organization_repository
-        self.__storage_provider = StorageProvider()
+        self._organization_repository = organization_repository
+        self._storage_provider = StorageProvider()
         
     def on_event(self, event):
         pass
@@ -92,7 +92,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
     def on_event(self, event):
         org_id, service_id, transaction_hash = self._get_service_details_from_blockchain(event)
         metadata_uri = self._get_metadata_uri_from_event(event)
-        service_data = self.__storage_provider.get(metadata_uri)
+        service_data = self._storage_provider.get(metadata_uri)
         self._process_service_data(
             org_id=org_id,
             service_id=service_id,
@@ -146,6 +146,9 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             ServiceFactory.create_service_group_entity_model(org_uuid, service_uuid, group) for group in
             service_metadata.get("groups", [])]
 
+        storage_provider, _ = self._storage_provider.uri_to_hash(metadata_uri)
+        storage_provider = storage_provider.value
+
         if existing_service:
             existing_service.display_name = display_name
             existing_service.short_description = short_description
@@ -160,6 +163,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             existing_service.groups = [
                 ServiceFactory.create_service_group_entity_model(org_uuid, existing_service.uuid, group) for group in
                 service_metadata.get("groups", [])]
+            existing_service.storage_provider = storage_provider
 
         recieved_service = Service(
             org_uuid=org_uuid,
@@ -179,7 +183,8 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             metadata_uri=metadata_uri,
             service_type=service_type,
             groups=groups,
-            service_state=state
+            service_state=state,
+            storage_provider=storage_provider
         )
 
         if not existing_service:

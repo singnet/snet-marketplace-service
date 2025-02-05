@@ -39,7 +39,7 @@ def organization_event_consumer_handler(event, context):
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def service_event_consumer_handler(event, context):
     logger.info(f"Got Service Event {event}")
-    organization_event_consumer = get_event_consumer(event)
-    organization_event_consumer.on_event(event)
+    service_event_consumer = get_event_consumer(event)
+    service_event_consumer.on_event(event)
 
     return generate_lambda_response(200, StatusCode.OK)
