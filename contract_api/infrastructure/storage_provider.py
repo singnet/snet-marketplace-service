@@ -50,11 +50,12 @@ class StorageProvider:
         self.__ipfs_util = IPFSUtil(IPFS_URL["url"], IPFS_URL["port"])
         self.__lighthouse_client = Lighthouse(lighthouse_token)
 
-    def get(self, metadata_uri: str) -> dict:
+    def get(self, metadata_uri: str, to_decode: bool = True) -> dict:
         """
         Get metadata json from provider storage rely on metadata_uri prefix
 
         :param metadata_uri: str, provider storage prefix + hash
+        :param to_decode: bool, whether to decode the data
         """
         provider_type, hash_uri = self.uri_to_hash(metadata_uri)
         logger.info(f"Get metadata from provider: {provider_type}, hash: {hash_uri}")
@@ -64,8 +65,11 @@ class StorageProvider:
         elif provider_type == StorageProviderType.FILECOIN:
             data_bytes = self.__lighthouse_client.download(hash_uri)[0]
 
-        logger.info(f"Resulting data: data bytes = {data_bytes}, dict = {json.loads(data_bytes.decode('utf-8'))}")
-        return json.loads(data_bytes.decode("utf-8"))
+        if to_decode:
+            logger.info(f"Resulting data: data bytes = {data_bytes}, dict = {json.loads(data_bytes.decode('utf-8'))}")
+            return json.loads(data_bytes.decode("utf-8"))
+        else:
+            return data_bytes
  
     def __upload_to_provider(self, file_path: str, provider_type: StorageProviderType) -> str:
         """

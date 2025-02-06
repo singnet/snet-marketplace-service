@@ -34,6 +34,7 @@ class EventConsumer:
 
         for new_asset_type, new_asset_hash in new_assets_hash.items():
             if isinstance(new_asset_hash, list):
+                logger.info(f"New asset hash is a list: {new_asset_hash}")
                 # Handle asset types with a list of assets
                 new_urls_list = []
 
@@ -51,6 +52,7 @@ class EventConsumer:
                 assets_url_mapping[new_asset_type] = new_urls_list
 
             elif isinstance(new_asset_hash, str):
+                logger.info(f"New asset hash is a string: {new_asset_hash}")
                 # Handle asset types with a single value
                 if (
                     new_asset_type in existing_assets_hash
@@ -80,9 +82,9 @@ class EventConsumer:
 
     # TODO: check and change hash_uri parsing
     def _push_asset_to_s3_using_hash(self, hash_uri, org_id, service_id):
-        asset_dict = self._storage_provider.get(hash_uri)
-        io_bytes = json.dumps(asset_dict).encode('utf-8')
+        io_bytes = self._storage_provider.get(hash_uri, to_decode = False)
         filename = hash_uri.split("/")[1]
+        logger.info(f"Filename = {filename}, hash_uri = {hash_uri}")
         if service_id:
             s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename
         else:

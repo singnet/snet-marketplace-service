@@ -70,7 +70,7 @@ class ServiceEventConsumer(EventConsumer):
     def _get_metadata_uri_from_event(self, event):
         event_data = event['data']
         service_data = ast.literal_eval(event_data['json_str'])
-        metadata_uri = Web3.toText(service_data['metadataURI'])[7:].rstrip("\u0000")
+        metadata_uri = Web3.toText(service_data['metadataURI']).rstrip("\u0000")
         return metadata_uri
 
     def _get_registry_contract(self):

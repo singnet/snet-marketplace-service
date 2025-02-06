@@ -35,13 +35,16 @@ class OrganizationEventConsumer(EventConsumer):
 
     def _get_new_assets_url(self, org_id, new_ipfs_data):
         new_assets_hash = new_ipfs_data.get("assets", {})
+        logger.info(f"New_assets_hash: {new_assets_hash}")
         existing_assets_hash = {}
         existing_assets_url = {}
 
         existing_organization = self._organization_repository.get_organization(org_id)
         if existing_organization:
             existing_assets_hash = json.loads(existing_organization["assets_hash"])
+            logger.info(f"Existing_assets_hash: {existing_assets_hash}")
             existing_assets_url = json.loads(existing_organization["org_assets_url"])
+            logger.info(f"Existing_assets_url: {existing_assets_url}")
         new_assets_url_mapping = self._compare_assets_and_push_to_s3(
             existing_assets_hash,
             new_assets_hash,
