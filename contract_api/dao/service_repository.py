@@ -69,7 +69,7 @@ class ServiceRepository(CommonRepository):
                             tag_name, datetime.utcnow(), datetime.utcnow(), tag_name, datetime.utcnow()]
         logger.info(f'insrt_tag_params: {" ".join(insrt_tag_params)}')
         qry_res = self.connection.execute(insrt_tag, insrt_tag_params)
-        print('_create_tags::qry_res: ', qry_res)
+        logger.info(f'_create_tags::qry_res: {qry_res}')
 
     def delete_tags(self, org_id, service_id):
         delete_service_tags = 'DELETE FROM service_tags WHERE service_id = %s AND org_id = %s '

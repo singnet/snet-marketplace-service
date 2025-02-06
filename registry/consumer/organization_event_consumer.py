@@ -59,7 +59,7 @@ class OrganizationEventConsumer(object):
         blockchain_org_data = registry_contract.functions.getOrganizationById(org_id.encode('utf-8')).call()
         logger.info(f"blockchain org data {blockchain_org_data}")
 
-        org_metadata_uri = Web3.toText(blockchain_org_data[2]).rstrip("\x00").lstrip("ipfs://")
+        org_metadata_uri = Web3.toText(blockchain_org_data[2]).rstrip("\x00")
         logger.info(f"org metadata uri {org_metadata_uri}")
 
         org_metadata = self.__storage_provider.get(org_metadata_uri)

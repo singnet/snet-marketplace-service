@@ -9,8 +9,11 @@ from registry.infrastructure.models import Service, ServiceGroup, ServiceState, 
     ServiceComment, OffchainServiceConfig
 from registry.infrastructure.repositories.base_repository import BaseRepository
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
+from common.logger import get_logger
+
 
 org_repo = OrganizationPublisherRepository()
+logger = get_logger(__name__)
 
 
 class ServicePublisherRepository(BaseRepository):
@@ -104,7 +107,7 @@ class ServicePublisherRepository(BaseRepository):
         try:
             service_db = self.session.query(Service).filter(Service.org_uuid == org_uuid).filter(
                 Service.uuid == service_uuid).first()
-            print(f"service query :: {str(self.session.query(Service).filter(Service.org_uuid == org_uuid).filter(Service.uuid == service_uuid))}")
+            logger.info(f"service query :: {str(self.session.query(Service).filter(Service.org_uuid == org_uuid).filter(Service.uuid == service_uuid))}")
             self.session.commit()
         except Exception as e:
             self.session.rollback()
@@ -193,7 +196,7 @@ class ServicePublisherRepository(BaseRepository):
             sql_query = sqlalchemy.text(f"select * from offchain_service_config where service_uuid = '{service_uuid}' and org_uuid = '{org_uuid}'")
             result = self.session.execute(sql_query)
             result_as_list = result.fetchall()
-            print(f"offchain configs :: {result_as_list}")
+            logger.info(f"offchain configs :: {result_as_list}")
         except SQLAlchemyError as error:
             self.session.rollback()
             raise error

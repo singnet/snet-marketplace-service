@@ -189,9 +189,9 @@ class FileUtils:
 
                 # Create the tar file and write to the temporary tar path
                 with tarfile.open(tar_path, mode="w:gz") as tar:
-                    for file_path in glob.glob(temp_dir):
+                    for file_path in os.scandir(temp_dir):
                         logger.info(f"Adding file to tar: {file_path}")
-                        tar.add(file_path, arcname=os.path.basename(file_path), filter=FileUtils.reset)
+                        tar.add(file_path.path, arcname=os.path.basename(file_path), filter=FileUtils.reset)
 
             return tar_path  # Return the path to the temporary tar file
         except Exception as e:

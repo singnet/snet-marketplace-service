@@ -362,9 +362,10 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
         temp_extraction_path = os.path.join(base_path, 'proto')
         temp_output_path = os.path.join(base_path, 'proto.tar.gz')
 
-        io_bytes = self._ipfs_util.read_bytesio_from_ipfs(asset_hash)
+        asset_dict = self._storage_provider.get(asset_hash)
+        io_bytes = json.dumps(asset_dict).encode('utf-8')
         with open(temp_download_path, 'wb') as outfile:
-            outfile.write(io_bytes.getbuffer())
+            outfile.write(io_bytes)
 
         extract_zip_file(zip_file_path=temp_download_path, extracted_path=temp_extraction_path)
         make_tarfile(source_dir=temp_extraction_path, output_filename=temp_output_path)
