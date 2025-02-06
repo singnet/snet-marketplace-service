@@ -1,3 +1,4 @@
+import io
 import json
 
 from common.logger import get_logger
@@ -46,7 +47,7 @@ class EventConsumer:
                 # Upload all new assets to S3 and store their URLs
                 for asset_hash in new_asset_hash:
                     new_urls_list.append(
-                        self._push_asset_to_s3_using_hash(asset_hash, org_id, service_id)
+                        self._push_asset_to_s3_using_hash(asset_hash, org_id, service_id, new_asset_type)
                     )
 
                 assets_url_mapping[new_asset_type] = new_urls_list
@@ -67,7 +68,7 @@ class EventConsumer:
 
                     # Push the updated asset to S3 and store its new URL
                     assets_url_mapping[new_asset_type] = self._push_asset_to_s3_using_hash(
-                        new_asset_hash, org_id, service_id
+                        new_asset_hash, org_id, service_id, new_asset_type
                     )
 
             else:
@@ -81,15 +82,20 @@ class EventConsumer:
         pass
 
     # TODO: check and change hash_uri parsing
-    def _push_asset_to_s3_using_hash(self, hash_uri, org_id, service_id):
+    def _push_asset_to_s3_using_hash(self, hash_uri, org_id, service_id, asset_type: str = ""):
         io_bytes = self._storage_provider.get(hash_uri, to_decode = False)
-        filename = hash_uri.split("/")[1]
+        if "://" in hash_uri:
+            filename = hash_uri.split("//")[1].split("/")[0]
+        else:
+            filename = hash_uri.split("/")[-1]
+        filename += "_" + asset_type
         logger.info(f"Filename = {filename}, hash_uri = {hash_uri}")
         if service_id:
             s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + service_id + "/" + filename
         else:
             s3_filename = ASSETS_PREFIX + "/" + org_id + "/" + filename
 
+        io_bytes = io.BytesIO(io_bytes)
         new_url = self._s3_util.push_io_bytes_to_s3(s3_filename,
                                                     ASSETS_BUCKET_NAME, io_bytes)
         logger.info(f"Pushed asset to S3: new_url = {new_url}, s3_filename = {s3_filename}, "
