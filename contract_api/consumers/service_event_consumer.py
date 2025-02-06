@@ -202,7 +202,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                     endpoint_insert_count = endpoint_insert_count + service_data[0]
 
             tags_data = new_data.get("tags", [])
-            logger.info(f"Tags data: {' '.join(tags_data)}")
+            # logger.info(f"Tags data: {' '.join(tags_data)}")
             for tag in tags_data:
                 self._service_repository.create_tags(service_row_id=service_row_id, org_id=org_id,
                                                      service_id=service_id,
@@ -224,12 +224,12 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             self._connection.rollback_transaction()
             raise e
 
-        ServiceCreatedDeploymentEventHandler(NETWORKS[NETWORK_ID]["ws_provider"]).process_service_deployment(
-            org_id=org_id,
-            service_id=service_id,
-            proto_hash=new_data["service_api_source"],
-            update_proto_stubs=update_proto_stubs
-        )
+        # ServiceCreatedDeploymentEventHandler(NETWORKS[NETWORK_ID]["ws_provider"]).process_service_deployment(
+        #     org_id=org_id,
+        #     service_id=service_id,
+        #     proto_hash=new_data["service_api_source"],
+        #     update_proto_stubs=update_proto_stubs
+        # )
 
 
 class ServiceMetadataModifiedConsumer(ServiceCreatedEventConsumer):
@@ -358,17 +358,16 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
         if not os.path.exists(base_path):
             os.makedirs(base_path)
 
-        temp_download_path = os.path.join(base_path, 'proto.tar')
-        temp_extraction_path = os.path.join(base_path, 'proto')
+        # temp_download_path = os.path.join(base_path, 'proto.tar')
+        # temp_extraction_path = os.path.join(base_path, 'proto')
         temp_output_path = os.path.join(base_path, 'proto.tar.gz')
 
-        asset_dict = self._storage_provider.get(asset_hash)
-        io_bytes = json.dumps(asset_dict).encode('utf-8')
-        with open(temp_download_path, 'wb') as outfile:
+        io_bytes = self._storage_provider.get(asset_hash, to_decode = False)
+        with open(temp_output_path, 'wb') as outfile:
             outfile.write(io_bytes)
 
-        extract_zip_file(zip_file_path=temp_download_path, extracted_path=temp_extraction_path)
-        make_tarfile(source_dir=temp_extraction_path, output_filename=temp_output_path)
+        # extract_zip_file(zip_file_path=temp_download_path, extracted_path=temp_extraction_path)
+        # make_tarfile(source_dir=temp_extraction_path, output_filename=temp_output_path)
         self._s3_util.push_file_to_s3(temp_output_path, ASSETS_COMPONENT_BUCKET_NAME,
                                       f"assets/{org_id}/{service_id}/proto.tar.gz")
 
