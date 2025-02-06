@@ -50,7 +50,7 @@ class StorageProvider:
         self.__ipfs_util = IPFSUtil(IPFS_URL["url"], IPFS_URL["port"])
         self.__lighthouse_client = Lighthouse(lighthouse_token)
 
-    def get(self, metadata_uri: str, to_decode: bool = True) -> dict | bytes:
+    def get(self, metadata_uri: str, to_decode: bool = True) -> Union[dict, bytes]:
         """
         Get metadata json from provider storage rely on metadata_uri prefix
 
