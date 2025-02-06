@@ -13,14 +13,12 @@ port = DB_DETAILS["port"]
 db_name = DB_DETAILS["name"]
 
 connection_string = f"{driver}://{user}:{password}@{host}:{port}/{db_name}"
-engine = create_engine(connection_string, pool_pre_ping=True, echo=True)
+engine = create_engine(connection_string, pool_pre_ping=True, echo=False)
 
 Session = sessionmaker(bind=engine)
 default_session = Session()
 # get_logger("sqlalchemy.engine").setLevel("INFO")
 # get_logger("sqlalchemy.pool").setLevel("DEBUG")
-get_logger("sqlalchemy.engine").setLevel(logging.NOTSET)
-get_logger("sqlalchemy.pool").setLevel(logging.NOTSET)
 
 
 class BaseRepository:
