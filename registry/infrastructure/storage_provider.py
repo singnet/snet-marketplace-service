@@ -8,6 +8,7 @@ from zipfile import ZipFile
 
 from common.exceptions import BadRequestException
 from registry.config import IPFS_URL
+from registry.exceptions import LighthouseInternalException
 from common.logger import get_logger
 
 import ipfshttpclient
@@ -77,7 +78,10 @@ class StorageProvider:
         if provider_type == StorageProviderType.IPFS:
             metadata_hash = self.__ipfs_util.write_file_in_ipfs(file_path)
         elif provider_type == StorageProviderType.FILECOIN:
-            metadata_hash = self.__lighthouse_client.upload(file_path)["data"]["Hash"]
+            try:
+                metadata_hash = self.__lighthouse_client.upload(file_path)["data"]["Hash"]
+            except Exception as e:
+                raise LighthouseInternalException("Internal Lighthouse server error. Please check your Lighthouse token.")
         else:
             raise ValueError(f"Unsupported provider type: {provider_type}")
         return self.hash_to_uri(metadata_hash, provider_type)
