@@ -56,7 +56,7 @@ class StorageProvider:
         :param metadata_uri: str, provider storage prefix + hash
         """
         provider_type, metadata_hash = self.uri_to_hash(metadata_uri)
-        logger.info(f"Get metadata from provider: {provider_type}, hash: {metadata_hash}")
+        logger.info(f"Get file from provider: {provider_type}, hash: {metadata_hash}")
 
         if provider_type == StorageProviderType.IPFS:
             data_bytes = self.__ipfs_util.read_bytes_from_ipfs(metadata_hash)
