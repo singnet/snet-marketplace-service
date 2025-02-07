@@ -278,6 +278,8 @@ class ServicePublisherService:
                     logger.warning(f"Asset URL for '{asset_name}' is missing. Skipping...")
                     continue
 
+                logger.info(f"Downloading asset '{asset_name}' from: {asset_url}")
+
                 source_path = self._download_file(asset_url)
                 logger.info(f"Downloaded asset '{asset_name}' to: {source_path}")
 
@@ -479,7 +481,7 @@ class ServicePublisherService:
         logger.debug(f"Existing service data :: {existing_service_data}")
 
         existing_metadata = (
-            self._storage_provider.get(existing_service_data["model_hash"])
+            self._storage_provider.get(existing_service_data["hash_uri"])
             if existing_service_data else {}
         )
         publish_to_blockchain = self.are_blockchain_attributes_got_updated(
