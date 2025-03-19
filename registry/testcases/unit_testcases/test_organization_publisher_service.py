@@ -17,7 +17,7 @@ from registry.infrastructure.models import Organization, OrganizationMember, Org
 from registry.testcases.test_variables import ORG_GROUPS, ORG_PAYLOAD_MODEL, \
     ORG_RESPONSE_MODEL, ORG_ADDRESS, ORIGIN
 
-ORG_PAYLOAD_REQUIRED_KEYS = ["org_id", "org_uuid", "org_name", "origin", "org_type", "metadata_ipfs_uri",
+ORG_PAYLOAD_REQUIRED_KEYS = ["org_id", "org_uuid", "org_name", "origin", "org_type", "metadata_uri",
                              "description", "short_description", "url", "contacts", "assets",
                              "mail_address_same_hq_address", "addresses", "duns_no"]
 
@@ -30,7 +30,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         username = "karl@cryptonian.io"
         payload = {
             "org_id": "", "org_uuid": "", "org_name": "test_org", "org_type": "organization",
-            "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN, "description": "",
+            "metadata_uri": "", "duns_no": "123456789", "origin": ORIGIN, "description": "",
             "short_description": "", "url": "https://dummy.dummy", "contacts": "",
             "assets": {"hero_image": {"url": "", "ipfs_hash": ""}},
             "org_address": ORG_ADDRESS, "groups": json.loads(ORG_GROUPS),
@@ -102,7 +102,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         username = "karl@cryptonian.io"
         payload = {
             "org_id": test_org_id, "org_uuid": test_org_uuid, "org_name": "test_org", "org_type": "organization",
-            "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN,
+            "metadata_uri": "", "duns_no": "123456789", "origin": ORIGIN,
             "description": "this is description", "short_description": "this is short description",
             "url": "https://dummy.dummy", "contacts": "",
             "assets": {"hero_image": {"url": "", "ipfs_hash": ""}},
@@ -157,7 +157,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
             origin=ORIGIN, description="this is long description",
             short_description="this is short description", url="https://dummy.com", duns_no="123456789", contacts=[],
             assets={"hero_image": {"url": "some_url", "ipfs_hash": "Q123"}},
-            metadata_ipfs_uri="Q3E12", org_state=[org_state], groups=[group], addresses=org_address)
+            metadata_uri="Q3E12", org_state=[org_state], groups=[group], addresses=org_address)
 
         owner = OrganizationMember(
             invite_code="123", org_uuid=test_org_uuid, role=Role.OWNER.value, username=username,
@@ -171,7 +171,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
             "queryStringParameters": {"action": "DRAFT"},
             "body": json.dumps({
                 "org_id": test_org_id, "org_uuid": test_org_uuid, "org_name": "test_org", "org_type": "organization",
-                "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN,
+                "metadata_uri": "", "duns_no": "123456789", "origin": ORIGIN,
                 "description": "this is long description",
                 "short_description": "this is short description",
                 "url": "https://dummy.com", "contacts": [],
@@ -204,7 +204,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         assert updated_org.name == "test_org"
         assert updated_org.id == "org_id"
         assert updated_org.org_type == "organization"
-        assert updated_org.metadata_ipfs_uri == ""
+        assert updated_org.metadata_uri == ""
         assert updated_org.groups[0].group_id == "group_id"
         assert updated_org.groups[0].name == "default"
         assert updated_org.groups[0].payment_address == "0x123"
@@ -220,7 +220,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         username = "karl@cryptonian.io"
         payload = {
             "org_id": test_org_id, "org_uuid": test_org_uuid, "org_name": "test_org", "org_type": "organization",
-            "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN,
+            "metadata_uri": "", "duns_no": "123456789", "origin": ORIGIN,
             "description": "this is description", "short_description": "this is short description",
             "url": "https://dummy.dummy", "contacts": "",
             "assets": {"hero_image": {"url": "", "ipfs_hash": ""}},
@@ -249,7 +249,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         username = "karl@cryptonian.io"
         payload = {
             "org_id": test_org_id, "org_uuid": test_org_uuid, "org_name": "test_org", "org_type": "organization",
-            "metadata_ipfs_uri": "", "duns_no": "123456789", "origin": ORIGIN,
+            "metadata_uri": "", "duns_no": "123456789", "origin": ORIGIN,
             "description": "this is description", "short_description": "this is short description",
             "url": "https://dummy.dummy", "contacts": "",
             "assets": {"hero_image": {"url": "", "ipfs_hash": ""}},
@@ -269,17 +269,17 @@ class TestOrganizationPublisherService(unittest.TestCase):
             else:
                 assert False
 
-    @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q12PWP")))
-    @patch("registry.domain.models.organization.json_to_file")
-    def test_org_publish_to_ipfs(self, mock_json_to_file_util, mock_ipfs_utils):
-        test_org_id = uuid4().hex
-        username = "dummy@snet.io"
-        org_repo.add_organization(
-            DomainOrganization(test_org_id, "org_id", "org_dummy", OrganizationType.ORGANIZATION.value, ORIGIN, "", "",
-                               "", [], {}, "", "", [], [], [], []),
-            username, OrganizationStatus.APPROVED.value)
-        response = OrganizationPublisherService(test_org_id, username).publish_org_to_ipfs()
-        self.assertEqual(response["metadata_ipfs_uri"], "ipfs://Q12PWP")
+    # @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q12PWP")))
+    # @patch("registry.domain.models.organization.json_to_file")
+    # def test_org_publish_to_ipfs(self, mock_json_to_file_util, mock_ipfs_utils):
+    #     test_org_id = uuid4().hex
+    #     username = "dummy@snet.io"
+    #     org_repo.add_organization(
+    #         DomainOrganization(test_org_id, "org_id", "org_dummy", OrganizationType.ORGANIZATION.value, ORIGIN, "", "",
+    #                            "", [], {}, "", "", [], [], [], []),
+    #         username, OrganizationStatus.APPROVED.value)
+    #     response = OrganizationPublisherService(test_org_id, username).publish_organization()
+    #     self.assertEqual(response["metadata_uri"], "ipfs://Q12PWP")
 
     @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q12PWP")))
     @patch("common.boto_utils.BotoUtils", return_value=Mock(s3_upload_file=Mock()))

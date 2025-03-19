@@ -95,8 +95,7 @@ class MPE:
     def get_channels_by_user_address(self, user_address, service_id, org_id):
         last_block_no = self.blockchain_util.get_current_block_no()
         params = [last_block_no]
-        print('Inside get_channel_info::user_address',
-              user_address, '|', org_id, '|', service_id)
+        logger.info(f'Inside get_channel_info :: user_address={user_address}, org_id={org_id}, service_id={service_id}')
         sub_qry = ""
         if user_address is not None and service_id is not None and org_id is not None:
             sub_qry = " AND S.org_id = %s AND S.service_id = %s "
@@ -181,7 +180,7 @@ class MPE:
             self.obj_util.clean(result)
             return result
         except Exception as e:
-            print(repr(e))
+            logger.exception(repr(e))
             raise e
 
     def update_consumed_balance(self, channel_id, authorized_amount, full_amount, nonce):

@@ -4,7 +4,6 @@ from datetime import datetime as dt
 from contract_api.infrastructure.repositories.service_repository import ServiceRepository, \
     OffchainServiceConfigRepository
 
-service_repo = ServiceRepository
 from contract_api.handlers.service_handlers import service_deployment_status_notification_handler
 from contract_api.infrastructure.models import ServiceMetadata, Service, OffchainServiceConfig
 
@@ -21,7 +20,7 @@ class TestService(unittest.TestCase):
                 org_id="snet",
                 service_id="gene-annotation-service",
                 service_path="",
-                ipfs_hash="hash",
+                hash_uri="hash",
                 is_curated=1,
                 service_email="service@email.com",
                 row_updated=dt.utcnow(),
@@ -38,7 +37,7 @@ class TestService(unittest.TestCase):
             demo_component_available=0,
             url="",
             json="{}",
-            model_ipfs_hash="sample hash",
+            model_hash="sample hash",
             encoding="proto",
             type="type",
             mpe_address="sample mpe",

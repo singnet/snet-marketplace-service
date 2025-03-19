@@ -59,7 +59,7 @@ class Registry:
                     rec['service_id'])
             return all_orgs_srvcs
         except Exception as e:
-            print(repr(e))
+            logger.exception(repr(e))
             raise e
 
     def _get_all_members(self, org_id=None):
@@ -77,7 +77,7 @@ class Registry:
                 all_orgs_members[rec['org_id']].append(rec['member'])
             return all_orgs_members
         except Exception as e:
-            print(repr(e))
+            logger.exception(repr(e))
             raise e
 
     def get_all_org(self):
@@ -95,7 +95,7 @@ class Registry:
                 all_orgs_data.append(data)
             return all_orgs_data
         except Exception as e:
-            print(repr(e))
+            logger.exception(repr(e))
             raise e
 
     def _prepare_subquery(self, s, q, fm):
@@ -166,11 +166,11 @@ class Registry:
                        str(org_srvc_tuple).replace(',)', ')')
             qry_part_where = " AND (org_id, service_id) IN " + \
                              str(org_srvc_tuple).replace(',)', ')')
-            print("qry_part::", qry_part)
+            logger.info(f"qry_part :: {qry_part}")
             sort_by = sort_by.replace("org_id", "M.org_id")
             if org_srvc_tuple:
                 services = self.repo.execute(
-                    "SELECT DISTINCT M.row_id, M.service_row_id, M.org_id, M.service_id, M.display_name, M.description, M.url, M.json, M.model_ipfs_hash, M.encoding, M.`type`,"
+                    "SELECT DISTINCT M.row_id, M.service_row_id, M.org_id, M.service_id, M.display_name, M.description, M.url, M.json, M.model_hash, M.encoding, M.`type`,"
                     " M.mpe_address,M.service_rating, M.ranking, M.contributors, M.short_description,"
                     "O.organization_name,O.org_assets_url FROM service_endpoint E, service_metadata M, service S "
                     ", organization O WHERE O.org_id = S.org_id AND S.row_id = M.service_row_id AND "
@@ -228,14 +228,13 @@ class Registry:
                 order_by = "asc"
 
             sub_qry = self._prepare_subquery(s=s, q=q, fm=fields_mapping)
-            print("get_all_srvcs::sub_qry: ", sub_qry)
+            logger.info(f"get_all_srvcs::sub_qry: {sub_qry}")
 
             filter_qry = ""
             if qry_param.get("filters", None) is not None:
                 filter_query, values = self._filters_to_query(
                     qry_param.get("filters"))
-                print("get_all_srvcs::filter_query: ",
-                      filter_query, "|values: ", values)
+            logger.info(f"get_all_srvcs::filter_query: {filter_query}, values: {values}")
             total_count = self._get_total_count(
                 sub_qry=sub_qry, filter_query=filter_query, values=values)
             if total_count == 0:
@@ -244,7 +243,7 @@ class Registry:
                                             offset=offset, limit=limit, filter_query=filter_query, values=values)
             return self._search_response_format(total_count, offset, limit, q_dta)
         except Exception as e:
-            print(repr(e))
+            logger.exception(repr(e))
             raise e
 
     def get_group_info(self, org_id, service_id):
@@ -269,7 +268,7 @@ class Registry:
                     rec['is_available'], "last_check_timestamp": rec["last_check_timestamp"]})
             return list(groups.values())
         except Exception as e:
-            print(repr(e))
+            logger.exception(repr(e))
             raise e
 
     def _get_is_available_service(self):
@@ -280,9 +279,9 @@ class Registry:
             for rec in srvc_st_dta:
                 available_service.append((rec['org_id'], rec['service_id']), )
             return available_service
-        except Exception as err:
-            print(repr(err))
-            raise err
+        except Exception as e:
+            logger.exception(repr(e))
+            raise e
 
     def _filter_condition_to_query(self, filter_condition):
         value = []
@@ -342,7 +341,7 @@ class Registry:
 
             return filter_attribute
         except Exception as e:
-            print(repr(e))
+            logger.exception(repr(e))
             raise e
 
     def get_all_group_for_org_id(self, org_id):
@@ -356,7 +355,7 @@ class Registry:
                       "groups": groups_data}
             return groups
         except Exception as e:
-            print(repr(e))
+            logger.exception(repr(e))
             raise e
 
     def get_group_details_for_org_id(self, org_id, group_id):
@@ -375,7 +374,7 @@ class Registry:
             tags = []
             org_groups_dict = {}
             basic_service_data = self.repo.execute(
-                "SELECT M.row_id, M.service_row_id, M.org_id, M.service_id, M.display_name, M.description, M.url, M.json, M.model_ipfs_hash, M.encoding, M.`type`,"
+                "SELECT M.row_id, M.service_row_id, M.org_id, M.service_id, M.display_name, M.description, M.url, M.json, M.model_hash, M.encoding, M.`type`,"
                 " M.mpe_address,M.service_rating, M.ranking, M.contributors, M.short_description, M.demo_component_available,"
                 " S.*, O.org_id, O.organization_name, O.owner_address, O.org_metadata_uri, O.org_email, "
                 "O.org_assets_url, O.description as org_description, O.contacts "
@@ -424,7 +423,7 @@ class Registry:
             result.update(offchain_service_configs)
             return result
         except Exception as e:
-            print(repr(e))
+            logger.exception(repr(e))
             raise e
 
     @staticmethod
@@ -460,7 +459,7 @@ class Registry:
                 org_details[0]["members"] = members
             return org_details
         except Exception as e:
-            print(repr(e))
+            logger.exception(repr(e))
             raise e
 
     def update_service_rating(self, org_id, service_id):
@@ -478,7 +477,7 @@ class Registry:
                 "WHERE A.org_id = %s AND A.service_id = %s ", [org_id, service_id])
             return "success"
         except Exception as e:
-            print(repr(e))
+            logger.exception(repr(e))
             raise e
 
     def curate_service(self, org_id, service_id, curated):

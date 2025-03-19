@@ -86,7 +86,7 @@ class Service(Base):
     org_id = Column("org_id", VARCHAR(128), nullable=False)
     service_id = Column("service_id", VARCHAR(128), nullable=False)
     service_path = Column("service_path", VARCHAR(128), default=null)
-    ipfs_hash = Column("ipfs_hash", VARCHAR(128), default=null)
+    hash_uri = Column("hash_uri", VARCHAR(128), default=null)
     is_curated = Column("is_curated", TINYINT, default=null)
     service_email = Column("service_email", VARCHAR(128), default=null)
     row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
@@ -146,7 +146,7 @@ class ServiceMedia(Base):
     alt_text = Column("alt_text", VARCHAR(100), default=null)
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=True, default=null)
     updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=True, default=null)
-    ipfs_url = Column("ipfs_url", VARCHAR(512), default=null)
+    hash_uri = Column("hash_uri", VARCHAR(512), default=null)
     service_row_id = Column("service_row_id", Integer,
                             ForeignKey("service.row_id", ondelete="CASCADE"),
                             default=null)
@@ -168,7 +168,7 @@ class ServiceMetadata(Base):
                                       nullable=False)
     url = Column("url", VARCHAR(256), default=null)
     json = Column("json", VARCHAR(1024), default=null)
-    model_ipfs_hash = Column("model_ipfs_hash", VARCHAR(256), default=null)
+    model_hash = Column("model_hash", VARCHAR(256), default=null)
     encoding = Column("encoding", VARCHAR(128), default=null)
     type = Column("type", VARCHAR(128), default=null)
     mpe_address = Column("mpe_address", VARCHAR(256), default=null)

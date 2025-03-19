@@ -33,7 +33,7 @@ class ServiceRepository(BaseRepository):
                 filter(ServiceDB.service_id == service.service_id). \
                 first()
             if service_db:
-                service_db.ipfs_hash = service.ipfs_hash,
+                service_db.hash_uri = service.hash_uri,
                 service_db.is_curated = service.is_curated,
                 service_db.service_email = service.service_email
                 service_db.row_updated = dt.utcnow()
@@ -42,7 +42,7 @@ class ServiceRepository(BaseRepository):
                 service_db.service_metadata.short_description = service.service_metadata.short_description
                 service_db.service_metadata.url = service.service_metadata.url
                 service_db.service_metadata.json = service.service_metadata.json
-                service_db.service_metadata.model_ipfs_hash = service.service_metadata.model_ipfs_hash
+                service_db.service_metadata.model_hash = service.service_metadata.model_hash
                 service_db.service_metadata.encoding = service.service_metadata.encoding
                 service_db.service_metadata.type = service.service_metadata.type
                 service_db.service_metadata.mpe_address = service.service_metadata.mpe_address
@@ -62,7 +62,7 @@ class ServiceRepository(BaseRepository):
                 org_id=service.org_id,
                 service_id=service.service_id,
                 service_path=None,
-                ipfs_hash=service.ipfs_hash,
+                hash_uri=service.hash_uri,
                 is_curated=service.is_curated,
                 service_email=service.service_email,
                 row_created=dt.utcnow(),
@@ -76,7 +76,7 @@ class ServiceRepository(BaseRepository):
                     demo_component_available=service.service_metadata.demo_component_available,
                     url=service.service_metadata.url,
                     json=service.service_metadata.json,
-                    model_ipfs_hash=service.service_metadata.model_ipfs_hash,
+                    model_hash=service.service_metadata.model_hash,
                     encoding=service.service_metadata.encoding,
                     type=service.service_metadata.type,
                     mpe_address=service.service_metadata.mpe_address,

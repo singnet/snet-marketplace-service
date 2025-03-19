@@ -2,6 +2,10 @@ from datetime import datetime
 import json
 
 from contract_api.dao.common_repository import CommonRepository
+from common.logger import get_logger
+
+
+logger = get_logger(__name__)
 
 
 class OrganizationRepository(CommonRepository):
@@ -72,5 +76,5 @@ class OrganizationRepository(CommonRepository):
     def read_registry_events(self):
         query = 'select * from registry_events_raw where processed = 0 order by block_no asc '
         events = self.connection.execute(query)
-        print('read_registry_events::read_count: ', len(events))
+        logger.info(f'read_registry_events::read_count: {len(events)}')
         return events

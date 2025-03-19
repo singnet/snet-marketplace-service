@@ -6,13 +6,13 @@ from uuid import uuid4
 from web3 import Web3
 
 from common import blockchain_util, boto_utils
-from common import ipfs_util
 from common.constant import StatusCode
 from common.logger import get_logger
 from registry.config import NETWORK_ID, SERVICE_CURATE_ARN, REGION_NAME, CONTRACT_BASE_PATH
 from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.models.service import Service
+from registry.infrastructure.storage_provider import StorageProvider
 
 logger = get_logger(__name__)
 BLOCKCHAIN_USER = "BLOCKCHAIN_USER"
@@ -20,12 +20,12 @@ BLOCKCHAIN_USER = "BLOCKCHAIN_USER"
 
 class ServiceEventConsumer(object):
 
-    def __init__(self, ws_provider, ipfs_url, ipfs_port, service_repository, organiztion_repository):
+    def __init__(self, ws_provider, service_repository, organization_repository):
         self._blockchain_util = blockchain_util.BlockChainUtil("WS_PROVIDER", ws_provider)
         self._service_repository = service_repository
-        self._organiztion_repository = organiztion_repository
-        self._ipfs_util = ipfs_util.IPFSUtil(ipfs_url, ipfs_port)
-
+        self._organization_repository = organization_repository
+        self._storage_provider = StorageProvider()
+        
     def on_event(self, event):
         pass
 
@@ -58,7 +58,7 @@ class ServiceEventConsumer(object):
     def _get_metadata_uri_from_event(self, event):
         event_data = event['data']
         service_data = ast.literal_eval(event_data['json_str'])
-        metadata_uri = Web3.toText(service_data['metadataURI'])[7:].rstrip("\u0000")
+        metadata_uri = Web3.toText(service_data['metadataURI']).rstrip("\u0000")
         return metadata_uri
 
     def _get_base_contract_path(self):
@@ -86,14 +86,20 @@ class ServiceEventConsumer(object):
 
 
 class ServiceCreatedEventConsumer(ServiceEventConsumer):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def on_event(self, event):
         org_id, service_id, transaction_hash = self._get_service_details_from_blockchain(event)
         metadata_uri = self._get_metadata_uri_from_event(event)
-        service_ipfs_data = self._ipfs_util.read_file_from_ipfs(metadata_uri)
+        service_data = self._storage_provider.get(metadata_uri)
         self._process_service_data(
-            org_id=org_id, service_id=service_id, service_metadata=service_ipfs_data, transaction_hash=transaction_hash,
-            metadata_uri=metadata_uri)
+            org_id=org_id,
+            service_id=service_id,
+            service_metadata=service_data,
+            transaction_hash=transaction_hash,
+            metadata_uri=metadata_uri
+        )
 
     def _get_existing_service_details(self, org_id, service_id):
         org_uuid, existing_service = self._service_repository.get_service_for_given_service_id_and_org_id(org_id,
@@ -124,11 +130,10 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         proto = {
             "encoding": service_metadata.get("encoding", ""),
             "service_type": service_metadata.get("service_type", ""),
-            "model_ipfs_hash": service_metadata.get("model_ipfs_hash", "")
+            "model_hash": service_metadata.get("service_api_source", "")
         }
         assets = service_metadata.get("assets", {})
         mpe_address = service_metadata.get("mpe_address", "")
-        metadata_uri = "ipfs://" + metadata_uri
         contributors = service_metadata.get("contributors", [])
         tags_data = service_metadata.get("tags", [])
         service_type = service_metadata.get("service_type", "grpc")
@@ -140,6 +145,9 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         groups = [
             ServiceFactory.create_service_group_entity_model(org_uuid, service_uuid, group) for group in
             service_metadata.get("groups", [])]
+
+        storage_provider, _ = self._storage_provider.uri_to_hash(metadata_uri)
+        storage_provider = storage_provider.value
 
         if existing_service:
             existing_service.display_name = display_name
@@ -155,6 +163,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             existing_service.groups = [
                 ServiceFactory.create_service_group_entity_model(org_uuid, existing_service.uuid, group) for group in
                 service_metadata.get("groups", [])]
+            existing_service.storage_provider = storage_provider
 
         recieved_service = Service(
             org_uuid=org_uuid,
@@ -174,7 +183,8 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             metadata_uri=metadata_uri,
             service_type=service_type,
             groups=groups,
-            service_state=state
+            service_state=state,
+            storage_provider=storage_provider
         )
 
         if not existing_service:

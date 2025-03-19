@@ -72,7 +72,7 @@ class BaseRepository:
                 org_type=organization.org_type, origin=organization.origin, description=organization.description,
                 short_description=organization.short_description, url=organization.url,
                 duns_no=organization.duns_no, contacts=organization.contacts, assets=organization.assets,
-                metadata_ipfs_uri=organization.metadata_ipfs_uri, org_state=org_state, groups=group_db
+                metadata_uri=organization.metadata_uri, org_state=org_state, groups=group_db
             ))
         self.session.add_all(organization_db_list)
         self.session.flush()

@@ -1,16 +1,13 @@
-from urllib.parse import urlparse
 from uuid import uuid4
 
-import requests
 from deepdiff import DeepDiff
 
-from common import ipfs_util
 from common.exceptions import OperationNotAllowed
 from common.logger import get_logger
-from common.utils import datetime_to_string, json_to_file
-from registry.config import ASSET_DIR, IPFS_URL, METADATA_FILE_PATH
+from common.utils import datetime_to_string
 from registry.constants import OrganizationActions, OrganizationAddressType, OrganizationStatus, OrganizationType
 from registry.domain.models.organization_address import OrganizationAddress
+from registry.infrastructure.storage_provider import get_storage_provider_by_uri
 
 logger = get_logger(__name__)
 
@@ -39,7 +36,7 @@ GROUP_MINOR_CHANGES = [
 
 class Organization:
     def __init__(self, uuid, org_id, name, org_type, origin, description, short_description, url,
-                 contacts, assets, metadata_ipfs_uri, duns_no, groups, addresses, org_state, members):
+                 contacts, assets, metadata_uri, duns_no, groups, addresses, org_state, members):
         self.__name = name
         self.__id = org_id
         self.__uuid = uuid
@@ -51,21 +48,28 @@ class Organization:
         self.__origin = origin
         self.__contacts = contacts
         self.__assets = assets
-        self.__metadata_ipfs_uri = metadata_ipfs_uri
+        self.__metadata_uri = metadata_uri
         self.__groups = groups
         self.__addresses = addresses
         self.__state = org_state
         self.__members = members
 
     def to_metadata(self):
+        ipfs_uri_prefix = "ipfs://"
+        filecoin_uri_prefix = "filecoin://"
         assets = {}
+
         for key in self.__assets:
-            ipfs_hash = ""
-            ipfs_uri = self.__assets[key]["ipfs_hash"]
-            uri_prefix = "ipfs://"
-            if ipfs_uri.startswith(uri_prefix):
-                ipfs_hash = ipfs_uri[len(uri_prefix):]
-            assets[key] = ipfs_hash
+            # Get the IPFS or generic hash (migration from single storage provider to multiple providers)
+            hash_uri = self.__assets[key].get("ipfs_hash") or self.__assets[key].get("hash")
+
+            # Ensure the hash URI includes the correct prefix (IPFS or Filecoin)
+            # This is needed due to migration from a single provider (IPFS) to multiple providers (e.g., IPFS, Filecoin)
+            if not hash_uri.startswith(ipfs_uri_prefix) and not hash_uri.startswith(filecoin_uri_prefix):
+                hash_uri = ipfs_uri_prefix + hash_uri
+
+            assets[key] = hash_uri
+
         return {
             "org_name": self.__name,
             "org_id": self.__id,
@@ -103,7 +107,8 @@ class Organization:
             "origin": self.__origin,
             "contacts": self.__contacts,
             "assets": self.__assets,
-            "metadata_ipfs_uri": self.__metadata_ipfs_uri,
+            "metadata_uri": self.__metadata_uri,
+            "storage_provider": get_storage_provider_by_uri(self.__metadata_uri),
             "groups": [group.to_response() for group in self.__groups],
             "org_address": {
                 "mail_address_same_hq_address": mail_address_same_hq_address,
@@ -184,12 +189,12 @@ class Organization:
         self.__assets = val
 
     @property
-    def metadata_ipfs_uri(self):
-        return self.__metadata_ipfs_uri
+    def metadata_uri(self):
+        return self.__metadata_uri
 
-    @metadata_ipfs_uri.setter
-    def metadata_ipfs_uri(self, val):
-        self.__metadata_ipfs_uri = val
+    @metadata_uri.setter
+    def metadata_uri(self, val):
+        self.__metadata_uri = val
 
     @property
     def groups(self):
@@ -215,28 +220,6 @@ class Organization:
 
     def get_status(self):
         return self.__state.state
-
-    def publish_assets(self):
-        ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
-        for asset_type in self.__assets:
-            if "url" in self.__assets[asset_type]:
-                url = self.__assets[asset_type]["url"]
-                filename = urlparse(url).path.split("/")[-1]
-                response = requests.get(url)
-                filepath = f"{ASSET_DIR}/{filename}"
-                with open(filepath, 'wb') as asset_file:
-                    asset_file.write(response.content)
-                asset_ipfs_hash = ipfs_utils.write_file_in_ipfs(filepath)
-                self.__assets[asset_type]["ipfs_hash"] = f"ipfs://{asset_ipfs_hash}"
-
-    def publish_to_ipfs(self):
-        self.publish_assets()
-        ipfs_utils = ipfs_util.IPFSUtil(IPFS_URL['url'], IPFS_URL['port'])
-        metadata = self.to_metadata()
-        filename = f"{METADATA_FILE_PATH}/{self.__uuid}_org_metadata.json"
-        json_to_file(metadata, filename)
-        ipfs_hash = ipfs_utils.write_file_in_ipfs(filename, wrap_with_directory=False)
-        self.__metadata_ipfs_uri = f"ipfs://{ipfs_hash}"
 
     def setup_id(self):
         org_uuid = uuid4().hex

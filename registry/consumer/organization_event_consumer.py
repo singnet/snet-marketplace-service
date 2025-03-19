@@ -5,7 +5,6 @@ import traceback
 from web3 import Web3
 
 from common import blockchain_util
-from common import ipfs_util
 from common.logger import get_logger
 from registry.config import NETWORK_ID, CONTRACT_BASE_PATH
 from registry.constants import OrganizationMemberStatus, OrganizationStatus, Role, EnvironmentType
@@ -13,6 +12,7 @@ from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization
 from registry.domain.services.registry_blockchain_util import RegistryBlockChainUtil
 from registry.exceptions import OrganizationNotFoundException
+from registry.infrastructure.storage_provider import StorageProvider
 
 logger = get_logger(__name__)
 
@@ -21,8 +21,8 @@ BLOCKCHAIN_USER = "BLOCKCHAIN_EVENT"
 
 class OrganizationEventConsumer(object):
 
-    def __init__(self, ws_provider, ipfs_url, ipfs_port, organization_repository):
-        self._ipfs_util = ipfs_util.IPFSUtil(ipfs_url, ipfs_port)
+    def __init__(self, ws_provider, organization_repository):
+        self.__storage_provider = StorageProvider()
         self._blockchain_util = blockchain_util.BlockChainUtil("WS_PROVIDER", ws_provider)
         self._organization_repository = organization_repository
 
@@ -57,12 +57,16 @@ class OrganizationEventConsumer(object):
         transaction_hash = self._get_tarnsaction_hash(event)
 
         blockchain_org_data = registry_contract.functions.getOrganizationById(org_id.encode('utf-8')).call()
-        org_metadata_uri = Web3.toText(blockchain_org_data[2]).rstrip("\x00").lstrip("ipfs://")
-        ipfs_org_metadata = self._ipfs_util.read_file_from_ipfs(org_metadata_uri)
+        logger.info(f"blockchain org data {blockchain_org_data}")
+
+        org_metadata_uri = Web3.toText(blockchain_org_data[2]).rstrip("\x00")
+        logger.info(f"org metadata uri {org_metadata_uri}")
+
+        org_metadata = self.__storage_provider.get(org_metadata_uri)
         owner = blockchain_org_data[3]
         members = blockchain_org_data[4]
         self._remove_owner_from_members(members, owner)
-        return org_id, ipfs_org_metadata, org_metadata_uri, transaction_hash, owner, members
+        return org_id, org_metadata, org_metadata_uri, transaction_hash, owner, members
 
     def _remove_owner_from_members(self, members, owner):
         if owner in members:
@@ -123,11 +127,19 @@ class OrganizationEventConsumer(object):
 
 class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     def on_event(self, event):
-        org_id, ipfs_org_metadata, org_metadata_uri, transaction_hash, owner, recieved_members = self._get_org_details_from_blockchain(
-            event)
-        self._process_organization_create_event(org_id, ipfs_org_metadata, org_metadata_uri, transaction_hash, owner,
-                                                recieved_members)
+        org_id, org_metadata, org_metadata_uri, transaction_hash, owner, recieved_members = self._get_org_details_from_blockchain(event)
+        self._process_organization_create_event(
+            org_id,
+            org_metadata,
+            org_metadata_uri,
+            transaction_hash,
+            owner,
+            recieved_members
+        )
 
     def _get_existing_organization_records(self, org_id):
         try:
@@ -151,23 +163,23 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
             test_transaction_hash=test_transaction_hash
         )
 
-    def _process_organization_create_event(self, org_id, ipfs_org_metadata, org_metadata_uri, transaction_hash, owner,
+    def _process_organization_create_event(self, org_id, org_metadata, org_metadata_uri, transaction_hash, owner,
                                            recieved_members_list):
         try:
 
             existing_publish_in_progress_organization = self._get_existing_organization_records(org_id)
 
-            org_id = ipfs_org_metadata.get("org_id", None)
-            org_name = ipfs_org_metadata.get("org_name", None)
-            org_type = ipfs_org_metadata.get("org_type", None)
-            description = ipfs_org_metadata.get("description", {})
+            org_id = org_metadata.get("org_id", None)
+            org_name = org_metadata.get("org_name", None)
+            org_type = org_metadata.get("org_type", None)
+            description = org_metadata.get("description", {})
             short_description = description.get("short_description", "")
             long_description = description.get("description", "")
             url = description.get("url", "")
-            contacts = ipfs_org_metadata.get("contacts", None)
-            raw_assets = ipfs_org_metadata.get("assets", {})
+            contacts = org_metadata.get("contacts", None)
+            raw_assets = org_metadata.get("assets", {})
             assets = OrganizationFactory.parse_organization_metadata_assets(raw_assets, {})
-            raw_groups = ipfs_org_metadata.get("groups", [])
+            raw_groups = org_metadata.get("groups", [])
             groups = OrganizationFactory.group_domain_entity_from_group_list_metadata(raw_groups)
 
             org_uuid = ""

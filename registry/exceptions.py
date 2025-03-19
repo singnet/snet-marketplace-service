@@ -128,9 +128,16 @@ class ForbiddenException(CustomException):
             http_code=HTTPStatus.FORBIDDEN
         )
 
+class LighthouseInternalException(CustomException):
+    error_message = "LIGHTHOUSE_INTERNAL_SERVER_ERROR"
+
+    def __init__(self):
+        super().__init__({})
+
 EXCEPTIONS = (BadRequestException, OrganizationNotFoundException, InvalidOriginException, MethodNotImplemented,
               InvalidOrganizationStateException, InvalidMetadataException, InvalidServiceStateException,
               ServiceProtoNotFoundException, OrganizationNotPublishedException, ForbiddenException,
               ServiceNotFoundException, ServiceGroupNotFoundException, EnvironmentNotFoundException,
               InvalidSlackUserException, InvalidSlackChannelException, InvalidSlackSignatureException,
-              InvalidFileTypeException, FileNotFoundException, OperationNotAllowed, InvalidOrganizationType)
+              InvalidFileTypeException, FileNotFoundException, OperationNotAllowed, InvalidOrganizationType,
+              LighthouseInternalException)

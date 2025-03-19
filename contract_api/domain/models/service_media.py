@@ -1,5 +1,5 @@
 class ServiceMedia:
-    def __init__(self, org_id, service_id, service_row_id, url, order, file_type, asset_type, alt_text, ipfs_url):
+    def __init__(self, org_id, service_id, service_row_id, url, order, file_type, asset_type, alt_text, hash_uri):
         self._service_row_id = service_row_id
         self._org_id = org_id
         self._service_id = service_id
@@ -8,7 +8,7 @@ class ServiceMedia:
         self._file_type = file_type
         self._asset_type = asset_type
         self._alt_text = alt_text
-        self._ipfs_url = ipfs_url
+        self._hash_uri = hash_uri
 
     def to_dict(self):
         return {
@@ -87,9 +87,9 @@ class ServiceMedia:
         self._alt_text = alt_text
 
     @property
-    def ipfs_url(self):
-        return self._ipfs_url
+    def hash_uri(self):
+        return self._hash_uri
 
-    @ipfs_url.setter
-    def ipfs_url(self, ipfs_url):
-        self.ipfs_url = ipfs_url
+    @hash_uri.setter
+    def hash_uri(self, hash_uri):
+        self._hash_uri = hash_uri

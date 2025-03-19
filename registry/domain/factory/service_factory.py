@@ -27,6 +27,7 @@ class ServiceFactory:
             project_url=service.project_url,
             proto=service.proto,
             metadata_uri=service.metadata_uri,
+            storage_provider=service.storage_provider,
             assets=service.assets,
             rating=service.rating,
             ranking=service.ranking,
@@ -56,6 +57,7 @@ class ServiceFactory:
             display_name=service.display_name,
             service_id=service.service_id,
             metadata_uri=service.metadata_uri,
+            storage_provider=service.storage_provider,
             proto=service.proto,
             short_description=service.short_description,
             description=service.description,
@@ -151,10 +153,11 @@ class ServiceFactory:
         mpe_address = payload.get("mpe_address", "")
         service_type = payload.get("service_type", ServiceType.GRPC.value)
         metadata_uri = payload.get("metadata_uri", "")
+        storage_provider = payload.get("storage_provider", "")
         return Service(
             org_uuid, service_uuid, service_id, display_name, short_description, description, project_url, proto,
-            assets, ranking, rating, contributors, tags, mpe_address, metadata_uri, service_type, service_group_entity_model_list,
-            service_state_entity_model)
+            assets, ranking, rating, contributors, tags, mpe_address, metadata_uri, storage_provider,
+            service_type, service_group_entity_model_list, service_state_entity_model)
 
     @staticmethod
     def is_valid_contributor(contributor):
@@ -210,16 +213,24 @@ class ServiceFactory:
             ServiceFactory.create_service_group_entity_model("", service_uuid, group) for group in
             service_metadata.get("groups", [])]
         return Service(
-            org_uuid, service_uuid, service_id, service_metadata.get("display_name", ""),
-            service_metadata.get("short_description", ""), service_metadata.get("description", ""),
+            org_uuid,
+            service_uuid,
+            service_id,
+            service_metadata.get("display_name", ""),
+            service_metadata.get("short_description", ""),
+            service_metadata.get("description", ""),
             service_metadata.get("project_url", ""),
-            service_metadata.get("proto", {}), service_metadata.get("assets", {}),
+            service_metadata.get("proto", {}),
+            service_metadata.get("assets", {}),
             ranking,
-            rating, service_metadata.get("contributors", []),
+            rating,
+            service_metadata.get("contributors", []),
             tags_data,
-            service_metadata.get("mpe_address", ""), service_metadata.get("metadata_ipfs_hash", ""),
+            service_metadata.get("mpe_address", ""),
+            service_metadata.get("metadata_hash", ""),
             service_group_entity_model_list,
-            service_state_entity_model)
+            service_state_entity_model
+        )
 
     @staticmethod
     def create_service_comment_entity_model(org_uuid, service_uuid, support_type, user_type, commented_by, comment):
@@ -260,7 +271,7 @@ class ServiceFactory:
                 url = ""
 
             assets[key] = {
-                "ipfs_hash": value,
+                "hash": value,
                 "url": url
             }
         merged = {**existing_assets, **assets}

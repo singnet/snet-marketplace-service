@@ -70,7 +70,7 @@ ORG_PAYLOAD_MODEL = json.dumps({
     "org_uuid": "",
     "org_name": "test_org",
     "org_type": "individual",
-    "metadata_ipfs_uri": "ipfs://Q12PWP",
+    "metadata_uri": "ipfs://Q12PWP",
     "duns_no": "123456789",
     "origin": ORIGIN,
     "description": "this is the dummy org for testcases",
@@ -119,7 +119,8 @@ ORG_RESPONSE_MODEL = json.dumps({
             "ipfs_hash": ""
         }
     },
-    "metadata_ipfs_uri": "ipfs://Q12PWP",
+    "metadata_uri": "ipfs://Q12PWP",
+    "storage_provider": "ipfs",
     "groups": json.loads(ORG_GROUPS),
     "org_address": {
         "mail_address_same_hq_address": False,

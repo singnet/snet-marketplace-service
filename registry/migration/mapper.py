@@ -103,7 +103,7 @@ class ServiceMapper:
         proto = {
             "encoding": old_service.ServiceMetadata.encoding,
             "service_type": old_service.ServiceMetadata.type,
-            "model_ipfs_hash": old_service.ServiceMetadata.model_ipfs_hash
+            "model_hash": old_service.ServiceMetadata.model_ipfs_hash
         }
         short_description = old_service.ServiceMetadata.short_description
         description = old_service.ServiceMetadata.description

@@ -40,7 +40,7 @@ class TestService(TestCase):
                 origin="PUBLISHER_DAPP",
                 groups=[],
                 addresses=[],
-                metadata_ipfs_uri="#dummyhashdummyhash"
+                metadata_uri="#dummyhashdummyhash"
             )
         )
         new_org_members = [

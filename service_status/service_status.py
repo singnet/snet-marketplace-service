@@ -1,6 +1,6 @@
 import json
 import re
-from datetime import datetime as dt
+import datetime as dt
 from datetime import timedelta
 from opensearchpy import OpenSearch
 import grpc
@@ -88,7 +88,7 @@ class ServiceStatus:
             ssl_assert_hostname = False,
             ssl_show_warn = False,
         )
-        timestamp = dt.utcnow()
+        timestamp = dt.datetime.now(dt.UTC)
         index_name = f"services-logs-{NETWORKS[NETWORK_ID]['name']}-{timestamp.strftime('%Y.%m.%d')}"
         if not client.indices.exists(index_name):
             index_body = {
@@ -122,7 +122,7 @@ class ServiceStatus:
                            "(org_id, service_id, previous_state, current_state, row_created, row_updated) " \
                            "values (%s, %s, %s, %s, %s, %s)"
             self.repo.execute(insert_query, [org_id, service_id, previous_state, current_state,
-                                             dt.utcnow(), dt.utcnow()])
+                                             dt.datetime.now(dt.UTC), dt.datetime.now(dt.UTC)])
         except Exception as e:
             logger.info(f"error in inserting service status stats, |error: {e}")
         return
@@ -130,6 +130,7 @@ class ServiceStatus:
     def update_service_status(self):
         service_endpoint_data = self._get_service_endpoint_data()
         rows_updated = 0
+        logger.info(f"number of rows to update: {len(service_endpoint_data)}")
         for record in service_endpoint_data:
             status, error_details, debug_error_string = self._ping_url(record["endpoint"])
             logger.info(f"error_details: {error_details}")
@@ -171,7 +172,7 @@ class ServiceStatus:
         time_delta_in_hours = MAXIMUM_INTERVAL_IN_HOUR
         if failed_status_count < 6:
             time_delta_in_hours = MINIMUM_INTERVAL_IN_HOUR * (2 ** (failed_status_count - 1))
-        next_check_timestamp = dt.utcnow() + timedelta(hours=time_delta_in_hours)
+        next_check_timestamp = dt.datetime.now(dt.UTC) + timedelta(hours=time_delta_in_hours)
         return next_check_timestamp
 
     def _valid_email(self, email):
