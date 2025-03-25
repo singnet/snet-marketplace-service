@@ -22,6 +22,8 @@ class GenerateStubService:
         base = os.path.join(TEMP_FILE_DIR, uuid.uuid4().hex)
         download = f"{base}_{filename}{input_file_extension}"
         extracted = f"{base}_{filename}"
+        logger.info(f"base: {base}, download: {download}, extracted: {extracted}")
+
         boto_utils.s3_download_file(
             bucket=bucket_name, key=download_file_path, filename=download
         )
@@ -30,6 +32,8 @@ class GenerateStubService:
             filename=f"{filename}{input_file_extension}",
             extracted=extracted
         )
+        logger.info(f"extracted: {extracted}")
+
         boto_utils.upload_folder_contents_to_s3(
             folder_path=extracted,
             bucket=bucket_name,
@@ -39,12 +43,18 @@ class GenerateStubService:
     def manage_proto_compilation(self, input_s3_path, output_s3_path, org_id, service_id):
         logger.info(f"Start manage proto compilation :: org_id: {org_id}, service_id: {service_id}")
         input_bucket_name, input_file_path = boto_utils.get_bucket_and_key_from_url(url=input_s3_path)
+        logger.info(f"input_bucket_name: {input_bucket_name}, input_file_path: {input_file_path}")
+
         if output_s3_path:
             output_bucket_name, output_file_path = boto_utils.get_bucket_and_key_from_url(url=output_s3_path)
+            logger.info(f"output_bucket_name: {output_bucket_name}, output_file_path: {output_file_path}")
 
         input_file_name, input_file_extension = utils.get_file_name_and_extension_from_path(input_file_path)
+        logger.info(f"input_file_name: {input_file_name}, input_file_extension: {input_file_extension}")
+
         input_s3_file_key = input_file_path.replace(input_file_name + input_file_extension, "")
         temp_proto_file_path = input_s3_file_key + "temp_proto_extracted"
+        logger.info(f"input_s3_file_key: {input_s3_file_key}, temp_proto_file_path: {temp_proto_file_path}")
 
         # Clear temp files from s3
         self.clear_s3_files(bucket=input_bucket_name, key=temp_proto_file_path)
