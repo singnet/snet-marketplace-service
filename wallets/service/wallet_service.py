@@ -1,20 +1,23 @@
 import base64
 from datetime import datetime
-
 from web3 import Web3
+from cryptography.fernet import Fernet
+
 from common.blockchain_util import BlockChainUtil
 from common.boto_utils import BotoUtils
 from common.constant import TransactionStatus
 from common.logger import get_logger
 from common.utils import Utils
 from wallets.config import NETWORK_ID, NETWORKS, SIGNER_ADDRESS, EXECUTOR_ADDRESS, EXECUTOR_KEY, \
-    MINIMUM_AMOUNT_IN_COGS_ALLOWED, REGION_NAME
+    MINIMUM_AMOUNT_IN_COGS_ALLOWED, REGION_NAME, ENCRYPTION_KEY
 from wallets.constant import GENERAL_WALLET_TYPE, MPE_ADDR_PATH, MPE_CNTRCT_PATH, WalletStatus
 from wallets.dao.channel_dao import ChannelDAO
 from wallets.dao.wallet_data_access_object import WalletDAO
 from wallets.domain.models.channel_transaction_history import ChannelTransactionHistory
 from wallets.infrastructure.repositories.channel_repository import ChannelRepository
 from wallets.wallet import Wallet
+
+
 channel_repo = ChannelRepository()
 logger = get_logger(__name__)
 
@@ -30,13 +33,18 @@ class WalletService:
         self.utils = Utils()
         self.channel_dao = ChannelDAO(repo=self.repo)
         self.wallet_dao = WalletDAO(repo=self.repo)
+        self.ENCRYPTION_KEY = self.boto_utils.get_ssm_parameter(ENCRYPTION_KEY)
+        self.fernet = Fernet(bytes.fromhex(self.ENCRYPTION_KEY))
 
     def create_and_register_wallet(self, username):
         address, private_key = self.blockchain_util.create_account()
+        private_key = self._encrypt_key(private_key)
         wallet = Wallet(address=address, private_key=private_key,
                         type=GENERAL_WALLET_TYPE, status=WalletStatus.ACTIVE.value)
         self._register_wallet(wallet, username)
-        return wallet.to_dict()
+        wallet = wallet.to_dict()
+        wallet['private_key'] = self._decrypt_key(wallet['private_key'])
+        return wallet
 
     def _register_wallet(self, wallet, username):
         existing_wallet = self.wallet_dao.get_wallet_details(wallet)
@@ -57,6 +65,10 @@ class WalletService:
         logger.info(f"Fetching wallet details for {username}")
         wallet_data = self.wallet_dao.get_wallet_data_by_username(username)
         self.utils.clean(wallet_data)
+
+        for wallet in wallet_data:
+            if wallet['private_key'] is not None:
+                wallet['private_key'] = self._decrypt_key(wallet['private_key'])
 
         logger.info(f"Fetched {len(wallet_data)} wallets for username: {username}")
         wallet_response = {"username": username, "wallets": wallet_data}
@@ -241,3 +253,15 @@ class WalletService:
     def __validate__cogs(self, amount_in_cogs):
         if amount_in_cogs < MINIMUM_AMOUNT_IN_COGS_ALLOWED:
             raise Exception("Insufficient amount to buy minimum amount in cogs allowed.")
+
+    def _encrypt_key(self, private_key: str) -> str:
+        key_in_bytes = bytes.fromhex(private_key)
+        encrypted_key = self.fernet.encrypt(key_in_bytes)
+        return encrypted_key.hex()
+
+    def _decrypt_key(self, encrypted_key: str) -> str:
+        encrypted_key_in_bytes = bytes.fromhex(encrypted_key)
+        decrypted_key = self.fernet.decrypt(encrypted_key_in_bytes)
+        return decrypted_key.hex()
+
+

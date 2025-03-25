@@ -312,6 +312,8 @@ class Signer:
                 [email, Web3.toChecksumAddress(user_public_key),
                  expiry_date_block],
                 SIGNER_KEY)
+        else:
+            raise Exception("Free call is not available")
 
         return {"token_to_make_free_call": token_with_expiry_to_make_free_call.hex(),
                 "token_expiration_block": expiry_date_block}

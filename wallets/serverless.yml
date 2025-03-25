@@ -73,7 +73,7 @@ custom:
 
 provider:
   name: aws
-  runtime: python3.7
+  runtime: python3.8
   description: Dapp user service# optional, Description to publish to AWS
   memorySize: 128
   timeout: 30
@@ -118,9 +118,9 @@ package:
 
 
 functions:
-  wallets:
+  create-and-register-wallet:
     warmup: true
-    handler: wallets/lambda_handler.request_handler
+    handler: wallets/lambda_handler.create_and_register_wallet
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
@@ -133,168 +133,86 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: POST
-          path: /wallet
-          private: true
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
-          documentation:
-            summary: "Get wallet"
-            description: "Get Wallet"
-            tags:
-              - "wallet"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            requestModels:
-              "application/json": "PostWalletInput"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "response"
-                responseModels:
-                  "application/json": "PostWalletOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
 
-      - http:
-          method: GET
-          path: /wallet
-          private: true
-          documentation:
-            summary: "Get wallet"
-            description: "Get Wallet"
-            tags:
-              - "wallet"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "response"
-                responseModels:
-                  "application/json": "GetWalletOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
-      - http:
-          method: POST
-          path: /wallet/register
-          private: true
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
-          documentation:
-            summary: "Register Wallet"
-            description: "Register Wallet"
-            tags:
-              - "wallet"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            requestModels:
-              "application/json": "WalletRegisterInput"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "response"
-                responseModels:
-                  "application/json": "WalletRegisterOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
-      - http:
-          method: POST
-          path: /wallet/channel/deposit
-          private: true
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
-          documentation:
-            summary: "Deposit to channel"
-            description: "Deposit to channel wallet"
-            tags:
-              - "wallet"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            requestModels:
-              "application/json": "WalletChannelDepositInput"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "response"
-                responseModels:
-                  "application/json": "WalletChannelDepositOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
-      - http:
-          method: POST
-          path: /wallet/status
-          private: true
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
-          documentation:
-            summary: "Get wallet status"
-            description: "Get wallet status"
-            tags:
-              - "wallet"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            requestModels:
-              "application/json": "WalletStatusInput"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "response"
-                responseModels:
-                  "application/json": "WalletStatusOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
+  get-wallet:
+    warmup: true
+    handler: wallets/lambda_handler.get_wallet
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
 
-      - http:
-          method: GET
-          path: /wallet/transactions
-          private: true
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
-          documentation:
-            summary: "Get wallet transactions"
-            description: "Get wallet transactions"
-            tags:
-              - "wallet"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "response"
-                responseModels:
-                  "application/json": "WalletTransactionsOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
+  register-wallet:
+    warmup: true
+    handler: wallets/lambda_handler.register_wallet
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+
+  channel-add-funds:
+    warmup: true
+    handler: wallets/lambda_handler.channel_add_funds
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+
+  set-default-wallet:
+    warmup: true
+    handler: wallets/lambda_handler.set_default_wallet
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+
+  get-transactions-for-order:
+    warmup: true
+    handler: wallets/lambda_handler.get-transactions-for-order
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
 
   create-channel:
     warmup: true
@@ -336,7 +254,6 @@ functions:
               - statusCode: "500"
                 responseModels:
                   "application/json": "ErrorMessage"
-
 
   delete-user-wallet:
     warmup: true

@@ -125,3 +125,6 @@ def request_handler(event, context):
         response = generate_lambda_response(500, error_message)
         traceback.print_exc()
     return response
+
+
+def lambda_handler(event, context):

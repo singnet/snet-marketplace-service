@@ -24,6 +24,7 @@ class Wallet(Base):
     row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
     address = Column("address", VARCHAR(256), nullable=False)
     type = Column("type", VARCHAR(128))
+    encrypted_key = Column("encrypted_key", VARCHAR(256), nullable=True)
     status = Column("status", BIT, default=b'1')
     row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
     row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())

@@ -320,22 +320,27 @@ class OrderService:
         recipient = order_data["recipient"]
         channel_id = order_data["channel_id"]
         sender = order_data["wallet_address"]
-        if order_type == OrderType.CREATE_WALLET_AND_CHANNEL.value:
-            wallet_create_payload = {
-                "path": "/wallet",
-                "body": json.dumps({"username": username}),
-                "httpMethod": "POST"
-            }
-            wallet_create_lambda_response = self.lambda_client.invoke(
-                FunctionName=WALLETS_SERVICE_ARN,
-                InvocationType='RequestResponse',
-                Payload=json.dumps(wallet_create_payload)
-            )
-            wallet_create_response = json.loads(wallet_create_lambda_response.get("Payload").read())
-            if wallet_create_response["statusCode"] != 200:
-                raise Exception("Failed to create wallet")
-            wallet_create_response_body = json.loads(wallet_create_response["body"])
-            wallet_details = wallet_create_response_body["data"]
+        if order_type == OrderType.CREATE_WALLET_AND_CHANNEL.value or order_type == OrderType.CREATE_CHANNEL.value:
+
+            if order_type == OrderType.CREATE_WALLET_AND_CHANNEL.value:
+                wallet_create_payload = {
+                    "path": "/wallet",
+                    "body": json.dumps({"username": username}),
+                    "httpMethod": "POST"
+                }
+                wallet_create_lambda_response = self.lambda_client.invoke(
+                    FunctionName=WALLETS_SERVICE_ARN,
+                    InvocationType='RequestResponse',
+                    Payload=json.dumps(wallet_create_payload)
+                )
+                wallet_create_response = json.loads(wallet_create_lambda_response.get("Payload").read())
+                if wallet_create_response["statusCode"] != 200:
+                    raise Exception("Failed to create wallet")
+                wallet_create_response_body = json.loads(wallet_create_response["body"])
+                wallet_details = wallet_create_response_body["data"]
+            else:
+
+
 
             try:
                 current_block_no = self.obj_blockchain_util.get_current_block_no()

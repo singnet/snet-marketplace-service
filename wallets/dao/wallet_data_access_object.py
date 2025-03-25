@@ -22,21 +22,21 @@ class WalletDAO:
             raise Exception("Failed to link user to the wallet")
 
     def get_wallet_details(self, wallet):
-        wallet_query = "SELECT address, type, status FROM wallet WHERE address = %s"
+        wallet_query = "SELECT address, type, encrypted_key, status FROM wallet WHERE address = %s"
         wallet_response = self.repo.execute(wallet_query, [wallet.address])
         return wallet_response
 
     def insert_wallet(self, wallet):
         time_now = dt.utcnow()
-        wallet_query = "INSERT INTO wallet (address, type, status, row_created, row_updated) VALUES (%s, %s, %s, %s, %s)"
-        wallet_query_response = self.repo.execute(wallet_query, [wallet.address, wallet.type, wallet.status, time_now, time_now])
+        wallet_query = "INSERT INTO wallet (address, type, encrypted_key, status, row_created, row_updated) VALUES (%s, %s, %s, %s, %s, %s)"
+        wallet_query_response = self.repo.execute(wallet_query, [wallet.address, wallet.type, wallet.private_key, wallet.status, time_now, time_now])
         logger.info(f"Insert status for wallet is: {wallet_query_response}")
         if wallet_query_response[0] != 1:
             raise Exception("failed to insert the wallet")
 
     def get_wallet_data_by_username(self, username):
         """ Method to get wallet details for a given username. """
-        query = "SELECT UW.address, UW.is_default, W.type, W.status " \
+        query = "SELECT UW.address, UW.is_default, W.type, W.encrypted_key, W.status " \
                 "FROM user_wallet as UW JOIN wallet as W ON UW.address = W.address WHERE UW.username= %s"
         wallet_data = self.repo.execute(query, username)
         return wallet_data
