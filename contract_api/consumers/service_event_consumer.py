@@ -224,12 +224,12 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             self._connection.rollback_transaction()
             raise e
 
-        # ServiceCreatedDeploymentEventHandler(NETWORKS[NETWORK_ID]["ws_provider"]).process_service_deployment(
-        #     org_id=org_id,
-        #     service_id=service_id,
-        #     proto_hash=new_data["service_api_source"],
-        #     update_proto_stubs=update_proto_stubs
-        # )
+        ServiceCreatedDeploymentEventHandler(NETWORKS[NETWORK_ID]["ws_provider"]).process_service_deployment(
+            org_id=org_id,
+            service_id=service_id,
+            proto_hash=new_data["service_api_source"],
+            update_proto_stubs=update_proto_stubs
+        )
 
 
 class ServiceMetadataModifiedConsumer(ServiceCreatedEventConsumer):
