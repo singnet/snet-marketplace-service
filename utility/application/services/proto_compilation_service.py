@@ -28,11 +28,6 @@ class GenerateStubService:
             bucket=bucket_name, key=download_file_path, filename=download
         )
         utils.extract_zip_file(zip_file_path=download, extracted_path=extracted)
-        extracted = GenerateStubService.handle_extraction_path(
-            filename=f"{filename}{input_file_extension}",
-            extracted=extracted
-        )
-        logger.info(f"extracted: {extracted}")
 
         boto_utils.upload_folder_contents_to_s3(
             folder_path=extracted,
