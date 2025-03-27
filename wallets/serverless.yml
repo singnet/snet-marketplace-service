@@ -134,9 +134,9 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
-  get-wallet:
+  get-wallets:
     warmup: true
-    handler: wallets/lambda_handler.get_wallet
+    handler: wallets/lambda_handler.get_wallets
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
@@ -200,7 +200,7 @@ functions:
 
   get-transactions-for-order:
     warmup: true
-    handler: wallets/lambda_handler.get-transactions-for-order
+    handler: wallets/lambda_handler.get_transactions_for_order
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}

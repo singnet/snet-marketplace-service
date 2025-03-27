@@ -7,7 +7,7 @@ from common.logger import get_logger
 from common.repository import Repository
 from common.utils import Utils, validate_dict, generate_lambda_response, make_response_body
 from wallets.config import NETWORK_ID, NETWORKS, SLACK_HOOK
-from wallets.domain.models.channel_transaction_history import ChannelTransactionHistory
+from wallets.domain.models.channel_transaction_history import ChannelTransactionHistoryModel
 from wallets.error import Error
 from wallets.exceptions import EXCEPTIONS
 from wallets.infrastructure.repositories.channel_repository import ChannelRepository
@@ -64,7 +64,7 @@ def record_create_channel_event(event, context):
         required_keys = ["order_id", "sender", "signature", "r", "s", "v", "current_block_no",
                          "group_id", "org_id", "amount", "currency", "recipient", "amount_in_cogs"]
         if validate_dict(payload, required_keys):
-            ChannelRepository().add_channel_transaction_history_record(ChannelTransactionHistory(
+            ChannelRepository().add_channel_transaction_history_record(ChannelTransactionHistoryModel(
                 order_id=payload["order_id"],
                 amount=payload["amount"],
                 currency=payload["currency"],

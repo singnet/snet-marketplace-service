@@ -13,7 +13,7 @@ from wallets.config import NETWORK_ID, NETWORKS, SIGNER_ADDRESS, EXECUTOR_ADDRES
 from wallets.constant import GENERAL_WALLET_TYPE, MPE_ADDR_PATH, MPE_CNTRCT_PATH, WalletStatus
 from wallets.dao.channel_dao import ChannelDAO
 from wallets.dao.wallet_data_access_object import WalletDAO
-from wallets.domain.models.channel_transaction_history import ChannelTransactionHistory
+from wallets.domain.models.channel_transaction_history import ChannelTransactionHistoryModel
 from wallets.infrastructure.repositories.channel_repository import ChannelRepository
 from wallets.wallet import Wallet
 
@@ -140,7 +140,7 @@ class WalletService:
         logger.info("openChannelByThirdParty::transaction_hash : %s for order_id : %s", transaction_hash, order_id)
 
         channel_repo.update_channel_transaction_history_status_by_order_id(
-            channel_txn_history=ChannelTransactionHistory(
+            channel_txn_history=ChannelTransactionHistoryModel(
                 order_id=order_id, amount=amount, currency=currency,
                 group_id=group_id, org_id=org_id,
                 type=method_name, recipient=recipient,
@@ -184,7 +184,7 @@ class WalletService:
         logger.info("channelAddFunds::transaction_hash: %s for order_id: %s", transaction_hash, order_id)
 
         channel_repo.update_channel_transaction_history_status_by_order_id(
-            channel_txn_history=ChannelTransactionHistory(
+            channel_txn_history=ChannelTransactionHistoryModel(
                 order_id=order_id, amount=amount, currency=currency,
                 group_id=group_id, org_id=org_id,
                 type=method_name, recipient=recipient,

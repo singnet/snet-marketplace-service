@@ -2,13 +2,12 @@ from datetime import datetime as dt
 
 from sqlalchemy.exc import SQLAlchemyError
 
-from wallets.domain.factory.wallet_factory import WalletFactory
+from wallets.domain.wallets_factory import WalletsFactory
 from wallets.infrastructure.models import ChannelTransactionHistory
 from wallets.infrastructure.repositories.base_repository import BaseRepository
 
 
 class ChannelRepository(BaseRepository):
-    pass
 
     def get_channel_transaction_history_data(self, transaction_hash=None, status=None):
         try:
@@ -25,7 +24,7 @@ class ChannelRepository(BaseRepository):
         txn_history = []
         for history in channel_txn_history_db:
             txn_history.append(
-                WalletFactory().convert_channel_transaction_history_db_model_to_entity_model(history))
+                WalletsFactory().convert_channel_transaction_history_db_model_to_entity_model(history))
         return txn_history
 
     def update_channel_transaction_history_status_by_order_id(self, channel_txn_history):

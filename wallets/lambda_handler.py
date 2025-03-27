@@ -1,5 +1,6 @@
 import traceback
 from enum import Enum
+import json
 
 from common.constant import StatusDescription, ErrorDescription
 from common.logger import get_logger
@@ -127,4 +128,42 @@ def request_handler(event, context):
     return response
 
 
-def lambda_handler(event, context):
+def create_and_register_wallet(event, context):
+    logger.info(f"Received request to create and register wallet: {event}")
+    body = event.get('body', None)
+    if body is None:
+        logger.error("Body not found")
+        return generate_lambda_response(400, StatusDescription.BAD_REQUEST)
+
+    payload_dict = json.loads(body)
+    if payload_dict.get('username', None) is None:
+        logger.error("Username field in the request body not found")
+        return generate_lambda_response(400, StatusDescription.BAD_REQUEST)
+
+    wallet_manager = WalletService(repo = db[NETWORK_ID])
+    response_data = wallet_manager.create_and_register_wallet(username=payload_dict['username'])
+
+    if response_data is None:
+        error_message = format_error_message(status = "failed", error = StatusDescription.BAD_REQUEST,
+                                             payload = payload_dict, net_id = NETWORK_ID, handler = "create_and_register_wallet")
+        response = generate_lambda_response(500, error_message)
+    else:
+        response = generate_lambda_response(200, {"status": "success", "data": response_data})
+
+    return response
+
+def get_wallets(event, context):
+    logger.info(f"Received request to get wallets: {event}")
+
+def register_wallet(event, context):
+    logger.info(f"Received request to register wallet: {event}")
+
+def channel_add_funds(event, context):
+    logger.info(f"Received request to add funds to channel: {event}")
+
+def set_default_wallet(event, context):
+    logger.info(f"Received request to set default wallet: {event}")
+
+def get_transactions_for_order(event, context):
+    logger.info(f"Received request to get transactions for order: {event}")
+
