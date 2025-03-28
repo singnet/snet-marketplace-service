@@ -47,7 +47,7 @@ class WalletRepository(BaseRepository):
             wallet_db = Wallet(
                 address = wallet.address,
                 type = wallet.type,
-                encrypted_key = wallet.private_key,
+                encrypted_key = wallet.encrypted_key,
                 status = wallet.status,
                 row_created = time_now,
                 row_updated = time_now

@@ -11,8 +11,8 @@ from wallets.domain.models.channel_transaction_history import ChannelTransaction
 from wallets.error import Error
 from wallets.exceptions import EXCEPTIONS
 from wallets.infrastructure.repositories.channel_repository import ChannelRepository
-from wallets.service.manage_create_channel_event import ManageCreateChannelEvent
-from wallets.service.wallet_service import WalletService
+from wallets.application.service.manage_create_channel_event import ManageCreateChannelEvent
+from wallets.application.service.wallet_service import WalletService
 
 NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys())
 repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)

@@ -15,7 +15,7 @@ from wallets.dao.channel_dao import ChannelDAO
 from wallets.dao.wallet_data_access_object import WalletDAO
 from wallets.domain.models.channel_transaction_history import ChannelTransactionHistoryModel
 from wallets.infrastructure.repositories.channel_repository import ChannelRepository
-from wallets.wallet import Wallet
+from wallets.domain.models.wallet import WalletModel
 
 
 channel_repo = ChannelRepository()
@@ -38,12 +38,12 @@ class WalletService:
 
     def create_and_register_wallet(self, username):
         address, private_key = self.blockchain_util.create_account()
-        private_key = self._encrypt_key(private_key)
-        wallet = Wallet(address=address, private_key=private_key,
+        encrypted_key = self._encrypt_key(private_key)
+        wallet = WalletModel(address=address, encrypted_key=encrypted_key,
                         type=GENERAL_WALLET_TYPE, status=WalletStatus.ACTIVE.value)
         self._register_wallet(wallet, username)
-        wallet = wallet.to_dict()
-        wallet['private_key'] = self._decrypt_key(wallet['private_key'])
+        wallet = wallet.to_response()
+        wallet["private_key"] = private_key
         return wallet
 
     def _register_wallet(self, wallet, username):
@@ -53,9 +53,9 @@ class WalletService:
         self.wallet_dao.add_user_for_wallet(wallet, username)
 
     def register_wallet(self, wallet_address, wallet_type, status, username):
-        wallet = Wallet(address=wallet_address, type=wallet_type, status=status)
+        wallet = WalletModel(address=wallet_address, type=wallet_type, status=status)
         self._register_wallet(wallet, username)
-        return wallet.to_dict()
+        return wallet.to_response()
 
     def remove_user_wallet(self, username):
         self.wallet_dao.remove_user_wallet(username)
@@ -66,12 +66,15 @@ class WalletService:
         wallet_data = self.wallet_dao.get_wallet_data_by_username(username)
         self.utils.clean(wallet_data)
 
+        wallets = []
         for wallet in wallet_data:
-            if wallet['private_key'] is not None:
-                wallet['private_key'] = self._decrypt_key(wallet['private_key'])
+            new_wallet = wallet.to_response()
+            if wallet.encrypted_key is not None:
+                new_wallet['private_key'] = self._decrypt_key(wallet.encrypted_key)
+            wallets.append(new_wallet)
 
         logger.info(f"Fetched {len(wallet_data)} wallets for username: {username}")
-        wallet_response = {"username": username, "wallets": wallet_data}
+        wallet_response = {"username": username, "wallets": wallets}
         return wallet_response
 
     def __generate_signature_details(self, recipient, group_id, agi_tokens, expiration, message_nonce, signer_key):

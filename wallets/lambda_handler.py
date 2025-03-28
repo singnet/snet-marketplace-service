@@ -9,8 +9,7 @@ from common.utils import Utils, generate_lambda_response, extract_payload, valid
 from wallets.config import NETWORKS, NETWORK_ID, WALLET_TYPES_ALLOWED
 from wallets.config import SLACK_HOOK
 from wallets.constant import REQUIRED_KEYS_FOR_LAMBDA_EVENT
-from wallets.service.wallet_service import WalletService
-from wallets.wallet import Wallet
+from wallets.application.service import WalletService
 
 NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys())
 db = dict((netId, Repository(net_id=netId, NETWORKS=NETWORKS)) for netId in NETWORKS.keys())
@@ -141,14 +140,20 @@ def create_and_register_wallet(event, context):
         return generate_lambda_response(400, StatusDescription.BAD_REQUEST)
 
     wallet_manager = WalletService(repo = db[NETWORK_ID])
-    response_data = wallet_manager.create_and_register_wallet(username=payload_dict['username'])
-
-    if response_data is None:
+    try:
+        response_data = wallet_manager.create_and_register_wallet(username=payload_dict['username'])
+        if response_data is None:
+            error_message = format_error_message(status = "failed", error = StatusDescription.BAD_REQUEST,
+                                                 payload = payload_dict, net_id = NETWORK_ID,
+                                                 handler = "create_and_register_wallet")
+            response = generate_lambda_response(500, error_message)
+        else:
+            response = generate_lambda_response(200, {"status": "success", "data": response_data})
+    except Exception as e:
         error_message = format_error_message(status = "failed", error = StatusDescription.BAD_REQUEST,
-                                             payload = payload_dict, net_id = NETWORK_ID, handler = "create_and_register_wallet")
+                                             payload = payload_dict, net_id = NETWORK_ID,
+                                             handler = "create_and_register_wallet")
         response = generate_lambda_response(500, error_message)
-    else:
-        response = generate_lambda_response(200, {"status": "success", "data": response_data})
 
     return response
 

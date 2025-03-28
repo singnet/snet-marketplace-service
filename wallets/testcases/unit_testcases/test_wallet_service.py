@@ -4,7 +4,7 @@ from unittest.mock import patch
 from common.repository import Repository
 from wallets.config import NETWORK_ID, NETWORKS
 from wallets.dao.wallet_data_access_object import WalletDAO
-from wallets.service.wallet_service import WalletService
+from wallets.application.service import WalletService
 from wallets.wallet import Wallet
 
 

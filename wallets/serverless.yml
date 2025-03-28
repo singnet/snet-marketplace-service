@@ -120,7 +120,7 @@ package:
 functions:
   create-and-register-wallet:
     warmup: true
-    handler: wallets/lambda_handler.create_and_register_wallet
+    handler: wallets/application/handlers/wallet_handlers.create_and_register_wallet
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
@@ -136,7 +136,7 @@ functions:
 
   get-wallets:
     warmup: true
-    handler: wallets/lambda_handler.get_wallets
+    handler: wallets/application/handlers/wallet_handlers.get_wallets
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
@@ -152,7 +152,7 @@ functions:
 
   register-wallet:
     warmup: true
-    handler: wallets/lambda_handler.register_wallet
+    handler: wallets/application/handlers/wallet_handlers.register_wallet
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
@@ -168,7 +168,7 @@ functions:
 
   channel-add-funds:
     warmup: true
-    handler: wallets/lambda_handler.channel_add_funds
+    handler: wallets/application/handlers/wallet_handlers.channel_add_funds
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
@@ -184,7 +184,7 @@ functions:
 
   set-default-wallet:
     warmup: true
-    handler: wallets/lambda_handler.set_default_wallet
+    handler: wallets/application/handlers/wallet_handlers.set_default_wallet
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
@@ -200,7 +200,7 @@ functions:
 
   get-transactions-for-order:
     warmup: true
-    handler: wallets/lambda_handler.get_transactions_for_order
+    handler: wallets/application/handlers/wallet_handlers.get_transactions_for_order
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
@@ -216,7 +216,7 @@ functions:
 
   create-channel:
     warmup: true
-    handler: wallets/handlers/channel_handler.create_channel
+    handler: wallets/application/handlers/channel_handler.create_channel
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -225,35 +225,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: POST
-          path: /wallet/channel
-          private: true
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
-          documentation:
-            summary: "Create channel"
-            description: "Create channel"
-            tags:
-              - "wallet"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            requestModels:
-              "application/json": "CreateChannelInput"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "response"
-                responseModels:
-                  "application/json": "CreateChannelOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
 
   delete-user-wallet:
     warmup: true
@@ -266,34 +237,10 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: POST
-          path: /wallet/delete
-          private: true
-          documentation:
-            summary: "Delete user wallet"
-            description: "Delete user wallet"
-            tags:
-              - "wallet"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            requestModels:
-              "application/json": "DeleteUserWalletInput"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "response"
-                responseModels:
-                  "application/json": "DeleteUserWalletOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
 
   create-channel-event:
     warmup: true
-    handler: wallets/handlers/channel_handler.record_create_channel_event
+    handler: wallets/application/handlers/channel_handler.record_create_channel_event
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -302,34 +249,10 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: POST
-          path: /wallet/channel/event
-          private: true
-          documentation:
-            summary: "Create channel event"
-            description: "Create channel event "
-            tags:
-              - "channel"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            requestModels:
-              "application/json": "CreateChannelEventInput"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "response"
-                responseModels:
-                  "application/json": "CreateChannelEventOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
 
   channelTxnStatus:
     warmup: true
-    handler: wallets/handlers/channel_transaction_status_handler.request_handler
+    handler: wallets/application/handlers/channel_transaction_status_handler.request_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -342,7 +265,7 @@ functions:
       - schedule: rate(2 minutes)
 
   open-channel-by-third-party:
-    handler: wallets/handlers/channel_handler.open_channel_by_third_party
+    handler: wallets/application/handlers/channel_handler.open_channel_by_third_party
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:

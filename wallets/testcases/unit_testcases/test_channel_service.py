@@ -4,7 +4,7 @@ from types import SimpleNamespace as Namespace
 from unittest.mock import patch
 
 from common.constant import TransactionStatus
-from wallets.handlers.channel_transaction_status_handler import request_handler
+from wallets.application.handlers import request_handler
 from wallets.infrastructure.models import ChannelTransactionHistory
 from wallets.infrastructure.repositories.channel_repository import ChannelRepository
 

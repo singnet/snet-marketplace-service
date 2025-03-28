@@ -5,10 +5,10 @@ from unittest.mock import patch
 
 from common.constant import TransactionStatus
 from common.repository import Repository
-from wallets.handlers.channel_handler import record_create_channel_event
+from wallets.application.handlers import record_create_channel_event
 from wallets.infrastructure.models import CreateChannelEvent, ChannelTransactionHistory
 from wallets.infrastructure.repositories.channel_repository import ChannelRepository
-from wallets.service.manage_create_channel_event import ManageCreateChannelEvent
+from wallets.application.service.manage_create_channel_event import ManageCreateChannelEvent
 from wallets.config import NETWORKS, NETWORK_ID
 from wallets.dao.channel_dao import ChannelDAO
 

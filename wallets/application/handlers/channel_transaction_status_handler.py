@@ -3,7 +3,7 @@ import traceback
 from common.repository import Repository
 from common.utils import Utils
 from wallets.config import NETWORKS, NETWORK_ID, SLACK_HOOK
-from wallets.service.channel_transaction_status_service import ChannelTransactionStatusService
+from wallets.application.service.channel_transaction_status_service import ChannelTransactionStatusService
 from aws_xray_sdk.core import patch_all
 
 patch_all()

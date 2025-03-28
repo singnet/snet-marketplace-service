@@ -1,6 +1,4 @@
 import json
-import traceback
-from time import sleep
 
 from common.constant import TransactionStatus
 from common.logger import get_logger
@@ -8,7 +6,7 @@ from common.repository import Repository
 from common.utils import Utils
 from wallets.config import NETWORKS, NETWORK_ID, SLACK_HOOK
 from wallets.dao.channel_dao import ChannelDAO
-from wallets.service.wallet_service import WalletService
+from wallets.application.service.wallet_service import WalletService
 
 connection = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
 channel_dao = ChannelDAO(connection)
