@@ -2,12 +2,15 @@ from wallets.domain.models.channel_transaction_history import ChannelTransaction
 from wallets.domain.models.wallet import WalletModel
 from wallets.domain.models.user_wallet import UserWalletModel
 from wallets.domain.models.create_channel_event import CreateChannelEventModel
+from wallets.infrastructure.models import ChannelTransactionHistory, Wallet, UserWallet, CreateChannelEvent
 
 
 class WalletsFactory:
 
     @staticmethod
-    def convert_channel_transaction_history_db_model_to_entity_model(channel_transaction_history_db):
+    def convert_channel_transaction_history_db_model_to_entity_model(
+            channel_transaction_history_db: ChannelTransactionHistory
+    ) -> ChannelTransactionHistoryModel:
         return ChannelTransactionHistoryModel(
             order_id=channel_transaction_history_db.order_id,
             amount=channel_transaction_history_db.amount,
@@ -24,7 +27,7 @@ class WalletsFactory:
         )
 
     @staticmethod
-    def convert_wallet_db_model_to_entity_model(wallet_db):
+    def convert_wallet_db_model_to_entity_model(wallet_db: Wallet) -> WalletModel:
         return WalletModel(
             row_id=wallet_db.row_id,
             address=wallet_db.address,
@@ -34,7 +37,7 @@ class WalletsFactory:
         )
 
     @staticmethod
-    def convert_user_wallet_db_model_to_entity_model(user_wallet_db):
+    def convert_user_wallet_db_model_to_entity_model(user_wallet_db: UserWallet) -> UserWalletModel:
         return UserWalletModel(
             row_id=user_wallet_db.row_id,
             username=user_wallet_db.username,
@@ -43,7 +46,9 @@ class WalletsFactory:
         )
 
     @staticmethod
-    def convert_create_channel_event_db_model_to_entity_model(create_channel_event_db):
+    def convert_create_channel_event_db_model_to_entity_model(
+            create_channel_event_db: CreateChannelEvent
+    ) -> CreateChannelEventModel:
         return CreateChannelEventModel(
             row_id=create_channel_event_db.row_id,
             payload=create_channel_event_db.payload,

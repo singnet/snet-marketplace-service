@@ -1,4 +1,4 @@
-
+from typing import Any
 
 class WalletModel:
 
@@ -29,7 +29,7 @@ class WalletModel:
     def status(self):
         return self.__status
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         return {
             "row_id": self.__row_id,
             "address": self.__address,
@@ -38,7 +38,7 @@ class WalletModel:
             "status": self.__status
         }
 
-    def to_response(self):
+    def to_response(self) -> dict[str, Any]:
         return {
             "address": self.__address,
             "type": self.__type,

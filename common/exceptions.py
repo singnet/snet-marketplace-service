@@ -10,6 +10,8 @@ class CustomException(Exception):
 
     def __init__(self, error_details):
         self.error_details = error_details
+        if "msg" in error_details:
+            super().__init__(error_details["msg"])
 
 
 class MethodNotImplemented(CustomException):

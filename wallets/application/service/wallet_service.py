@@ -11,28 +11,24 @@ from common.utils import Utils
 from wallets.config import NETWORK_ID, NETWORKS, SIGNER_ADDRESS, EXECUTOR_ADDRESS, EXECUTOR_KEY, \
     MINIMUM_AMOUNT_IN_COGS_ALLOWED, REGION_NAME, ENCRYPTION_KEY
 from wallets.constant import GENERAL_WALLET_TYPE, MPE_ADDR_PATH, MPE_CNTRCT_PATH, WalletStatus
-from wallets.dao.channel_dao import ChannelDAO
-from wallets.dao.wallet_data_access_object import WalletDAO
 from wallets.domain.models.channel_transaction_history import ChannelTransactionHistoryModel
 from wallets.infrastructure.repositories.channel_repository import ChannelRepository
 from wallets.domain.models.wallet import WalletModel
+from wallets.infrastructure.repositories.wallet_repository import WalletRepository
 
-
-channel_repo = ChannelRepository()
 logger = get_logger(__name__)
 
 
 class WalletService:
-    def __init__(self, repo):
-        self.repo = repo
+    def __init__(self):
         self.boto_utils = BotoUtils(region_name=REGION_NAME)
         self.blockchain_util = BlockChainUtil(
             provider_type="HTTP_PROVIDER",
             provider=NETWORKS[NETWORK_ID]['http_provider']
         )
         self.utils = Utils()
-        self.channel_dao = ChannelDAO(repo=self.repo)
-        self.wallet_dao = WalletDAO(repo=self.repo)
+        self.channel_repo = ChannelRepository()
+        self.wallet_repo = WalletRepository()
         self.ENCRYPTION_KEY = self.boto_utils.get_ssm_parameter(ENCRYPTION_KEY)
         self.fernet = Fernet(bytes.fromhex(self.ENCRYPTION_KEY))
 
@@ -47,10 +43,10 @@ class WalletService:
         return wallet
 
     def _register_wallet(self, wallet, username):
-        existing_wallet = self.wallet_dao.get_wallet_details(wallet)
-        if len(existing_wallet) == 0:
-            self.wallet_dao.insert_wallet(wallet)
-        self.wallet_dao.add_user_for_wallet(wallet, username)
+        existing_wallet = self.wallet_repo.get_wallet_details(wallet)
+        if existing_wallet is None:
+            self.wallet_repo.insert_wallet(wallet)
+        self.wallet_repo.add_user_for_wallet(wallet, username)
 
     def register_wallet(self, wallet_address, wallet_type, status, username):
         wallet = WalletModel(address=wallet_address, type=wallet_type, status=status)
@@ -58,12 +54,12 @@ class WalletService:
         return wallet.to_response()
 
     def remove_user_wallet(self, username):
-        self.wallet_dao.remove_user_wallet(username)
+        self.wallet_repo.remove_user_wallet(username)
 
     def get_wallet_details(self, username):
         """ Method to get wallet details for a given username. """
         logger.info(f"Fetching wallet details for {username}")
-        wallet_data = self.wallet_dao.get_wallet_data_by_username(username)
+        wallet_data = self.wallet_repo.get_wallet_data_by_username(username)
         self.utils.clean(wallet_data)
 
         wallets = []
@@ -98,7 +94,7 @@ class WalletService:
 
     def record_create_channel_event(self, payload):
         current_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-        if not self.channel_dao.persist_create_channel_event(payload, current_time):
+        if not self.channel_repo.persist_create_channel_event(payload, current_time):
             raise Exception("Failed to create record")
         return {}
 
@@ -142,7 +138,7 @@ class WalletService:
 
         logger.info("openChannelByThirdParty::transaction_hash : %s for order_id : %s", transaction_hash, order_id)
 
-        channel_repo.update_channel_transaction_history_status_by_order_id(
+        self.channel_repo.update_channel_transaction_history_status_by_order_id(
             channel_txn_history=ChannelTransactionHistoryModel(
                 order_id=order_id, amount=amount, currency=currency,
                 group_id=group_id, org_id=org_id,
@@ -160,7 +156,7 @@ class WalletService:
         }
 
     def set_default_wallet(self, username, address):
-        self.wallet_dao.set_default_wallet(username=username, address=address)
+        self.wallet_repo.set_default_wallet(username=username, address=address)
         return "OK"
 
     def add_funds_to_channel(self, org_id, group_id, channel_id, sender, recipient, order_id, amount, currency, amount_in_cogs):
@@ -186,7 +182,7 @@ class WalletService:
         transaction_hash = self.blockchain_util.process_raw_transaction(raw_transaction=raw_transaction)
         logger.info("channelAddFunds::transaction_hash: %s for order_id: %s", transaction_hash, order_id)
 
-        channel_repo.update_channel_transaction_history_status_by_order_id(
+        self.channel_repo.update_channel_transaction_history_status_by_order_id(
             channel_txn_history=ChannelTransactionHistoryModel(
                 order_id=order_id, amount=amount, currency=currency,
                 group_id=group_id, org_id=org_id,
@@ -201,7 +197,7 @@ class WalletService:
 
     def get_transactions_from_username_recipient(self, username, org_id, group_id):
         logger.info(f"Fetching transactions for {username} to org_id: {org_id} group_id: {org_id}")
-        channel_data = self.channel_dao.get_channel_transactions_for_username_recipient(
+        channel_data = self.channel_repo.get_channel_transactions_for_username_recipient(
             username=username, group_id=group_id, org_id=org_id)
         self.utils.clean(channel_data)
 
@@ -243,7 +239,7 @@ class WalletService:
         return transaction_details
 
     def get_channel_transactions_against_order_id(self, order_id):
-        transaction_history = self.channel_dao.get_channel_transactions_against_order_id(order_id)
+        transaction_history = self.channel_repo.get_channel_transactions_against_order_id(order_id)
 
         for record in transaction_history:
             record["created_at"] = record["created_at"].strftime("%Y-%m-%d %H:%M:%S")

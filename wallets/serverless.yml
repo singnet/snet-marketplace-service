@@ -214,9 +214,9 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
-  create-channel:
+  delete-user-wallet:
     warmup: true
-    handler: wallets/application/handlers/channel_handler.create_channel
+    handler: wallets/application/handlers/wallet_handlers.delete_user_wallet
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -226,9 +226,9 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
-  delete-user-wallet:
+  create-channel:
     warmup: true
-    handler: wallets/handlers/wallet_handlers.delete_user_wallet
+    handler: wallets/application/handlers/channel_handlers.create_channel
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -240,7 +240,7 @@ functions:
 
   create-channel-event:
     warmup: true
-    handler: wallets/application/handlers/channel_handler.record_create_channel_event
+    handler: wallets/application/handlers/channel_handlers.record_create_channel_event
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -250,9 +250,8 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
-  channelTxnStatus:
-    warmup: true
-    handler: wallets/application/handlers/channel_transaction_status_handler.request_handler
+  open-channel-by-third-party:
+    handler: wallets/application/handlers/channel_handlers.open_channel_by_third_party
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -264,8 +263,9 @@ functions:
     events:
       - schedule: rate(2 minutes)
 
-  open-channel-by-third-party:
-    handler: wallets/application/handlers/channel_handler.open_channel_by_third_party
+  channelTxnStatus:
+    warmup: true
+    handler: wallets/application/handlers/channel_transaction_status_handler.request_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
