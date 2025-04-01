@@ -44,6 +44,7 @@ class WalletRepository(BaseRepository):
             return WalletsFactory.convert_wallet_db_model_to_entity_model(wallet_db)
         except SQLAlchemyError as e:
             self.session.rollback()
+            logger.error(f"Failed to get wallet details for wallet {wallet.address}: {e}")
             raise e
 
     def insert_wallet(self, wallet: Union[Wallet, WalletModel]):
@@ -83,6 +84,7 @@ class WalletRepository(BaseRepository):
             return wallets
         except SQLAlchemyError as e:
             self.session.rollback()
+            logger.error(f"Failed to get wallet data for username {username}: {e}")
             raise e
 
     def set_default_wallet(self, username: str, address: str):
@@ -112,4 +114,5 @@ class WalletRepository(BaseRepository):
             self.session.commit()
         except SQLAlchemyError as e:
             self.session.rollback()
+            logger.error(f"Failed to remove user wallet for username {username}: {e}")
             raise e

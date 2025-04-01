@@ -14,14 +14,20 @@ wallet_service = WalletService()
 
 
 @handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
-def delete_user_wallet(event, context):
-    query_parameters = event["queryStringParameters"]
-    username = query_parameters["username"]
-    wallet_service.remove_user_wallet(username)
-    return generate_lambda_response(StatusCode.CREATED, make_response_body(
-        ResponseStatus.SUCCESS, "OK", {}
-    ), cors_enabled=False)
+def remove_user_wallet(event, context):
+    logger.info(f"Received request to remove user wallet: {event}")
+    try:
+        body = event.get('body', None)
+        assert body is not None, "Body not found"
+        payload_dict = json.loads(body)
+        assert payload_dict.get('username', None) is not None, "'username' field in the request body not found"
+    except AssertionError as e:
+        raise BadRequestException(str(e))
 
+    wallet_service.remove_user_wallet(username = payload_dict["username"])
+    response = generate_lambda_response(200, make_response_body(ResponseStatus.SUCCESS, "OK", {}))
+
+    return response
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def create_and_register_wallet(event, context):
@@ -35,7 +41,7 @@ def create_and_register_wallet(event, context):
         raise BadRequestException(str(e))
 
     response_data = wallet_service.create_and_register_wallet(username=payload_dict['username'])
-    response = generate_lambda_response(200, {"status": "success", "data": response_data})
+    response = generate_lambda_response(200, {"status": ResponseStatus.SUCCESS, "data": response_data})
 
     return response
 
@@ -52,7 +58,7 @@ def get_wallets(event, context):
         raise BadRequestException(str(e))
 
     response_data = wallet_service.get_wallet_details(username = payload_dict['username'])
-    response = generate_lambda_response(200, {"status": "success", "data": response_data})
+    response = generate_lambda_response(200, {"status": ResponseStatus.SUCCESS, "data": response_data})
 
     return response
 
@@ -70,14 +76,14 @@ def register_wallet(event, context):
     except AssertionError as e:
         raise BadRequestException(str(e))
 
-    status = 1 # ACTIVE
+    status = 1 # ACTIVE by default
     response_data = wallet_service.register_wallet(
         payload_dict["address"],
         payload_dict["type"],
         status,
         payload_dict['username']
     )
-    response = generate_lambda_response(200, {"status": "success", "data": response_data})
+    response = generate_lambda_response(200, {"status": ResponseStatus.SUCCESS, "data": response_data})
 
     return response
 
@@ -88,16 +94,15 @@ def channel_add_funds(event, context):
         body = event.get('body', None)
         assert body is not None, "Body not found"
         payload_dict = json.loads(body)
+        required_fields = ["org_id", "group_id", "channel_id", "sender", "recipient",
+                           "order_id", "amount", "currency", "amount_in_cogs"]
+        assert validate_dict(payload_dict, required_fields, True), \
+            f"Missing required fields. Required fields: {str(required_fields)}"
     except AssertionError as e:
         raise BadRequestException(str(e))
 
-    required_fields = ["org_id", "group_id", "channel_id", "sender", "recipient",
-                       "order_id", "amount", "currency", "amount_in_cogs"]
-    if not validate_dict(payload_dict, required_fields, True):
-        raise BadRequestException("Missing required fields")
-
     response_data = wallet_service.add_funds_to_channel(**payload_dict)
-    response = generate_lambda_response(200, {"status": "success", "data": response_data})
+    response = generate_lambda_response(200, {"status": ResponseStatus.SUCCESS, "data": response_data})
 
     return response
 
@@ -113,11 +118,8 @@ def set_default_wallet(event, context):
     except AssertionError as e:
         raise BadRequestException(str(e))
 
-    response_data = wallet_service.set_default_wallet(
-        payload_dict["username"],
-        payload_dict["address"]
-    )
-    response = generate_lambda_response(200, {"status": "success", "data": response_data})
+    wallet_service.set_default_wallet(payload_dict["username"], payload_dict["address"])
+    response = generate_lambda_response(200, {"status": ResponseStatus.SUCCESS, "data": "OK"})
 
     return response
 
@@ -141,13 +143,13 @@ def get_transactions_for_order(event, context):
         response_data = wallet_service.get_channel_transactions_against_order_id(
             order_id = payload_dict["order_id"]
         )
-    elif username is not None and group_id is not None and org_id is not None:
+    else:
         response_data = wallet_service.get_transactions_from_username_recipient(
             username = username,
             group_id = group_id,
             org_id = org_id
         )
-    response = generate_lambda_response(200, {"status": "success", "data": response_data})
+    response = generate_lambda_response(200, {"status": ResponseStatus.SUCCESS, "data": response_data})
 
     return response
 

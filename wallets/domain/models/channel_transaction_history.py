@@ -1,8 +1,7 @@
 
 class ChannelTransactionHistoryModel:
     def __init__(self, order_id, amount, currency, type, address, recipient, signature, org_id, group_id,
-                 request_parameters, transaction_hash,
-                 status):
+                 request_parameters, transaction_hash, status, row_updated=None, row_created=None):
         self._order_id = order_id
         self._amount = amount
         self._currency = currency
@@ -15,6 +14,8 @@ class ChannelTransactionHistoryModel:
         self._request_parameters = request_parameters
         self._transaction_hash = transaction_hash
         self._status = status
+        self._row_updated = row_updated
+        self._row_created = row_created
 
     def to_dict(self):
         return {
@@ -29,7 +30,9 @@ class ChannelTransactionHistoryModel:
             "group_id": self._group_id,
             "request_parameters": self._request_parameters,
             "transaction_hash": self._transaction_hash,
-            "status": self._status
+            "status": self._status,
+            "updated_at": self._row_updated.strftime("%Y-%m-%d %H:%M:%S"),
+            "created_at": self._row_created.strftime("%Y-%m-%d %H:%M:%S")
         }
 
     @property

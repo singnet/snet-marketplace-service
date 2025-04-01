@@ -4,109 +4,84 @@ import traceback
 from common.constant import StatusCode, ResponseStatus, TransactionStatus
 from common.exception_handler import exception_handler
 from common.logger import get_logger
-from common.repository import Repository
 from common.utils import Utils, validate_dict, generate_lambda_response, make_response_body
-from wallets.config import NETWORK_ID, NETWORKS, SLACK_HOOK
+from wallets.config import NETWORK_ID, SLACK_HOOK
 from wallets.domain.models.channel_transaction_history import ChannelTransactionHistoryModel
 from wallets.error import Error
-from wallets.exceptions import EXCEPTIONS
+from wallets.exceptions import EXCEPTIONS, BadRequestException
 from wallets.infrastructure.repositories.channel_repository import ChannelRepository
 from wallets.application.service.manage_create_channel_event import ManageCreateChannelEvent
 from wallets.application.service.wallet_service import WalletService
 
-NETWORKS_NAME = dict((NETWORKS[netId]['name'], netId) for netId in NETWORKS.keys())
-repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
-utils = Utils()
+
 logger = get_logger(__name__)
-wallet_service = WalletService(repo=repo)
+wallet_service = WalletService()
 
 
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def create_channel(event, context):
-    logger.info("Received request to initiate order")
+    logger.info(f"Received request to initiate order: {event}")
     try:
-        payload = json.loads(event["body"])
-        required_keys = ["order_id", "sender", "signature", "r", "s", "v", "current_block_no",
+        body = event.get('body', None)
+        assert body is not None, "Body not found"
+        payload_dict = json.loads(event["body"])
+        required_fields = ["order_id", "sender", "signature", "r", "s", "v", "current_block_no",
                          "group_id", "org_id", "amount", "currency", "recipient", "amount_in_cogs"]
-        if validate_dict(payload, required_keys):
-            logger.info(f"Payload for create channel: {payload}")
-            response = wallet_service.open_channel_by_third_party(
-                order_id=payload['order_id'], sender=payload['sender'], signature=payload['signature'],
-                r=payload['r'], s=payload['s'], v=payload['v'], current_block_no=payload['current_block_no'],
-                group_id=payload['group_id'], org_id=payload["org_id"], recipient=payload['recipient'],
-                amount=payload['amount'], currency=payload['currency'],
-                amount_in_cogs=payload['amount_in_cogs']
-            )
-            return generate_lambda_response(StatusCode.CREATED, make_response_body(
-                ResponseStatus.SUCCESS, response, {}), cors_enabled=False)
-        else:
-            response = "Bad Request"
-            logger.error(f"response: {response}\n"
-                         f"event: {event}")
-            return generate_lambda_response(StatusCode.BAD_REQUEST, make_response_body(
-                ResponseStatus.FAILED, response, {}
-            ), cors_enabled=False)
-    except Exception as e:
-        response = "Failed create channel"
-        logger.error(f"response: {response}\n"
-                     f"event: {event}\n"
-                     f"error: {repr(e)}")
-        utils.report_slack(str(repr(e)), SLACK_HOOK)
-        traceback.print_exc()
-        return generate_lambda_response(StatusCode.INTERNAL_SERVER_ERROR, make_response_body(
-            ResponseStatus.FAILED, response, Error.undefined_error(repr(e))
-        ), cors_enabled=False)
+        assert validate_dict(payload_dict, required_fields, True), \
+            f"Missing required fields. Required fields: {str(required_fields)}"
+    except AssertionError as e:
+        raise BadRequestException(str(e))
+
+    logger.info(f"Payload for create channel: {payload_dict}")
+    response_data = wallet_service.open_channel_by_third_party(
+        order_id=payload_dict['order_id'], sender=payload_dict['sender'], signature=payload_dict['signature'],
+        r=payload_dict['r'], s=payload_dict['s'], v=payload_dict['v'], current_block_no=payload_dict['current_block_no'],
+        group_id=payload_dict['group_id'], org_id=payload_dict["org_id"], recipient=payload_dict['recipient'],
+        amount=payload_dict['amount'], currency=payload_dict['currency'],
+        amount_in_cogs=payload_dict['amount_in_cogs']
+    )
+    response = generate_lambda_response(StatusCode.CREATED, {"status": ResponseStatus.SUCCESS, "data": response_data})
+
+    return response
 
 
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def record_create_channel_event(event, context):
-    logger.info("Received request to initiate order")
+    logger.info(f"Received request to initiate order: {event}")
     try:
-        payload = json.loads(event["body"])
-        required_keys = ["order_id", "sender", "signature", "r", "s", "v", "current_block_no",
+        body = event.get('body', None)
+        assert body is not None, "Body not found"
+        payload_dict = json.loads(event["body"])
+        required_fields = ["order_id", "sender", "signature", "r", "s", "v", "current_block_no",
                          "group_id", "org_id", "amount", "currency", "recipient", "amount_in_cogs"]
-        if validate_dict(payload, required_keys):
-            ChannelRepository().add_channel_transaction_history_record(ChannelTransactionHistoryModel(
-                order_id=payload["order_id"],
-                amount=payload["amount"],
-                currency=payload["currency"],
-                type=payload.get("type", "openChannelByThirdParty"),
-                address=payload["sender"],
-                recipient=payload["recipient"],
-                signature=payload["signature"],
-                org_id=payload["org_id"],
-                group_id=payload["group_id"],
-                request_parameters=payload.get("request_parameters", ""),
-                transaction_hash=payload.get("transaction_hash", ""),
-                status=TransactionStatus.NOT_SUBMITTED
-            ))
-            logger.info(f"Payload for create channel: {payload}")
-            response = wallet_service.record_create_channel_event(payload)
-            return generate_lambda_response(StatusCode.CREATED, make_response_body(
-                ResponseStatus.SUCCESS, response, {}), cors_enabled=False)
-        else:
-            response = "Bad Request"
-            logger.error(f"response: {response}\n"
-                         f"event: {event}")
-            return generate_lambda_response(StatusCode.BAD_REQUEST, make_response_body(
-                ResponseStatus.FAILED, response, {}
-            ), cors_enabled=False)
-    except Exception as e:
-        response = "Failed to record create channel event"
-        logger.error(f"response: {response}\n"
-                     f"stage: {NETWORK_ID}"
-                     f"event: {event}\n"
-                     f"error: {repr(e)}")
-        utils.report_slack(str(repr(e)), SLACK_HOOK)
-        traceback.print_exc()
-        return generate_lambda_response(StatusCode.INTERNAL_SERVER_ERROR, make_response_body(
-            ResponseStatus.FAILED, response, Error.undefined_error(repr(e))
-        ), cors_enabled=False)
+        assert validate_dict(payload_dict, required_fields, True), \
+            f"Missing required fields. Required fields: {str(required_fields)}"
+    except AssertionError as e:
+        raise BadRequestException(str(e))
+
+    logger.info(f"Payload for create channel: {payload_dict}")
+    ChannelRepository().add_channel_transaction_history_record(ChannelTransactionHistoryModel(
+        order_id=payload_dict["order_id"],
+        amount=payload_dict["amount"],
+        currency=payload_dict["currency"],
+        type=payload_dict.get("type", "openChannelByThirdParty"),
+        address=payload_dict["sender"],
+        recipient=payload_dict["recipient"],
+        signature=payload_dict["signature"],
+        org_id=payload_dict["org_id"],
+        group_id=payload_dict["group_id"],
+        request_parameters=payload_dict.get("request_parameters", ""),
+        transaction_hash=payload_dict.get("transaction_hash", ""),
+        status=TransactionStatus.NOT_SUBMITTED
+    ))
+    response_data = wallet_service.record_create_channel_event(payload_dict)
+    response = generate_lambda_response(StatusCode.CREATED, {"status": ResponseStatus.SUCCESS, "data": response_data})
+
+    return response
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def open_channel_by_third_party(event, context):
     logger.info(f"Open channel by third party {event}")
-    response = ManageCreateChannelEvent().manage_create_channel_event()
-    return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
-    )
+    ManageCreateChannelEvent().manage_create_channel_event()
+    return {}

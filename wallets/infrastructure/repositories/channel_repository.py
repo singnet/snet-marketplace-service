@@ -31,6 +31,7 @@ class ChannelRepository(BaseRepository):
             channel_txn_history_db = query.all()
         except SQLAlchemyError as e:
             self.session.rollback()
+            logger.error(f"Failed to get channel transaction history data: {e}")
             raise e
         txn_history = []
         for history in channel_txn_history_db:
@@ -51,6 +52,7 @@ class ChannelRepository(BaseRepository):
             self.session.commit()
         except SQLAlchemyError as e:
             self.session.rollback()
+            logger.error(f"Failed to update channel transaction history status: {e}")
             raise e
 
     def add_channel_transaction_history_record(self, channel_txn_history):
@@ -141,6 +143,7 @@ class ChannelRepository(BaseRepository):
             return transactions
         except SQLAlchemyError as e:
             self.session.rollback()
+            logger.error(f"Failed to get channel transactions: {e}")
             raise e
 
     def persist_create_channel_event(self, payload, created_at) -> bool:

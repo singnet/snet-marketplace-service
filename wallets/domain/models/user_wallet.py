@@ -22,3 +22,11 @@ class UserWalletModel:
     @property
     def is_default(self):
         return self.__is_default
+
+    def to_dict(self) -> dict:
+        return {
+            "row_id": self.__row_id,
+            "username": self.__username,
+            "address": self.__address,
+            "is_default": self.__is_default
+        }

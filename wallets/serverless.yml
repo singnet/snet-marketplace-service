@@ -214,9 +214,9 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
-  delete-user-wallet:
+  remove-user-wallet:
     warmup: true
-    handler: wallets/application/handlers/wallet_handlers.delete_user_wallet
+    handler: wallets/application/handlers/wallet_handlers.remove_user_wallet
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:

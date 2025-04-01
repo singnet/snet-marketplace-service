@@ -16,6 +16,7 @@ from wallets.infrastructure.repositories.channel_repository import ChannelReposi
 from wallets.domain.models.wallet import WalletModel
 from wallets.infrastructure.repositories.wallet_repository import WalletRepository
 
+
 logger = get_logger(__name__)
 
 
@@ -63,13 +64,14 @@ class WalletService:
         self.utils.clean(wallet_data)
 
         wallets = []
-        for wallet in wallet_data:
+        for user_wallet, wallet in wallet_data:
             new_wallet = wallet.to_response()
             if wallet.encrypted_key is not None:
                 new_wallet['private_key'] = self._decrypt_key(wallet.encrypted_key)
+            new_wallet["is_default"] = user_wallet.is_default
             wallets.append(new_wallet)
 
-        logger.info(f"Fetched {len(wallet_data)} wallets for username: {username}")
+        logger.info(f"Fetched {len(wallets)} wallets for username: {username}")
         wallet_response = {"username": username, "wallets": wallets}
         return wallet_response
 
@@ -157,7 +159,6 @@ class WalletService:
 
     def set_default_wallet(self, username, address):
         self.wallet_repo.set_default_wallet(username=username, address=address)
-        return "OK"
 
     def add_funds_to_channel(self, org_id, group_id, channel_id, sender, recipient, order_id, amount, currency, amount_in_cogs):
         self.EXECUTOR_WALLET_ADDRESS = self.boto_utils.get_ssm_parameter(EXECUTOR_ADDRESS)
@@ -199,7 +200,6 @@ class WalletService:
         logger.info(f"Fetching transactions for {username} to org_id: {org_id} group_id: {org_id}")
         channel_data = self.channel_repo.get_channel_transactions_for_username_recipient(
             username=username, group_id=group_id, org_id=org_id)
-        self.utils.clean(channel_data)
 
         logger.info(f"Fetched {len(channel_data)} transactions")
         transaction_details = {
@@ -207,11 +207,21 @@ class WalletService:
             "wallets": []
         }
 
-        wallet_transactions = dict()
+        transactions = []
         for rec in channel_data:
+            transaction = rec[2].to_dict()
+            transaction["transaction_type"] = transaction["type"]
+            del transaction["type"]
+            user_wallet = rec[0].to_dict()
+            user_wallet["type"] = rec[1].type
+            transaction.update(user_wallet)
+            transactions.append(transaction)
+
+        wallet_transactions = {}
+        for rec in transactions:
             sender_address = rec["address"]
             if rec["address"] not in wallet_transactions:
-                wallet_transactions[rec["address"]] = {
+                wallet_transactions[sender_address] = {
                     "address": sender_address,
                     "is_default": rec["is_default"],
                     "type": rec["type"],
@@ -240,13 +250,15 @@ class WalletService:
 
     def get_channel_transactions_against_order_id(self, order_id):
         transaction_history = self.channel_repo.get_channel_transactions_against_order_id(order_id)
+        logger.info(f"Fetched {len(transaction_history)} transactions against order_id: {order_id}")
 
-        for record in transaction_history:
-            record["created_at"] = record["created_at"].strftime("%Y-%m-%d %H:%M:%S")
+        transactions = []
+        for transaction in transaction_history:
+            transactions.append(transaction.to_dict())
 
         return {
             "order_id": order_id,
-            "transactions": transaction_history
+            "transactions": transactions
         }
 
     def __validate__cogs(self, amount_in_cogs):
