@@ -166,41 +166,9 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
-  channel-add-funds:
-    warmup: true
-    handler: wallets/application/handlers/wallet_handlers.channel_add_funds
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    tags:
-      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
-      Team: ${file(./config.${self:provider.stage}.json):TEAM}
-      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-
   set-default-wallet:
     warmup: true
     handler: wallets/application/handlers/wallet_handlers.set_default_wallet
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    tags:
-      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
-      Team: ${file(./config.${self:provider.stage}.json):TEAM}
-      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-
-  get-transactions-for-order:
-    warmup: true
-    handler: wallets/application/handlers/wallet_handlers.get_transactions_for_order
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
@@ -218,6 +186,38 @@ functions:
     warmup: true
     handler: wallets/application/handlers/wallet_handlers.remove_user_wallet
     role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+
+  get-transactions-for-order:
+    warmup: true
+    handler: wallets/application/handlers/channel_handlers.get_transactions_for_order
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+
+  channel-add-funds:
+    warmup: true
+    handler: wallets/application/handlers/channel_handlers.channel_add_funds
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    tags:
+      Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
+      Team: ${file(./config.${self:provider.stage}.json):TEAM}
+      Owner: ${file(./config.${self:provider.stage}.json):OWNER}
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
@@ -263,9 +263,9 @@ functions:
     events:
       - schedule: rate(2 minutes)
 
-  channelTxnStatus:
+  update-channel-transaction-status:
     warmup: true
-    handler: wallets/application/handlers/channel_transaction_status_handler.request_handler
+    handler: wallets/application/handlers/channel_handlers.update_channel_transaction_status
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:

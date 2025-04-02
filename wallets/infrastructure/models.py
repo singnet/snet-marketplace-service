@@ -1,8 +1,6 @@
-from datetime import datetime
-
 from sqlalchemy import Column, VARCHAR, Integer, null, UniqueConstraint, JSON, text
 from sqlalchemy.dialects.mssql import BIT
-from sqlalchemy.dialects.mysql import TIMESTAMP, TINYINT
+from sqlalchemy.dialects.mysql import TIMESTAMP
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
