@@ -173,13 +173,6 @@ jobs:
           pip3 install -r verification/requirements.txt
           PYTHONPATH=$PWD python3 -m coverage run -m pytest verification/testcases/unit_testcases/*.py verification/testcases/functional_testcases/*.py
 
-      - name: wallets tests
-        run: |
-          export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-          export AWS_XRAY_SDK_ENABLED=false
-          pip3 install -r wallets/requirements.txt
-          PYTHONPATH=$PWD python3 -m coverage run -m pytest wallets/testcases/integration_testcases/*.py wallets/testcases/unit_testcases/*.py
-
     run_tests_development_upg:
     # tests for services moved to updated environment (node22, python3.12)
       runs-on: ubuntu-24.04
@@ -279,3 +272,10 @@ jobs:
           pip3 install -r service_status/requirements.txt
           pip3 install --upgrade protobuf
           PYTHONPATH=$PWD python3 -m coverage run -m pytest service_status/testcases/unit_testcases/*.py service_status/testcases/functional_testcases/*.py
+
+      - name: wallets tests
+        run: |
+          export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+          export AWS_XRAY_SDK_ENABLED=false
+          pip3 install -r wallets/requirements.txt
+          PYTHONPATH=$PWD python3 -m coverage run -m pytest wallets/testcases/integration_testcases/*.py wallets/testcases/unit_testcases/*.py

@@ -1,7 +1,7 @@
 from typing import Union
 
 from sqlalchemy.exc import SQLAlchemyError
-from datetime import datetime as dt
+import datetime as dt
 
 from wallets.domain.models.user_wallet import UserWalletModel
 from wallets.domain.models.wallet import WalletModel
@@ -20,13 +20,13 @@ class WalletRepository(BaseRepository):
     def add_user_for_wallet(self, wallet: Union[Wallet, WalletModel, UserWallet, UserWalletModel], username: str):
         try:
             is_default = 0
-            time_now = dt.utcnow()
+            current_time = dt.datetime.now(dt.UTC)
             user_wallet = UserWallet(
                 username = username,
                 address = wallet.address,
                 is_default = is_default,
-                row_created = time_now,
-                row_updated = time_now
+                row_created = current_time,
+                row_updated = current_time
             )
             self.session.add(user_wallet)
             self.session.commit()
@@ -49,14 +49,14 @@ class WalletRepository(BaseRepository):
 
     def insert_wallet(self, wallet: Union[Wallet, WalletModel]):
         try:
-            time_now = dt.utcnow()
+            current_time = dt.datetime.now(dt.UTC)
             wallet_db = Wallet(
                 address = wallet.address,
                 type = wallet.type,
                 encrypted_key = wallet.encrypted_key,
                 status = wallet.status,
-                row_created = time_now,
-                row_updated = time_now
+                row_created = current_time,
+                row_updated = current_time
             )
             self.session.add(wallet_db)
             self.session.commit()

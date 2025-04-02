@@ -1,9 +1,7 @@
 plugins:
   - serverless-offline
   - serverless-python-requirements
-  - serverless-plugin-tracing
   - serverless-prune-plugin
-  - serverless-aws-documentation
 
 service: wallets
 custom:
@@ -17,63 +15,10 @@ custom:
     automatic: true
     includeLayers: true
     number: 2
-  documentation:
-    models:
-      - name: "ErrorMessage"
-        contentType: "application/json"
-        schema: ${file(wallets/documentation/models/error.json)}
-      - name: "PostWalletOutput"
-        contentType: "application/json"
-        schema: ${file(wallets/documentation/models/post_wallet.json):PostWalletOutput}
-      - name: "PostWalletInput"
-        contentType: "application/json"
-        schema: ${file(wallets/documentation/models/post_wallet.json):PostWalletInput}
-      - name: "GetWalletOutput"
-        contentType: "application/json"
-        schema: ${file(wallets/documentation/models/get_wallet.json):GetWalletOutput}
-      - name: "WalletRegisterOutput"
-        contentType: "application/json"
-        schema: ${file(wallets/documentation/models/wallet_register.json):WalletRegisterOutput}
-      - name: "WalletRegisterInput"
-        contentType: "application/json"
-        schema: ${file(wallets/documentation/models/wallet_register.json):WalletRegisterInput}
-      - name: "WalletChannelDepositOutput"
-        contentType: "application/json"
-        schema: ${file(wallets/documentation/models/wallet_channel_deposit.json):WalletChannelDepositOutput}
-      - name: "WalletChannelDepositInput"
-        contentType: "application/json"
-        schema: ${file(wallets/documentation/models/wallet_channel_deposit.json):WalletChannelDepositInput}
-      - name: "WalletStatusOutput"
-        contentType: "application/json"
-        schema: ${file(wallets/documentation/models/wallet_status.json):WalletStatusOutput}
-      - name: "WalletStatusInput"
-        contentType: "application/json"
-        schema: ${file(wallets/documentation/models/wallet_status.json):WalletStatusInput}
-      - name: "WalletTransactionsOutput"
-        contentType: "application/json"
-        schema: ${file(wallets/documentation/models/wallet_transactions.json):WalletTransactionsOutput}
-      - name: "CreateChannelOutput"
-        contentType: "application/json"
-        schema: ${file(wallets/documentation/models/create_channel.json):CreateChannelOutput}
-      - name: "CreateChannelInput"
-        contentType: "application/json"
-        schema: ${file(wallets/documentation/models/create_channel.json):CreateChannelInput}
-      - name: "DeleteUserWalletOutput"
-        contentType: "application/json"
-        schema: ${file(wallets/documentation/models/delete_user_wallet.json):DeleteUserWalletOutput}
-      - name: "DeleteUserWalletInput"
-        contentType: "application/json"
-        schema: ${file(wallets/documentation/models/delete_user_wallet.json):DeleteUserWalletInput}
-      - name: "CreateChannelEventOutput"
-        contentType: "application/json"
-        schema: ${file(wallets/documentation/models/create_channel_event.json):CreateChannelEventOutput}
-      - name: "CreateChannelEventInput"
-        contentType: "application/json"
-        schema: ${file(wallets/documentation/models/create_channel_event.json):CreateChannelEventInput}
 
 provider:
   name: aws
-  runtime: python3.8
+  runtime: python3.12
   description: Dapp user service# optional, Description to publish to AWS
   memorySize: 128
   timeout: 30
@@ -86,7 +31,6 @@ provider:
       key1: wallets
   deploymentPrefix: serverless
   versionFunctions: false
-  tracing: true
 
 package:
   exclude:

@@ -1,13 +1,11 @@
 import json
 
-from common.constant import StatusCode, ResponseStatus, TransactionStatus
+from common.constant import StatusCode, ResponseStatus
 from common.exception_handler import exception_handler
 from common.logger import get_logger
 from common.utils import validate_dict, generate_lambda_response
 from wallets.config import NETWORK_ID, SLACK_HOOK
-from wallets.domain.models.channel_transaction_history import ChannelTransactionHistoryModel
 from wallets.exceptions import EXCEPTIONS, BadRequestException
-from wallets.infrastructure.repositories.channel_repository import ChannelRepository
 from wallets.application.service.channel_service import ChannelService
 
 logger = get_logger(__name__)

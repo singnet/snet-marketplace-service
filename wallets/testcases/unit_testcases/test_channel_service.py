@@ -4,7 +4,7 @@ from types import SimpleNamespace as Namespace
 from unittest.mock import patch
 
 from common.constant import TransactionStatus
-from wallets.application.handlers import request_handler
+from wallets.application.handlers.channel_handlers import update_channel_transaction_status
 from wallets.infrastructure.models import ChannelTransactionHistory
 from wallets.infrastructure.repositories.channel_repository import ChannelRepository
 
@@ -103,7 +103,7 @@ class TestChannelService(unittest.TestCase):
             }
         ]
         mock_reciept.return_value = json.loads('{"status": 1}', object_hook=lambda d: Namespace(**d))
-        res = request_handler(event={}, context=None)
+        res = update_channel_transaction_status(event={}, context=None)
         transaction = channel_repo.get_channel_transaction_history_data()
         assert transaction[0].transaction_hash == "sample_1"
         assert transaction[0].status == TransactionStatus.SUCCESS
@@ -130,7 +130,7 @@ class TestChannelService(unittest.TestCase):
             row_created="2021-05-19 13:51:53"
         ))
         mock_reciept.return_value = json.loads('{"status": 0}', object_hook=lambda d: Namespace(**d))
-        res = request_handler(event={}, context=None)
+        res = update_channel_transaction_status(event={}, context=None)
         transaction = channel_repo.get_channel_transaction_history_data()
         assert transaction[0].transaction_hash == "sample_1"
         assert transaction[0].status == TransactionStatus.FAILED

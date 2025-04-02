@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime as dt
 import base64
 import json
 
@@ -145,7 +145,7 @@ class ChannelService:
             status = TransactionStatus.NOT_SUBMITTED
         ))
 
-        current_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        current_time = dt.datetime.now(dt.UTC).strftime("%Y-%m-%d %H:%M:%S")
         if not self.channel_repo.persist_create_channel_event(payload, current_time):
             raise Exception("Failed to create record")
         return {}

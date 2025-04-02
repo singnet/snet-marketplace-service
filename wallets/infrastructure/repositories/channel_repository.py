@@ -1,4 +1,4 @@
-from datetime import datetime as dt
+import datetime as dt
 import json
 
 from sqlalchemy.exc import SQLAlchemyError
@@ -21,7 +21,7 @@ logger = get_logger(__name__)
 
 class ChannelRepository(BaseRepository):
 
-    def get_channel_transaction_history_data(self, transaction_hash=None, status=None):
+    def get_channel_transaction_history_data(self, transaction_hash: str=None, status: str=None) -> list[ChannelTransactionHistoryModel]:
         try:
             query = self.session.query(ChannelTransactionHistory)
             if transaction_hash:
@@ -39,7 +39,8 @@ class ChannelRepository(BaseRepository):
                 WalletsFactory().convert_channel_transaction_history_db_model_to_entity_model(history))
         return txn_history
 
-    def update_channel_transaction_history_status_by_order_id(self, channel_txn_history):
+    def update_channel_transaction_history_status_by_order_id(self, channel_txn_history: ChannelTransactionHistoryModel):
+        current_time = dt.datetime.now(dt.UTC)
         try:
             transaction_record_db = self.session.query(ChannelTransactionHistory). \
                 filter(ChannelTransactionHistory.order_id == channel_txn_history.order_id). \
@@ -48,7 +49,7 @@ class ChannelRepository(BaseRepository):
                 transaction_record_db.transaction_hash = channel_txn_history.transaction_hash,
                 transaction_record_db.request_parameters = channel_txn_history.request_parameters,
                 transaction_record_db.status = channel_txn_history.status,
-                transaction_record_db.row_updated = dt.utcnow()
+                transaction_record_db.row_updated = current_time
             self.session.commit()
         except SQLAlchemyError as e:
             self.session.rollback()
@@ -56,6 +57,7 @@ class ChannelRepository(BaseRepository):
             raise e
 
     def add_channel_transaction_history_record(self, channel_txn_history):
+        current_time = dt.datetime.now(dt.UTC)
         self.add_item(ChannelTransactionHistory(
             order_id=channel_txn_history.order_id,
             amount=channel_txn_history.amount,
@@ -69,8 +71,8 @@ class ChannelRepository(BaseRepository):
             request_parameters=channel_txn_history.request_parameters,
             transaction_hash=channel_txn_history.transaction_hash,
             status=channel_txn_history.status,
-            row_updated=dt.utcnow(),
-            row_created=dt.utcnow()
+            row_updated=current_time,
+            row_created=current_time
         ))
         return channel_txn_history
 
@@ -108,7 +110,7 @@ class ChannelRepository(BaseRepository):
     def insert_channel_history(self, order_id, amount, currency, type, group_id, org_id, recipient,
                              address, signature, request_parameters, transaction_hash, status) -> bool:
         try:
-            time_now = dt.utcnow()
+            current_time = dt.datetime.now(dt.UTC)
             channel_txn = ChannelTransactionHistory(
                 order_id=order_id,
                 amount=amount,
@@ -122,8 +124,8 @@ class ChannelRepository(BaseRepository):
                 request_parameters=request_parameters,
                 transaction_hash=transaction_hash,
                 status=status,
-                row_created=time_now,
-                row_updated=time_now
+                row_created=current_time,
+                row_updated=current_time
             )
             self.session.add(channel_txn)
             self.session.commit()

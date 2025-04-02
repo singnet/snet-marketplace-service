@@ -1,18 +1,16 @@
 import unittest
 from unittest.mock import patch
 
-from common.repository import Repository
-from wallets.config import NETWORK_ID, NETWORKS
-from wallets.dao.wallet_data_access_object import WalletDAO
-from wallets.application.service import WalletService
-from wallets.wallet import Wallet
+from wallets.application.service.wallet_service import WalletService
+from wallets.domain.models.wallet import WalletModel
+from wallets.infrastructure.models import Wallet, UserWallet
+from wallets.infrastructure.repositories.wallet_repository import WalletRepository
 
 
 class TestWalletService(unittest.TestCase):
     def setUp(self):
-        self.NETWORKS_NAME = dict((NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())
-        self.repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
-        self.wallet_service = WalletService(repo=self.repo)
+        self.wallet_service = WalletService()
+        self.wallet_repo = WalletRepository()
 
     @patch("common.utils.Utils.report_slack")
     @patch("common.blockchain_util.BlockChainUtil.create_account")
@@ -49,20 +47,21 @@ class TestWalletService(unittest.TestCase):
         self.assertRaises(Exception, self.wallet_service.register_wallet(username, address, type, status))
 
     def test_remove_user_wallet(self):
-        wallet_dao = WalletDAO(self.repo)
         username = "dummy@dummy.io"
-        wallet = Wallet(address="32344958712265144",
+        wallet = WalletModel(address="32344958712265144",
                         type="GENERAL",
                         status=0)
-        wallet_dao.insert_wallet(wallet)
-        wallet_dao.add_user_for_wallet(wallet, username)
+        self.wallet_repo.insert_wallet(wallet)
+        self.wallet_repo.add_user_for_wallet(wallet, username)
         self.wallet_service.remove_user_wallet(username)
-        wallet_details = wallet_dao.get_wallet_data_by_username(username)
+        wallet_details = self.wallet_repo.get_wallet_data_by_username(username)
         if len(wallet_details) == 0:
             assert True
         else:
             assert False
 
     def tearDown(self):
-        self.repo.execute("DELETE FROM wallet")
-        self.repo.execute("DELETE FROM user_wallet")
+        self.wallet_repo.session.begin()
+        self.wallet_repo.session.query(Wallet).delete()
+        self.wallet_repo.session.query(UserWallet).delete()
+        self.wallet_repo.session.commit()
