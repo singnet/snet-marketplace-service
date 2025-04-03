@@ -247,17 +247,17 @@ jobs:
           # for package_file in `ls */package*.json | cut -d '/' -f1`;do npm install $package_file/;done
           npm install service_status/
 
-#      - name: create db
-#        run: |
-#          # export PIP_BREAK_SYSTEM_PACKAGES=1
-#          # socat TCP-LISTEN:3306,fork TCP:mysql:3306 &
-#          # mysql -h 172.17.0.1 -u root -punittest_pwd -e "create database registry_unittest_db"
-#          mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "create database registry_unittest_db"
-#          mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "create database verification_unittest_db"
-#          mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "GRANT ALL PRIVILEGES ON *.* TO 'unittest_root'@'%';"
-#          export PYTHONPATH=$PWD
-#          # for alembic_file in `ls */alembic*.ini | cut -d '/' -f1`;do cd $alembic_file; echo $alembic_file; alembic upgrade head; cd .. ;done
-#          mysql -h 127.0.0.1 -P 3306 -u unittest_root -punittest_pwd unittest_db < orchestrator/testcases/script.sql
+      - name: create db
+        run: |
+          # export PIP_BREAK_SYSTEM_PACKAGES=1
+          # socat TCP-LISTEN:3306,fork TCP:mysql:3306 &
+          # mysql -h 172.17.0.1 -u root -punittest_pwd -e "create database registry_unittest_db"
+          mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "create database registry_unittest_db"
+          mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "create database verification_unittest_db"
+          mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "GRANT ALL PRIVILEGES ON *.* TO 'unittest_root'@'%';"
+          export PYTHONPATH=$PWD
+          # for alembic_file in `ls */alembic*.ini | cut -d '/' -f1`;do cd $alembic_file; echo $alembic_file; alembic upgrade head; cd .. ;done
+          mysql -h 127.0.0.1 -P 3306 -u unittest_root -punittest_pwd unittest_db < orchestrator/testcases/script.sql
 
 #      - name: common tests
 #        run: |
