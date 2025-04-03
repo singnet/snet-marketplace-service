@@ -2,8 +2,8 @@ import json
 from common.boto_utils import BotoUtils
 from common.constant import TransactionStatus
 from common.logger import get_logger
-from orchestrator.config import REGION_NAME, WALLETS_SERVICE_ARN, GET_CHANNEL_API_OLD_ARN, \
-    CREATE_CHANNEL_EVENT_ARN
+from orchestrator.config import REGION_NAME, GET_CHANNEL_API_OLD_ARN, \
+    CREATE_CHANNEL_EVENT_ARN, GET_CHANNEL_TRANSACTIONS_ARN, GET_WALLETS_ARN, REGISTER_WALLET_ARN, SET_DEFAULT_WALLET_ARN
 
 logger = get_logger(__name__)
 
@@ -15,9 +15,7 @@ class WalletService:
 
     def create_channel(self, open_channel_body):
         create_channel_transaction_payload = {
-            "path": "/wallet/channel/event",
-            "body": json.dumps(open_channel_body),
-            "httpMethod": "POST"
+            "body": json.dumps(open_channel_body)
         }
 
         create_channel_response = self.boto_client.invoke_lambda(
@@ -63,17 +61,15 @@ class WalletService:
     def get_channel_transactions(self, username, org_id, group_id):
 
         channel_transactions_event = {
-            "path": "/wallet/channel/transactions",
-            "queryStringParameters": {
+            "body": json.dumps({
                 "username": username,
                 "group_id": group_id,
                 "org_id": org_id
-            },
-            "httpMethod": "GET"
+            })
         }
 
         channel_transactions_response = self.boto_client.invoke_lambda(
-            lambda_function_arn=WALLETS_SERVICE_ARN,
+            lambda_function_arn=GET_CHANNEL_TRANSACTIONS_ARN,
             invocation_type='RequestResponse',
             payload=json.dumps(channel_transactions_event)
         )
@@ -114,13 +110,11 @@ class WalletService:
 
     def get_wallets(self, username):
         get_wallet_event = {
-            "path": "/wallet",
-            "queryStringParameters": {
+            "body": json.dumps({
                 "username": username
-            },
-            "httpMethod": "GET"
+            })
         }
-        get_wallet_response = self.boto_client.invoke_lambda(lambda_function_arn=WALLETS_SERVICE_ARN,
+        get_wallet_response = self.boto_client.invoke_lambda(lambda_function_arn=GET_WALLETS_ARN,
                                                              invocation_type="RequestResponse",
                                                              payload=json.dumps(get_wallet_event))
         status = get_wallet_response["statusCode"]
@@ -136,11 +130,9 @@ class WalletService:
             'username': username
         }
         register_wallet_payload = {
-            "path": "/wallet/register",
-            "body": json.dumps(register_wallet_body),
-            "httpMethod": "POST"
+            "body": json.dumps(register_wallet_body)
         }
-        raw_response = self.boto_client.invoke_lambda(lambda_function_arn=WALLETS_SERVICE_ARN,
+        raw_response = self.boto_client.invoke_lambda(lambda_function_arn=REGISTER_WALLET_ARN,
                                                       invocation_type="RequestResponse",
                                                       payload=json.dumps(register_wallet_payload))
         status = raw_response["statusCode"]
@@ -154,11 +146,9 @@ class WalletService:
             'username': username
         }
         set_default_wallet_payload = {
-            "path": "/wallet/status",
-            "body": json.dumps(set_default_wallet_body),
-            "httpMethod": "POST"
+            "body": json.dumps(set_default_wallet_body)
         }
-        response = self.boto_client.invoke_lambda(lambda_function_arn=WALLETS_SERVICE_ARN,
+        response = self.boto_client.invoke_lambda(lambda_function_arn=SET_DEFAULT_WALLET_ARN,
                                                   invocation_type="RequestResponse",
                                                   payload=json.dumps(set_default_wallet_payload))
         return json.loads(response["body"])["data"]

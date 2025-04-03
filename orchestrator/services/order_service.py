@@ -13,9 +13,10 @@ from common.constant import TransactionStatus, COGS_TO_AGI
 from common.logger import get_logger
 from common.utils import Utils
 from orchestrator.config import CREATE_ORDER_SERVICE_ARN, INITIATE_PAYMENT_SERVICE_ARN, \
-    EXECUTE_PAYMENT_SERVICE_ARN, WALLETS_SERVICE_ARN, ORDER_DETAILS_ORDER_ID_ARN, ORDER_DETAILS_BY_USERNAME_ARN, \
+    EXECUTE_PAYMENT_SERVICE_ARN, ORDER_DETAILS_ORDER_ID_ARN, ORDER_DETAILS_BY_USERNAME_ARN, \
     REGION_NAME, SIGNER_ADDRESS, EXECUTOR_ADDRESS, NETWORKS, NETWORK_ID, SIGNER_SERVICE_ARN, \
-    GET_GROUP_FOR_ORG_API_ARN, GET_ALL_ORG_API_ARN, USD_TO_COGS_CONVERSION_FACTOR
+    GET_GROUP_FOR_ORG_API_ARN, GET_ALL_ORG_API_ARN, USD_TO_COGS_CONVERSION_FACTOR, CREATE_AND_REGISTER_WALLET_ARN, \
+    CHANNEL_ADD_FUNDS_ARN, GET_CHANNEL_TRANSACTIONS_ARN
 from orchestrator.dao.transaction_history_dao import TransactionHistoryDAO
 from orchestrator.exceptions import PaymentInitiateFailed, ChannelCreationFailed, FundChannelFailed
 from orchestrator.order_status import OrderStatus
@@ -320,16 +321,14 @@ class OrderService:
         recipient = order_data["recipient"]
         channel_id = order_data["channel_id"]
         sender = order_data["wallet_address"]
-        if order_type == OrderType.CREATE_WALLET_AND_CHANNEL.value or order_type == OrderType.CREATE_CHANNEL.value:
+        if order_type in [OrderType.CREATE_WALLET_AND_CHANNEL.value, OrderType.CREATE_CHANNEL.value]:
 
             if order_type == OrderType.CREATE_WALLET_AND_CHANNEL.value:
                 wallet_create_payload = {
-                    "path": "/wallet",
-                    "body": json.dumps({"username": username}),
-                    "httpMethod": "POST"
+                    "body": json.dumps({"username": username})
                 }
                 wallet_create_lambda_response = self.lambda_client.invoke(
-                    FunctionName=WALLETS_SERVICE_ARN,
+                    FunctionName=CREATE_AND_REGISTER_WALLET_ARN,
                     InvocationType='RequestResponse',
                     Payload=json.dumps(wallet_create_payload)
                 )
@@ -339,7 +338,7 @@ class OrderService:
                 wallet_create_response_body = json.loads(wallet_create_response["body"])
                 wallet_details = wallet_create_response_body["data"]
             else:
-
+                wallet_details = self.wallet_service.get_wallets(username)["wallets"][0]
 
 
             try:
@@ -426,13 +425,11 @@ class OrderService:
                     'amount_in_cogs': amount_in_cogs
                 }
                 fund_channel_payload = {
-                    "path": "/wallet/channel/deposit",
-                    "body": json.dumps(fund_channel_body),
-                    "httpMethod": "POST"
+                    "body": json.dumps(fund_channel_body)
                 }
 
                 fund_channel_lambda_response = self.lambda_client.invoke(
-                    FunctionName=WALLETS_SERVICE_ARN,
+                    FunctionName=CHANNEL_ADD_FUNDS_ARN,
                     InvocationType='RequestResponse',
                     Payload=json.dumps(fund_channel_payload)
                 )
@@ -481,12 +478,10 @@ class OrderService:
                     order["item_details"]["organization_name"] = org_id_name_mapping[org_id]
 
             transaction_details_event = {
-                "path": f"/wallet/channel/transactions",
-                "queryStringParameters": {"order_id": order_id},
-                "httpMethod": "GET"
+                "body": json.dumps({"order_id": order_id})
             }
             transaction_details_lambda_response = self.lambda_client.invoke(
-                FunctionName=WALLETS_SERVICE_ARN,
+                FunctionName=GET_CHANNEL_TRANSACTIONS_ARN,
                 InvocationType='RequestResponse',
                 Payload=json.dumps(transaction_details_event)
             )
