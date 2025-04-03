@@ -98,7 +98,7 @@ class ChannelRepository(BaseRepository):
             for user_transaction in user_transactions:
                 user_wallet = WalletsFactory.convert_user_wallet_db_model_to_entity_model(user_transaction.UserWallet)
                 wallet = WalletsFactory.convert_wallet_db_model_to_entity_model(user_transaction.Wallet)
-                channel_txn = WalletsFactory.convert_channel_transaction_history_db_model_to_entity_model(user_transaction.ChannelTransactionHistory)
+                channel_txn = WalletsFactory.convert_channel_transaction_history_db_model_to_entity_model(user_transaction.ChannelTransactionHistory) if user_transaction.ChannelTransactionHistory else None
                 result.append((user_wallet, wallet, channel_txn))
             return result
 
@@ -176,10 +176,10 @@ class ChannelRepository(BaseRepository):
             self.session.rollback()
             raise e
 
-    def update_create_channel_event(self, event_details, status: str) -> bool:
+    def update_create_channel_event(self, event_details: CreateChannelEventModel, status: str) -> bool:
         try:
             result = self.session.query(CreateChannelEvent).filter(
-                CreateChannelEvent.row_id == event_details["row_id"]
+                CreateChannelEvent.row_id == event_details.row_id
             ).update({
                 "status": status
             })

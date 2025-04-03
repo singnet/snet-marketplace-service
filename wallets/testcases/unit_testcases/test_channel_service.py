@@ -13,9 +13,7 @@ channel_repo = ChannelRepository()
 
 class TestChannelService(unittest.TestCase):
 
-    @patch(
-        "wallets.service.channel_transaction_status_service.ChannelTransactionStatusService"
-        ".get_mpe_processed_transactions_from_event_pub_sub")
+    @patch("wallets.application.service.channel_service.ChannelService.get_mpe_processed_transactions_from_event_pub_sub")
     @patch("common.blockchain_util.BlockChainUtil.get_transaction_receipt_from_blockchain")
     def test_channel_update_transaction_status(self, mock_reciept, mock_processed_res):
         self.tearDown()
@@ -67,7 +65,7 @@ class TestChannelService(unittest.TestCase):
             row_updated="2021-05-19 13:51:53",
             row_created="2021-05-19 13:51:53"
         ))
-        mock_processed_res.return_value = mock_processed_res.return_value = [
+        mock_processed_res.return_value = [
             {
                 "block_no": 10259540,
                 "uncle_block_no": 12,

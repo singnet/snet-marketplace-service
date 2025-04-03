@@ -77,9 +77,12 @@ class ChannelService:
 
         transactions = []
         for rec in channel_data:
-            transaction = rec[2].to_dict()
-            transaction["transaction_type"] = transaction["type"]
-            del transaction["type"]
+            if rec[2] is not None:
+                transaction = rec[2].to_dict()
+                transaction["transaction_type"] = transaction["type"]
+                del transaction["type"]
+            else:
+                transaction = {}
             user_wallet = rec[0].to_dict()
             user_wallet["type"] = rec[1].type
             transaction.update(user_wallet)
@@ -91,11 +94,11 @@ class ChannelService:
             if rec["address"] not in wallet_transactions:
                 wallet_transactions[sender_address] = {
                     "address": sender_address,
-                    "is_default": rec["is_default"],
+                    "is_default": int(rec["is_default"]),
                     "type": rec["type"],
                     "transactions": []
                 }
-            if rec['recipient'] is None:
+            if 'recipient' not in rec:
                 continue
 
             transaction = {

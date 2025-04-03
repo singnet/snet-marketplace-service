@@ -9,7 +9,9 @@ from wallets.infrastructure.repositories.wallet_repository import WalletReposito
 
 class TestWalletService(unittest.TestCase):
     def setUp(self):
-        self.wallet_service = WalletService()
+        with patch("common.boto_utils.BotoUtils.get_ssm_parameter",
+                   return_value = "744f676a485a4b63427a56342d476b6a3174324335536f375f65566f545735644553574a483663333554773d"):
+            self.wallet_service = WalletService()
         self.wallet_repo = WalletRepository()
 
     @patch("common.utils.Utils.report_slack")
@@ -17,23 +19,20 @@ class TestWalletService(unittest.TestCase):
     def test_create_wallet(self, mock_create_account, mock_report_slack):
         mock_create_account.return_value = (
             "323449587122651441342932061624154600879572532581",
-            "26561428888193216265620544717131876925191237116680314981303971688115990928499",
+            "2656142888819321626562054471713187692519123711668031498130397168",
         )
         response = self.wallet_service.create_and_register_wallet(username="dummy")
         self.assertDictEqual(
             response,
             {"address": "323449587122651441342932061624154600879572532581",
-             "private_key": "26561428888193216265620544717131876925191237116680314981303971688115990928499",
+             "private_key": "2656142888819321626562054471713187692519123711668031498130397168",
              "status": 0, "type": "GENERAL"
              }
         )
 
     @patch("common.utils.Utils.report_slack")
-    @patch("wallets.dao.wallet_data_access_object.WalletDAO.get_wallet_details")
-    @patch("wallets.dao.wallet_data_access_object.WalletDAO.insert_wallet")
-    @patch("wallets.dao.wallet_data_access_object.WalletDAO.add_user_for_wallet")
-    def test_register_wallet(self, mock_add_user_for_wallet, mock_insert_wallet,
-                             mock_get_wallet_details, mock_report_slack):
+    @patch("wallets.infrastructure.repositories.wallet_repository.WalletRepository.get_wallet_details")
+    def test_register_wallet(self, mock_get_wallet_details, mock_report_slack):
         """
             insert new wallet for user
         """
@@ -42,7 +41,12 @@ class TestWalletService(unittest.TestCase):
         type = "GENERAL"
         status = 0
         username = "dummy@dummy.io"
-        response = self.wallet_service.register_wallet(username, address, type, status)
+        response = self.wallet_service.register_wallet(
+            username = username,
+            wallet_address = address,
+            wallet_type = type,
+            status = status
+        )
         assert response
         self.assertRaises(Exception, self.wallet_service.register_wallet(username, address, type, status))
 
@@ -55,13 +59,9 @@ class TestWalletService(unittest.TestCase):
         self.wallet_repo.add_user_for_wallet(wallet, username)
         self.wallet_service.remove_user_wallet(username)
         wallet_details = self.wallet_repo.get_wallet_data_by_username(username)
-        if len(wallet_details) == 0:
-            assert True
-        else:
-            assert False
+        assert len(wallet_details) == 0
 
     def tearDown(self):
-        self.wallet_repo.session.begin()
         self.wallet_repo.session.query(Wallet).delete()
         self.wallet_repo.session.query(UserWallet).delete()
         self.wallet_repo.session.commit()

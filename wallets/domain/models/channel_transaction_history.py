@@ -31,8 +31,8 @@ class ChannelTransactionHistoryModel:
             "request_parameters": self._request_parameters,
             "transaction_hash": self._transaction_hash,
             "status": self._status,
-            "updated_at": self._row_updated.strftime("%Y-%m-%d %H:%M:%S"),
-            "created_at": self._row_created.strftime("%Y-%m-%d %H:%M:%S")
+            "updated_at": self._row_updated.strftime("%Y-%m-%d %H:%M:%S") if self._row_updated else None,
+            "created_at": self._row_created.strftime("%Y-%m-%d %H:%M:%S") if self._row_created else None
         }
 
     @property

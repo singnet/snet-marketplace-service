@@ -23,7 +23,9 @@ class WalletsFactory:
             group_id=channel_transaction_history_db.group_id,
             request_parameters=channel_transaction_history_db.request_parameters,
             transaction_hash=channel_transaction_history_db.transaction_hash,
-            status=channel_transaction_history_db.status
+            status=channel_transaction_history_db.status,
+            row_created=channel_transaction_history_db.row_created,
+            row_updated=channel_transaction_history_db.row_updated
         )
 
     @staticmethod

@@ -17,7 +17,7 @@ channel_repo = ChannelRepository()
 
 class TestCreateChannelConsumer(TestCase):
 
-    @patch("wallets.service.wallet_service.WalletService.open_channel_by_third_party")
+    @patch("wallets.application.service.channel_service.ChannelService.open_channel_by_third_party")
     def test_create_channel_event_consumer_success(self, create_channel_mock):
         create_channel_mock.return_value = {}
         channel_repo.persist_create_channel_event({
@@ -57,14 +57,18 @@ class TestCreateChannelConsumer(TestCase):
         })}
         res = record_create_channel_event(event=event, context=None)
         assert res["statusCode"] == 201
-        record = channel_repo.get_channel_transaction_history_data(status=TransactionStatus.NOT_SUBMITTED)
-        assert record[0].to_dict() == {'order_id': 'sample_order_id', 'amount': 2, 'currency': 'USD', 'type': '',
+        records = channel_repo.get_channel_transaction_history_data(status=TransactionStatus.NOT_SUBMITTED)
+        real_dict = records[0].to_dict()
+        del real_dict["created_at"]
+        del real_dict["updated_at"]
+        expected_dict = {'order_id': 'sample_order_id', 'amount': 2, 'currency': 'USD', 'type': '',
                                        'address': 'sample_sender', 'recipient': 'sample_recipient',
                                        'signature': 'sample_signature',
                                        'org_id': 'sample_org_id', 'group_id': 'sample_group_id',
                                        'request_parameters': '',
                                        'transaction_hash': '', 'type': 'openChannelByThirdParty',
                                        'status': 'NOT_SUBMITTED'}
+        assert real_dict == expected_dict
 
     def tearDown(self):
         channel_repo.session.query(CreateChannelEvent).delete()
