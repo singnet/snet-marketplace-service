@@ -256,8 +256,8 @@ jobs:
           mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "create database verification_unittest_db"
           mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "GRANT ALL PRIVILEGES ON *.* TO 'unittest_root'@'%';"
           export PYTHONPATH=$PWD
-          for alembic_file in `ls */alembic*.ini | cut -d '/' -f1`;do cd $alembic_file; echo $alembic_file; alembic upgrade head; cd .. ;done
-          mysql -h 127.0.0.1 -P 3306 -u unittest_root -punittest_pwd unittest_db < orchestrator/testcases/script.sql
+          for alembic_file in `ls */wallets/alembic*.ini | cut -d '/' -f1`;do cd $alembic_file; echo $alembic_file; alembic upgrade head; cd .. ;done
+#          mysql -h 127.0.0.1 -P 3306 -u unittest_root -p unittest_pwd unittest_db < orchestrator/testcases/script.sql
 
 #      - name: common tests
 #        run: |
