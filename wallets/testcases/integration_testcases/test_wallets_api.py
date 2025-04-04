@@ -98,6 +98,7 @@ class TestWalletAPI(unittest.TestCase):
                     'address': 'sample_address',
                     'is_default': 0,
                     'type': 'GENERAL',
+                    'has_private_key': 0,
                     'transactions': [
                         {
                             'org_id': 'sample_org_id',
@@ -143,6 +144,7 @@ class TestWalletAPI(unittest.TestCase):
                 {'address': 'sample_address',
                  'is_default': 0,
                  'type': 'GENERAL',
+                 'has_private_key': 0,
                  'transactions': []
                  }]}
         real_dict = json.loads(response['body'])["data"]
