@@ -19,7 +19,6 @@ custom:
 provider:
   name: aws
   runtime: python3.12
-  description: Dapp user service# optional, Description to publish to AWS
   memorySize: 128
   timeout: 30
   region: ${file(./config.${self:provider.stage}.json):REGION}
@@ -63,7 +62,6 @@ package:
 
 functions:
   create-and-register-wallet:
-    warmup: true
     handler: wallets/application/handlers/wallet_handlers.create_and_register_wallet
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
@@ -79,7 +77,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
   get-wallets:
-    warmup: true
     handler: wallets/application/handlers/wallet_handlers.get_wallets
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
@@ -95,7 +92,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
   register-wallet:
-    warmup: true
     handler: wallets/application/handlers/wallet_handlers.register_wallet
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
@@ -111,7 +107,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
   set-default-wallet:
-    warmup: true
     handler: wallets/application/handlers/wallet_handlers.set_default_wallet
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
@@ -127,7 +122,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
   remove-user-wallet:
-    warmup: true
     handler: wallets/application/handlers/wallet_handlers.remove_user_wallet
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -139,7 +133,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
   get-transactions-for-order:
-    warmup: true
     handler: wallets/application/handlers/channel_handlers.get_transactions_for_order
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
@@ -155,7 +148,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
   channel-add-funds:
-    warmup: true
     handler: wallets/application/handlers/channel_handlers.channel_add_funds
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
@@ -171,7 +163,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
   create-channel:
-    warmup: true
     handler: wallets/application/handlers/channel_handlers.create_channel
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -183,7 +174,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
   create-channel-event:
-    warmup: true
     handler: wallets/application/handlers/channel_handlers.record_create_channel_event
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -208,7 +198,6 @@ functions:
       - schedule: rate(2 minutes)
 
   update-channel-transaction-status:
-    warmup: true
     handler: wallets/application/handlers/channel_handlers.update_channel_transaction_status
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
