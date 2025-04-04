@@ -114,7 +114,7 @@ class OrderService:
                 status=Status.PAYMENT_INITIATED.value
             )
             self.obj_transaction_history_dao.insert_transaction_history(obj_transaction_history=obj_transaction_history)
-            return payment_data
+            return {"payment_url": payment_data["payment"]["payment_url"]}
         except Exception as e:
             obj_transaction_history = TransactionHistory(
                 username=username, order_id=order_id, order_type=order_type,
@@ -338,8 +338,11 @@ class OrderService:
                 wallet_create_response_body = json.loads(wallet_create_response["body"])
                 wallet_details = wallet_create_response_body["data"]
             else:
-                wallet_details = self.wallet_service.get_wallets(username)["wallets"][0]
-
+                wallets_details = self.wallet_service.get_wallets(username)["wallets"]
+                for wallet in wallets_details:
+                    if wallet["address"] == sender:
+                        wallet_details = wallet
+                        break
 
             try:
                 current_block_no = self.obj_blockchain_util.get_current_block_no()
@@ -372,8 +375,14 @@ class OrderService:
                     'amount_in_cogs': amount_in_cogs
                 }
                 channel_details = self.wallet_service.create_channel(open_channel_body=open_channel_body)
-                channel_details.update(wallet_details)
-                return channel_details
+                response = {
+                    "price": channel_details["price"],
+                    "item_details": {
+                        "item": channel_details["item_details"]["item"],
+                        "quantity": channel_details["item_details"]["quantity"]
+                    }
+                }
+                return response
             except Exception as e:
                 logger.error("Failed to create channel")
                 logger.error(repr(e))
@@ -385,30 +394,10 @@ class OrderService:
                         "amount": amount,
                         "currency": currency
                     },
-                    "item_details": order_data
+                    "item_details": order_data,
+                    "address": wallet_details["address"]
                 }
-                response.update(wallet_details)
                 raise ChannelCreationFailed("Failed to create channel", wallet_details=response)
-
-        elif order_type == OrderType.CREATE_CHANNEL.value:
-            try:
-                logger.info(f"Order Data {order_data}")
-                signature = order_data["signature"]
-                v, r, s = Web3.toInt(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
-                open_channel_body = {
-                    'order_id': order_id, 'sender': order_data["wallet_address"],
-                    'signature': order_data["signature"], 'r': r, 's': s, 'v': v,
-                    'group_id': group_id, 'org_id': org_id, 'amount': amount, 'currency': currency,
-                    'recipient': recipient, 'current_block_no': order_data["current_block_number"],
-                    'amount_in_cogs': amount_in_cogs
-                }
-                channel_details = self.wallet_service.create_channel(open_channel_body=open_channel_body)
-                logger.info(f"channel_details: {channel_details}")
-                return channel_details
-            except Exception as e:
-                logger.error("Failed to create channel")
-                print(repr(e))
-                raise ChannelCreationFailed("Failed to create channel", wallet_details=order_data)
 
         elif order_type == OrderType.FUND_CHANNEL.value:
 
@@ -440,7 +429,14 @@ class OrderService:
 
                 fund_channel_response_body = json.loads(fund_channel_response["body"])
                 fund_channel_transaction_details = fund_channel_response_body["data"]
-                return fund_channel_transaction_details
+                response = {
+                    "price": fund_channel_transaction_details["price"],
+                    "item_details": {
+                        "item": fund_channel_transaction_details["item_details"]["item"],
+                        "quantity": fund_channel_transaction_details["item_details"]["quantity"]
+                    }
+                }
+                return response
             except Exception as e:
                 logger.error("Failed to fund channel")
                 logger.error(repr(e))

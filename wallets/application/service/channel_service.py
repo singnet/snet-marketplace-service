@@ -86,6 +86,7 @@ class ChannelService:
             user_wallet = rec[0].to_dict()
             user_wallet["type"] = rec[1].type
             transaction.update(user_wallet)
+            transaction["has_private_key"] = int(rec[1].encrypted_key is not None and rec[1].encrypted_key != "")
             transactions.append(transaction)
 
         wallet_transactions = {}
@@ -96,6 +97,7 @@ class ChannelService:
                     "address": sender_address,
                     "is_default": int(rec["is_default"]),
                     "type": rec["type"],
+                    "has_private_key": rec["has_private_key"],
                     "transactions": []
                 }
             if 'recipient' not in rec:
