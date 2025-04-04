@@ -79,7 +79,7 @@ custom:
 
 provider:
   name: aws
-  runtime: python3.7
+  runtime: python3.8
   description: Orchestrator # optional, Description to publish to AWS
   memorySize: 512
   timeout: 60

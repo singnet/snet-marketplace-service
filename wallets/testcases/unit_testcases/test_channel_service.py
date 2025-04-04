@@ -4,7 +4,7 @@ from types import SimpleNamespace as Namespace
 from unittest.mock import patch
 
 from common.constant import TransactionStatus
-from wallets.handlers.channel_transaction_status_handler import request_handler
+from wallets.application.handlers.channel_handlers import update_channel_transaction_status
 from wallets.infrastructure.models import ChannelTransactionHistory
 from wallets.infrastructure.repositories.channel_repository import ChannelRepository
 
@@ -13,9 +13,7 @@ channel_repo = ChannelRepository()
 
 class TestChannelService(unittest.TestCase):
 
-    @patch(
-        "wallets.service.channel_transaction_status_service.ChannelTransactionStatusService"
-        ".get_mpe_processed_transactions_from_event_pub_sub")
+    @patch("wallets.application.service.channel_service.ChannelService.get_mpe_processed_transactions_from_event_pub_sub")
     @patch("common.blockchain_util.BlockChainUtil.get_transaction_receipt_from_blockchain")
     def test_channel_update_transaction_status(self, mock_reciept, mock_processed_res):
         self.tearDown()
@@ -67,7 +65,7 @@ class TestChannelService(unittest.TestCase):
             row_updated="2021-05-19 13:51:53",
             row_created="2021-05-19 13:51:53"
         ))
-        mock_processed_res.return_value = mock_processed_res.return_value = [
+        mock_processed_res.return_value = [
             {
                 "block_no": 10259540,
                 "uncle_block_no": 12,
@@ -103,7 +101,7 @@ class TestChannelService(unittest.TestCase):
             }
         ]
         mock_reciept.return_value = json.loads('{"status": 1}', object_hook=lambda d: Namespace(**d))
-        res = request_handler(event={}, context=None)
+        res = update_channel_transaction_status(event={}, context=None)
         transaction = channel_repo.get_channel_transaction_history_data()
         assert transaction[0].transaction_hash == "sample_1"
         assert transaction[0].status == TransactionStatus.SUCCESS
@@ -130,7 +128,7 @@ class TestChannelService(unittest.TestCase):
             row_created="2021-05-19 13:51:53"
         ))
         mock_reciept.return_value = json.loads('{"status": 0}', object_hook=lambda d: Namespace(**d))
-        res = request_handler(event={}, context=None)
+        res = update_channel_transaction_status(event={}, context=None)
         transaction = channel_repo.get_channel_transaction_history_data()
         assert transaction[0].transaction_hash == "sample_1"
         assert transaction[0].status == TransactionStatus.FAILED

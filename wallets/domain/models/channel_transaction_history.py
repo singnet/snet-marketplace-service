@@ -1,7 +1,7 @@
-class ChannelTransactionHistory:
+
+class ChannelTransactionHistoryModel:
     def __init__(self, order_id, amount, currency, type, address, recipient, signature, org_id, group_id,
-                 request_parameters, transaction_hash,
-                 status):
+                 request_parameters, transaction_hash, status, row_updated=None, row_created=None):
         self._order_id = order_id
         self._amount = amount
         self._currency = currency
@@ -14,6 +14,8 @@ class ChannelTransactionHistory:
         self._request_parameters = request_parameters
         self._transaction_hash = transaction_hash
         self._status = status
+        self._row_updated = row_updated
+        self._row_created = row_created
 
     def to_dict(self):
         return {
@@ -28,7 +30,9 @@ class ChannelTransactionHistory:
             "group_id": self._group_id,
             "request_parameters": self._request_parameters,
             "transaction_hash": self._transaction_hash,
-            "status": self._status
+            "status": self._status,
+            "updated_at": self._row_updated.strftime("%Y-%m-%d %H:%M:%S") if self._row_updated else None,
+            "created_at": self._row_created.strftime("%Y-%m-%d %H:%M:%S") if self._row_created else None
         }
 
     @property
@@ -85,35 +89,35 @@ class ChannelTransactionHistory:
 
     @amount.setter
     def amount(self, amount):
-        self._amount == amount
+        self._amount = amount
 
     @currency.setter
     def currency(self, currency):
-        self._currency == currency
+        self._currency = currency
 
     @type.setter
     def type(self, type):
-        self._type == type
+        self._type = type
 
     @address.setter
     def address(self, address):
-        self._address == address
+        self._address = address
 
     @recipient.setter
     def recipient(self, recipient):
-        self._recipient == recipient
+        self._recipient = recipient
 
     @signature.setter
     def signature(self, signature):
-        self._signature == signature
+        self._signature = signature
 
     @org_id.setter
     def org_id(self, org_id):
-        self._org_id == org_id
+        self._org_id = org_id
 
     @group_id.setter
     def group_id(self, group_id):
-        self._group_id == group_id
+        self._group_id = group_id
 
     @request_parameters.setter
     def request_parameters(self, request_parameters):
