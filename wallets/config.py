@@ -8,7 +8,7 @@ NETWORKS = {
             "DB_HOST": "localhost",
             "DB_USER": "unittest_root",
             "DB_PASSWORD": "unittest_pwd",
-            "DB_NAME": "unittest_db",
+            "DB_NAME": "marketplace_unittest_db",
             "DB_PORT": 3306,
         },
     }
@@ -18,7 +18,7 @@ DB_DETAILS = {
     "host": "localhost",
     "user": "unittest_root",
     "password": "unittest_pwd",
-    "name": "unittest_db",
+    "name": "marketplace_unittest_db",
     "port": 3306
 }
 SIGNER_KEY = ""

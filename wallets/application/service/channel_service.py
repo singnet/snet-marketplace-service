@@ -4,7 +4,12 @@ import json
 
 from common.logger import get_logger
 from common.utils import Utils
-from common.blockchain_util import BlockChainUtil
+# from common.blockchain_util import BlockChainUtil
+from wallets.infrastructure.blockchain_util import BlockChainUtil
+"""
+Temporarily moved for latest web3 version for python 3.12
+TODO: change back when 'common' is updated
+"""
 from common.boto_utils import BotoUtils
 from common.constant import TransactionStatus
 
