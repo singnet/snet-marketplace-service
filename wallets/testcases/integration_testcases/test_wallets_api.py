@@ -12,7 +12,7 @@ channel_repo = ChannelRepository()
 
 class TestWalletAPI(unittest.TestCase):
     @patch("common.utils.Utils.report_slack")
-    @patch("common.blockchain_util.BlockChainUtil.create_account")
+    @patch("wallets.infrastructure.blockchain_util.BlockChainUtil.create_account")
     def test_create_wallet(self, mock_create_account, mock_report_slack):
         create_wallet_event = {
             "body": '{"username": "dummy@dummy.com"}',
