@@ -113,6 +113,7 @@ def channel_add_funds(event, context):
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def update_channel_transaction_status(event, context):
+    logger.info(f"Received request to update channel transaction status: {event}")
     channel_service.manage_channel_transaction_status()
     return
 
