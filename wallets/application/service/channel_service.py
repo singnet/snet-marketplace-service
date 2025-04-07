@@ -223,11 +223,13 @@ class ChannelService:
             raise Exception("Insufficient amount to buy minimum amount in cogs allowed.")
 
     def get_mpe_processed_transactions_from_event_pub_sub(self, transaction_list):
+        logger.info(f"Getting processed transactions from event pubsub: {transaction_list}")
         response = self.boto_utils.invoke_lambda(
             payload=json.dumps({"transaction_hash_list": transaction_list, "contract_name": "MPE"}),
             lambda_function_arn=GET_RAW_EVENT_DETAILS,
             invocation_type="RequestResponse"
         )
+        logger.info(f"Response from event pubsub: {response}")
         if response["statusCode"] != 200:
             raise Exception("Error getting processed transactions from event pubsub")
         return json.loads(response["body"])["data"]
