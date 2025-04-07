@@ -28,10 +28,6 @@ class WalletService:
         if create_channel_response["statusCode"] != 201:
             raise Exception(f"Failed to create channel")
 
-        create_channel_response_body = json.loads(create_channel_response["body"])
-        channel_details = create_channel_response_body["data"]
-        return channel_details
-
     def get_channel_details(self, username, org_id, group_id):
         """ Method to get wallet details for a given username. """
         try:

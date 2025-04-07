@@ -14,7 +14,7 @@ channel_repo = ChannelRepository()
 class TestChannelService(unittest.TestCase):
 
     @patch("wallets.application.service.channel_service.ChannelService.get_mpe_processed_transactions_from_event_pub_sub")
-    @patch("common.blockchain_util.BlockChainUtil.get_transaction_receipt_from_blockchain")
+    @patch("wallets.infrastructure.blockchain_util.BlockChainUtil.get_transaction_receipt_from_blockchain")
     def test_channel_update_transaction_status(self, mock_reciept, mock_processed_res):
         self.tearDown()
         channel_repo.add_item(ChannelTransactionHistory(

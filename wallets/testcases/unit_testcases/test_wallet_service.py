@@ -15,7 +15,7 @@ class TestWalletService(unittest.TestCase):
         self.wallet_repo = WalletRepository()
 
     @patch("common.utils.Utils.report_slack")
-    @patch("common.blockchain_util.BlockChainUtil.create_account")
+    @patch("wallets.infrastructure.blockchain_util.BlockChainUtil.create_account")
     def test_create_wallet(self, mock_create_account, mock_report_slack):
         mock_create_account.return_value = (
             "323449587122651441342932061624154600879572532581",

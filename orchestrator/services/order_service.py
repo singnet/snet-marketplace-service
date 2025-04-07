@@ -212,7 +212,7 @@ class OrderService:
             amount_in_cogs = self.calculate_amount_in_cogs(amount=price["amount"], currency=price["currency"])
             if amount_in_cogs < 1:
                 raise Exception("Amount in cogs should be greater than equal to 1")
-            processed_order_data = self.manage_process_order(
+            self.manage_process_order(
                 username=username,
                 order_id=order_id, order_type=order_type,
                 amount=price["amount"],
@@ -227,9 +227,14 @@ class OrderService:
                 raw_payment_data=json.dumps(paid_payment_details)
             )
             self.obj_transaction_history_dao.insert_transaction_history(obj_transaction_history=obj_transaction_history)
-            processed_order_data["price"] = price
-            processed_order_data["item_details"] = item_details
-            return processed_order_data
+            response = {
+                "price": price,
+                "item_details": {
+                    "item": item_details["item"],
+                    "quantity": item_details["quantity"]
+                }
+            }
+            return response
 
         except Exception as e:
             obj_transaction_history = TransactionHistory(
@@ -374,15 +379,7 @@ class OrderService:
                     'current_block_no': current_block_no,
                     'amount_in_cogs': amount_in_cogs
                 }
-                channel_details = self.wallet_service.create_channel(open_channel_body=open_channel_body)
-                response = {
-                    "price": channel_details["price"],
-                    "item_details": {
-                        "item": channel_details["item_details"]["item"],
-                        "quantity": channel_details["item_details"]["quantity"]
-                    }
-                }
-                return response
+                self.wallet_service.create_channel(open_channel_body=open_channel_body)
             except Exception as e:
                 logger.error("Failed to create channel")
                 logger.error(repr(e))
