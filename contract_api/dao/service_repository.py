@@ -108,7 +108,7 @@ class ServiceRepository(CommonRepository):
 
     def get_services(self, org_id):
         query = 'SELECT * FROM service WHERE org_id = %s '
-        service_data = self.connection.execute(query, (org_id))
+        service_data = self.connection.execute(query, [org_id])
 
         return service_data
 
@@ -122,10 +122,13 @@ class ServiceRepository(CommonRepository):
             return service_metadata[0]
         return None
 
-    def get_service_endpoints(self, service_id, org_id):
+    def get_service_endpoints(self, service_id, org_id, group_id=None):
         query = "Select  org_id, service_id, group_id, endpoint from service_endpoint where service_id = %s and org_id = %s "
-        service_endpoints = self.connection.execute(query, (service_id, org_id))
-
+        params = [service_id, org_id]
+        if group_id is not None:
+            query += "and group_id = %s "
+            params.append(group_id)
+        service_endpoints = self.connection.execute(query, params)
         return service_endpoints
 
     def get_service_tags(self, service_id, org_id):

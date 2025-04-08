@@ -72,38 +72,43 @@ def get_channels_old_api(event, context):
 
 
 def update_consumed_balance(event, context):
-    logger.info("Received request to update consumed balance")
+    """
+    for METAMASK sender wallet: channel_id, signed_amount
+    for GENERAL sender wallet: channel_id, org_id, service_id
+    """
+    logger.info(f"Received request to update consumed balance: {event}")
     try:
         path_parameters = event["pathParameters"]
+        channel_id = path_parameters.get("channel_id", None)
         payload = json.loads(event["body"])
-        if validate_dict(
-                payload, ["OrganizationID", "ServiceID", "GroupID", "AuthorizedAmount",
-                          "FullAmount", "ChannelId", "Nonce"]) \
-                and "channel_id" in path_parameters:
-            org_id = payload["OrganizationID"]
-            service_id = payload["ServiceID"]
-            group_id = payload["GroupID"]
-            authorized_amount = payload["AuthorizedAmount"]
-            full_amount = payload["FullAmount"]
-            nonce = payload["Nonce"]
-            channel_id = path_parameters["channel_id"]
-            logger.info(f"Fetched values from request\n"
-                        f"org_id: {org_id} group_id: {group_id} service_id: {service_id} "
-                        f"authorized_amount: {authorized_amount} full_amount: {full_amount} nonce: {nonce}")
-            response = obj_mpe.update_consumed_balance(channel_id, authorized_amount, full_amount, nonce)
-            return generate_lambda_response(
-                StatusCode.CREATED,
-                make_response_body(ResponseStatus.SUCCESS, response, {}),
-                cors_enabled=True
-            )
-        else:
-            logger.error("Bad Request")
-            logger.info(event)
-            return generate_lambda_response(
-                StatusCode.BAD_REQUEST,
-                make_response_body(ResponseStatus.FAILED, "Bad Request", {}),
-                cors_enabled=True
-            )
+        username = event["requestContext"]["authorizer"]["claims"]["email"]
+        if channel_id is not None:
+            response = None
+            if "signed_amount" in payload:
+                signed_amount = payload["signed_amount"]
+                response = obj_mpe.update_consumed_balance(channel_id,
+                                                           signed_amount = signed_amount)
+            elif "org_id" in payload and "service_id" in payload:
+                org_id = payload["org_id"]
+                service_id = payload["service_id"]
+                response = obj_mpe.update_consumed_balance(channel_id,
+                                                           org_id = org_id,
+                                                           service_id = service_id,
+                                                           username = username)
+            if response is not None:
+                return generate_lambda_response(
+                    StatusCode.CREATED,
+                    make_response_body(ResponseStatus.SUCCESS, response, {}),
+                    cors_enabled=True
+                )
+
+        logger.error("Bad Request")
+        logger.info(event)
+        return generate_lambda_response(
+            StatusCode.BAD_REQUEST,
+            make_response_body(ResponseStatus.FAILED, "Bad Request", {}),
+            cors_enabled=True
+        )
 
     except Exception as e:
         response = "Failed to update consumed balance"
