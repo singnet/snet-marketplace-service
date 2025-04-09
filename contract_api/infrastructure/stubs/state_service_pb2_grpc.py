@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import state_service_pb2 as state__service__pb2
+from contract_api.infrastructure.stubs import state_service_pb2 as state__service__pb2
 
 
 class PaymentChannelStateServiceStub(object):
