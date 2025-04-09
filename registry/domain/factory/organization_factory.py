@@ -1,4 +1,4 @@
-from registry.config import ALLOWED_ORIGIN
+from registry.settings import settings
 from registry.constants import Role, OrganizationAddressType
 from registry.domain.models.comment import Comment
 from registry.domain.models.group import Group
@@ -22,7 +22,7 @@ class OrganizationFactory:
         url = payload["url"]
         duns_no = payload["duns_no"]
         origin = payload["origin"]
-        if origin not in ALLOWED_ORIGIN:
+        if origin not in settings.aws.ALLOWED_ORIGIN:
             raise InvalidOriginException()
         contacts = payload["contacts"]
         assets = payload["assets"]

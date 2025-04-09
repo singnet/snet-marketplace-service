@@ -11,7 +11,7 @@ from common import utils
 from common.boto_utils import BotoUtils
 from common.exceptions import MethodNotImplemented
 from common.logger import get_logger
-from registry.config import REGION_NAME, NOTIFICATION_ARN
+from registry.settings import settings
 from registry.constants import (
     EnvironmentType,
     ORG_STATUS_LIST,
@@ -50,10 +50,10 @@ ORG_APPROVE_MESSAGE = "You organization  {} has been approved"
 
 
 class OrganizationPublisherService:
-    def __init__(self, org_uuid: str, username: str, lighthouse_token: Union[str, None] = None):
+    def __init__(self, org_uuid: str | None, username: str | None, lighthouse_token: Union[str, None] = None):
         self.org_uuid = org_uuid
         self.username = username
-        self.boto_utils = BotoUtils(region_name=REGION_NAME)
+        self.boto_utils = BotoUtils(region_name=settings.aws.REGION_NAME)
         self.storage_provider = StorageProvider(lighthouse_token)
 
     def get_approval_pending_organizations(self, limit, type=None):
@@ -119,8 +119,11 @@ class OrganizationPublisherService:
                 "subject": mail_template["subject"],
                 "notification_type": "support",
                 "recipient": recipient})}
-            self.boto_utils.invoke_lambda(lambda_function_arn=NOTIFICATION_ARN, invocation_type="RequestResponse",
-                                          payload=json.dumps(send_notification_payload))
+            self.boto_utils.invoke_lambda(
+                lambda_function_arn=settings.lambda_arn.NOTIFICATION_ARN,
+                invocation_type="RequestResponse",
+                payload=json.dumps(send_notification_payload)
+            )
             logger.info(f"Recipient {recipient} notified for successfully starting onboarding process.")
 
     def _archive_current_organization(self, organization):
@@ -207,7 +210,7 @@ class OrganizationPublisherService:
 
     def register_member(self, invite_code, wallet_address):
         logger.info(f"register user: {self.username} with invite_code: {invite_code}")
-        if Web3.isAddress(wallet_address):
+        if Web3.is_address(wallet_address):
             org_repo.update_org_member(self.username, wallet_address, invite_code)
         else:
             raise Exception("Invalid wallet address")
@@ -247,8 +250,11 @@ class OrganizationPublisherService:
                 "subject": mail_template["subject"],
                 "notification_type": "support",
                 "recipient": recipient})}
-            self.boto_utils.invoke_lambda(lambda_function_arn=NOTIFICATION_ARN, invocation_type="RequestResponse",
-                                          payload=json.dumps(send_notification_payload))
+            self.boto_utils.invoke_lambda(
+                lambda_function_arn=settings.lambda_arn.NOTIFICATION_ARN,
+                invocation_type="RequestResponse",
+                payload=json.dumps(send_notification_payload)
+            )
             logger.info(f"Org Membership Invite sent to {recipient}")
 
     def update_verification(self, verification_type, verification_details):
@@ -292,5 +298,10 @@ class OrganizationPublisherService:
             logger.info(f"Organization status: {status}")
             raise InvalidOrganizationStateException()
 
-        utils.send_email_notification([owner_email_address], mail_template["subject"],
-                                      mail_template["body"], NOTIFICATION_ARN, self.boto_utils)
+        utils.send_email_notification(
+            [owner_email_address],
+            mail_template["subject"],
+            mail_template["body"],
+            settings.lambda_arn.NOTIFICATION_ARN,
+            self.boto_utils
+        )

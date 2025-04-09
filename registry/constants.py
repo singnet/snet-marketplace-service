@@ -1,10 +1,13 @@
 import os
 from enum import Enum
 
-from registry.config import ALLOWED_HERO_IMAGE_FORMATS, CONTRACT_BASE_PATH
+from registry.settings import settings
+
+network_id = settings.network.id
+CONTRACT_BASE_PATH = settings.network.networks[network_id].contract_base_path
 
 COMMON_CNTRCT_PATH = os.path.abspath(f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-platform-contracts")
-REG_CNTRCT_PATH = os.path.join(COMMON_CNTRCT_PATH, 'abi', 'Registry.json')
+REG_CNTRCT_PATH = os.path.join(COMMON_CNTRCT_PATH, "abi", "Registry.json")
 MPE_CNTRCT_PATH = os.path.join(COMMON_CNTRCT_PATH, "abi", "MultiPartyEscrow.json")
 REG_ADDR_PATH = os.path.join(COMMON_CNTRCT_PATH, "networks", "Registry.json")
 MPE_ADDR_PATH = os.path.join(COMMON_CNTRCT_PATH, "networks", "MultiPartyEscrow.json")
@@ -29,8 +32,11 @@ class OrganizationStatus(Enum):
     CHANGE_REQUESTED = "CHANGE_REQUESTED"
 
 
-ORG_STATUS_LIST = [OrganizationStatus.APPROVED.value, OrganizationStatus.REJECTED.value,
-                   OrganizationStatus.CHANGE_REQUESTED.value]
+ORG_STATUS_LIST = [
+    OrganizationStatus.APPROVED.value,
+    OrganizationStatus.REJECTED.value,
+    OrganizationStatus.CHANGE_REQUESTED.value
+]
 
 
 class OrganizationActions(Enum):
@@ -97,8 +103,10 @@ class OrganizationType(Enum):
     INDIVIDUAL = "individual"
 
 
-ORG_TYPE_VERIFICATION_TYPE_MAPPING = {"INDIVIDUAL": OrganizationType.INDIVIDUAL.value,
-                                      "DUNS": OrganizationType.ORGANIZATION.value}
+ORG_TYPE_VERIFICATION_TYPE_MAPPING = {
+    "INDIVIDUAL": OrganizationType.INDIVIDUAL.value,
+    "DUNS": OrganizationType.ORGANIZATION.value
+}
 
 
 class EnvironmentType(Enum):
@@ -117,6 +125,8 @@ class UserType(Enum):
 
 DEFAULT_SERVICE_RANKING = 1
 
+
+ALLOWED_HERO_IMAGE_FORMATS = settings.aws.S3.ALLOWED_HERO_IMAGE_FORMATS
 
 class ServiceAssetsRegex(Enum):
     ORGANIZATION_FILE_PATH = "([a-zA-Z0-9_]*(\/assets\/)[^\/.]*)"

@@ -6,17 +6,18 @@ from web3 import Web3
 
 from common import blockchain_util
 from common.logger import get_logger
-from registry.config import NETWORK_ID, CONTRACT_BASE_PATH
-from registry.constants import OrganizationMemberStatus, OrganizationStatus, Role, EnvironmentType
+from registry.settings import settings
+from registry.constants import OrganizationMemberStatus, OrganizationStatus, Role
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization
-from registry.domain.services.registry_blockchain_util import RegistryBlockChainUtil
 from registry.exceptions import OrganizationNotFoundException
 from registry.infrastructure.storage_provider import StorageProvider
 
 logger = get_logger(__name__)
 
 BLOCKCHAIN_USER = "BLOCKCHAIN_EVENT"
+NETWORK_ID = settings.network.id
+CONTRACT_BASE_PATH = settings.network.networks[NETWORK_ID].contract_base_path
 
 
 class OrganizationEventConsumer(object):
@@ -32,7 +33,7 @@ class OrganizationEventConsumer(object):
     def _get_org_id_from_event(self, event):
         event_org_data = ast.literal_eval(event['data']['json_str'])
         org_id_bytes = event_org_data['orgId']
-        org_id = Web3.toText(org_id_bytes).rstrip("\x00")
+        org_id = Web3.to_text(org_id_bytes).rstrip("\x00")
         return org_id
 
     @staticmethod
@@ -59,7 +60,7 @@ class OrganizationEventConsumer(object):
         blockchain_org_data = registry_contract.functions.getOrganizationById(org_id.encode('utf-8')).call()
         logger.info(f"blockchain org data {blockchain_org_data}")
 
-        org_metadata_uri = Web3.toText(blockchain_org_data[2]).rstrip("\x00")
+        org_metadata_uri = Web3.to_text(blockchain_org_data[2]).rstrip("\x00")
         logger.info(f"org metadata uri {org_metadata_uri}")
 
         org_metadata = self.__storage_provider.get(org_metadata_uri)
