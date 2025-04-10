@@ -81,7 +81,6 @@ def update_consumed_balance(event, context):
         path_parameters = event["pathParameters"]
         channel_id = path_parameters.get("channel_id", None)
         payload = json.loads(event["body"])
-        username = event["requestContext"]["authorizer"]["claims"]["email"]
         if channel_id is not None:
             response = None
             if "signed_amount" in payload:
@@ -93,8 +92,7 @@ def update_consumed_balance(event, context):
                 service_id = payload["service_id"]
                 response = obj_mpe.update_consumed_balance(channel_id,
                                                            org_id = org_id,
-                                                           service_id = service_id,
-                                                           username = username)
+                                                           service_id = service_id)
             if response is not None:
                 return generate_lambda_response(
                     StatusCode.CREATED,

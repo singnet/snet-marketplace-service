@@ -191,7 +191,7 @@ class MPE:
             logger.exception(repr(e))
             raise e
 
-    def update_consumed_balance(self, channel_id, signed_amount=None, org_id=None, service_id=None, username=None):
+    def update_consumed_balance(self, channel_id, signed_amount=None, org_id=None, service_id=None):
         mpe_repo = MPERepository(self.repo)
         channel = mpe_repo.get_mpe_channels(channel_id)
         if len(channel) != 0:
@@ -200,12 +200,12 @@ class MPE:
             raise Exception(f"Channel with id {channel_id} not found!")
 
         if signed_amount is None:
-            signed_amount = self._get_channel_state_from_daemon(channel, org_id, service_id, username)
+            signed_amount = self._get_channel_state_from_daemon(channel, org_id, service_id)
         mpe_repo.update_consumed_balance(channel_id, signed_amount)
 
         return {}
 
-    def _get_channel_state_from_daemon(self, channel, org_id, service_id, username):
+    def _get_channel_state_from_daemon(self, channel, org_id, service_id):
         channel_id = channel["channel_id"]
         group_id = channel["groupId"]
 
