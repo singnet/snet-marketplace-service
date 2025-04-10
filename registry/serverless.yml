@@ -3,7 +3,6 @@ plugins:
   - serverless-python-requirements
   - serverless-plugin-tracing
   - serverless-prune-plugin
-  - serverless-plugin-split-stacks
   - serverless-latest-layer-version
 
 service: registry
@@ -34,10 +33,6 @@ custom:
     automatic: true
     includeLayers: true
     number: 2
-  splitStacks:
-    perFunction: false
-    perType: true
-    perGroupFunction: false
 
 package:
   exclude:
@@ -77,7 +72,6 @@ package:
     - config.rt-v2.json
   include:
     - resources/**
-
 
 functions:
   get_all_org:
@@ -169,7 +163,8 @@ functions:
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
-              - Content-Type - X-Amz-Date
+              - Content-Type
+              - X-Amz-Date
               - Authorization
               - X-Api-Key
               - X-Amz-Security-Token
@@ -288,6 +283,7 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
+  save-org-transaction:
     warmup: true
     handler: registry.application.handlers.organization_handlers.save_transaction_hash_for_publish_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -464,7 +460,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-                  "application/json": "ErrorMessage"
 
   register-member:
     warmup: true
@@ -535,7 +530,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-                  "application/json": "ErrorMessage"
 
   delete-members:
     warmup: true
@@ -573,7 +567,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-                  "application/json": "ErrorMessage"
 
   organization_event_consumer_handler:
     warmup: true
@@ -651,7 +644,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-                  "application/json": "ErrorMessage"
 
   create-service:
     warmup: true
@@ -685,7 +677,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-                  "application/json": "ErrorMessage"
 
   save-service:
     warmup: true
@@ -719,7 +710,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-                  "application/json": "ErrorMessage"
 
   save-service-attributes:
     warmup: true
@@ -753,7 +743,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-                  "application/json": "ErrorMessage"
 
   get-services-for-org:
     warmup: true
@@ -787,7 +776,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-                  "application/json": "ErrorMessage"
 
   get-service-for-service-uuid:
     warmup: true
@@ -821,7 +809,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-                  "application/json": "ErrorMessage"
 
   publish-service-metadata-to-ipfs-hash:
     warmup: true
@@ -855,7 +842,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-                  "application/json": "ErrorMessage"
 
   save_service_transaction:
     warmup: true
@@ -889,7 +875,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-                  "application/json": "ErrorMessage"
 
   daemon-config-for-given-network-id:
     warmup: true
@@ -923,7 +908,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-                  "application/json": "ErrorMessage"
 
   file-delete:
     handler: registry.application.handlers.file_handlers.delete

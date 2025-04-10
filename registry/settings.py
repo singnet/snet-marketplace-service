@@ -1,4 +1,4 @@
-import config
+from registry import config
 from pydantic import Field, BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
