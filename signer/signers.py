@@ -31,8 +31,7 @@ class Signer:
         )
         self.mpe_address = self.obj_blockchain_utils.read_contract_address(
             net_id=self.net_id, path=MPE_ADDR_PATH, key="address")
-        self.current_block_no = self.obj_blockchain_utils.get_current_block_no(
-        )
+        self.current_block_no = self.obj_blockchain_utils.get_current_block_no()
 
     def _get_free_calls_allowed(self, org_id, service_id, group_id):
         lambda_payload = {
@@ -185,12 +184,11 @@ class Signer:
                 "Unable to generate signature for daemon call for username %s",
                 username)
 
-    def signature_for_state_service(self, user_data, channel_id):
+    def signature_for_state_service(self, username, channel_id):
         """
             Method to generate signature for state service.
         """
         try:
-            username = user_data["authorizer"]["claims"]["email"]
             data_types = ["string", "address", "uint256", "uint256"]
             values = [
                 "__get_channel_state",

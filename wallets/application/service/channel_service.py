@@ -33,7 +33,7 @@ class ChannelService:
         self.utils = Utils()
         self.channel_repo = ChannelRepository()
 
-    def add_funds_to_channel(self, org_id, group_id, channel_id, sender, recipient, order_id, amount, currency, amount_in_cogs): # ------------------------------
+    def add_funds_to_channel(self, org_id, group_id, channel_id, sender, recipient, order_id, amount, currency, amount_in_cogs):
         self.EXECUTOR_WALLET_ADDRESS = self.boto_utils.get_ssm_parameter(EXECUTOR_ADDRESS)
         self.EXECUTOR_WALLET_KEY = self.boto_utils.get_ssm_parameter(EXECUTOR_KEY)
         method_name = "channelAddFunds"

@@ -419,6 +419,7 @@ class OrderService:
                     InvocationType='RequestResponse',
                     Payload=json.dumps(fund_channel_payload)
                 )
+                logger.info(f"Fund channel response {fund_channel_lambda_response}")
 
                 fund_channel_response = json.loads(fund_channel_lambda_response.get("Payload").read())
                 if fund_channel_response["statusCode"] != 200:
@@ -426,17 +427,9 @@ class OrderService:
 
                 fund_channel_response_body = json.loads(fund_channel_response["body"])
                 fund_channel_transaction_details = fund_channel_response_body["data"]
-                response = {
-                    "price": fund_channel_transaction_details["price"],
-                    "item_details": {
-                        "item": fund_channel_transaction_details["item_details"]["item"],
-                        "quantity": fund_channel_transaction_details["item_details"]["quantity"]
-                    }
-                }
-                return response
+                logger.info(f"Fund channel transaction details {fund_channel_transaction_details}")
             except Exception as e:
-                logger.error("Failed to fund channel")
-                logger.error(repr(e))
+                logger.error(f"Failed to fund channel: {str(e)}")
                 raise FundChannelFailed()
         else:
             raise Exception("Order type is not valid.")

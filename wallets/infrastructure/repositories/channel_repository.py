@@ -46,11 +46,15 @@ class ChannelRepository(BaseRepository):
                 filter(ChannelTransactionHistory.order_id == channel_txn_history.order_id). \
                 first()
             if transaction_record_db:
+                logger.info(f"Updating channel transaction history status for order_id: {channel_txn_history.order_id}")
                 transaction_record_db.transaction_hash = channel_txn_history.transaction_hash,
                 transaction_record_db.request_parameters = channel_txn_history.request_parameters,
                 transaction_record_db.status = channel_txn_history.status,
                 transaction_record_db.row_updated = current_time
-            self.session.commit()
+                self.session.commit()
+            else:
+                logger.info(f"Creating channel transaction history record for order_id: {channel_txn_history.order_id}")
+                self.add_channel_transaction_history_record(channel_txn_history)
         except SQLAlchemyError as e:
             self.session.rollback()
             logger.error(f"Failed to update channel transaction history status: {e}")
