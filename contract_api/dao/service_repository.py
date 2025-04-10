@@ -122,7 +122,7 @@ class ServiceRepository(CommonRepository):
             return service_metadata[0]
         return None
 
-    def get_service_endpoints(self, service_id, org_id, group_id=None):
+    def get_service_endpoints(self, org_id, service_id, group_id=None):
         query = "Select  org_id, service_id, group_id, endpoint from service_endpoint where service_id = %s and org_id = %s "
         params = [service_id, org_id]
         if group_id is not None:
