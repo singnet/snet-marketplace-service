@@ -218,11 +218,14 @@ class MPE:
         endpoint = endpoint["endpoint"]
 
         signature, current_block_number = self._get_channel_state_signature(channel_id)
+        if signature.startswith("0x"):
+            signature = signature[2:]
         signed_amount = self._get_channel_state_via_grpc(endpoint, channel_id, signature, current_block_number)
 
         return signed_amount
 
-    def _get_channel_state_signature(self, channel_id):
+    @staticmethod
+    def _get_channel_state_signature(channel_id):
         body = {
             'channel_id': channel_id
         }
@@ -262,8 +265,8 @@ class MPE:
 
         stub = state_service_pb2_grpc.PaymentChannelStateServiceStub(grpc_channel)
         request = state_service_pb2.ChannelStateRequest(
-            channel_id = web3.Web3.to_bytes(channel_id),
-            signature = bytes(signature),
+            channel_id = channel_id.to_bytes(4, "big"),
+            signature = bytes.fromhex(signature),
             current_block = current_block_number
         )
         try:
