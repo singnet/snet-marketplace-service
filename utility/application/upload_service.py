@@ -1,9 +1,10 @@
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
-from common.utils import date_time_for_filename
 from utility.config import REGION_NAME
 from utility.constants import UPLOAD_TYPE_DETAILS, UploadType
 from utility.exceptions import BadRequestException
+
+from datetime import datetime
 
 logger = get_logger(__name__)
 
@@ -19,7 +20,8 @@ class UploadService:
         if upload_type == UploadType.FEEDBACK.value:
             bucket = UPLOAD_TYPE_DETAILS[upload_type]["bucket"]
             dest_file_path = UPLOAD_TYPE_DETAILS[upload_type]["bucket_path"]\
-                .format(date_time_for_filename(), file_data["file_extension"])
+                .format(datetime.utcnow().strftime("%Y%m%d%H%M%S"), file_data["file_extension"])
+            # TODO: change datetime.utcnow().strftime("%Y%m%d%H%M%S") to common.utils.date_time_for_filename() when updating the Python version
 
             self.boto_utils.s3_upload_file(file_data["file_path"], bucket, dest_file_path)
 
@@ -30,7 +32,8 @@ class UploadService:
             org_id = request_params["org_uuid"]
             bucket = UPLOAD_TYPE_DETAILS[upload_type]["bucket"]
             dest_file_path = UPLOAD_TYPE_DETAILS[upload_type]["bucket_path"].format(
-                org_id, date_time_for_filename(), file_data["file_extension"])
+                org_id, datetime.utcnow().strftime("%Y%m%d%H%M%S"), file_data["file_extension"])
+            # TODO: change datetime.utcnow().strftime("%Y%m%d%H%M%S") to common.utils.date_time_for_filename() when updating the Python version
 
             self.boto_utils.s3_upload_file(file_data["file_path"], bucket, dest_file_path)
 
@@ -43,7 +46,8 @@ class UploadService:
             service_id = request_params["service_uuid"]
             bucket = UPLOAD_TYPE_DETAILS[upload_type]["bucket"]
             dest_file_path = UPLOAD_TYPE_DETAILS[upload_type]["bucket_path"].format(
-                org_id, service_id, date_time_for_filename(), file_data["file_extension"])
+                org_id, service_id, datetime.utcnow().strftime("%Y%m%d%H%M%S"), file_data["file_extension"])
+            # TODO: change datetime.utcnow().strftime("%Y%m%d%H%M%S") to common.utils.date_time_for_filename() when updating the Python version
 
             self.boto_utils.s3_upload_file(file_data["file_path"], bucket, dest_file_path)
 

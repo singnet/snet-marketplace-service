@@ -1,3 +1,5 @@
+from common.logger import get_logger
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from wallets.config import DB_DETAILS
@@ -15,6 +17,8 @@ engine = create_engine(connection_string, pool_pre_ping=True)
 Session = sessionmaker(bind=engine)
 default_session = Session()
 
+logger = get_logger(__name__)
+
 
 class BaseRepository:
 
@@ -27,6 +31,7 @@ class BaseRepository:
             self.session.commit()
         except Exception as e:
             self.session.rollback()
+            logger.error(f"Failed to add item: {item}, Error: {e}")
             raise e
 
     def add_all_items(self, items):
@@ -35,4 +40,5 @@ class BaseRepository:
             self.session.commit()
         except Exception as e:
             self.session.rollback()
+            logger.error(f"Failed to add all items: {items}, Error: {e}")
             raise e

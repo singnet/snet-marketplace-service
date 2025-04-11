@@ -3,7 +3,8 @@ import json
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from common.utils import send_email_notification, Utils
-from orchestrator.config import REGION_NAME, REGISTRY_ARN, WALLETS_SERVICE_ARN, VERIFICATION_ARN, NOTIFICATION_ARN, ORG_APPROVERS_DLIST
+from orchestrator.config import REGION_NAME, REGISTRY_ARN, VERIFICATION_ARN, NOTIFICATION_ARN, \
+    ORG_APPROVERS_DLIST, REGISTER_WALLET_ARN
 from orchestrator.constant import VerificationType, OrganizationType
 from orchestrator.publisher.mail_templates import get_mail_template_to_user_for_org_onboarding
 from orchestrator.publisher.mail_templates import get_org_approval_mail
@@ -58,11 +59,9 @@ class OrganizationOrchestratorService:
             'username': username
         }
         register_wallet_payload = {
-            "path": "/wallet/register",
-            "body": json.dumps(register_wallet_body),
-            "httpMethod": "POST"
+            "body": json.dumps(register_wallet_body)
         }
-        raw_response = self.boto_client.invoke_lambda(lambda_function_arn=WALLETS_SERVICE_ARN,
+        raw_response = self.boto_client.invoke_lambda(lambda_function_arn=REGISTER_WALLET_ARN,
                                                       invocation_type="RequestResponse",
                                                       payload=json.dumps(register_wallet_payload))
         status = raw_response["statusCode"]

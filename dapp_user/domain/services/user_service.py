@@ -56,11 +56,9 @@ class UserService:
 
     def _unlink_wallets_from_user(self, username):
         delete_user_wallet_event = {
-            "path": "/wallet/delete",
-            "queryStringParameters": {
+            "body": json.dumps({
                 "username": username
-            },
-            "httpMethod": "POST"
+            })
         }
 
         delete_user_wallet_response = self.boto_client.invoke_lambda(

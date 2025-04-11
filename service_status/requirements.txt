@@ -1,6 +1,6 @@
 alembic==1.14.0
 ipfsapi==0.4.4
-cryptography==44.0.0
+cryptography==44.0.2
 rlp==4.0.1
 web3==7.6.1
 boto3==1.35.98
