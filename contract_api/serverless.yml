@@ -702,10 +702,10 @@ functions:
       - http:
           method: POST
           authorizer:
-            type: request
-            arn: ${file(./config.${self:provider.stage}.json):SIGN_AUTHORIZER}
-            identitySource: ${file(./config.${self:provider.stage}.json):SIGN_HEADERS}
-            name: update_consume_balance_authorizer
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
           path: /channel/{channel_id}/balance
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
