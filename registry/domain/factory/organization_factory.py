@@ -1,4 +1,4 @@
-from registry.config import ALLOWED_ORIGIN
+from registry.settings import settings
 from registry.constants import Role, OrganizationAddressType
 from registry.domain.models.comment import Comment
 from registry.domain.models.group import Group
@@ -9,10 +9,8 @@ from registry.exceptions import InvalidOriginException, BadRequestException
 
 
 class OrganizationFactory:
-
     @staticmethod
     def org_domain_entity_from_payload(payload):
-
         org_uuid = payload["org_uuid"]
         org_id = payload["org_id"]
         org_name = payload["org_name"]
@@ -22,7 +20,7 @@ class OrganizationFactory:
         url = payload["url"]
         duns_no = payload["duns_no"]
         origin = payload["origin"]
-        if origin not in ALLOWED_ORIGIN:
+        if origin not in settings.aws.ALLOWED_ORIGIN:
             raise InvalidOriginException()
         contacts = payload["contacts"]
         assets = payload["assets"]

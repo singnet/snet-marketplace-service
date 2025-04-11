@@ -8,7 +8,7 @@ from web3 import Web3
 from common import blockchain_util, boto_utils
 from common.constant import StatusCode
 from common.logger import get_logger
-from registry.config import NETWORK_ID, SERVICE_CURATE_ARN, REGION_NAME, CONTRACT_BASE_PATH
+from registry.settings import settings
 from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.models.service import Service
@@ -16,6 +16,8 @@ from registry.infrastructure.storage_provider import StorageProvider
 
 logger = get_logger(__name__)
 BLOCKCHAIN_USER = "BLOCKCHAIN_USER"
+NETWORK_ID = settings.network.id
+CONTRACT_BASE_PATH = settings.network.networks[NETWORK_ID].contract_base_path
 
 
 class ServiceEventConsumer(object):
@@ -25,7 +27,7 @@ class ServiceEventConsumer(object):
         self._service_repository = service_repository
         self._organization_repository = organization_repository
         self._storage_provider = StorageProvider()
-        
+
     def on_event(self, event):
         pass
 
@@ -210,10 +212,14 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             },
             "body": None
         }
-        curate_service_response = boto_utils.BotoUtils(region_name=REGION_NAME) \
-            .invoke_lambda(lambda_function_arn=SERVICE_CURATE_ARN,
-                           invocation_type="RequestResponse",
-                           payload=json.dumps(curate_service_payload))
+
+        curate_service_response = boto_utils.BotoUtils(region_name=settings.aws.REGION_NAME) \
+            .invoke_lambda(
+                lambda_function_arn=settings.lambda_arn.SERVICE_CURATE_ARN,
+                invocation_type="RequestResponse",
+                payload=json.dumps(curate_service_payload)
+            )
+
         if curate_service_response["statusCode"] != StatusCode.CREATED:
             logger.info(f"failed to update service ({service_id}, {org_id}) curation {curate_service_response}")
             raise Exception("failed to update service curation")
