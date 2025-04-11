@@ -9,10 +9,8 @@ from registry.exceptions import InvalidOriginException, BadRequestException
 
 
 class OrganizationFactory:
-
     @staticmethod
     def org_domain_entity_from_payload(payload):
-
         org_uuid = payload["org_uuid"]
         org_id = payload["org_id"]
         org_name = payload["org_name"]
