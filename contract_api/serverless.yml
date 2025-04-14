@@ -3,6 +3,7 @@ plugins:
   - serverless-python-requirements
   - serverless-plugin-tracing
   - serverless-prune-plugin
+  - serverless-latest-layer-version
 
 service: contract-api
 provider:
@@ -63,7 +64,6 @@ package:
     - notification/**
     - dapp_user/**
   include:
-    - node_modules/singularitynet-platform-contracts/**
     - resources/**
 
 

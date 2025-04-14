@@ -57,7 +57,6 @@ package:
     - heath_check.sh
     - node_modules/**
   include:
-    - node_modules/singularitynet-platform-contracts/**
     - resources/**
 
 
