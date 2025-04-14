@@ -481,6 +481,8 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   service_event_consumer:
     warmup: true
@@ -494,6 +496,8 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   mpe_event_consumer:
     warmup: true
@@ -506,6 +510,8 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   service_create_deployment_handler:
     warmup: true
@@ -518,6 +524,8 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   service_deploy_status_notify:
     handler: contract_api/handlers.service_handlers.service_deployment_status_notification_handler
