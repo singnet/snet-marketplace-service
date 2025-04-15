@@ -21,7 +21,7 @@ REQUIRED_KEYS_FOR_CURRENCY_TO_TOKEN_CONVERSION = ['pathParameters', 'queryString
 
 
 def initiate(event, context):
-    logger.info("Received request to initiate order")
+    logger.info(f"Received request to initiate order {event}")
     try:
         username = event["requestContext"]["authorizer"]["claims"]["email"]
         payload = json.loads(event["body"])
@@ -66,7 +66,7 @@ def initiate(event, context):
 
 
 def execute(event, context):
-    logger.info("Received request to execute order")
+    logger.info(f"Received request to execute order {event}")
     try:
         username = event["requestContext"]["authorizer"]["claims"]["email"]
         payload = json.loads(event["body"])

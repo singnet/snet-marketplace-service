@@ -1,4 +1,5 @@
 from unittest import TestCase
+from unittest.mock import patch
 
 from common.repository import Repository
 from contract_api.config import NETWORKS, NETWORK_ID
@@ -13,8 +14,10 @@ class TestMPE(TestCase):
         self.repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
         self.mpe = MPE(self.repo)
 
-    def test_update_consumed_balance(self):
+    @patch("contract_api.mpe.MPE._get_channel_state_from_daemon")
+    def test_update_consumed_balance(self, mock_get_channel_state_from_daemon):
         mpe_repo = MPERepository(self.repo)
+        mock_get_channel_state_from_daemon.return_value = 15
         mpe_repo.create_channel(
             {
                 "channelId": 1,
@@ -43,19 +46,12 @@ class TestMPE(TestCase):
             }
         )
 
-        self.assertDictEqual({}, self.mpe.update_consumed_balance(1, 13, 100, 0))
-        try:
-            self.mpe.update_consumed_balance(2, 2, 100, 1)
-        except:
-            assert True
+        self.assertDictEqual({}, self.mpe.update_consumed_balance(1, signed_amount = 15))
+        self.assertDictEqual({}, self.mpe.update_consumed_balance(2, org_id = "test_org", service_id = "test_service"))
 
         try:
-            self.mpe.update_consumed_balance(2, 4, 100, 0)
-        except:
-            assert True
-        try:
-            self.mpe.update_consumed_balance(2, 4, 80, 1)
-        except:
+            self.mpe.update_consumed_balance(3, signed_amount = 10)
+        except Exception:
             assert True
 
     def tearDown(self):
