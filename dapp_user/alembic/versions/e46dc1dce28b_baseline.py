@@ -8,6 +8,7 @@ Create Date: 2020-01-09 14:56:23.600767
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
+from sqlalchemy import text
 
 # revision identifiers, used by Alembic.
 revision = 'e46dc1dce28b'
@@ -18,7 +19,7 @@ depends_on = None
 
 def upgrade():
     conn = op.get_bind()
-    conn.execute("""
+    conn.execute(text("""
             CREATE TABLE `user` (
               `row_id` int(11) NOT NULL AUTO_INCREMENT,
               `username` varchar(128) NOT NULL,
@@ -38,8 +39,8 @@ def upgrade():
               UNIQUE KEY `uq_usr` (`username`),
               UNIQUE KEY `uq_usr_email` (`email`)
             ) ;
-       """)
-    conn.execute("""
+       """))
+    conn.execute(text("""
              CREATE TABLE `user_service_vote` (
               `row_id` int(11) NOT NULL AUTO_INCREMENT,
               `username` varchar(128) NOT NULL,
@@ -51,8 +52,8 @@ def upgrade():
               PRIMARY KEY (`row_id`),
               UNIQUE KEY `unique_vote` (`username`,`org_id`,`service_id`)
             ) ;
-    """)
-    conn.execute("""
+    """))
+    conn.execute(text("""
             CREATE TABLE `user_service_feedback` (
               `row_id` int(11) NOT NULL AUTO_INCREMENT,
               `username` varchar(128) NOT NULL,
@@ -63,7 +64,7 @@ def upgrade():
               `row_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
               PRIMARY KEY (`row_id`)
             );
-       """)
+       """))
     op.create_table('user_preference',
         sa.Column('row_id', sa.Integer(), autoincrement=True, nullable=False),
         sa.Column('user_row_id', sa.Integer(), nullable=False),
