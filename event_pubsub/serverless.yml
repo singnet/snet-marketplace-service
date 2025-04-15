@@ -36,7 +36,6 @@ provider:
 
 package:
   exclude:
-    - common/**
     - contract_api/**
     - dapp_user/**
     - lambda_layers/**
