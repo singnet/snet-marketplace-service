@@ -3,7 +3,7 @@ plugins:
   - serverless-python-requirements
   - serverless-plugin-tracing
   - serverless-prune-plugin
-  - serverless-aws-documentation
+  - serverless-latest-layer-version
 
 service: contract-api
 provider:
@@ -33,84 +33,7 @@ custom:
     automatic: true
     includeLayers: true
     number: 2
-  documentation:
-    models:
-      -
-        name: "ErrorMessage"
-        contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/error.json)}
-      -
-        name: "GetAllGroupForOrgOutput"
-        contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_all_group_for_org.json):GetAllGroupForOrgOutput}
-      -
-        name: "GetAllOrgOutput"
-        contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_all_org.json):GetAllOrgOutput}
-      -
-        name: "GetChannelOutput"
-        contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_channel.json):GetChannelOutput}
-      -
-        name: "GetChannelsForGroupOutput"
-        contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_channels_for_group.json):GetChannelsForGroupOutput}
-      -
-        name: "GetChannelsOldApiOutput"
-        contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_channels_old_api.json):GetChannelsOldApiOutput}
-      -
-        name: "GetGroupForOrgIdOutput"
-        contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_group_for_org_id.json):GetGroupForOrgIdOutput}
-      -
-        name: "GetGroupForServiceOutput"
-        contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_group_for_service.json):GetGroupForServiceOutput}
-      -
-        name: "GetOrgForOrgIdOutput"
-        contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_org_for_org_id.json):GetOrgForOrgIdOutput}
-      -
-        name: "GetServiceForGivenOrgOutput"
-        contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_service_for_given_org.json):GetServiceForGivenOrgOutput}
-      -
-        name: "GetServiceForGivenOrgInput"
-        contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_service_for_given_org.json):GetServiceForGivenOrgInput}
-      -
-        name: "GetServiceGetOutput"
-        contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_service_get.json):GetServiceGetOutput}
-      -
-        name: "GetServicePostOutput"
-        contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_service_post.json):GetServicePostOutput}
-      -
-        name: "GetServicePostInput"
-        contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_service_post.json):GetServicePostInput}
-      -
-        name: "PostRatingForGivenServiceOutput"
-        contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/post_rating_for_given_service.json):PostRatingForGivenServiceOutput}
-      -
-        name: "ServiceCurationOutput"
-        contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/service_curation.json):ServiceCurationOutput}
-      -
-        name: "UpdateConsumedBalanceOutput"
-        contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/update_consumed_balance.json):UpdateConsumedBalanceOutput}
-      -
-        name: "UpdateConsumedBalanceInput"
-        contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/update_consumed_balance.json):UpdateConsumedBalanceInput}
-      -
-        name: "MarketplaceCarousel"
-        contentType: "application/json"
-        schema: ${file(contract_api/documentation/models/get_marketplace_carousel.json):MarketplaceCarouselOutput}
+
 package:
   exclude:
     - .circleci/**
@@ -141,7 +64,6 @@ package:
     - notification/**
     - dapp_user/**
   include:
-    - node_modules/singularitynet-platform-contracts/**
     - resources/**
 
 
@@ -173,23 +95,7 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-          documentation:
-            summary: "Get all organizations"
-            description: "Get all organizations high level data"
-            tags:
-              - "organization"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Organization Data"
-                responseModels:
-                  "application/json": "GetAllOrgOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
+
   get_org_for_org_id:
     warmup: true
     handler: contract_api/handlers.organization_handlers.get_org_for_org_id
@@ -219,23 +125,7 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-          documentation:
-            summary: "Get all organizations by orgId"
-            description: "Get all organization data by orgId"
-            tags:
-              - "organization"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Organization Data"
-                responseModels:
-                  "application/json": "GetOrgForOrgIdOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
+
   get_all_group_for_org:
     warmup: true
     handler: contract_api/handlers.organization_handlers.get_all_group_for_org
@@ -265,23 +155,7 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-          documentation:
-            summary: "Get all group for organization by orgId"
-            description: "Get all group data for given orgId"
-            tags:
-              - "group"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Group Data"
-                responseModels:
-                  "application/json": "GetAllGroupForOrgOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
+
   get_group_for_org_id:
     warmup: true
     handler:  contract_api/handlers.organization_handlers.get_group_for_org_id
@@ -311,23 +185,7 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-          documentation:
-            summary: "Get group for organization by orgId and groupId"
-            description: "Get group data for given orgId and groupId"
-            tags:
-              - "group"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Group Data"
-                responseModels:
-                  "application/json": "GetGroupForOrgIdOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
+
   get_service_get:
     warmup: true
     handler: contract_api/handlers.service_handlers.get_service_get
@@ -353,26 +211,7 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-          documentation:
-            summary: "Get service"
-            description: "Get service"
-            tags:
-              - "service"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            queryParams:
-              - name: "attribute"
-                description: "get key value pairs based on attribute"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Service Data"
-                responseModels:
-                  "application/json": "GetServiceGetOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
+
   get_service_post:
     warmup: true
     handler: contract_api/handlers.service_handlers.get_service_post
@@ -398,25 +237,7 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-          documentation:
-            summary: "Get service"
-            description: "Get service"
-            tags:
-              - "service"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            requestModels:
-              "application/json": "GetServicePostInput"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Service Data"
-                responseModels:
-                  "application/json": "GetServicePostOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
+
   get_group_for_service:
     warmup: true
     handler:  contract_api/handlers.service_handlers.get_group_for_service
@@ -447,23 +268,7 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-          documentation:
-            summary: "Get group by orgId and serviceId"
-            description: "Get group for given orgId and serviceId"
-            tags:
-              - "group"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Group Data"
-                responseModels:
-                  "application/json": "GetGroupForServiceOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
+
   get_service_for_given_org:
     warmup: true
     handler: contract_api/handlers.service_handlers.get_service_for_given_org
@@ -494,23 +299,7 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-          documentation:
-            summary: "Get service by orgId and serviceId"
-            description: "Get service for given orgId and serviceId"
-            tags:
-              - "service"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Service Data"
-                responseModels:
-                  "application/json": "GetServiceForGivenOrgOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
+
   post_rating_for_given_service:
     warmup: true
     handler: contract_api/handlers.service_handlers.post_rating_for_given_service
@@ -531,25 +320,7 @@ functions:
               paths:
                 orgId: true
                 serviceId: true
-          documentation:
-            summary: "update rating for service by serviceId and orgId"
-            description: "update rating for service by given serviceId and orgId "
-            tags:
-              - "service"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            requestModels:
-              "application/json": "GetServiceForGivenOrgInput"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "response"
-                responseModels:
-                  "application/json": "GetServiceForGivenOrgOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
+
   get_channels_for_group:
     warmup: true
     handler: contract_api/handlers.channel_handlers.get_channels_for_group
@@ -580,28 +351,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-          documentation:
-            summary: "Get channels for groupId and channelId"
-            description: "Get channels for given group by groupId and channelId"
-            tags:
-              - "channel"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            pathParams:
-              - name: "groupId"
-                description: "Enter groupId"
-              - name: "channelId"
-                description: "Enter channelId"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "response"
-                responseModels:
-                  "application/json": "GetChannelsForGroupOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
 
   get_channels_old_api:
     warmup: true
@@ -628,23 +377,7 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-          documentation:
-            summary: "Get channel"
-            description: "Get channel"
-            tags:
-              - "channel"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Channel Data"
-                responseModels:
-                  "application/json": "GetChannelsOldApiOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
+
   get_channel:
     warmup: true
     handler: contract_api/handlers.channel_handlers.get_channels
@@ -670,23 +403,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-          documentation:
-            summary: "Get channel"
-            description: "Get channel"
-            tags:
-              - "channel"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Channel Data"
-                responseModels:
-                  "application/json": "GetChannelOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
 
   update-consumed-balance:
     handler: contract_api/handlers.channel_handlers.update_consumed_balance
@@ -717,28 +433,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-          documentation:
-            summary: "Get balance by channel_id"
-            description: "Get balance for given channel_id"
-            tags:
-              - "channel"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            pathParams:
-              - name: "channel_id"
-                description: "Enter channel_id"
-            requestModels:
-              "application/json": "UpdateConsumedBalanceInput"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Channel Data"
-                responseModels:
-                  "application/json": "UpdateConsumedBalanceOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
 
   get_marketplace_carousel:
     handler: contract_api/handlers.ui_content_handlers.get_marketplace_carousel
@@ -764,23 +458,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-          documentation:
-            summary: "Get Marketplace carousel content"
-            description: "Get the list of banners and their respects CTAs to display in the marketplace dapp carousel"
-            tags:
-              - "ui"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Carousel Data"
-                responseModels:
-                  "application/json": "MarketplaceCarousel"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
 
   service-curation:
     handler: contract_api.handlers.service_handlers.service_curation
@@ -804,6 +481,8 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   service_event_consumer:
     warmup: true
@@ -817,6 +496,8 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   mpe_event_consumer:
     warmup: true
@@ -829,6 +510,8 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   service_create_deployment_handler:
     warmup: true
@@ -841,6 +524,8 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   service_deploy_status_notify:
     handler: contract_api/handlers.service_handlers.service_deployment_status_notification_handler

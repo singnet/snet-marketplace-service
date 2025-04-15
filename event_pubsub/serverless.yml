@@ -1,5 +1,4 @@
 plugins:
-  #- serverless-offline
   - serverless-python-requirements
   - serverless-plugin-tracing
   - serverless-prune-plugin
@@ -20,7 +19,7 @@ custom:
 
 provider:
   name: aws
-  runtime: python3.7
+  runtime: python3.8
   description: event_publisher # optional, Description to publish to AWS
   memorySize: 512
   timeout: 60
@@ -91,9 +90,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     layers:
-        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
-        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
-        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
         - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
@@ -117,9 +113,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     layers:
-        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
-        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
-        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
         - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
@@ -142,9 +135,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     layers:
-        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
-        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
-        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
         - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
@@ -167,9 +157,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     layers:
-        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
-        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
-        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
         - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
@@ -192,9 +179,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     layers:
-        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
-        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
-        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
         - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
@@ -217,9 +201,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     layers:
-        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
-        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
-        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
         - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
@@ -242,9 +223,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     layers:
-        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
-        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
-        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
         - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
@@ -267,9 +245,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     layers:
-        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
-        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
-        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
         - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
@@ -292,9 +267,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     layers:
-        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
-        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
-        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
         - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
@@ -317,9 +289,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     layers:
-        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
-        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
-        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
         - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
@@ -342,9 +311,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     layers:
-      - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
-      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
-      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
       - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
@@ -367,9 +333,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     layers:
-      - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
-      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
-      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
       - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
@@ -392,9 +355,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     layers:
-      - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
-      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
-      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
       - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
@@ -417,9 +377,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     layers:
-      - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
-      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
-      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
       - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
@@ -442,9 +399,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     layers:
-      - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
-      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
-      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
       - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
@@ -467,9 +421,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     layers:
-      - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
-      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
-      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
       - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
@@ -492,9 +443,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     layers:
-      - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
-      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
-      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
       - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
@@ -517,9 +465,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     layers:
-      - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
-      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
-      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
       - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
@@ -542,9 +487,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     layers:
-      - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
-      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
-      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
       - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
@@ -567,9 +509,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     layers:
-      - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
-      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
-      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
       - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
@@ -593,9 +532,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
     layers:
-        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
-        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
-        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
         - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:

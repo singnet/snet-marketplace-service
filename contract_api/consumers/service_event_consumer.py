@@ -25,7 +25,7 @@ from contract_api.config import (
     S3_BUCKET_SECRET_KEY,
     ASSET_TEMP_EXTRACT_DIRECTORY,
     ASSETS_COMPONENT_BUCKET_NAME,
-    MANAGE_PROTO_COMPILATION,
+    MANAGE_PROTO_COMPILATION, CONTRACT_BASE_PATH,
 )
 from contract_api.consumers.event_consumer import EventConsumer
 from contract_api.dao.service_repository import ServiceRepository
@@ -76,7 +76,7 @@ class ServiceEventConsumer(EventConsumer):
     def _get_registry_contract(self):
         net_id = NETWORK_ID
         base_contract_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '..', '..', 'node_modules', 'singularitynet-platform-contracts'))
+            os.path.join(CONTRACT_BASE_PATH,'node_modules', 'singularitynet-platform-contracts'))
         registry_contract = self._blockchain_util.get_contract_instance(base_contract_path, "REGISTRY", net_id)
         return registry_contract
 
