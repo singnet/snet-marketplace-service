@@ -6,6 +6,7 @@ Create Date: 2019-09-18 14:33:54.629555
 
 """
 from alembic import op
+from sqlalchemy import text
 
 # revision identifiers, used by Alembic.
 revision = 'd8822b756c18'
@@ -17,7 +18,7 @@ depends_on = None
 def upgrade():
     conn = op.get_bind()
 
-    conn.execute("""
+    conn.execute(text("""
             CREATE TABLE `mpe_channel` (
               `row_id` int(11) NOT NULL AUTO_INCREMENT,
               `channel_id` int(11) NOT NULL,
@@ -34,9 +35,9 @@ def upgrade():
               PRIMARY KEY (`row_id`),
               UNIQUE KEY `uq_channel` (`channel_id`, `sender`, `recipient`, `groupId`)
             ) ;
-            """)
+            """))
 
-    conn.execute("""
+    conn.execute(text("""
 
             CREATE TABLE `organization` (
               `row_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -54,8 +55,8 @@ def upgrade():
               PRIMARY KEY (`row_id`),
               UNIQUE KEY `uq_org` (`org_id`)
             )
-        """)
-    conn.execute("""
+        """))
+    conn.execute(text("""
             CREATE TABLE `org_group` (
               `row_id` int(11) NOT NULL AUTO_INCREMENT,
               `org_id` varchar(128) NOT NULL,
@@ -67,8 +68,8 @@ def upgrade():
               PRIMARY KEY (`row_id`),
               UNIQUE KEY `uq_org_grp` (`org_id`,`group_id`)
             ) ;
-        """)
-    conn.execute("""
+        """))
+    conn.execute(text("""
             CREATE TABLE `members` (
               `row_id` int(11) NOT NULL AUTO_INCREMENT,
               `org_id` varchar(128) NOT NULL,
@@ -79,9 +80,9 @@ def upgrade():
               KEY `MembersFK_idx` (`org_id`),
               CONSTRAINT `MembersFK` FOREIGN KEY (`org_id`) REFERENCES `organization` (`org_id`) ON DELETE CASCADE
             ) ;
-        """)
+        """))
 
-    conn.execute("""
+    conn.execute(text("""
             CREATE TABLE `service` (
               `row_id` int(11) NOT NULL AUTO_INCREMENT,
               `org_id` varchar(128) NOT NULL,
@@ -95,8 +96,8 @@ def upgrade():
               PRIMARY KEY (`row_id`),
               UNIQUE KEY `uq_srvc` (`org_id`,`service_id`)
             ) ;
-    """)
-    conn.execute("""
+    """))
+    conn.execute(text("""
             CREATE TABLE `service_metadata` (
               `row_id` int(11) NOT NULL AUTO_INCREMENT,
               `service_row_id` int(11) NOT NULL,
@@ -123,8 +124,8 @@ def upgrade():
               KEY `ServiceFK_idx` (`service_row_id`),
               CONSTRAINT `ServiceMdataFK` FOREIGN KEY (`service_row_id`) REFERENCES `service` (`row_id`) ON DELETE CASCADE
             )
-       """)
-    conn.execute("""
+       """))
+    conn.execute(text("""
             CREATE TABLE `service_group` (
               `row_id` int(11) NOT NULL AUTO_INCREMENT,
               `service_row_id` int(11) NOT NULL,
@@ -142,9 +143,9 @@ def upgrade():
               KEY `ServiceFK_idx` (`service_row_id`),
               CONSTRAINT `ServiceGrpFK` FOREIGN KEY (`service_row_id`) REFERENCES `service` (`row_id`) ON DELETE CASCADE
             ) ;
-       """)
+       """))
 
-    conn.execute("""
+    conn.execute(text("""
         CREATE TABLE `service_endpoint` (
           `row_id` int(11) NOT NULL AUTO_INCREMENT,
           `service_row_id` int(11) NOT NULL,
@@ -162,8 +163,8 @@ def upgrade():
           KEY `ServiceFK_idx` (`service_row_id`),
           CONSTRAINT `ServiceEndpt` FOREIGN KEY (`service_row_id`) REFERENCES `service` (`row_id`) ON DELETE CASCADE
         );
-    """)
-    conn.execute("""
+    """))
+    conn.execute(text("""
             CREATE TABLE `service_tags` (
               `row_id` int(11) NOT NULL AUTO_INCREMENT,
               `service_row_id` int(11) NOT NULL,
@@ -177,8 +178,8 @@ def upgrade():
               KEY `ServiceFK_idx` (`service_row_id`),
               CONSTRAINT `ServiceFK` FOREIGN KEY (`service_row_id`) REFERENCES `service` (`row_id`) ON DELETE CASCADE
             ) ;
-       """)
-    conn.execute("""
+       """))
+    conn.execute(text("""
             CREATE TABLE `daemon_token` (
               `row_id` int(11) NOT NULL AUTO_INCREMENT,
               `daemon_id` varchar(256) NOT NULL,
@@ -190,13 +191,13 @@ def upgrade():
               KEY `daemon_id_idx` (`daemon_id`),
               UNIQUE KEY `uq_daemon_id` (`daemon_id`)
             ) ;
-        """)
+        """))
 
 
 def downgrade():
     conn = op.get_bind()
-    conn.execute("""
+    conn.execute(text("""
                 drop table mpe_channel
             """
-                 )
+    ))
 

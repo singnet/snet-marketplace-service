@@ -6,7 +6,7 @@ Create Date: 2021-01-11 19:01:28.355682
 
 """
 from alembic import op
-import sqlalchemy as sa
+from sqlalchemy import text
 
 
 # revision identifiers, used by Alembic.
@@ -18,7 +18,7 @@ depends_on = None
 
 def upgrade():
    conn = op.get_bind()
-   conn.execute("""
+   conn.execute(text("""
             CREATE TABLE `service_media` (
             `row_id` int NOT NULL AUTO_INCREMENT,
             `org_id` varchar(100) NOT NULL,
@@ -36,9 +36,9 @@ def upgrade():
             KEY `ServiceMedisFK` (`service_row_id`),
             CONSTRAINT `ServiceMedisFK` FOREIGN KEY (`service_row_id`) REFERENCES `service` (`row_id`) ON DELETE CASCADE
             );
-            """
+            """)
     )
 
 def downgrade():
  conn = op.get_bind()
- conn.execute("DROP TABLE service_media;")
+ conn.execute(text("DROP TABLE service_media;"))
