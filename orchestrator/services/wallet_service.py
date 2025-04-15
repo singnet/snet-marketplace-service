@@ -14,6 +14,7 @@ class WalletService:
         self.boto_client = BotoUtils(REGION_NAME)
 
     def create_channel(self, open_channel_body):
+        logger.info(f"Request to create channel event: {open_channel_body}")
         create_channel_transaction_payload = {
             "body": json.dumps(open_channel_body)
         }
