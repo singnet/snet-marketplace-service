@@ -14,6 +14,9 @@ NETWORKS = {
     }
 }
 NETWORK_ID = 3
+TOKEN_NAME = ""
+STAGE = ""
+
 DB_DETAILS = {
     "driver": "mysql+pymysql",
     "host": "localhost",

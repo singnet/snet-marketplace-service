@@ -39,14 +39,15 @@ class BlockChainUtil(object):
             raise Exception("Only HTTP_PROVIDER and WS_PROVIDER provider type are supported.")
         self.web3_object = Web3(self.provider)
 
-    def load_contract(self, path):
+    @staticmethod
+    def load_contract(path):
         with open(path) as f:
             contract = json.load(f)
         return contract
 
-    def read_contract_address(self, net_id, path, key):
+    def read_contract_address(self, net_id, path, token_name, stage, key='address'):
         contract = self.load_contract(path)
-        return Web3.to_checksum_address(contract[str(net_id)][key])
+        return Web3.to_checksum_address(contract[str(net_id)][token_name][stage][key])
 
     def contract_instance(self, contract_abi, address):
         if self._provider_type == "HTTP_PROVIDER":
@@ -57,11 +58,14 @@ class BlockChainUtil(object):
         self.web3_object = web3_object
         return web3_object.eth.contract(abi=contract_abi, address=address)
 
-    def get_contract_instance(self, base_path, contract_name, net_id):
+    def get_contract_instance(self, base_path, contract_name, net_id, token_name, stage):
         contract_network_path, contract_abi_path = self.get_contract_file_paths(base_path, contract_name)
 
-        contract_address = self.read_contract_address(net_id=net_id, path=contract_network_path,
-                                                      key='address')
+        contract_address = self.read_contract_address(net_id = net_id,
+                                                      path = contract_network_path,
+                                                      token_name = token_name,
+                                                      stage = stage,
+                                                      key = 'address')
         contract_abi = self.load_contract(contract_abi_path)
         logger.debug(f"contract address is {contract_address}")
         contract_instance = self.contract_instance(contract_abi=contract_abi, address=contract_address)
@@ -89,11 +93,15 @@ class BlockChainUtil(object):
         return self.web3_object.eth.account.sign_transaction(transaction_object, private_key).raw_transaction
 
     def create_transaction_object(self, *positional_inputs, method_name, address, contract_path, contract_address_path,
-                                  net_id, gas=None):
+                                  net_id, token_name, stage, gas=None):
         nonce = self.get_nonce(address=address)
-        self.contract = self.load_contract(path=contract_path)
-        self.contract_address = self.read_contract_address(net_id=net_id, path=contract_address_path, key='address')
-        self.contract_instance = self.contract_instance(contract_abi=self.contract, address=self.contract_address)
+        contract = self.load_contract(path=contract_path)
+        contract_address = self.read_contract_address(net_id = net_id,
+                                                      path = contract_address_path,
+                                                      token_name = token_name,
+                                                      stage = stage,
+                                                      key = 'address')
+        contract_instance = self.contract_instance(contract_abi=contract, address=contract_address)
         logger.info(f"gas_price :: {self.web3_object.eth.gas_price}")
         logger.info(f"nonce :: {nonce}")
         logger.info(f"positional_inputs :: {positional_inputs}")
@@ -106,7 +114,7 @@ class BlockChainUtil(object):
         }
         if gas is not None:
             options.update({"gas": gas})
-        transaction_object = getattr(self.contract_instance.functions, method_name)(
+        transaction_object = getattr(contract_instance.functions, method_name)(
             *positional_inputs).build_transaction(options)
         return transaction_object
 
@@ -130,7 +138,8 @@ class BlockChainUtil(object):
     def get_transaction_receipt_from_blockchain(self, transaction_hash):
         return self.web3_object.eth.get_transaction_receipt(transaction_hash)
 
-    def get_contract_file_paths(self, base_path, contract_name):
+    @staticmethod
+    def get_contract_file_paths(base_path, contract_name):
         logger.info(f"base_path: {base_path}, contract_name: {contract_name}")
 
         if contract_name == ContractType.REGISTRY.value:

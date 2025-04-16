@@ -11,8 +11,17 @@ from common.blockchain_util import BlockChainUtil
 from common.logger import get_logger
 from common.utils import Utils
 from resources.certificates.root_certificate import certificate
-from signer.config import GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_ARN, METERING_ARN, NETWORKS, \
-    PREFIX_FREE_CALL, REGION_NAME, SIGNER_ADDRESS, SIGNER_KEY
+from signer.config import (
+    GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_ARN,
+    METERING_ARN,
+    NETWORKS,
+    PREFIX_FREE_CALL,
+    REGION_NAME,
+    SIGNER_ADDRESS,
+    SIGNER_KEY,
+    TOKEN_NAME,
+    STAGE
+)
 from signer.constant import MPE_ADDR_PATH
 from signer.stubs import state_service_pb2, state_service_pb2_grpc
 
@@ -30,7 +39,12 @@ class Signer:
             provider=NETWORKS[self.net_id]["http_provider"],
         )
         self.mpe_address = self.obj_blockchain_utils.read_contract_address(
-            net_id=self.net_id, path=MPE_ADDR_PATH, key="address")
+            net_id=self.net_id,
+            path=MPE_ADDR_PATH,
+            key="address",
+            token_name = TOKEN_NAME,
+            stage = STAGE
+        )
         self.current_block_no = self.obj_blockchain_utils.get_current_block_no()
 
     def _get_free_calls_allowed(self, org_id, service_id, group_id):

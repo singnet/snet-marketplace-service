@@ -13,6 +13,10 @@ NETWORKS = {
         },
     }
 }
+NETWORK_ID = 0
+TOKEN_NAME = ""
+STAGE = ""
+
 DB_DETAILS = {
     "driver": "mysql+pymysql",
     "host": "localhost",
@@ -26,7 +30,6 @@ SIGNER_ADDRESS = ""
 EXECUTOR_KEY = ""
 EXECUTOR_ADDRESS = ""
 ENCRYPTION_KEY = ""
-NETWORK_ID = 0
 SLACK_HOOK = {}
 REGION_NAME = "us-east-2"
 WALLET_TYPES_ALLOWED = []

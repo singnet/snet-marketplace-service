@@ -156,7 +156,8 @@ class TestSignUPAPI(unittest.TestCase):
     @patch("common.blockchain_util.BlockChainUtil.read_contract_address")
     @patch("common.blockchain_util.BlockChainUtil.get_current_block_no")
     @patch("boto3.client")
-    def test_token_for_free_call(self, boto_client,mock_current_block_no,mock_read_contract_address,mock_endpoint,mock_daemon_free_call):
+    def test_token_for_free_call(self, boto_client, mock_current_block_no, mock_read_contract_address,
+                                 mock_endpoint, mock_daemon_free_call):
         boto_client.return_value = None
 
         mock_read_contract_address.return_value = "0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C"
