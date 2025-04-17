@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import List
 from uuid import uuid4
 
@@ -16,6 +16,7 @@ from registry.infrastructure.models import (
     OrganizationArchive,
 )
 from registry.domain.models.organization import Organization as OrganizationEntity
+from registry.domain.models.organization_member import OrganizationMember as OrganizationMemberEntity
 from registry.domain.models.group import Group as GroupEntity
 from registry.domain.models.organization import OrganizationState as OrganizationStateEntity
 from registry.infrastructure.repositories.base_repository import BaseRepository
@@ -79,7 +80,6 @@ class OrganizationPublisherRepository(BaseRepository):
             raise OrganizationNotFoundException()
         organization_db.assets = organization.assets
         organization_db.metadata_uri = organization.metadata_uri
-        organization_db.org_state[0].updated_on = datetime.utcnow()
         organization_db.org_state[0].updated_by = username
         self.session.commit()
 
@@ -97,7 +97,6 @@ class OrganizationPublisherRepository(BaseRepository):
 
         organization.org_state[0].wallet_address = wallet_address
         organization.org_state[0].state = OrganizationStatus.PUBLISH_IN_PROGRESS.value
-        organization.org_state[0].updated_on = datetime.utcnow()
         organization.org_state[0].updated_by = username
         organization.org_state[0].transaction_hash = transaction_hash
         organization.org_state[0].nonce = nonce
@@ -164,7 +163,6 @@ class OrganizationPublisherRepository(BaseRepository):
 
         organization.org_state[0].state = status
         organization.org_state[0].updated_by = updated_by
-        organization.org_state[0].updated_on = datetime.utcnow()
         if comment is not None:
             comments = list(organization.org_state[0].comments)
             comments.append(comment.to_dict())
@@ -173,7 +171,7 @@ class OrganizationPublisherRepository(BaseRepository):
 
     @BaseRepository.write_ops
     def add_organization(self, organization, username, state, address="", test_transaction_hash=None):
-        current_time = datetime.utcnow()
+        current_time = datetime.now(UTC)
         org_addresses_domain_entity = organization.addresses
         group_domain_entity = organization.groups
 
@@ -198,8 +196,6 @@ class OrganizationPublisherRepository(BaseRepository):
                 pincode=address.pincode,
                 state=address.state,
                 country=address.country,
-                created_on=current_time, 
-                pdated_on=current_time
             ) for address in org_addresses_domain_entity
         ]
 
@@ -210,10 +206,8 @@ class OrganizationPublisherRepository(BaseRepository):
                 transaction_hash="",
                 wallet_address="",
                 created_by=username,
-                created_on=current_time,
                 test_transaction_hash=test_transaction_hash,
                 updated_by=username,
-                updated_on=current_time,
                 reviewed_by=""
             )
         ]
@@ -237,6 +231,7 @@ class OrganizationPublisherRepository(BaseRepository):
         )
 
         self.add_item(organization_db)
+        
         self.add_item(OrganizationMember(
             invite_code=uuid4().hex,
             org_uuid=organization.uuid,
@@ -246,16 +241,20 @@ class OrganizationPublisherRepository(BaseRepository):
             status=OrganizationMemberStatus.ACCEPTED.value,
             transaction_hash="",
             invited_on=current_time,
-            created_on=current_time,
-            updated_on=current_time
         ))
 
         organization_entity = OrganizationFactory.org_domain_entity_from_repo_model(organization_db)
         return organization_entity
 
     @BaseRepository.write_ops
-    def _update_organization(self, organization_db_model, organization, username, state, test_transaction_hash=None):
-        current_time = datetime.utcnow()
+    def _update_organization(
+        self,
+        organization_db_model: Organization,
+        organization: OrganizationEntity,
+        username: str,
+        state: str,
+        test_transaction_hash: str | None = None
+    ):
         organization_db_model.name = organization.name
         organization_db_model.org_id = organization.id
         organization_db_model.org_type = organization.org_type
@@ -268,7 +267,6 @@ class OrganizationPublisherRepository(BaseRepository):
         organization_db_model.assets = organization.assets
         organization_db_model.metadata_uri = organization.metadata_uri
         organization_db_model.org_state[0].state = state
-        organization_db_model.org_state[0].updated_on = current_time
         if test_transaction_hash is not None:
             organization_db_model.org_state[0].test_transaction_hash = test_transaction_hash
         organization_db_model.org_state[0].updated_by = username
@@ -278,19 +276,31 @@ class OrganizationPublisherRepository(BaseRepository):
         group_domain_entity = organization.groups
         addresses = [
             OrganizationAddress(
-                org_uuid=organization.uuid, address_type=address.address_type, street_address=address.street_address,
-                apartment=address.apartment, city=address.city, pincode=address.pincode, state=address.state,
-                country=address.country, created_on=current_time, updated_on=current_time
+                org_uuid=organization.uuid,
+                address_type=address.address_type,
+                street_address=address.street_address,
+                apartment=address.apartment,
+                city=address.city,
+                pincode=address.pincode,
+                state=address.state,
+                country=address.country,
             )
             for address in org_addresses_domain_entity]
 
         groups = [
-            Group(name=group.name, id=group.group_id, org_uuid=organization.uuid,
-                  payment_address=group.payment_address, payment_config=group.payment_config, status=group.status)
-            for group in group_domain_entity]
+            Group(
+                name=group.name,
+                id=group.group_id,
+                org_uuid=organization.uuid,
+                payment_address=group.payment_address,
+                payment_config=group.payment_config,
+                status=group.status
+            ) for group in group_domain_entity
+        ]
 
-        self.session.query(OrganizationAddress).filter(OrganizationAddress.org_uuid == organization.uuid) \
-            .delete(synchronize_session='fetch')
+        self.session.query(OrganizationAddress).filter(
+            OrganizationAddress.org_uuid == organization.uuid
+        ).delete(synchronize_session='fetch')
         self.session.query(Group).filter(Group.org_uuid == organization.uuid).delete(synchronize_session='fetch')
         self.session.commit()
 
@@ -310,7 +320,7 @@ class OrganizationPublisherRepository(BaseRepository):
             org_state=org_state, groups=groups
         ))
 
-    def get_org_member(self, username=None, org_uuid=None, role=None, status=None, invite_code=None):
+    def get_org_member(self, username=None, org_uuid=None, role=None, status=None, invite_code=None) -> List[OrganizationMemberEntity]:
         org_member_query = self.session.query(OrganizationMember)
         if org_uuid is not None:
             org_member_query = org_member_query.filter(OrganizationMember.org_uuid == org_uuid)
@@ -325,11 +335,10 @@ class OrganizationPublisherRepository(BaseRepository):
 
         org_member = org_member_query.all()
     
-        return [OrganizationFactory.org_member_domain_entity_from_repo_model(org_member)] if org_member else []
+        return OrganizationFactory.org_member_domain_from_repo_model_list(org_member) if org_member else []
 
     def add_member(self, org_member):
         member_db_models = []
-        current_time = datetime.utcnow()
         for member in org_member:
             member_db_models.append(
                 OrganizationMember(
@@ -340,9 +349,7 @@ class OrganizationPublisherRepository(BaseRepository):
                     transaction_hash=member.transaction_hash,
                     username=member.username,
                     invite_code=member.invite_code,
-                    updated_on=member.updated_on,
                     invited_on=member.invited_on,
-                    created_on=current_time
                 )
             )
         self.add_all_items(member_db_models)
@@ -358,7 +365,7 @@ class OrganizationPublisherRepository(BaseRepository):
             .filter(OrganizationMember.status == OrganizationMemberStatus.PENDING.value) \
             .all()
 
-        return True if len(org_members) == 0 else False
+        return True if len(org_members) != 0 else False
 
     @BaseRepository.write_ops
     def delete_members(self, org_member_list, member_status):
@@ -385,7 +392,6 @@ class OrganizationPublisherRepository(BaseRepository):
         for org_member in org_members_db_items:
             org_member.status = OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value
             org_member.transaction_hash = transaction_hash
-            org_member.updated_on = datetime.utcnow()
         self.session.commit()
 
     @BaseRepository.write_ops
@@ -403,7 +409,6 @@ class OrganizationPublisherRepository(BaseRepository):
         elif org_member.status == OrganizationMemberStatus.PENDING.value and org_member.username == username:
             org_member.address = wallet_address
             org_member.status = OrganizationMemberStatus.ACCEPTED.value
-        org_member.updated_on = datetime.utcnow()
         self.session.commit()
 
     @BaseRepository.write_ops
@@ -416,7 +421,6 @@ class OrganizationPublisherRepository(BaseRepository):
             raise Exception("No existing member found")
 
         org_member.status = member.status
-        org_member.updated_on = datetime.utcnow()
         self.session.commit()
 
     @BaseRepository.write_ops
@@ -435,7 +439,6 @@ class OrganizationPublisherRepository(BaseRepository):
                 else:
                     raise Exception("Invalid verification status")
                 organization.org_state[0].updated_by = updated_by
-                organization.org_state[0].updated_at = datetime.utcnow()
                 organization.org_state[0].state = updated_status
         self.session.commit()
 

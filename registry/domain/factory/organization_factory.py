@@ -1,38 +1,14 @@
-from registry.settings import settings
 from registry.constants import Role, OrganizationAddressType
 from registry.domain.models.comment import Comment
 from registry.domain.models.group import Group
 from registry.domain.models.organization import Organization, OrganizationState
 from registry.domain.models.organization_address import OrganizationAddress
 from registry.domain.models.organization_member import OrganizationMember
-from registry.exceptions import InvalidOriginException, BadRequestException
+from registry.infrastructure.models import Organization as OrganizationDbModel
+from registry.exceptions import BadRequestException
 
 
 class OrganizationFactory:
-    @staticmethod
-    def org_domain_entity_from_payload(payload):
-        org_uuid = payload["org_uuid"]
-        org_id = payload["org_id"]
-        org_name = payload["org_name"]
-        org_type = payload["org_type"]
-        description = payload["description"]
-        short_description = payload["short_description"]
-        url = payload["url"]
-        duns_no = payload["duns_no"]
-        origin = payload["origin"]
-        if origin not in settings.aws.ALLOWED_ORIGIN:
-            raise InvalidOriginException()
-        contacts = payload["contacts"]
-        assets = payload["assets"]
-        metadata_uri = payload["metadata_uri"]
-        groups = OrganizationFactory.group_domain_entity_from_group_list_payload(payload["groups"])
-        addresses = OrganizationFactory \
-            .domain_address_entity_from_address_list_payload(payload["org_address"]["addresses"])
-        organization = Organization(
-            org_uuid, org_id, org_name, org_type, origin, description, short_description, url, contacts,
-            assets, metadata_uri, duns_no, groups, addresses, None, [])
-        return organization
-
     @staticmethod
     def group_domain_entity_from_payload(payload):
         group_id = payload["id"]
@@ -75,14 +51,14 @@ class OrganizationFactory:
 
     @staticmethod
     def get_comment_from_db(comments):
-        return [Comment(comment['comment'], comment['created_by'], comment['created_at']) for comment in comments]
+        return [Comment(comment['comment'], comment['created_by'], comment['created_on']) for comment in comments]
 
     @staticmethod
-    def org_domain_entity_from_repo_model(organization_repo_model):
+    def org_domain_entity_from_repo_model(organization_repo_model: OrganizationDbModel):
         return Organization(
             uuid=organization_repo_model.uuid,
             name=organization_repo_model.name,
-            org_id=organization_repo_model.org_id,
+            id=organization_repo_model.org_id,
             org_type=organization_repo_model.org_type,
             origin=organization_repo_model.origin,
             description=organization_repo_model.description,
@@ -128,20 +104,33 @@ class OrganizationFactory:
         item = item[0]
         return OrganizationState(
             org_uuid=item.org_uuid,
-            state=item.state, transaction_hash=item.transaction_hash, wallet_address=item.wallet_address,
-            created_on=item.created_on, updated_on=item.updated_on, updated_by=item.updated_by,
-            reviewed_by=item.reviewed_by, reviewed_on=item.reviewed_on,
-            comments=OrganizationFactory.get_comment_from_db(item.comments), created_by=item.created_by)
+            state=item.state,
+            transaction_hash=item.transaction_hash,
+            wallet_address=item.wallet_address,
+            created_on=item.created_on,
+            updated_on=item.updated_on,
+            updated_by=item.updated_by,
+            reviewed_by=item.reviewed_by,
+            reviewed_on=item.reviewed_on,
+            comments=OrganizationFactory.get_comment_from_db(item.comments),
+            created_by=item.created_by
+            )
 
     @staticmethod
     def parse_organization_state_from_db(item):
         return OrganizationState(
-            org_uuid=item.org_uuid, state=item.state, transaction_hash=item.transaction_hash,
+            org_uuid=item.org_uuid,
+            state=item.state,
+            transaction_hash=item.transaction_hash,
             wallet_address=item.wallet_address,
-            created_on=item.created_on, updated_on=item.updated_on, updated_by=item.updated_by,
-            reviewed_by=item.reviewed_by, reviewed_on=item.reviewed_on,
+            created_on=item.created_on,
+            updated_on=item.updated_on,
+            updated_by=item.updated_by,
+            reviewed_by=item.reviewed_by,
+            reviewed_on=item.reviewed_on,
             comments=OrganizationFactory.get_comment_from_db(item.comments),
-            created_by=item.created_by)
+            created_by=item.created_by
+        )
 
     @staticmethod
     def parse_organization_state_from_db_list(org_state_db_list):

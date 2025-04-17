@@ -7,9 +7,9 @@ from registry.domain.models.organization import Organization as OrganizationEnti
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.exceptions import InvalidOriginException
 from registry.constants import ORG_STATUS_LIST, ORG_TYPE_VERIFICATION_TYPE_MAPPING, OrganizationActions, OrganizationType
-from infrastructure.storage_provider import StorageProviderType
+from registry.infrastructure.storage_provider import StorageProviderType
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 
@@ -28,20 +28,22 @@ class GetGroupByOrganizationIdRequest(BaseModel):
 
 
 class CreateOrganizationRequest(BaseModel):
-    uuid: str
-    org_id: str
-    name: str
-    type: str
+    model_config = ConfigDict(validate_by_name=True, validate_by_alias=True)
+
+    uuid: str = Field(alias="org_uuid")
+    id: str = Field(alias="org_id")
+    name: str = Field(alias="org_name")
+    type: str = Field(alias="org_type")
     description: str
     short_description: str
     url: str
     duns_no: str
     origin: str
-    contacts: dict
+    contacts: list
     assets: dict
     metadata_uri: str
     groups: list
-    addresses: list
+    org_address: dict
 
     @classmethod
     def validate_event(cls, event: dict) -> 'CreateOrganizationRequest':
@@ -70,7 +72,7 @@ class CreateOrganizationRequest(BaseModel):
     def map_to_entity(self) -> OrganizationEntity:
         return OrganizationEntity(
             uuid=self.uuid,
-            org_id=self.org_id,
+            id=self.id,
             name=self.name,
             org_type=self.type,
             description=self.description,
@@ -82,27 +84,29 @@ class CreateOrganizationRequest(BaseModel):
             assets=self.assets,
             metadata_uri=self.metadata_uri,
             groups=OrganizationFactory.group_domain_entity_from_group_list_payload(self.groups),
-            addresses=OrganizationFactory.domain_address_entity_from_address_list_payload(self.addresses),
+            addresses=OrganizationFactory.domain_address_entity_from_address_list_payload(self.org_address["addresses"]),
             org_state=None,
             members=[]
         )
 
 
 class UpdateOrganizationRequest(BaseModel):
-    uuid: str
-    org_id: str
-    name: str
-    type: str
+    model_config = ConfigDict(validate_by_name=True, validate_by_alias=True)
+
+    uuid: str = Field(alias="org_uuid")
+    id: str = Field(alias="org_id")
+    name: str = Field(alias="org_name")
+    type: str = Field(alias="org_type")
     description: str
     short_description: str
     url: str
     duns_no: str
     origin: str
-    contacts: dict
+    contacts: list
     assets: dict
     metadata_uri: str
     groups: list
-    addresses: list
+    org_address: dict
 
     action: str
 
@@ -138,7 +142,7 @@ class UpdateOrganizationRequest(BaseModel):
     def map_to_entity(self) -> OrganizationEntity:
         return OrganizationEntity(
             uuid=self.uuid,
-            org_id=self.org_id,
+            id=self.id,
             name=self.name,
             org_type=self.type,
             description=self.description,
@@ -150,7 +154,7 @@ class UpdateOrganizationRequest(BaseModel):
             assets=self.assets,
             metadata_uri=self.metadata_uri,
             groups=OrganizationFactory.group_domain_entity_from_group_list_payload(self.groups),
-            addresses=OrganizationFactory.domain_address_entity_from_address_list_payload(self.addresses),
+            addresses=OrganizationFactory.domain_address_entity_from_address_list_payload(self.org_address["addresses"]),
             org_state=None,
             members=[]
         )
@@ -210,8 +214,8 @@ class SaveTransactionHashForOrganizationRequest(BaseModel):
 
 class GetAllMembersRequest(BaseModel):
     org_uuid: str
-    status: str
-    role: str
+    status: str | None
+    role: str | None
    
     @classmethod
     def validate_event(cls, event: dict) -> "GetAllMembersRequest":
@@ -234,6 +238,8 @@ class GetAllMembersRequest(BaseModel):
 
        
 class GetMemberRequest(BaseModel):
+    model_config = ConfigDict(validate_by_name=True, validate_by_alias=True)
+
     org_uuid: str
     member_username: str = Field(alias="username")
 

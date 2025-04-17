@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, UTC
 import tempfile
 from typing import Union
 from urllib.parse import urlparse
@@ -245,7 +245,7 @@ class OrganizationService:
         return "OK"
 
     def invite_members(self, request: InviteMembersRequest):
-        current_time = datetime.utcnow()
+        current_time = datetime.now(UTC)
         requested_invite_member_list = OrganizationFactory.org_member_domain_entity_from_payload_list(
             request.members,
             request.org_uuid

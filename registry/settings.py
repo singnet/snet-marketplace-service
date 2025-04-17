@@ -23,6 +23,7 @@ class IPFSConfig(BaseModel):
 
 
 class EmailsConfig(BaseModel):
+    PUBLISHER_PORTAl_DAPP_URL: str = Field(default=config.EMAILS["PUBLISHER_PORTAL_DAPP_URL"])
     PUBLISHER_PORTAL_SUPPORT_MAIL: str = Field(default=config.EMAILS["PUBLISHER_PORTAL_SUPPORT_MAIL"])
     ORG_APPROVERS_DLIST: str = Field(default=config.EMAILS["ORG_APPROVERS_DLIST"])
     SERVICE_APPROVERS_DLIST: str = Field(default=config.EMAILS["SERVICE_APPROVERS_DLIST"])

@@ -88,7 +88,8 @@ ORG_PAYLOAD_MODEL = json.dumps({
         "addresses": []
     },
     "groups": json.loads(ORG_GROUPS),
-    "state": {}
+    "state": {},
+    "addresses": [],
 })
 
 ORG_RESPONSE_MODEL = json.dumps({
