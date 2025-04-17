@@ -1,18 +1,40 @@
 import sys
-sys.path.append('/opt')
-import json
 
+sys.path.append("/opt")
+
+from pydantic import ValidationError
 from aws_xray_sdk.core import patch_all
 
 from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.logger import get_logger
-from common.utils import generate_lambda_response, validate_dict
+from common.utils import generate_lambda_response
 from registry.application.access_control.authorization import secured
-from registry.application.services.org_transaction_status import OrganizationTransactionStatus
-from registry.application.services.organization_publisher_service import OrganizationPublisherService
+from registry.application.handlers.common import RequestContext
+from registry.application.schemas.organization import (
+    GetGroupByOrganizationIdRequest,
+    CreateOrganizationRequest,
+    UpdateOrganizationRequest,
+    PublishOrganizationRequest,
+    SaveTransactionHashForOrganizationRequest,
+    GetAllMembersRequest,
+    GetMemberRequest,
+    InviteMembersRequest,
+    VerifyCodeRequest,
+    PublishMembersRequest,
+    DeleteMembersRequest,
+    RegisterMemberRequest,
+    VerifyOrgRequest,
+    VerifyOrgIdRequest,
+)
+from registry.application.services.org_transaction_status import (
+    OrganizationTransactionStatus,
+)
+from registry.application.services.organization_publisher_service import (
+    OrganizationService,
+)
 from registry.config import NETWORK_ID, SLACK_HOOK
-from registry.constants import Action, OrganizationActions
+from registry.constants import Action
 from registry.exceptions import BadRequestException, EXCEPTIONS
 
 patch_all()
@@ -21,257 +43,300 @@ logger = get_logger(__name__)
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def get_all_org(event, context):
-    logger.info(event)
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    response = OrganizationPublisherService(None, username).get_all_org_for_user()
+    req_ctx = RequestContext(event)
+
+    response = OrganizationService().get_all_org_for_user(username=req_ctx.username)
+
     return generate_lambda_response(
         StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+        {"status": "success", "data": response, "error": {}},
+        cors_enabled=True,
     )
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
-         username_path=("requestContext", "authorizer", "claims", "email"))
+@secured(
+    action=Action.CREATE,
+    org_uuid_path=("pathParameters", "org_uuid"),
+    username_path=("requestContext", "authorizer", "claims", "email"),
+)
 def get_group_for_org(event, context):
-    path_parameters = event["pathParameters"]
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    if "org_uuid" not in path_parameters:
+    try:
+        request = GetGroupByOrganizationIdRequest.validate_event(event)
+    except ValidationError:
         raise BadRequestException()
-    org_uuid = path_parameters["org_uuid"]
-    response = OrganizationPublisherService(org_uuid, username).get_groups_for_org()
+
+    response = OrganizationService().get_groups_for_org(request)
+
     return generate_lambda_response(
         StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+        {"status": "success", "data": response, "error": {}},
+        cors_enabled=True,
     )
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def create_organization(event, context):
-    payload = json.loads(event["body"])
-    required_keys = []
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    if not validate_dict(payload, required_keys):
+    req_ctx = RequestContext(event)
+
+    try:
+        request = CreateOrganizationRequest.validate_event(event)
+    except ValidationError:
         raise BadRequestException()
-    response = OrganizationPublisherService(None, username).create_organization(payload)
+
+    response = OrganizationService().create_organization(req_ctx.username, request)
+
     return generate_lambda_response(
         StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+        {"status": "success", "data": response, "error": {}},
+        cors_enabled=True,
     )
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-@secured(action=Action.UPDATE, org_uuid_path=("pathParameters", "org_uuid"),
-         username_path=("requestContext", "authorizer", "claims", "email"))
+@secured(
+    action=Action.UPDATE,
+    org_uuid_path=("pathParameters", "org_uuid"),
+    username_path=("requestContext", "authorizer", "claims", "email"),
+)
 def update_org(event, context):
-    logger.debug(f"Update org, event : {event}")
-    payload = json.loads(event["body"])
-    path_parameters = event["pathParameters"]
-    required_keys = []
-    action = event["queryStringParameters"].get("action", None)
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    org_uuid = path_parameters["org_uuid"]
-    if not validate_dict(payload, required_keys):
+    req_ctx = RequestContext(event)
+
+    try:
+        request = UpdateOrganizationRequest.validate_event(event)
+    except ValidationError:
         raise BadRequestException()
-    org_service = OrganizationPublisherService(org_uuid, username)
-    if action in [OrganizationActions.DRAFT.value, OrganizationActions.SUBMIT.value]:
-        response = org_service.update_organization(payload, action)
-    else:
-        raise Exception("Invalid action")
+
+    response = OrganizationService().update_organization(req_ctx.username, request)
+
     return generate_lambda_response(
         StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+        {"status": "success", "data": response, "error": {}},
+        cors_enabled=True,
     )
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
-         username_path=("requestContext", "authorizer", "claims", "email"))
+@secured(
+    action=Action.CREATE,
+    org_uuid_path=("pathParameters", "org_uuid"),
+    username_path=("requestContext", "authorizer", "claims", "email"),
+)
 def publish_organization(event, context):
-    logger.debug(f"Publish org on ipfs, event : {event}")
-    payload = json.loads(event["body"])
-    path_parameters = event["pathParameters"]
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    if "org_uuid" not in path_parameters and "provider_storage" not in path_parameters:
+    req_ctx = RequestContext(event)
+
+    try:
+        request = PublishOrganizationRequest.validate_event(event)
+    except ValidationError:
         raise BadRequestException()
-    if path_parameters["provider_storage"] == "filecoin" and payload.get("lighthouse_token") is None:
-        raise BadRequestException()
-    response = OrganizationPublisherService(
-        path_parameters["org_uuid"],
-        username,
-        payload.get("lighthouse_token")
-    ).publish_organization(path_parameters["provider_storage"])
+
+    response = OrganizationService().publish_organization(req_ctx.username, request)
 
     return generate_lambda_response(
         StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+        {"status": "success", "data": response, "error": {}},
+        cors_enabled=True,
     )
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
-         username_path=("requestContext", "authorizer", "claims", "email"))
+@secured(
+    action=Action.CREATE,
+    org_uuid_path=("pathParameters", "org_uuid"),
+    username_path=("requestContext", "authorizer", "claims", "email"),
+)
 def save_transaction_hash_for_publish_org(event, context):
-    payload = json.loads(event["body"])
-    path_parameters = event["pathParameters"]
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    if "org_uuid" not in path_parameters:
+    req_ctx = RequestContext(event)
+
+    try:
+        request = SaveTransactionHashForOrganizationRequest.validate_event(event)
+    except ValidationError:
         raise BadRequestException()
-    org_uuid = path_parameters["org_uuid"]
-    response = OrganizationPublisherService(org_uuid, username).save_transaction_hash_for_publish_org(payload)
+
+    response = OrganizationService().save_transaction_hash_for_publish_org(
+        req_ctx.username, request
+    )
+
     return generate_lambda_response(
         StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+        {"status": "success", "data": response, "error": {}},
+        cors_enabled=True,
     )
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
-         username_path=("requestContext", "authorizer", "claims", "email"))
+@secured(
+    action=Action.CREATE,
+    org_uuid_path=("pathParameters", "org_uuid"),
+    username_path=("requestContext", "authorizer", "claims", "email"),
+)
 def get_all_members(event, context):
-    logger.debug(f"Get all members, event : {event}")
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    path_parameters = event["pathParameters"]
-    query_parameters = event["queryStringParameters"]
-    if "org_uuid" not in path_parameters:
+    try:
+        request = GetAllMembersRequest.validate_event(event)
+    except ValidationError:
         raise BadRequestException()
-    org_uuid = path_parameters["org_uuid"]
-    status = query_parameters.get("status", None)
-    role = query_parameters.get("role", None)
-    response = OrganizationPublisherService(org_uuid, username).get_all_member(status, role, query_parameters)
+
+    response = OrganizationService().get_all_member(request)
+
     return generate_lambda_response(
         StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+        {"status": "success", "data": response, "error": {}},
+        cors_enabled=True,
     )
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
-         username_path=("requestContext", "authorizer", "claims", "email"))
+@secured(
+    action=Action.CREATE,
+    org_uuid_path=("pathParameters", "org_uuid"),
+    username_path=("requestContext", "authorizer", "claims", "email"),
+)
 def get_member(event, context):
-    logger.debug(f"Get member, event : {event}")
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    path_parameters = event["pathParameters"]
-    org_uuid = path_parameters["org_uuid"]
-    member_username = path_parameters["username"]
-    response = OrganizationPublisherService(org_uuid, username).get_member(member_username)
+    req_ctx = RequestContext(event)
+
+    try:
+        request = GetMemberRequest.validate_event(event)
+    except ValidationError:
+        raise BadRequestException()
+
+    response = OrganizationService().get_member(req_ctx.username, request)
+
     return generate_lambda_response(
         StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+        {"status": "success", "data": response, "error": {}},
+        cors_enabled=True,
     )
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
-         username_path=("requestContext", "authorizer", "claims", "email"))
+@secured(
+    action=Action.CREATE,
+    org_uuid_path=("pathParameters", "org_uuid"),
+    username_path=("requestContext", "authorizer", "claims", "email"),
+)
 def invite_members(event, context):
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    payload = json.loads(event["body"])
-    path_parameters = event["pathParameters"]
-    if "org_uuid" not in path_parameters or "members" not in payload:
-        raise BadRequestException()
-    org_uuid = path_parameters["org_uuid"]
-    org_members = payload["members"]
-    response = OrganizationPublisherService(org_uuid, username).invite_members(org_members)
+    try:
+        request = InviteMembersRequest.validate_event(event)
+    except ValidationError:
+        raise BadRequestException
+
+    response = OrganizationService().invite_members(request)
+
     return generate_lambda_response(
         StatusCode.CREATED,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+        {"status": "success", "data": response, "error": {}},
+        cors_enabled=True,
     )
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def verify_code(event, context):
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    query_string_parameters = event["queryStringParameters"]
-    if "invite_code" not in query_string_parameters:
+    req_ctx = RequestContext(event)
+
+    try:
+        request = VerifyCodeRequest.validate_event(event)
+    except ValidationError:
         raise BadRequestException()
-    invite_code = query_string_parameters["invite_code"]
-    response = OrganizationPublisherService(None, username).verify_invite(invite_code)
+
+    response = OrganizationService().verify_invite(req_ctx.username, request)
+
     return generate_lambda_response(
         StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+        {"status": "success", "data": response, "error": {}},
+        cors_enabled=True,
     )
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
-         username_path=("requestContext", "authorizer", "claims", "email"))
+@secured(
+    action=Action.CREATE,
+    org_uuid_path=("pathParameters", "org_uuid"),
+    username_path=("requestContext", "authorizer", "claims", "email"),
+)
 def publish_members(event, context):
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    payload = json.loads(event["body"])
-    path_parameters = event["pathParameters"]
-    if "org_uuid" not in path_parameters or not validate_dict(payload, ["transaction_hash", "members"]):
+    req_ctx = RequestContext(event)
+
+    try:
+        request = PublishMembersRequest.validate_event(event)
+    except ValidationError:
         raise BadRequestException()
-    org_uuid = path_parameters["org_uuid"]
-    transaction_hash = payload["transaction_hash"]
-    org_members = payload["members"]
-    response = OrganizationPublisherService(org_uuid, username).publish_members(transaction_hash, org_members)
+
+    response = OrganizationService().publish_members(req_ctx.username, request)
+
     return generate_lambda_response(
         StatusCode.CREATED,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+        {"status": "success", "data": response, "error": {}},
+        cors_enabled=True,
     )
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def delete_members(event, context):
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    payload = json.loads(event["body"])
-    path_parameters = event["pathParameters"]
-    if "org_uuid" not in path_parameters or "members" not in payload:
+    req_ctx = RequestContext(event)
+
+    try:
+        request = DeleteMembersRequest.validate_event(event)
+    except ValidationError:
         raise BadRequestException()
-    org_uuid = path_parameters["org_uuid"]
-    org_members = payload["members"]
-    response = OrganizationPublisherService(org_uuid, username).delete_members(org_members)
+
+    response = OrganizationService().delete_members(req_ctx.username, request)
     return generate_lambda_response(
         StatusCode.CREATED,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+        {"status": "success", "data": response, "error": {}},
+        cors_enabled=True,
     )
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def register_member(event, context):
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    payload = json.loads(event["body"])
-    if "invite_code" not in payload and "wallet_address" not in payload:
+    req_ctx = RequestContext(event)
+
+    try:
+        request = RegisterMemberRequest.validate_event(event)
+    except ValidationError:
         raise BadRequestException()
-    invite_code = payload["invite_code"]
-    wallet_address = payload["wallet_address"]
-    response = OrganizationPublisherService(None, username).register_member(invite_code, wallet_address)
+
+    response = OrganizationService().register_member(req_ctx.username, request)
+
     return generate_lambda_response(
         StatusCode.CREATED,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+        {"status": "success", "data": response, "error": {}},
+        cors_enabled=True,
     )
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def org_verification(event, context):
-    query_parameters = event["queryStringParameters"]
-    if "verification_type" not in query_parameters:
-        raise BadRequestException()
-    verification_type = query_parameters["verification_type"]
-    response = OrganizationPublisherService(None, None).update_verification(verification_type, query_parameters)
+    try:
+        request = VerifyOrgRequest.validate_event(event)
+    except ValidationError:
+        raise BadRequestException
+
+    response = OrganizationService().update_verification(request)
+
     return generate_lambda_response(
         StatusCode.CREATED,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=False
+        {"status": "success", "data": response, "error": {}},
+        cors_enabled=False,
     )
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def verify_org_id(event, context):
-    logger.info(f"Verify org id event:: {event}")
-    query_parameters = event["queryStringParameters"]
-    if "org_id" not in query_parameters:
-        raise BadRequestException()
-    org_id = query_parameters["org_id"]
-    response = OrganizationPublisherService(None, None).get_org_id_availability_status(org_id)
+    try:
+        request = VerifyOrgIdRequest.validate_event(event)
+    except ValidationError:
+        raise BadRequestException
+
+    response = OrganizationService().get_org_id_availability_status(request)
     return generate_lambda_response(
         StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+        {"status": "success", "data": response, "error": {}},
+        cors_enabled=True,
     )
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def update_transaction(event, context):
-    logger.info(f"Update transaction event:: {event}")
     OrganizationTransactionStatus().update_transaction_status()
     return generate_lambda_response(StatusCode.OK, "OK")

@@ -16,10 +16,11 @@ from common.boto_utils import BotoUtils
 from common.constant import StatusCode
 from common.logger import get_logger
 from common.utils import send_email_notification
-from registry.config import (
-    IPFS_URL, METADATA_FILE_PATH, NETWORKS, NETWORK_ID, NOTIFICATION_ARN,
-    REGION_NAME, PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT, GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT
-)
+# from registry.config import (
+#     IPFS_URL, METADATA_FILE_PATH, NETWORKS, NETWORK_ID, NOTIFICATION_ARN,
+#     REGION_NAME, PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT, GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT
+# )
+from registry.settings import settings
 from registry.constants import (
     EnvironmentType,
     ServiceAvailabilityStatus,
@@ -44,8 +45,12 @@ from registry.exceptions import (
 )
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
-from registry.infrastructure.storage_provider import validate_storage_provider, StorageProvider, StorageProviderType, \
+from registry.infrastructure.storage_provider import (
+    validate_storage_provider,
+    StorageProvider,
+    StorageProviderType,
     FileUtils
+)
 
 patch_all()
 ALLOWED_ATTRIBUTES_FOR_SERVICE_SEARCH = ["display_name"]
@@ -54,13 +59,14 @@ ALLOWED_ATTRIBUTES_FOR_SERVICE_SORT_BY = ["ranking", "service_id"]
 DEFAULT_ATTRIBUTES_FOR_SERVICE_SORT_BY = "ranking"
 ALLOWED_ATTRIBUTES_FOR_SERVICE_ORDER_BY = ["asc", "desc"]
 DEFAULT_ATTRIBUTES_FOR_SERVICE_ORDER_BY = "desc"
+NETWORK_ID = settings.network.id
 DEFAULT_OFFSET = 0
 DEFAULT_LIMIT = 0
 BUILD_FAILURE_CODE = 0
 
 logger = get_logger(__name__)
 service_factory = ServiceFactory()
-boto_util = BotoUtils(region_name=REGION_NAME)
+boto_util = BotoUtils(region_name=settings.a)
 validator = Validator()
 
 
@@ -74,12 +80,15 @@ class ServicePublisherService:
     def service_build_status_notifier(self, org_id, service_id, build_status):
         if build_status == BUILD_FAILURE_CODE:
             BUILD_FAIL_MESSAGE = "Build failed please check your components"
-            org_uuid, service = ServicePublisherRepository() \
+            service = ServicePublisherRepository() \
                 .get_service_for_given_service_id_and_org_id(org_id, service_id)
+
+            if service is None:
+                raise Exception()
 
             contacts = [contributor.get("email_id", "") for contributor in service.contributors]
 
-            service_comment = ServiceComment(org_uuid, service.uuid, "SERVICE_APPROVAL", "SERVICE_APPROVER",
+            service_comment = ServiceComment(service.org_uuid, service.uuid, "SERVICE_APPROVAL", "SERVICE_APPROVER",
                                              self._username, BUILD_FAIL_MESSAGE)
             ServicePublisherRepository().save_service_comments(service_comment)
             ServicePublisherRepository().save_service(self._username, service, ServiceStatus.CHANGE_REQUESTED.value)
@@ -89,7 +98,9 @@ class ServicePublisherService:
                 BUILD_STATUS_MESSAGE = "Build failed for your org_id {} and service_id {}"
                 send_email_notification(
                     contacts, BUILD_STATUS_SUBJECT.format(service_id),
-                    BUILD_STATUS_MESSAGE.format(org_id, service_id), NOTIFICATION_ARN, boto_util
+                    BUILD_STATUS_MESSAGE.format(org_id, service_id),
+                    settings.lambda_arn.NOTIFICATION_ARN,
+                    boto_util
                 )
             except Exception:
                 logger.info(f"Error happened while sending build_status mail for {org_id} and contacts {contacts}")
@@ -102,7 +113,7 @@ class ServicePublisherService:
 
     @staticmethod
     def get_service_for_org_id_and_service_id(org_id, service_id):
-        _, service = ServicePublisherRepository().get_service_for_given_service_id_and_org_id(org_id, service_id)
+        service = ServicePublisherRepository().get_service_for_given_service_id_and_org_id(org_id, service_id)
         if not service:
             return {}
         return service.to_dict()
@@ -143,6 +154,10 @@ class ServicePublisherService:
     def save_service(self, payload):
         logger.info(f"Save service with payload :: {payload}")
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
+        
+        if service is None:
+            raise Exception()
+        
         service.service_id = payload["service_id"]
         service.proto = payload.get("proto", {})
         service.storage_provider = payload.get("storage_provider", "")
@@ -176,7 +191,10 @@ class ServicePublisherService:
                                                                                      self._service_uuid)
         service = ServiceFactory.convert_service_db_model_to_entity_model(service_db)
 
-        for attribute, value in payload.items():
+        if service is None:
+            raise Exception()
+
+        for attribute, _ in payload.items():
             if attribute in VALID_PATCH_ATTRIBUTE:
                 if attribute == "groups":
                     service.groups = [
@@ -191,6 +209,10 @@ class ServicePublisherService:
 
     def save_transaction_hash_for_published_service(self, payload):
         service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
+        
+        if service is None:
+            raise Exception()
+        
         if service.service_state.state == ServiceStatus.APPROVED.value:
             service.service_state = \
                 ServiceFactory().create_service_state_entity_model(
@@ -390,12 +412,12 @@ class ServicePublisherService:
         if not service:
             raise ServiceNotFoundException()
         organization_members = OrganizationPublisherRepository().get_org_member(org_uuid=self._org_uuid)
-        network_name = NETWORKS[NETWORK_ID]["name"].lower()
+        network_name = settings.network.networks[NETWORK_ID].name
         # this is how network name is set in daemon for mainnet
         network_name = "main" if network_name == "mainnet" else network_name
         if environment is EnvironmentType.MAIN.value:
             daemon_config = {
-                "ipfs_end_point": f"{IPFS_URL['url']}:{IPFS_URL['port']}",
+                "ipfs_end_point": f"{settings.ipfs.URL}:{settings.ipfs.PORT}",
                 "blockchain_network_selected": network_name,
                 "organization_id": organization.id,
                 "service_id": service.service_id,
@@ -409,6 +431,7 @@ class ServicePublisherService:
         return daemon_config
 
     def get_service_demo_component_build_status(self):
+        build_id: str | None = None
         try:
             service = self.get_service_for_given_service_uuid()
             if service:
@@ -460,12 +483,12 @@ class ServicePublisherService:
 
     def publish_offchain_service_configs(self, org_id, service_id, payload):
         response = requests.post(
-            PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT.format(org_id, service_id), data=payload)
+            settings.lambda_arn.PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT.format(org_id, service_id), data=payload)
         if response.status_code != 200:
             raise Exception("Error in updating offchain service attributes")
 
     def get_existing_service_details_from_contract_api(self, service_id, org_id):
-        response = requests.get(GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT.format(org_id, service_id))
+        response = requests.get(settings.lambda_arn.GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT.format(org_id, service_id))
         if response.status_code != 200:
             raise Exception(f"Error getting service details for org_id :: {org_id} service_id :: {service_id}")
         logger.debug(f"Get service by org_id from contract_api :: {response}")
