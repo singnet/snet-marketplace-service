@@ -2,7 +2,11 @@ import os
 
 os.environ["LOG_LEVEL"] = "DEBUG"
 LAMBDA_ARN_FORMAT = "arn:aws"
+
 NETWORK_ID = 0
+TOKEN_NAME = ""
+STAGE = ""
+
 NETWORKS = {
     'name': 'ropsten',
     'http_provider': 'https://ropsten.infura.io/v3/',
