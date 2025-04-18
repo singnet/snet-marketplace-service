@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from registry.application.handlers.organization_handlers import update_org
 from registry.application.services.organization_publisher_service import (
-    OrganizationService,
+    OrganizationPublisherService,
     org_repo,
 )
 from registry.constants import (
@@ -91,7 +91,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
 
         request = CreateOrganizationRequest.model_validate(payload)
 
-        OrganizationService().create_organization(username, request)
+        OrganizationPublisherService().create_organization(username, request)
 
         org_db_model = org_repo.session.query(Organization).first()
         if org_db_model is not None:
@@ -142,7 +142,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         payload["action"] = OrganizationStatus.DRAFT.value
 
         request = UpdateOrganizationRequest.model_validate(payload)
-        OrganizationService().update_organization(username, request)
+        OrganizationPublisherService().update_organization(username, request)
 
         org_db_model = org_repo.session.query(Organization).first()
         if org_db_model is None:
@@ -200,7 +200,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
 
         request = UpdateOrganizationRequest.model_validate(payload)
 
-        response = OrganizationService().update_organization(
+        response = OrganizationPublisherService().update_organization(
             username, request
         )
 
@@ -239,7 +239,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         organization = request.map_to_entity()
         org_repo.add_organization(organization, username, OrganizationStatus.PUBLISHED.value)
 
-        OrganizationService().update_organization(username, request)
+        OrganizationPublisherService().update_organization(username, request)
 
         org_db_model = org_repo.session.query(Organization).first()
         if org_db_model is None:
@@ -439,7 +439,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
 
         org_repo.add_organization(organization, username, OrganizationStatus.APPROVED.value)
 
-        OrganizationService().update_organization(username, request)
+        OrganizationPublisherService().update_organization(username, request)
 
         org_db_model = org_repo.session.query(Organization).first()
         if org_db_model is None:
@@ -486,7 +486,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
             organization, username, OrganizationStatus.ONBOARDING_APPROVED.value
         )
 
-        OrganizationService().update_organization(username, request)
+        OrganizationPublisherService().update_organization(username, request)
 
         org_db_model = org_repo.session.query(Organization).first()
         if org_db_model is None:
@@ -561,7 +561,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
 
         request = VerifyOrgRequest.model_validate(payload)
 
-        OrganizationService().update_verification(request)
+        OrganizationPublisherService().update_verification(request)
         organization = org_repo.get_organizations(OrganizationStatus.ONBOARDING_APPROVED.value)
         self.assertEqual(len(organization), 3)
 
@@ -608,7 +608,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
 
         request = VerifyOrgRequest.model_validate(payload)
 
-        OrganizationService().update_verification(request)
+        OrganizationPublisherService().update_verification(request)
 
         organization = org_repo.get_organizations(OrganizationStatus.ONBOARDING_APPROVED.value)
         self.assertEqual(len(organization), 1)

@@ -61,7 +61,7 @@ ORG_APPROVE_SUBJECT = "Organization  {} Approved "
 ORG_APPROVE_MESSAGE = "You organization  {} has been approved"
 
 
-class OrganizationService:
+class OrganizationPublisherService:
     def __init__(self, lighthouse_token: Union[str, None] = None):
         self.boto_utils = BotoUtils(region_name=settings.aws.REGION_NAME)
         self.storage_provider = StorageProvider(lighthouse_token)

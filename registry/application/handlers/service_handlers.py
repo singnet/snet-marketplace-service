@@ -1,6 +1,7 @@
 import sys
+
+from pydantic import ValidationError
 sys.path.append('/opt')
-import json
 
 from common.constant import StatusCode
 from common.exception_handler import exception_handler
@@ -11,9 +12,24 @@ from registry.application.access_control.authorization import secured
 from registry.application.services.service_publisher_service import ServicePublisherService
 from registry.application.services.service_transaction_status import ServiceTransactionStatus
 from registry.config import NETWORK_ID, SLACK_HOOK
-from registry.constants import Action, EnvironmentType
-from registry.exceptions import EnvironmentNotFoundException, EXCEPTIONS
+from registry.constants import Action
+from registry.exceptions import EXCEPTIONS
 from registry.application.services.update_service_assets import UpdateServiceAssets
+from registry.application.handlers.common import RequestContext
+
+from registry.application.schemas.service import (
+    CreateServiceRequest,
+    GetCodeBuildStatusRequest,
+    GetDaemonConfigRequest,
+    GetServiceRequest,
+    GetServicesForOrganizationRequest,
+    SaveServiceAttributesRequest,
+    ServiceDeploymentStatusRequest,
+    VerifyServiceIdRequest,
+    SaveTransactionHashRequest,
+    SaveServiceRequest,
+    PublishServiceRequest
+)
 
 logger = get_logger(__name__)
 
@@ -22,14 +38,13 @@ logger = get_logger(__name__)
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def verify_service_id(event, context):
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    path_parameters = event["pathParameters"]
-    query_parameters = event["queryStringParameters"]
-    if "org_uuid" not in path_parameters and "service_id" not in query_parameters:
+    try:
+        request = VerifyServiceIdRequest.validate_event(event)
+    except ValidationError:
         raise BadRequestException()
-    org_uuid = path_parameters["org_uuid"]
-    service_id = query_parameters["service_id"]
-    response = ServicePublisherService(username, org_uuid, None).get_service_id_availability_status(service_id)
+
+    response = ServicePublisherService().get_service_id_availability_status(request)
+
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
@@ -40,15 +55,17 @@ def verify_service_id(event, context):
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def save_transaction_hash_for_published_service(event, context):
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    path_parameters = event["pathParameters"]
-    payload = json.loads(event["body"])
-    if "org_uuid" not in path_parameters and "service_uuid" not in path_parameters:
+    req_context = RequestContext(event)
+
+    try:
+        request = SaveTransactionHashRequest.validate_event(event)
+    except ValidationError:
         raise BadRequestException()
-    org_uuid = path_parameters["org_uuid"]
-    service_uuid = path_parameters["service_uuid"]
-    response = ServicePublisherService(username, org_uuid, service_uuid).save_transaction_hash_for_published_service(
-        payload)
+
+    response = ServicePublisherService().save_transaction_hash_for_published_service(
+        req_context.username, request
+    )
+
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
@@ -59,15 +76,15 @@ def save_transaction_hash_for_published_service(event, context):
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def save_service(event, context):
-    logger.info(f"Event for save service {event}")
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    path_parameters = event["pathParameters"]
-    payload = json.loads(event["body"])
-    if not path_parameters.get("org_uuid") and not path_parameters.get("service_uuid"):
+    req_ctx = RequestContext(event)
+
+    try:
+        request = SaveServiceRequest.validate_event(event)
+    except ValidationError:
         raise BadRequestException()
-    org_uuid = path_parameters["org_uuid"]
-    service_uuid = path_parameters["service_uuid"]
-    response = ServicePublisherService(username, org_uuid, service_uuid).save_service(payload)
+        
+    response = ServicePublisherService().save_service(req_ctx.username, request)
+
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
@@ -78,15 +95,15 @@ def save_service(event, context):
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def save_service_attributes(event, context):
-    logger.info(f"Event for save service {event}")
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    path_parameters = event["pathParameters"]
-    payload = json.loads(event["body"])
-    if not path_parameters.get("org_uuid", "") and not path_parameters.get("service_uuid", ""):
+    req_ctx = RequestContext(event)
+
+    try:
+        request = SaveServiceAttributesRequest.validate_event(event)
+    except ValidationError:
         raise BadRequestException()
-    org_uuid = path_parameters["org_uuid"]
-    service_uuid = path_parameters["service_uuid"]
-    response = ServicePublisherService(username, org_uuid, service_uuid).save_service_attributes(payload)
+
+    response = ServicePublisherService().save_service_attributes(req_ctx.username, request)
+
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
@@ -97,13 +114,15 @@ def save_service_attributes(event, context):
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def create_service(event, context):
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    path_parameters = event["pathParameters"]
-    payload = json.loads(event["body"])
-    if not path_parameters.get("org_uuid", ""):
+    req_ctx = RequestContext(event)
+
+    try:
+        request = CreateServiceRequest.validate_event(event)
+    except ValidationError:
         raise BadRequestException()
-    org_uuid = path_parameters["org_uuid"]
-    response = ServicePublisherService(username, org_uuid, None).create_service(payload)
+
+    response = ServicePublisherService().create_service(req_ctx.username, request)
+
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
@@ -114,13 +133,12 @@ def create_service(event, context):
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def get_services_for_organization(event, context):
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    path_parameters = event["pathParameters"]
-    payload = json.loads(event["body"])
-    if "org_uuid" not in path_parameters:
+    try:
+        request = GetServicesForOrganizationRequest.validate_event(event)
+    except ValidationError:
         raise BadRequestException()
-    org_uuid = path_parameters["org_uuid"]
-    response = ServicePublisherService(username, org_uuid, None).get_services_for_organization(payload)
+
+    response = ServicePublisherService().get_services_for_organization(request)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
@@ -131,33 +149,16 @@ def get_services_for_organization(event, context):
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def get_service_for_service_uuid(event, context):
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    path_parameters = event["pathParameters"]
-    if "org_uuid" not in path_parameters and "service_uuid" not in path_parameters:
+    
+    try:
+        request = GetServiceRequest.validate_event(event)
+    except ValidationError:
         raise BadRequestException()
-    org_uuid = path_parameters["org_uuid"]
-    service_uuid = path_parameters["service_uuid"]
-    response = ServicePublisherService(username, org_uuid, service_uuid).get_service_for_given_service_uuid()
-    return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    
+    response = ServicePublisherService().get_service_for_given_service_uuid(
+        request.org_uuid, request.service_uuid
     )
 
-
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-@secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
-         username_path=("requestContext", "authorizer", "claims", "email"))
-def publish_service_metadata_to_ipfs(event, context):
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    path_parameters = event["pathParameters"]
-    if "org_uuid" not in path_parameters and \
-        "service_uuid" not in path_parameters and "provider_storage" not in path_parameters:
-        raise BadRequestException()
-    response = ServicePublisherService(
-        username,
-        path_parameters["org_uuid"],
-        path_parameters["service_uuid"]
-    ).publish_service_data_to_ipfs()
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
@@ -168,23 +169,13 @@ def publish_service_metadata_to_ipfs(event, context):
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def get_daemon_config_for_current_network(event, context):
-    logger.info(f"event for get_daemon_config_for_current_network:: {event}")
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    path_parameters = event["pathParameters"]
-    query_parameters = event["queryStringParameters"]
-    if not validate_dict(path_parameters,
-                         ["org_uuid", "service_uuid", "group_id"]) or 'network' not in query_parameters:
+    try:
+        request = GetDaemonConfigRequest.validate_event(event)
+    except ValidationError:
         raise BadRequestException()
-    org_uuid = path_parameters["org_uuid"]
-    service_uuid = path_parameters["service_uuid"]
-    if query_parameters["network"] == EnvironmentType.TEST.value:
-        response = ServicePublisherService(username, org_uuid, service_uuid).daemon_config(
-            environment=EnvironmentType.TEST.value)
-    elif query_parameters["network"] == EnvironmentType.MAIN.value:
-        response = ServicePublisherService(username, org_uuid, service_uuid).daemon_config(
-            environment=EnvironmentType.MAIN.value)
-    else:
-        raise EnvironmentNotFoundException()
+
+    response = ServicePublisherService().daemon_config(request)   
+
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
@@ -208,12 +199,14 @@ def get_service_details_using_org_id_service_id(event, context):
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def service_deployment_status_notification_handler(event, context):
-    logger.info(f"Service Build status event {event}")
-    org_id = event['org_id']
-    service_id = event['service_id']
-    build_status = int(event['build_status'])
+    req_ctx = RequestContext(event)
 
-    ServicePublisherService("BUILD_PROCESS", "", "").service_build_status_notifier(org_id, service_id, build_status)
+    try:
+        request = ServiceDeploymentStatusRequest.validate_event(event)
+    except ValidationError:
+        raise BadRequestException()
+    
+    ServicePublisherService().service_build_status_notifier(req_ctx.username, request)
 
     return generate_lambda_response(
         StatusCode.CREATED,
@@ -230,12 +223,12 @@ def update_transaction(event, context):
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def get_code_build_status_for_service(event, context):
-    logger.info(f"Get code build status event :: {event}")
-    path_parameters = event["pathParameters"]
-    org_uuid = path_parameters["org_uuid"]
-    service_uuid = path_parameters["service_uuid"]
-    response = ServicePublisherService(org_uuid=org_uuid, service_uuid=service_uuid, username=None) \
-        .get_service_demo_component_build_status()
+    try:
+        request = GetCodeBuildStatusRequest.validate_event(event)
+    except ValidationError:
+        raise BadRequestException()
+
+    response = ServicePublisherService().get_service_demo_component_build_status(request)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
@@ -272,21 +265,16 @@ def update_demo_component_build_status(event, context):
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def publish_service(event, context):
-    logger.info(f"Publish service event::{event}")
-    username = event["requestContext"]["authorizer"]["claims"]["email"]
-    path_parameters = event["pathParameters"]
-    payload = json.loads(event["body"])
-    if "org_uuid" not in path_parameters and \
-        "service_uuid" not in path_parameters and "provider_storage" not in path_parameters:
+    req_ctx = RequestContext(event)
+    
+    try:
+        request = PublishServiceRequest.validate_event(event)
+    except ValidationError:
         raise BadRequestException()
-    if path_parameters["provider_storage"] == "filecoin" and payload.get("lighthouse_token") is None:
-        raise BadRequestException()
-    response = ServicePublisherService(
-        username,
-        path_parameters["org_uuid"],
-        path_parameters["service_uuid"],
-        payload.get("lighthouse_token")
-    ).publish_service(path_parameters["provider_storage"])
+
+    response = ServicePublisherService(request.lighthouse_token).publish_service(
+        req_ctx.username, request
+    )
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True

@@ -3,7 +3,7 @@ from unittest import TestCase
 from unittest.mock import patch
 from uuid import uuid4
 
-from registry.application.services.organization_publisher_service import org_repo, OrganizationService
+from registry.application.services.organization_publisher_service import org_repo, OrganizationPublisherService
 from registry.constants import OrganizationMemberStatus, OrganizationStatus, Role
 from registry.domain.models.organization import Organization as DomainOrganization
 from registry.infrastructure.models import (
@@ -73,7 +73,7 @@ class TestOrganizationMember(TestCase):
             role=Role.MEMBER.value,
         )
 
-        members = OrganizationService().get_all_member(request)
+        members = OrganizationPublisherService().get_all_member(request)
         if len(members) == 3:
             assert True
         else:
@@ -95,7 +95,7 @@ class TestOrganizationMember(TestCase):
             username=owner_username,
         )
 
-        members = OrganizationService().get_member(
+        members = OrganizationPublisherService().get_member(
             username=owner_username,
             request=request
         )
@@ -142,14 +142,14 @@ class TestOrganizationMember(TestCase):
             )
         )
 
-        self.assertEqual(OrganizationService().verify_invite(
+        self.assertEqual(OrganizationPublisherService().verify_invite(
             username=member_username,
             request=VerifyCodeRequest(
                 invite_code=member_invite_code
         )
         ), "OK")
 
-        self.assertEqual(OrganizationService().verify_invite(
+        self.assertEqual(OrganizationPublisherService().verify_invite(
             username=member_username,
             request=VerifyCodeRequest(
                 invite_code="wrong_invite_code"
@@ -201,7 +201,7 @@ class TestOrganizationMember(TestCase):
             members=new_org_members
         )
 
-        OrganizationService().delete_members(username=owner_username, request=request)
+        OrganizationPublisherService().delete_members(username=owner_username, request=request)
         org_members = org_repo.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == test_org_uuid).all()
 
         if len(org_members) == 1:
@@ -255,7 +255,7 @@ class TestOrganizationMember(TestCase):
             members=new_org_members
         )
 
-        OrganizationService().publish_members(username=owner_username, request=request)
+        OrganizationPublisherService().publish_members(username=owner_username, request=request)
         org_members = org_repo.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == test_org_uuid)\
             .filter(OrganizationMember.status == OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value).all()
 
@@ -291,14 +291,14 @@ class TestOrganizationMember(TestCase):
         )
         member_wallet_address = "0x962FD47b5afBc8D03025cE52155890667E58dEBA"
         
-        self.assertRaises(Exception, OrganizationService().register_member, member_username, 
+        self.assertRaises(Exception, OrganizationPublisherService().register_member, member_username, 
                           RegisterMemberRequest(
                             org_uuid=test_org_uuid,
                             invite_code="wrong_invite_code",
                             wallet_address="0x9876",
                         ))
 
-        OrganizationService().register_member(
+        OrganizationPublisherService().register_member(
             username=member_username,
             request=RegisterMemberRequest(
                 org_uuid=test_org_uuid,
@@ -349,7 +349,7 @@ class TestOrganizationMember(TestCase):
             members=new_org_members
         )
 
-        OrganizationService().invite_members(request)
+        OrganizationPublisherService().invite_members(request)
         invited_org_members = org_repo.get_org_member(org_uuid=test_org_uuid, status=OrganizationMemberStatus.PENDING.value)
         if len(invited_org_members) == 3:
             assert True

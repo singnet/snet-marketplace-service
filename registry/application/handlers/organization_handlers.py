@@ -31,7 +31,7 @@ from registry.application.services.org_transaction_status import (
     OrganizationTransactionStatus,
 )
 from registry.application.services.organization_publisher_service import (
-    OrganizationService,
+    OrganizationPublisherService,
 )
 from registry.config import NETWORK_ID, SLACK_HOOK
 from registry.constants import Action
@@ -45,7 +45,7 @@ logger = get_logger(__name__)
 def get_all_org(event, context):
     req_ctx = RequestContext(event)
 
-    response = OrganizationService().get_all_org_for_user(username=req_ctx.username)
+    response = OrganizationPublisherService().get_all_org_for_user(username=req_ctx.username)
 
     return generate_lambda_response(
         StatusCode.OK,
@@ -66,7 +66,7 @@ def get_group_for_org(event, context):
     except ValidationError:
         raise BadRequestException()
 
-    response = OrganizationService().get_groups_for_org(request)
+    response = OrganizationPublisherService().get_groups_for_org(request)
 
     return generate_lambda_response(
         StatusCode.OK,
@@ -84,7 +84,7 @@ def create_organization(event, context):
     except ValidationError:
         raise BadRequestException()
 
-    response = OrganizationService().create_organization(req_ctx.username, request)
+    response = OrganizationPublisherService().create_organization(req_ctx.username, request)
 
     return generate_lambda_response(
         StatusCode.OK,
@@ -107,7 +107,7 @@ def update_org(event, context):
     except ValidationError:
         raise BadRequestException()
 
-    response = OrganizationService().update_organization(req_ctx.username, request)
+    response = OrganizationPublisherService().update_organization(req_ctx.username, request)
 
     return generate_lambda_response(
         StatusCode.OK,
@@ -130,7 +130,7 @@ def publish_organization(event, context):
     except ValidationError:
         raise BadRequestException()
 
-    response = OrganizationService().publish_organization(req_ctx.username, request)
+    response = OrganizationPublisherService().publish_organization(req_ctx.username, request)
 
     return generate_lambda_response(
         StatusCode.OK,
@@ -153,7 +153,7 @@ def save_transaction_hash_for_publish_org(event, context):
     except ValidationError:
         raise BadRequestException()
 
-    response = OrganizationService().save_transaction_hash_for_publish_org(
+    response = OrganizationPublisherService().save_transaction_hash_for_publish_org(
         req_ctx.username, request
     )
 
@@ -176,7 +176,7 @@ def get_all_members(event, context):
     except ValidationError:
         raise BadRequestException()
 
-    response = OrganizationService().get_all_member(request)
+    response = OrganizationPublisherService().get_all_member(request)
 
     return generate_lambda_response(
         StatusCode.OK,
@@ -199,7 +199,7 @@ def get_member(event, context):
     except ValidationError:
         raise BadRequestException()
 
-    response = OrganizationService().get_member(req_ctx.username, request)
+    response = OrganizationPublisherService().get_member(req_ctx.username, request)
 
     return generate_lambda_response(
         StatusCode.OK,
@@ -220,7 +220,7 @@ def invite_members(event, context):
     except ValidationError:
         raise BadRequestException
 
-    response = OrganizationService().invite_members(request)
+    response = OrganizationPublisherService().invite_members(request)
 
     return generate_lambda_response(
         StatusCode.CREATED,
@@ -238,7 +238,7 @@ def verify_code(event, context):
     except ValidationError:
         raise BadRequestException()
 
-    response = OrganizationService().verify_invite(req_ctx.username, request)
+    response = OrganizationPublisherService().verify_invite(req_ctx.username, request)
 
     return generate_lambda_response(
         StatusCode.OK,
@@ -261,7 +261,7 @@ def publish_members(event, context):
     except ValidationError:
         raise BadRequestException()
 
-    response = OrganizationService().publish_members(req_ctx.username, request)
+    response = OrganizationPublisherService().publish_members(req_ctx.username, request)
 
     return generate_lambda_response(
         StatusCode.CREATED,
@@ -279,7 +279,7 @@ def delete_members(event, context):
     except ValidationError:
         raise BadRequestException()
 
-    response = OrganizationService().delete_members(req_ctx.username, request)
+    response = OrganizationPublisherService().delete_members(req_ctx.username, request)
     return generate_lambda_response(
         StatusCode.CREATED,
         {"status": "success", "data": response, "error": {}},
@@ -296,7 +296,7 @@ def register_member(event, context):
     except ValidationError:
         raise BadRequestException()
 
-    response = OrganizationService().register_member(req_ctx.username, request)
+    response = OrganizationPublisherService().register_member(req_ctx.username, request)
 
     return generate_lambda_response(
         StatusCode.CREATED,
@@ -312,7 +312,7 @@ def org_verification(event, context):
     except ValidationError:
         raise BadRequestException
 
-    response = OrganizationService().update_verification(request)
+    response = OrganizationPublisherService().update_verification(request)
 
     return generate_lambda_response(
         StatusCode.CREATED,
@@ -328,7 +328,7 @@ def verify_org_id(event, context):
     except ValidationError:
         raise BadRequestException
 
-    response = OrganizationService().get_org_id_availability_status(request)
+    response = OrganizationPublisherService().get_org_id_availability_status(request)
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}},

@@ -12,7 +12,7 @@ from registry.infrastructure.repositories.organization_repository import Organiz
 ORIGIN = "PUBLISHER"
 
 
-class TestOrganizationService(unittest.TestCase):
+class TestOrganizationPublisherService(unittest.TestCase):
     def setUp(self):
         self.org_repo = OrganizationPublisherRepository()
 

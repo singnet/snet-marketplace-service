@@ -1,5 +1,6 @@
 from datetime import datetime as dt
 
+from registry.application.schemas.service import CreateServiceRequest, SaveServiceRequest
 from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus, ServiceType
 from registry.domain.models.offchain_service_config import OffchainServiceConfig
 from registry.domain.models.service import Service
@@ -118,6 +119,48 @@ class ServiceFactory:
             reviewed_on=service_review_history.reviewed_on,
             created_on=service_review_history.created_on,
             updated_on=service_review_history.updated_on
+        )
+
+    @staticmethod
+    def create_service_entity_model_from_request(
+        request: CreateServiceRequest,
+        service_state: str
+    ) -> Service:
+        service_state_entity_model = ServiceFactory.create_service_state_entity_model(
+            request.org_uuid, request.service_uuid, service_state
+        )
+
+        service_group_entity_model_list = [
+            ServiceFactory.create_service_group_entity_model(
+                request.org_uuid, request.service_uuid, group
+            ) for group in request.groups
+        ]
+
+        contributors = []
+        for contributor in request.contributors:
+            if ServiceFactory.is_valid_contributor(contributor):
+                contributors.append(contributor)
+
+        return Service(
+            request.org_uuid,
+            request.service_uuid,
+            request.service_id,
+            request.display_name,
+            request.short_description,
+            request.description,
+            request.project_url,
+            request.proto,
+            request.assets,
+            request.ranking,
+            request.rating,
+            contributors,
+            request.tags,
+            request.mpe_address,
+            request.metadata_uri,
+            request.storage_provider,
+            request.service_type,
+            service_group_entity_model_list,
+            service_state_entity_model
         )
 
     @staticmethod
