@@ -1,10 +1,7 @@
-import json
 from datetime import datetime as dt
 from unittest import TestCase
-from unittest.mock import patch
 from uuid import uuid4
 
-from registry.application.handlers.service_handlers import publish_service
 from registry.constants import OrganizationMemberStatus
 from registry.constants import Role
 from registry.constants import ServiceStatus
@@ -16,8 +13,12 @@ from registry.infrastructure.models import Service as ServiceDBModel
 from registry.infrastructure.models import ServiceGroup as ServiceGroupDBModel
 from registry.infrastructure.models import ServiceReviewHistory as ServiceReviewHistoryDBModel
 from registry.infrastructure.models import ServiceState as ServiceStateDBModel
-from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
-from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
+from registry.infrastructure.repositories.organization_repository import (
+    OrganizationPublisherRepository,
+)
+from registry.infrastructure.repositories.service_publisher_repository import (
+    ServicePublisherRepository,
+)
 
 org_repo = OrganizationPublisherRepository()
 service_repo = ServicePublisherRepository()
@@ -41,15 +42,10 @@ class TestServiceMetadata(TestCase):
                 origin="PUBLISHER_DAPP",
                 groups=[],
                 addresses=[],
-                metadata_uri="#dummyhashdummyhash"
+                metadata_uri="#dummyhashdummyhash",
             )
         )
-        new_org_members = [
-            {
-                "username": "karl@dummy.io",
-                "address": "0x123"
-            }
-        ]
+        new_org_members = [{"username": "karl@dummy.io", "address": "0x123"}]
         org_repo.add_all_items(
             [
                 OrganizationMemberDBModel(
@@ -61,8 +57,9 @@ class TestServiceMetadata(TestCase):
                     transaction_hash="0x123",
                     invite_code=str(uuid4()),
                     invited_on=dt.utcnow(),
-                    updated_on=dt.utcnow()
-                ) for member in new_org_members
+                    updated_on=dt.utcnow(),
+                )
+                for member in new_org_members
             ]
         )
         org_repo.add_item(
@@ -70,7 +67,7 @@ class TestServiceMetadata(TestCase):
                 org_uuid="test_org_uuid",
                 state="APPROVED",
                 created_by="karl@dummy.io",
-                updated_by="karl@dummy.io"
+                updated_by="karl@dummy.io",
             )
         )
         service_repo.add_item(
@@ -80,24 +77,29 @@ class TestServiceMetadata(TestCase):
                 display_name="test_display_name",
                 service_id="test_service_id",
                 metadata_uri="Qasdfghjklqwertyuiopzxcvbnm",
-                proto={"encoding": "proto", "service_type": "grpc",
-                       "model_hash": "ipfs://QmcdTYvTxEJrv18Ui1vo1wNDisw8BMoFRMQyM13rz1ok5B"},
+                proto={
+                    "encoding": "proto",
+                    "service_type": "grpc",
+                    "model_hash": "ipfs://QmcdTYvTxEJrv18Ui1vo1wNDisw8BMoFRMQyM13rz1ok5B",
+                },
                 short_description="test_short_description",
                 description="test_description",
                 project_url="https://dummy.io",
-                assets={"demo_files": {
-                    "url": f"https://ropsten-marketplace-service-assets.s3.amazonaws.com/test_org_uuid/services/test_service_uuid/component/20210809094640_component.zip",
-                    "status": "SUCCEEDED",
-                    "required": "1",
-                    "last_modified": "2020-08-18T00:10:20"
-                }},
+                assets={
+                    "demo_files": {
+                        "url": "https://ropsten-marketplace-service-assets.s3.amazonaws.com/test_org_uuid/services/test_service_uuid/component/20210809094640_component.zip",
+                        "status": "SUCCEEDED",
+                        "required": "1",
+                        "last_modified": "2020-08-18T00:10:20",
+                    }
+                },
                 rating={},
                 ranking=1,
                 contributors=[],
                 mpe_address="#12345678",
-                service_type="grpc", 
+                service_type="grpc",
                 created_on=dt.utcnow(),
-                updated_on=dt.utcnow()
+                updated_on=dt.utcnow(),
             )
         )
         service_repo.add_item(
@@ -112,7 +114,7 @@ class TestServiceMetadata(TestCase):
                 free_calls=10,
                 free_call_signer_address="0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F",
                 group_name="default_group",
-                created_on=dt.utcnow()
+                created_on=dt.utcnow(),
             )
         )
         service_repo.add_item(
@@ -123,7 +125,7 @@ class TestServiceMetadata(TestCase):
                 parameter_name="demo_component_required",
                 parameter_value=0,
                 created_on=dt.utcnow(),
-                updated_on=dt.utcnow()
+                updated_on=dt.utcnow(),
             )
         )
         service_repo.add_item(
@@ -134,7 +136,7 @@ class TestServiceMetadata(TestCase):
                 state=ServiceStatus.APPROVED.value,
                 created_by="dummy_user",
                 updated_by="dummy_user",
-                created_on=dt.utcnow()
+                created_on=dt.utcnow(),
             )
         )
 

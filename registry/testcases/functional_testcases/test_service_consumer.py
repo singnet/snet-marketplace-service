@@ -1,24 +1,25 @@
-import json
 import unittest
-from datetime import datetime as dt
-from random import randrange
-from unittest.mock import patch, Mock
-from uuid import uuid4
-
-from common.constant import StatusCode
-from registry.constants import ServiceStatus, OrganizationStatus
-from registry.consumer.service_event_consumer import ServiceCreatedEventConsumer
-from registry.infrastructure.models import Organization, Service, ServiceGroup, ServiceReviewHistory, ServiceState, OrganizationState
-from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
-from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
-from registry.testcases.functional_testcases.test_variables import service_metadata
+from registry.infrastructure.models import (
+    Organization,
+    Service,
+    ServiceGroup,
+    ServiceReviewHistory,
+    ServiceState,
+)
+from registry.infrastructure.repositories.organization_repository import (
+    OrganizationPublisherRepository,
+)
+from registry.infrastructure.repositories.service_publisher_repository import (
+    ServicePublisherRepository,
+)
 
 org_repo = OrganizationPublisherRepository()
 service_repo = ServicePublisherRepository()
 
+
 class TestServiceEventConsumer(unittest.TestCase):
     def setUp(self):
-      pass
+        pass
 
     # @patch("common.ipfs_util.IPFSUtil", return_value=Mock(
     #     read_bytesio_from_ipfs=Mock(return_value=""),
