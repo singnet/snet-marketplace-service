@@ -30,7 +30,7 @@ from registry.application.schemas.service import (
     GetDaemonConfigRequest,
     GetServicesForOrganizationRequest,
     PublishServiceRequest,
-    SaveServiceAttributesRequest,
+    SaveServiceGroupsRequest,
     SaveServiceRequest,
     ServiceDeploymentStatusRequest,
     VerifyServiceIdRequest,
@@ -226,8 +226,7 @@ class ServicePublisherService:
         
         return service
 
-    def save_service_attributes(self, username: str, request: SaveServiceAttributesRequest):
-        VALID_PATCH_ATTRIBUTE = ["groups"]
+    def save_service_groups(self, username: str, request: SaveServiceGroupsRequest):
         service_db = ServicePublisherRepository().get_service_for_given_service_uuid(
             request.org_uuid, request.service_uuid
         )
@@ -236,16 +235,11 @@ class ServicePublisherService:
         if service is None:
             raise Exception()
 
-        for attribute, _ in request.attributes.items():
-            if attribute in VALID_PATCH_ATTRIBUTE:
-                if attribute == "groups":
-                    service.groups = [
-                        ServiceFactory.create_service_group_entity_model(
-                            request.org_uuid, request.service_uuid, group
-                        ) for group in request.groups
-                    ]
-            else:
-                raise Exception("Patching of other attributes not allowed as of now")
+        service.groups = [
+            ServiceFactory.create_service_group_entity_model(
+                request.org_uuid, request.service_uuid, group
+            ) for group in request.groups
+        ]
 
         saved_service = ServicePublisherRepository().save_service(
             username, service, service.service_state.state
@@ -281,11 +275,11 @@ class ServicePublisherService:
     def create_service(self, username: str, request: CreateServiceRequest):
         service_uuid = uuid4().hex
         service = ServiceFactory.create_service_entity_model_from_request(
-            request, ServiceStatus.DRAFT.value
+            request, service_uuid, ServiceStatus.DRAFT.value
         )
-        
+
         ServicePublisherRepository().add_service(service, username)
-        
+
         return {"org_uuid": request.org_uuid, "service_uuid": service_uuid}
 
     def get_services_for_organization(self, request: GetServicesForOrganizationRequest):
@@ -514,7 +508,7 @@ class ServicePublisherService:
         network_name = settings.network.networks[NETWORK_ID].name
         network_name = "main" if network_name == "mainnet" else network_name
 
-        if request.network is EnvironmentType.MAIN.value:
+        if request.network is EnvironmentType.MAIN:
             daemon_config = {
                 "ipfs_end_point": f"{settings.ipfs.URL}:{settings.ipfs.PORT}",
                 "blockchain_network_selected": network_name,

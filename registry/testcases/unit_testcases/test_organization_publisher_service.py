@@ -236,7 +236,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         }
         request = UpdateOrganizationRequest.model_validate(payload)
 
-        organization = request.map_to_entity()
+        organization = OrganizationFactory.create_organization_entity_from_request(request)
         org_repo.add_organization(organization, username, OrganizationStatus.PUBLISHED.value)
 
         OrganizationPublisherService().update_organization(username, request)
@@ -435,7 +435,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         }
         request = UpdateOrganizationRequest.model_validate(payload)
 
-        organization = request.map_to_entity()
+        organization = OrganizationFactory.create_organization_entity_from_request(request)
 
         org_repo.add_organization(organization, username, OrganizationStatus.APPROVED.value)
 
@@ -480,7 +480,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         }
         request = UpdateOrganizationRequest.model_validate(payload)
 
-        organization = request.map_to_entity()
+        organization = OrganizationFactory.create_organization_entity_from_request(request)
 
         org_repo.add_organization(
             organization, username, OrganizationStatus.ONBOARDING_APPROVED.value

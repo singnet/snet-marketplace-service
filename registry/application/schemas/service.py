@@ -1,8 +1,9 @@
 import json
-from pydantic import BaseModel, Field, model_validator
+from typing import List
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from registry.application.schemas.common import PayloadValidationError
-from registry.constants import EnvironmentType, ServiceType
+from registry.constants import EnvironmentType, DEFAULT_SERVICE_RANKING, ServiceType
 from registry.infrastructure.storage_provider import StorageProviderType
 
 
@@ -17,7 +18,7 @@ class VerifyServiceIdRequest(BaseModel):
             assert event.get("queryStringParameters") is not None, "Missing queryStringParameters"
 
             query_string_parameters = event["queryStringParameters"]
-            path_parameters = event["pathPerameters"]
+            path_parameters = event["pathParameters"]
 
             data = {
                 **path_parameters,
@@ -39,16 +40,13 @@ class SaveTransactionHashRequest(BaseModel):
     def validate_event(cls, event: dict) -> "SaveTransactionHashRequest":
         try:
             assert event.get("pathParameters") is not None, "Missing pathParameters"
-            assert event.get("queryStringParameters") is not None, "Missing queryStringParameters"
             assert event.get("body") is not None, "Invalid event body"
             
             body = json.loads(event["body"])
-            query_string_parameters = event["queryStringParameters"]
-            path_parameters = event["pathPerameters"]
+            path_parameters = event["pathParameters"]
 
             data = {
                 **path_parameters,
-                **query_string_parameters
                 **body
             }
 
@@ -84,7 +82,7 @@ class SaveServiceRequest(BaseModel):
             assert event.get("body") is not None, "Invalid event body"
             
             body = json.loads(event["body"])
-            path_parameters = event["pathPerameters"]
+            path_parameters = event["pathParameters"]
 
             data = {
                 **path_parameters,
@@ -97,20 +95,19 @@ class SaveServiceRequest(BaseModel):
             raise PayloadValidationError()
 
 
-class SaveServiceAttributesRequest(BaseModel):
+class SaveServiceGroupsRequest(BaseModel):
     org_uuid: str
     service_uuid: str
-    attributes: dict = Field(default_factory=dict)
-    groups: list = Field(default_factory=list)
+    groups: List[dict] = Field(min_length=1, default_factory=list)
 
     @classmethod
-    def validate_event(cls, event: dict) -> "SaveServiceAttributesRequest":
+    def validate_event(cls, event: dict) -> "SaveServiceGroupsRequest":
         try:
             assert event.get("pathParameters") is not None, "Missing pathParameters"
             assert event.get("body") is not None, "Invalid event body"
             
             body = json.loads(event["body"])
-            path_parameters = event["pathPerameters"]
+            path_parameters = event["pathParameters"]
 
             data = {
                 **path_parameters,
@@ -125,9 +122,8 @@ class SaveServiceAttributesRequest(BaseModel):
 
 class CreateServiceRequest(BaseModel):
     org_uuid: str
-    service_uuid: str
 
-    service_id: str
+    service_id: str = Field(default="")
     proto: dict = Field(default_factory=dict)
     storage_provider: str | None = Field(default="")
     display_name: str | None = Field(default="")
@@ -142,8 +138,8 @@ class CreateServiceRequest(BaseModel):
     transaction_hash: str | None = Field(default="")
     comments: dict = Field(default_factory=dict)
     assets: dict = Field(default_factory=dict)
-    ranking: str = Field(default="")
-    rating: str = Field(default="")
+    ranking: int = Field(default=DEFAULT_SERVICE_RANKING)
+    rating: dict = Field(default_factory=dict)
     metadata_uri: str = Field(default="")
 
     @classmethod
@@ -153,7 +149,7 @@ class CreateServiceRequest(BaseModel):
             assert event.get("body") is not None, "Invalid event body"
             
             body = json.loads(event["body"])
-            path_parameters = event["pathPerameters"]
+            path_parameters = event["pathParameters"]
 
             data = {
                 **path_parameters,
@@ -167,13 +163,16 @@ class CreateServiceRequest(BaseModel):
 
 
 class GetServicesForOrganizationRequest(BaseModel):
+    model_config = ConfigDict(validate_by_name=True, validate_by_alias=True)
+
     org_uuid: str
-    offset: int = Field(default=0)
+    offset: int = Field(default=0)   
     limit: int = Field(default=10)
-    search_string: str | None
-    search_attribute: str | None
+    search_string: str | None = Field(default="", alias="q")
+    search_attribute: str | None = Field(default="", alias="s")
     sort_by: str | None
     order_by: str | None
+    filters: list | None = Field(default_factory=list)
 
     @classmethod
     def validate_event(cls, event: dict) -> "GetServicesForOrganizationRequest":
@@ -182,7 +181,7 @@ class GetServicesForOrganizationRequest(BaseModel):
             assert event.get("body") is not None, "Invalid event body"
             
             body = json.loads(event["body"])
-            path_parameters = event["pathPerameters"]
+            path_parameters = event["pathParameters"]
 
             data = {
                 **path_parameters,
@@ -204,7 +203,7 @@ class GetServiceRequest(BaseModel):
         try:
             assert event.get("pathParameters") is not None, "Missing pathParameters"
 
-            path_parameters = event["pathPerameters"]
+            path_parameters = event["pathParameters"]
 
             return cls.model_validate(path_parameters)
 
@@ -224,7 +223,7 @@ class GetDaemonConfigRequest(BaseModel):
             assert event.get("queryStringParameters") is not None, "Missing queryStringParameters"
             
             query_string_parameters = event["queryStringParameters"]
-            path_parameters = event["pathPerameters"]
+            path_parameters = event["pathParameters"]
 
             data = {
                 **path_parameters,
@@ -260,7 +259,7 @@ class GetCodeBuildStatusRequest(BaseModel):
         try:
             assert event.get("pathParameters") is not None, "Missing pathParameters"
             
-            path_parameters = event["pathPerameters"]
+            path_parameters = event["pathParameters"]
 
             return cls.model_validate(path_parameters)
 
@@ -287,7 +286,7 @@ class PublishServiceRequest(BaseModel):
             assert event.get("body") is not None, "Invalid event body"
             
             body = json.loads(event["body"])
-            path_parameters = event["pathPerameters"]
+            path_parameters = event["pathParameters"]
 
             data = {
                 **path_parameters,

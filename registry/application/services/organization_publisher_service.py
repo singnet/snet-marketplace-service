@@ -97,7 +97,7 @@ class OrganizationPublisherService:
         }
 
     def create_organization(self, username: str, request: CreateOrganizationRequest):
-        organization = request.map_to_entity()
+        organization = OrganizationFactory.create_organization_entity_from_request(request)
         organization.setup_id()
         logger.info(f"assigned org_uuid : {organization.uuid}")
 
@@ -112,7 +112,7 @@ class OrganizationPublisherService:
 
     #TODO: Review this method with frontend calls
     def update_organization(self, username: str, request: UpdateOrganizationRequest):
-        updated_organization = request.map_to_entity()
+        updated_organization = OrganizationFactory.create_organization_entity_from_request(request)
         
         current_organization = org_repo.get_organization(org_uuid=request.uuid)
         self._archive_current_organization(current_organization)

@@ -23,7 +23,7 @@ from registry.application.schemas.service import (
     GetDaemonConfigRequest,
     GetServiceRequest,
     GetServicesForOrganizationRequest,
-    SaveServiceAttributesRequest,
+    SaveServiceGroupsRequest,
     ServiceDeploymentStatusRequest,
     VerifyServiceIdRequest,
     SaveTransactionHashRequest,
@@ -40,8 +40,11 @@ logger = get_logger(__name__)
 def verify_service_id(event, context):
     try:
         request = VerifyServiceIdRequest.validate_event(event)
-    except ValidationError:
+    except ValidationError as e:
+        print(e)
         raise BadRequestException()
+
+    print(f"request: {request}")
 
     response = ServicePublisherService().get_service_id_availability_status(request)
 
@@ -98,11 +101,11 @@ def save_service_attributes(event, context):
     req_ctx = RequestContext(event)
 
     try:
-        request = SaveServiceAttributesRequest.validate_event(event)
+        request = SaveServiceGroupsRequest.validate_event(event)
     except ValidationError:
         raise BadRequestException()
 
-    response = ServicePublisherService().save_service_attributes(req_ctx.username, request)
+    response = ServicePublisherService().save_service_groups(req_ctx.username, request)
 
     return generate_lambda_response(
         StatusCode.OK,
@@ -246,16 +249,18 @@ def update_service_assets(event, context):
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def update_demo_component_build_status(event, context):
-    logger.info(f"Demo component build status update event :: {event}")
     org_uuid = event['org_uuid']
     service_uuid = event['service_uuid']
     build_status = event['build_status']
     build_id = event['build_id']
     filename = event['filename']
-    response = UpdateServiceAssets()\
-        .update_demo_component_build_status(org_uuid=org_uuid, service_uuid=service_uuid,
-                                            build_status=build_status, build_id=build_id,
-                                            filename=filename)
+    response = UpdateServiceAssets().update_demo_component_build_status(
+        org_uuid=org_uuid,
+        service_uuid=service_uuid,
+        build_status=build_status,
+        build_id=build_id,
+        filename=filename
+    )
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled=True

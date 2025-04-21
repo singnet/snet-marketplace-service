@@ -22,8 +22,8 @@ class Organization(Base):
     short_description: Mapped[str | None] = mapped_column("short_description", VARCHAR(1024))
     url: Mapped[str | None] = mapped_column("url", VARCHAR(512))
     duns_no: Mapped[str | None] = mapped_column("duns_no", VARCHAR(36))
-    contacts: Mapped[str] = mapped_column("contacts", JSON, nullable=False)
-    assets: Mapped[str] = mapped_column("assets", JSON, nullable=False)
+    contacts: Mapped[list] = mapped_column("contacts", JSON, nullable=False)
+    assets: Mapped[dict] = mapped_column("assets", JSON, nullable=False)
     metadata_uri: Mapped[str | None] = mapped_column("metadata_uri", VARCHAR(255))
 
     created_on: Mapped[datetime] = mapped_column(

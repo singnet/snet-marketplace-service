@@ -40,17 +40,17 @@ GROUP_MINOR_CHANGES = [
 @dataclass
 class Organization:
     uuid: str
-    id: str
-    name: str
-    org_type: str
-    origin: str
-    description: str
-    short_description: str
-    url: str
+    id: str | None
+    name: str | None
+    org_type: str | None
+    origin: str | None
+    description: str | None
+    short_description: str | None
+    url: str | None
     contacts: list
     assets: dict
-    metadata_uri: str
-    duns_no: str
+    metadata_uri: str | None
+    duns_no: str | None
     groups: List[Any]
     addresses: list
     org_state: Any
@@ -108,7 +108,7 @@ class Organization:
             "contacts": self.contacts,
             "assets": self.assets,
             "metadata_uri": self.metadata_uri,
-            "storage_provider": get_storage_provider_by_uri(self.metadata_uri),
+            "storage_provider": get_storage_provider_by_uri(self.metadata_uri) if self.metadata_uri else None,
             "groups": [group.to_response() for group in self.groups],
             "org_address": {
                 "mail_address_same_hq_address": mail_address_same_hq_address,

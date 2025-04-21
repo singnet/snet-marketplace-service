@@ -69,26 +69,6 @@ class CreateOrganizationRequest(BaseModel):
             data["addresses"] = data["org_address"]["addresses"]
         return data
 
-    def map_to_entity(self) -> OrganizationEntity:
-        return OrganizationEntity(
-            uuid=self.uuid,
-            id=self.id,
-            name=self.name,
-            org_type=self.type,
-            description=self.description,
-            short_description=self.short_description,
-            url=self.url,
-            duns_no=self.duns_no,
-            origin=self.origin,
-            contacts=self.contacts,
-            assets=self.assets,
-            metadata_uri=self.metadata_uri,
-            groups=OrganizationFactory.group_domain_entity_from_group_list_payload(self.groups),
-            addresses=OrganizationFactory.domain_address_entity_from_address_list_payload(self.org_address["addresses"]),
-            org_state=None,
-            members=[]
-        )
-
 
 class UpdateOrganizationRequest(BaseModel):
     model_config = ConfigDict(validate_by_name=True, validate_by_alias=True)
@@ -139,26 +119,6 @@ class UpdateOrganizationRequest(BaseModel):
         except (AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
 
-    def map_to_entity(self) -> OrganizationEntity:
-        return OrganizationEntity(
-            uuid=self.uuid,
-            id=self.id,
-            name=self.name,
-            org_type=self.type,
-            description=self.description,
-            short_description=self.short_description,
-            url=self.url,
-            duns_no=self.duns_no,
-            origin=self.origin,
-            contacts=self.contacts,
-            assets=self.assets,
-            metadata_uri=self.metadata_uri,
-            groups=OrganizationFactory.group_domain_entity_from_group_list_payload(self.groups),
-            addresses=OrganizationFactory.domain_address_entity_from_address_list_payload(self.org_address["addresses"]),
-            org_state=None,
-            members=[]
-        )
-
 
 class PublishOrganizationRequest(BaseModel):
     org_uuid: str
@@ -190,7 +150,7 @@ class SaveTransactionHashForOrganizationRequest(BaseModel):
     org_uuid: str
     transaction_hash: str
     wallet_address: str
-    nonce: str
+    nonce: int
 
     @classmethod
     def validate_event(cls, event: dict) -> "SaveTransactionHashForOrganizationRequest":

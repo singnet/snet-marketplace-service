@@ -1,4 +1,3 @@
-from datetime import datetime as dt
 from typing import List
 
 import sqlalchemy
@@ -64,6 +63,7 @@ class ServicePublisherRepository(BaseRepository):
         except Exception as e:
             self.session.rollback()
             raise e
+
         try:
             service_db = self.session.query(Service) \
                 .filter(Service.org_uuid == service.org_uuid) \
@@ -87,13 +87,11 @@ class ServicePublisherRepository(BaseRepository):
             service_db.contributors = service.contributors
             service_db.tags = service.tags
             service_db.mpe_address = service.mpe_address
-            service_db.updated_on = dt.utcnow()
             service_db.groups = service_group_db_model
             service_db.service_state.state = state
             service_db.service_type = service.service_type
             service_db.service_state.transaction_hash = service.service_state.transaction_hash
             service_db.service_state.updated_by = username
-            service_db.service_state.updated_on = dt.utcnow()
             self.session.commit()
         except Exception as e:
             self.session.rollback()
@@ -133,9 +131,6 @@ class ServicePublisherRepository(BaseRepository):
                 user_type=service_comment.user_type,
                 commented_by=service_comment.commented_by,
                 comment=service_comment.comment,
-                created_on=dt.utcnow(),
-                updated_on=dt.utcnow()
-
             )
         )
 
@@ -197,7 +192,6 @@ class ServicePublisherRepository(BaseRepository):
 
             if offchain_service_config_db:
                 offchain_service_config_db.parameter_value = parameter_value
-                offchain_service_config_db.updated_on = dt.utcnow()
             self.session.commit()
 
             if not offchain_service_config_db:
@@ -206,6 +200,4 @@ class ServicePublisherRepository(BaseRepository):
                     service_uuid=offchain_service_config.service_uuid,
                     parameter_name=parameter_name,
                     parameter_value=parameter_value,
-                    created_on=dt.utcnow(),
-                    updated_on=dt.utcnow()
                 ))

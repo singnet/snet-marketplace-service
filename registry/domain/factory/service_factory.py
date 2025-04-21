@@ -1,6 +1,4 @@
-from datetime import datetime as dt
-
-from registry.application.schemas.service import CreateServiceRequest, SaveServiceRequest
+from registry.application.schemas.service import CreateServiceRequest
 from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus, ServiceType
 from registry.domain.models.offchain_service_config import OffchainServiceConfig
 from registry.domain.models.service import Service
@@ -8,16 +6,18 @@ from registry.domain.models.service_comment import ServiceComment
 from registry.domain.models.service_group import ServiceGroup
 from registry.domain.models.service_state import ServiceState
 from registry.exceptions import InvalidServiceStateException
-from registry.infrastructure.models import Service as ServiceDBModel, ServiceGroup as ServiceGroupDBModel, \
-    ServiceReviewHistory, ServiceState as ServiceStateDBModel, OffchainServiceConfig as offchain_service_configs_db
+from registry.infrastructure.models import (
+    Service as ServiceDBModel,
+    ServiceGroup as ServiceGroupDBModel,
+    ServiceReviewHistory,
+    ServiceState as ServiceStateDBModel,
+)
 
 
 class ServiceFactory:
 
     @staticmethod
     def convert_service_db_model_to_entity_model(service):
-        if service is None:
-            return None
         return Service(
             org_uuid=service.org_uuid,
             uuid=service.uuid,
@@ -46,9 +46,13 @@ class ServiceFactory:
         )
 
     @staticmethod
-    def convert_service_state_from_db(service_state):
-        return ServiceState(service_state.org_uuid, service_state.service_uuid, service_state.state,
-                            service_state.transaction_hash)
+    def convert_service_state_from_db(service_state: ServiceStateDBModel):
+        return ServiceState(
+            service_state.org_uuid,
+            service_state.service_uuid,
+            service_state.state,
+            service_state.transaction_hash
+        )
 
     @staticmethod
     def convert_service_entity_model_to_db_model(username, service):
@@ -70,11 +74,11 @@ class ServiceFactory:
             tags=service.tags,
             mpe_address=service.mpe_address,
             service_type=service.service_type,
-            created_on=dt.utcnow(),
             groups=[ServiceFactory.convert_service_group_entity_model_to_db_model(group) for group in service.groups],
-            service_state=ServiceFactory.convert_service_state_entity_model_to_db_model(username,
-                                                                                        service.service_state),
-            updated_on=dt.utcnow()
+            service_state=ServiceFactory.convert_service_state_entity_model_to_db_model(
+                username,
+                service.service_state
+            ),
         )
 
     @staticmethod
@@ -90,8 +94,6 @@ class ServiceFactory:
             daemon_address=service_group.daemon_address,
             free_calls=service_group.free_calls,
             free_call_signer_address=service_group.free_call_signer_address,
-            created_on=dt.utcnow(),
-            updated_on=dt.utcnow()
         )
 
     @staticmethod
@@ -104,8 +106,6 @@ class ServiceFactory:
             created_by=username,
             updated_by=username,
             approved_by="",
-            created_on=dt.utcnow()
-
         )
 
     @staticmethod
@@ -124,15 +124,16 @@ class ServiceFactory:
     @staticmethod
     def create_service_entity_model_from_request(
         request: CreateServiceRequest,
+        service_uuid: str,
         service_state: str
     ) -> Service:
         service_state_entity_model = ServiceFactory.create_service_state_entity_model(
-            request.org_uuid, request.service_uuid, service_state
+            request.org_uuid, service_uuid, service_state
         )
 
         service_group_entity_model_list = [
             ServiceFactory.create_service_group_entity_model(
-                request.org_uuid, request.service_uuid, group
+                request.org_uuid, service_uuid, group
             ) for group in request.groups
         ]
 
@@ -143,7 +144,7 @@ class ServiceFactory:
 
         return Service(
             request.org_uuid,
-            request.service_uuid,
+            service_uuid,
             request.service_id,
             request.display_name,
             request.short_description,
@@ -244,35 +245,6 @@ class ServiceFactory:
             daemon_address=group.get("daemon_addresses", []),
             free_calls=group.get("free_calls", 0),
             free_call_signer_address=group.get("free_call_signer_address", None),
-        )
-
-    @staticmethod
-    def create_service_from_service_metadata(org_uuid, service_uuid, service_id, service_metadata, tags_data, ranking,
-                                             rating, status):
-        service_state_entity_model = \
-            ServiceFactory.create_service_state_entity_model(org_uuid, service_uuid,
-                                                             getattr(ServiceStatus, status).value)
-        service_group_entity_model_list = [
-            ServiceFactory.create_service_group_entity_model("", service_uuid, group) for group in
-            service_metadata.get("groups", [])]
-        return Service(
-            org_uuid,
-            service_uuid,
-            service_id,
-            service_metadata.get("display_name", ""),
-            service_metadata.get("short_description", ""),
-            service_metadata.get("description", ""),
-            service_metadata.get("project_url", ""),
-            service_metadata.get("proto", {}),
-            service_metadata.get("assets", {}),
-            ranking,
-            rating,
-            service_metadata.get("contributors", []),
-            tags_data,
-            service_metadata.get("mpe_address", ""),
-            service_metadata.get("metadata_hash", ""),
-            service_group_entity_model_list,
-            service_state_entity_model
         )
 
     @staticmethod

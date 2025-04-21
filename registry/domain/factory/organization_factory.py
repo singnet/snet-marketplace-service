@@ -54,6 +54,27 @@ class OrganizationFactory:
         return [Comment(comment['comment'], comment['created_by'], comment['created_on']) for comment in comments]
 
     @staticmethod
+    def create_organization_entity_from_request(request: 'CreateOrganizationRequest | UpdateOrganizationRequest') -> Organization:
+        return Organization(
+            uuid=request.uuid,
+            id=request.id,
+            name=request.name,
+            org_type=request.type,
+            origin=request.origin,
+            description=request.description,
+            short_description=request.short_description,
+            url=request.url,
+            contacts=request.contacts,
+            assets=request.assets,
+            metadata_uri=request.metadata_uri,
+            duns_no=request.duns_no,
+            groups=OrganizationFactory.group_domain_entity_from_group_list_payload(request.groups),
+            addresses=OrganizationFactory.domain_address_entity_from_address_list_payload(request.org_address["addresses"]),
+            org_state=None,
+            members=[],
+        )
+
+    @staticmethod
     def org_domain_entity_from_repo_model(organization_repo_model: OrganizationDbModel):
         return Organization(
             uuid=organization_repo_model.uuid,

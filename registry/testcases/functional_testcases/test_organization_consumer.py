@@ -1,13 +1,14 @@
 import unittest
-from datetime import datetime
-from unittest.mock import Mock, patch
-from uuid import uuid4
 
-from registry.constants import OrganizationStatus, Role, OrganizationMemberStatus
-from registry.consumer.organization_event_consumer import OrganizationCreatedAndModifiedEventConsumer
-from registry.infrastructure.models import Organization, OrganizationState, \
-    OrganizationMember, OrganizationAddress, Group
-from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
+from registry.infrastructure.models import (
+    Organization,
+    OrganizationState,
+    OrganizationMember,
+    OrganizationAddress,
+)
+from registry.infrastructure.repositories.organization_repository import (
+    OrganizationPublisherRepository,
+)
 
 ORIGIN = "PUBLISHER"
 
@@ -108,7 +109,6 @@ class TestOrganizationPublisherService(unittest.TestCase):
     #     assert published_org.groups[0].payment_address == "0x123"
     #     assert published_org.duns_no == '123456789'
     #     assert published_org.org_state.state == "PUBLISHED"
-
 
     # @patch("common.ipfs_util.IPFSUtil", return_value=Mock(write_file_in_ipfs=Mock(return_value="Q3E12")))
     # @patch('common.s3_util.S3Util.push_io_bytes_to_s3')
@@ -239,7 +239,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
     #         description="this is long description",
     #         short_description="this is short description", url="https://dummy.com", duns_no="123456789", contacts=[],
     #         assets={
-    #             "hero_image": 
+    #             "hero_image":
     #             {
     #                 "url": "some_url",
     #                 "ipfs_hash": "ipfs://Q123"
