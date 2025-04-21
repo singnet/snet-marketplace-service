@@ -2,6 +2,7 @@ plugins:
   - serverless-offline
   - serverless-python-requirements
   - serverless-prune-plugin
+  - serverless-latest-layer-version
 
 service: wallets
 custom:
@@ -56,7 +57,6 @@ package:
     - heath_check.sh
     - node_modules/**
   include:
-    - node_modules/singularitynet-platform-contracts/**
     - resources/**
 
 
@@ -146,6 +146,8 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   channel-add-funds:
     handler: wallets/application/handlers/channel_handlers.channel_add_funds
@@ -161,6 +163,8 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   create-channel:
     handler: wallets/application/handlers/channel_handlers.create_channel
@@ -172,6 +176,8 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   create-channel-event:
     handler: wallets/application/handlers/channel_handlers.record_create_channel_event
@@ -183,6 +189,8 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   open-channel-by-third-party:
     handler: wallets/application/handlers/channel_handlers.open_channel_by_third_party
@@ -194,6 +202,8 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule: rate(2 minutes)
 
@@ -207,5 +217,7 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule: rate(2 minutes)

@@ -13,6 +13,9 @@ NETWORKS = {
         },
     }
 }
+NETWORK_ID = 0
+TOKEN_NAME = ""
+STAGE = ""
 
 SLACK_HOOK = {
     'hostname': 'https://hooks.slack.com',
@@ -23,7 +26,6 @@ IPFS_URL = {
     'port': '80',
 
 }
-NETWORK_ID = 11155111
 REGION_NAME = "us-east-2"
 S3_BUCKET_ACCESS_KEY = ""
 S3_BUCKET_SECRET_KEY = ""
@@ -35,3 +37,5 @@ MARKETPLACE_DAPP_BUILD = ""
 ASSET_TEMP_EXTRACT_DIRECTORY = "/var/task/"
 ASSETS_COMPONENT_BUCKET_NAME = ""
 MANAGE_PROTO_COMPILATION = ""
+SIGNER_SERVICE_ARN = ""
+CONTRACT_BASE_PATH = ""

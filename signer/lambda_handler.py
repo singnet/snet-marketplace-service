@@ -47,9 +47,12 @@ def request_handler(event, context):
             )
 
         elif "/state-service" == path:
-
+            if event.get("requestContext", None) is not None:
+                username = event["requestContext"]["authorizer"]["claims"]["email"]
+            else:
+                username = "INTERNAL"
             response_data = signer_object.signature_for_state_service(
-                user_data=event["requestContext"],
+                username=username,
                 channel_id=payload_dict["channel_id"])
 
         elif "/regular-call" == path:

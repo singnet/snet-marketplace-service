@@ -7,7 +7,9 @@ NETWORKS = {
     }
 }
 
-NETWORK_ID = 11155111
+NETWORK_ID = 3
+TOKEN_NAME = ""
+STAGE = ""
 
 DB_CONFIG = {
     "driver": "mysql+pymysql",
