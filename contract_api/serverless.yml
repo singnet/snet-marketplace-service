@@ -33,6 +33,12 @@ custom:
     automatic: true
     includeLayers: true
     number: 2
+  queue:
+    queueMessageRetention: ${file(./config.${self:provider.stage}.json):QUEUE_MESSAGE_RETENTION, 14400}
+    dlqMessageRetention: ${file(./config.${self:provider.stage}.json):DLQ_MESSAGE_RETENTION, 1209600}
+    queueMaxReceiveCount: ${file(./config.${self:provider.stage}.json):QUEUE_MAX_RECEIVE_COUNT, 2}
+    receiveMessageWaitTimeSeconds: ${file(./config.${self:provider.stage}.json):RECEIVE_MESSAGE_WAIT_TIME_SECONDS, 20}
+    messageVisibilityTimeout: ${file(./config.${self:provider.stage}.json):MESSAGE_VISIBILITY_TIMEOUT, 60}
 
 package:
   exclude:
@@ -66,10 +72,134 @@ package:
   include:
     - resources/**
 
+resources:
+  Resources:
+    mpeEventConsumerQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${file(./config.${self:provider.stage}.json):MPE_QUEUE}
+        VisibilityTimeout: ${self:custom.queue.messageVisibilityTimeout}
+        ReceiveMessageWaitTimeSeconds: ${self:custom.queue.receiveMessageWaitTimeSeconds}
+        MessageRetentionPeriod: ${self:custom.queue.queueMessageRetention}
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt mpeEventConsumerDLQ.Arn
+          maxReceiveCount: ${self:custom.queue.queueMaxReceiveCount}
+
+    mpeEventConsumerQueuePolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        PolicyDocument:
+          Id: mpeEventConsumerQueue
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action:
+                - sqs:SendMessage
+              Resource: !GetAtt mpeEventConsumerQueue.Arn
+              Condition:
+                ArnEquals:
+                  aws:SourceArn: !GetAtt ${file(./config.${self:provider.stage}.json):MPE_TOPIC_ARN}
+        Queues:
+          - !Ref mpeEventConsumerQueue
+
+    mpeEventConsumerTopicSubscriptionForSQS:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Protocol: sqs
+        Endpoint: !GetAtt mpeEventConsumerQueue.Arn
+        TopicArn: !GetAtt ${file(./config.${self:provider.stage}.json):MPE_TOPIC_ARN}
+
+    mpeEventConsumerDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${file(./config.${self:provider.stage}.json):MPE_QUEUE}-dlq
+        VisibilityTimeout: ${self:custom.queue.messageVisibilityTimeout}
+        ReceiveMessageWaitTimeSeconds: ${self:custom.queue.receiveMessageWaitTimeSeconds}
+        MessageRetentionPeriod: ${self:custom.queue.dlqMessageRetention}
+
+    mpeEventConsumerDLQPolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        PolicyDocument:
+          Id: mpeEventConsumerDLQ
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action:
+                - sqs:SendMessage
+              Resource: !GetAtt mpeEventConsumerDLQ.Arn
+              Condition:
+                ArnEquals:
+                  aws:SourceArn: !GetAtt mpeEventConsumerQueue.Arn
+        Queues:
+          - !Ref mpeEventConsumerDLQ
+
+    registryEventConsumerQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${file(./config.${self:provider.stage}.json):REGISTRY_QUEUE}
+        VisibilityTimeout: ${self:custom.queue.messageVisibilityTimeout}
+        ReceiveMessageWaitTimeSeconds: ${self:custom.queue.receiveMessageWaitTimeSeconds}
+        MessageRetentionPeriod: ${self:custom.queue.queueMessageRetention}
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt registryEventConsumerDLQ.Arn
+          maxReceiveCount: ${self:custom.queue.queueMaxReceiveCount}
+
+    registryEventConsumerQueuePolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        PolicyDocument:
+          Id: registryEventConsumerQueue
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action:
+                - sqs:SendMessage
+              Resource: !GetAtt registryEventConsumerQueue.Arn
+              Condition:
+                ArnEquals:
+                  aws:SourceArn: !GetAtt ${file(./config.${self:provider.stage}.json):REGISTRY_TOPIC_ARN}
+        Queues:
+          - !Ref registryEventConsumerQueue
+
+    registryEventConsumerTopicSubscriptionForSQS:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Protocol: sqs
+        Endpoint: !GetAtt registryEventConsumerQueue.Arn
+        TopicArn: !GetAtt ${file(./config.${self:provider.stage}.json):REGISTRY_TOPIC_ARN}
+
+    registryEventConsumerDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${file(./config.${self:provider.stage}.json):REGISTRY_QUEUE}-dlq
+        VisibilityTimeout: ${self:custom.queue.messageVisibilityTimeout}
+        ReceiveMessageWaitTimeSeconds: ${self:custom.queue.receiveMessageWaitTimeSeconds}
+        MessageRetentionPeriod: ${self:custom.queue.dlqMessageRetention}
+
+    registryEventConsumerDLQPolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        PolicyDocument:
+          Id: registryEventConsumerDLQ
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action:
+                - sqs:SendMessage
+              Resource: !GetAtt registryEventConsumerDLQ.Arn
+              Condition:
+                ArnEquals:
+                  aws:SourceArn: !GetAtt registryEventConsumerQueue.Arn
+        Queues:
+          - !Ref registryEventConsumerDLQ
+
 
 functions:
-
-
   get_all_org:
     warmup: true
     handler: contract_api/handlers.organization_handlers.get_all_org
@@ -470,34 +600,34 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
-  organization_event_consumer:
-    warmup: true
-    handler: contract_api/handlers.consumer_handlers.organization_event_consumer_handler
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-      - ${file(./config.${self:provider.stage}.json):SnetContract}
-
-  service_event_consumer:
-    warmup: true
-    handler: contract_api/handlers.consumer_handlers.service_event_consumer_handler
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    timeout: 60
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-      - ${file(./config.${self:provider.stage}.json):SnetContract}
+#  organization_event_consumer:
+#    warmup: true
+#    handler: contract_api/handlers.consumer_handlers.organization_event_consumer_handler
+#    role: ${file(./config.${self:provider.stage}.json):ROLE}
+#    vpc:
+#      securityGroupIds:
+#        - ${file(./config.${self:provider.stage}.json):SG1}
+#        - ${file(./config.${self:provider.stage}.json):SG2}
+#      subnetIds:
+#        - ${file(./config.${self:provider.stage}.json):VPC1}
+#        - ${file(./config.${self:provider.stage}.json):VPC2}
+#    layers:
+#      - ${file(./config.${self:provider.stage}.json):SnetContract}
+#
+#  service_event_consumer:
+#    warmup: true
+#    handler: contract_api/handlers.consumer_handlers.service_event_consumer_handler
+#    role: ${file(./config.${self:provider.stage}.json):ROLE}
+#    timeout: 60
+#    vpc:
+#      securityGroupIds:
+#        - ${file(./config.${self:provider.stage}.json):SG1}
+#        - ${file(./config.${self:provider.stage}.json):SG2}
+#      subnetIds:
+#        - ${file(./config.${self:provider.stage}.json):VPC1}
+#        - ${file(./config.${self:provider.stage}.json):VPC2}
+#    layers:
+#      - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   mpe_event_consumer:
     warmup: true
@@ -512,6 +642,34 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     layers:
       - ${file(./config.${self:provider.stage}.json):SnetContract}
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - mpeEventConsumerQueue
+              - Arn
+          batchSize: 1
+
+  registry_event_consumer:
+    warmup: true
+    handler: contract_api/handlers.consumer_handlers.registry_event_consumer_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - registryEventConsumerQueue
+              - Arn
+          batchSize: 1
 
   service_create_deployment_handler:
     warmup: true

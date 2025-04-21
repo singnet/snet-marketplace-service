@@ -37,15 +37,12 @@ def service_event_consumer_handler(event, context):
 
 
 def mpe_event_consumer_handler(event, context):
-    logger.info(f"Got MPE Event {event}")
-    try:
-        MPEEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"]).on_event(event)
-        return generate_lambda_response(200, StatusCode.OK)
+    logger.info(f"Got MPE event {event}")
+    MPEEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"]).on_event(event)
+    return {}
 
-    except Exception as e:
-        logger.exception(f"error  {str(e)} while processing event {event}")
-        util.report_slack(f"got error :  {str(e)} \n for event : {event}", SLACK_HOOK)
-        return generate_lambda_response(500, str(e))
+def registry_event_consumer_handler(event, context):
+    logger.info(f"Got Registry event {event}")
 
 
 @handle_exception_with_slack_notification(logger=logger, SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID)
