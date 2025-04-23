@@ -34,7 +34,7 @@ from registry.constants import (
     ServiceSupportType,
     UserType,
     ServiceType,
-    REG_ADDR_PATH
+    MPE_ADDR_PATH
 )
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.models.demo_component import DemoComponent
@@ -602,7 +602,7 @@ class ServicePublisherService:
 
     @staticmethod
     def __get_token_name(mpe_address):
-        mpe_contract = BlockChainUtil.load_contract(REG_ADDR_PATH)
+        mpe_contract = BlockChainUtil.load_contract(MPE_ADDR_PATH)
         network_data = mpe_contract[NETWORK_ID]
         for token, data in network_data.items():
             if data[STAGE]["address"] == mpe_address:
