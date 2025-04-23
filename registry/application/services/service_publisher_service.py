@@ -6,19 +6,26 @@ from typing import Dict, Union
 from urllib.request import urlretrieve
 from uuid import uuid4
 
-import requests
 from deepdiff import DeepDiff
 from aws_xray_sdk.core import patch_all
 from cerberus import Validator
 
 from common import utils
 from common.boto_utils import BotoUtils
+from common.blockchain_util import BlockChainUtil
 from common.constant import StatusCode
 from common.logger import get_logger
 from common.utils import send_email_notification
 from registry.config import (
-    IPFS_URL, METADATA_FILE_PATH, NETWORKS, NETWORK_ID, NOTIFICATION_ARN,
-    REGION_NAME, PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT, GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT
+    IPFS_URL,
+    METADATA_FILE_PATH,
+    NETWORKS,
+    NETWORK_ID,
+    NOTIFICATION_ARN,
+    REGION_NAME,
+    PUBLISH_OFFCHAIN_ATTRIBUTES_ARN,
+    GET_SERVICE_FOR_GIVEN_ORG_ARN,
+    STAGE
 )
 from registry.constants import (
     EnvironmentType,
@@ -26,7 +33,8 @@ from registry.constants import (
     ServiceStatus,
     ServiceSupportType,
     UserType,
-    ServiceType
+    ServiceType,
+    REG_ADDR_PATH
 )
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.models.demo_component import DemoComponent
@@ -458,25 +466,63 @@ class ServicePublisherService:
         changes.update({"demo_component": demo_changes})
         return changes
 
-    def publish_offchain_service_configs(self, org_id, service_id, payload):
-        response = requests.post(
-            PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT.format(org_id, service_id), data=payload)
-        if response.status_code != 200:
-            raise Exception("Error in updating offchain service attributes")
+    def publish_offchain_service_configs(self, org_id, service_id, payload, token_name):
+        publish_offchain_attributes_arn = PUBLISH_OFFCHAIN_ATTRIBUTES_ARN[token_name]
+        # response = requests.post(PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT.format(org_id, service_id), data=payload)
+        payload = {
+            "httpMethod": "POST",
+            "pathParameters": {
+                "orgId": org_id,
+                "serviceId": service_id
+            },
+            "body": payload
+        }
+        response = boto_util.invoke_lambda(
+            publish_offchain_attributes_arn,
+            "RequestResponse",
+            json.dumps(payload)
+        )
 
-    def get_existing_service_details_from_contract_api(self, service_id, org_id):
-        response = requests.get(GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT.format(org_id, service_id))
-        if response.status_code != 200:
+        result = json.loads(response.get('Payload').read())
+        response = json.loads(result['body'])
+
+        if response["status"] != 200:
+            raise Exception(f"Error in publishing offchain service attributes for org_id :: {org_id} service_id :: {service_id}")
+
+
+    def get_existing_service_details_from_contract_api(self, service_id, org_id, token_name):
+        get_service_arn = GET_SERVICE_FOR_GIVEN_ORG_ARN[token_name]
+        payload = {
+            "httpMethod": "GET",
+            "pathParameters": {
+                "orgId": org_id,
+                "serviceId": service_id
+            }
+        }
+        response = boto_util.invoke_lambda(
+            get_service_arn,
+            "RequestResponse",
+            json.dumps(payload)
+        )
+
+        result = json.loads(response.get('Payload').read())
+        response = json.loads(result['body'])
+
+        if response["status"] != 200:
             raise Exception(f"Error getting service details for org_id :: {org_id} service_id :: {service_id}")
         logger.debug(f"Get service by org_id from contract_api :: {response}")
-        return json.loads(response.text)["data"]
+
+        return response["data"]
 
     def publish_new_offchain_configs(self, current_service: Service, storage_provider: StorageProviderType) -> Dict[str, Union[bool, str]]:
         organization = OrganizationPublisherRepository().get_organization(org_uuid=self._org_uuid)
         logger.debug(f"Current organization :: {organization.to_response()}")
 
+        service_mpe_address = current_service.mpe_address
+        token_name = self.__get_token_name(service_mpe_address)
+
         existing_service_data = self.get_existing_service_details_from_contract_api(
-            current_service.service_id, organization.id
+            current_service.service_id, organization.id, token_name
         )
         logger.debug(f"Existing service data :: {existing_service_data}")
 
@@ -505,7 +551,12 @@ class ServicePublisherService:
         logger.debug(f"New offchain configs :: {new_offchain_configs}")
 
         status = self._prepare_publish_status(
-            organization, current_service, storage_provider, publish_to_blockchain, new_offchain_configs
+            organization,
+            current_service,
+            storage_provider,
+            publish_to_blockchain,
+            new_offchain_configs,
+            token_name
         )
         logger.debug(f"Prepare publish status result :: {status}")
 
@@ -513,7 +564,7 @@ class ServicePublisherService:
 
     def _prepare_publish_status(self, organization: Organization, current_service: Service,
                                 storage_provider: StorageProviderType, publish_to_blockchain: bool,
-                                new_offchain_configs: Dict[str, any]):
+                                new_offchain_configs: Dict[str, any], token_name: str):
         status = {"publish_to_blockchain": publish_to_blockchain}
 
         if publish_to_blockchain:
@@ -526,7 +577,8 @@ class ServicePublisherService:
         self.publish_offchain_service_configs(
             org_id=organization.id,
             service_id=current_service.service_id,
-            payload=json.dumps(new_offchain_configs)
+            payload=json.dumps(new_offchain_configs),
+            token_name=token_name
         )
 
         if not publish_to_blockchain:
@@ -547,3 +599,11 @@ class ServicePublisherService:
             raise InvalidMetadataException()
 
         return self.publish_new_offchain_configs(current_service, storage_provider_enum)
+
+    @staticmethod
+    def __get_token_name(mpe_address):
+        mpe_contract = BlockChainUtil.load_contract(REG_ADDR_PATH)
+        network_data = mpe_contract[NETWORK_ID]
+        for token, data in network_data.items():
+            if data[STAGE]["address"] == mpe_address:
+                return token
