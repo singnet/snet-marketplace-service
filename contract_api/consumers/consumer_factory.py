@@ -1,3 +1,5 @@
+import json
+
 from contract_api.consumers.service_event_consumer import (
     ServiceCreatedEventConsumer,
     ServiceMetadataModifiedConsumer,
@@ -9,6 +11,20 @@ from contract_api.consumers.organization_event_consumer import (
     OrganizationModifiedEventConsumer,
     OrganizationDeletedEventConsumer,
 )
+
+def get_payload_from_queue_event(event):
+    converted_events = []
+    records = event.get("Records", [])
+    if records:
+        for record in records:
+            body = record.get("body")
+            if body:
+                parsed_body = json.loads(body)
+                message = parsed_body.get("Message")
+                if message:
+                    payload = json.loads(message)
+                    converted_events.append(payload)
+    return converted_events
 
 
 def get_organization_event_consumer(event):

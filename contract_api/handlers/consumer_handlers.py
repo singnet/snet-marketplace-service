@@ -2,7 +2,11 @@ from common.constant import StatusCode
 from common.logger import get_logger
 from common.utils import Utils, generate_lambda_response, handle_exception_with_slack_notification
 from contract_api.config import IPFS_URL, NETWORKS, NETWORK_ID, SLACK_HOOK
-from contract_api.consumers.consumer_factory import get_organization_event_consumer, get_service_event_consumer
+from contract_api.consumers.consumer_factory import (
+    get_organization_event_consumer,
+    get_service_event_consumer,
+    get_payload_from_queue_event
+)
 from contract_api.consumers.mpe_event_consumer import MPEEventConsumer
 from contract_api.consumers.service_event_consumer import ServiceCreatedDeploymentEventHandler
 
@@ -37,8 +41,12 @@ def service_event_consumer_handler(event, context):
 
 
 def mpe_event_consumer_handler(event, context):
-    logger.info(f"Got MPE event {event}")
-    MPEEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"]).on_event(event)
+    logger.info(f"Got MPE event from queue {event}")
+    events = get_payload_from_queue_event(event)
+    consumer = MPEEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"])
+    for e in events:
+        logger.info(f"Processing MPE event: {e}")
+        consumer.on_event(e)
     return {}
 
 def registry_event_consumer_handler(event, context):
