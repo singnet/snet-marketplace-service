@@ -603,7 +603,7 @@ class ServicePublisherService:
     @staticmethod
     def __get_token_name(mpe_address):
         mpe_contract = BlockChainUtil.load_contract(MPE_ADDR_PATH)
-        network_data = mpe_contract[NETWORK_ID]
+        network_data = mpe_contract[str(NETWORK_ID)]
         for token, data in network_data.items():
             if data[STAGE]["address"] == mpe_address:
                 return token
