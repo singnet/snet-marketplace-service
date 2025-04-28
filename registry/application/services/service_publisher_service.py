@@ -484,8 +484,8 @@ class ServicePublisherService:
         )
 
         logger.info(f"Publish attributes response: {response}")
-
-        response = response.get("body")
+        response = json.loads(response.get("body"))
+        logger.info(f"Get service response body: {response}")
 
         if response["status"] != "success":
             raise Exception(f"Error in publishing offchain service attributes for org_id :: {org_id} service_id :: {service_id}")
@@ -507,7 +507,8 @@ class ServicePublisherService:
         )
 
         logger.info(f"Get service response: {response}")
-        response = response.get("body")
+        response = json.loads(response.get("body"))
+        logger.info(f"Get service response body: {response}")
 
         if response["status"] != "success":
             raise Exception(f"Error getting service details for org_id :: {org_id} service_id :: {service_id}")
