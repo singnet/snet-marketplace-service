@@ -73,11 +73,6 @@ functions:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
       Team: ${file(./config.${self:provider.stage}.json):TEAM}
       Owner: ${file(./config.${self:provider.stage}.json):OWNER}
-    events:
-      - http:
-          path: order/create
-          method: post
-          private: true
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
@@ -94,11 +89,6 @@ functions:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
       Team: ${file(./config.${self:provider.stage}.json):TEAM}
       Owner: ${file(./config.${self:provider.stage}.json):OWNER}
-    events:
-      - http:
-          path: order/{order_id}
-          method: get
-          private: true
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
@@ -114,11 +104,6 @@ functions:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
       Team: ${file(./config.${self:provider.stage}.json):TEAM}
       Owner: ${file(./config.${self:provider.stage}.json):OWNER}
-    events:
-      - http:
-          path: order/{order_id}/payment/initiate
-          method: post
-          private: true
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
@@ -134,11 +119,6 @@ functions:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
       Team: ${file(./config.${self:provider.stage}.json):TEAM}
       Owner: ${file(./config.${self:provider.stage}.json):OWNER}
-    events:
-      - http:
-          path: order/{order_id}/payment/{payment_id}/execute
-          method: post
-          private: true
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
@@ -154,11 +134,6 @@ functions:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
       Team: ${file(./config.${self:provider.stage}.json):TEAM}
       Owner: ${file(./config.${self:provider.stage}.json):OWNER}
-    events:
-      - http:
-          path: order/{order_id}/payment/{payment_id}/cancel
-          method: post
-          private: true
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
@@ -174,11 +149,6 @@ functions:
       Environment: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}
       Team: ${file(./config.${self:provider.stage}.json):TEAM}
       Owner: ${file(./config.${self:provider.stage}.json):OWNER}
-    events:
-      - http:
-          path: order
-          method: get
-          private: true
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
