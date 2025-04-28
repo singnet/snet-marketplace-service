@@ -468,7 +468,7 @@ class ServicePublisherService:
 
     def publish_offchain_service_configs(self, org_id, service_id, payload, token_name):
         publish_offchain_attributes_arn = PUBLISH_OFFCHAIN_ATTRIBUTES_ARN[token_name]
-        # response = requests.post(PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT.format(org_id, service_id), data=payload)
+        logger.info(f"publish attributes arn: {publish_offchain_attributes_arn}")
         payload = {
             "httpMethod": "POST",
             "pathParameters": {
@@ -483,15 +483,17 @@ class ServicePublisherService:
             json.dumps(payload)
         )
 
+        logger.info(f"Publish attributes response: {response}")
+
         result = json.loads(response.get('Payload').read())
         response = json.loads(result['body'])
 
         if response["status"] != 200:
             raise Exception(f"Error in publishing offchain service attributes for org_id :: {org_id} service_id :: {service_id}")
 
-
     def get_existing_service_details_from_contract_api(self, service_id, org_id, token_name):
         get_service_arn = GET_SERVICE_FOR_GIVEN_ORG_ARN[token_name]
+        logger.info(f"get service arn: {get_service_arn}")
         payload = {
             "httpMethod": "GET",
             "pathParameters": {
@@ -504,6 +506,8 @@ class ServicePublisherService:
             "RequestResponse",
             json.dumps(payload)
         )
+
+        logger.info(f"Get service response: {response}")
 
         result = json.loads(response.get('Payload').read())
         response = json.loads(result['body'])
