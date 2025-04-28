@@ -485,10 +485,9 @@ class ServicePublisherService:
 
         logger.info(f"Publish attributes response: {response}")
 
-        result = json.loads(response.get('Payload').read())
-        response = json.loads(result['body'])
+        response = response.get("body")
 
-        if response["status"] != 200:
+        if response["status"] != "success":
             raise Exception(f"Error in publishing offchain service attributes for org_id :: {org_id} service_id :: {service_id}")
 
     def get_existing_service_details_from_contract_api(self, service_id, org_id, token_name):
@@ -508,11 +507,9 @@ class ServicePublisherService:
         )
 
         logger.info(f"Get service response: {response}")
+        response = response.get("body")
 
-        result = json.loads(response.get('Payload').read())
-        response = json.loads(result['body'])
-
-        if response["status"] != 200:
+        if response["status"] != "success":
             raise Exception(f"Error getting service details for org_id :: {org_id} service_id :: {service_id}")
         logger.debug(f"Get service by org_id from contract_api :: {response}")
 
