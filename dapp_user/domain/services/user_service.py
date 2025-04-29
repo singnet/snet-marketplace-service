@@ -120,7 +120,9 @@ class UserService:
                                             ))
 
             logger.info(f"Signature for free call response: {response}")
-            signature_response = json.loads(response.get("body"))
+            result = json.loads(response.get('Payload').read())
+            logger.info(f"Signature for free call response payload: {result}")
+            signature_response = json.loads(result.get("body"))
             logger.info(f"Signature for free call response body: {signature_response}")
 
             if signature_response["status"] == "success":
