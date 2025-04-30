@@ -205,7 +205,9 @@ class ChannelService:
             contract_path=MPE_CNTRCT_PATH,
             contract_address_path=MPE_ADDR_PATH,
             net_id=NETWORK_ID,
-            gas=250000
+            token_name = TOKEN_NAME,
+            stage = STAGE,
+            gas=250000,
         )
 
         raw_transaction = self.blockchain_util.sign_transaction_with_private_key(
