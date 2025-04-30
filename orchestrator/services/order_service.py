@@ -345,7 +345,7 @@ class OrderService:
                 wallet_create_response_body = json.loads(wallet_create_response["body"])
                 wallet_details = wallet_create_response_body["data"]
             else:
-                wallets_details = self.wallet_service.get_wallets(username)["wallets"]
+                wallets_details = self.wallet_service.get_wallets(username, remove_keys = False)["wallets"]
                 if len(wallets_details) == 0:
                     raise Exception(f"No wallet found for username {username}")
                 wallet_details = None
