@@ -14,8 +14,8 @@ NETWORKS = {
     }
 }
 NETWORK_ID = 11155111
-TOKEN_NAME = ""
-STAGE = ""
+TOKEN_NAME = "FET"
+STAGE = "dev"
 
 SLACK_HOOK = {
     'hostname': 'https://hooks.slack.com',
