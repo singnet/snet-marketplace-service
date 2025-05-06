@@ -4,7 +4,7 @@
   "description": "",
   "author": "SingularityNet",
   "dependencies": {
-    "singularitynet-platform-contracts": "2.2.0",
+    "singularitynet-platform-contracts": "2.1.0",
     "singularitynet-stake-contracts": "1.0.0",
     "singularitynet-rfai-contracts": "1.0.0",
     "singularitynet-bridge": "0.1.3",
