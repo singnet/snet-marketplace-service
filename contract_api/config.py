@@ -13,7 +13,7 @@ NETWORKS = {
         },
     }
 }
-NETWORK_ID = 0
+NETWORK_ID = 11155111
 TOKEN_NAME = ""
 STAGE = ""
 
