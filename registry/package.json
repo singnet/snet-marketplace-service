@@ -9,7 +9,7 @@
     "serverless-plugin-split-stacks": "1.9.3",
     "serverless-prune-plugin": "1.4.1",
     "serverless-python-requirements": "5.0.0",
-    "singularitynet-platform-contracts": "1.0.4",
+    "singularitynet-platform-contracts": "2.1.0",
     "serverless-aws-documentation": "1.1.0",
     "serverless-latest-layer-version": "2.1.1"
   }

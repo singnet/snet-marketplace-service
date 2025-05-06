@@ -14,6 +14,9 @@ NETWORKS = {
     }
 }
 NETWORK_ID = 3
+TOKEN_NAME = ""
+STAGE = ""
+
 DB_DETAILS = {
     "driver": "mysql+pymysql",
     "host": "localhost",
@@ -63,3 +66,11 @@ PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT = ""
 GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT = ""
 ASSETS_COMPONENT_BUCKET_NAME = ""
 CONTRACT_BASE_PATH = ""
+GET_SERVICE_FOR_GIVEN_ORG_ARN = {
+    "FET": "",
+    "AGIX": ""
+}
+PUBLISH_OFFCHAIN_ATTRIBUTES_ARN = {
+    "FET": "",
+    "AGIX": ""
+}

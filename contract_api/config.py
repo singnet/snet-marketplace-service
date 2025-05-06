@@ -13,6 +13,9 @@ NETWORKS = {
         },
     }
 }
+NETWORK_ID = 11155111
+TOKEN_NAME = "FET"
+STAGE = "dev"
 
 SLACK_HOOK = {
     'hostname': 'https://hooks.slack.com',
@@ -23,7 +26,6 @@ IPFS_URL = {
     'port': '80',
 
 }
-NETWORK_ID = 11155111
 REGION_NAME = "us-east-2"
 S3_BUCKET_ACCESS_KEY = ""
 S3_BUCKET_SECRET_KEY = ""

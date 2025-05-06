@@ -13,8 +13,18 @@ TODO: change back when 'common' is updated
 from common.boto_utils import BotoUtils
 from common.constant import TransactionStatus
 
-from wallets.config import NETWORK_ID, NETWORKS, SIGNER_ADDRESS, EXECUTOR_ADDRESS, EXECUTOR_KEY, \
-    MINIMUM_AMOUNT_IN_COGS_ALLOWED, REGION_NAME, GET_RAW_EVENT_DETAILS
+from wallets.config import (
+    NETWORK_ID,
+    NETWORKS,
+    SIGNER_ADDRESS,
+    EXECUTOR_ADDRESS,
+    EXECUTOR_KEY,
+    MINIMUM_AMOUNT_IN_COGS_ALLOWED,
+    REGION_NAME,
+    GET_RAW_EVENT_DETAILS,
+    TOKEN_NAME,
+    STAGE
+)
 from wallets.infrastructure.repositories.channel_repository import ChannelRepository
 from wallets.constant import MPE_ADDR_PATH, MPE_CNTRCT_PATH
 from wallets.domain.models.channel_transaction_history import ChannelTransactionHistoryModel
@@ -46,7 +56,9 @@ class ChannelService:
             address=self.EXECUTOR_WALLET_ADDRESS,
             contract_path=MPE_CNTRCT_PATH,
             contract_address_path=MPE_ADDR_PATH,
-            net_id=NETWORK_ID
+            net_id=NETWORK_ID,
+            token_name = TOKEN_NAME,
+            stage = STAGE
         )
 
         raw_transaction = self.blockchain_util.sign_transaction_with_private_key(
@@ -166,8 +178,11 @@ class ChannelService:
         self.EXECUTOR_WALLET_KEY = self.boto_utils.get_ssm_parameter(EXECUTOR_KEY)
         method_name = "openChannelByThirdParty"
         self.mpe_address = self.blockchain_util.read_contract_address(
-            net_id=NETWORK_ID, path=MPE_ADDR_PATH,
-            key='address'
+            net_id=NETWORK_ID,
+            path=MPE_ADDR_PATH,
+            key='address',
+            token_name = TOKEN_NAME,
+            stage = STAGE
         )
 
         # 1 block no is mined in 15 sec on average, setting expiration as 10 years
@@ -190,7 +205,9 @@ class ChannelService:
             contract_path=MPE_CNTRCT_PATH,
             contract_address_path=MPE_ADDR_PATH,
             net_id=NETWORK_ID,
-            gas=250000
+            token_name = TOKEN_NAME,
+            stage = STAGE,
+            gas=250000,
         )
 
         raw_transaction = self.blockchain_util.sign_transaction_with_private_key(

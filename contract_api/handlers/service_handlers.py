@@ -48,6 +48,7 @@ def get_service_for_given_org(event, context):
     service_id = event['pathParameters']['serviceId']
     response_data = obj_reg.get_service_data_by_org_id_and_service_id(
         org_id=org_id, service_id=service_id)
+    logger.info(f"Response data: {response_data}")
     return generate_lambda_response(
         200, {"status": "success", "data": response_data}, cors_enabled=True)
 

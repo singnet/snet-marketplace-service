@@ -119,8 +119,11 @@ class UserService:
                                                                            "group_id": group_id}}
                                             ))
 
+            logger.info(f"Signature for free call response: {response}")
             result = json.loads(response.get('Payload').read())
-            signature_response = json.loads(result['body'])
+            logger.info(f"Signature for free call response payload: {result}")
+            signature_response = json.loads(result.get("body"))
+            logger.info(f"Signature for free call response body: {signature_response}")
 
             if signature_response["status"] == "success":
                 logger.info(f"Got signature to make free call to daemon for {email} : {signature_response['data']}")

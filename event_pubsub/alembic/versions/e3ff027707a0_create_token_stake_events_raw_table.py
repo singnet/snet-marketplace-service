@@ -6,7 +6,7 @@ Create Date: 2020-03-03 19:32:40.022260
 
 """
 from alembic import op
-import sqlalchemy as sa
+from sqlalchemy import text
 
 
 # revision identifiers, used by Alembic.
@@ -18,7 +18,7 @@ depends_on = None
 
 def upgrade():
     conn = op.get_bind()
-    conn.execute("""
+    conn.execute(text("""
         CREATE TABLE `token_stake_events_raw` (
           `row_id` int(11) NOT NULL AUTO_INCREMENT,
           `block_no` int(11) NOT NULL,
@@ -35,12 +35,13 @@ def upgrade():
           KEY `blk_no_idx` (`block_no`),
           UNIQUE KEY `uq_st_ev` (`transactionHash`, `logIndex`)
         ) ;
-            """)
+            """))
 
 
 def downgrade():
     conn = op.get_bind()
-    conn.execute("""
-                drop table token_stake_events_raw
-            """
-                 )
+    conn.execute(text(
+        """
+            drop table token_stake_events_raw
+        """
+    ))
