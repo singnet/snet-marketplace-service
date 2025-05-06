@@ -142,7 +142,8 @@ class TestWalletClientService(unittest.TestCase):
                             "address": "0x123",
                             "is_default": 1,
                             "type": "GENERAL",
-                            "status": 0
+                            "status": 0,
+                            "private_key": "dummy"
                         }
                     ]
                 },
@@ -203,7 +204,8 @@ class TestWalletClientService(unittest.TestCase):
                             "address": "0x123",
                             "is_default": 1,
                             "type": "GENERAL",
-                            "status": 0
+                            "status": 0,
+                            "private_key": "dummy"
                         }
                     ]
                 }

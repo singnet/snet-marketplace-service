@@ -105,7 +105,7 @@ class WalletService:
         channel_details = json.loads(channel_details_response["body"])["data"]
         return channel_details["channels"]
 
-    def get_wallets(self, username):
+    def get_wallets(self, username, remove_keys: bool=True):
         get_wallet_event = {
             "body": json.dumps({
                 "username": username
@@ -118,6 +118,11 @@ class WalletService:
         if status != 200:
             raise Exception("Unable to get wallets for username %s", username)
         wallets = json.loads(get_wallet_response["body"])["data"]
+
+        if remove_keys:
+            for wallet in wallets["wallets"]:
+                del wallet["private_key"]
+
         return wallets
 
     def register_wallet(self, username, wallet_details):

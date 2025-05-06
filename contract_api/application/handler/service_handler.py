@@ -23,5 +23,6 @@ def save_offchain_attribute(event, context):
     attributes = json.loads(event["body"])
     response = RegistryService(org_id=org_id, service_id=service_id).save_offchain_service_attribute(
         new_offchain_attributes=attributes)
+    logger.info(f"Response data: {response}")
     return generate_lambda_response(
         200, {"status": "success", "data": response}, cors_enabled=True)

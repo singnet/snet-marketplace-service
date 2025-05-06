@@ -16,6 +16,8 @@ logger = get_logger(__name__)
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def upload_file(event, context):
+    logger.debug(f"Received event: {event}")
+
     headers = event["headers"]
 
     username = event["requestContext"]["authorizer"]["claims"]["email"]
