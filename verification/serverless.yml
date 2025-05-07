@@ -1,9 +1,7 @@
 plugins:
-  - serverless-offline
   - serverless-python-requirements
   - serverless-plugin-tracing
   - serverless-prune-plugin
-  - serverless-aws-documentation
 
 service: verification
 custom:
@@ -16,37 +14,11 @@ custom:
   prune:
     automatic: true
     includeLayers: true
-    number: 2
-  documentation:
-    models:
-      - name: "ErrorMessage"
-        contentType: "application/json"
-        schema: ${file(verification/documentation/models/error.json)}
-      - name: "InitiateOutput"
-        contentType: "application/json"
-        schema: ${file(verification/documentation/models/initiate.json):InitiateOutput}
-      - name: "InitiateInput"
-        contentType: "application/json"
-        schema: ${file(verification/documentation/models/initiate.json):InitiateInput}
-      - name: "CallBackOutput"
-        contentType: "application/json"
-        schema: ${file(verification/documentation/models/callback.json):CallBackOutput}
-      - name: "CallBackInput"
-        contentType: "application/json"
-        schema: ${file(verification/documentation/models/callback.json):CallBackInput}
-      - name: "StatusOutput"
-        contentType: "application/json"
-        schema: ${file(verification/documentation/models/status.json):StatusOutput}
-      - name: "PostCallBackOutput"
-        contentType: "application/json"
-        schema: ${file(verification/documentation/models/post_callback.json):PostCallBackOutput}
-      - name: "PostCallBackInput"
-        contentType: "application/json"
-        schema: ${file(verification/documentation/models/post_callback.json):PostCallBackInput}
+    number: 0
 
 provider:
   name: aws
-  runtime: python3.7
+  runtime: python3.8
   description: verification # optional, Description to publish to AWS
   memorySize: 512
   timeout: 60
@@ -118,25 +90,6 @@ functions:
               - X-Api-Key
               - X-Amz-Security-Token
               - X-Amz-User-Agent
-          documentation:
-            summary: "Initiate"
-            description: "Initiate"
-            tags:
-              - "verification"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            requestModels:
-                "application/json": "InitiateInput"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "response data"
-                responseModels:
-                  "application/json": "InitiateOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
 
   callback:
     warmup: true
@@ -164,26 +117,6 @@ functions:
               - X-Api-Key
               - X-Amz-Security-Token
               - X-Amz-User-Agent
-          documentation:
-            summary: "callback"
-            description: "callback"
-            tags:
-              - "verification"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            requestModels:
-              "application/json": "CallBackInput"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "response data"
-                responseModels:
-                  "application/json": "CallBackOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
-
 
   status:
     warmup: true
@@ -216,54 +149,4 @@ functions:
               - X-Api-Key
               - X-Amz-Security-Token
               - X-Amz-User-Agent
-          documentation:
-            summary: "status"
-            description: "status"
-            tags:
-              - "verification"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "response data"
-                responseModels:
-                  "application/json": "StatusOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
-          events:
-            - http:
-                method: POST
-                path: /callback
-                cors:
-                  origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-                  header:
-                    - Content-Type
-                    - X-Amz-Date
-                    - Authorization
-                    - X-Api-Key
-                    - X-Amz-Security-Token
-                    - X-Amz-User-Agent
-                documentation:
-                  summary: "Post callback"
-                  description: "Post callback"
-                  tags:
-                    - "verification"
-                  requestHeaders:
-                    - name: "Content-Type"
-                      description: "application/json"
-                  requestModels:
-                    "application/json": "PostCallBackInput"
-                  methodResponses:
-                    - statusCode: "200"
-                      responseBody:
-                        description: "response data"
-                      responseModels:
-                        "application/json": "PostCallBackOutput"
-                    - statusCode: "500"
-                      responseModels:
-                        "application/json": "ErrorMessage"
-
 

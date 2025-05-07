@@ -6,7 +6,7 @@ from web3 import Web3
 
 from common import blockchain_util
 from common.logger import get_logger
-from registry.config import NETWORK_ID, CONTRACT_BASE_PATH
+from registry.config import NETWORK_ID, CONTRACT_BASE_PATH, TOKEN_NAME, STAGE
 from registry.constants import OrganizationMemberStatus, OrganizationStatus, Role, EnvironmentType
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization
@@ -42,7 +42,11 @@ class OrganizationEventConsumer(object):
     def _get_registry_contract(self):
         net_id = NETWORK_ID
         base_contract_path = self._get_base_contract_path()
-        registry_contract = self._blockchain_util.get_contract_instance(base_contract_path, 'REGISTRY', net_id=net_id)
+        registry_contract = self._blockchain_util.get_contract_instance(base_contract_path,
+                                                                        'REGISTRY',
+                                                                        net_id = net_id,
+                                                                        token_name = TOKEN_NAME,
+                                                                        stage = STAGE)
 
         return registry_contract
 

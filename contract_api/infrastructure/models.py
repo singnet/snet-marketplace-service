@@ -39,14 +39,14 @@ class MpeChannel(Base):
     sender = Column("sender", VARCHAR(128), nullable=False)
     recipient = Column("recipient", VARCHAR(128), nullable=False)
     groupId = Column("groupId", VARCHAR(128), nullable=False)
-    balance_in_cogs = Column("balance_in_cogs", DECIMAL(19, 8), default=null)
-    pending = Column("pending", DECIMAL(19, 8), default=null)
+    balance_in_cogs = Column("balance_in_cogs", DECIMAL(38, 0), default=null)
+    pending = Column("pending", DECIMAL(38, 0), default=null)
     nonce = Column("nonce", Integer, default=null)
     expiration = Column("expiration", BIGINT, default=null)
     signer = Column("signer", VARCHAR(256), nullable=False)
     row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
     row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
-    consumed_balance = Column("consumed_balance", DECIMAL(10, 0), default=0)
+    consumed_balance = Column("consumed_balance", DECIMAL(38, 0), default=0)
     UniqueConstraint(channel_id, sender, recipient, groupId, name="uq_channel")
 
 

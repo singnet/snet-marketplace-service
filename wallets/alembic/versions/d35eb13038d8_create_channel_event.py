@@ -6,7 +6,7 @@ Create Date: 2019-11-18 15:42:14.202820
 
 """
 from alembic import op
-import sqlalchemy as sa
+from sqlalchemy import text
 
 
 # revision identifiers, used by Alembic.
@@ -18,7 +18,7 @@ depends_on = None
 
 def upgrade():
     conn = op.get_bind()
-    conn.execute("""
+    conn.execute(text("""
             CREATE TABLE `create_channel_event` (
               `row_id` int NOT NULL AUTO_INCREMENT,
               `payload` json NOT NULL,
@@ -27,11 +27,9 @@ def upgrade():
               `row_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
               PRIMARY KEY (`row_id`)
            );
-        """)
+        """))
 
 
 def downgrade():
     conn = op.get_bind()
-    conn.execute("""
-            drop table `create_channel_event`
-        """)
+    conn.execute(text('DROP TABLE create_channel_event'))

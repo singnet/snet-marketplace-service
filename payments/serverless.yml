@@ -3,7 +3,6 @@ plugins:
   - serverless-python-requirements
   - serverless-plugin-tracing
   - serverless-prune-plugin
-  - serverless-aws-documentation
 
 service: payment-service
 custom:
@@ -16,47 +15,12 @@ custom:
   prune:
     automatic: true
     includeLayers: true
-    number: 2
-  documentation:
-    models:
-      - name: "ErrorMessage"
-        contentType: "application/json"
-        schema: ${file(payments/documentation/models/error.json)}
-      - name: "CreateOrderOutput"
-        contentType: "application/json"
-        schema: ${file(payments/documentation/models/create_order.json):CreateOrderOutput}
-      - name: "CreateOrderInput"
-        contentType: "application/json"
-        schema: ${file(payments/documentation/models/create_order.json):CreateOrderInput}
-      - name: "GetOrderFromOrderIdOutput"
-        contentType: "application/json"
-        schema: ${file(payments/documentation/models/get_order_from_order_id.json):GetOrderFromOrderIdOutput}
-      - name: "InitiatePaymentOutput"
-        contentType: "application/json"
-        schema: ${file(payments/documentation/models/initiate_payment.json):InitiatePaymentOutput}
-      - name: "InitiatePaymentInput"
-        contentType: "application/json"
-        schema: ${file(payments/documentation/models/initiate_payment.json):InitiatePaymentInput}
-      - name: "ExecutePaymentOutput"
-        contentType: "application/json"
-        schema: ${file(payments/documentation/models/execute_payment.json):ExecutePaymentOutput}
-      - name: "ExecutePaymentInput"
-        contentType: "application/json"
-        schema: ${file(payments/documentation/models/execute_payment.json):ExecutePaymentInput}
-      - name: "GetOrderDetailsFromUserOutput"
-        contentType: "application/json"
-        schema: ${file(payments/documentation/models/get_order_details_from_user.json):GetOrderDetailsFromUserOutput}
-      - name: "CancelPaymentOutput"
-        contentType: "application/json"
-        schema: ${file(payments/documentation/models/cancel_payment.json):CancelPaymentOutput}
-      - name: "CancelPaymentInput"
-        contentType: "application/json"
-        schema: ${file(payments/documentation/models/cancel_payment.json):CancelPaymentInput}
+    number: 0
 
 
 provider:
   name: aws
-  runtime: python3.7
+  runtime: python3.8
   description: Payment Service #optional, Description to publish to AWS
   memorySize: 512
   timeout: 60
@@ -114,25 +78,6 @@ functions:
           path: order/create
           method: post
           private: true
-          documentation:
-            summary: "Create order"
-            description: "Create order"
-            tags:
-              - "order"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            requestModels:
-              "application/json": "CreateOrderInput"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Order Data"
-                responseModels:
-                  "application/json": "CreateOrderOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
@@ -154,26 +99,6 @@ functions:
           path: order/{order_id}
           method: get
           private: true
-          documentation:
-            summary: "Create order by order_id"
-            description: "Create order from given order_id"
-            tags:
-              - "order"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            pathParams:
-              - name: "order_id"
-                description: "Enter order_id"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Order Data"
-                responseModels:
-                  "application/json": "GetOrderFromOrderIdOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
@@ -194,28 +119,6 @@ functions:
           path: order/{order_id}/payment/initiate
           method: post
           private: true
-          documentation:
-            summary: "Initiate payment by order_id"
-            description: "Initiate payment from given order_id"
-            tags:
-              - "payment"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            pathParams:
-              - name: "order_id"
-                description: "Enter order_id"
-            requestModels:
-              "application/json": "InitiatePaymentInput"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Order Data"
-                responseModels:
-                  "application/json": "InitiatePaymentOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
@@ -236,31 +139,6 @@ functions:
           path: order/{order_id}/payment/{payment_id}/execute
           method: post
           private: true
-          documentation:
-            summary: "Execute payment by order_id and payment_id"
-            description: "Execute payment from given order_id and payment_id"
-            tags:
-              - "payment"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            pathParams:
-              - name: "order_id"
-                description: "Enter order_id"
-              - name: "payment_id"
-                description: "Enter payment_id"
-            requestModels:
-              "application/json": "ExecutePaymentInput"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Order Data"
-                responseModels:
-                  "application/json": "ExecutePaymentOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
-
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
@@ -281,31 +159,6 @@ functions:
           path: order/{order_id}/payment/{payment_id}/cancel
           method: post
           private: true
-          documentation:
-            summary: "Cancel payment by order_id and payment_id"
-            description: "Cancel payment from given order_id and payment_id"
-            tags:
-              - "payment"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            pathParams:
-              - name: "order_id"
-                description: "Enter order_id"
-              - name: "payment_id"
-                description: "Enter payment_id"
-            requestModels:
-              "application/json": "CancelPaymentInput"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Order Data"
-                responseModels:
-                  "application/json": "CancelPaymentOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
-
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
@@ -326,23 +179,6 @@ functions:
           path: order
           method: get
           private: true
-          documentation:
-            summary: "Get order details from user"
-            description: "Get order details from user"
-            tags:
-              - "order"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Order Data"
-                responseModels:
-                  "application/json": "GetOrderDetailsFromUserOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}

@@ -13,9 +13,10 @@ from common.constant import TransactionStatus, COGS_TO_AGI
 from common.logger import get_logger
 from common.utils import Utils
 from orchestrator.config import CREATE_ORDER_SERVICE_ARN, INITIATE_PAYMENT_SERVICE_ARN, \
-    EXECUTE_PAYMENT_SERVICE_ARN, WALLETS_SERVICE_ARN, ORDER_DETAILS_ORDER_ID_ARN, ORDER_DETAILS_BY_USERNAME_ARN, \
+    EXECUTE_PAYMENT_SERVICE_ARN, ORDER_DETAILS_ORDER_ID_ARN, ORDER_DETAILS_BY_USERNAME_ARN, \
     REGION_NAME, SIGNER_ADDRESS, EXECUTOR_ADDRESS, NETWORKS, NETWORK_ID, SIGNER_SERVICE_ARN, \
-    GET_GROUP_FOR_ORG_API_ARN, GET_ALL_ORG_API_ARN, USD_TO_COGS_CONVERSION_FACTOR
+    GET_GROUP_FOR_ORG_API_ARN, GET_ALL_ORG_API_ARN, USD_TO_COGS_CONVERSION_FACTOR, CREATE_AND_REGISTER_WALLET_ARN, \
+    CHANNEL_ADD_FUNDS_ARN, GET_CHANNEL_TRANSACTIONS_ARN
 from orchestrator.dao.transaction_history_dao import TransactionHistoryDAO
 from orchestrator.exceptions import PaymentInitiateFailed, ChannelCreationFailed, FundChannelFailed
 from orchestrator.order_status import OrderStatus
@@ -113,7 +114,7 @@ class OrderService:
                 status=Status.PAYMENT_INITIATED.value
             )
             self.obj_transaction_history_dao.insert_transaction_history(obj_transaction_history=obj_transaction_history)
-            return payment_data
+            return {"payment_url": payment_data["payment"]["payment_url"]}
         except Exception as e:
             obj_transaction_history = TransactionHistory(
                 username=username, order_id=order_id, order_type=order_type,
@@ -183,6 +184,7 @@ class OrderService:
         order_id = payload_dict["order_id"]
         payment_id = payload_dict["payment_id"]
         order = self.get_order_details_by_order_id(order_id, username)
+        logger.info(f"Order details: {order}")
         payment = None
         for payment_item in order["payments"]:
             if payment_item["payment_id"] == payment_id:
@@ -211,7 +213,7 @@ class OrderService:
             amount_in_cogs = self.calculate_amount_in_cogs(amount=price["amount"], currency=price["currency"])
             if amount_in_cogs < 1:
                 raise Exception("Amount in cogs should be greater than equal to 1")
-            processed_order_data = self.manage_process_order(
+            self.manage_process_order(
                 username=username,
                 order_id=order_id, order_type=order_type,
                 amount=price["amount"],
@@ -226,9 +228,14 @@ class OrderService:
                 raw_payment_data=json.dumps(paid_payment_details)
             )
             self.obj_transaction_history_dao.insert_transaction_history(obj_transaction_history=obj_transaction_history)
-            processed_order_data["price"] = price
-            processed_order_data["item_details"] = item_details
-            return processed_order_data
+            response = {
+                "price": price,
+                "item_details": {
+                    "item": item_details["item"],
+                    "quantity": item_details["quantity"]
+                }
+            }
+            return response
 
         except Exception as e:
             obj_transaction_history = TransactionHistory(
@@ -298,6 +305,7 @@ class OrderService:
             raise Exception(f"Error creating order for user {username}")
 
     def manage_execute_payment(self, username, order_id, payment_id, payment_details, payment_method):
+        logger.info(f"Requesting payment executing for username {username} against order_id {order_id}")
         execute_payment_event = {
             "pathParameters": {"order_id": order_id, "payment_id": payment_id},
             "body": json.dumps({"payment_method": payment_method, "payment_details": payment_details})
@@ -320,22 +328,35 @@ class OrderService:
         recipient = order_data["recipient"]
         channel_id = order_data["channel_id"]
         sender = order_data["wallet_address"]
-        if order_type == OrderType.CREATE_WALLET_AND_CHANNEL.value:
-            wallet_create_payload = {
-                "path": "/wallet",
-                "body": json.dumps({"username": username}),
-                "httpMethod": "POST"
-            }
-            wallet_create_lambda_response = self.lambda_client.invoke(
-                FunctionName=WALLETS_SERVICE_ARN,
-                InvocationType='RequestResponse',
-                Payload=json.dumps(wallet_create_payload)
-            )
-            wallet_create_response = json.loads(wallet_create_lambda_response.get("Payload").read())
-            if wallet_create_response["statusCode"] != 200:
-                raise Exception("Failed to create wallet")
-            wallet_create_response_body = json.loads(wallet_create_response["body"])
-            wallet_details = wallet_create_response_body["data"]
+        if order_type in [OrderType.CREATE_WALLET_AND_CHANNEL.value, OrderType.CREATE_CHANNEL.value]:
+
+            if order_type == OrderType.CREATE_WALLET_AND_CHANNEL.value:
+                wallet_create_payload = {
+                    "body": json.dumps({"username": username})
+                }
+                wallet_create_lambda_response = self.lambda_client.invoke(
+                    FunctionName=CREATE_AND_REGISTER_WALLET_ARN,
+                    InvocationType='RequestResponse',
+                    Payload=json.dumps(wallet_create_payload)
+                )
+                wallet_create_response = json.loads(wallet_create_lambda_response.get("Payload").read())
+                if wallet_create_response["statusCode"] != 200:
+                    raise Exception("Failed to create wallet")
+                wallet_create_response_body = json.loads(wallet_create_response["body"])
+                wallet_details = wallet_create_response_body["data"]
+            else:
+                wallets_details = self.wallet_service.get_wallets(username, remove_keys = False)["wallets"]
+                if len(wallets_details) == 0:
+                    raise Exception(f"No wallet found for username {username}")
+                wallet_details = None
+                for wallet in wallets_details:
+                    if wallet["address"] == sender:
+                        wallet_details = wallet
+                        break
+                if wallet_details is None:
+                    raise Exception(f"No wallet found for username {username} and wallet address {sender}")
+                elif not wallet_details["private_key"]:
+                    raise Exception(f"Wallet with address {sender} doesn't have private key")
 
             try:
                 current_block_no = self.obj_blockchain_util.get_current_block_no()
@@ -350,8 +371,8 @@ class OrderService:
                     message_nonce=message_nonce, sender_private_key=wallet_details["private_key"],
                     executor_wallet_address=self.EXECUTOR_WALLET_ADDRESS
                 )
-
                 logger.info(f"Signature Details {signature_details}")
+
                 open_channel_body = {
                     'order_id': order_id,
                     'sender': wallet_details["address"],
@@ -367,9 +388,7 @@ class OrderService:
                     'current_block_no': current_block_no,
                     'amount_in_cogs': amount_in_cogs
                 }
-                channel_details = self.wallet_service.create_channel(open_channel_body=open_channel_body)
-                channel_details.update(wallet_details)
-                return channel_details
+                self.wallet_service.create_channel(open_channel_body=open_channel_body)
             except Exception as e:
                 logger.error("Failed to create channel")
                 logger.error(repr(e))
@@ -381,30 +400,10 @@ class OrderService:
                         "amount": amount,
                         "currency": currency
                     },
-                    "item_details": order_data
+                    "item_details": order_data,
+                    "address": wallet_details["address"]
                 }
-                response.update(wallet_details)
                 raise ChannelCreationFailed("Failed to create channel", wallet_details=response)
-
-        elif order_type == OrderType.CREATE_CHANNEL.value:
-            try:
-                logger.info(f"Order Data {order_data}")
-                signature = order_data["signature"]
-                v, r, s = Web3.toInt(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
-                open_channel_body = {
-                    'order_id': order_id, 'sender': order_data["wallet_address"],
-                    'signature': order_data["signature"], 'r': r, 's': s, 'v': v,
-                    'group_id': group_id, 'org_id': org_id, 'amount': amount, 'currency': currency,
-                    'recipient': recipient, 'current_block_no': order_data["current_block_number"],
-                    'amount_in_cogs': amount_in_cogs
-                }
-                channel_details = self.wallet_service.create_channel(open_channel_body=open_channel_body)
-                logger.info(f"channel_details: {channel_details}")
-                return channel_details
-            except Exception as e:
-                logger.error("Failed to create channel")
-                print(repr(e))
-                raise ChannelCreationFailed("Failed to create channel", wallet_details=order_data)
 
         elif order_type == OrderType.FUND_CHANNEL.value:
 
@@ -420,17 +419,17 @@ class OrderService:
                     'sender': sender,
                     'amount_in_cogs': amount_in_cogs
                 }
+                logger.info(f"Request to fund channel: {fund_channel_body}")
                 fund_channel_payload = {
-                    "path": "/wallet/channel/deposit",
-                    "body": json.dumps(fund_channel_body),
-                    "httpMethod": "POST"
+                    "body": json.dumps(fund_channel_body)
                 }
 
                 fund_channel_lambda_response = self.lambda_client.invoke(
-                    FunctionName=WALLETS_SERVICE_ARN,
+                    FunctionName=CHANNEL_ADD_FUNDS_ARN,
                     InvocationType='RequestResponse',
                     Payload=json.dumps(fund_channel_payload)
                 )
+                logger.info(f"Fund channel response {fund_channel_lambda_response}")
 
                 fund_channel_response = json.loads(fund_channel_lambda_response.get("Payload").read())
                 if fund_channel_response["statusCode"] != 200:
@@ -438,10 +437,9 @@ class OrderService:
 
                 fund_channel_response_body = json.loads(fund_channel_response["body"])
                 fund_channel_transaction_details = fund_channel_response_body["data"]
-                return fund_channel_transaction_details
+                logger.info(f"Fund channel transaction details {fund_channel_transaction_details}")
             except Exception as e:
-                logger.error("Failed to fund channel")
-                logger.error(repr(e))
+                logger.error(f"Failed to fund channel: {str(e)}")
                 raise FundChannelFailed()
         else:
             raise Exception("Order type is not valid.")
@@ -476,12 +474,10 @@ class OrderService:
                     order["item_details"]["organization_name"] = org_id_name_mapping[org_id]
 
             transaction_details_event = {
-                "path": f"/wallet/channel/transactions",
-                "queryStringParameters": {"order_id": order_id},
-                "httpMethod": "GET"
+                "body": json.dumps({"order_id": order_id})
             }
             transaction_details_lambda_response = self.lambda_client.invoke(
-                FunctionName=WALLETS_SERVICE_ARN,
+                FunctionName=GET_CHANNEL_TRANSACTIONS_ARN,
                 InvocationType='RequestResponse',
                 Payload=json.dumps(transaction_details_event)
             )
@@ -526,7 +522,7 @@ class OrderService:
 
     def generate_signature_for_open_channel_for_third_party(self, recipient, group_id, amount_in_cogs, expiration,
                                                             message_nonce, sender_private_key, executor_wallet_address):
-
+        logger.info("Generating signature for open channel for third party")
         signature_for_open_channel_for_third_party_body = {
             'recipient': recipient,
             'group_id': group_id,
@@ -551,6 +547,7 @@ class OrderService:
 
         signature_response = json.loads(signature_for_open_channel_for_third_party_response.get("Payload").read())
         if signature_response["statusCode"] != 200:
+            signature_for_open_channel_for_third_party_body["signer_key"] = "**********"
             raise Exception(f"Failed to create signature for {signature_for_open_channel_for_third_party_body}")
         signature_details = json.loads(signature_response["body"])
         return signature_details["data"]

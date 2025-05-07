@@ -11,7 +11,7 @@ from contract_api.consumers.event_consumer import EventConsumer
 from contract_api.dao.organization_repository import OrganizationRepository
 from contract_api.dao.service_repository import ServiceRepository
 from common.repository import Repository
-from contract_api.config import NETWORK_ID, NETWORKS
+from contract_api.config import NETWORK_ID, NETWORKS, CONTRACT_BASE_PATH, TOKEN_NAME, STAGE
 from contract_api.config import S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY
 from contract_api.infrastructure.storage_provider import StorageProvider
 
@@ -63,16 +63,21 @@ class OrganizationEventConsumer(EventConsumer):
     def _get_registry_contract(self):
         net_id = NETWORK_ID
         base_contract_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '..', '..', 'node_modules', 'singularitynet-platform-contracts'))
-        registry_contract = self._blockchain_util.get_contract_instance(base_contract_path, "REGISTRY", net_id)
+            os.path.join(CONTRACT_BASE_PATH,'node_modules', 'singularitynet-platform-contracts'))
+        registry_contract = self._blockchain_util.get_contract_instance(base_contract_path,
+                                                                        "REGISTRY",
+                                                                        net_id,
+                                                                        TOKEN_NAME,
+                                                                        STAGE)
 
         return registry_contract
 
-    def _get_org_details_from_blockchain(self, event):
+    def _get_org_details_from_blockchain(self, event, org_id=None):
         logger.info(f"Processing organization event: {event}")
 
         registry_contract = self._get_registry_contract()
-        org_id = self._get_org_id_from_event(event)
+        if org_id is None:
+            org_id = self._get_org_id_from_event(event)
 
         blockchain_org_data = registry_contract.functions.getOrganizationById(
             org_id.encode("utf-8")
@@ -90,9 +95,9 @@ class OrganizationCreatedEventConsumer(OrganizationEventConsumer):
     def __init__(self, ws_provider):
         super().__init__(ws_provider)
 
-    def on_event(self, event):
+    def on_event(self, event, org_id=None):
         org_id, blockchain_org_data, org_metadata, org_metadata_uri = (
-            self._get_org_details_from_blockchain(event)
+            self._get_org_details_from_blockchain(event, org_id)
         )
 
         self._process_organization_create_update_event(
@@ -142,8 +147,9 @@ class OrganizationDeletedEventConsumer(OrganizationEventConsumer):
     def __init__(self, ws_provider):
         super().__init__(ws_provider)
 
-    def on_event(self, event):
-        org_id, _, _, _ = self._get_org_details_from_blockchain(event)
+    def on_event(self, event, org_id=None):
+        if org_id is None:
+            org_id, _, _, _ = self._get_org_details_from_blockchain(event)
         self._process_organization_delete_event(org_id)
 
     def _process_organization_delete_event(self, org_id):

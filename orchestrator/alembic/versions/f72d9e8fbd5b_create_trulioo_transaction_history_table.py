@@ -6,7 +6,7 @@ Create Date: 2019-12-12 17:08:25.579811
 
 """
 from alembic import op
-import sqlalchemy as sa
+from sqlalchemy import text
 
 
 # revision identifiers, used by Alembic.
@@ -18,7 +18,7 @@ depends_on = None
 
 def upgrade():
     conn = op.get_bind()
-    conn.execute("""
+    conn.execute(text("""
          CREATE TABLE `trulioo_transaction_history` (
             `row_id` int NOT NULL AUTO_INCREMENT,
             `transaction_id` varchar(128) NOT NULL,
@@ -33,11 +33,11 @@ def upgrade():
             UNIQUE KEY `uq_trxn_id` (`transaction_id`),
             UNIQUE KEY `uq_trxn_rec_id` (`transaction_record_id`)
         );
-    """)
+    """))
 
 
 def downgrade():
     conn = op.get_bind()
-    conn.execute("""
+    conn.execute(text("""
             drop table trulioo_transaction_history;
-            """)
+            """))

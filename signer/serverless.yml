@@ -3,7 +3,7 @@ plugins:
   - serverless-python-requirements
   - serverless-plugin-tracing
   - serverless-prune-plugin
-  - serverless-aws-documentation
+  - serverless-latest-layer-version
 
 service: signer
 custom:
@@ -16,46 +16,11 @@ custom:
   prune:
     automatic: true
     includeLayers: true
-    number: 2
-  documentation:
-    models:
-      - name: "ErrorMessage"
-        contentType: "application/json"
-        schema: ${file(signer/documentation/models/error.json)}
-      - name: "SignerInput"
-        contentType: "application/json"
-        schema: ${file(signer/documentation/models/signer.json):SignerInput}
-      - name: "SignerOutput"
-        contentType: "application/json"
-        schema: ${file(signer/documentation/models/signer.json):SignerOutput}
-      - name: "FreeCallTokenOutput"
-        contentType: "application/json"
-        schema: ${file(signer/documentation/models/free_call_token.json):FreeCallTokenOutput}
-      - name: "FreeCallSignerAddressOutput"
-        contentType: "application/json"
-        schema: ${file(signer/documentation/models/free_call_signer_address.json):FreeCallSignerAddressOutput}
-      - name: "RegularCallOutput"
-        contentType: "application/json"
-        schema: ${file(signer/documentation/models/regular_call.json):RegularCallOutput}
-      - name: "RegularCallInput"
-        contentType: "application/json"
-        schema: ${file(signer/documentation/models/regular_call.json):RegularCallInput}
-      - name: "StateServiceOutput"
-        contentType: "application/json"
-        schema: ${file(signer/documentation/models/state_service.json):StateServiceOutput}
-      - name: "StateServiceInput"
-        contentType: "application/json"
-        schema: ${file(signer/documentation/models/state_service.json):StateServiceInput}
-      - name: "OpenChannelForThirdPartyOutput"
-        contentType: "application/json"
-        schema: ${file(signer/documentation/models/open_channel_for_third_party.json):OpenChannelForThirdPartyOutput}
-      - name: "OpenChannelForThirdPartyInput"
-        contentType: "application/json"
-        schema: ${file(signer/documentation/models/open_channel_for_third_party.json):OpenChannelForThirdPartyInput}
+    number: 0
 
 provider:
   name: aws
-  runtime: python3.7
+  runtime: python3.8
   description: Description of what the lambda function does # optional, Description to publish to AWS
   memorySize: 128
   timeout: 30
@@ -96,7 +61,6 @@ package:
     - heath_check.sh
     - node_modules/**
   include:
-    - node_modules/singularitynet-platform-contracts/**
     - resources/**
 
 
@@ -124,6 +88,8 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -143,25 +109,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-          documentation:
-            summary: "Post free call"
-            description: "Post free call"
-            tags:
-              - "call"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            requestModels:
-                "application/json": "SignerInput"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Signer Data"
-                responseModels:
-                  "application/json": "SignerOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
       - http:
           method: POST
           path: /regular-call
@@ -180,25 +127,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-          documentation:
-            summary: "Post regular call"
-            description: "Post regular call"
-            tags:
-              - "call"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            requestModels:
-              "application/json": "RegularCallInput"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Signer Data"
-                responseModels:
-                  "application/json": "RegularCallOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
       - http:
           method: POST
           path: /state-service
@@ -217,25 +145,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-          documentation:
-            summary: "Post state-service"
-            description: "Post state-service"
-            tags:
-              - "call"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            requestModels:
-              "application/json": "StateServiceInput"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Signer Data"
-                responseModels:
-                  "application/json": "StateServiceOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
       - http:
           method: POST
           path: /open-channel-for-third-party
@@ -254,25 +163,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-          documentation:
-            summary: "Open channel for third party"
-            description: "Open channel for third party"
-            tags:
-              - "call"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            requestModels:
-              "application/json": "OpenChannelForThirdPartyInput"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Signer Data"
-                responseModels:
-                  "application/json": "OpenChannelForThirdPartyOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
 
   free_call_token:
     warmup: true
@@ -285,6 +175,8 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -304,24 +196,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-          documentation:
-            summary: "Get free call token"
-            description: "Get free call token"
-            tags:
-              - "call"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Signer Data"
-                responseModels:
-                  "application/json": "FreeCallTokenOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
-
 
   free-call-signer-address:
     warmup: true
@@ -334,6 +208,8 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -353,23 +229,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-          documentation:
-            summary: "Get free call signer address"
-            description: "Get free call signer address"
-            tags:
-              - "call"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Signer Data"
-                responseModels:
-                  "application/json": "FreeCallSignerAddressOutput"
-              - statusCode: "500"
-                responseModels:
-                  "application/json": "ErrorMessage"
 
   signature-to-get-freecall-from-daemon:
     warmup: true
@@ -382,3 +241,5 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+      - ${file(./config.${self:provider.stage}.json):SnetContract}
