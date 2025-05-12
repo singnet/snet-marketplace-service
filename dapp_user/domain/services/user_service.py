@@ -105,12 +105,17 @@ class UserService:
         # metering will eventually go out  then we will clean this up.
         try:
             payload_dict = event['queryStringParameters']
+            front_domain = event['headers']['origin']
+            logger.info(f"Front domain: {front_domain}")
+            event_token_name = "AGIX" if "agix" in front_domain else "FET"
+            get_signature_endpoint = GET_SIGNATURE_TO_GET_FREE_CALL_FROM_DAEMON[event_token_name]
+            logger.info(f"Signature endpoint: {get_signature_endpoint}")
             email = payload_dict['username']
             lambda_client = boto3.client('lambda')
             org_id = payload_dict['organization_id']
             service_id = payload_dict['service_id']
             group_id = unquote(payload_dict['group_id'])
-            response = lambda_client.invoke(FunctionName=GET_SIGNATURE_TO_GET_FREE_CALL_FROM_DAEMON,
+            response = lambda_client.invoke(FunctionName=get_signature_endpoint,
                                             InvocationType='RequestResponse',
                                             Payload=json.dumps(
                                                 {"queryStringParameters": {"username": email,

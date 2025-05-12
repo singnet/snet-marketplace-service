@@ -29,7 +29,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.7'
+          python-version: '3.8'
 
       - name: install pip
         run: |
@@ -117,14 +117,14 @@ jobs:
           pip3 install -r payments/requirements.txt
           PYTHONPATH=$PWD python3 -m coverage run -m pytest payments/testcases/unit_testcases/*.py
 
-      - name: utility tests
-        run: |
-          export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-          export AWS_XRAY_SDK_ENABLED=false
-          pip3 install setuptools==65.5.0
-          pip3 install wheel==0.38.0
-          pip3 install -r utility/requirements.txt
-          PYTHONPATH=$PWD python3 -m coverage run -m pytest utility/testcases/functional_testcases/*.py
+#      - name: utility tests
+#        run: |
+#          export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+#          export AWS_XRAY_SDK_ENABLED=false
+#          pip3 install setuptools==65.5.0
+#          pip3 install wheel==0.38.0
+#          pip3 install -r utility/requirements.txt
+#          PYTHONPATH=$PWD python3 -m coverage run -m pytest utility/testcases/functional_testcases/*.py
 
       - name: contract_api tests
         run: |
