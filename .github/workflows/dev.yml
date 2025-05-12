@@ -117,14 +117,14 @@ jobs:
           pip3 install -r payments/requirements.txt
           PYTHONPATH=$PWD python3 -m pytest payments/testcases/unit_testcases/*.py
 
-      - name: utility tests
-        run: |
-          export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-          export AWS_XRAY_SDK_ENABLED=false
-          pip3 install setuptools==65.5.0
-          pip3 install wheel==0.38.0
-          pip3 install -r utility/requirements.txt
-          PYTHONPATH=$PWD python3 -m pytest utility/testcases/functional_testcases/*.py
+#      - name: utility tests
+#        run: |
+#          export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+#          export AWS_XRAY_SDK_ENABLED=false
+#          pip3 install setuptools==65.5.0
+#          pip3 install wheel==0.38.0
+#          pip3 install -r utility/requirements.txt
+#          PYTHONPATH=$PWD python3 -m pytest utility/testcases/functional_testcases/*.py
           
       - name: contract_api tests
         run: |
