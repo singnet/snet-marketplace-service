@@ -15,6 +15,7 @@ logger = get_logger(__name__)
 
 @handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def add_or_update_user_preference(event, context):
+    logger.debug(f"add_or_update_user_preference event {event}")
     payload = json.loads(event["body"])
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     required_keys = ["communication_type", "preference_type", "source", "status"]
