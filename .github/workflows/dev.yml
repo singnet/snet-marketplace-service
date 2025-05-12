@@ -102,7 +102,7 @@ jobs:
           export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
           export AWS_XRAY_SDK_ENABLED=false
           pip3 install -r dapp_user/requirements.txt
-          PYTHONPATH=$PWD python3 -m pytest dapp_user/testcases/unit_testcases/*.py dapp_user/testcases/functional_testcases/*.py
+          PYTHONPATH=$PWD python3 -m coverage run -m pytest dapp_user/testcases/unit_testcases/*.py dapp_user/testcases/functional_testcases/*.py
 
       - name: notification tests
         run: |
@@ -115,7 +115,7 @@ jobs:
           export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
           export AWS_XRAY_SDK_ENABLED=false
           pip3 install -r payments/requirements.txt
-          PYTHONPATH=$PWD python3 -m pytest payments/testcases/unit_testcases/*.py
+          PYTHONPATH=$PWD python3 -m coverage run -m pytest payments/testcases/unit_testcases/*.py
 
 #      - name: utility tests
 #        run: |
@@ -124,14 +124,14 @@ jobs:
 #          pip3 install setuptools==65.5.0
 #          pip3 install wheel==0.38.0
 #          pip3 install -r utility/requirements.txt
-#          PYTHONPATH=$PWD python3 -m pytest utility/testcases/functional_testcases/*.py
+#          PYTHONPATH=$PWD python3 -m coverage run -m pytest utility/testcases/functional_testcases/*.py
           
       - name: contract_api tests
         run: |
           export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
           export AWS_XRAY_SDK_ENABLED=false
           pip3 install -r contract_api/requirements.txt
-          PYTHONPATH=$PWD python3 -m pytest contract_api/testcases/unit_testcases/*.py contract_api/testcases/unit_testcases/*/*.py contract_api/testcases/functional_testcases/*.py
+          PYTHONPATH=$PWD python3 -m coverage run -m pytest contract_api/testcases/unit_testcases/*.py contract_api/testcases/unit_testcases/*/*.py contract_api/testcases/functional_testcases/*.py
 
       - name: event_pubsub tests
         run: |
@@ -140,14 +140,14 @@ jobs:
           pip3 install -r lambda_layers/web3_and_grpc_libraries/requirements.txt
           pip3 install -r lambda_layers/common_python_libraries/requirements.txt
           pip3 install -r event_pubsub/requirements.txt
-          PYTHONPATH=$PWD python3 -m pytest event_pubsub/testcases/unit_testcases/*.py
+          PYTHONPATH=$PWD python3 -m coverage run -m pytest event_pubsub/testcases/unit_testcases/*.py
 
       - name: orchestrator tests
         run: |
           export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
           export AWS_XRAY_SDK_ENABLED=false
           pip3 install -r orchestrator/requirements.txt
-          PYTHONPATH=$PWD python3 -m pytest orchestrator/testcases/integration_testcases/*.py orchestrator/testcases/unit_testcases/*.py
+          PYTHONPATH=$PWD python3 -m coverage run -m pytest orchestrator/testcases/integration_testcases/*.py orchestrator/testcases/unit_testcases/*.py
 
       - name: registry tests
         run: |
@@ -157,21 +157,21 @@ jobs:
           pip3 install -r lambda_layers/common_python_libraries/requirements.txt
           pip3 install -r registry/migration/requirements.txt
           pip3 install -r registry/requirements.txt
-          PYTHONPATH=$PWD python3 -m pytest registry/testcases/unit_testcases/*.py registry/testcases/functional_testcases/*.py
+          PYTHONPATH=$PWD python3 -m coverage run -m pytest registry/testcases/unit_testcases/*.py registry/testcases/functional_testcases/*.py
 
       - name: signer tests
         run: |
           export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
           export AWS_XRAY_SDK_ENABLED=false
           pip3 install -r signer/requirements.txt
-          PYTHONPATH=$PWD python3 -m pytest signer/testcases/integration_testcases/*.py
+          PYTHONPATH=$PWD python3 -m coverage run -m pytest signer/testcases/integration_testcases/*.py
 
       - name: verification tests
         run: |
           export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
           export AWS_XRAY_SDK_ENABLED=false
           pip3 install -r verification/requirements.txt
-          PYTHONPATH=$PWD python3 -m pytest verification/testcases/unit_testcases/*.py verification/testcases/functional_testcases/*.py
+          PYTHONPATH=$PWD python3 -m coverage run -m pytest verification/testcases/unit_testcases/*.py verification/testcases/functional_testcases/*.py
 
     run_tests_development_upg:
     # tests for services moved to updated environment (node22, python3.12)
