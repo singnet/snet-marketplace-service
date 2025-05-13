@@ -220,6 +220,9 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             service_row_id = service_data['last_row_id']
             logger.info(f"Created service with service :: {service_row_id}")
 
+            self._service_repository.curate_service(org_id, service_id, 1)
+            logger.info(f"Curated service with service :: {service_row_id}")
+
             self._service_repository.create_or_update_service_metadata(
                 service_row_id=service_row_id,
                 org_id=org_id,
