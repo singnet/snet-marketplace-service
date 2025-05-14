@@ -1,5 +1,3 @@
-from pydantic import ValidationError
-
 from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.exceptions import BadRequestException
@@ -25,8 +23,9 @@ from registry.application.schemas.service import (
     VerifyServiceIdRequest,
     SaveTransactionHashRequest,
     SaveServiceRequest,
-    PublishServiceRequest
+    PublishServiceRequest,
 )
+from registry.application.schemas.common import PayloadValidationError
 
 logger = get_logger(__name__)
 
@@ -37,8 +36,7 @@ logger = get_logger(__name__)
 def verify_service_id(event, context):
     try:
         request = VerifyServiceIdRequest.validate_event(event)
-    except ValidationError as e:
-        print(e)
+    except PayloadValidationError:
         raise BadRequestException()
 
     response = ServicePublisherService().get_service_id_availability_status(request)
@@ -57,7 +55,7 @@ def save_transaction_hash_for_published_service(event, context):
 
     try:
         request = SaveTransactionHashRequest.validate_event(event)
-    except ValidationError:
+    except PayloadValidationError:
         raise BadRequestException()
 
     response = ServicePublisherService().save_transaction_hash_for_published_service(
@@ -78,7 +76,7 @@ def save_service(event, context):
 
     try:
         request = SaveServiceRequest.validate_event(event)
-    except ValidationError:
+    except PayloadValidationError:
         raise BadRequestException()
         
     response = ServicePublisherService().save_service(req_ctx.username, request)
@@ -97,7 +95,7 @@ def save_service_attributes(event, context):
 
     try:
         request = SaveServiceGroupsRequest.validate_event(event)
-    except ValidationError:
+    except PayloadValidationError:
         raise BadRequestException()
 
     response = ServicePublisherService().save_service_groups(req_ctx.username, request)
@@ -116,7 +114,7 @@ def create_service(event, context):
 
     try:
         request = CreateServiceRequest.validate_event(event)
-    except ValidationError:
+    except PayloadValidationError:
         raise BadRequestException()
 
     response = ServicePublisherService().create_service(req_ctx.username, request)
@@ -133,7 +131,7 @@ def create_service(event, context):
 def get_services_for_organization(event, context):
     try:
         request = GetServicesForOrganizationRequest.validate_event(event)
-    except ValidationError:
+    except PayloadValidationError:
         raise BadRequestException()
 
     response = ServicePublisherService().get_services_for_organization(request)
@@ -150,7 +148,7 @@ def get_service_for_service_uuid(event, context):
     
     try:
         request = GetServiceRequest.validate_event(event)
-    except ValidationError:
+    except PayloadValidationError:
         raise BadRequestException()
     
     response = ServicePublisherService().get_service_for_given_service_uuid(
@@ -169,7 +167,7 @@ def get_service_for_service_uuid(event, context):
 def get_daemon_config_for_current_network(event, context):
     try:
         request = GetDaemonConfigRequest.validate_event(event)
-    except ValidationError:
+    except PayloadValidationError:
         raise BadRequestException()
 
     response = ServicePublisherService().daemon_config(request)   
@@ -201,7 +199,7 @@ def service_deployment_status_notification_handler(event, context):
 
     try:
         request = ServiceDeploymentStatusRequest.validate_event(event)
-    except ValidationError:
+    except PayloadValidationError:
         raise BadRequestException()
     
     ServicePublisherService().service_build_status_notifier(req_ctx.username, request)
@@ -223,7 +221,7 @@ def update_transaction(event, context):
 def get_code_build_status_for_service(event, context):
     try:
         request = GetCodeBuildStatusRequest.validate_event(event)
-    except ValidationError:
+    except PayloadValidationError:
         raise BadRequestException()
 
     response = ServicePublisherService().get_service_demo_component_build_status(request)
@@ -269,7 +267,7 @@ def publish_service(event, context):
     
     try:
         request = PublishServiceRequest.validate_event(event)
-    except ValidationError:
+    except PayloadValidationError:
         raise BadRequestException()
 
     response = ServicePublisherService(request.lighthouse_token).publish_service(

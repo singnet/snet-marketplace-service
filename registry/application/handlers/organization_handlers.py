@@ -1,11 +1,10 @@
-from pydantic import ValidationError
-
 from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.logger import get_logger
 from common.utils import generate_lambda_response
 from registry.application.access_control.authorization import secured
 from registry.application.handlers.common import RequestContext
+from registry.application.schemas.common import PayloadValidationError
 from registry.application.schemas.organization import (
     GetGroupByOrganizationIdRequest,
     CreateOrganizationRequest,
@@ -57,7 +56,7 @@ def get_all_org(event, context):
 def get_group_for_org(event, context):
     try:
         request = GetGroupByOrganizationIdRequest.validate_event(event)
-    except ValidationError:
+    except PayloadValidationError:
         raise BadRequestException()
 
     response = OrganizationPublisherService().get_groups_for_org(request)
@@ -75,7 +74,7 @@ def create_organization(event, context):
 
     try:
         request = CreateOrganizationRequest.validate_event(event)
-    except ValidationError:
+    except PayloadValidationError:
         raise BadRequestException()
 
     response = OrganizationPublisherService().create_organization(req_ctx.username, request)
@@ -98,7 +97,7 @@ def update_org(event, context):
 
     try:
         request = UpdateOrganizationRequest.validate_event(event)
-    except ValidationError:
+    except PayloadValidationError:
         raise BadRequestException()
 
     response = OrganizationPublisherService().update_organization(req_ctx.username, request)
@@ -121,7 +120,7 @@ def publish_organization(event, context):
 
     try:
         request = PublishOrganizationRequest.validate_event(event)
-    except ValidationError:
+    except PayloadValidationError:
         raise BadRequestException()
 
     response = OrganizationPublisherService().publish_organization(req_ctx.username, request)
@@ -144,7 +143,7 @@ def save_transaction_hash_for_publish_org(event, context):
 
     try:
         request = SaveTransactionHashForOrganizationRequest.validate_event(event)
-    except ValidationError:
+    except PayloadValidationError:
         raise BadRequestException()
 
     response = OrganizationPublisherService().save_transaction_hash_for_publish_org(
@@ -167,7 +166,7 @@ def save_transaction_hash_for_publish_org(event, context):
 def get_all_members(event, context):
     try:
         request = GetAllMembersRequest.validate_event(event)
-    except ValidationError:
+    except PayloadValidationError:
         raise BadRequestException()
 
     response = OrganizationPublisherService().get_all_member(request)
@@ -190,7 +189,7 @@ def get_member(event, context):
 
     try:
         request = GetMemberRequest.validate_event(event)
-    except ValidationError:
+    except PayloadValidationError:
         raise BadRequestException()
 
     response = OrganizationPublisherService().get_member(req_ctx.username, request)
@@ -211,7 +210,7 @@ def get_member(event, context):
 def invite_members(event, context):
     try:
         request = InviteMembersRequest.validate_event(event)
-    except ValidationError:
+    except PayloadValidationError:
         raise BadRequestException
 
     response = OrganizationPublisherService().invite_members(request)
@@ -229,7 +228,7 @@ def verify_code(event, context):
 
     try:
         request = VerifyCodeRequest.validate_event(event)
-    except ValidationError:
+    except PayloadValidationError:
         raise BadRequestException()
 
     response = OrganizationPublisherService().verify_invite(req_ctx.username, request)
@@ -252,7 +251,7 @@ def publish_members(event, context):
 
     try:
         request = PublishMembersRequest.validate_event(event)
-    except ValidationError:
+    except PayloadValidationError:
         raise BadRequestException()
 
     response = OrganizationPublisherService().publish_members(req_ctx.username, request)
@@ -270,7 +269,7 @@ def delete_members(event, context):
 
     try:
         request = DeleteMembersRequest.validate_event(event)
-    except ValidationError:
+    except PayloadValidationError:
         raise BadRequestException()
 
     response = OrganizationPublisherService().delete_members(req_ctx.username, request)
@@ -287,7 +286,7 @@ def register_member(event, context):
 
     try:
         request = RegisterMemberRequest.validate_event(event)
-    except ValidationError:
+    except PayloadValidationError:
         raise BadRequestException()
 
     response = OrganizationPublisherService().register_member(req_ctx.username, request)
@@ -303,7 +302,7 @@ def register_member(event, context):
 def org_verification(event, context):
     try:
         request = VerifyOrgRequest.validate_event(event)
-    except ValidationError:
+    except PayloadValidationError:
         raise BadRequestException
 
     response = OrganizationPublisherService().update_verification(request)
@@ -319,7 +318,7 @@ def org_verification(event, context):
 def verify_org_id(event, context):
     try:
         request = VerifyOrgIdRequest.validate_event(event)
-    except ValidationError:
+    except PayloadValidationError:
         raise BadRequestException
 
     response = OrganizationPublisherService().get_org_id_availability_status(request)

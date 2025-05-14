@@ -1,5 +1,7 @@
 import json
 
+from pydantic import ValidationError
+
 from common.exceptions import MethodNotImplemented
 from registry.settings import settings
 from registry.application.schemas.common import PayloadValidationError
@@ -8,7 +10,6 @@ from registry.constants import ORG_STATUS_LIST, ORG_TYPE_VERIFICATION_TYPE_MAPPI
 from registry.infrastructure.storage_provider import StorageProviderType
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
-
 
 
 class GetGroupByOrganizationIdRequest(BaseModel):
@@ -21,7 +22,7 @@ class GetGroupByOrganizationIdRequest(BaseModel):
             path_parameters = event["pathParameters"]
             assert path_parameters.get("org_uuid") is not None, "Missing organization UUID"
             return cls.model_validate(path_parameters)
-        except (AssertionError, json.JSONDecodeError):
+        except (ValidationError, AssertionError, json.JSONDecodeError):
             raise PayloadValidationError()
 
 
@@ -49,7 +50,7 @@ class CreateOrganizationRequest(BaseModel):
             assert event.get("body") is not None, "Invalid event body"
             body = json.loads(event["body"])
             return cls.model_validate(body)
-        except (AssertionError, json.JSONDecodeError):
+        except (ValidationError, AssertionError, json.JSONDecodeError):
             raise PayloadValidationError()
 
     @field_validator("origin")
@@ -114,7 +115,7 @@ class UpdateOrganizationRequest(BaseModel):
 
             return cls.model_validate(data)
 
-        except (AssertionError, json.JSONDecodeError, KeyError):
+        except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
 
 
@@ -140,7 +141,7 @@ class PublishOrganizationRequest(BaseModel):
 
             return cls.model_validate(data)
 
-        except (AssertionError, json.JSONDecodeError, KeyError):
+        except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
 
 
@@ -166,7 +167,7 @@ class SaveTransactionHashForOrganizationRequest(BaseModel):
 
             return cls.model_validate(data)
 
-        except (AssertionError, json.JSONDecodeError, KeyError):
+        except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
 
 
@@ -191,7 +192,7 @@ class GetAllMembersRequest(BaseModel):
 
             return cls.model_validate(data)
 
-        except (AssertionError, json.JSONDecodeError, KeyError):
+        except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
 
        
@@ -207,7 +208,7 @@ class GetMemberRequest(BaseModel):
             assert event.get("pathParameters") is not None, "Missing pathParameters"
             return cls.model_validate(event["pathPerameters"])
 
-        except (AssertionError, json.JSONDecodeError, KeyError):
+        except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
 
 
@@ -231,7 +232,7 @@ class InviteMembersRequest(BaseModel):
 
             return cls.model_validate(data)
 
-        except (AssertionError, json.JSONDecodeError, KeyError):
+        except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
 
 
@@ -244,7 +245,7 @@ class VerifyCodeRequest(BaseModel):
             assert event.get("queryStringParameters") is not None, "Missing queryStringParameters"
             return cls.model_validate(event["queryStringPerameters"])
 
-        except (AssertionError, json.JSONDecodeError, KeyError):
+        except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
 
 
@@ -269,7 +270,7 @@ class PublishMembersRequest(BaseModel):
 
             return cls.model_validate(data)
 
-        except (AssertionError, json.JSONDecodeError, KeyError):
+        except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
 
 
@@ -293,7 +294,7 @@ class DeleteMembersRequest(BaseModel):
 
             return cls.model_validate(data)
 
-        except (AssertionError, json.JSONDecodeError, KeyError):
+        except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
 
 
@@ -318,7 +319,7 @@ class RegisterMemberRequest(BaseModel):
 
             return cls.model_validate(data)
 
-        except (AssertionError, json.JSONDecodeError, KeyError):
+        except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
 
 
@@ -354,7 +355,7 @@ class VerifyOrgRequest(BaseModel):
         try:
             assert event.get("queryStringParameters") is not None, "Missing queryStringParameters"
             return cls.model_validate(event["queryStringParameters"])
-        except (AssertionError, json.JSONDecodeError, KeyError):
+        except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
 
 
@@ -366,5 +367,5 @@ class VerifyOrgIdRequest(BaseModel):
         try:
             assert event.get("queryStringParameters") is not None, "Missing queryStringParameters"
             return cls.model_validate(event["queryStringParameters"])
-        except (AssertionError, json.JSONDecodeError, KeyError):
+        except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()

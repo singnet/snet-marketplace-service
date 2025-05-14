@@ -1,6 +1,7 @@
 import json
 from typing import List
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import ValidationError
 
 from registry.application.schemas.common import PayloadValidationError
 from registry.constants import EnvironmentType, DEFAULT_SERVICE_RANKING, ServiceType
@@ -27,7 +28,7 @@ class VerifyServiceIdRequest(BaseModel):
 
             return cls.model_validate(data)
 
-        except (AssertionError, json.JSONDecodeError, KeyError):
+        except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
 
 
@@ -52,7 +53,7 @@ class SaveTransactionHashRequest(BaseModel):
 
             return cls.model_validate(data)
 
-        except (AssertionError, json.JSONDecodeError, KeyError):
+        except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
 
 
@@ -91,7 +92,7 @@ class SaveServiceRequest(BaseModel):
 
             return cls.model_validate(data)
 
-        except (AssertionError, json.JSONDecodeError, KeyError):
+        except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
 
 
@@ -116,7 +117,7 @@ class SaveServiceGroupsRequest(BaseModel):
 
             return cls.model_validate(data)
 
-        except (AssertionError, json.JSONDecodeError, KeyError):
+        except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
 
 
@@ -158,7 +159,7 @@ class CreateServiceRequest(BaseModel):
 
             return cls.model_validate(data)
 
-        except (AssertionError, json.JSONDecodeError, KeyError):
+        except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
 
 
@@ -190,7 +191,7 @@ class GetServicesForOrganizationRequest(BaseModel):
 
             return cls.model_validate(data)
 
-        except (AssertionError, json.JSONDecodeError, KeyError):
+        except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
 
 
@@ -207,7 +208,7 @@ class GetServiceRequest(BaseModel):
 
             return cls.model_validate(path_parameters)
 
-        except (AssertionError, json.JSONDecodeError, KeyError):
+        except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
 
 
@@ -232,7 +233,7 @@ class GetDaemonConfigRequest(BaseModel):
 
             return cls.model_validate(data)
 
-        except (AssertionError, json.JSONDecodeError, KeyError):
+        except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
 
 
@@ -246,7 +247,7 @@ class ServiceDeploymentStatusRequest(BaseModel):
         try:
             return cls.model_validate(event)
 
-        except (AssertionError, json.JSONDecodeError, KeyError):
+        except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
 
 
@@ -263,7 +264,7 @@ class GetCodeBuildStatusRequest(BaseModel):
 
             return cls.model_validate(path_parameters)
 
-        except (AssertionError, json.JSONDecodeError, KeyError):
+        except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
 
 
@@ -295,6 +296,5 @@ class PublishServiceRequest(BaseModel):
 
             return cls.model_validate(data)
 
-        except (AssertionError, json.JSONDecodeError, KeyError):
+        except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
-
