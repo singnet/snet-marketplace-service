@@ -1,3 +1,4 @@
+from typing import Literal
 from registry import config
 from pydantic import Field, BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -34,7 +35,7 @@ class UploadBucketConfig(BaseModel):
 
 
 class S3Config(BaseModel):
-    ASSET_BUCKET: str = Field(default=config.AWS["S3"]["ASSET_BUCKET"])
+    ASSETS_BUCKET: str = Field(default=config.AWS["S3"]["ASSETS_BUCKET"])
     ASSET_DIR: str = Field(default=config.AWS["S3"]["ASSET_DIR"])
     UPLOAD_BUCKET: UploadBucketConfig = Field(default_factory=UploadBucketConfig)
     ASSET_COMPONENT_BUCKET_NAME: str = Field(default=config.AWS["S3"]["ASSET_COMPONENT_BUCKET_NAME"])
@@ -47,14 +48,43 @@ class AWSConfig(BaseModel):
     S3: S3Config = Field(default_factory=S3Config)
 
 
+class DemoComponentConfig(BaseModel):
+    CODE_BUILD_NAME: str = Field(default=config.LAMBDA_ARN["DEMO_COMPONENT"]["CODE_BUILD_NAME"])
+    UPDATE_DEMO_COMPONENT_BUILD_STATUS_LAMBDA_ARN: str = Field(
+        default=config.LAMBDA_ARN["DEMO_COMPONENT"]["UPDATE_DEMO_COMPONENT_BUILD_STATUS_LAMBDA_ARN"]
+    )
+
+
+class PublishOffchainAttributesConfig(BaseModel):
+    FET: str = Field(default=config.LAMBDA_ARN["PUBLISH_OFFCHAIN_ATTRIBUTES_LAMBDAS"]["FET"])
+    AGIX: str = Field(default=config.LAMBDA_ARN["PUBLISH_OFFCHAIN_ATTRIBUTES_LAMBDAS"]["AGIX"])
+
+    def __getitem__(self, token_name: Literal["FET", "AGIX"]) -> str:
+        return getattr(self, token_name)
+
+
+class GetServiceForGiverOrgLambdas(BaseModel):
+    FET: str = Field(default=config.LAMBDA_ARN["GET_SERVICE_FOR_GIVEN_ORG_LAMBDAS"]["FET"])
+    AGIX: str = Field(default=config.LAMBDA_ARN["GET_SERVICE_FOR_GIVEN_ORG_LAMBDAS"]["AGIX"])
+
+    def __getitem__(self, token_name: Literal["FET", "AGIX"]) -> str:
+        return getattr(self, token_name)
+
+
 class LambdaARNConfig(BaseModel):
     NOTIFICATION_ARN: str = Field(default=config.LAMBDA_ARN["NOTIFICATION_ARN"])
     VERIFICATION_ARN: dict = Field(default=config.LAMBDA_ARN["VERIFICATION_ARN"])
     SERVICE_CURATE_ARN: str = Field(default=config.LAMBDA_ARN["SERVICE_CURATE_ARN"])
-    DEMO_COMPONENT: dict = Field(default=config.LAMBDA_ARN["DEMO_COMPONENT"])
+    DEMO_COMPONENT: DemoComponentConfig = Field(
+        default_factory=DemoComponentConfig
+    )
     MANAGE_PROTO_COMPILATION_LAMBDA_ARN: str = Field(default=config.LAMBDA_ARN["MANAGE_PROTO_COMPILATION_LAMBDA_ARN"])
-    PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT: str = Field(default=config.LAMBDA_ARN["PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT"])
-    GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT: str = Field(default=config.LAMBDA_ARN["GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT"])
+    PUBLISH_OFFCHAIN_ATTRIBUTES_ARN: PublishOffchainAttributesConfig = Field(
+        default_factory=PublishOffchainAttributesConfig
+    )
+    GET_SERVICE_FOR_GIVEN_ORG_LAMBDAS: GetServiceForGiverOrgLambdas = Field(
+        default_factory=GetServiceForGiverOrgLambdas
+    )
 
 
 class NetworkDetail(BaseModel):

@@ -1,9 +1,4 @@
-import sys
-
-sys.path.append("/opt")
-
 from pydantic import ValidationError
-from aws_xray_sdk.core import patch_all
 
 from common.constant import StatusCode
 from common.exception_handler import exception_handler
@@ -37,7 +32,6 @@ from registry.config import NETWORK_ID, SLACK_HOOK
 from registry.constants import Action
 from registry.exceptions import BadRequestException, EXCEPTIONS
 
-patch_all()
 logger = get_logger(__name__)
 
 

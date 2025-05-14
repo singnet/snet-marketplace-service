@@ -1,7 +1,4 @@
-import sys
-
 from pydantic import ValidationError
-sys.path.append('/opt')
 
 from common.constant import StatusCode
 from common.exception_handler import exception_handler

@@ -83,13 +83,13 @@ class UpdateServiceAssets:
             "org_uuid": org_uuid,
             "service_uuid": service_uuid,
             "filename": filename,
-            "lambda_function": settings.lambda_arn.DEMO_COMPONENT["UPDATE_DEMO_COMPONENT_BUILD_STATUS_LAMBDA_ARN"]
+            "lambda_function": settings.lambda_arn.DEMO_COMPONENT.UPDATE_DEMO_COMPONENT_BUILD_STATUS_LAMBDA_ARN
         }
         env_variables = []
         for variable in variables:
             env_variables.append({"name": variable, "type": "PLAINTEXT", "value": variables[variable]})
         build_details = {
-            "projectName": settings.lambda_arn.DEMO_COMPONENT["CODE_BUILD_NAME"],
+            "projectName": settings.lambda_arn.DEMO_COMPONENT.CODE_BUILD_NAME,
             "environmentVariablesOverride": env_variables
         }
         build_trigger_response = boto_utils.trigger_code_build(build_details=build_details)
@@ -135,7 +135,7 @@ class UpdateServiceAssets:
                 else:
                     next_state = ServiceStatus.CHANGE_REQUESTED.value
                 service_repo.save_service(
-                    username=f"CodeBuild :: {settings.lambda_arn.DEMO_COMPONENT["CODE_BUILD_NAME"]}",
+                    username=f"CodeBuild :: {settings.lambda_arn.DEMO_COMPONENT.CODE_BUILD_NAME}",
                     service=service,
                     state=next_state
                 )

@@ -7,7 +7,6 @@ from urllib.request import urlretrieve
 from uuid import uuid4
 
 from deepdiff import DeepDiff
-from aws_xray_sdk.core import patch_all
 from cerberus import Validator
 
 from common import utils
@@ -18,18 +17,6 @@ from common.logger import get_logger
 
 from common.utils import send_email_notification 
 from registry.settings import settings
-from common.utils import send_email_notification
-from registry.config import (
-    IPFS_URL,
-    METADATA_FILE_PATH,
-    NETWORKS,
-    NETWORK_ID,
-    NOTIFICATION_ARN,
-    REGION_NAME,
-    PUBLISH_OFFCHAIN_ATTRIBUTES_ARN,
-    GET_SERVICE_FOR_GIVEN_ORG_ARN,
-    STAGE
-)
 
 from registry.constants import (
     EnvironmentType,
@@ -37,7 +24,6 @@ from registry.constants import (
     ServiceStatus,
     ServiceSupportType,
     UserType,
-    SericeType,
     MPE_ADDR_PATH,
 )
 
@@ -77,7 +63,6 @@ from registry.infrastructure.storage_provider import (
     FileUtils
 )
 
-patch_all()
 ALLOWED_ATTRIBUTES_FOR_SERVICE_SEARCH = ["display_name"]
 DEFAULT_ATTRIBUTE_FOR_SERVICE_SEARCH = "display_name"
 ALLOWED_ATTRIBUTES_FOR_SERVICE_SORT_BY = ["ranking", "service_id"]
@@ -590,7 +575,7 @@ class ServicePublisherService:
         return changes
 
     def publish_offchain_service_configs(self, org_id, service_id, payload, token_name):
-        publish_offchain_attributes_arn = PUBLISH_OFFCHAIN_ATTRIBUTES_ARN[token_name]
+        publish_offchain_attributes_arn = settings.lambda_arn.PUBLISH_OFFCHAIN_ATTRIBUTES_ARN[token_name]
         logger.info(f"publish attributes arn: {publish_offchain_attributes_arn}")
         payload = {
             "httpMethod": "POST",
@@ -613,8 +598,9 @@ class ServicePublisherService:
         if response["status"] != "success":
             raise Exception(f"Error in publishing offchain service attributes for org_id :: {org_id} service_id :: {service_id}")
 
+
     def get_existing_service_details_from_contract_api(self, service_id, org_id, token_name):
-        get_service_arn = GET_SERVICE_FOR_GIVEN_ORG_ARN[token_name]
+        get_service_arn = settings.lambda_arn.GET_SERVICE_FOR_GIVEN_ORG_LAMBDAS[token_name]
         logger.info(f"get service arn: {get_service_arn}")
         payload = {
             "httpMethod": "GET",
@@ -696,10 +682,17 @@ class ServicePublisherService:
 
         return status
 
-    def _prepare_publish_status(self, organization: Organization, current_service: Service,
-                                storage_provider: StorageProviderType, publish_to_blockchain: bool,
-                                new_offchain_configs: Dict[str, any], token_name: str):
-        status = {"publish_to_blockchain": publish_to_blockchain}
+    def _prepare_publish_status(
+        self,
+        username: str,
+        organization: Organization,
+        current_service: Service,
+        storage_provider: StorageProviderType,
+        publish_to_blockchain: bool,
+        new_offchain_configs: Dict[str, Any],
+        token_name: str
+    ):
+        status: Dict[str, str | bool] = {"publish_to_blockchain": publish_to_blockchain}
 
         if publish_to_blockchain:
             filepath = FileUtils.create_temp_json_file(current_service.to_metadata())
@@ -734,9 +727,10 @@ class ServicePublisherService:
         return self.publish_new_offchain_configs(username, current_service, request)
 
     @staticmethod
-    def __get_token_name(mpe_address):
+    def __get_token_name(mpe_address) -> str:
         mpe_contract = BlockChainUtil.load_contract(MPE_ADDR_PATH)
         network_data = mpe_contract[str(NETWORK_ID)]
         for token, data in network_data.items():
-            if data[STAGE]["address"] == mpe_address:
+            if data[settings.stage]["address"] == mpe_address:
                 return token
+        raise Exception(f"Unable to find token name for mpe address {mpe_address}")
