@@ -32,7 +32,11 @@ custom:
   prune:
     automatic: true
     includeLayers: true
-    number: 2
+    number: 1
+  splitStacks:
+    perFunction: false
+    perType: true
+    perGroupFunction: false
 
 package:
   exclude:

@@ -15,8 +15,6 @@ from common.repository import Repository
 from common.s3_util import S3Util
 from common.utils import download_file_from_url, extract_zip_file, make_tarfile
 from contract_api.config import (
-    ASSETS_BUCKET_NAME,
-    ASSETS_PREFIX,
     GET_SERVICE_FROM_ORGID_SERVICE_ID_REGISTRY_ARN,
     NETWORKS,
     NETWORK_ID,
@@ -31,11 +29,17 @@ from contract_api.config import (
     STAGE
 )
 from contract_api.consumers.event_consumer import EventConsumer
+from contract_api.consumers.organization_event_consumer import (
+    OrganizationDeletedEventConsumer,
+    OrganizationCreatedEventConsumer
+)
+from contract_api.dao.organization_repository import OrganizationRepository
 from contract_api.dao.service_repository import ServiceRepository
 from contract_api.domain.models.service_media import ServiceMedia
 from contract_api.infrastructure.repositories.service_media_repository import ServiceMediaRepository
 from contract_api.infrastructure.repositories.service_repository import ServiceRepository as NewServiceRepository
 from contract_api.infrastructure.storage_provider import StorageProvider
+
 
 logger = get_logger(__name__)
 new_service_repo = NewServiceRepository()
@@ -45,6 +49,7 @@ service_media_repo = ServiceMediaRepository()
 class ServiceEventConsumer(EventConsumer):
     _connection = Repository(NETWORK_ID, NETWORKS=NETWORKS)
     _service_repository = ServiceRepository(_connection)
+    _organization_repository = OrganizationRepository(_connection)
 
     def __init__(self, ws_provider):
         super().__init__(ws_provider)
@@ -103,6 +108,50 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         org_id, service_id = self._get_service_details_from_blockchain(event)
         metadata_uri = self._get_metadata_uri_from_event(event)
         service_metadata = self._storage_provider.get(metadata_uri)
+        service_mpe_address = service_metadata.get("mpe_address")
+
+        mpe_contract_path = os.path.abspath(f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-platform-contracts/networks/MultiPartyEscrow.json")
+        current_mpe_address = self._blockchain_util.read_contract_address(
+            net_id=NETWORK_ID,
+            path = mpe_contract_path,
+            token_name=TOKEN_NAME,
+            stage=STAGE,
+            key="address"
+        )
+
+        if service_mpe_address != current_mpe_address:
+            logger.info("Service's MPE address is not the same as the current MPE address.")
+            try:
+                service_data = self._service_repository.get_service(org_id, service_id)
+                logger.info(f"Deleting service {service_id} from org {org_id}")
+                ServiceDeletedEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"]).on_event(
+                    event = None,
+                    org_id = service_data['org_id'],
+                    service_id = service_data['service_id']
+                )
+            except Exception:
+                logger.info(f"No service found with org_id {org_id} and service_id {service_id}")
+
+            org_data = self._organization_repository.get_organization(org_id)
+            if org_data is None:
+                logger.info(f"No organization found with org_id {org_id}")
+                return
+            org_services = self._service_repository.get_services(org_id)
+            if len(org_services) == 0:
+                logger.info(f"Deleting organization {org_id} because of the lack of services.")
+                OrganizationDeletedEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"]).on_event(event = None, org_id = org_id)
+            else:
+                logger.info(f"Organization {org_id} still has services. Skipping deletion.")
+            return
+        else:
+            logger.info(f"Service's MPE address is the same as the current MPE address. Checking organization {org_id}.")
+            org_data = self._organization_repository.get_organization(org_id)
+            if org_data is None:
+                logger.info(f"No organization found with org_id {org_id}. Creating it.")
+                OrganizationCreatedEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"]).on_event(event = None, org_id = org_id)
+            else:
+                logger.info(f"Organization {org_id} already exists. Skipping addition.")
+
         self._process_service_data(org_id, service_id, metadata_uri, service_metadata)
 
     def _get_new_assets_url(self, org_id, service_id, new_ipfs_data, existing_service_metadata):
@@ -170,6 +219,9 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             service_data = self._service_repository.create_or_update_service(org_id, service_id, new_hash)
             service_row_id = service_data['last_row_id']
             logger.info(f"Created service with service :: {service_row_id}")
+
+            self._service_repository.curate_service(org_id, service_id, 1)
+            logger.info(f"Curated service with service :: {service_row_id}")
 
             self._service_repository.create_or_update_service_metadata(
                 service_row_id=service_row_id,
@@ -247,8 +299,9 @@ class ServiceDeletedEventConsumer(ServiceEventConsumer):
     def __init__(self, ws_provider):
         super().__init__(ws_provider)
 
-    def on_event(self, event):
-        org_id, service_id = self._get_service_details_from_blockchain(event)
+    def on_event(self, event, org_id=None, service_id=None):
+        if org_id is None or service_id is None:
+            org_id, service_id = self._get_service_details_from_blockchain(event)
         self._service_repository.delete_service_dependents(org_id, service_id)
         self._service_repository.delete_service(org_id, service_id)
 
