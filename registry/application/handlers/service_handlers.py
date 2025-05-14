@@ -41,8 +41,6 @@ def verify_service_id(event, context):
         print(e)
         raise BadRequestException()
 
-    print(f"request: {request}")
-
     response = ServicePublisherService().get_service_id_availability_status(request)
 
     return generate_lambda_response(
