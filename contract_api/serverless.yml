@@ -1,7 +1,6 @@
 plugins:
   - serverless-offline
   - serverless-python-requirements
-  - serverless-plugin-tracing
   - serverless-prune-plugin
   - serverless-latest-layer-version
 
@@ -20,7 +19,6 @@ provider:
     tags: # Tags that will be added to each of the deployment resources
       key1: contract-api
   deploymentPrefix: serverless
-  tracing: true
 
 custom:
   pythonRequirements:
@@ -32,7 +30,7 @@ custom:
   prune:
     automatic: true
     includeLayers: true
-    number: 0
+    number: 1
 
 package:
   exclude:

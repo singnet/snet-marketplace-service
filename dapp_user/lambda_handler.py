@@ -1,8 +1,6 @@
 import json
 import re
 
-from aws_xray_sdk.core import patch_all
-
 from common.logger import get_logger
 from common.repository import Repository
 from common.utils import Utils, handle_exception_with_slack_notification
@@ -10,8 +8,6 @@ from dapp_user.config import NETWORKS, NETWORK_ID, SLACK_HOOK
 from dapp_user.constant import SourceDApp
 from dapp_user.domain.services.user_service import UserService
 from dapp_user.user import User
-
-patch_all()
 
 db = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
 logger = get_logger(__name__)

@@ -1,7 +1,6 @@
 plugins:
   - serverless-offline
   - serverless-python-requirements
-  - serverless-plugin-tracing
   - serverless-prune-plugin
   - serverless-latest-layer-version
 
@@ -16,7 +15,7 @@ custom:
   prune:
     automatic: true
     includeLayers: true
-    number: 0
+    number: 1
 
 provider:
   name: aws
@@ -33,7 +32,6 @@ provider:
       key1: signer
   deploymentPrefix: serverless
   versionFunctions: false
-  tracing: true
 
 package:
   exclude:

@@ -1,7 +1,5 @@
 import json
 
-from aws_xray_sdk.core import patch_all
-
 from common.constant import StatusCode, ResponseStatus
 from common.exception_handler import exception_handler
 from common.logger import get_logger
@@ -11,7 +9,6 @@ from verification.config import NETWORK_ID, SLACK_HOOK
 from verification.constants import VerificationType
 from verification.exceptions import EXCEPTIONS, BadRequestException
 
-patch_all()
 logger = get_logger(__name__)
 
 

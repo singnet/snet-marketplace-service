@@ -3,8 +3,6 @@ import json
 from common.exceptions import MethodNotImplemented
 from registry.settings import settings
 from registry.application.schemas.common import PayloadValidationError
-from registry.domain.models.organization import Organization as OrganizationEntity
-from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.exceptions import InvalidOriginException
 from registry.constants import ORG_STATUS_LIST, ORG_TYPE_VERIFICATION_TYPE_MAPPING, OrganizationActions, OrganizationType
 from registry.infrastructure.storage_provider import StorageProviderType
