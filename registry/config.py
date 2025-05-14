@@ -3,11 +3,11 @@ NETWORKS = {
         "name": "test",
         "http_provider": "https://sepolia.infura.io",
         "ws_provider": "wss://sepolia.infura.io/ws",
-        "ContractBasePath": "",
+        "contract_base_path": "",
     }
 }
 
-NETWORK_ID = 3
+NETWORK_ID = 11155111
 TOKEN_NAME = ""
 STAGE = ""
 

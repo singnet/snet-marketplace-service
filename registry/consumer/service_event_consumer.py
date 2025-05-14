@@ -8,16 +8,13 @@ from web3 import Web3
 from common import blockchain_util, boto_utils
 from common.constant import StatusCode
 from common.logger import get_logger
-from registry.config import (
-    NETWORK_ID,
-    SERVICE_CURATE_ARN,
-    REGION_NAME,
-    CONTRACT_BASE_PATH,
-    TOKEN_NAME,
-    STAGE
-)
 
-from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus
+from registry.settings import settings
+from registry.constants import (
+    DEFAULT_SERVICE_RANKING,
+    ServiceStatus,
+    SmartContracts,
+)
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.models.service import Service
 from registry.infrastructure.storage_provider import StorageProvider
@@ -82,11 +79,13 @@ class ServiceEventConsumer():
 
     def _get_registry_contract(self):
         base_contract_path = self._get_base_contract_path()
-        registry_contract = self._blockchain_util.get_contract_instance(base_contract_path,
-                                                                        "REGISTRY",
-                                                                        net_id=net_id,
-                                                                        token_name = TOKEN_NAME,
-                                                                        stage = STAGE)
+        registry_contract = self._blockchain_util.get_contract_instance(
+            base_contract_path,
+            SmartContracts.REGISTRY,
+            NETWORK_ID,
+            settings.token_name,
+            settings.stage,
+        )
 
         return registry_contract
 

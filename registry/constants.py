@@ -148,3 +148,8 @@ class AssetsStatus(Enum):
     SUCCESS = "SUCCESS"
     FAILED = "FAILED"
     PENDING = "PENDING"
+
+
+class SmartContracts(Enum):
+    REGISTRY = "REGISTRY"
+    MPE = "MPE"

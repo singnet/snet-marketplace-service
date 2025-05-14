@@ -7,16 +7,21 @@ from web3 import Web3
 from common import blockchain_util
 from common.logger import get_logger
 
-from registry.settings import settings, CONTRACT_BASE_PATH, TOKEN_NAME, STAGE
-from registry.constants import OrganizationMemberStatus, OrganizationStatus, Role
+from registry.settings import settings
+from registry.constants import (
+    OrganizationMemberStatus,
+    OrganizationStatus,
+    Role,
+    SmartContracts,
+)
 
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization
 from registry.exceptions import OrganizationNotFoundException
 from registry.infrastructure.storage_provider import StorageProvider
 
-logger = get_logger(__name__)
 
+logger = get_logger(__name__)
 BLOCKCHAIN_USER = "BLOCKCHAIN_EVENT"
 NETWORK_ID = settings.network.id
 CONTRACT_BASE_PATH = settings.network.networks[NETWORK_ID].contract_base_path
@@ -49,11 +54,13 @@ class OrganizationEventConsumer:
 
     def _get_registry_contract(self):
         base_contract_path = self._get_base_contract_path()
-        registry_contract = self._blockchain_util.get_contract_instance(base_contract_path,
-                                                                        'REGISTRY',
-                                                                        net_id = net_id,
-                                                                        token_name = TOKEN_NAME,
-                                                                        stage = STAGE)
+        registry_contract = self._blockchain_util.get_contract_instance(
+            base_contract_path,
+            SmartContracts.REGISTRY,
+            NETWORK_ID,
+            settings.token_name,
+            settings.stage,
+        )
 
         return registry_contract
 
