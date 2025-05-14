@@ -32,7 +32,6 @@ class BlockChainUtil(object):
     def __init__(self, provider_type, provider):
         self._provider_type = provider_type
         self._provider_url = provider
-    
 
         if self._provider_type == "HTTP_PROVIDER":
             self.provider = Web3.HTTPProvider(self._provider_url)
@@ -40,6 +39,7 @@ class BlockChainUtil(object):
             self.provider = LegacyWebSocketProvider(self._provider_url)
         else:
             raise Exception("Only HTTP_PROVIDER and WS_PROVIDER provider type are supported.")
+
         self.web3_object = Web3(self.provider)
 
     @staticmethod
