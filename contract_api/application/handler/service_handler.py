@@ -1,15 +1,11 @@
 import json
 
-from aws_xray_sdk.core import patch_all
-from common.constant import StatusCode
-from common.exception_handler import exception_handler
 from common.logger import get_logger
 from common.utils import Utils, generate_lambda_response
 from common.utils import handle_exception_with_slack_notification
 from contract_api.config import NETWORK_ID, SLACK_HOOK
 from contract_api.application.service.registry_service import RegistryService
 
-# patch_all()
 
 util = Utils()
 logger = get_logger(__name__)

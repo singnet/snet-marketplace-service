@@ -1,7 +1,5 @@
 import json
 
-from aws_xray_sdk.core import patch_all
-
 from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.logger import get_logger
@@ -12,7 +10,6 @@ from contract_api.application.service.update_assets_service import UpdateService
 from contract_api.config import NETWORKS, NETWORK_ID, SLACK_HOOK
 from contract_api.registry import Registry
 
-patch_all()
 
 db = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
 obj_util = Utils()

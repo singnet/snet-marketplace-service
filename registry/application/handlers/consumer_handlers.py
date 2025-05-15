@@ -1,5 +1,3 @@
-import sys
-sys.path.append('/opt')
 from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.logger import get_logger
@@ -18,19 +16,27 @@ service_repository = ServicePublisherRepository()
 
 
 def get_event_consumer(event):
-    if event['name'] in ["OrganizationCreated", 'OrganizationModified']:
-        return OrganizationCreatedAndModifiedEventConsumer(ws_provider = NETWORKS[NETWORK_ID]["ws_provider"],
-                                                           organization_repository = org_repository)
-    elif event['name'] in ['ServiceCreated', 'ServiceMetadataModified']:
-        return ServiceCreatedEventConsumer(ws_provider = NETWORKS[NETWORK_ID]["ws_provider"],
-                                           service_repository = service_repository,
-                                           organization_repository = org_repository)
+    if event["name"] in ["OrganizationCreated", "OrganizationModified"]:
+        return OrganizationCreatedAndModifiedEventConsumer(
+            ws_provider = NETWORKS[NETWORK_ID]["ws_provider"],
+            organization_repository = org_repository
+        )
+    elif event["name"] in ["ServiceCreated", "ServiceMetadataModified"]:
+        return ServiceCreatedEventConsumer(
+            ws_provider = NETWORKS[NETWORK_ID]["ws_provider"],
+            service_repository = service_repository,
+            organization_repository = org_repository
+        )
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 def organization_event_consumer_handler(event, context):
     logger.info(f"Got Organization Event {event}")
     organization_event_consumer = get_event_consumer(event)
+
+    if organization_event_consumer is None:
+        raise Exception()
+
     organization_event_consumer.on_event(event)
 
     return generate_lambda_response(200, StatusCode.OK)
@@ -40,6 +46,10 @@ def organization_event_consumer_handler(event, context):
 def service_event_consumer_handler(event, context):
     logger.info(f"Got Service Event {event}")
     service_event_consumer = get_event_consumer(event)
+
+    if service_event_consumer is None:
+        raise Exception()
+
     service_event_consumer.on_event(event)
 
     return generate_lambda_response(200, StatusCode.OK)

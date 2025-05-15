@@ -1,7 +1,6 @@
 plugins:
   - serverless-offline
   - serverless-python-requirements
-  - serverless-plugin-tracing
   - serverless-prune-plugin
 
 service: common-utility
@@ -19,7 +18,6 @@ provider:
     tags:
       key1: registry
   deploymentPrefix: serverless
-  tracing: true
 
 custom:
   pythonRequirements:
@@ -31,7 +29,7 @@ custom:
   prune:
     automatic: true
     includeLayers: true
-    number: 0
+    number: 1
 
 package:
   exclude:

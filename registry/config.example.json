@@ -1,0 +1,20 @@
+{
+    "SG1": "",
+    "SG2": "",
+    "VPC1": "",
+    "VPC2": "",
+    "AUTHORIZER": "arn:aws:cognito-idp:us-east-1:533793137436:userpool/us-east-1_vnsxyLKbb",
+    "ROLE": "",
+    "ROLE1": "",
+    "OWNER": "",
+    "TEAM": "",
+    "REGION": "",
+    "ORIGIN": "*",
+    "DOMAIN_NAME": "",
+    "MplaceCommonCode" : "",
+    "MplaceCommonPythonLib" : "",
+    "MplacePythonWeb3AndGrpc" : "",
+    "SnetContract" : "",
+    "ASSETS_BUCKET": "ropsten-marketplace-service-assets"
+  }
+  

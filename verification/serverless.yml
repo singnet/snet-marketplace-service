@@ -1,6 +1,5 @@
 plugins:
   - serverless-python-requirements
-  - serverless-plugin-tracing
   - serverless-prune-plugin
 
 service: verification
@@ -14,7 +13,7 @@ custom:
   prune:
     automatic: true
     includeLayers: true
-    number: 0
+    number: 1
 
 provider:
   name: aws
@@ -31,7 +30,6 @@ provider:
       key1: verification
   deploymentPrefix: serverless
   versionFunctions: false
-  tracing: true
 
 package:
   exclude:

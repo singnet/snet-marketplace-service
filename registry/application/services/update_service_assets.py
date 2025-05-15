@@ -5,13 +5,12 @@ from datetime import datetime as dt
 from common import utils
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
-from registry.config import REGION_NAME, DEMO_COMPONENT_CODE_BUILD_NAME, \
-    MANAGE_PROTO_COMPILATION_LAMBDA_ARN, UPDATE_DEMO_COMPONENT_BUILD_STATUS_LAMBDA_ARN
+from registry.settings import settings
 from registry.constants import ServiceStatus, ServiceAssetsRegex, AssetsStatus
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 
 logger = get_logger(__name__)
-boto_utils = BotoUtils(region_name=REGION_NAME)
+boto_utils = BotoUtils(region_name=settings.aws.REGION_NAME)
 service_repo = ServicePublisherRepository()
 
 
@@ -43,7 +42,7 @@ class UpdateServiceAssets:
                 #proto file validation
                 proto_compile_status = UpdateServiceAssets.validate_proto(file_path, bucket_name, org_uuid=org_uuid, service_uuid=service_uuid)
                 proto_details = {
-                    "url": f"https://{bucket_name}.s3.{REGION_NAME}.amazonaws.com/{file_path}",
+                    "url": f"https://{bucket_name}.s3.{settings.aws.REGION_NAME}.amazonaws.com/{file_path}",
                     "status": proto_compile_status
                 }
                 service.assets.update({"proto_files": proto_details})
@@ -53,7 +52,7 @@ class UpdateServiceAssets:
                                                                                  service_uuid=service_uuid,
                                                                                  filename=filename)
                 demo_details = service.assets.get("demo_details", {})
-                demo_details.update({"url": f"https://{bucket_name}.s3.{REGION_NAME}.amazonaws.com/{file_path}"})
+                demo_details.update({"url": f"https://{bucket_name}.s3.{settings.aws.REGION_NAME}.amazonaws.com/{file_path}"})
                 demo_details.update({"build_id": build_id})
                 demo_details.update({"status": "PENDING"})
                 demo_details.update({"last_modified": dt.isoformat(dt.utcnow())})
@@ -61,7 +60,7 @@ class UpdateServiceAssets:
                 response = {'build_id': build_id}
             elif utils.match_regex_string(path=file_path, regex_pattern=ServiceAssetsRegex.HERO_IMAGE_URL.value):
                 hero_image_details = {
-                    "url": f"https://{bucket_name}.s3.{REGION_NAME}.amazonaws.com/{file_path}"
+                    "url": f"https://{bucket_name}.s3.{settings.aws.REGION_NAME}.amazonaws.com/{file_path}"
                 }
                 service.assets.update({"hero_image": hero_image_details})
                 response = {}
@@ -80,19 +79,21 @@ class UpdateServiceAssets:
 
     @staticmethod
     def trigger_demo_component_code_build(org_uuid, service_uuid, filename):
-        lambda_function = UPDATE_DEMO_COMPONENT_BUILD_STATUS_LAMBDA_ARN
         variables = {
-            "org_uuid": org_uuid, "service_uuid": service_uuid, "filename": filename, "lambda_function": lambda_function
+            "org_uuid": org_uuid,
+            "service_uuid": service_uuid,
+            "filename": filename,
+            "lambda_function": settings.lambda_arn.DEMO_COMPONENT.UPDATE_DEMO_COMPONENT_BUILD_STATUS_LAMBDA_ARN
         }
         env_variables = []
         for variable in variables:
             env_variables.append({"name": variable, "type": "PLAINTEXT", "value": variables[variable]})
         build_details = {
-            'projectName': DEMO_COMPONENT_CODE_BUILD_NAME,
-            'environmentVariablesOverride': env_variables
+            "projectName": settings.lambda_arn.DEMO_COMPONENT.CODE_BUILD_NAME,
+            "environmentVariablesOverride": env_variables
         }
         build_trigger_response = boto_utils.trigger_code_build(build_details=build_details)
-        build_id = build_trigger_response['build']['id']
+        build_id = build_trigger_response["build"]["id"]
         logger.info(f"Build triggered details :: {build_details} build_id :: {build_id}")
         return build_id
 
@@ -108,7 +109,7 @@ class UpdateServiceAssets:
         response = boto_utils.invoke_lambda(
             payload=json.dumps(payload),
             invocation_type="RequestResponse",
-            lambda_function_arn=MANAGE_PROTO_COMPILATION_LAMBDA_ARN
+            lambda_function_arn=settings.lambda_arn.MANAGE_PROTO_COMPILATION_LAMBDA_ARN
         )
         logger.info(f"Getting response from manage proto compilation lambda :: {response}")
         if response["statusCode"] == 200:
@@ -133,8 +134,11 @@ class UpdateServiceAssets:
                     next_state = ServiceStatus.APPROVED.value
                 else:
                     next_state = ServiceStatus.CHANGE_REQUESTED.value
-                service_repo.save_service(username=f"CodeBuild :: {DEMO_COMPONENT_CODE_BUILD_NAME}", service=service,
-                                          state=next_state)
+                service_repo.save_service(
+                    username=f"CodeBuild :: {settings.lambda_arn.DEMO_COMPONENT.CODE_BUILD_NAME}",
+                    service=service,
+                    state=next_state
+                )
         else:
             raise Exception(f"Service {service_uuid} not found for org {org_uuid}")
 
