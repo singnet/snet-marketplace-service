@@ -32,7 +32,7 @@ custom:
   prune:
     automatic: true
     includeLayers: true
-    number: 2
+    number: 1
   queue:
     queueMessageRetention: ${file(./config.${self:provider.stage}.json):QUEUE_MESSAGE_RETENTION, 14400}
     dlqMessageRetention: ${file(./config.${self:provider.stage}.json):DLQ_MESSAGE_RETENTION, 1209600}
