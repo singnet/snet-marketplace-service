@@ -11,8 +11,7 @@ custom:
 
 provider:
   name: aws
-  runtime: python3.8
-  description: Orchestrator # optional, Description to publish to AWS
+  runtime: python3.12
   memorySize: 512
   timeout: 60
   region: ${file(./config.${self:provider.stage}.json):REGION}
@@ -56,7 +55,6 @@ package:
 
 functions:
   orchestrator:
-    warmup: true
     handler: orchestrator/lambda_handler.request_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
@@ -145,7 +143,6 @@ functions:
               - x-requested-with
 
   get-order:
-    warmup: true
     handler: orchestrator/handlers.order_handler.get
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
@@ -198,7 +195,6 @@ functions:
               - x-requested-with
 
   initiate-order:
-    warmup: true
     handler: orchestrator/handlers.order_handler.initiate
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
@@ -233,7 +229,6 @@ functions:
               - x-requested-with
 
   execute-order:
-    warmup: true
     handler: orchestrator/handlers.order_handler.execute
     timeout: 60
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -269,7 +264,6 @@ functions:
               - x-requested-with
 
   cancel-order:
-    warmup: true
     handler: orchestrator/handlers.order_handler.cancel
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
@@ -304,7 +298,6 @@ functions:
               - x-requested-with
 
   currency-to-token-conversion:
-    warmup: true
     handler: orchestrator/handlers.order_handler.currency_to_token_conversion
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     tags:
@@ -334,7 +327,6 @@ functions:
               - x-requested-with
 
   register-org-member:
-    warmup: true
     handler: orchestrator.publisher.application.handlers.organization_handlers.register_org_member
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -395,7 +387,6 @@ functions:
               - x-requested-with
 
   updateTxnStatus:
-    warmup: true
     handler: orchestrator/handlers.update_transaction_status_handler.request_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:

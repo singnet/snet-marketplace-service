@@ -33,7 +33,7 @@ def request_handler(event, context):
         error_message = format_error_message(
             status="failed",
             error=repr(e),
-            payload=payload_dict,
+            payload=event,
             net_id=NETWORK_ID,
             handler="cancel_order_handler"
         )
