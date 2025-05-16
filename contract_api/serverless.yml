@@ -33,12 +33,6 @@ custom:
     automatic: true
     includeLayers: true
     number: 1
-  queue:
-    queueMessageRetention: ${file(./config.${self:provider.stage}.json):QUEUE_MESSAGE_RETENTION, 14400}
-    dlqMessageRetention: ${file(./config.${self:provider.stage}.json):DLQ_MESSAGE_RETENTION, 1209600}
-    queueMaxReceiveCount: ${file(./config.${self:provider.stage}.json):QUEUE_MAX_RECEIVE_COUNT, 2}
-    receiveMessageWaitTimeSeconds: ${file(./config.${self:provider.stage}.json):RECEIVE_MESSAGE_WAIT_TIME_SECONDS, 20}
-    messageVisibilityTimeout: ${file(./config.${self:provider.stage}.json):MESSAGE_VISIBILITY_TIMEOUT, 60}
 
 package:
   exclude:
