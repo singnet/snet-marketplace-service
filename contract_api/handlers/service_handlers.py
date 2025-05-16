@@ -1,7 +1,5 @@
 import json
 
-from aws_xray_sdk.core import patch_all
-
 from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.logger import get_logger
@@ -12,7 +10,6 @@ from contract_api.application.service.update_assets_service import UpdateService
 from contract_api.config import NETWORKS, NETWORK_ID, SLACK_HOOK
 from contract_api.registry import Registry
 
-patch_all()
 
 db = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
 obj_util = Utils()
@@ -48,6 +45,7 @@ def get_service_for_given_org(event, context):
     service_id = event['pathParameters']['serviceId']
     response_data = obj_reg.get_service_data_by_org_id_and_service_id(
         org_id=org_id, service_id=service_id)
+    logger.info(f"Response data: {response_data}")
     return generate_lambda_response(
         200, {"status": "success", "data": response_data}, cors_enabled=True)
 

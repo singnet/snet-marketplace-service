@@ -4,9 +4,7 @@
   "description": "",
   "author": "SingularityNet",
   "dependencies": {
-    "serverless-plugin-tracing": "2.0.0",
     "serverless-prune-plugin": "1.4.1",
-    "serverless-python-requirements": "5.0.0",
     "singularitynet-stake-contracts": "1.0.4",
     "singularitynet-rfai-contracts": "1.0.0",
     "serverless-latest-layer-version": "2.1.1"

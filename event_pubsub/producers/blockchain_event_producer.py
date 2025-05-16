@@ -18,6 +18,7 @@ class BlockchainEventProducer(EventProducer):
 
     @staticmethod
     def _get_base_contract_path():
+        logger.debug(f"Contents of /opt: {os.listdir('/opt')}")
         return os.path.abspath(os.path.join(f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-platform-contracts"))
 
     def _get_events_from_blockchain(self, start_block_number, end_block_number, net_id):

@@ -1,7 +1,5 @@
 plugins:
   - serverless-offline
-  - serverless-python-requirements
-  - serverless-plugin-tracing
   - serverless-prune-plugin
 
 service: common-utility
@@ -13,25 +11,21 @@ provider:
   timeout: 30
   region: ${file(./config.${self:provider.stage}.json):REGION}
   stage: ${opt:stage,'dev'}
+  layers:
+    - ${file(./config.${self:provider.stage}.json):GeneralPythonLibsMP}
+    - ${file(./config.${self:provider.stage}.json):GrpcPythonLibsMP}
   deploymentBucket:
     name: snet-serverless-artifacts
     serverSideEncryption: AES256
     tags:
       key1: registry
   deploymentPrefix: serverless
-  tracing: true
 
 custom:
-  pythonRequirements:
-    fileName: utility/requirements.txt
-    dockerizePip: true
-    useDownloadCache: true
-    useStaticCache: true
-    cacheLocation: "/var/cache/serverless"
   prune:
     automatic: true
     includeLayers: true
-    number: 2
+    number: 1
 
 package:
   exclude:

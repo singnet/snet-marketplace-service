@@ -3,16 +3,12 @@ import re
 import traceback
 from urllib.parse import unquote
 
-from aws_xray_sdk.core import patch_all
-
 from common.constant import StatusCode
 from common.exceptions import BadRequestException
 from common.logger import get_logger
 from common.utils import Utils, generate_lambda_response, handle_exception_with_slack_notification
 from signer.config import NETWORK_ID, NET_ID, SIGNER_ADDRESS, SLACK_HOOK
 from signer.signers import Signer
-
-patch_all()
 
 obj_util = Utils()
 

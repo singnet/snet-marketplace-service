@@ -2,31 +2,42 @@ import os
 import json
 import tempfile
 from datetime import datetime as dt
-from typing import Dict, Union
+from typing import Any, Dict, Union
 from urllib.request import urlretrieve
 from uuid import uuid4
 
-import requests
 from deepdiff import DeepDiff
-from aws_xray_sdk.core import patch_all
 from cerberus import Validator
 
 from common import utils
 from common.boto_utils import BotoUtils
+from common.blockchain_util import BlockChainUtil
 from common.constant import StatusCode
 from common.logger import get_logger
-from common.utils import send_email_notification
-from registry.config import (
-    IPFS_URL, METADATA_FILE_PATH, NETWORKS, NETWORK_ID, NOTIFICATION_ARN,
-    REGION_NAME, PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT, GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT
-)
+
+from common.utils import send_email_notification 
+from registry.settings import settings
+
 from registry.constants import (
     EnvironmentType,
     ServiceAvailabilityStatus,
     ServiceStatus,
     ServiceSupportType,
     UserType,
-    ServiceType
+    MPE_ADDR_PATH,
+)
+
+from registry.application.schemas.service import (
+    CreateServiceRequest,
+    GetDaemonConfigRequest,
+    GetServicesForOrganizationRequest,
+    PublishServiceRequest,
+    SaveServiceGroupsRequest,
+    SaveServiceRequest,
+    ServiceDeploymentStatusRequest,
+    VerifyServiceIdRequest,
+    SaveTransactionHashRequest,
+    GetCodeBuildStatusRequest
 )
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.models.demo_component import DemoComponent
@@ -35,6 +46,7 @@ from registry.domain.models.service import Service
 from registry.domain.models.organization import Organization
 from registry.domain.models.service_comment import ServiceComment
 from registry.exceptions import (
+    BadRequestException,
     EnvironmentNotFoundException,
     InvalidServiceStateException,
     OrganizationNotFoundException,
@@ -42,67 +54,83 @@ from registry.exceptions import (
     ServiceProtoNotFoundException,
     InvalidMetadataException
 )
+
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
-from registry.infrastructure.storage_provider import validate_storage_provider, StorageProvider, StorageProviderType, \
+from registry.infrastructure.storage_provider import (
+    StorageProvider,
+    StorageProviderType,
     FileUtils
+)
 
-patch_all()
 ALLOWED_ATTRIBUTES_FOR_SERVICE_SEARCH = ["display_name"]
 DEFAULT_ATTRIBUTE_FOR_SERVICE_SEARCH = "display_name"
 ALLOWED_ATTRIBUTES_FOR_SERVICE_SORT_BY = ["ranking", "service_id"]
 DEFAULT_ATTRIBUTES_FOR_SERVICE_SORT_BY = "ranking"
 ALLOWED_ATTRIBUTES_FOR_SERVICE_ORDER_BY = ["asc", "desc"]
 DEFAULT_ATTRIBUTES_FOR_SERVICE_ORDER_BY = "desc"
+NETWORK_ID = settings.network.id
 DEFAULT_OFFSET = 0
 DEFAULT_LIMIT = 0
 BUILD_FAILURE_CODE = 0
 
 logger = get_logger(__name__)
 service_factory = ServiceFactory()
-boto_util = BotoUtils(region_name=REGION_NAME)
+boto_util = BotoUtils(region_name=settings.aws.REGION_NAME)
 validator = Validator()
 
 
 class ServicePublisherService:
-    def __init__(self, username: str, org_uuid: str, service_uuid: str, lighthouse_token: Union[str, None] = None):
-        self._username = username
-        self._org_uuid = org_uuid
-        self._service_uuid = service_uuid
+    def __init__(self, lighthouse_token: Union[str, None] = None):
         self._storage_provider = StorageProvider(lighthouse_token)
 
-    def service_build_status_notifier(self, org_id, service_id, build_status):
-        if build_status == BUILD_FAILURE_CODE:
+    def service_build_status_notifier(self, username: str, request: ServiceDeploymentStatusRequest):
+        if request.build_status == BUILD_FAILURE_CODE:
             BUILD_FAIL_MESSAGE = "Build failed please check your components"
-            org_uuid, service = ServicePublisherRepository() \
-                .get_service_for_given_service_id_and_org_id(org_id, service_id)
+            service = ServicePublisherRepository().get_service_for_given_service_id_and_org_id(
+                request.org_id, request.service_id
+            )
+
+            if service is None:
+                raise Exception()
 
             contacts = [contributor.get("email_id", "") for contributor in service.contributors]
 
-            service_comment = ServiceComment(org_uuid, service.uuid, "SERVICE_APPROVAL", "SERVICE_APPROVER",
-                                             self._username, BUILD_FAIL_MESSAGE)
+            service_comment = ServiceComment(
+                service.org_uuid,
+                service.uuid,
+                "SERVICE_APPROVAL",
+                "SERVICE_APPROVER",
+                username,
+                BUILD_FAIL_MESSAGE
+            )
+
             ServicePublisherRepository().save_service_comments(service_comment)
-            ServicePublisherRepository().save_service(self._username, service, ServiceStatus.CHANGE_REQUESTED.value)
-            logger.info(f"Build failed for org_id {org_id}  and service_id {service_id}")
+            ServicePublisherRepository().save_service(username, service, ServiceStatus.CHANGE_REQUESTED.value)
+
             try:
                 BUILD_STATUS_SUBJECT = "Build failed for your service {}"
                 BUILD_STATUS_MESSAGE = "Build failed for your org_id {} and service_id {}"
                 send_email_notification(
-                    contacts, BUILD_STATUS_SUBJECT.format(service_id),
-                    BUILD_STATUS_MESSAGE.format(org_id, service_id), NOTIFICATION_ARN, boto_util
+                    contacts, BUILD_STATUS_SUBJECT.format(request.service_id),
+                    BUILD_STATUS_MESSAGE.format(request.org_id, request.service_id),
+                    settings.lambda_arn.NOTIFICATION_ARN,
+                    boto_util
                 )
             except Exception:
-                logger.info(f"Error happened while sending build_status mail for {org_id} and contacts {contacts}")
+                logger.info(f"Error happened while sending build_status mail for {request.org_id} and contacts {contacts}")
 
-    def get_service_id_availability_status(self, service_id):
-        record_exist = ServicePublisherRepository().check_service_id_within_organization(self._org_uuid, service_id)
+    def get_service_id_availability_status(self, request: VerifyServiceIdRequest):
+        record_exist = ServicePublisherRepository().check_service_id_within_organization(
+            request.org_uuid, request.service_id
+        )
         if record_exist:
             return ServiceAvailabilityStatus.UNAVAILABLE.value
         return ServiceAvailabilityStatus.AVAILABLE.value
 
     @staticmethod
     def get_service_for_org_id_and_service_id(org_id, service_id):
-        _, service = ServicePublisherRepository().get_service_for_given_service_id_and_org_id(org_id, service_id)
+        service = ServicePublisherRepository().get_service_for_given_service_id_and_org_id(org_id, service_id)
         if not service:
             return {}
         return service.to_dict()
@@ -116,125 +144,181 @@ class ServicePublisherService:
                 contributors.remove(contributor)
         return contributors
 
-    def _save_service_comment(self, support_type, user_type, comment):
-        service_provider_comment = ServiceFactory. \
-            create_service_comment_entity_model(org_uuid=self._org_uuid,
-                                                service_uuid=self._service_uuid,
-                                                support_type=support_type,
-                                                user_type=user_type,
-                                                commented_by=self._username,
-                                                comment=comment)
+    def _save_service_comment(
+        self,
+        org_uuid: str,
+        service_uuid: str,
+        username: str,
+        support_type: str,
+        user_type: str,
+        comment: str
+    ):
+        service_provider_comment = ServiceFactory.create_service_comment_entity_model(
+            org_uuid=org_uuid,
+            service_uuid=service_uuid,
+            support_type=support_type,
+            user_type=user_type,
+            commented_by=username,
+            comment=comment
+        )
         ServicePublisherRepository().save_service_comments(service_provider_comment)
 
-    def save_offline_service_configs(self, payload):
-        demo_component_required = payload.get("assets", {}).get("demo_files", {}).get("required", -1)
+    def save_offline_service_configs(self, request: SaveServiceRequest):
+        demo_component_required = request.assets.get("demo_files", {}).get("required", -1)
+        
         if demo_component_required == -1:
             return
+
         offchain_service_config = OffchainServiceConfig(
-            org_uuid=self._org_uuid,
-            service_uuid=self._service_uuid,
+            org_uuid=request.org_uuid,
+            service_uuid=request.service_uuid,
             configs={
                 "demo_component_required": str(demo_component_required)
             }
         )
         ServicePublisherRepository().add_or_update_offline_service_config(offchain_service_config)
-        return
 
-    def save_service(self, payload):
-        logger.info(f"Save service with payload :: {payload}")
-        service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
-        service.service_id = payload["service_id"]
-        service.proto = payload.get("proto", {})
-        service.storage_provider = payload.get("storage_provider", "")
-        service.display_name = payload.get("display_name", "")
-        service.short_description = payload.get("short_description", "")
-        service.description = payload.get("description", "")
-        service.project_url = payload.get("project_url", "")
-        service.service_type = payload.get("service_type", ServiceType.GRPC.value)
-        service.contributors = ServicePublisherService. \
-            _get_valid_service_contributors(contributors=payload.get("contributors", []))
-        service.tags = payload.get("tags", [])
-        service.mpe_address = payload.get("mpe_address", "")
+    def save_service(self, username: str, request: SaveServiceRequest):
+        service = ServicePublisherRepository().get_service_for_given_service_uuid(
+            request.org_uuid, request.service_uuid
+        )
+        
+        if service is None:
+            raise Exception()
+        
+        service.service_id = request.service_id
+        service.proto = request.proto
+        service.storage_provider = service.storage_provider
+        service.display_name = service.display_name
+        service.short_description = service.short_description
+        service.description = service.description
+        service.project_url = service.project_url
+        service.service_type = service.service_type
+        service.contributors = ServicePublisherService._get_valid_service_contributors(
+            contributors=request.contributors
+        )
+        service.tags = request.tags
+        service.mpe_address = request.mpe_address
         groups = []
-        for group in payload["groups"]:
-            service_group = ServiceFactory.create_service_group_entity_model(self._org_uuid, self._service_uuid, group)
+        for group in request.groups:
+            service_group = ServiceFactory.create_service_group_entity_model(
+                request.org_uuid, request.service_uuid, group
+            )
             groups.append(service_group)
         service.groups = groups
-        service.service_state.transaction_hash = payload.get("transaction_hash", None)
-        logger.info(f"Save service data with proto: {service.proto} and assets: {service.assets}")
-        ServicePublisherRepository().save_service(self._username, service, ServiceStatus.APPROVED.value)
-        comment = payload.get("comments", {}).get(UserType.SERVICE_PROVIDER.value, "")
+        service.service_state.transaction_hash = request.transaction_hash
+        
+        ServicePublisherRepository().save_service(username, service, ServiceStatus.APPROVED.value)
+        
+        comment = request.comments.get(UserType.SERVICE_PROVIDER.value, "")
         if len(comment) > 0:
-            self._save_service_comment(support_type="SERVICE_APPROVAL", user_type="SERVICE_PROVIDER", comment=comment)
-        self.save_offline_service_configs(payload=payload)
-        service = self.get_service_for_given_service_uuid()
+            self._save_service_comment(
+                org_uuid=request.org_uuid,
+                service_uuid=request.service_uuid,
+                support_type="SERVICE_APPROVAL",
+                user_type="SERVICE_PROVIDER",
+                username=username,
+                comment=comment
+            )
+        
+        self.save_offline_service_configs(request)
+        
+        service = self.get_service_for_given_service_uuid(request.org_uuid, request.service_uuid)
+        
         return service
 
-    def save_service_attributes(self, payload):
-        VALID_PATCH_ATTRIBUTE = ["groups"]
-        service_db = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid,
-                                                                                     self._service_uuid)
+    def save_service_groups(self, username: str, request: SaveServiceGroupsRequest):
+        service_db = ServicePublisherRepository().get_service_for_given_service_uuid(
+            request.org_uuid, request.service_uuid
+        )
         service = ServiceFactory.convert_service_db_model_to_entity_model(service_db)
 
-        for attribute, value in payload.items():
-            if attribute in VALID_PATCH_ATTRIBUTE:
-                if attribute == "groups":
-                    service.groups = [
-                        ServiceFactory.create_service_group_entity_model(self._org_uuid, self._service_uuid, group) for
-                        group in payload.get("groups", [])]
-            else:
-                raise Exception("Patching of other attributes not allowed as of now")
+        if service is None:
+            raise Exception()
 
-        saved_service = ServicePublisherRepository().save_service(self._username, service, service.service_state.state)
+        service.groups = [
+            ServiceFactory.create_service_group_entity_model(
+                request.org_uuid, request.service_uuid, group
+            ) for group in request.groups
+        ]
+
+        saved_service = ServicePublisherRepository().save_service(
+            username, service, service.service_state.state
+        )
 
         return saved_service.to_dict()
 
-    def save_transaction_hash_for_published_service(self, payload):
-        service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
+    def save_transaction_hash_for_published_service(
+        self,
+        username: str,
+        request: SaveTransactionHashRequest
+    ):
+        service = ServicePublisherRepository().get_service_for_given_service_uuid(
+            request.org_uuid, request.service_uuid
+        )
+        
+        if service is None:
+            raise BadRequestException()
+        
         if service.service_state.state == ServiceStatus.APPROVED.value:
-            service.service_state = \
-                ServiceFactory().create_service_state_entity_model(
-                    self._org_uuid, self._service_uuid, ServiceStatus.PUBLISH_IN_PROGRESS.value,
-                    payload.get("transaction_hash", ""))
-            ServicePublisherRepository().save_service(self._username, service, ServiceStatus.PUBLISH_IN_PROGRESS.value)
+            service.service_state = ServiceFactory().create_service_state_entity_model(
+                request.org_uuid,
+                request.service_uuid,
+                ServiceStatus.PUBLISH_IN_PROGRESS.value,
+                request.transaction_hash
+            )
+            ServicePublisherRepository().save_service(
+                username, service, ServiceStatus.PUBLISH_IN_PROGRESS.value
+            )
+
         return StatusCode.OK
 
-    def create_service(self, payload):
+    def create_service(self, username: str, request: CreateServiceRequest):
         service_uuid = uuid4().hex
-        service = ServiceFactory().create_service_entity_model(self._org_uuid, service_uuid, payload,
-                                                               ServiceStatus.DRAFT.value)
-        logger.info(f"Creating service :: {service.to_dict()}")
-        ServicePublisherRepository().add_service(service, self._username)
-        return {"org_uuid": self._org_uuid, "service_uuid": service_uuid}
+        service = ServiceFactory.create_service_entity_model_from_request(
+            request, service_uuid, ServiceStatus.DRAFT.value
+        )
 
-    def get_services_for_organization(self, payload):
-        offset = payload.get("offset", DEFAULT_OFFSET)
-        limit = payload.get("limit", DEFAULT_LIMIT)
-        search_string = payload["q"]
-        search_attribute = payload["s"]
-        sort_by = payload["sort_by"].lower()
-        order_by = payload["order_by"].lower()
+        ServicePublisherRepository().add_service(service, username)
+
+        return {"org_uuid": request.org_uuid, "service_uuid": service_uuid}
+
+    def get_services_for_organization(self, request: GetServicesForOrganizationRequest):
         filter_parameters = {
-            "offset": offset,
-            "limit": limit,
-            "search_string": search_string,
-            "search_attribute": search_attribute if search_attribute in ALLOWED_ATTRIBUTES_FOR_SERVICE_SEARCH else DEFAULT_ATTRIBUTE_FOR_SERVICE_SEARCH,
-            "sort_by": sort_by if sort_by in ALLOWED_ATTRIBUTES_FOR_SERVICE_SORT_BY else DEFAULT_ATTRIBUTES_FOR_SERVICE_SORT_BY,
-            "order_by": order_by if order_by in ALLOWED_ATTRIBUTES_FOR_SERVICE_SORT_BY else DEFAULT_ATTRIBUTES_FOR_SERVICE_ORDER_BY
+            "offset": request.offset,
+            "limit": request.limit,
+            "search_string": request.search_string,
+            "search_attribute": request.search_attribute if request.search_attribute in ALLOWED_ATTRIBUTES_FOR_SERVICE_SEARCH else DEFAULT_ATTRIBUTE_FOR_SERVICE_SEARCH,
+            "sort_by": request.sort_by if request.sort_by in ALLOWED_ATTRIBUTES_FOR_SERVICE_SORT_BY else DEFAULT_ATTRIBUTES_FOR_SERVICE_SORT_BY,
+            "order_by": request.order_by if request.order_by in ALLOWED_ATTRIBUTES_FOR_SERVICE_SORT_BY else DEFAULT_ATTRIBUTES_FOR_SERVICE_ORDER_BY
         }
-        services = ServicePublisherRepository().get_services_for_organization(self._org_uuid, filter_parameters)
-        search_result = [service.to_dict() for service in services]
-        search_count = ServicePublisherRepository().get_total_count_of_services_for_organization(self._org_uuid,
-                                                                                                 filter_parameters)
-        return {"total_count": search_count, "offset": offset, "limit": limit, "result": search_result}
 
-    def get_service_comments(self):
+        services = ServicePublisherRepository().get_services_for_organization(
+            request.org_uuid, filter_parameters
+        )
+
+        search_result = [service.to_dict() for service in services]
+        search_count = ServicePublisherRepository().get_total_count_of_services_for_organization(
+            request.org_uuid, filter_parameters
+        )
+
+        return {"total_count": search_count, "offset": request.offset, "limit": request.limit, "result": search_result}
+
+    def get_service_comments(self, org_uuid: str, service_uuid: str):
         service_provider_comment = ServicePublisherRepository().get_last_service_comment(
-            org_uuid=self._org_uuid, service_uuid=self._service_uuid,
-            support_type=ServiceSupportType.SERVICE_APPROVAL.value, user_type=UserType.SERVICE_PROVIDER.value)
+            org_uuid=org_uuid,
+            service_uuid=service_uuid,
+            support_type=ServiceSupportType.SERVICE_APPROVAL.value,
+            user_type=UserType.SERVICE_PROVIDER.value
+        )
+
         approver_comment = ServicePublisherRepository().get_last_service_comment(
-            org_uuid=self._org_uuid, service_uuid=self._service_uuid,
-            support_type=ServiceSupportType.SERVICE_APPROVAL.value, user_type=UserType.SERVICE_APPROVER.value)
+            org_uuid=org_uuid,
+            service_uuid=service_uuid,
+            support_type=ServiceSupportType.SERVICE_APPROVAL.value,
+            user_type=UserType.SERVICE_APPROVER.value
+        )
+
         return {
             UserType.SERVICE_PROVIDER.value: None if not service_provider_comment else f"{service_provider_comment.comment}",
             UserType.SERVICE_APPROVER.value: "<div></div>" if not approver_comment else f"<div>{approver_comment.comment}</div>"
@@ -247,18 +331,23 @@ class ServicePublisherService:
         service["media"]["demo_files"].update({"required": offchain_service_config.configs["demo_component_required"]})
         return service
 
-    def get_service_for_given_service_uuid(self):
-        service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
+    def get_service_for_given_service_uuid(self, org_uuid: str, service_uuid: str):
+        service = ServicePublisherRepository().get_service_for_given_service_uuid(
+            org_uuid, service_uuid
+        )
         if not service:
             return None
-        service.comments = self.get_service_comments()
+
+        service.comments = self.get_service_comments(org_uuid, service_uuid)
         offchain_service_config = ServicePublisherRepository().get_offchain_service_config(
-            org_uuid=self._org_uuid,
-            service_uuid=self._service_uuid
+            org_uuid=org_uuid,
+            service_uuid=service_uuid
         )
+
         service_data = service.to_dict()
         if offchain_service_config.configs:
             service_data = self.map_offchain_service_config(offchain_service_config, service_data)
+
         return service_data
 
     def publish_assets(self, service: Service, storage_provider_enum: StorageProviderType):
@@ -291,7 +380,11 @@ class ServicePublisherService:
             except Exception as e:
                 logger.error(f"Failed to process asset '{asset_name}': {str(e)}")
 
-    def publish_service_data_to_storage_provider(self, storage_provider_enum: StorageProviderType) -> Service:
+    def publish_service_data_to_storage_provider(
+        self,
+        username: str,
+        request: PublishServiceRequest,
+    ) -> Service:
         """
         Publishes the service's assets and protos to storage provider and updates the service's metadata.
 
@@ -300,21 +393,21 @@ class ServicePublisherService:
         :raises ServiceProtoNotFoundException: If the proto files are not found in the service assets.
         :raises InvalidServiceStateException: If the service is not in the APPROVED state.
         """
-        service = self._get_approved_service()
+        service = self._get_approved_service(request.org_uuid, request.service_uuid)
 
         proto_url = service.assets.get("proto_files", {}).get("url")
         if not proto_url:
-            raise ServiceProtoNotFoundException("Proto file URL not found in service assets.")
+            raise ServiceProtoNotFoundException()
 
         proto_file_path = self._download_file(proto_url)
         logger.info(f"Proto file downloaded to: {proto_file_path}")
 
-        asset_hash = self._storage_provider.publish(proto_file_path, storage_provider_enum, zip_archive=True)
+        asset_hash = self._storage_provider.publish(proto_file_path, request.storage_provider, zip_archive=True)
         logger.info(f"Published proto files. Hash: {asset_hash}")
 
-        return self._update_service_metadata(service, asset_hash, storage_provider_enum)
+        return self._update_service_metadata(username, service, asset_hash, request.storage_provider)
 
-    def _get_approved_service(self) -> Service:
+    def _get_approved_service(self, org_uuid: str, service_uuid: str) -> Service:
         """
         Fetches the service from the repository and validates its state.
 
@@ -322,7 +415,11 @@ class ServicePublisherService:
         :raises InvalidServiceStateException: If the service is not in the APPROVED state.
         """
         service_repo = ServicePublisherRepository()
-        service = service_repo.get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
+        service = service_repo.get_service_for_given_service_uuid(org_uuid, service_uuid)
+
+        if service is None:
+            raise BadRequestException()
+
         if service.service_state.state != ServiceStatus.APPROVED.value:
             logger.error(f"Service status must be {ServiceStatus.APPROVED.value} to publish.")
             raise InvalidServiceStateException()
@@ -350,7 +447,13 @@ class ServicePublisherService:
             logger.error(f"Failed to download file from URL '{url}': {str(e)}")
             raise
 
-    def _update_service_metadata(self, service: Service, asset_hash: str, storage_provider_enum: StorageProviderType) -> Service:
+    def _update_service_metadata(
+        self,
+        username: str,
+        service: Service,
+        asset_hash: str,
+        storage_provider_enum: StorageProviderType,    
+    ) -> Service:
         """
         Updates the service metadata and persists it in the repository.
 
@@ -367,7 +470,7 @@ class ServicePublisherService:
         self.publish_assets(service, storage_provider_enum)
 
         service_repo = ServicePublisherRepository()
-        return service_repo.save_service(self._username, service, service.service_state.state)
+        return service_repo.save_service(username, service, service.service_state.state)
 
     @staticmethod
     def notify_service_contributor_when_user_submit_for_approval(org_id, service_id, contributors):
@@ -380,22 +483,35 @@ class ServicePublisherService:
         notification_message = f"Your service {service_id} under organization {org_id} has successfully been submitted " \
                                f"for approval. We will notify you once it is reviewed by our approval team. It usually " \
                                f"takes around five to ten business days for approval."
-        utils.send_email_notification(recipients, notification_subject, notification_message, NOTIFICATION_ARN, boto_util)
+        utils.send_email_notification(
+            recipients,
+            notification_subject,
+            notification_message,
+            settings.lambda_arn.NOTIFICATION_ARN,
+            boto_util
+        )
 
-    def daemon_config(self, environment):
-        organization = OrganizationPublisherRepository().get_organization(org_uuid=self._org_uuid)
+    def daemon_config(self, request: GetDaemonConfigRequest):
+        organization = OrganizationPublisherRepository().get_organization(
+            org_uuid=request.org_uuid
+        )
         if not organization:
             raise OrganizationNotFoundException()
-        service = ServicePublisherRepository().get_service_for_given_service_uuid(self._org_uuid, self._service_uuid)
+
+        service = ServicePublisherRepository().get_service_for_given_service_uuid(
+            request.org_uuid, request.service_uuid
+        )
         if not service:
             raise ServiceNotFoundException()
-        organization_members = OrganizationPublisherRepository().get_org_member(org_uuid=self._org_uuid)
-        network_name = NETWORKS[NETWORK_ID]["name"].lower()
-        # this is how network name is set in daemon for mainnet
+    
+        organization_members = OrganizationPublisherRepository().get_org_member(org_uuid=request.org_uuid)
+
+        network_name = settings.network.networks[NETWORK_ID].name
         network_name = "main" if network_name == "mainnet" else network_name
-        if environment is EnvironmentType.MAIN.value:
+
+        if request.network is EnvironmentType.MAIN:
             daemon_config = {
-                "ipfs_end_point": f"{IPFS_URL['url']}:{IPFS_URL['port']}",
+                "ipfs_end_point": f"{settings.ipfs.URL}:{settings.ipfs.PORT}",
                 "blockchain_network_selected": network_name,
                 "organization_id": organization.id,
                 "service_id": service.service_id,
@@ -408,20 +524,22 @@ class ServicePublisherService:
             raise EnvironmentNotFoundException()
         return daemon_config
 
-    def get_service_demo_component_build_status(self):
+    def get_service_demo_component_build_status(self, request: GetCodeBuildStatusRequest):
+        build_id: str | None = None
         try:
-            service = self.get_service_for_given_service_uuid()
+            service = self.get_service_for_given_service_uuid(request.org_uuid, request.service_uuid)
             if service:
                 build_id = service["media"]["demo_files"]["build_id"]
                 build_response = boto_util.get_code_build_details(build_ids=[build_id])
                 build_data = [data for data in build_response['builds'] if data['id'] == build_id]
                 status = build_data[0]['buildStatus']
             else:
-                raise Exception(f"service for org {self._org_uuid} and service {service} is not found")
+                raise Exception(f"service for org {request.org_uuid} and service {service} is not found")
             return {"build_status": status}
         except Exception as e:
             logger.info(
-                f"error in triggering build_id {build_id} for service {self._service_uuid} and org {self._org_uuid} :: error {repr(e)}")
+                f"error in triggering build_id {build_id} for service {request.service_uuid} and org {request.org_uuid} :: error {repr(e)}"
+            )
             raise e
 
     def get_existing_offchain_configs(self, existing_service_data):
@@ -434,9 +552,7 @@ class ServicePublisherService:
     def are_blockchain_attributes_got_updated(self, existing_metadata, current_service_metadata):
         change = DeepDiff(current_service_metadata, existing_metadata)
         logger.info(f"Change in blockchain attributes::{change}")
-        if change:
-            return True
-        return False
+        return True if change else False
 
     def get_offchain_changes(self, current_offchain_config, existing_offchain_config, current_service):
         changes = {}
@@ -458,25 +574,74 @@ class ServicePublisherService:
         changes.update({"demo_component": demo_changes})
         return changes
 
-    def publish_offchain_service_configs(self, org_id, service_id, payload):
-        response = requests.post(
-            PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT.format(org_id, service_id), data=payload)
-        if response.status_code != 200:
-            raise Exception("Error in updating offchain service attributes")
+    def publish_offchain_service_configs(self, org_id, service_id, payload, token_name):
+        publish_offchain_attributes_arn = settings.lambda_arn.PUBLISH_OFFCHAIN_ATTRIBUTES_ARN[token_name]
+        logger.info(f"publish attributes arn: {publish_offchain_attributes_arn}")
+        payload = {
+            "httpMethod": "POST",
+            "pathParameters": {
+                "orgId": org_id,
+                "serviceId": service_id
+            },
+            "body": payload
+        }
+        response = boto_util.invoke_lambda(
+            publish_offchain_attributes_arn,
+            "RequestResponse",
+            json.dumps(payload)
+        )
 
-    def get_existing_service_details_from_contract_api(self, service_id, org_id):
-        response = requests.get(GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT.format(org_id, service_id))
-        if response.status_code != 200:
+        logger.info(f"Publish attributes response: {response}")
+        response = json.loads(response.get("body"))
+        logger.info(f"Get service response body: {response}")
+
+        if response["status"] != "success":
+            raise Exception(f"Error in publishing offchain service attributes for org_id :: {org_id} service_id :: {service_id}")
+
+
+    def get_existing_service_details_from_contract_api(self, service_id, org_id, token_name):
+        get_service_arn = settings.lambda_arn.GET_SERVICE_FOR_GIVEN_ORG_LAMBDAS[token_name]
+        logger.info(f"get service arn: {get_service_arn}")
+        payload = {
+            "httpMethod": "GET",
+            "pathParameters": {
+                "orgId": org_id,
+                "serviceId": service_id
+            }
+        }
+        response = boto_util.invoke_lambda(
+            get_service_arn,
+            "RequestResponse",
+            json.dumps(payload)
+        )
+
+        logger.info(f"Get service response: {response}")
+        response = json.loads(response.get("body"))
+        logger.info(f"Get service response body: {response}")
+
+        if response["status"] != "success":
             raise Exception(f"Error getting service details for org_id :: {org_id} service_id :: {service_id}")
         logger.debug(f"Get service by org_id from contract_api :: {response}")
-        return json.loads(response.text)["data"]
 
-    def publish_new_offchain_configs(self, current_service: Service, storage_provider: StorageProviderType) -> Dict[str, Union[bool, str]]:
-        organization = OrganizationPublisherRepository().get_organization(org_uuid=self._org_uuid)
+        return response["data"]
+
+    def publish_new_offchain_configs(
+        self,
+        username: str,
+        current_service: Service,
+        request: PublishServiceRequest
+    ) -> Dict[str, Union[bool, str]]:
+        organization = OrganizationPublisherRepository().get_organization(org_uuid=request.org_uuid)
+        if organization is None:
+            raise BadRequestException()
+
         logger.debug(f"Current organization :: {organization.to_response()}")
 
+        service_mpe_address = current_service.mpe_address
+        token_name = self.__get_token_name(service_mpe_address)
+
         existing_service_data = self.get_existing_service_details_from_contract_api(
-            current_service.service_id, organization.id
+            current_service.service_id, organization.id, token_name
         )
         logger.debug(f"Existing service data :: {existing_service_data}")
 
@@ -491,7 +656,7 @@ class ServicePublisherService:
 
         existing_offchain_configs = self.get_existing_offchain_configs(existing_service_data)
         current_offchain_configs = ServicePublisherRepository().get_offchain_service_config(
-            org_uuid=self._org_uuid, service_uuid=self._service_uuid
+            org_uuid=request.org_uuid, service_uuid=request.service_uuid
         )
 
         logger.debug(f"Current offchain configs :: {current_offchain_configs}")
@@ -505,16 +670,29 @@ class ServicePublisherService:
         logger.debug(f"New offchain configs :: {new_offchain_configs}")
 
         status = self._prepare_publish_status(
-            organization, current_service, storage_provider, publish_to_blockchain, new_offchain_configs
+            username,
+            organization,
+            current_service,
+            request.storage_provider,
+            publish_to_blockchain,
+            new_offchain_configs,
+            token_name,
         )
         logger.debug(f"Prepare publish status result :: {status}")
 
         return status
 
-    def _prepare_publish_status(self, organization: Organization, current_service: Service,
-                                storage_provider: StorageProviderType, publish_to_blockchain: bool,
-                                new_offchain_configs: Dict[str, any]):
-        status = {"publish_to_blockchain": publish_to_blockchain}
+    def _prepare_publish_status(
+        self,
+        username: str,
+        organization: Organization,
+        current_service: Service,
+        storage_provider: StorageProviderType,
+        publish_to_blockchain: bool,
+        new_offchain_configs: Dict[str, Any],
+        token_name: str
+    ):
+        status: Dict[str, str | bool] = {"publish_to_blockchain": publish_to_blockchain}
 
         if publish_to_blockchain:
             filepath = FileUtils.create_temp_json_file(current_service.to_metadata())
@@ -526,24 +704,33 @@ class ServicePublisherService:
         self.publish_offchain_service_configs(
             org_id=organization.id,
             service_id=current_service.service_id,
-            payload=json.dumps(new_offchain_configs)
+            payload=json.dumps(new_offchain_configs),
+            token_name=token_name
         )
 
         if not publish_to_blockchain:
             ServicePublisherRepository().save_service(
-                username=self._username,
+                username=username,
                 service=current_service,
                 state=ServiceStatus.PUBLISHED.value
             )
 
         return status
 
-    def publish_service(self, storage_provider: str):
-        storage_provider_enum = validate_storage_provider(storage_provider)
-        current_service = self.publish_service_data_to_storage_provider(storage_provider_enum=storage_provider_enum)
+    def publish_service(self, username: str, request: PublishServiceRequest):
+        current_service = self.publish_service_data_to_storage_provider(username, request)
         logger.debug(f"Current service :: {current_service.to_dict()}")
 
         if not Service.is_metadata_valid(service_metadata=current_service.to_metadata()):
             raise InvalidMetadataException()
 
-        return self.publish_new_offchain_configs(current_service, storage_provider_enum)
+        return self.publish_new_offchain_configs(username, current_service, request)
+
+    @staticmethod
+    def __get_token_name(mpe_address) -> str:
+        mpe_contract = BlockChainUtil.load_contract(MPE_ADDR_PATH)
+        network_data = mpe_contract[str(NETWORK_ID)]
+        for token, data in network_data.items():
+            if data[settings.stage]["address"] == mpe_address:
+                return token
+        raise Exception(f"Unable to find token name for mpe address {mpe_address}")
