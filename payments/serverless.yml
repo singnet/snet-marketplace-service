@@ -4,12 +4,6 @@ plugins:
 
 service: payment-service
 custom:
-  pythonRequirements:
-    fileName: payments/requirements.txt
-    dockerizePip: true
-    useDownloadCache: true
-    useStaticCache: true
-    cacheLocation: '/var/cache/serverless'
   prune:
     automatic: true
     includeLayers: true

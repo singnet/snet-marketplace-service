@@ -5,12 +5,6 @@ plugins:
 
 service: signer
 custom:
-  pythonRequirements:
-    fileName: signer/requirements.txt
-    dockerizePip: true
-    useDownloadCache: true
-    useStaticCache: true
-    cacheLocation: '/var/cache/serverless'
   prune:
     automatic: true
     includeLayers: true

@@ -4,12 +4,6 @@ plugins:
 service: notification
 
 custom:
-  pythonRequirements:
-    fileName: event_pubsub/requirements.txt
-    dockerizePip: true
-    useDownloadCache: true
-    useStaticCache: true
-    cacheLocation: '/var/cache/serverless'
   prune:
     automatic: true
     includeLayers: true

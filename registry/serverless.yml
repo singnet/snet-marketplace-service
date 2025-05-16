@@ -16,6 +16,7 @@ provider:
     - ${file(./config.${self:provider.stage}.json):GeneralPythonLibsMP}
     - ${file(./config.${self:provider.stage}.json):GrpcPythonLibsMP}
     - ${file(./config.${self:provider.stage}.json):OptionalPythonLibsMP}
+    - ${file(./config.${self:provider.stage}.json):SnetContract}
   deploymentBucket:
     name: snet-serverless-artifacts
     serverSideEncryption: AES256
@@ -24,12 +25,6 @@ provider:
   deploymentPrefix: serverless
 
 custom:
-  pythonRequirements:
-    fileName: registry/requirements.txt
-    dockerizePip: true
-    useDownloadCache: true
-    useStaticCache: true
-    cacheLocation: "/var/cache/serverless"
   prune:
     automatic: true
     includeLayers: true
@@ -89,8 +84,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -121,8 +114,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -154,8 +145,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -187,8 +176,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -220,8 +207,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -252,8 +237,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   publish-organization:
     warmup: true
@@ -266,8 +249,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -299,8 +280,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -332,8 +311,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -370,8 +347,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -444,8 +419,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -510,8 +483,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -584,8 +555,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   service_event_consumer_handler:
     warmup: true
@@ -598,8 +567,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   org-update-transaction:
     handler: registry.application.handlers.organization_handlers.update_transaction
@@ -611,8 +578,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
           rate: rate(10 minutes)
@@ -628,8 +593,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -661,8 +624,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -694,8 +655,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: PUT
@@ -727,8 +686,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: PATCH
@@ -760,8 +717,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -793,8 +748,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -826,8 +779,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -859,8 +810,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -892,8 +841,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -924,8 +871,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -958,8 +903,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   service_deployment_status_notification_handler:
     warmup: true
@@ -973,8 +916,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   service-update-transaction:
     handler: registry.application.handlers.service_handlers.update_transaction
@@ -986,8 +927,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
           rate: rate(10 minutes)
@@ -1003,8 +942,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -1031,8 +968,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - s3:
           bucket: ${file(./config.${self:provider.stage}.json):ASSETS_BUCKET}
@@ -1076,8 +1011,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   publish_service:
     warmup: true

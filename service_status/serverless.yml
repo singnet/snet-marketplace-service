@@ -4,12 +4,6 @@ plugins:
 
 service: service-status
 custom:
-  pythonRequirements:
-    fileName: service_status/requirements.txt
-    dockerizePip: true
-    useDownloadCache: true
-    useStaticCache: true
-    cacheLocation: '/var/cache/serverless'
   prune:
     automatic: true
     includeLayers: true
