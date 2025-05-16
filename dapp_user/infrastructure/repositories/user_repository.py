@@ -55,7 +55,7 @@ class UserRepository:
             raise UserAlreadyExistException()
         query_parameters = [user.email, "", user.origin, user.name, user.email, user.email_verified,
                             user.email_verified, "", "", dt.utcnow(), dt.utcnow()]
-        query_response = self._repo.execute(
+        self._repo.execute(
             "INSERT INTO user (username, account_id, origin, name, email, email_verified, status, request_id, "
             "request_time_epoch, row_created, row_updated) "
             "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", query_parameters)

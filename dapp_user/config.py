@@ -1,4 +1,3 @@
-from enum import Enum
 from dapp_user.constant import SourceDApp
 NETWORKS = {
     3: {

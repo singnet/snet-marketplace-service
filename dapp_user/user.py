@@ -1,7 +1,5 @@
-import json
 from datetime import datetime as dt
 
-import boto3
 from schema import Schema, And
 
 from common.boto_utils import BotoUtils

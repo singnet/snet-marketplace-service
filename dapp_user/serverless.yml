@@ -11,7 +11,7 @@ custom:
 
 provider:
   name: aws
-  runtime: python3.8
+  runtime: python3.12
   description: Dapp user service# optional, Description to publish to AWS
   memorySize: 128
   timeout: 30
@@ -59,7 +59,6 @@ package:
 
 functions:
   get-user-preference:
-    warmup: true
     handler: dapp_user/application/handlers/user_handlers.get_user_preference
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -90,7 +89,6 @@ functions:
               - x-requested-with
 
   enable-disable-user-preference:
-    warmup: true
     handler: dapp_user/application/handlers/user_handlers.add_or_update_user_preference
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -121,7 +119,6 @@ functions:
               - x-requested-with
 
   dapp-user:
-    warmup: true
     handler: dapp_user/lambda_handler.request_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -280,7 +277,6 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
   delete-user:
-    warmup: true
     handler: dapp_user/application/handlers/user_handlers.delete_user
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -311,7 +307,6 @@ functions:
               - x-requested-with
 
   register-user-post-aws-cognito-signup:
-    warmup: true
     handler: dapp_user/application/handlers/user_handlers.register_user_post_aws_cognito_signup
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
