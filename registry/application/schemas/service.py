@@ -35,7 +35,7 @@ class VerifyServiceIdRequest(BaseModel):
 class SaveTransactionHashRequest(BaseModel):
     org_uuid: str
     service_uuid: str
-    transaction_hash: str | None
+    transaction_hash: str | None = None
    
     @classmethod
     def validate_event(cls, event: dict) -> "SaveTransactionHashRequest":
@@ -171,8 +171,8 @@ class GetServicesForOrganizationRequest(BaseModel):
     limit: int = Field(default=10)
     search_string: str | None = Field(default="", alias="q")
     search_attribute: str | None = Field(default="", alias="s")
-    sort_by: str | None
-    order_by: str | None
+    sort_by: str | None = None
+    order_by: str | None = None
     filters: list | None = Field(default_factory=list)
 
     @classmethod

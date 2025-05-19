@@ -173,8 +173,8 @@ class SaveTransactionHashForOrganizationRequest(BaseModel):
 
 class GetAllMembersRequest(BaseModel):
     org_uuid: str
-    status: str | None
-    role: str | None
+    status: str | None = None
+    role: str | None = None
    
     @classmethod
     def validate_event(cls, event: dict) -> "GetAllMembersRequest":
@@ -330,7 +330,7 @@ class VerifyOrgRequest(BaseModel):
     username: str | None = None
     org_uuid: str | None = None
     comment: str | None = None
-    org_type: str | None = None 
+    org_type: str | None = None
 
     @field_validator("verification_type")
     @classmethod
