@@ -595,10 +595,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - sqs:
-          arn:
-            Fn::GetAtt:
-              - mpeEventConsumerQueue
-              - Arn
+          arn: !GetAtt mpeEventConsumerQueue.Arn
           batchSize: 1
 
   registry_event_consumer:
@@ -613,10 +610,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - sqs:
-          arn:
-            Fn::GetAtt:
-              - registryEventConsumerQueue
-              - Arn
+          arn: !GetAtt registryEventConsumerQueue.Arn
           batchSize: 1
 
   service_create_deployment_handler:
