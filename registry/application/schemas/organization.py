@@ -183,7 +183,7 @@ class GetAllMembersRequest(BaseModel):
             assert event.get("queryStringParameters") is not None, "Missing queryStringParameters"
 
             query_string_parameters = event["queryStringParameters"]
-            path_parameters = event["pathPerameters"]
+            path_parameters = event["pathParameters"]
 
             data = {
                 **path_parameters,
@@ -206,7 +206,7 @@ class GetMemberRequest(BaseModel):
     def validate_event(cls, event: dict) -> "GetMemberRequest":
         try:
             assert event.get("pathParameters") is not None, "Missing pathParameters"
-            return cls.model_validate(event["pathPerameters"])
+            return cls.model_validate(event["pathParameters"])
 
         except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
