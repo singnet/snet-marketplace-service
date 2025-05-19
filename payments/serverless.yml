@@ -13,8 +13,7 @@ custom:
 
 provider:
   name: aws
-  runtime: python3.8
-  description: Payment Service #optional, Description to publish to AWS
+  runtime: python3.12
   memorySize: 512
   timeout: 60
   region: ${file(./config.${self:provider.stage}.json):REGION}
