@@ -94,7 +94,7 @@ resources:
               Resource: !GetAtt mpeEventConsumerQueue.Arn
               Condition:
                 ArnEquals:
-                  aws:SourceArn: !GetAtt ${file(./config.${self:provider.stage}.json):MPE_TOPIC_ARN}
+                  aws:SourceArn: ${file(./config.${self:provider.stage}.json):MPE_TOPIC_ARN}
         Queues:
           - !Ref mpeEventConsumerQueue
 
@@ -103,7 +103,7 @@ resources:
       Properties:
         Protocol: sqs
         Endpoint: !GetAtt mpeEventConsumerQueue.Arn
-        TopicArn: !GetAtt ${file(./config.${self:provider.stage}.json):MPE_TOPIC_ARN}
+        TopicArn: ${file(./config.${self:provider.stage}.json):MPE_TOPIC_ARN}
 
     mpeEventConsumerDLQ:
       Type: AWS::SQS::Queue
@@ -156,7 +156,7 @@ resources:
               Resource: !GetAtt registryEventConsumerQueue.Arn
               Condition:
                 ArnEquals:
-                  aws:SourceArn: !GetAtt ${file(./config.${self:provider.stage}.json):REGISTRY_TOPIC_ARN}
+                  aws:SourceArn: ${file(./config.${self:provider.stage}.json):REGISTRY_TOPIC_ARN}
         Queues:
           - !Ref registryEventConsumerQueue
 
@@ -165,7 +165,7 @@ resources:
       Properties:
         Protocol: sqs
         Endpoint: !GetAtt registryEventConsumerQueue.Arn
-        TopicArn: !GetAtt ${file(./config.${self:provider.stage}.json):REGISTRY_TOPIC_ARN}
+        TopicArn: ${file(./config.${self:provider.stage}.json):REGISTRY_TOPIC_ARN}
 
     registryEventConsumerDLQ:
       Type: AWS::SQS::Queue
@@ -595,7 +595,10 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - sqs:
-          arn: !GetAtt mpeEventConsumerQueue.Arn
+          arn:
+            Fn::GetAtt:
+              - mpeEventConsumerQueue
+              - Arn
           batchSize: 1
 
   registry_event_consumer:
@@ -610,7 +613,10 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - sqs:
-          arn: !GetAtt registryEventConsumerQueue.Arn
+          arn:
+            Fn::GetAtt:
+              - registryEventConsumerQueue
+              - Arn
           batchSize: 1
 
   service_create_deployment_handler:
