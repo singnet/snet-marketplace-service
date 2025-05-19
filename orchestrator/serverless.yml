@@ -1,6 +1,7 @@
 plugins:
   - serverless-offline
   - serverless-prune-plugin
+  - serverless-latest-layer-version
 
 service: orchestrator
 custom:

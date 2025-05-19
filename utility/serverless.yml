@@ -1,12 +1,12 @@
 plugins:
   - serverless-offline
   - serverless-prune-plugin
+  - serverless-latest-layer-version
 
 service: common-utility
 provider:
   name: aws
-  runtime: python3.8
-  description: utility operations for snet
+  runtime: python3.12
   memorySize: 512
   timeout: 30
   region: ${file(./config.${self:provider.stage}.json):REGION}
@@ -101,7 +101,6 @@ functions:
           enabled: true
 
   currency-to-token-conversion:
-    warmup: true
     handler: utility/application/handlers.crypto_fiat_handler.get_agi_fiat_rate
     role: ${file(./config.${self:provider.stage}.json):AGI_ROLE}
     vpc:
