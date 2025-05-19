@@ -3,7 +3,6 @@ import json
 import boto3
 import grpc
 from urllib.parse import urlparse
-import web3
 
 from common.blockchain_util import BlockChainUtil
 from common.logger import get_logger

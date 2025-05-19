@@ -65,20 +65,20 @@ class ServiceEventConsumer(EventConsumer):
         event_data = event['data']
         service_data = ast.literal_eval(event_data['json_str'])
         org_id_bytes = service_data['orgId']
-        org_id = Web3.toText(org_id_bytes).rstrip("\x00")
+        org_id = Web3.to_text(org_id_bytes).rstrip("\x00")
         return org_id
 
     def _get_service_id_from_event(self, event):
         event_data = event['data']
         service_data = ast.literal_eval(event_data['json_str'])
         service_id_bytes = service_data['serviceId']
-        service_id = Web3.toText(service_id_bytes).rstrip("\x00")
+        service_id = Web3.to_text(service_id_bytes).rstrip("\x00")
         return service_id
 
     def _get_metadata_uri_from_event(self, event):
         event_data = event['data']
         service_data = ast.literal_eval(event_data['json_str'])
-        metadata_uri = Web3.toText(service_data['metadataURI']).rstrip("\u0000")
+        metadata_uri = Web3.to_text(service_data['metadataURI']).rstrip("\u0000")
         return metadata_uri
 
     def _get_registry_contract(self):

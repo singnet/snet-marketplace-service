@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+import datetime as dt
 
 from contract_api.dao.common_repository import CommonRepository
 from common.logger import get_logger
@@ -16,8 +16,9 @@ class ServiceRepository(CommonRepository):
         upsrt_service = "INSERT INTO service (org_id, service_id, is_curated, hash_uri, row_created, row_updated) " \
                         "VALUES (%s, %s, %s, %s, %s, %s) " \
                         "ON DUPLICATE KEY UPDATE hash_uri = %s, row_updated = %s "
+        current_datetime = dt.datetime.now(dt.UTC)
         upsrt_service_params = [org_id, service_id, 0, hash_uri,
-                                datetime.utcnow(), datetime.utcnow(), hash_uri, datetime.utcnow()]
+                                current_datetime, current_datetime, hash_uri, current_datetime]
         query_response = self.connection.execute(upsrt_service, upsrt_service_params)
         return query_response[len(query_response) - 1]
 
@@ -39,16 +40,17 @@ class ServiceRepository(CommonRepository):
         assets_url_str = json.dumps(assets_url)
         contributors = json.dumps(service_metadata.get('contributors', {}))
         model_hash = service_metadata.get('service_api_source', '')
+        current_datetime = dt.datetime.now(dt.UTC)
         upsrt_service_metadata_params = [service_row_id, org_id, service_id, service_metadata['display_name'],
                                          model_hash, desc, short_desc, url, json_str,
                                          service_metadata['encoding'], service_metadata['service_type'],
                                          service_metadata['mpe_address'], assets_hash, assets_url_str,
                                          '{"rating": 0.0 , "total_users_rated": 0 }', contributors,
-                                         datetime.utcnow(), datetime.utcnow(),service_row_id,
+                                         current_datetime, current_datetime,service_row_id,
                                          service_metadata['display_name'], model_hash,
                                          desc, short_desc, url, json_str, service_metadata['encoding'],
                                          service_metadata['service_type'], service_metadata['mpe_address'],
-                                         datetime.utcnow(), assets_hash, assets_url_str, contributors]
+                                         current_datetime, assets_hash, assets_url_str, contributors]
 
         self.connection.execute(upsrt_servicec_metadata, upsrt_service_metadata_params)
 
@@ -57,16 +59,18 @@ class ServiceRepository(CommonRepository):
                            "is_available, row_created, row_updated) " \
                            "VALUES(%s, %s, %s, %s, %s, %s, %s, %s)"
         is_available = 1
+        current_datetime = dt.datetime.now(dt.UTC)
         insert_endpoint_paramteres = [service_row_id, org_id, service_id, endpt_data['group_id'],
-                                      endpt_data['endpoint'], is_available, datetime.utcnow(), datetime.utcnow()]
+                                      endpt_data['endpoint'], is_available, current_datetime, current_datetime]
         return self.connection.execute(insert_endpoints, insert_endpoint_paramteres)
 
     def create_tags(self, service_row_id, org_id, service_id, tag_name):
         insrt_tag = "INSERT INTO service_tags (service_row_id, org_id, service_id, tag_name, row_created, row_updated) " \
                     "VALUES(%s, %s, %s, %s, %s, %s) " \
                     "ON DUPLICATE KEY UPDATE tag_name = %s, row_updated = %s "
+        current_datetime = dt.datetime.now(dt.UTC)
         insrt_tag_params = [service_row_id, org_id, service_id,
-                            tag_name, datetime.utcnow(), datetime.utcnow(), tag_name, datetime.utcnow()]
+                            tag_name, current_datetime, current_datetime, tag_name, current_datetime]
         # logger.info(f'insrt_tag_params: {" ".join(insrt_tag_params)}')
         qry_res = self.connection.execute(insrt_tag, insrt_tag_params)
         logger.info(f'_create_tags::qry_res: {qry_res}')
@@ -141,8 +145,9 @@ class ServiceRepository(CommonRepository):
         insert_group = "INSERT INTO service_group (service_row_id, org_id, service_id, group_id, group_name," \
                        "pricing,free_call_signer_address,free_calls,row_updated, row_created)" \
                        "VALUES(%s, %s, %s, %s, %s, %s, %s, %s ,%s ,%s)"
+        current_datetime = dt.datetime.now(dt.UTC)
         insert_group_param = [service_row_id, org_id, service_id, grp_data['group_id'], grp_data['group_name'],
-                              grp_data['pricing'],grp_data.get("free_call_signer_address","") ,grp_data.get("free_calls",0),datetime.utcnow(), datetime.utcnow()]
+                              grp_data['pricing'],grp_data.get("free_call_signer_address","") ,grp_data.get("free_calls",0),current_datetime, current_datetime]
 
         return self.connection.execute(insert_group, insert_group_param)
 
@@ -184,8 +189,9 @@ class ServiceRepository(CommonRepository):
 
         query = ("INSERT INTO service_media (org_id, service_id, url, `order`, file_type, asset_type, alt_text, hash_uri, "
                  "service_row_id ,created_on, updated_on) VALUES(%s, %s, %s, %s, %s, %s, %s, %s,%s, %s,%s)")
-        insert_media_parameters = (org_id,service_id,url,order,file_type,asset_type,alt_text,
-                                   hash_uri,service_row_id,datetime.now(),datetime.now())
+        current_datetime = dt.datetime.now(dt.UTC)
+        insert_media_parameters = (org_id, service_id, url, order, file_type, asset_type, alt_text,
+                                   hash_uri, service_row_id, current_datetime, current_datetime)
 
         self.connection.execute(query,insert_media_parameters)
 
