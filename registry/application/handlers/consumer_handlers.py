@@ -1,3 +1,5 @@
+import json
+
 from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.logger import get_logger
@@ -15,7 +17,7 @@ org_repository = OrganizationPublisherRepository()
 service_repository = ServicePublisherRepository()
 
 
-def get_event_consumer(event):
+def get_registry_event_consumer(event):
     if event["name"] in ["OrganizationCreated", "OrganizationModified"]:
         return OrganizationCreatedAndModifiedEventConsumer(
             ws_provider = NETWORKS[NETWORK_ID]["ws_provider"],
@@ -29,27 +31,31 @@ def get_event_consumer(event):
         )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-def organization_event_consumer_handler(event, context):
-    logger.info(f"Got Organization Event {event}")
-    organization_event_consumer = get_event_consumer(event)
+def get_payload_from_queue_event(event) -> list[dict]:
+    converted_events = []
+    records = event.get("Records", [])
+    logger.info(f"Event records: {records}")
+    if records:
+        for record in records:
+            body = record.get("body")
+            if body:
+                parsed_body = json.loads(body)
+                message = parsed_body.get("Message")
+                if message:
+                    payload = json.loads(message)
+                    converted_events.append(payload)
+    return converted_events
 
-    if organization_event_consumer is None:
-        raise Exception()
 
-    organization_event_consumer.on_event(event)
+def registry_event_consumer_handler(event, context):
+    logger.info(f"Got Registry event {event}")
+    events = get_payload_from_queue_event(event)
 
-    return generate_lambda_response(200, StatusCode.OK)
-
-
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
-def service_event_consumer_handler(event, context):
-    logger.info(f"Got Service Event {event}")
-    service_event_consumer = get_event_consumer(event)
-
-    if service_event_consumer is None:
-        raise Exception()
-
-    service_event_consumer.on_event(event)
-
-    return generate_lambda_response(200, StatusCode.OK)
+    for e in events:
+        consumer = get_registry_event_consumer(e)
+        if consumer is None:
+            logger.info(f"Unhandled Registry event: {e}")
+            continue
+        logger.info(f"Processing Registry event: {e}")
+        consumer.on_event(e)
+    return {}
