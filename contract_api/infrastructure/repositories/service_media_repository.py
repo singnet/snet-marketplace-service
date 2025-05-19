@@ -2,7 +2,7 @@ from contract_api.domain.factory.service_factory import ServiceFactory
 from contract_api.infrastructure.models import ServiceMedia
 from contract_api.infrastructure.repositories.base_repository import BaseRepository
 from sqlalchemy.exc import SQLAlchemyError
-from datetime import datetime as dt
+import datetime as dt
 
 
 class ServiceMediaRepository(BaseRepository):
@@ -22,6 +22,7 @@ class ServiceMediaRepository(BaseRepository):
         return service_media_list
 
     def create_service_media(self, org_id, service_id, service_media):
+        current_datetime = dt.datetime.now(dt.UTC)
         self.add_item(ServiceMedia(
             service_row_id=service_media.service_row_id,
             org_id=org_id,
@@ -32,8 +33,8 @@ class ServiceMediaRepository(BaseRepository):
             asset_type=service_media.asset_type,
             alt_text=service_media.alt_text,
             hash_uri=service_media.hash_uri,
-            created_on=dt.utcnow(),
-            updated_on=dt.utcnow()
+            created_on=current_datetime,
+            updated_on=current_datetime
         ))
 
     def delete_service_media(self, org_id, service_id, asset_types=None, file_types=None):

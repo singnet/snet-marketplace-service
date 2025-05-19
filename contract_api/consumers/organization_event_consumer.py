@@ -57,7 +57,7 @@ class OrganizationEventConsumer(EventConsumer):
     def _get_org_id_from_event(self, event):
         event_org_data = ast.literal_eval(event['data']['json_str'])
         org_id_bytes = event_org_data['orgId']
-        org_id = Web3.toText(org_id_bytes).rstrip("\x00")
+        org_id = Web3.to_text(org_id_bytes).rstrip("\x00")
         return org_id
 
     def _get_registry_contract(self):
@@ -83,7 +83,7 @@ class OrganizationEventConsumer(EventConsumer):
             org_id.encode("utf-8")
         ).call()
 
-        org_metadata_uri = Web3.toText(blockchain_org_data[2]).rstrip("\x00")
+        org_metadata_uri = Web3.to_text(blockchain_org_data[2]).rstrip("\x00")
         logger.info(f"Organization metadata uri hash: {org_metadata_uri}")
 
         org_metadata = self._storage_provider.get(org_metadata_uri)

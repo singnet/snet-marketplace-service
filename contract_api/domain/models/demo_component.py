@@ -1,6 +1,3 @@
-import json
-from datetime import datetime as dt
-
 
 class DemoComponent:
     def __init__(self, demo_component_required, demo_component_url="", demo_component_status=""):

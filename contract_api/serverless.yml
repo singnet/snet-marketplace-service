@@ -6,8 +6,7 @@ plugins:
 service: contract-api
 provider:
   name: aws
-  runtime: python3.8
-  description: Description of what the lambda function does # optional, Description to publish to AWS
+  runtime: python3.12
   memorySize: 512
   timeout: 30
   region: ${file(./config.${self:provider.stage}.json):REGION}
@@ -197,7 +196,6 @@ resources:
 
 functions:
   get_all_org:
-    warmup: true
     handler: contract_api/handlers.organization_handlers.get_all_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -223,7 +221,6 @@ functions:
               - x-requested-with
 
   get_org_for_org_id:
-    warmup: true
     handler: contract_api/handlers.organization_handlers.get_org_for_org_id
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -253,7 +250,6 @@ functions:
               - x-requested-with
 
   get_all_group_for_org:
-    warmup: true
     handler: contract_api/handlers.organization_handlers.get_all_group_for_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -283,7 +279,6 @@ functions:
               - x-requested-with
 
   get_group_for_org_id:
-    warmup: true
     handler:  contract_api/handlers.organization_handlers.get_group_for_org_id
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -313,7 +308,6 @@ functions:
               - x-requested-with
 
   get_service_get:
-    warmup: true
     handler: contract_api/handlers.service_handlers.get_service_get
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -339,7 +333,6 @@ functions:
               - x-requested-with
 
   get_service_post:
-    warmup: true
     handler: contract_api/handlers.service_handlers.get_service_post
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -365,7 +358,6 @@ functions:
               - x-requested-with
 
   get_group_for_service:
-    warmup: true
     handler:  contract_api/handlers.service_handlers.get_group_for_service
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -396,7 +388,6 @@ functions:
               - x-requested-with
 
   get_service_for_given_org:
-    warmup: true
     handler: contract_api/handlers.service_handlers.get_service_for_given_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -427,7 +418,6 @@ functions:
               - x-requested-with
 
   post_rating_for_given_service:
-    warmup: true
     handler: contract_api/handlers.service_handlers.post_rating_for_given_service
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -448,7 +438,6 @@ functions:
                 serviceId: true
 
   get_channels_for_group:
-    warmup: true
     handler: contract_api/handlers.channel_handlers.get_channels_for_group
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -479,7 +468,6 @@ functions:
               - x-requested-with
 
   get_channels_old_api:
-    warmup: true
     handler: contract_api/handlers.channel_handlers.get_channels_old_api
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -505,7 +493,6 @@ functions:
               - x-requested-with
 
   get_channel:
-    warmup: true
     handler: contract_api/handlers.channel_handlers.get_channels
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -596,37 +583,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
-#  organization_event_consumer:
-#    warmup: true
-#    handler: contract_api/handlers.consumer_handlers.organization_event_consumer_handler
-#    role: ${file(./config.${self:provider.stage}.json):ROLE}
-#    vpc:
-#      securityGroupIds:
-#        - ${file(./config.${self:provider.stage}.json):SG1}
-#        - ${file(./config.${self:provider.stage}.json):SG2}
-#      subnetIds:
-#        - ${file(./config.${self:provider.stage}.json):VPC1}
-#        - ${file(./config.${self:provider.stage}.json):VPC2}
-#    layers:
-#      - ${file(./config.${self:provider.stage}.json):SnetContract}
-#
-#  service_event_consumer:
-#    warmup: true
-#    handler: contract_api/handlers.consumer_handlers.service_event_consumer_handler
-#    role: ${file(./config.${self:provider.stage}.json):ROLE}
-#    timeout: 60
-#    vpc:
-#      securityGroupIds:
-#        - ${file(./config.${self:provider.stage}.json):SG1}
-#        - ${file(./config.${self:provider.stage}.json):SG2}
-#      subnetIds:
-#        - ${file(./config.${self:provider.stage}.json):VPC1}
-#        - ${file(./config.${self:provider.stage}.json):VPC2}
-#    layers:
-#      - ${file(./config.${self:provider.stage}.json):SnetContract}
-
   mpe_event_consumer:
-    warmup: true
     handler: contract_api/handlers.consumer_handlers.mpe_event_consumer_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -645,7 +602,6 @@ functions:
           batchSize: 1
 
   registry_event_consumer:
-    warmup: true
     handler: contract_api/handlers.consumer_handlers.registry_event_consumer_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -664,7 +620,6 @@ functions:
           batchSize: 1
 
   service_create_deployment_handler:
-    warmup: true
     handler: contract_api/handlers.consumer_handlers.service_create_deployment_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE1}
     vpc:
