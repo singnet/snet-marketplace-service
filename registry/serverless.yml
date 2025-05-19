@@ -452,8 +452,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-      - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -520,8 +518,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-      - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -588,8 +584,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -1087,8 +1081,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-      - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
