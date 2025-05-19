@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 import boto3
 import grpc
 import web3
-from eth_account.messages import defunct_hash_message
+from eth_account.messages import encode_defunct
 from web3 import Web3
 
 from common.blockchain_util import BlockChainUtil
@@ -137,7 +137,7 @@ class Signer:
                 provider = Web3.HTTPProvider(
                     NETWORKS[self.net_id]["http_provider"])
                 w3 = Web3(provider)
-                message = web3.Web3.soliditySha3(
+                message = web3.Web3.solidity_keccak(
                     ["string", "string", "string", "string", "uint256"],
                     [
                         PREFIX_FREE_CALL, username, org_id, service_id,
@@ -148,8 +148,8 @@ class Signer:
                 if not signer_key.startswith("0x"):
                     signer_key = "0x" + signer_key
                 signature = bytes(
-                    w3.eth.account.signHash(defunct_hash_message(message),
-                                            signer_key).signature)
+                    w3.eth.account.sign_message(encode_defunct(message), signer_key).signature
+                )
                 signature = signature.hex()
                 if not signature.startswith("0x"):
                     signature = "0x" + signature
@@ -230,13 +230,13 @@ class Signer:
                   group_id, amount_in_cogs, expiration, message_nonce]
         signature = self.obj_blockchain_utils.generate_signature(data_types=data_types, values=values,
                                                                  signer_key=sender_private_key)
-        v, r, s = Web3.toInt(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
+        v, r, s = Web3.to_int(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
         return {"r": r, "s": s, "v": v, "signature": signature}
 
     def _get_no_of_free_calls_from_daemon(self, email, token_to_get_free_call, expiry_date_block, signature,
                                           current_block_number, daemon_endpoint):
 
-        request = state_service_pb2.FreeCallStateRequest()
+        request = state_service_pb2.free_CallStateRequest()
         request.user_id = email
         request.token_for_free_call = token_to_get_free_call
         request.token_expiry_date_block = expiry_date_block
@@ -293,7 +293,7 @@ class Signer:
                         service_id, org_id, group_id)
 
     def token_to_get_free_call(self, email, org_id, service_id, group_id):
-        signer_public_key_checksum = Web3.toChecksumAddress(SIGNER_ADDRESS)
+        signer_public_key_checksum = Web3.to_checksum_address(SIGNER_ADDRESS)
         current_block_number = self.obj_blockchain_utils.get_current_block_no()
         expiry_date_block = current_block_number + FREE_CALL_EXPIRY
         token_to_get_free_call = self.obj_blockchain_utils.generate_signature_bytes(["string", "address", "uint256"],
@@ -321,7 +321,7 @@ class Signer:
                                         current_block_number, daemon_endpoint):
             token_with_expiry_to_make_free_call = self.obj_blockchain_utils.generate_signature_bytes(
                 ["string", "address", "uint256"],
-                [email, Web3.toChecksumAddress(user_public_key),
+                [email, Web3.to_checksum_address(user_public_key),
                  expiry_date_block],
                 SIGNER_KEY)
         else:

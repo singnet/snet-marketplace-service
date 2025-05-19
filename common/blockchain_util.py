@@ -78,13 +78,13 @@ class BlockChainUtil(object):
     def generate_signature(self, data_types, values, signer_key):
         signer_key = "0x" + signer_key if not signer_key.startswith("0x") else signer_key
         message = Web3.solidity_keccak(data_types, values)
-        signature = self.web3_object.eth.account.sign_message(defunct_hash_message(message), signer_key)
+        signature = self.web3_object.eth.account._sign_hash(defunct_hash_message(message), signer_key)
         return signature.signature.hex()
 
     def generate_signature_bytes(self, data_types, values, signer_key):
         signer_key = "0x" + signer_key if not signer_key.startswith("0x") else signer_key
         message = Web3.solidity_keccak(data_types, values)
-        signature = self.web3_object.eth.account.sign_message(defunct_hash_message(message), signer_key)
+        signature = self.web3_object.eth.account._sign_hash(defunct_hash_message(message), signer_key)
         return bytes(signature.signature)
 
     def get_nonce(self, address):

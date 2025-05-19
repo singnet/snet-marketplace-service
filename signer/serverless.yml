@@ -12,8 +12,7 @@ custom:
 
 provider:
   name: aws
-  runtime: python3.9
-  description: Description of what the lambda function does # optional, Description to publish to AWS
+  runtime: python3.12
   memorySize: 128
   timeout: 30
   region: ${file(./config.${self:provider.stage}.json):REGION}
@@ -61,7 +60,6 @@ package:
 
 functions:
   signature-authenticator:
-    warmup: true
     handler: signer/signature_authenticator.main
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -73,7 +71,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
   signer:
-    warmup: true
     handler: signer/lambda_handler.request_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -158,7 +155,6 @@ functions:
               - x-requested-with
 
   free_call_token:
-    warmup: true
     handler: signer/lambda_handler.free_call_token_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -189,7 +185,6 @@ functions:
               - x-requested-with
 
   free-call-signer-address:
-    warmup: true
     handler: signer/lambda_handler.get_free_call_signer_address
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -220,7 +215,6 @@ functions:
               - x-requested-with
 
   signature-to-get-freecall-from-daemon:
-    warmup: true
     handler: signer/lambda_handler.signature_to_get_free_call_from_daemon_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:

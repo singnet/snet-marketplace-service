@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "dapp_user"
+name = "signer"
 version = "0.1.0"
 description = ""
 authors = ["Your Name <you@example.com>"]
@@ -12,14 +12,14 @@ boto3 = "1.37.30"
 web3 = "7.10.0"
 pymysql = "1.1.1"
 alembic = "1.15.2"
-grpcio = "1.71.0"
-deepdiff = "8.4.2"
 pydantic = "2.11.3"
 pydantic-settings = "2.8.1"
+ipfshttpclient = "0.4.13"
 sqlalchemy = "2.0.41"
 rlp = "4.1.0"
+cryptography = "44.0.2"
 grpcio-tools = "1.71.0"
-schema = "0.7.7"
+
 
 [tool.poetry.group.dev.dependencies]
 ruff = "0.11.4"
