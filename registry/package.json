@@ -4,7 +4,6 @@
   "description": "",
   "author": "SingularityNet",
   "dependencies": {
-    "serverless": "4.12.0",
     "serverless-latest-layer-version": "2.1.2",
     "serverless-prune-plugin": "2.1.0"
   },
