@@ -25,7 +25,7 @@ NETWORK_ID = settings.network.id
 CONTRACT_BASE_PATH = settings.network.networks[NETWORK_ID].contract_base_path
 
 
-class ServiceEventConsumer():
+class ServiceEventConsumer:
     def __init__(self, ws_provider, service_repository, organization_repository):
         self._blockchain_util = blockchain_util.BlockChainUtil(
             "WS_PROVIDER", ws_provider

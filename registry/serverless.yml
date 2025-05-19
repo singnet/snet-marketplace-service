@@ -33,6 +33,12 @@ custom:
     perFunction: false
     perType: true
     perGroupFunction: false
+  queue:
+    queueMessageRetention: ${file(./config.${self:provider.stage}.json):QUEUE_MESSAGE_RETENTION, 14400}
+    dlqMessageRetention: ${file(./config.${self:provider.stage}.json):DLQ_MESSAGE_RETENTION, 1209600}
+    queueMaxReceiveCount: ${file(./config.${self:provider.stage}.json):QUEUE_MAX_RECEIVE_COUNT, 2}
+    receiveMessageWaitTimeSeconds: ${file(./config.${self:provider.stage}.json):RECEIVE_MESSAGE_WAIT_TIME_SECONDS, 20}
+    messageVisibilityTimeout: ${file(./config.${self:provider.stage}.json):MESSAGE_VISIBILITY_TIMEOUT, 60}
 
 package:
   exclude:
@@ -72,6 +78,70 @@ package:
     - config.rt-v2.json
   include:
     - resources/**
+
+resources:
+  Resources:
+    registryEventConsumerQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${file(./config.${self:provider.stage}.json):REGISTRY_QUEUE}
+        VisibilityTimeout: ${self:custom.queue.messageVisibilityTimeout}
+        ReceiveMessageWaitTimeSeconds: ${self:custom.queue.receiveMessageWaitTimeSeconds}
+        MessageRetentionPeriod: ${self:custom.queue.queueMessageRetention}
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt registryEventConsumerDLQ.Arn
+          maxReceiveCount: ${self:custom.queue.queueMaxReceiveCount}
+
+    registryEventConsumerQueuePolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        PolicyDocument:
+          Id: registryEventConsumerQueue
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action:
+                - sqs:SendMessage
+              Resource: !GetAtt registryEventConsumerQueue.Arn
+              Condition:
+                ArnEquals:
+                  aws:SourceArn: ${file(./config.${self:provider.stage}.json):REGISTRY_TOPIC_ARN}
+        Queues:
+          - !Ref registryEventConsumerQueue
+
+    registryEventConsumerTopicSubscriptionForSQS:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Protocol: sqs
+        Endpoint: !GetAtt registryEventConsumerQueue.Arn
+        TopicArn: ${file(./config.${self:provider.stage}.json):REGISTRY_TOPIC_ARN}
+
+    registryEventConsumerDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${file(./config.${self:provider.stage}.json):REGISTRY_QUEUE}-dlq
+        VisibilityTimeout: ${self:custom.queue.messageVisibilityTimeout}
+        ReceiveMessageWaitTimeSeconds: ${self:custom.queue.receiveMessageWaitTimeSeconds}
+        MessageRetentionPeriod: ${self:custom.queue.dlqMessageRetention}
+
+    registryEventConsumerDLQPolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        PolicyDocument:
+          Id: registryEventConsumerDLQ
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action:
+                - sqs:SendMessage
+              Resource: !GetAtt registryEventConsumerDLQ.Arn
+              Condition:
+                ArnEquals:
+                  aws:SourceArn: !GetAtt registryEventConsumerQueue.Arn
+        Queues:
+          - !Ref registryEventConsumerDLQ
 
 functions:
   get_all_org:
@@ -544,9 +614,8 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-  organization_event_consumer_handler:
-    warmup: true
-    handler: registry.application.handlers.consumer_handlers.organization_event_consumer_handler
+  registry-event-consumer:
+    handler: registry.application.handlers.consumer_handlers.registry_event_consumer_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -555,18 +624,13 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-
-  service_event_consumer_handler:
-    warmup: true
-    handler: registry.application.handlers.consumer_handlers.service_event_consumer_handler
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - registryEventConsumerQueue
+              - Arn
+          batchSize: 1
 
   org-update-transaction:
     handler: registry.application.handlers.organization_handlers.update_transaction
