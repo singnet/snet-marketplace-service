@@ -85,9 +85,7 @@ class StorageProvider:
             try:
                 metadata_hash = self.__lighthouse_client.upload(file_path)["data"]["Hash"]
             except Exception as e:
-                raise LighthouseInternalException(
-                    "Internal Lighthouse server error. Please check your Lighthouse token."
-                )
+                raise LighthouseInternalException()
         else:
             raise ValueError(f"Unsupported provider type: {provider_type}")
         return self.hash_to_uri(metadata_hash, provider_type)

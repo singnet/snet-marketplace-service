@@ -250,7 +250,7 @@ class GetCodeBuildStatusRequest(BaseModel):
 class PublishServiceRequest(BaseModel):
     org_uuid: str
     service_uuid: str
-    storage_provider: StorageProviderType = Field(default=StorageProviderType.IPFS.value)
+    storage_provider: StorageProviderType = StorageProviderType.IPFS
     lighthouse_token: str | None = None
 
     @model_validator(mode="after")

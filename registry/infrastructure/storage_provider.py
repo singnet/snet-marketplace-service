@@ -83,7 +83,7 @@ class StorageProvider:
         elif provider_type == StorageProviderType.FILECOIN:
             try:
                 metadata_hash = self.__lighthouse_client.upload(file_path)["data"]["Hash"]
-            except Exception as _:
+            except Exception:
                 raise LighthouseInternalException()
         else:
             raise ValueError(f"Unsupported provider type: {provider_type}")
