@@ -60,6 +60,7 @@ class SaveServiceRequest(BaseModel):
     storage_provider: str | None = Field(default="")
     display_name: str | None = Field(default="")
     short_description: str | None = Field(default="")
+    description: str | None = Field(default="")
     project_url: str | None = Field(default="")
     service_type: str | None = Field(default=ServiceType.GRPC.value)
     contributors: list = Field(default_factory=list)
