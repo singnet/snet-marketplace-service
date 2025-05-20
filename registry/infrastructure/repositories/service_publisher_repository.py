@@ -120,7 +120,7 @@ class ServicePublisherRepository(BaseRepository):
         if service_db is None:
             raise ServiceNotFoundException()
 
-        return ServiceFactory().convert_service_db_model_to_entity_model(service_db) if service_db else None
+        return ServiceFactory().convert_service_db_model_to_entity_model(service_db)
 
     def save_service_comments(self, service_comment):
         self.add_item(

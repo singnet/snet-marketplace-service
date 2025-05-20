@@ -18,6 +18,7 @@ from registry.constants import (
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.domain.models.service import Service
 from registry.infrastructure.storage_provider import StorageProvider
+from registry.exceptions import ServiceNotFoundException
 
 logger = get_logger(__name__)
 BLOCKCHAIN_USER = "BLOCKCHAIN_USER"
@@ -54,7 +55,7 @@ class ServiceEventConsumer:
         org_id = Web3.to_text(org_id_bytes).rstrip("\x00")
         return org_id
 
-    def _get_tarnsaction_hash(self, event):
+    def _get_transaction_hash(self, event):
         return event["data"]["transaction_hash"]
 
     def _get_service_id_from_event(self, event):
@@ -99,7 +100,7 @@ class ServiceEventConsumer:
         # tags_data = self._fetch_tags(
         #     registry_contract=registry_contract, org_id_hex=org_id.encode("utf-8"),
         #     service_id_hex=service_id.encode("utf-8"))
-        transaction_hash = self._get_tarnsaction_hash(event)
+        transaction_hash = self._get_transaction_hash(event)
 
         return org_id, service_id, transaction_hash
 
@@ -123,11 +124,14 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         )
 
     def _get_existing_service_details(self, org_id, service_id):
-        org_uuid, existing_service = (
-            self._service_repository.get_service_for_given_service_id_and_org_id(
+        try:
+            existing_service = self._service_repository.get_service_for_given_service_id_and_org_id(
                 org_id, service_id
             )
-        )
+        except ServiceNotFoundException:
+            existing_service = None
+
+        org_uuid = self._organization_repository.get_organization().uuid
 
         return org_uuid, existing_service
 
@@ -199,7 +203,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             ]
             existing_service.storage_provider = storage_provider
 
-        recieved_service = Service(
+        received_service = Service(
             org_uuid=org_uuid,
             uuid=str(uuid4()),
             service_id=service_id,
@@ -222,7 +226,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         )
 
         if not existing_service:
-            self._service_repository.add_service(recieved_service, BLOCKCHAIN_USER)
+            self._service_repository.add_service(received_service, BLOCKCHAIN_USER)
         elif existing_service.service_state.transaction_hash is None:
             self._service_repository.save_service(
                 BLOCKCHAIN_USER, existing_service, ServiceStatus.DRAFT.value

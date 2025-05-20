@@ -64,7 +64,7 @@ class OrganizationEventConsumer:
 
         return registry_contract
 
-    def _get_tarnsaction_hash(self, event):
+    def _get_transaction_hash(self, event):
         return event["data"]["transaction_hash"]
 
     def _get_org_details_from_blockchain(self, event):
@@ -72,7 +72,7 @@ class OrganizationEventConsumer:
 
         registry_contract = self._get_registry_contract()
         org_id = self._get_org_id_from_event(event)
-        transaction_hash = self._get_tarnsaction_hash(event)
+        transaction_hash = self._get_transaction_hash(event)
 
         blockchain_org_data = registry_contract.functions.getOrganizationById(
             org_id.encode("utf-8")
