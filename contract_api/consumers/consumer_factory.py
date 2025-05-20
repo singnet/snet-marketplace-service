@@ -27,7 +27,7 @@ def get_payload_from_queue_event(event):
                 message = parsed_body.get("Message")
                 if message:
                     payload = json.loads(message)
-                    converted_events.append(payload)
+                    converted_events.append(payload["blockchain_event"])
     return converted_events
 
 

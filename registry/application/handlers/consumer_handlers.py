@@ -1,13 +1,9 @@
 import json
 
-from common.constant import StatusCode
-from common.exception_handler import exception_handler
 from common.logger import get_logger
-from common.utils import generate_lambda_response
-from registry.config import NETWORKS, NETWORK_ID, SLACK_HOOK
+from registry.config import NETWORKS, NETWORK_ID
 from registry.consumer.organization_event_consumer import OrganizationCreatedAndModifiedEventConsumer
 from registry.consumer.service_event_consumer import ServiceCreatedEventConsumer
-from registry.exceptions import EXCEPTIONS
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
 
@@ -43,7 +39,7 @@ def get_payload_from_queue_event(event) -> list[dict]:
                 message = parsed_body.get("Message")
                 if message:
                     payload = json.loads(message)
-                    converted_events.append(payload)
+                    converted_events.append(payload["blockchain_event"])
     return converted_events
 
 

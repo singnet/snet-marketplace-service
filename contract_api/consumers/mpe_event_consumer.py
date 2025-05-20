@@ -28,7 +28,6 @@ class MPEEventConsumer(EventConsumer):
                                                                   TOKEN_NAME,
                                                                   STAGE)
 
-        event = event["blockchain_event"]
         event_name = event["name"]
         data = event["data"]
         event_data = ast.literal_eval(data["json_str"])
