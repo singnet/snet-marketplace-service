@@ -207,6 +207,7 @@ class ServicePublisherService:
             service_group = ServiceFactory.create_service_group_entity_model(
                 request.org_uuid, request.service_uuid, group
             )
+            logger.info(f"group service_uuid: {service_group.service_uuid}")
             groups.append(service_group)
         logger.info(f"New Service Groups: {groups}")
         service.groups = groups

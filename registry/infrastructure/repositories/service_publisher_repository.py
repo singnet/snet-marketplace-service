@@ -72,6 +72,8 @@ class ServicePublisherRepository(BaseRepository):
             if service_db is None:
                 raise ServiceNotFoundException
 
+            logger.info(f"state service_uuid: {service_db.service_state.service_uuid}, db state: {service_db.service_state.state}, new state: {state}")
+
             service_db.display_name = service.display_name
             service_db.service_id = service.service_id
             service_db.metadata_uri = service.metadata_uri
