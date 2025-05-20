@@ -55,7 +55,7 @@ class ServiceEventConsumer:
         return org_id
 
     def _get_tarnsaction_hash(self, event):
-        return event["data"]["transactionHash"]
+        return event["data"]["transaction_hash"]
 
     def _get_service_id_from_event(self, event):
         event_data = event["data"]
