@@ -81,7 +81,7 @@ class ServiceEventConsumer:
         base_contract_path = self._get_base_contract_path()
         registry_contract = self._blockchain_util.get_contract_instance(
             base_contract_path,
-            SmartContracts.REGISTRY,
+            SmartContracts.REGISTRY.value,
             NETWORK_ID,
             settings.token_name,
             settings.stage,
