@@ -59,12 +59,12 @@ class ServicePublisherRepository(BaseRepository):
         try:
             self.session.query(ServiceGroup).filter(ServiceGroup.org_uuid == service.org_uuid).filter(
                 ServiceGroup.service_uuid == service.uuid).delete(synchronize_session='fetch')
-            self.session.commit()
-        except Exception as e:
-            self.session.rollback()
-            raise e
-
-        try:
+        #     self.session.commit()
+        # except Exception as e:
+        #     self.session.rollback()
+        #     raise e
+        #
+        # try:
             service_db = self.session.query(Service) \
                 .filter(Service.org_uuid == service.org_uuid) \
                 .filter(Service.uuid == service.uuid).first()

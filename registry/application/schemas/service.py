@@ -57,7 +57,7 @@ class SaveServiceRequest(BaseModel):
 
     service_id: str
     proto: dict = Field(default_factory=dict)
-    storage_provide: str | None = Field(default="")
+    storage_provider: str | None = Field(default="")
     display_name: str | None = Field(default="")
     short_description: str | None = Field(default="")
     project_url: str | None = Field(default="")

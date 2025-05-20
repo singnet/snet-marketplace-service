@@ -188,25 +188,28 @@ class ServicePublisherService:
         
         service.service_id = request.service_id
         service.proto = request.proto
-        service.storage_provider = service.storage_provider
-        service.display_name = service.display_name
-        service.short_description = service.short_description
-        service.description = service.description
-        service.project_url = service.project_url
-        service.service_type = service.service_type
+        service.storage_provider = request.storage_provider
+        service.display_name = request.display_name
+        service.short_description = request.short_description
+        service.description = request.description
+        service.project_url = request.project_url
+        service.service_type = request.service_type
+        service.service_state.transaction_hash = request.transaction_hash
+        service.tags = request.tags
+        service.mpe_address = request.mpe_address
+
         service.contributors = ServicePublisherService._get_valid_service_contributors(
             contributors=request.contributors
         )
-        service.tags = request.tags
-        service.mpe_address = request.mpe_address
+
         groups = []
         for group in request.groups:
             service_group = ServiceFactory.create_service_group_entity_model(
                 request.org_uuid, request.service_uuid, group
             )
             groups.append(service_group)
+        logger.info(f"New Service Groups: {groups}")
         service.groups = groups
-        service.service_state.transaction_hash = request.transaction_hash
         
         ServicePublisherRepository().save_service(username, service, ServiceStatus.APPROVED.value)
         
