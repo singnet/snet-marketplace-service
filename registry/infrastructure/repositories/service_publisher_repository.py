@@ -73,6 +73,11 @@ class ServicePublisherRepository(BaseRepository):
                 raise ServiceNotFoundException
 
             logger.info(f"state service_uuid: {service_db.service_state.service_uuid}, db state: {service_db.service_state.state}, new state: {state}")
+            logger.info(f"groups: {service_db.groups}")
+            try:
+                logger.info(f"group service_uuid: {service_db.groups[0].service_uuid}")
+            except Exception as e:
+                logger.info(f"error: {e}")
 
             service_db.display_name = service.display_name
             service_db.service_id = service.service_id
