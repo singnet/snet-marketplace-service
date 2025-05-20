@@ -6,7 +6,12 @@ from common.exceptions import MethodNotImplemented
 from registry.settings import settings
 from registry.application.schemas.common import PayloadValidationError
 from registry.exceptions import InvalidOriginException
-from registry.constants import ORG_STATUS_LIST, ORG_TYPE_VERIFICATION_TYPE_MAPPING, OrganizationActions, OrganizationType
+from registry.constants import (
+    ORG_STATUS_LIST,
+    ORG_TYPE_VERIFICATION_TYPE_MAPPING,
+    OrganizationActions,
+    OrganizationType,
+)
 from registry.infrastructure.storage_provider import StorageProviderType
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -16,7 +21,7 @@ class GetGroupByOrganizationIdRequest(BaseModel):
     org_uuid: str
 
     @classmethod
-    def validate_event(cls, event) -> 'GetGroupByOrganizationIdRequest':
+    def validate_event(cls, event) -> "GetGroupByOrganizationIdRequest":
         try:
             assert event.get("pathParameters") is not None, "Invalid event path parameters"
             path_parameters = event["pathParameters"]
@@ -45,7 +50,7 @@ class CreateOrganizationRequest(BaseModel):
     org_address: dict
 
     @classmethod
-    def validate_event(cls, event: dict) -> 'CreateOrganizationRequest':
+    def validate_event(cls, event: dict) -> "CreateOrganizationRequest":
         try:
             assert event.get("body") is not None, "Invalid event body"
             body = json.loads(event["body"])
@@ -60,7 +65,7 @@ class CreateOrganizationRequest(BaseModel):
             raise InvalidOriginException()
         return value
 
-    #TODO: Check if it need, maybe we can change payload format
+    # TODO: Check if it need, maybe we can change payload format
     @model_validator(mode="before")
     @classmethod
     def extract_addresses(cls, data: dict) -> dict:
@@ -93,8 +98,8 @@ class UpdateOrganizationRequest(BaseModel):
     @classmethod
     def validate_action(cls, value):
         if value is not None and value not in {
-            OrganizationActions.DRAFT.value, 
-            OrganizationActions.SUBMIT.value
+            OrganizationActions.DRAFT.value,
+            OrganizationActions.SUBMIT.value,
         }:
             raise ValueError(f"Invalid action: {value}")
         return value
@@ -108,10 +113,7 @@ class UpdateOrganizationRequest(BaseModel):
             body = json.loads(event["body"])
             query_parameters = event.get("queryStringParameters") or {}
 
-            data = {
-                **body,
-                "action": query_parameters.get("action")
-            }
+            data = {**body, "action": query_parameters.get("action")}
 
             return cls.model_validate(data)
 
@@ -136,7 +138,7 @@ class PublishOrganizationRequest(BaseModel):
             data = {
                 **body,
                 "org_uuid": path_parameters["org_uuid"],
-                "provider_storage": path_parameters["provider_storage"]
+                "provider_storage": path_parameters["provider_storage"],
             }
 
             return cls.model_validate(data)
@@ -175,7 +177,7 @@ class GetAllMembersRequest(BaseModel):
     org_uuid: str
     status: str | None = None
     role: str | None = None
-   
+
     @classmethod
     def validate_event(cls, event: dict) -> "GetAllMembersRequest":
         try:
@@ -185,17 +187,14 @@ class GetAllMembersRequest(BaseModel):
             query_string_parameters = event["queryStringParameters"]
             path_parameters = event["pathParameters"]
 
-            data = {
-                **path_parameters,
-                **query_string_parameters
-            }
+            data = {**path_parameters, **query_string_parameters}
 
             return cls.model_validate(data)
 
         except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
 
-       
+
 class GetMemberRequest(BaseModel):
     model_config = ConfigDict(validate_by_name=True, validate_by_alias=True)
 
@@ -347,7 +346,7 @@ class VerifyOrgRequest(BaseModel):
         if org_type == OrganizationType.ORGANIZATION.value:
             if self.status not in ORG_STATUS_LIST:
                 raise MethodNotImplemented()
-        
+
         return self
 
     @classmethod

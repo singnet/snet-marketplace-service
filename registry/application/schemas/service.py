@@ -11,7 +11,7 @@ from registry.infrastructure.storage_provider import StorageProviderType
 class VerifyServiceIdRequest(BaseModel):
     org_uuid: str
     service_id: str
-   
+
     @classmethod
     def validate_event(cls, event: dict) -> "VerifyServiceIdRequest":
         try:
@@ -21,10 +21,7 @@ class VerifyServiceIdRequest(BaseModel):
             query_string_parameters = event["queryStringParameters"]
             path_parameters = event["pathParameters"]
 
-            data = {
-                **path_parameters,
-                **query_string_parameters
-            }
+            data = {**path_parameters, **query_string_parameters}
 
             return cls.model_validate(data)
 
@@ -36,20 +33,17 @@ class SaveTransactionHashRequest(BaseModel):
     org_uuid: str
     service_uuid: str
     transaction_hash: str | None = None
-   
+
     @classmethod
     def validate_event(cls, event: dict) -> "SaveTransactionHashRequest":
         try:
             assert event.get("pathParameters") is not None, "Missing pathParameters"
             assert event.get("body") is not None, "Invalid event body"
-            
+
             body = json.loads(event["body"])
             path_parameters = event["pathParameters"]
 
-            data = {
-                **path_parameters,
-                **body
-            }
+            data = {**path_parameters, **body}
 
             return cls.model_validate(data)
 
@@ -60,7 +54,7 @@ class SaveTransactionHashRequest(BaseModel):
 class SaveServiceRequest(BaseModel):
     org_uuid: str
     service_uuid: str
-    
+
     service_id: str
     proto: dict = Field(default_factory=dict)
     storage_provide: str | None = Field(default="")
@@ -81,14 +75,11 @@ class SaveServiceRequest(BaseModel):
         try:
             assert event.get("pathParameters") is not None, "Missing pathParameters"
             assert event.get("body") is not None, "Invalid event body"
-            
+
             body = json.loads(event["body"])
             path_parameters = event["pathParameters"]
 
-            data = {
-                **path_parameters,
-                **body
-            }
+            data = {**path_parameters, **body}
 
             return cls.model_validate(data)
 
@@ -106,14 +97,11 @@ class SaveServiceGroupsRequest(BaseModel):
         try:
             assert event.get("pathParameters") is not None, "Missing pathParameters"
             assert event.get("body") is not None, "Invalid event body"
-            
+
             body = json.loads(event["body"])
             path_parameters = event["pathParameters"]
 
-            data = {
-                **path_parameters,
-                **body
-            }
+            data = {**path_parameters, **body}
 
             return cls.model_validate(data)
 
@@ -148,14 +136,11 @@ class CreateServiceRequest(BaseModel):
         try:
             assert event.get("pathParameters") is not None, "Missing pathParameters"
             assert event.get("body") is not None, "Invalid event body"
-            
+
             body = json.loads(event["body"])
             path_parameters = event["pathParameters"]
 
-            data = {
-                **path_parameters,
-                **body
-            }
+            data = {**path_parameters, **body}
 
             return cls.model_validate(data)
 
@@ -167,7 +152,7 @@ class GetServicesForOrganizationRequest(BaseModel):
     model_config = ConfigDict(validate_by_name=True, validate_by_alias=True)
 
     org_uuid: str
-    offset: int = Field(default=0)   
+    offset: int = Field(default=0)
     limit: int = Field(default=10)
     search_string: str | None = Field(default="", alias="q")
     search_attribute: str | None = Field(default="", alias="s")
@@ -180,14 +165,11 @@ class GetServicesForOrganizationRequest(BaseModel):
         try:
             assert event.get("pathParameters") is not None, "Missing pathParameters"
             assert event.get("body") is not None, "Invalid event body"
-            
+
             body = json.loads(event["body"])
             path_parameters = event["pathParameters"]
 
-            data = {
-                **path_parameters,
-                **body
-            }
+            data = {**path_parameters, **body}
 
             return cls.model_validate(data)
 
@@ -216,20 +198,17 @@ class GetDaemonConfigRequest(BaseModel):
     org_uuid: str
     service_uuid: str
     network: EnvironmentType
-   
+
     @classmethod
     def validate_event(cls, event: dict) -> "GetDaemonConfigRequest":
         try:
             assert event.get("pathParameters") is not None, "Missing pathParameters"
             assert event.get("queryStringParameters") is not None, "Missing queryStringParameters"
-            
+
             query_string_parameters = event["queryStringParameters"]
             path_parameters = event["pathParameters"]
 
-            data = {
-                **path_parameters,
-                **query_string_parameters
-            }
+            data = {**path_parameters, **query_string_parameters}
 
             return cls.model_validate(data)
 
@@ -254,12 +233,12 @@ class ServiceDeploymentStatusRequest(BaseModel):
 class GetCodeBuildStatusRequest(BaseModel):
     org_uuid: str
     service_uuid: str
-   
+
     @classmethod
     def validate_event(cls, event: dict) -> "GetCodeBuildStatusRequest":
         try:
             assert event.get("pathParameters") is not None, "Missing pathParameters"
-            
+
             path_parameters = event["pathParameters"]
 
             return cls.model_validate(path_parameters)
@@ -271,8 +250,8 @@ class GetCodeBuildStatusRequest(BaseModel):
 class PublishServiceRequest(BaseModel):
     org_uuid: str
     service_uuid: str
-    storage_provider: StorageProviderType
-    lighthouse_token: str
+    storage_provider: StorageProviderType = Field(default=StorageProviderType.IPFS.value)
+    lighthouse_token: str | None = None
 
     @model_validator(mode="after")
     def check_lighthouse_token_required(cls, model):
@@ -285,14 +264,11 @@ class PublishServiceRequest(BaseModel):
         try:
             assert event.get("pathParameters") is not None, "Missing pathParameters"
             assert event.get("body") is not None, "Invalid event body"
-            
+
             body = json.loads(event["body"])
             path_parameters = event["pathParameters"]
 
-            data = {
-                **path_parameters,
-                **body
-            }
+            data = {**path_parameters, **body}
 
             return cls.model_validate(data)
 
