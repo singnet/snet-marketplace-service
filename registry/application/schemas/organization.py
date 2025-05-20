@@ -123,7 +123,7 @@ class UpdateOrganizationRequest(BaseModel):
 
 class PublishOrganizationRequest(BaseModel):
     org_uuid: str
-    storage_provider: StorageProviderType
+    storage_provider: StorageProviderType = StorageProviderType.IPFS
     lighthouse_token: None | str = None
 
     @classmethod
