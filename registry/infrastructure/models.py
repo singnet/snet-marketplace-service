@@ -33,9 +33,13 @@ class Organization(Base):
         TIMESTAMP(timezone=False), nullable=False, server_default=func.now(), onupdate=func.now()
     )
 
-    org_state: Mapped[List["OrganizationState"]] = relationship("OrganizationState", backref='organization', lazy='joined')
-    groups: Mapped[List["Group"]] = relationship("Group", backref='organization', lazy='joined')
-    addresses: Mapped[List["OrganizationAddress"]] = relationship("OrganizationAddress", backref='organization', lazy='joined')
+    org_state: Mapped[List["OrganizationState"]] = relationship(
+        "OrganizationState", backref="organization", lazy="joined"
+    )
+    groups: Mapped[List["Group"]] = relationship("Group", backref="organization", lazy="joined")
+    addresses: Mapped[List["OrganizationAddress"]] = relationship(
+        "OrganizationAddress", backref="organization", lazy="joined"
+    )
 
 
 class OrganizationAddress(Base):
@@ -46,7 +50,7 @@ class OrganizationAddress(Base):
         "org_uuid",
         VARCHAR(128),
         ForeignKey("organization.uuid", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False
+        nullable=False,
     )
     address_type: Mapped[str | None] = mapped_column("address_type", VARCHAR(64))
     street_address: Mapped[str | None] = mapped_column("street_address", VARCHAR(256))
@@ -69,8 +73,10 @@ class OrganizationState(Base):
 
     row_id: Mapped[int] = mapped_column("row_id", Integer, primary_key=True, autoincrement=True)
     org_uuid: Mapped[str] = mapped_column(
-        "org_uuid", VARCHAR(128),
-        ForeignKey("organization.uuid", ondelete="CASCADE", onupdate="CASCADE"), nullable=False
+        "org_uuid",
+        VARCHAR(128),
+        ForeignKey("organization.uuid", ondelete="CASCADE", onupdate="CASCADE"),
+        nullable=False,
     )
     state: Mapped[str] = mapped_column("state", VARCHAR(128), nullable=False)
     transaction_hash: Mapped[str | None] = mapped_column("transaction_hash", VARCHAR(128))
@@ -100,7 +106,7 @@ class OrganizationMember(Base):
         "org_uuid",
         VARCHAR(128),
         ForeignKey("organization.uuid", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False
+        nullable=False,
     )
     role: Mapped[str | None] = mapped_column("role", VARCHAR(128))
     username: Mapped[str | None] = mapped_column("username", VARCHAR(128))
@@ -127,7 +133,7 @@ class Group(Base):
         "org_uuid",
         VARCHAR(128),
         ForeignKey("organization.uuid", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False
+        nullable=False,
     )
     payment_address: Mapped[str | None] = mapped_column("payment_address", VARCHAR(128))
     payment_config: Mapped[dict] = mapped_column("payment_config", JSON, nullable=False)
@@ -159,7 +165,7 @@ class OrganizationArchive(Base):
     metadata_uri: Mapped[str | None] = mapped_column("metadata_uri", VARCHAR(255))
     groups: Mapped[dict] = mapped_column("groups", JSON, nullable=False)
     org_state: Mapped[dict] = mapped_column("org_state", JSON, nullable=False)
-    
+
     created_on: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=False), nullable=False, server_default=func.now()
     )
@@ -175,7 +181,7 @@ class Service(Base):
         "org_uuid",
         VARCHAR(128),
         ForeignKey("organization.uuid", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False
+        nullable=False,
     )
     uuid: Mapped[str] = mapped_column("uuid", VARCHAR(128), primary_key=True, nullable=False)
     display_name: Mapped[str] = mapped_column("display_name", VARCHAR(128), nullable=False)
@@ -183,15 +189,21 @@ class Service(Base):
     metadata_uri: Mapped[str | None] = mapped_column("metadata_uri", VARCHAR(255))
     storage_provider: Mapped[str | None] = mapped_column("storage_provider", VARCHAR(128))
     proto: Mapped[dict] = mapped_column("proto", JSON, nullable=False, default={})
-    short_description: Mapped[str] = mapped_column("short_description", VARCHAR(1024), nullable=False, default="")
-    description: Mapped[str] = mapped_column("description", VARCHAR(1024), nullable=False, default="")
+    short_description: Mapped[str] = mapped_column(
+        "short_description", VARCHAR(1024), nullable=False, default=""
+    )
+    description: Mapped[str] = mapped_column(
+        "description", VARCHAR(1024), nullable=False, default=""
+    )
     project_url: Mapped[str | None] = mapped_column("project_url", VARCHAR(512))
     assets: Mapped[dict] = mapped_column("assets", JSON, nullable=False, default={})
     rating: Mapped[dict] = mapped_column("ratings", JSON, nullable=False, default={})
     ranking: Mapped[int] = mapped_column("ranking", Integer, nullable=False, default=1)
     contributors: Mapped[dict] = mapped_column("contributors", JSON, nullable=False, default=[])
     tags: Mapped[dict] = mapped_column("tags", JSON, nullable=False, default=[])
-    mpe_address: Mapped[str] = mapped_column("mpe_address", VARCHAR(128), nullable=False, default="")
+    mpe_address: Mapped[str] = mapped_column(
+        "mpe_address", VARCHAR(128), nullable=False, default=""
+    )
     service_type: Mapped[str | None] = mapped_column("service_type", VARCHAR(128))
 
     created_on: Mapped[datetime] = mapped_column(
@@ -201,7 +213,7 @@ class Service(Base):
         TIMESTAMP(timezone=False), nullable=False, server_default=func.now(), onupdate=func.now()
     )
 
-    groups = relationship("ServiceGroup", uselist=True)
+    groups = relationship("ServiceGroup", back_populates="service", cascade="all, delete-orphan")
     service_state = relationship("ServiceState", uselist=False)
     offchain_service_config = relationship("OffchainServiceConfig", uselist=True)
 
@@ -216,7 +228,7 @@ class ServiceState(Base):
         VARCHAR(128),
         ForeignKey("service.uuid", ondelete="CASCADE", onupdate="CASCADE"),
         unique=True,
-        nullable=False
+        nullable=False,
     )
     state: Mapped[str] = mapped_column("state", VARCHAR(128), nullable=False)
     transaction_hash: Mapped[str | None] = mapped_column("transaction_hash", VARCHAR(128))
@@ -224,7 +236,7 @@ class ServiceState(Base):
     created_by: Mapped[str] = mapped_column("created_by", VARCHAR(128), nullable=False)
     updated_by: Mapped[str] = mapped_column("updated_by", VARCHAR(128), nullable=False)
     approved_by: Mapped[str | None] = mapped_column("approved_by", VARCHAR(128))
-    
+
     created_on: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=False), nullable=False, server_default=func.now()
     )
@@ -232,7 +244,7 @@ class ServiceState(Base):
         TIMESTAMP(timezone=False), nullable=False, server_default=func.now(), onupdate=func.now()
     )
 
-    UniqueConstraint(org_uuid, service_uuid, name="uq_org_srvc")
+    __table_args__ = (UniqueConstraint(org_uuid, service_uuid, name="uq_org_srvc"),)
 
 
 class ServiceGroup(Base):
@@ -244,7 +256,7 @@ class ServiceGroup(Base):
         "service_uuid",
         VARCHAR(128),
         ForeignKey("service.uuid", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False
+        nullable=False,
     )
     group_id: Mapped[str] = mapped_column("group_id", VARCHAR(128), nullable=False)
     group_name: Mapped[str] = mapped_column("group_name", VARCHAR(128), nullable=False, default="")
@@ -253,7 +265,9 @@ class ServiceGroup(Base):
     test_endpoints: Mapped[dict] = mapped_column("test_endpoints", JSON, nullable=False, default=[])
     daemon_address: Mapped[dict] = mapped_column("daemon_address", JSON, nullable=False, default=[])
     free_calls: Mapped[int] = mapped_column("free_calls", Integer, nullable=False, default=0)
-    free_call_signer_address: Mapped[str | None] = mapped_column("free_call_signer_address", VARCHAR(128))
+    free_call_signer_address: Mapped[str | None] = mapped_column(
+        "free_call_signer_address", VARCHAR(128)
+    )
 
     created_on: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=False), nullable=False, server_default=func.now()
@@ -262,7 +276,9 @@ class ServiceGroup(Base):
         TIMESTAMP(timezone=False), nullable=False, server_default=func.now(), onupdate=func.now()
     )
 
-    UniqueConstraint(org_uuid, service_uuid, group_id, name="uq_org_srvc_grp")
+    __table_args__ = (UniqueConstraint(org_uuid, service_uuid, group_id, name="uq_org_srvc_grp"),)
+
+    service = relationship("Service", back_populates="groups")
 
 
 class ServiceReviewHistory(Base):
@@ -312,7 +328,7 @@ class OffchainServiceConfig(Base):
         "service_uuid",
         VARCHAR(128),
         ForeignKey("service.uuid", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False
+        nullable=False,
     )
     parameter_name: Mapped[str] = mapped_column("parameter_name", VARCHAR(128), nullable=False)
     parameter_value: Mapped[str] = mapped_column("parameter_value", VARCHAR(512), nullable=False)
@@ -324,4 +340,4 @@ class OffchainServiceConfig(Base):
         TIMESTAMP(timezone=False), nullable=False, server_default=func.now(), onupdate=func.now()
     )
 
-    UniqueConstraint(org_uuid, service_uuid, parameter_name, name="uq_off")
+    __table_args__ = (UniqueConstraint(org_uuid, service_uuid, parameter_name, name="uq_off"),)
