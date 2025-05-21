@@ -151,7 +151,7 @@ class SaveTransactionHashForOrganizationRequest(BaseModel):
     org_uuid: str
     transaction_hash: str
     wallet_address: str
-    nonce: int
+    nonce: int = None
 
     @classmethod
     def validate_event(cls, event: dict) -> "SaveTransactionHashForOrganizationRequest":
