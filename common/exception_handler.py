@@ -22,7 +22,7 @@ def exception_handler(*decorator_args, **decorator_kwargs):
             return exception_info
 
         def wrapper(*args, **kwargs):
-            event = kwargs.get("event", {})
+            event = args[0] if len(args) > 0 else {}
             logger.debug(f"lambda event: {event}")
             handler_name = decorator_kwargs.get("handler_name", func.__name__)
             path = event.get("path", None)
