@@ -79,8 +79,11 @@ class OrganizationEventConsumer(EventConsumer):
         if org_id is None:
             org_id = self._get_org_id_from_event(event)
 
+        logger.info(f"Organization id: {org_id}")
+        encoded_org_id = org_id.encode("utf-8")
+        logger.info(f"Encoded organization id: {encoded_org_id}")
         blockchain_org_data = registry_contract.functions.getOrganizationById(
-            org_id.encode("utf-8")
+            encoded_org_id
         ).call()
 
         org_metadata_uri = Web3.to_text(blockchain_org_data[2]).rstrip("\x00")
