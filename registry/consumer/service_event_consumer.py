@@ -39,6 +39,7 @@ class ServiceEventConsumer:
         pass
 
     def _fetch_tags(self, registry_contract, org_id_hex, service_id_hex):
+        # TODO: сonvert parameter types if this method will be used and there will be bugs
         tags_data = registry_contract.functions.getServiceRegistrationById(
             org_id_hex, service_id_hex
         ).call()

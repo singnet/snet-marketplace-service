@@ -74,8 +74,9 @@ class OrganizationEventConsumer:
         org_id = self._get_org_id_from_event(event)
         transaction_hash = self._get_transaction_hash(event)
 
+        encoded_org_id = Web3.to_bytes(text = org_id).ljust(32, b'\0')[:32]
         blockchain_org_data = registry_contract.functions.getOrganizationById(
-            org_id.encode("utf-8")
+            encoded_org_id
         ).call()
         logger.info(f"blockchain org data {blockchain_org_data}")
 
