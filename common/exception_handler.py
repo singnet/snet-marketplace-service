@@ -22,11 +22,13 @@ def exception_handler(*decorator_args, **decorator_kwargs):
             return exception_info
 
         def wrapper(*args, **kwargs):
+            event = kwargs.get("event", {})
+            logger.debug(f"lambda event: {event}")
             handler_name = decorator_kwargs.get("handler_name", func.__name__)
-            path = kwargs.get("event", {}).get("path", None)
-            path_parameters = kwargs.get("event", {}).get("pathParameters", {})
-            query_string_parameters = kwargs.get("event", {}).get("queryStringParameters", {})
-            body = kwargs.get("event", {}).get("body", "{}")
+            path = event.get("path", None)
+            path_parameters = event.get("pathParameters", {})
+            query_string_parameters = event.get("queryStringParameters", {})
+            body = event.get("body", "{}")
 
             error_message = f"Error Reported! \n" \
                             f"network_id: {NETWORK_ID}\n" \
