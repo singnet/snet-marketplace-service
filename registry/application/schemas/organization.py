@@ -242,7 +242,7 @@ class VerifyCodeRequest(BaseModel):
     def validate_event(cls, event: dict) -> "VerifyCodeRequest":
         try:
             assert event.get("queryStringParameters") is not None, "Missing queryStringParameters"
-            return cls.model_validate(event["queryStringPerameters"])
+            return cls.model_validate(event["queryStringParameters"])
 
         except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
