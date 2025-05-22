@@ -100,25 +100,27 @@ class OrganizationEventConsumer:
 
         received_for_logs = [member.to_response() for member in received_members]
         existing_for_logs = [member.to_response() for member in existing_members]
-        logger.info(f"Recieved members: {received_for_logs}\n Existing members: {existing_for_logs}")
+        logger.info(f"Received members: {received_for_logs}\n Existing members: {existing_for_logs}")
 
         added_member = []
         removed_member = []
         updated_members = []
-        recieved_members_map = {}
+        received_members_map = {}
         existing_members_map = {}
-        for recieved_member in received_members:
-            recieved_member.set_status(OrganizationMemberStatus.PUBLISHED.value)
-            recieved_members_map[recieved_member.address] = recieved_member
+        for received_member in received_members:
+            received_member.set_status(OrganizationMemberStatus.PUBLISHED.value)
+            received_members_map[received_member.address] = received_member
 
         existing_owner = None
         for existing_member in existing_members:
             existing_member.set_status(OrganizationMemberStatus.PUBLISHED.value)
             if existing_member.role == Role.OWNER.value:
                 existing_owner = existing_member
-                existing_members.remove(existing_member)
             else:
                 existing_members_map[existing_member.address] = existing_member
+
+        if existing_owner is not None:
+            existing_members.remove(existing_owner)
 
         if not existing_owner or not existing_owner.address:
             self._organization_repository.add_member([received_owner])
@@ -132,14 +134,14 @@ class OrganizationEventConsumer:
                 self._organization_repository.delete_published_members([existing_owner])
                 self._organization_repository.add_member([received_owner])
 
-        for recieved_member in received_members:
-            if recieved_member.address in existing_members_map:
-                updated_members.append(existing_members_map[recieved_member.address])
+        for received_member in received_members:
+            if received_member.address in existing_members_map:
+                updated_members.append(existing_members_map[received_member.address])
             else:
-                added_member.append(recieved_member)
+                added_member.append(received_member)
 
         for existing_member in existing_members:
-            if existing_member.address not in recieved_members_map:
+            if existing_member.address not in received_members_map:
                 removed_member.append(existing_member)
 
         removed_for_logs = [member.to_response() for member in removed_member]
