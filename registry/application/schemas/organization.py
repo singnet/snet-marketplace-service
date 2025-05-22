@@ -151,7 +151,7 @@ class SaveTransactionHashForOrganizationRequest(BaseModel):
     org_uuid: str
     transaction_hash: str
     wallet_address: str
-    nonce: int = None
+    nonce: int | None = None
 
     @classmethod
     def validate_event(cls, event: dict) -> "SaveTransactionHashForOrganizationRequest":
@@ -298,25 +298,16 @@ class DeleteMembersRequest(BaseModel):
 
 
 class RegisterMemberRequest(BaseModel):
-    org_uuid: str
     invite_code: str
     wallet_address: str
 
     @classmethod
     def validate_event(cls, event: dict) -> "RegisterMemberRequest":
         try:
-            assert event.get("pathParameters") is not None, "Missing pathParameters"
             assert event.get("body") is not None, "Missing body"
-
             body = json.loads(event["body"])
-            path_parameters = event["pathParameters"]
 
-            data = {
-                **body,
-                **path_parameters,
-            }
-
-            return cls.model_validate(data)
+            return cls.model_validate(body)
 
         except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
