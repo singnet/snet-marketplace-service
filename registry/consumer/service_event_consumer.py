@@ -152,6 +152,9 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         org_uuid, existing_service = self._get_existing_service_details(
             org_id, service_id
         )
+
+        logger.info(f"org_id: {org_id}, service_id: {service_id}, org_uuid: {org_uuid}")
+
         service_uuid = str(uuid4())
         display_name = service_metadata.get("display_name", "")
         description_dict = service_metadata.get("service_description", {})
@@ -228,20 +231,24 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
 
         if not existing_service:
             self._service_repository.add_service(received_service, BLOCKCHAIN_USER)
+            logger.info(f"The first path has been chosen (no existing service), service_uuid: {received_service.uuid}")
         elif existing_service.service_state.transaction_hash is None:
             self._service_repository.save_service(
                 BLOCKCHAIN_USER, existing_service, ServiceStatus.DRAFT.value
             )
+            logger.info(f"The second path has been chosen (existing service state tx hash is None), service_uuid: {existing_service.uuid}")
         elif existing_service.service_state.transaction_hash != transaction_hash:
             # TODO:  Implement major & minor changes
             self._service_repository.save_service(
                 BLOCKCHAIN_USER, existing_service, ServiceStatus.DRAFT.value
             )
+            logger.info(f"The third path has been chosen (existing service state tx hash - {existing_service.service_state.transaction_hash} doesn't equal new tx hash - {transaction_hash}), service_uuid: {existing_service.uuid}")
         elif existing_service.service_state.transaction_hash == transaction_hash:
             self.__curate_service_in_marketplace(service_id, org_id, curated=True)
             self._service_repository.save_service(
                 BLOCKCHAIN_USER, existing_service, ServiceStatus.PUBLISHED.value
             )
+            logger.info(f"The fourth path has been chosen (existing service state tx hash equals new tx hash - {transaction_hash}), service_uuid: {existing_service.uuid}")
 
     @staticmethod
     def __curate_service_in_marketplace(service_id, org_id, curated):
