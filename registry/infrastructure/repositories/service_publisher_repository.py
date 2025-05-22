@@ -97,11 +97,6 @@ class ServicePublisherRepository(BaseRepository):
             if service_db is None:
                 raise ServiceNotFoundException
 
-            try:
-                logger.info(f"group service_uuid: {service_db.groups[0].service_uuid}")
-            except Exception as e:
-                logger.info(f"error: {e}")
-
             service_db.display_name = service.display_name
             service_db.service_id = service.service_id
             service_db.metadata_uri = service.metadata_uri

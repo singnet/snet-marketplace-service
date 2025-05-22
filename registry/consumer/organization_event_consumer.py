@@ -97,6 +97,11 @@ class OrganizationEventConsumer:
     def _process_members(
         self, org_uuid, received_owner, existing_members, received_members
     ):
+
+        received_for_logs = [member.to_response() for member in received_members]
+        existing_for_logs = [member.to_response() for member in existing_members]
+        logger.info(f"Recieved members: {received_for_logs}\n Existing members: {existing_for_logs}")
+
         added_member = []
         removed_member = []
         updated_members = []
@@ -134,11 +139,14 @@ class OrganizationEventConsumer:
                 added_member.append(recieved_member)
 
         for existing_member in existing_members:
-            if existing_member.address in recieved_members_map:
-                # already existing
-                pass
-            else:
+            if existing_member.address not in recieved_members_map:
                 removed_member.append(existing_member)
+
+        removed_for_logs = [member.to_response() for member in removed_member]
+        added_for_logs = [member.to_response() for member in added_member]
+        updated_for_logs = [member.to_response() for member in updated_members]
+        logger.info(f"Removed members: {removed_for_logs}\n Added members: {added_for_logs}\n Updated members: {updated_for_logs}")
+
         if len(removed_member) > 0:
             self._organization_repository.delete_published_members(removed_member)
         if len(added_member) > 0:
