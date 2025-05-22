@@ -276,7 +276,7 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                 self._create_event_outside_publisher_portal(
                     received_organization_event, ""
                 )
-
+                logger.info(f"The first path has chosen")
             elif (
                 existing_publish_in_progress_organization.org_state.transaction_hash
                 != transaction_hash
@@ -295,6 +295,7 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                     OrganizationStatus.APPROVAL_PENDING.value,
                     test_transaction_hash="",
                 )
+                logger.info(f"The second path has chosen")
             else:
                 org_uuid = existing_publish_in_progress_organization.uuid
                 existing_members = self._organization_repository.get_org_member(
@@ -303,6 +304,7 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                 self._mark_existing_publish_in_progress_as_published(
                     existing_publish_in_progress_organization, ""
                 )
+                logger.info(f"The third path has chosen")
             owner = OrganizationFactory.parser_org_owner_from_metadata(
                 org_uuid, owner, OrganizationMemberStatus.PUBLISHED.value
             )
@@ -312,6 +314,7 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                 OrganizationMemberStatus.PUBLISHED.value,
             )
 
+            logger.info(f"org_uuid: {org_uuid}, owner: {owner.to_response()}")
             self._process_members(org_uuid, owner, existing_members, recieved_members)
         except Exception as e:
             traceback.print_exc()
