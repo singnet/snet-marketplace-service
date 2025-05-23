@@ -44,7 +44,7 @@ from registry.application.schemas.organization import (
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization
 from registry.domain.services.registry_blockchain_util import RegistryBlockChainUtil
-from registry.exceptions import InvalidOrganizationStateException, BadRequestException
+from registry.exceptions import InvalidOrganizationStateException, BadRequestException, NewMemberAddressException
 from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 from registry.mail_templates import (
     get_notification_mail_template_for_service_provider_when_org_is_submitted_for_onboarding,
@@ -237,6 +237,10 @@ class OrganizationPublisherService:
     def register_member(self, username: str, request: RegisterMemberRequest):
         logger.info(f"register user: {username} with invite_code: {request.invite_code}")
         if Web3.is_address(request.wallet_address):
+            org_uuid = org_repo.get_org_member(username = username, invite_code = request.invite_code)[0].org_uuid
+            org_owner = org_repo.get_org_member(org_uuid = org_uuid, role = Role.OWNER.value)[0]
+            if org_owner.address == request.wallet_address:
+                raise NewMemberAddressException()
             org_repo.update_org_member(
                 username, request.wallet_address, request.invite_code
             )
