@@ -205,7 +205,6 @@ functions:
               - x-requested-with
 
   get_groups_for_org:
-    warmup: true
     handler: registry.application.handlers.organization_handlers.get_group_for_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -236,7 +235,6 @@ functions:
               - x-requested-wit
 
   create-org:
-    warmup: true
     handler: registry.application.handlers.organization_handlers.create_organization
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -267,7 +265,6 @@ functions:
               - x-requested-with
 
   update-org:
-    warmup: true
     handler: registry.application.handlers.organization_handlers.update_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -309,7 +306,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
   publish-organization:
-    warmup: true
     handler: registry.application.handlers.organization_handlers.publish_organization
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -340,7 +336,6 @@ functions:
               - x-requested-with
 
   save-org-transaction:
-    warmup: true
     handler: registry.application.handlers.organization_handlers.save_transaction_hash_for_publish_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -371,7 +366,6 @@ functions:
               - x-requested-wit
 
   get-member:
-    warmup: true
     handler: registry.application.handlers.organization_handlers.get_member
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -407,7 +401,6 @@ functions:
               - x-requested-with
 
   get-all-members:
-    warmup: true
     handler: registry.application.handlers.organization_handlers.get_all_members
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -442,7 +435,6 @@ functions:
               - x-requested-with
 
   invite-members:
-    warmup: true
     handler: registry.application.handlers.organization_handlers.invite_members
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -477,7 +469,6 @@ functions:
               - x-requested-with
 
   verify-invite:
-    warmup: true
     handler: registry.application.handlers.organization_handlers.verify_code
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -508,7 +499,6 @@ functions:
               - x-requested-with
 
   register-member:
-    warmup: true
     handler: registry.application.handlers.organization_handlers.register_member
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -539,7 +529,6 @@ functions:
               - x-requested-with
 
   publish-members:
-    warmup: true
     handler: registry.application.handlers.organization_handlers.publish_members
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -574,7 +563,6 @@ functions:
               - x-requested-with
 
   delete-members:
-    warmup: true
     handler: registry.application.handlers.organization_handlers.delete_members
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -641,7 +629,6 @@ functions:
           rate: rate(10 minutes)
 
   verify-service-id:
-    warmup: true
     handler: registry.application.handlers.service_handlers.verify_service_id
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -672,7 +659,6 @@ functions:
               - x-requested-with
 
   create-service:
-    warmup: true
     handler: registry.application.handlers.service_handlers.create_service
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -703,7 +689,6 @@ functions:
               - x-requested-with
 
   save-service:
-    warmup: true
     handler: registry.application.handlers.service_handlers.save_service
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -734,7 +719,6 @@ functions:
               - x-requested-with
 
   save-service-attributes:
-    warmup: true
     handler: registry.application.handlers.service_handlers.save_service_attributes
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -765,7 +749,6 @@ functions:
               - x-requested-with
 
   get-services-for-org:
-    warmup: true
     handler: registry.application.handlers.service_handlers.get_services_for_organization
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -796,7 +779,6 @@ functions:
               - x-requested-with
 
   get-service-for-service-uuid:
-    warmup: true
     handler: registry.application.handlers.service_handlers.get_service_for_service_uuid
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -827,7 +809,6 @@ functions:
               - x-requested-with
 
   publish-service-metadata-to-ipfs-hash:
-    warmup: true
     handler: registry.application.handlers.service_handlers.publish_service_metadata_to_ipfs
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -858,7 +839,6 @@ functions:
               - x-requested-with
 
   save_service_transaction:
-    warmup: true
     handler: registry.application.handlers.service_handlers.save_transaction_hash_for_published_service
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -889,7 +869,6 @@ functions:
               - x-requested-with
 
   daemon-config-for-given-network-id:
-    warmup: true
     handler: registry.application.handlers.service_handlers.get_daemon_config_for_current_network
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -950,7 +929,6 @@ functions:
               - x-requested-with
 
   get_service_details_using_org_id_service_id:
-    warmup: true
     private: true
     handler: registry.application.handlers.service_handlers.get_service_details_using_org_id_service_id
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -963,7 +941,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
   service_deployment_status_notification_handler:
-    warmup: true
     private: true
     handler: registry.application.handlers.service_handlers.service_deployment_status_notification_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -990,7 +967,6 @@ functions:
           rate: rate(10 minutes)
 
   get-code-build-status-for-service:
-    warmup: true
     handler: registry.application.handlers.service_handlers.get_code_build_status_for_service
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -1016,7 +992,6 @@ functions:
               - x-requested-with
 
   update-service-assets:
-    warmup: true
     handler: registry.application.handlers.service_handlers.update_service_assets
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -1059,7 +1034,6 @@ functions:
           existing: true
 
   update-demo-component-build-status:
-    warmup: true
     handler: registry.application.handlers.service_handlers.update_demo_component_build_status
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -1071,7 +1045,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
   publish_service:
-    warmup: true
     handler: registry.application.handlers.service_handlers.publish_service
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
