@@ -131,7 +131,7 @@ class OrganizationEventConsumer:
                     org_uuid, existing_owner, existing_owner.address
                 )
             else:
-                self._organization_repository.delete_published_members([existing_owner])
+                self._organization_repository.delete_published_members(org_uuid, [existing_owner])
                 self._organization_repository.add_member([received_owner])
 
         for received_member in received_members:
@@ -150,7 +150,7 @@ class OrganizationEventConsumer:
         logger.info(f"Removed members: {removed_for_logs}\n Added members: {added_for_logs}\n Updated members: {updated_for_logs}")
 
         if len(removed_member) > 0:
-            self._organization_repository.delete_published_members(removed_member)
+            self._organization_repository.delete_published_members(org_uuid, removed_member)
         if len(added_member) > 0:
             self._organization_repository.add_member(added_member)
 

@@ -375,10 +375,12 @@ class OrganizationPublisherRepository(BaseRepository):
         self.session.commit()
 
     @BaseRepository.write_ops
-    def delete_published_members(self, member_list):
+    def delete_published_members(self, org_uuid, member_list):
         member_address_list = [member.address for member in member_list]
-        self.session.query(OrganizationMember).filter(OrganizationMember.address.in_(member_address_list)) \
+        self.session.query(OrganizationMember) \
+            .filter(OrganizationMember.org_uuid == org_uuid) \
             .filter(OrganizationMember.status == OrganizationMemberStatus.PUBLISHED.value) \
+            .filter(OrganizationMember.address.in_(member_address_list)) \
             .delete(synchronize_session='fetch')
         self.session.commit()
 
