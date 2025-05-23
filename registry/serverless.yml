@@ -322,7 +322,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /org/{org_uuid}/publish/{provider_storage}
+          path: /org/{org_uuid}/publish/{storage_provider}
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -1084,7 +1084,7 @@ functions:
     events:
       - http:
           method: POST
-          path: /org/{org_uuid}/service/{service_uuid}/publish/{provider_storage}
+          path: /org/{org_uuid}/service/{service_uuid}/publish/{storage_provider}
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS

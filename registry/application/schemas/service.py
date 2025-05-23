@@ -257,7 +257,7 @@ class PublishServiceRequest(BaseModel):
     @model_validator(mode="after")
     def check_lighthouse_token_required(cls, model):
         if model.storage_provider == "filecoin" and model.lighthouse_token is None:
-            raise ValueError("lighthouse_token is required when provider_storage is 'filecoin'")
+            raise ValueError("lighthouse_token is required when storage_provider is 'filecoin'")
         return model
 
     @classmethod
