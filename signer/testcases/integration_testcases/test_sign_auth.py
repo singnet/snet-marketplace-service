@@ -1,11 +1,7 @@
 import unittest
-
-from eth_account.messages import defunct_hash_message
 from unittest.mock import patch
-from web3.auto import w3
-import web3
 
-from signer.signature_authenticator import main
+from signer.infrastructure.authenticators.signature_authenticator import main
 
 
 class TestSignAuth(unittest.TestCase):

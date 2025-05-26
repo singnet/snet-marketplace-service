@@ -10,18 +10,9 @@ from web3 import Web3
 from common.blockchain_util import BlockChainUtil
 from common.logger import get_logger
 from common.utils import Utils
+from common.constant import ProviderType
 from resources.certificates.root_certificate import certificate
-from signer.config import (
-    GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_ARN,
-    METERING_ARN,
-    NETWORKS,
-    PREFIX_FREE_CALL,
-    REGION_NAME,
-    SIGNER_ADDRESS,
-    SIGNER_KEY,
-    TOKEN_NAME,
-    STAGE
-)
+from signer.settings import settings
 from signer.constant import MPE_ADDR_PATH
 from signer.stubs import state_service_pb2, state_service_pb2_grpc
 
@@ -30,20 +21,19 @@ logger = get_logger(__name__)
 FREE_CALL_EXPIRY=172800
 
 class Signer:
-    def __init__(self, net_id):
-        self.net_id = net_id
-        self.lambda_client = boto3.client("lambda", region_name=REGION_NAME)
+    def __init__(self):
+        self.lambda_client = boto3.client("lambda", region_name=settings.aws.REGION_NAME)
         self.obj_utils = Utils()
         self.obj_blockchain_utils = BlockChainUtil(
-            provider_type="HTTP_PROVIDER",
-            provider=NETWORKS[self.net_id]["http_provider"],
+            provider_type=ProviderType.http.value,
+            provider=settings.network.networks[settings.network.id].http_provider,
         )
         self.mpe_address = self.obj_blockchain_utils.read_contract_address(
-            net_id=self.net_id,
+            net_id=self,
             path=MPE_ADDR_PATH,
             key="address",
-            token_name = TOKEN_NAME,
-            stage = STAGE
+            token_name = settings.token_name,
+            stage = settings.stage
         )
         self.current_block_no = self.obj_blockchain_utils.get_current_block_no()
 
@@ -56,7 +46,7 @@ class Signer:
             },
         }
         response = self.lambda_client.invoke(
-            FunctionName=GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_ARN,
+            FunctionName=settings.lambda_arn.get_service_deatails_arn,
             InvocationType="RequestResponse",
             Payload=json.dumps(lambda_payload),
         )
@@ -81,7 +71,7 @@ class Signer:
             },
         }
         response = self.lambda_client.invoke(
-            FunctionName=METERING_ARN,
+            FunctionName=settings.lambda_arn.metering_arn,
             InvocationType="RequestResponse",
             Payload=json.dumps(lambda_payload),
         )
@@ -114,42 +104,42 @@ class Signer:
 
     def _free_calls_allowed(self, username, org_id, service_id, group_id):
         """
-            Method to check free calls exists for given user or not.
-            Call monitoring service to get the details
+        Method to check free calls exists for given user or not.
+        Call monitoring service to get the details
         """
-
         free_calls_available = self._get_no_of_free_call_available(username, org_id, service_id, group_id)
-        if free_calls_available > 0:
-            return True;
+        return free_calls_available > 0
 
-        return False
-
-    def signature_for_free_call(self, user_data, org_id, service_id, group_id):
+    def signature_for_free_call(self, username, org_id, service_id, group_id):
         """
-            Method to generate signature for free call.
+        Method to generate signature for free call.
         """
         try:
-            username = user_data["authorizer"]["claims"]["email"]
             if self._free_calls_allowed(
                 username=username, org_id=org_id, service_id=service_id, group_id=group_id):
                 current_block_no = self.obj_utils.get_current_block_no(
-                    ws_provider=NETWORKS[self.net_id]["ws_provider"])
+                    ws_provider=settings.network.networks[settings.network.id].ws_provider
+                )
                 provider = Web3.HTTPProvider(
-                    NETWORKS[self.net_id]["http_provider"])
+                    settings.network.networks[settings.network.id].http_provider
+                )
                 w3 = Web3(provider)
                 message = web3.Web3.solidity_keccak(
                     ["string", "string", "string", "string", "uint256"],
                     [
-                        PREFIX_FREE_CALL, username, org_id, service_id,
+                        settings.lambda_arn.prefix_free_call,
+                        username,
+                        org_id,
+                        service_id,
                         current_block_no
                     ],
                 )
-                signer_key = SIGNER_KEY
-                if not signer_key.startswith("0x"):
-                    signer_key = "0x" + signer_key
+                signer_key = "0x" + settings.signer.KEY if not settings.signer.KEY.startswith("0x") else settings.signer.KEY
+                
                 signature = bytes(
                     w3.eth.account.sign_message(encode_defunct(message), signer_key).signature
                 )
+
                 signature = signature.hex()
                 if not signature.startswith("0x"):
                     signature = "0x" + signature
@@ -168,12 +158,11 @@ class Signer:
             logger.error(repr(e))
             raise e
 
-    def signature_for_regular_call(self, user_data, channel_id, nonce, amount):
+    def signature_for_regular_call(self, username, channel_id, nonce, amount):
         """
-            Method to generate signature for regular call.
+        Method to generate signature for regular call.
         """
         try:
-            username = user_data["authorizer"]["claims"]["email"]
             data_types = ["string", "address", "uint256", "uint256", "uint256"]
             values = [
                 "__MPE_claim_message",
@@ -183,7 +172,7 @@ class Signer:
                 amount,
             ]
             signature = self.obj_blockchain_utils.generate_signature(
-                data_types=data_types, values=values, signer_key=SIGNER_KEY)
+                data_types=data_types, values=values, signer_key=settings.signer.KEY)
             return {
                 "snet-payment-channel-signature-bin": signature,
                 "snet-payment-type": "escrow",
@@ -194,13 +183,11 @@ class Signer:
             }
         except Exception as e:
             logger.error(repr(e))
-            raise Exception(
-                "Unable to generate signature for daemon call for username %s",
-                username)
+            raise Exception("Unable to generate signature for daemon call for username")
 
     def signature_for_state_service(self, username, channel_id):
         """
-            Method to generate signature for state service.
+        Method to generate signature for state service.
         """
         try:
             data_types = ["string", "address", "uint256", "uint256"]
@@ -211,7 +198,10 @@ class Signer:
                 self.current_block_no,
             ]
             signature = self.obj_blockchain_utils.generate_signature(
-                data_types=data_types, values=values, signer_key=SIGNER_KEY)
+                data_types=data_types,
+                values=values,
+                signer_key=settings.signer.KEY
+            )
             return {
                 "signature": signature,
                 "snet-current-block-number": self.current_block_no,
@@ -222,12 +212,30 @@ class Signer:
                 "Unable to generate signature for daemon call for username %s",
                 username)
 
-    def signature_for_open_channel_for_third_party(self, recipient, group_id, amount_in_cogs, expiration, message_nonce,
-                                                   sender_private_key, executor_wallet_address):
-        data_types = ["string", "address", "address", "address", "address", "bytes32", "uint256", "uint256",
-                      "uint256"]
-        values = ["__openChannelByThirdParty", self.mpe_address, executor_wallet_address, SIGNER_ADDRESS, recipient,
-                  group_id, amount_in_cogs, expiration, message_nonce]
+    def signature_for_open_channel_for_third_party(
+        self,
+        recipient,
+        group_id,
+        amount_in_cogs,
+        expiration,
+        message_nonce,
+        sender_private_key,
+        executor_wallet_address
+    ):
+        data_types = [
+            "string", "address", "address", "address", "address", "bytes32", "uint256", "uint256", "uint256"
+        ]
+        values = [
+            "__openChannelByThirdParty",
+            self.mpe_address,
+            executor_wallet_address,
+            settings.signer.ADDRESS,
+            recipient,
+            group_id,
+            amount_in_cogs,
+            expiration,
+            message_nonce
+        ]
         signature = self.obj_blockchain_utils.generate_signature(data_types=data_types, values=values,
                                                                  signer_key=sender_private_key)
         v, r, s = Web3.to_int(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
@@ -261,14 +269,20 @@ class Signer:
 
         return response.free_calls_available
 
-    def _is_free_call_available(self, email, token_for_free_call, expiry_date_block, signature,
-                                current_block_number, daemon_endpoint):
-        if self._get_no_of_free_calls_from_daemon(email, token_for_free_call, expiry_date_block, signature,
-                                                  current_block_number, daemon_endpoint) > 0:
-            return True
-        return False
+    def _is_free_call_available(
+        self,
+        email,
+        token_for_free_call,
+        expiry_date_block, signature,
+        current_block_number,
+        daemon_endpoint
+    ):
+        free_calls_number = self._get_no_of_free_calls_from_daemon(
+            email, token_for_free_call, expiry_date_block, signature, current_block_number, daemon_endpoint
+        )
 
-
+        return free_calls_number > 0
+        
     def _get_daemon_endpoint_and_free_call_for_group(self,org_id,service_id,group_id):
         lambda_payload = {
             "httpMethod": "GET",
@@ -278,7 +292,7 @@ class Signer:
             },
         }
         response = self.lambda_client.invoke(
-            FunctionName=GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_ARN,
+            FunctionName=settings.lambda_arn.get_service_deatails_arn,
             InvocationType="RequestResponse",
             Payload=json.dumps(lambda_payload),
         )
@@ -293,19 +307,20 @@ class Signer:
                         service_id, org_id, group_id)
 
     def token_to_get_free_call(self, email, org_id, service_id, group_id):
-        signer_public_key_checksum = Web3.to_checksum_address(SIGNER_ADDRESS)
+        signer_public_key_checksum = Web3.to_checksum_address(settings.signer.ADDRESS)
         current_block_number = self.obj_blockchain_utils.get_current_block_no()
         expiry_date_block = current_block_number + FREE_CALL_EXPIRY
-        token_to_get_free_call = self.obj_blockchain_utils.generate_signature_bytes(["string", "address", "uint256"],
-                                                                                 [email, signer_public_key_checksum,
-                                                                                  expiry_date_block],
-                                                                                 SIGNER_KEY)
+        token_to_get_free_call = self.obj_blockchain_utils.generate_signature_bytes(
+            ["string", "address", "uint256"],
+            [email, signer_public_key_checksum, expiry_date_block],
+            settings.signer.KEY
+        )
 
         signature = self.obj_blockchain_utils.generate_signature_bytes(
             ["string", "string", "string", "string", "string", "uint256", "bytes32"],
-            ["__prefix_free_trial", email, org_id, service_id, group_id,
-             current_block_number, token_to_get_free_call],
-            SIGNER_KEY)
+            ["__prefix_free_trial", email, org_id, service_id, group_id, current_block_number, token_to_get_free_call],
+            settings.signer.KEY
+        )
 
         daemon_endpoint ,free_calls_allowed = self._get_daemon_endpoint_and_free_call_for_group(org_id, service_id, group_id)
         logger.info(f"Got daemon endpoint {daemon_endpoint} for org {org_id} service {service_id} group {group_id}")
@@ -323,7 +338,7 @@ class Signer:
                 ["string", "address", "uint256"],
                 [email, Web3.to_checksum_address(user_public_key),
                  expiry_date_block],
-                SIGNER_KEY)
+                settings.signer.KEY)
         else:
             raise Exception("Free call is not available")
 

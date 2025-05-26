@@ -1,7 +1,6 @@
 from common.exceptions import BadRequestException
 
 
-# TODO: Move it to common package
 class RequestContext:
     def __init__(self, event):
         self.event = event
