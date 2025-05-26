@@ -66,3 +66,9 @@ class TokenSymbol(Enum):
 class ProviderType(Enum):
     http = "HTTP_PROVIDER"
     ws = "WS_PROVIDER"
+
+
+class RequestPayloadType(str, Enum):
+    BODY = "body"
+    PATH_PARAMS = "pathParameters"
+    QUERY_STRING = "queryStringParameters"

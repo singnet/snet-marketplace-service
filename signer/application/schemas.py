@@ -1,5 +1,6 @@
 import json
 from pydantic import BaseModel, ValidationError
+from common.constant import RequestPayloadType
 from common.schemas import PayloadValidationError
 
 class GetFreeCallSignatureRequest(BaseModel):
@@ -10,11 +11,11 @@ class GetFreeCallSignatureRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "GetFreeCallSignatureRequest":
         try:
-            assert event.get("pathParameters") is not None, "Missing pathParameters"
-            assert event.get("body") is not None, "Missing body"
+            assert event.get(RequestPayloadType.PATH_PARAMS.value) is not None, "Missing pathParameters"
+            assert event.get(RequestPayloadType.BODY) is not None, "Missing body"
 
-            body = json.loads(event["body"])
-            path_parameters = event["pathParameters"]
+            body = json.loads(event[RequestPayloadType.BODY])
+            path_parameters = event[RequestPayloadType.PATH_PARAMS]
 
             data = {**path_parameters, **body}
 
@@ -30,8 +31,8 @@ class GetSignatureForStateServiceRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "GetSignatureForStateServiceRequest":
         try:
-            assert event.get("body") is not None, "Missing body"
-            body = json.loads(event["body"])
+            assert event.get(RequestPayloadType.BODY) is not None, "Missing body"
+            body = json.loads(event[RequestPayloadType.BODY])
             return cls.model_validate(body)
 
         except (ValidationError, AssertionError, KeyError):
@@ -46,8 +47,8 @@ class GetSignatureForRegularCallRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "GetSignatureForRegularCallRequest":
         try:
-            assert event.get("body") is not None, "Missing body"
-            body = json.loads(event["body"])
+            assert event.get(RequestPayloadType.BODY) is not None, "Missing body"
+            body = json.loads(event[RequestPayloadType.BODY])
             return cls.model_validate(body)
 
         except (ValidationError, json.JSONDecodeError, AssertionError, KeyError):
@@ -66,8 +67,8 @@ class GetSignatureForOpenChannelForThirdPartyRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "GetSignatureForOpenChannelForThirdPartyRequest":
         try:
-            assert event.get("body") is not None, "Missing body"
-            body = json.loads(event["body"])
+            assert event.get(RequestPayloadType.BODY) is not None, "Missing body"
+            body = json.loads(event[RequestPayloadType.BODY])
             return cls.model_validate(body)
 
         except (ValidationError, json.JSONDecodeError, AssertionError, KeyError):
@@ -83,8 +84,8 @@ class GetFreeCallTokenRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "GetFreeCallTokenRequest":
         try:
-            assert event.get("queryStringParameters") is not None, "Missing queryStringParameters"
-            data = event["queryStringParameters"]
+            assert event.get(RequestPayloadType.QUERY_STRING) is not None, "Missing queryStringParameters"
+            data = event[RequestPayloadType.QUERY_STRING]
             return cls.model_validate(data)
 
         except (ValidationError, json.JSONDecodeError, AssertionError, KeyError):
@@ -99,8 +100,8 @@ class GetFreecallSignerAddress(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "GetFreecallSignerAddress":
         try:
-            assert event.get("queryStringParameters") is not None, "Missing queryStringParameters"
-            data = event["queryStringParameters"]
+            assert event.get(RequestPayloadType.QUERY_STRING) is not None, "Missing queryStringParameters"
+            data = event[RequestPayloadType.QUERY_STRING]
             return cls.model_validate(data)
 
         except (ValidationError, json.JSONDecodeError, AssertionError, KeyError):
@@ -115,8 +116,8 @@ class GetSignatureForFreeCallFromDaemonRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "GetSignatureForFreeCallFromDaemonRequest":
         try:
-            assert event.get("queryStringParameters") is not None, "Missing queryStringParameters"
-            data = event["queryStringParameters"]
+            assert event.get(RequestPayloadType.QUERY_STRING) is not None, "Missing queryStringParameters"
+            data = event[RequestPayloadType.QUERY_STRING]
             return cls.model_validate(data)
 
         except (ValidationError, json.JSONDecodeError, AssertionError, KeyError):
