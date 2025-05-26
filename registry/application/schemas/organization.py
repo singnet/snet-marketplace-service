@@ -4,7 +4,7 @@ from pydantic import ValidationError
 
 from common.exceptions import MethodNotImplemented
 from registry.settings import settings
-from registry.application.schemas.common import PayloadValidationError
+from common.schemas import PayloadValidationError
 from registry.exceptions import InvalidOriginException
 from registry.constants import (
     ORG_STATUS_LIST,

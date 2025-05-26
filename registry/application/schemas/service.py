@@ -3,7 +3,7 @@ from typing import List
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic import ValidationError
 
-from registry.application.schemas.common import PayloadValidationError
+from common.schemas import PayloadValidationError
 from registry.constants import EnvironmentType, DEFAULT_SERVICE_RANKING, ServiceType
 from registry.infrastructure.storage_provider import StorageProviderType
 

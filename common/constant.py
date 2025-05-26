@@ -61,3 +61,8 @@ class TokenSymbol(Enum):
     NTX = "NTX"
     RJV = "RJV"
     CGV = "CGV"
+
+
+class ProviderType(Enum):
+    http = "HTTP_PROVIDER"
+    ws = "WS_PROVIDER"

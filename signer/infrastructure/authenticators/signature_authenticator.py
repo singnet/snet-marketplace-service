@@ -1,11 +1,11 @@
 from web3.auto import w3
 
-from signer.authenticators.daemon_authenticator import DaemonAuthenticator
-from signer.config import NETWORKS, NET_ID
+from signer.infrastructure.authenticators.daemon_authenticator import DaemonAuthenticator
+from signer.settings import settings
 
 
 def extract_public_key(message_data, signature):
-    public_key = w3.eth.account.recoverHash(message_data, signature=signature)
+    public_key = w3.eth.account.recover_message(message_data, signature=signature)
     return public_key
 
 
@@ -47,7 +47,7 @@ def main(event, context):
     if 'x-authtype' in event:
         pass
     else:
-        authenticator = DaemonAuthenticator(event, NETWORKS, NET_ID)
+        authenticator = DaemonAuthenticator(event, settings.network.networks, settings.network.id)
 
     try:
         message = authenticator.get_signature_message()
@@ -56,8 +56,9 @@ def main(event, context):
         principal = authenticator.get_principal()
         derived_public_key = extract_public_key(message, signature)
         print("Derived public key is %s", derived_public_key)
-        verified = (verify_public_key(public_keys, derived_public_key)
-                    and authenticator.verify_current_block_number())
+        verified = (
+            verify_public_key(public_keys, derived_public_key) and authenticator.verify_current_block_number()
+        )
         if verified:
             print(f"verified sign auth for {principal}")
             return generatePolicy(principal, 'Allow', event['methodArn'])

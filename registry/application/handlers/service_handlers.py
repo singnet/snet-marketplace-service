@@ -10,7 +10,7 @@ from registry.config import NETWORK_ID, SLACK_HOOK
 from registry.constants import Action
 from registry.exceptions import EXCEPTIONS
 from registry.application.services.update_service_assets import UpdateServiceAssets
-from registry.application.handlers.common import RequestContext
+from common.request_context import RequestContext
 
 from registry.application.schemas.service import (
     CreateServiceRequest,
@@ -25,7 +25,7 @@ from registry.application.schemas.service import (
     SaveServiceRequest,
     PublishServiceRequest,
 )
-from registry.application.schemas.common import PayloadValidationError
+from common.schemas import PayloadValidationError
 
 logger = get_logger(__name__)
 
