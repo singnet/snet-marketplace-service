@@ -1,25 +1,39 @@
 import json
+from typing import Dict
 from pydantic import BaseModel, ValidationError
 from common.constant import RequestPayloadType
 from common.schemas import PayloadValidationError
+
+
+class GetFreeCallUsageRequest(BaseModel):
+    org_id: str
+    service_id: str
+    group_id: str
+    free_call_token_hex: str | None = None
+
+    @classmethod
+    def validate_event(cls, event: Dict[str, str]) -> "GetFreeCallUsageRequest":
+        try:
+            assert event.get(RequestPayloadType.QUERY_STRING) is not None, "Missing body"
+            data = event[RequestPayloadType.QUERY_STRING]
+            return cls.model_validate(data)
+
+        except (ValidationError, json.JSONDecodeError, AssertionError, KeyError):
+            raise PayloadValidationError()
+
 
 class GetFreeCallSignatureRequest(BaseModel):
     org_id: str
     service_id: str
     group_id: str
+    free_call_token_hex: str
 
     @classmethod
     def validate_event(cls, event: dict) -> "GetFreeCallSignatureRequest":
         try:
-            assert event.get(RequestPayloadType.PATH_PARAMS.value) is not None, "Missing pathParameters"
             assert event.get(RequestPayloadType.BODY) is not None, "Missing body"
-
             body = json.loads(event[RequestPayloadType.BODY])
-            path_parameters = event[RequestPayloadType.PATH_PARAMS]
-
-            data = {**path_parameters, **body}
-
-            return cls.model_validate(data)
+            return cls.model_validate(body)
 
         except (ValidationError, json.JSONDecodeError, AssertionError, KeyError):
             raise PayloadValidationError()

@@ -24,6 +24,9 @@ class AWSConfig(BaseModel):
 class SignerConfig(BaseModel):
     KEY: str = Field(default=config.SIGNER["KEY"])
     ADDRESS: str = Field(default=config.SIGNER["ADDRESS"])
+    FREECAL_EXPIRY: int = Field(
+        default=config.SIGNER["FREECAL_EXPIRY"]
+    )
 
 
 class LambdaARNConfig(BaseModel):
@@ -61,8 +64,6 @@ class Settings(BaseSettings):
     lambda_arn: LambdaARNConfig = Field(default_factory=LambdaARNConfig)
     network: NetworkConfig = Field(default_factory=NetworkConfig)
     signer: SignerConfig = Field(default_factory=SignerConfig)
-
-
 
     model_config = SettingsConfigDict(env_file=".env", env_nested_delimiter="__")
 

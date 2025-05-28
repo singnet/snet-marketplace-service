@@ -70,8 +70,8 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
-  signer:
-    handler: signer/lambda_handler.request_handler
+  get-free-call-usage:
+    handler: signer/application/handlers.get_free_call_usage_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -82,8 +82,8 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - http:
-          method: POST
-          path: /free-call
+          method: GET
+          path: /freecall/usage
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -99,6 +99,48 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+
+  get-free-call-signature:
+    handler: signer/application/handlers.get_free_call_signature_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: POST
+          path: /freecall
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
+  get-regular-call-signature:
+    handler: signer/application/handlers.get_regular_call_signature_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
       - http:
           method: POST
           path: /regular-call
@@ -117,6 +159,18 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+
+  get-state-service-signature:
+    handler: signer/application/handlers.get_state_service_signature_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
       - http:
           method: POST
           path: /state-service
@@ -135,6 +189,18 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+
+  get-open-channel-for-third-party-signature:
+    handler: signer/application/handlers.get_open_channel_for_third_party_signature_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events
       - http:
           method: POST
           path: /open-channel-for-third-party
@@ -154,8 +220,8 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-  free_call_token:
-    handler: signer/lambda_handler.free_call_token_handler
+  get-free-call-token:
+    handler: signer/application/handlers.get_free_call_token_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -184,8 +250,8 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-  free-call-signer-address:
-    handler: signer/lambda_handler.get_free_call_signer_address
+  get-free-call-signer-address:
+    handler: signer/application/handlers.get_free_call_signer_address_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -215,7 +281,7 @@ functions:
               - x-requested-with
 
   signature-to-get-freecall-from-daemon:
-    handler: signer/lambda_handler.signature_to_get_free_call_from_daemon_handler
+    handler: signer/application/handlers.get_signature_for_free_call_daemon_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
