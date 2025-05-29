@@ -224,24 +224,6 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
       - http:
-          path: /usage/freecalls
-          method: get
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-      - http:
           method: POST
           path: /feedback
           authorizer:

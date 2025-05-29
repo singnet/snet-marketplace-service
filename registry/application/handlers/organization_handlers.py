@@ -3,8 +3,8 @@ from common.exception_handler import exception_handler
 from common.logger import get_logger
 from common.utils import generate_lambda_response
 from registry.application.access_control.authorization import secured
-from registry.application.handlers.common import RequestContext
-from registry.application.schemas.common import PayloadValidationError
+from common.request_context import RequestContext
+from common.schemas import PayloadValidationError
 from registry.application.schemas.organization import (
     GetGroupByOrganizationIdRequest,
     CreateOrganizationRequest,

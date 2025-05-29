@@ -1,6 +1,5 @@
 import base64
 import json
-import boto3
 
 import web3
 from eth_account.messages import defunct_hash_message
@@ -8,7 +7,7 @@ from eth_account.messages import defunct_hash_message
 from common.blockchain_util import BlockChainUtil
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
-from signer.config import GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_REGISTRY_ARN, REGION_NAME
+from signer.settings import settings
 
 logger = get_logger(__name__)
 class SignatureAuthenticator(object):
@@ -18,7 +17,7 @@ class SignatureAuthenticator(object):
         self.event = event
         self.networks = networks
         self.net_id = net_id
-        self.boto_utils=BotoUtils(REGION_NAME)
+        self.boto_utils=BotoUtils(settings.aws.REGION_NAME)
 
 
     def get_signature_message(self):
@@ -58,8 +57,10 @@ class DaemonAuthenticator(SignatureAuthenticator):
         group_id = self.event['headers']['x-groupid']
         service_id = self.event['headers']['x-serviceid']
         block_number = self.event['headers']['x-currentblocknumber']
-        message = web3.Web3.soliditySha3(["string", "string", "string", "string", "string", "uint256"],
-                                         ['_usage', username, organization_id, service_id, group_id, int(block_number)])
+        message = web3.Web3.solidity_keccak(
+            ["string", "string", "string", "string", "string", "uint256"],
+            ['_usage', username, organization_id, service_id, group_id, int(block_number)]
+        )
         return defunct_hash_message(message)
 
 
@@ -72,7 +73,7 @@ class DaemonAuthenticator(SignatureAuthenticator):
             },
         }
         response = self.boto_utils.invoke_lambda(
-            lambda_function_arn=GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_REGISTRY_ARN,
+            lambda_function_arn=settings.lambda_arn.get_service_deatails_arn,
             invocation_type="RequestResponse",
             payload=json.dumps(lambda_payload),
         )
