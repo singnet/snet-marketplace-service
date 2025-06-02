@@ -132,8 +132,7 @@ class Signer:
             username = user_data["authorizer"]["claims"]["email"]
             if self._free_calls_allowed(
                 username=username, org_id=org_id, service_id=service_id, group_id=group_id):
-                current_block_no = self.obj_utils.get_current_block_no(
-                    ws_provider=NETWORKS[self.net_id]["ws_provider"])
+                current_block_no = self.obj_blockchain_utils.get_current_block_no()
                 provider = Web3.HTTPProvider(
                     NETWORKS[self.net_id]["http_provider"])
                 w3 = Web3(provider)
