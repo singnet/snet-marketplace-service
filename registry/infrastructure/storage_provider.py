@@ -8,7 +8,7 @@ from zipfile import ZipFile
 
 from common.exceptions import BadRequestException
 from registry.config import IPFS_URL
-from registry.exceptions import LighthouseInternalException
+from registry.exceptions import LighthouseInternalException, TooLargeFileException
 from common.logger import get_logger
 
 import ipfshttpclient
@@ -155,7 +155,7 @@ class IPFSUtil:
                 return result["Hash"]
         except Exception as err:
             logger.error(f"File error {repr(err)}")
-        return ""
+            raise TooLargeFileException()
 
     def read_file_from_ipfs(self, ipfs_hash):
         """

@@ -134,6 +134,12 @@ class LighthouseInternalException(CustomException):
     def __init__(self):
         super().__init__({})
 
+class TooLargeFileException(CustomException):
+    error_message = "TOO_LARGE_FILE"
+
+    def __init__(self):
+        super().__init__({})
+
 class NewMemberAddressException(CustomException):
     error_message = "NEW_MEMBER_ADDRESS_EQUALS_OWNER"
 
@@ -146,4 +152,4 @@ EXCEPTIONS = (BadRequestException, OrganizationNotFoundException, InvalidOriginE
               ServiceNotFoundException, ServiceGroupNotFoundException, EnvironmentNotFoundException,
               InvalidSlackUserException, InvalidSlackChannelException, InvalidSlackSignatureException,
               InvalidFileTypeException, FileNotFoundException, OperationNotAllowed, InvalidOrganizationType,
-              LighthouseInternalException, NewMemberAddressException)
+              LighthouseInternalException, NewMemberAddressException, TooLargeFileException)
