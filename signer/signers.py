@@ -120,7 +120,7 @@ class Signer:
 
         free_calls_available = self._get_no_of_free_call_available(username, org_id, service_id, group_id)
         if free_calls_available > 0:
-            return True;
+            return True
 
         return False
 
@@ -236,7 +236,7 @@ class Signer:
     def _get_no_of_free_calls_from_daemon(self, email, token_to_get_free_call, expiry_date_block, signature,
                                           current_block_number, daemon_endpoint):
 
-        request = state_service_pb2.free_CallStateRequest()
+        request = state_service_pb2.FreeCallStateRequest()
         request.user_id = email
         request.token_for_free_call = token_to_get_free_call
         request.token_expiry_date_block = expiry_date_block
