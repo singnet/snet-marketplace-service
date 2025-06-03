@@ -33,14 +33,15 @@ IPFS_URL = {
 EMAILS = {
     "PUBLISHER_PORTAL_SUPPORT_MAIL": "",
     "ORG_APPROVERS_DLIST": "",
-    "SERVICE_APPROVERS_DLIST": ""
+    "SERVICE_APPROVERS_DLIST": "",
+    "PUBLISHER_PORTAL_DAPP_URL": "http://dev-fet-publisher.singularitynet.io.s3-website-us-east-1.amazonaws.com/"
 }
 
 AWS = {
     "ALLOWED_ORIGIN": ["PUBLISHER"],
     "REGION_NAME": "us-east-1",
     "S3": {
-        "ASSET_BUCKET": "snet-marketplace-assets",
+        "ASSETS_BUCKET": "snet-marketplace-assets",
         "ASSET_DIR": "/tmp",
         "UPLOAD_BUCKET": {
             "ORG_BUCKET": "org_bucket"
@@ -62,25 +63,15 @@ LAMBDA_ARN = {
         "UPDATE_DEMO_COMPONENT_BUILD_STATUS_LAMBDA_ARN": ""
     },
     "MANAGE_PROTO_COMPILATION_LAMBDA_ARN": "",
-    "PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT": "",
-    "GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT": ""
+    "PUBLISH_OFFCHAIN_ATTRIBUTES_LAMBDAS": {
+        "FET": "",
+        "AGIX": "",
+    },
+    "GET_SERVICE_FOR_GIVEN_ORG_LAMBDAS": {
+        "FET": "",
+        "AGIX": ""
+    }
 }
 
-
-DEMO_COMPONENT_CODE_BUILD_NAME = ""
-UPDATE_DEMO_COMPONENT_BUILD_STATUS_LAMBDA_ARN = ""
-MANAGE_PROTO_COMPILATION_LAMBDA_ARN = ""
-ALLOWED_HERO_IMAGE_FORMATS = ['.jpg', '.jpeg', '.png']
-PUBLISH_OFFCHAIN_ATTRIBUTES_ENDPOINT = ""
-GET_SERVICE_FOR_GIVEN_ORG_ENDPOINT = ""
-ASSETS_COMPONENT_BUCKET_NAME = ""
 CONTRACT_BASE_PATH = ""
-GET_SERVICE_FOR_GIVEN_ORG_ARN = {
-    "FET": "",
-    "AGIX": ""
-}
-PUBLISH_OFFCHAIN_ATTRIBUTES_ARN = {
-    "FET": "",
-    "AGIX": ""
-}
 
