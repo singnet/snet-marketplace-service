@@ -1,7 +1,5 @@
 import traceback
 
-from aws_xray_sdk.core import patch_all
-
 from common.logger import get_logger
 from common.repository import Repository
 from common.utils import Utils
@@ -13,7 +11,6 @@ from orchestrator.config import NETWORK_ID
 from orchestrator.config import SLACK_HOOK
 from orchestrator.services.order_service import OrderService
 
-patch_all()
 REQUIRED_KEYS_FOR_CANCEL_ORDER_EVENT = ["pathParameters"]
 repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
 obj_util = Utils()
@@ -36,7 +33,7 @@ def request_handler(event, context):
         error_message = format_error_message(
             status="failed",
             error=repr(e),
-            payload=payload_dict,
+            payload=event,
             net_id=NETWORK_ID,
             handler="cancel_order_handler"
         )

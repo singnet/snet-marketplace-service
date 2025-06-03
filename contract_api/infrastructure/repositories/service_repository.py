@@ -1,4 +1,4 @@
-from datetime import datetime as dt
+import datetime as dt
 
 from contract_api.infrastructure.models import Service as ServiceDB, ServiceMetadata as ServiceMetadataDB
 from contract_api.infrastructure.models import OffchainServiceConfig
@@ -27,6 +27,7 @@ class ServiceRepository(BaseRepository):
         return service_factory.convert_service_db_model_to_entity_model(service_db)
 
     def create_or_update_service(self, service):
+        current_datetime = dt.datetime.now(dt.UTC)
         try:
             service_db = self.session.query(ServiceDB). \
                 filter(ServiceDB.org_id == service.org_id). \
@@ -36,7 +37,7 @@ class ServiceRepository(BaseRepository):
                 service_db.hash_uri = service.hash_uri,
                 service_db.is_curated = service.is_curated,
                 service_db.service_email = service.service_email
-                service_db.row_updated = dt.utcnow()
+                service_db.row_updated = current_datetime
                 service_db.service_metadata.display_name = service.service_metadata.display_name
                 service_db.service_metadata.description = service.service_metadata.description
                 service_db.service_metadata.short_description = service.service_metadata.short_description
@@ -52,7 +53,7 @@ class ServiceRepository(BaseRepository):
                 service_db.service_metadata.ranking = service.service_metadata.ranking
                 service_db.service_metadata.demo_component_available = service.service_metadata.demo_component_available
                 service_db.service_metadata.contributors = service.service_metadata.contributors
-                service_db.service_metadata.row_updated = dt.utcnow()
+                service_db.service_metadata.row_updated = current_datetime
             self.session.commit()
         except SQLAlchemyError as e:
             self.session.rollback()
@@ -65,8 +66,8 @@ class ServiceRepository(BaseRepository):
                 hash_uri=service.hash_uri,
                 is_curated=service.is_curated,
                 service_email=service.service_email,
-                row_created=dt.utcnow(),
-                row_updated=dt.utcnow,
+                row_created=current_datetime,
+                row_updated=current_datetime,
                 service_metadata=ServiceMetadataDB(
                     org_id=service.service_metadata.org_id,
                     service_id=service.service_metadata.service_id,
@@ -85,8 +86,8 @@ class ServiceRepository(BaseRepository):
                     service_rating=service.service_metadata.service_rating,
                     ranking=service.service_metadata.ranking,
                     contributors=service.service_metadata.contributors,
-                    row_created=dt.utcnow(),
-                    row_updated=dt.utcnow()
+                    row_created=current_datetime,
+                    row_updated=current_datetime
                 )
             ))
 
@@ -113,6 +114,7 @@ class OffchainServiceConfigRepository(BaseRepository):
 
     def save_offchain_service_attribute(self, offchain_service_attribute):
         attributes = offchain_service_attribute.attributes
+        current_datetime = dt.datetime.now(dt.UTC)
         for key in attributes:
             parameter_name = key
             parameter_value = attributes[key]
@@ -124,7 +126,7 @@ class OffchainServiceConfigRepository(BaseRepository):
                     first()
                 if offchain_service_config_db:
                     offchain_service_config_db.parameter_value = parameter_value
-                    offchain_service_config_db.updated_on=dt.utcnow()
+                    offchain_service_config_db.updated_on=current_datetime
                 self.session.commit()
             except SQLAlchemyError as e:
                 self.session.rollback()
@@ -135,7 +137,7 @@ class OffchainServiceConfigRepository(BaseRepository):
                     service_id=offchain_service_attribute.service_id,
                     parameter_name=parameter_name,
                     parameter_value=parameter_value,
-                    created_on=dt.utcnow(),
-                    updated_on=dt.utcnow()
+                    created_on=current_datetime,
+                    updated_on=current_datetime
                 ))
         return offchain_service_attribute

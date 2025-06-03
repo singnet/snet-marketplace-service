@@ -8,7 +8,7 @@ from zipfile import ZipFile
 
 from common.exceptions import BadRequestException
 from registry.config import IPFS_URL
-from registry.exceptions import LighthouseInternalException
+from registry.exceptions import LighthouseInternalException, TooLargeFileException
 from common.logger import get_logger
 
 import ipfshttpclient
@@ -19,7 +19,7 @@ logger = get_logger(__name__)
 
 class MetaEnum(EnumMeta):
     def __contains__(cls, item):
-        return any(item == member.value for member in cls)
+        return any(item == member.value for member in cls) # type: ignore
 
 
 class StorageProviderType(Enum, metaclass=MetaEnum):
@@ -59,12 +59,15 @@ class StorageProvider:
         provider_type, metadata_hash = self.uri_to_hash(metadata_uri)
         logger.info(f"Get file from provider: {provider_type}, hash: {metadata_hash}")
 
+        data_bytes: bytes | None = None
         if provider_type == StorageProviderType.IPFS:
             data_bytes = self.__ipfs_util.read_bytes_from_ipfs(metadata_hash)
         elif provider_type == StorageProviderType.FILECOIN:
             data_bytes = self.__lighthouse_client.download(metadata_hash)[0]
 
-        logger.debug(f"Resulting data: data bytes = {data_bytes}, dict = {json.loads(data_bytes.decode('utf-8'))}")
+        if data_bytes is None:
+            raise Exception("Data bytes is None")
+
         return json.loads(data_bytes.decode("utf-8"))
  
     def __upload_to_provider(self, file_path: str, provider_type: StorageProviderType) -> str:
@@ -80,33 +83,35 @@ class StorageProvider:
         elif provider_type == StorageProviderType.FILECOIN:
             try:
                 metadata_hash = self.__lighthouse_client.upload(file_path)["data"]["Hash"]
-            except Exception as e:
-                raise LighthouseInternalException("Internal Lighthouse server error. Please check your Lighthouse token.")
+            except Exception:
+                raise LighthouseInternalException()
         else:
             raise ValueError(f"Unsupported provider type: {provider_type}")
         return self.hash_to_uri(metadata_hash, provider_type)
 
     def publish(self, source: str, provider_type: StorageProviderType,
-                zip_archive: bool = False, ignored_files: List[str] = None) -> str:
+                zip_archive: bool = False, exclude_files: List[str] | None = None) -> str:
         """
         Publish metadata to a specific provider storage.
 
         :param source: str, file path to metadata JSON file or zip archive
         :param provider_type: StorageProviderType, type of the storage provider (e.g., IPFS, FILECOIN)
         :param zip_archive: bool, flag to indicate whether to publish a zip archive (default is False)
-        :param ignored_files: list[str], list of file names to be ignored when publishing a zip archive
+        :param exclude_files: list[str], list of file names to be ignored when publishing a zip archive
         :return: str, the URI of the uploaded metadata
         """
         logger.info(f"Publishing file to storage: source = {source}, provider type = {provider_type}, zip_archive = {zip_archive}")
+
+        temp_tar_path: str | None = None
         if zip_archive:
             try:
-                temp_tar_path = FileUtils.convert_zip_to_temp_tar(source, ignored_files)
+                temp_tar_path = FileUtils.convert_zip_to_temp_tar(source, exclude_files)
                 logger.info(f"temp_tar_path = {temp_tar_path}")
                 hash_uri = self.__upload_to_provider(temp_tar_path, provider_type)
                 logger.info(f"hash_uri = {hash_uri}")
                 return hash_uri
             finally:
-                if 'temp_tar_path' in locals() and os.path.exists(temp_tar_path):
+                if temp_tar_path is not None and "temp_tar_path" in locals() and os.path.exists(temp_tar_path):
                     os.remove(temp_tar_path)
         else:
             hash_uri = self.__upload_to_provider(source, provider_type)
@@ -150,7 +155,7 @@ class IPFSUtil:
                 return result["Hash"]
         except Exception as err:
             logger.error(f"File error {repr(err)}")
-        return ""
+            raise TooLargeFileException()
 
     def read_file_from_ipfs(self, ipfs_hash):
         """
@@ -165,8 +170,7 @@ class FileUtils:
     @staticmethod
     def convert_zip_to_temp_tar(
         zip_path: str,
-        exclude_files: List[str] = [],
-        include_files: List[str] = [],
+        exclude_files: List[str] | None = None
     ) -> str:
         """
         Convert a zip archive into a tar file and save it as a temporary file.
@@ -188,7 +192,7 @@ class FileUtils:
             # Extract the zip archive to a temporary directory
             with tempfile.TemporaryDirectory() as temp_dir:
                 logger.debug(f"Extracting zip file: {zip_path}")
-                with ZipFile(zip_path, 'r') as zip_obj:
+                with ZipFile(zip_path, "r") as zip_obj:
                     zip_obj.extractall(temp_dir)
 
                 # Create the tar file and write to the temporary tar path
@@ -217,7 +221,7 @@ class FileUtils:
 
     @staticmethod
     def create_temp_json_file(data: dict) -> str:
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as temp_file:
             json.dump(data, temp_file)
             temp_file_name = temp_file.name 
         return temp_file_name

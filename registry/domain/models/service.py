@@ -2,7 +2,6 @@ from cerberus import Validator
 
 from common.logger import get_logger
 from registry.constants import UserType
-from registry.infrastructure.storage_provider import get_storage_provider_by_uri
 
 logger = get_logger(__name__)
 

@@ -115,7 +115,7 @@ def find_training_indicator(proto_path: str) -> bool:
         return bool(re.search(pattern, text_data))
 
 
-def daemon_health_check(daemon_endpoint: str) -> dict:
+def daemon_health_check(daemon_endpoint: str) -> dict | None:
     try:
         response = requests.get(f"{daemon_endpoint}/heartbeat")
         if response.status_code == HTTPStatus.OK:

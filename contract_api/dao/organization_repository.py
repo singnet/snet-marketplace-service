@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime as dt
 import json
 
 from contract_api.dao.common_repository import CommonRepository
@@ -33,11 +33,12 @@ class OrganizationRepository(CommonRepository):
         upsert_query = "Insert into organization (org_id, organization_name, owner_address, org_metadata_uri, is_curated, description, assets_hash,org_assets_url, contacts, row_updated, row_created) " \
                        "VALUES ( %s, %s, %s, %s, %s , %s ,%s ,%s, %s ,%s, %s) " \
                        "ON DUPLICATE KEY UPDATE organization_name = %s, owner_address = %s, org_metadata_uri = %s, row_updated = %s, is_curated=%s, description = %s ,assets_hash =%s , org_assets_url = %s , contacts = %s"
+        current_datetime = dt.datetime.now(dt.UTC)
         upsert_params = [org_id, org_name, owner_address, org_metadata_uri, is_curated, description, assets_hash,
                          assets_url, contacts,
-                         datetime.utcnow(), datetime.utcnow(),
+                         current_datetime, current_datetime,
                          org_name, owner_address, org_metadata_uri,
-                         datetime.utcnow(), is_curated, description, assets_hash, assets_url, contacts]
+                         current_datetime, is_curated, description, assets_hash, assets_url, contacts]
 
         self.connection.execute(upsert_query, upsert_params)
 
@@ -49,9 +50,10 @@ class OrganizationRepository(CommonRepository):
         insert_qry = "Insert into org_group (org_id, group_id, group_name, payment, row_updated, row_created) " \
                      "VALUES ( %s, %s, %s, %s, %s, %s ) "
         count = 0
+        current_datetime = dt.datetime.now(dt.UTC)
         for group in groups:
             insert_params = [org_id, group['group_id'], group['group_name'], json.dumps(
-                group['payment']), datetime.utcnow(), datetime.utcnow()]
+                group['payment']), current_datetime, current_datetime]
             query_response = self.connection.execute(insert_qry, insert_params)
             count = count + query_response[0]
 
@@ -63,9 +65,10 @@ class OrganizationRepository(CommonRepository):
                         "VALUES ( %s, %s, %s, %s ) " \
                         "ON DUPLICATE KEY UPDATE row_updated = %s "
         count = 0
+        current_datetime = dt.datetime.now(dt.UTC)
         for member in members:
             upsrt_members_params = [org_id, member,
-                                    datetime.utcnow(), datetime.utcnow(), datetime.utcnow()]
+                                    current_datetime, current_datetime, current_datetime]
             query_response = self.connection.execute(upsrt_members, upsrt_members_params)
             count = count + query_response[0]
 

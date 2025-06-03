@@ -64,10 +64,6 @@ class Utils:
         url = url.replace("http://", "")
         return url
 
-    def get_current_block_no(self, ws_provider):
-        w3Obj = Web3(web3.providers.WebsocketProvider(ws_provider))
-        return w3Obj.eth.blockNumber
-
     def cogs_to_agi(self, cogs):
         with decimal.localcontext() as ctx:
             ctx.prec = 8

@@ -12,7 +12,7 @@ class HistoricalCryptoFiatRates(BaseRepository):
                 Rate.id.desc()).limit(limit).first()
 
             self.session.commit()
-            if result.max is not None:
+            if result is not None and result.max is not None:
                 return result.max * Decimal(multiplier)
             else:
                 return None

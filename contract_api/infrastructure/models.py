@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime as dt
 
 from sqlalchemy import Column, VARCHAR, Integer, ForeignKey, UniqueConstraint, null, DECIMAL, BIGINT, Index, TEXT
 from sqlalchemy.dialects.mysql import JSON, TIMESTAMP, TINYINT, BIT
@@ -14,8 +14,8 @@ class DaemonToken(Base):
     daemon_id = Column("daemon_id", VARCHAR(256), nullable=False)
     token = Column("token", VARCHAR(128), nullable=False)
     expiration = Column("expiration", VARCHAR(256), nullable=False)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
+    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
     UniqueConstraint(daemon_id, name="uq_daemon_id")
     Index("daemon_id_idx", daemon_id)
 
@@ -27,8 +27,8 @@ class Members(Base):
                     ForeignKey("organization.org_id", ondelete="CASCADE"),
                     nullable=False)
     member = Column("member", VARCHAR(128), nullable=False)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
+    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
     Index("MembersFK_idx", org_id)
 
 
@@ -44,8 +44,8 @@ class MpeChannel(Base):
     nonce = Column("nonce", Integer, default=null)
     expiration = Column("expiration", BIGINT, default=null)
     signer = Column("signer", VARCHAR(256), nullable=False)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
+    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
     consumed_balance = Column("consumed_balance", DECIMAL(38, 0), default=0)
     UniqueConstraint(channel_id, sender, recipient, groupId, name="uq_channel")
 
@@ -57,8 +57,8 @@ class OrgGroup(Base):
     group_id = Column("group_id", VARCHAR(256), default=null)
     group_name = Column("group_name", VARCHAR(128), default=null)
     payment = Column("payment", JSON, default=null)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
+    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
     UniqueConstraint(org_id, group_id, name="uq_org_grp")
 
 
@@ -75,8 +75,8 @@ class Organization(Base):
     description = Column("description", VARCHAR(256), default=null)
     assets_hash = Column("assets_hash", JSON, default=null)
     contacts = Column("contacts", JSON, default=null)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
+    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
     UniqueConstraint(org_id, name="uq_org")
 
 
@@ -89,8 +89,8 @@ class Service(Base):
     hash_uri = Column("hash_uri", VARCHAR(128), default=null)
     is_curated = Column("is_curated", TINYINT, default=null)
     service_email = Column("service_email", VARCHAR(128), default=null)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
+    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
     service_metadata = relationship("ServiceMetadata", uselist=False)
     UniqueConstraint(org_id, service_id, name="uq_srvc")
 
@@ -108,10 +108,10 @@ class ServiceEndpoint(Base):
     is_available = Column("is_available", BIT(1), default=null)
     last_check_timestamp = Column("last_check_timestamp", TIMESTAMP(timezone=False), nullable=True, default=null)
     next_check_timestamp = Column("next_check_timestamp", TIMESTAMP(timezone=False), nullable=True,
-                                  default=datetime.utcnow())
+                                  default=dt.datetime.now(dt.UTC))
     failed_status_count = Column("failed_status_count", Integer, default=1)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
+    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
     Index("ServiceFK_idx", service_row_id)
 
 
@@ -128,8 +128,8 @@ class ServiceGroup(Base):
     group_id = Column("group_id", VARCHAR(256), nullable=False)
     group_name = Column("group_name", VARCHAR(128), nullable=False)
     pricing = Column("pricing", JSON, default=null)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
+    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
     Index("ServiceFK_idx", service_row_id)
     UniqueConstraint(org_id, service_id, group_id, name="uq_srvc_grp")
 
@@ -177,8 +177,8 @@ class ServiceMetadata(Base):
     service_rating = Column("service_rating", JSON, default=null)
     ranking = Column("ranking", Integer, default=1)
     contributors = Column("contributors", JSON, default=null)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
+    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
     UniqueConstraint(org_id, service_id, name="uq_srvc_mdata")
     Index("ServiceFK_idx", service_row_id)
 
@@ -192,8 +192,8 @@ class ServiceTags(Base):
     org_id = Column("org_id", VARCHAR(128), nullable=False)
     service_id = Column("service_id", VARCHAR(128), default=null)
     tag_name = Column("tag_name", VARCHAR(128), default=null)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
+    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
     UniqueConstraint(org_id, service_id, tag_name, name="uq_srvc_tag")
     Index("ServiceFK_idx", service_row_id)
 
@@ -207,8 +207,8 @@ class Banner(Base):
     title = Column("title", VARCHAR(256))
     rank = Column("rank", Integer)
     description = Column("description", TEXT)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
+    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
     cta_order_rank = relationship("CTA", backref="banner", lazy="joined", order_by="CTA.rank")
 
 
@@ -221,8 +221,8 @@ class CTA(Base):
     type = Column("type", VARCHAR(256))
     variant = Column("variant", VARCHAR(256))
     rank = Column("rank", Integer)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=datetime.utcnow())
+    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
+    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
 
 
 class OffchainServiceConfig(Base):
@@ -233,5 +233,5 @@ class OffchainServiceConfig(Base):
     parameter_name = Column("parameter_name", VARCHAR(128), nullable=False)
     parameter_value = Column("parameter_value", VARCHAR(512), nullable=False)
     created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
-    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=datetime.utcnow())
+    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=dt.datetime.now(dt.UTC))
     UniqueConstraint(org_id, service_id, parameter_name, name="uq_off")

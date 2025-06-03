@@ -1,7 +1,6 @@
 from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.logger import get_logger
-from common.utils import generate_lambda_response
 from utility.application.services.generate_grpc_python_stubs import generate_python_stubs
 from utility.application.services.proto_compilation_service import GenerateStubService
 from utility.config import SLACK_HOOK, NETWORK_ID
