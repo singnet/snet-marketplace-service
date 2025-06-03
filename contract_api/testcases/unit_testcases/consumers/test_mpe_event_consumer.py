@@ -16,13 +16,13 @@ class TestOrganizationEventConsumer(unittest.TestCase):
 
     @patch("common.blockchain_util.BlockChainUtil.get_contract_instance")
     def test_on_event_channel_open(self, mock_get_contract_instance):
-        event = {"blockchain_event": {"data": {'row_id': 347, 'block_no': 6629145, 'event': 'ChannelOpen',
+        event = {"data": {'row_id': 347, 'block_no': 6629145, 'event': 'ChannelOpen',
                            'json_str': '{\'sender\': \'0x669CCF5025C08304Fd836d7A136634E22C5Dd31C\', \'recipient\': \'0xaceB1EaCA36061ff29Ddb7c963142abbFf23e508\', \'groupId\': b"\\xbc\\xb0\\xa1\\x93Z\\xa1\\xab\\x11\\xfd\\xbcX\\x1c\\x1cxZ\\xdc.\\xb6\\xba\\x8e\\xc6\\xc8C*\\xd7\\xa9\\xea\\x91\\xe6\'\\xae\\xfc", \'channelId\': 143, \'nonce\': 0, \'signer\': \'0x669CCF5025C08304Fd836d7A136634E22C5Dd31C\', \'amount\': 1, \'expiration\': 8731644}',
                            'processed': b'\x00',
                            'transactionHash': "b'\\xb7X\\xde\\x13{\\x13\\x05$\\x99\\x8c\\x1a\\xe4\\xae\\xdf\\x0f\\x88\\x08\\xd4\\x0f\\x7fVV^T;s\\x93\\x90$?\\xe6\\x14'",
                            'logIndex': '42', 'error_code': 1, 'error_msg': '',
                            'row_updated': datetime(2019, 10, 23, 12, 35, 53),
-                           'row_created': datetime(2019, 10, 23, 12, 35, 53)}, "name": "ChannelOpen"}}
+                           'row_created': datetime(2019, 10, 23, 12, 35, 53)}, "name": "ChannelOpen"}
 
         block_chain_channel_data = [0, '0x669CCF5025C08304Fd836d7A136634E22C5Dd31C',
                                     '0x669CCF5025C08304Fd836d7A136634E22C5Dd31C',
@@ -52,13 +52,13 @@ class TestOrganizationEventConsumer(unittest.TestCase):
 
     @patch("common.blockchain_util.BlockChainUtil.get_contract_instance")
     def test_on_event_channels_add_funds(self, mock_get_contract_instance):
-        create_event = {"blockchain_event": {"data": {'row_id': 347, 'block_no': 6629145, 'event': 'ChannelOpen',
+        create_event = {"data": {'row_id': 347, 'block_no': 6629145, 'event': 'ChannelOpen',
                                   'json_str': '{\'sender\': \'0x669CCF5025C08304Fd836d7A136634E22C5Dd31C\', \'recipient\': \'0xaceB1EaCA36061ff29Ddb7c963142abbFf23e508\', \'groupId\': b"\\xbc\\xb0\\xa1\\x93Z\\xa1\\xab\\x11\\xfd\\xbcX\\x1c\\x1cxZ\\xdc.\\xb6\\xba\\x8e\\xc6\\xc8C*\\xd7\\xa9\\xea\\x91\\xe6\'\\xae\\xfc", \'channelId\': 143, \'nonce\': 0, \'signer\': \'0x669CCF5025C08304Fd836d7A136634E22C5Dd31C\', \'amount\': 1, \'expiration\': 8731644}',
                                   'processed': b'\x00',
                                   'transactionHash': "b'\\xb7X\\xde\\x13{\\x13\\x05$\\x99\\x8c\\x1a\\xe4\\xae\\xdf\\x0f\\x88\\x08\\xd4\\x0f\\x7fVV^T;s\\x93\\x90$?\\xe6\\x14'",
                                   'logIndex': '42', 'error_code': 1, 'error_msg': '',
                                   'row_updated': datetime(2019, 10, 23, 12, 35, 53),
-                                  'row_created': datetime(2019, 10, 23, 12, 35, 53)}, "name": "ChannelOpen"}}
+                                  'row_created': datetime(2019, 10, 23, 12, 35, 53)}, "name": "ChannelOpen"}
         mpe_event_consumer = MPEEventConsumer("wss://ropsten.infura.io/ws")
 
         mpe_repository = MPERepository(Repository(NETWORK_ID, NETWORKS=NETWORKS))
@@ -66,12 +66,12 @@ class TestOrganizationEventConsumer(unittest.TestCase):
 
         mpe_event_consumer.on_event(event=create_event)
 
-        update_event = {"blockchain_event": {"data": {'row_id': 349, 'block_no': 6629307, 'event': 'ChannelAddFunds',
+        update_event = {"data": {'row_id': 349, 'block_no': 6629307, 'event': 'ChannelAddFunds',
                                   'json_str': "{'channelId': 143, 'additionalFunds': 10}", 'processed': b'\x00',
                                   'transactionHash': "b'\\x14\\xb3\\x8b\\x18\\xf1@6\\xe7\\x85T\\x82\\xf3\\xe7\\x15\\x82U\\xd8(\\x0f\\xe8T\\xac\\xdb\\xbdg\\xad0s\\xb6\\xd8\\x03\\x98'",
                                   'logIndex': '4', 'error_code': 1, 'error_msg': '',
                                   'row_updated': datetime(2019, 10, 23, 12, 35, 53),
-                                  'row_created': datetime(2019, 10, 23, 12, 35, 53)}, "name": "ChannelAddFunds"}}
+                                  'row_created': datetime(2019, 10, 23, 12, 35, 53)}, "name": "ChannelAddFunds"}
 
         block_chain_channel_data = [0, '0x669CCF5025C08304Fd836d7A136634E22C5Dd31C',
                                     '0x669CCF5025C08304Fd836d7A136634E22C5Dd31C',

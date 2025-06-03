@@ -34,7 +34,7 @@ EMAILS = {
     "PUBLISHER_PORTAL_SUPPORT_MAIL": "",
     "ORG_APPROVERS_DLIST": "",
     "SERVICE_APPROVERS_DLIST": "",
-    "PUBLISHER_PORTAL_DAPP_URL": "http://dev-fet-publisher.singularitynet.io.s3-website-us-east-1.amazonaws.com/"
+    "PUBLISHER_PORTAL_DAPP_URL": ""
 }
 
 AWS = {
