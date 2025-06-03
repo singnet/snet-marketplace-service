@@ -28,17 +28,21 @@ class MPEEventConsumer(EventConsumer):
                                                                   TOKEN_NAME,
                                                                   STAGE)
 
-        logger.info(f"processing mpe event {event}")
         event_name = event["name"]
-        event_data = event["data"]
-        mpe_data = ast.literal_eval(event_data['json_str'])
+        data = event["data"]
+        event_data = ast.literal_eval(data["json_str"])
+        logger.info(f"Processing MPE event: {event_name} with data {event_data}")
 
         if event_name == 'ChannelOpen':
-            self._mpe_repository.create_channel(mpe_data)
-        else:
-            channel_id = int(mpe_data['channelId'])
+            self._mpe_repository.create_channel(event_data)
+            logger.info(f"Created channel {int(event_data['channelId'])}")
+        elif event_name in ['ChannelClaim', 'ChannelExtend', 'ChannelAddFunds']:
+            channel_id = int(event_data['channelId'])
             channel_data = mpe_contract.functions.channels(
                 channel_id).call()
             group_id = base64.b64encode(channel_data[4]).decode('utf8')
             self._mpe_repository.update_channel(
                 channel_id=channel_id, group_id=group_id, channel_data=channel_data)
+            logger.info(f"Updated channel {channel_id}")
+        else:
+            logger.info(f"Unhandled event: {event_name}")

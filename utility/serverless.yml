@@ -1,37 +1,31 @@
 plugins:
   - serverless-offline
-  - serverless-python-requirements
-  - serverless-plugin-tracing
   - serverless-prune-plugin
+  - serverless-latest-layer-version
 
 service: common-utility
 provider:
   name: aws
-  runtime: python3.8
-  description: utility operations for snet
+  runtime: python3.12
   memorySize: 512
   timeout: 30
   region: ${file(./config.${self:provider.stage}.json):REGION}
   stage: ${opt:stage,'dev'}
+  layers:
+    - ${file(./config.${self:provider.stage}.json):GeneralPythonLibsMP}
+    - ${file(./config.${self:provider.stage}.json):GrpcPythonLibsMP}
   deploymentBucket:
     name: snet-serverless-artifacts
     serverSideEncryption: AES256
     tags:
       key1: registry
   deploymentPrefix: serverless
-  tracing: true
 
 custom:
-  pythonRequirements:
-    fileName: utility/requirements.txt
-    dockerizePip: true
-    useDownloadCache: true
-    useStaticCache: true
-    cacheLocation: "/var/cache/serverless"
   prune:
     automatic: true
     includeLayers: true
-    number: 0
+    number: 1
 
 package:
   exclude:
@@ -107,7 +101,6 @@ functions:
           enabled: true
 
   currency-to-token-conversion:
-    warmup: true
     handler: utility/application/handlers.crypto_fiat_handler.get_agi_fiat_rate
     role: ${file(./config.${self:provider.stage}.json):AGI_ROLE}
     vpc:

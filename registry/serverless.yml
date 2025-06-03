@@ -1,175 +1,44 @@
 plugins:
   - serverless-offline
-  - serverless-python-requirements
-  - serverless-plugin-tracing
   - serverless-prune-plugin
-  - serverless-plugin-split-stacks
   - serverless-latest-layer-version
-#  - serverless-aws-documentation
 
 service: registry
 provider:
   name: aws
-  runtime: python3.8
+  runtime: python3.12
   description: offchain information of organizations and services
   memorySize: 512
   timeout: 60
   region: ${file(./config.${self:provider.stage}.json):REGION}
   stage: ${opt:stage,'dev'}
+  layers:
+    - ${file(./config.${self:provider.stage}.json):GeneralPythonLibsMP}
+    - ${file(./config.${self:provider.stage}.json):GrpcPythonLibsMP}
+    - ${file(./config.${self:provider.stage}.json):OptionalPythonLibsMP}
+    - ${file(./config.${self:provider.stage}.json):SnetContract}
   deploymentBucket:
     name: snet-serverless-artifacts
     serverSideEncryption: AES256
     tags:
       key1: registry
   deploymentPrefix: serverless
-  tracing: true
 
 custom:
-  pythonRequirements:
-    fileName: registry/requirements.txt
-    dockerizePip: true
-    useDownloadCache: true
-    useStaticCache: true
-    cacheLocation: "/var/cache/serverless"
   prune:
     automatic: true
     includeLayers: true
-    number: 0
+    number: 1
   splitStacks:
     perFunction: false
     perType: true
     perGroupFunction: false
-#  documentation:
-#    models:
-#      - name: "ErrorMessage"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/error.json)}
-#      - name: "GetAllOrgOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/get_all_org.json):GetAllOrgOutput}
-#      - name: "VerifyOrganizationIdOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/verify_org_id.json):VerifyOrganizationIdOutput}
-#      - name: "GetGroupsForOrgOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/get_groups_for_org.json):GetGroupsForOrgOutput}
-#      - name: "SaveOrgTransactionsOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/save_org_transactions.json):SaveOrgTransactionsOutput}
-#      - name: "SaveOrgTransactionsInput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/save_org_transactions.json):SaveOrgTransactionsInput}
-#      - name: "GetAllOrgPendingForApprovalOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/get_all_org_pending_for_approval.json):GetAllOrgPendingForApprovalOutput}
-#      - name: "GetAllOrgPendingForApprovalInput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/get_all_org_pending_for_approval.json):GetAllOrgPendingForApprovalInput}
-#      - name: "FileDeleteOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/file_delete.json):FileDeleteOutput}
-#      - name: "FileDeleteInput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/file_delete.json):FileDeleteInput}
-#      - name: "DemonConfigForGivenNetworkIdOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/demon_config_for_given_network_id.json):DemonConfigForGivenNetworkIdOutput}
-#      - name: "SaveServiceTransactionOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/save_service_transaction.json):SaveServiceTransactionOutput}
-#      - name: "SaveServiceTransactionInput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/save_service_transaction.json):SaveServiceTransactionInput}
-#      - name: "PublishServiceMetadataToIpfsHashOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/publish_service_metadata_to_ipfs_hash.json):PublishServiceMetadataToIpfsHashOutput}
-#      - name: "PublishServiceMetadataToIpfsHashInput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/publish_service_metadata_to_ipfs_hash.json):PublishServiceMetadataToIpfsHashInput}
-#      - name: "CreateOrgOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/create_org.json):CreateOrgOutput}
-#      - name: "CreateOrgInput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/create_org.json):CreateOrgInput}
-#      - name: "PublishOrgIpfsOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/publish_org_ipfs.json):PublishOrgIpfsOutput}
-#      - name: "PublishOrgIpfsInput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/publish_org_ipfs.json):PublishOrgIpfsInput}
-#      - name: "GetMemberOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/get_member.json):GetMemberOutput}
-#      - name: "GetAllMembersOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/get_all_members.json):GetAllMembersOutput}
-#      - name: "InviteMembersOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/invite_members.json):InviteMembersOutput}
-#      - name: "InviteMembersInput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/invite_members.json):InviteMembersInput}
-#      - name: "VerifyInviteOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/verify_invite.json):VerifyInviteOutput}
-#      - name: "RegisterMemberOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/register_member.json):RegisterMemberOutput}
-#      - name: "RegisterMemberInput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/register_member.json):RegisterMemberInput}
-#      - name: "PublishMembersOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/publish_members.json):PublishMembersOutput}
-#      - name: "PublishMembersInput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/publish_members.json):PublishMembersInput}
-#      - name: "DeleteMemberOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/delete_member.json):DeleteMemberOutput}
-#      - name: "DeleteMemberInput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/delete_member.json):DeleteMemberInput}
-#      - name: "VerifyServiceIdOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/verify_service_id.json):VerifyServiceIdOutput}
-#      - name: "CreateServiceOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/create_service.json):CreateServiceOutput}
-#      - name: "CreateServiceInput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/create_service.json):CreateServiceInput}
-#      - name: "SaveServiceOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/save_service.json):SaveServiceOutput}
-#      - name: "SaveServiceInput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/save_service.json):SaveServiceInput}
-#      - name: "SaveServiceAttributesOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/save_service_attributes.json):SaveServiceAttributesOutput}
-#      - name: "GetServicesForOrgOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/get_services_for_org.json):GetServicesForOrgOutput}
-#      - name: "GetServicesForOrgInput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/get_services_for_org.json):GetServicesForOrgInput}
-#      - name: "GetServiceForServiceUuidOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/get_service_for_service_uuid.json):GetServiceForServiceUuidOutput}
-#      - name: "UpdateOrgOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/update_org.json):UpdateOrgOutput}
-#      - name: "UpdateOrgInput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/update_org.json):UpdateOrgInput}
-#      - name: "PublishServiceOutput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/publish_service.json):PublishServiceOutput}
-#      - name: "PublishServiceInput"
-#        contentType: "application/json"
-#        schema: ${file(registry/documentation/models/publish_service.json):PublishServiceInput}
+  queue:
+    queueMessageRetention: ${file(./config.${self:provider.stage}.json):QUEUE_MESSAGE_RETENTION, 14400}
+    dlqMessageRetention: ${file(./config.${self:provider.stage}.json):DLQ_MESSAGE_RETENTION, 1209600}
+    queueMaxReceiveCount: ${file(./config.${self:provider.stage}.json):QUEUE_MAX_RECEIVE_COUNT, 2}
+    receiveMessageWaitTimeSeconds: ${file(./config.${self:provider.stage}.json):RECEIVE_MESSAGE_WAIT_TIME_SECONDS, 20}
+    messageVisibilityTimeout: ${file(./config.${self:provider.stage}.json):MESSAGE_VISIBILITY_TIMEOUT, 60}
 
 package:
   exclude:
@@ -210,6 +79,69 @@ package:
   include:
     - resources/**
 
+resources:
+  Resources:
+    registryEventConsumerQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${file(./config.${self:provider.stage}.json):REGISTRY_QUEUE}
+        VisibilityTimeout: ${self:custom.queue.messageVisibilityTimeout}
+        ReceiveMessageWaitTimeSeconds: ${self:custom.queue.receiveMessageWaitTimeSeconds}
+        MessageRetentionPeriod: ${self:custom.queue.queueMessageRetention}
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt registryEventConsumerDLQ.Arn
+          maxReceiveCount: ${self:custom.queue.queueMaxReceiveCount}
+
+    registryEventConsumerQueuePolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        PolicyDocument:
+          Id: registryEventConsumerQueue
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action:
+                - sqs:SendMessage
+              Resource: !GetAtt registryEventConsumerQueue.Arn
+              Condition:
+                ArnEquals:
+                  aws:SourceArn: ${file(./config.${self:provider.stage}.json):REGISTRY_TOPIC_ARN}
+        Queues:
+          - !Ref registryEventConsumerQueue
+
+    registryEventConsumerTopicSubscriptionForSQS:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Protocol: sqs
+        Endpoint: !GetAtt registryEventConsumerQueue.Arn
+        TopicArn: ${file(./config.${self:provider.stage}.json):REGISTRY_TOPIC_ARN}
+
+    registryEventConsumerDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${file(./config.${self:provider.stage}.json):REGISTRY_QUEUE}-dlq
+        VisibilityTimeout: ${self:custom.queue.messageVisibilityTimeout}
+        ReceiveMessageWaitTimeSeconds: ${self:custom.queue.receiveMessageWaitTimeSeconds}
+        MessageRetentionPeriod: ${self:custom.queue.dlqMessageRetention}
+
+    registryEventConsumerDLQPolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        PolicyDocument:
+          Id: registryEventConsumerDLQ
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action:
+                - sqs:SendMessage
+              Resource: !GetAtt registryEventConsumerDLQ.Arn
+              Condition:
+                ArnEquals:
+                  aws:SourceArn: !GetAtt registryEventConsumerQueue.Arn
+        Queues:
+          - !Ref registryEventConsumerDLQ
 
 functions:
   get_all_org:
@@ -222,8 +154,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -243,23 +173,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-#          documentation:
-#            summary: "Get all organizations"
-#            description: "Get all organizations data"
-#            tags:
-#              - "organization"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "Organization Data"
-#                responseModels:
-#                  "application/json": "GetAllOrgOutput"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"
 
   verify-org-id:
     handler: registry.application.handlers.organization_handlers.verify_org_id
@@ -271,8 +184,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -292,29 +203,8 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-#          documentation:
-#            summary: "Verify organization"
-#            description: "Verify organization"
-#            tags:
-#              - "organization"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            pathParams:
-#              - name: "org_id"
-#                description: "Enter organization org_id"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "Verified Data"
-#                responseModels:
-#                  "application/json": "VerifyOrganizationIdOutput"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"
 
   get_groups_for_org:
-    warmup: true
     handler: registry.application.handlers.organization_handlers.get_group_for_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -324,8 +214,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -345,29 +233,8 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-wit
-#          documentation:
-#            summary: "get group by organization"
-#            description: "get group by organization"
-#            tags:
-#              - "group"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            pathParams:
-#              - name: "org_uuid"
-#                description: "Enter organization org_uuid"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "Group Data"
-#                responseModels:
-#                  "application/json": "GetGroupsForOrgOutput"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"
 
   create-org:
-    warmup: true
     handler: registry.application.handlers.organization_handlers.create_organization
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -377,8 +244,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -398,29 +263,8 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-#          documentation:
-#            summary: "Create organization"
-#            description: "Create organization"
-#            tags:
-#              - "organization"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            requestModels:
-#              "application/json": "CreateOrgInput"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "Organization Data"
-#                responseModels:
-#                  "application/json": "CreateOrgOutput"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"
-
 
   update-org:
-    warmup: true
     handler: registry.application.handlers.organization_handlers.update_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -430,8 +274,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -451,29 +293,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-#          documentation:
-#            summary: "Update organization"
-#            description: "Update organization"
-#            tags:
-#              - "organization"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            pathParams:
-#              - name: "org_uuid"
-#                description: "Enter org_uuid"
-#            requestModels:
-#              "application/json": "UpdateOrgInput"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "Organization Data"
-#                responseModels:
-#                  "application/json": "UpdateOrgOutput"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"
-
 
   org-verification:
     handler: registry.application.handlers.organization_handlers.org_verification
@@ -485,13 +304,8 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
-
-
 
   publish-organization:
-    warmup: true
     handler: registry.application.handlers.organization_handlers.publish_organization
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -501,12 +315,10 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
-          path: /org/{org_uuid}/publish/{provider_storage}
+          path: /org/{org_uuid}/publish/{storage_provider}
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -522,31 +334,8 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-#          documentation:
-#            summary: "Publish organization ipfs"
-#            description: "Publish organzation ipfs"
-#            tags:
-#              - "organization"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            pathParams:
-#              - name: "org_uuid"
-#                description: "Enter org_uuid"
-#            requestModels:
-#              "application/json": "PublishOrgIpfsInput"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "Organization Data"
-#                responseModels:
-#                  "application/json": "PublishOrgIpfsOutput"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"
 
   save-org-transaction:
-    warmup: true
     handler: registry.application.handlers.organization_handlers.save_transaction_hash_for_publish_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -556,8 +345,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -577,31 +364,8 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-wit
-#          documentation:
-#            summary: "Save organization transaction"
-#            description: "Save organization transaction for given org_uuid"
-#            tags:
-#              - "transaction"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            pathParams:
-#              - name: "org_uuid"
-#                description: "Enter organization org_uuid"
-#            requestModels:
-#              "application/json": "SaveOrgTransactionsInput"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "Group Data"
-#                responseModels:
-#                  "application/json": "SaveOrgTransactionsOutput"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"
 
   get-member:
-    warmup: true
     handler: registry.application.handlers.organization_handlers.get_member
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -611,8 +375,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -637,31 +399,8 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-#          documentation:
-#            summary: "Get member by org_uuid and username"
-#            description: "Get member by given org_uuid and username"
-#            tags:
-#              - "member"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            pathParams:
-#              - name: "org_uuid"
-#                description: "Enter organization org_uuid"
-#              - name: "username"
-#                description: "Enter username"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "Group Data"
-#                responseModels:
-#                  "application/json": "GetMemberOutput"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"
 
   get-all-members:
-    warmup: true
     handler: registry.application.handlers.organization_handlers.get_all_members
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -671,8 +410,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -696,31 +433,8 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-#          documentation:
-#            summary: "Get members by org_uuid"
-#            description: "Get members by given org_uuid"
-#            tags:
-#              - "member"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            pathParams:
-#              - name: "org_uuid"
-#                description: "Enter organization org_uuid"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "Group Data"
-#                responseModels:
-#                  "application/json": "GetAllMembersOutput"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"
-
-
 
   invite-members:
-    warmup: true
     handler: registry.application.handlers.organization_handlers.invite_members
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -730,8 +444,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -755,32 +467,8 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-#          documentation:
-#            summary: "Invite members by org_uuid"
-#            description: "Invite members for given org_uuid "
-#            tags:
-#              - "member"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            pathParams:
-#              - name: "org_uuid"
-#                description: "Enter organization org_uuid"
-#            requestModels:
-#              "application/json" : "InviteMembersInput"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "Group Data"
-#                responseModels:
-#                  "application/json": "InviteMembersOutput"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"
-
 
   verify-invite:
-    warmup: true
     handler: registry.application.handlers.organization_handlers.verify_code
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -790,8 +478,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -811,26 +497,8 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-#          documentation:
-#            summary: "Verify member"
-#            description: "Verify member"
-#            tags:
-#              - "member"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "Group Data"
-#                responseModels:
-#                  "application/json": "VerifyInviteOutput"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"
 
   register-member:
-    warmup: true
     handler: registry.application.handlers.organization_handlers.register_member
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -840,8 +508,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -861,28 +527,8 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-#          documentation:
-#            summary: "Register member"
-#            description: "Register member"
-#            tags:
-#              - "member"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            requestModels:
-#              "application/json": "RegisterMemberInput"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "member data"
-#                responseModels:
-#                  "application/json": "RegisterMemberOutput"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"
 
   publish-members:
-    warmup: true
     handler: registry.application.handlers.organization_handlers.publish_members
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -892,8 +538,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -917,31 +561,8 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-#          documentation:
-#            summary: "Publish member by org_uuid"
-#            description: "Publish member by given org_uuid"
-#            tags:
-#              - "member"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            pathParams:
-#              - name: "org_uuid"
-#                description: "Enter org_uuid"
-#            requestModels:
-#              "application/json": "PublishMembersInput"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "member Data"
-#                responseModels:
-#                  "application/json": "PublishMembersOutput"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"
 
   delete-members:
-    warmup: true
     handler: registry.application.handlers.organization_handlers.delete_members
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -951,8 +572,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -976,32 +595,9 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-#          documentation:
-#            summary: "Delete member by org_uuid"
-#            description: "Delete member by given org_uuid"
-#            tags:
-#              - "member"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            pathParams:
-#              - name: "org_uuid"
-#                description: "Enter org_uuid"
-#            requestModels:
-#              "application/json": "DeleteMemberInput"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "member data"
-#                responseModels:
-#                  "application/json": "DeleteMemberOutput"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"
 
-  organization_event_consumer_handler:
-    warmup: true
-    handler: registry.application.handlers.consumer_handlers.organization_event_consumer_handler
+  registry-event-consumer:
+    handler: registry.application.handlers.consumer_handlers.registry_event_consumer_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -1010,23 +606,13 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
-
-
-  service_event_consumer_handler:
-    warmup: true
-    handler: registry.application.handlers.consumer_handlers.service_event_consumer_handler
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - registryEventConsumerQueue
+              - Arn
+          batchSize: 1
 
   org-update-transaction:
     handler: registry.application.handlers.organization_handlers.update_transaction
@@ -1038,14 +624,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
           rate: rate(10 minutes)
 
   verify-service-id:
-    warmup: true
     handler: registry.application.handlers.service_handlers.verify_service_id
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -1055,8 +638,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -1076,29 +657,8 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-#          documentation:
-#            summary: "Verify service by org_uuid"
-#            description: "Verify service by given org_uuid"
-#            tags:
-#              - "service"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            pathParams:
-#              - name: "org_uuid"
-#                description: "Enter org_uuid"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "Service Data"
-#                responseModels:
-#                  "application/json": "VerifyServiceIdOutput"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"
 
   create-service:
-    warmup: true
     handler: registry.application.handlers.service_handlers.create_service
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -1108,8 +668,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -1129,31 +687,8 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-#          documentation:
-#            summary: "Create service"
-#            description: "Create service by org_uuid"
-#            tags:
-#              - "service"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            pathParams:
-#              - name: "org_uuid"
-#                description: "Enter org_uuid"
-#            requestModels:
-#              "application/json": "CreateServiceInput"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "Service Data"
-#                responseModels:
-#                  "application/json": "CreateServiceOutput"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"
 
   save-service:
-    warmup: true
     handler: registry.application.handlers.service_handlers.save_service
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -1163,8 +698,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: PUT
@@ -1184,33 +717,8 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-#          documentation:
-#            summary: "save service by org_uuid and service_uuid"
-#            description: "save service by given org_uuid and service_uuid"
-#            tags:
-#              - "service"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            requestModels:
-#              "application/json": "SaveServiceInput"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "Service Data"
-#                responseModels:
-#                  "application/json": "SaveServiceOutput"
-#                pathParams:
-#                  - name: "org_uuid"
-#                    description: "Enter org_uuid"
-#                  - name: "service_uuid"
-#                    description: "Enter service_uuid"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"
 
   save-service-attributes:
-    warmup: true
     handler: registry.application.handlers.service_handlers.save_service_attributes
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -1220,8 +728,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: PATCH
@@ -1241,31 +747,8 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-#          documentation:
-#            summary: "save service attribute by org_uuid and service_uuid"
-#            description: "save service attribute by given org_uuid and service_uuid"
-#            tags:
-#              - "service"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            pathParams:
-#              - name: "org_uuid"
-#                description: "Enter org_uuid"
-#              - name: "service_uuid"
-#                description: "Enter service_uuid"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "Service Data"
-#                responseModels:
-#                  "application/json": "SaveServiceAttributesOutput"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"
 
   get-services-for-org:
-    warmup: true
     handler: registry.application.handlers.service_handlers.get_services_for_organization
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -1275,8 +758,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -1296,31 +777,8 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-#          documentation:
-#            summary: "get services for org_uuid"
-#            description: "get services for given org_uuid"
-#            tags:
-#              - "service"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            pathParams:
-#              - name: "org_uuid"
-#                description: "Enter org_uuid"
-#            requestModels:
-#              "application/json": "GetServicesForOrgInput"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "Service Data"
-#                responseModels:
-#                  "application/json": "GetServicesForOrgOutput"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"
 
   get-service-for-service-uuid:
-    warmup: true
     handler: registry.application.handlers.service_handlers.get_service_for_service_uuid
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -1330,8 +788,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -1351,31 +807,8 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-#          documentation:
-#            summary: "get service by org_uuid and service_uuid"
-#            description: "get service by given org_uuid and service_uuid"
-#            tags:
-#              - "service"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            pathParams:
-#              - name: "org_uuid"
-#                description: "Enter org_uuid"
-#              - name: "service_uuid"
-#                description: "Enter service_uuid"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "Service Data"
-#                responseModels:
-#                  "application/json": "GetServiceForServiceUuidOutput"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"
 
   publish-service-metadata-to-ipfs-hash:
-    warmup: true
     handler: registry.application.handlers.service_handlers.publish_service_metadata_to_ipfs
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -1385,8 +818,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -1406,33 +837,8 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-#          documentation:
-#            summary: "Publish service metadata by org_uuid and service_uuid "
-#            description: "Publish service metadata by given org_uuid and service_uuid"
-#            tags:
-#              - "service"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            pathParams:
-#              - name: "org_uuid"
-#                description: "Enter org_uuid"
-#              - name: "service_uuid"
-#                description: "Enter service_uuid"
-#            requestModels:
-#              "application/json": "PublishServiceMetadataToIpfsHashInput"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "Service Data"
-#                responseModels:
-#                  "application/json": "PublishServiceMetadataToIpfsHashOutput"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"
 
   save_service_transaction:
-    warmup: true
     handler: registry.application.handlers.service_handlers.save_transaction_hash_for_published_service
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -1442,8 +848,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -1463,34 +867,8 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-#          documentation:
-#            summary: "Save service transaction by org_uuid and service_uuid"
-#            description: "Save service transaction by given org_uuid and service_uuid"
-#            tags:
-#              - "transaction"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            pathParams:
-#              - name: "org_uuid"
-#                description: "Enter org_uuid"
-#              - name: "service_uuid"
-#                description: "Enter service_uuid"
-#            requestModels:
-#              "application/json": "SaveServiceTransactionInput"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "Service Data"
-#                responseModels:
-#                  "application/json": "SaveServiceTransactionOutput"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"
-
 
   daemon-config-for-given-network-id:
-    warmup: true
     handler: registry.application.handlers.service_handlers.get_daemon_config_for_current_network
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -1500,8 +878,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -1521,30 +897,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-#          documentation:
-#            summary: "Get demon config by org_uuid and service_uuid and group_id"
-#            description: "Get demon config by given org_uuid and service_uuid and group_id"
-#            tags:
-#              - "demon"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            pathParams:
-#              - name: "org_uuid"
-#                description: "Enter org_uuid"
-#              - name: "service_uuid"
-#                description: "Enter service_uuid"
-#              - name: "group_id"
-#                description: "Enter group_id"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "Service Data"
-#                responseModels:
-#                  "application/json": "DemonConfigForGivenNetworkIdOutput"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"
 
   file-delete:
     handler: registry.application.handlers.file_handlers.delete
@@ -1556,8 +908,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
@@ -1577,29 +927,8 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-#          documentation:
-#            summary: "Delete file"
-#            description: "Delete file"
-#            tags:
-#              - "file"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            requestModels:
-#              "application/json": "FileDeleteInput"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "Service Data"
-#                responseModels:
-#                  "application/json": "FileDeleteOutput"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"
-
 
   get_service_details_using_org_id_service_id:
-    warmup: true
     private: true
     handler: registry.application.handlers.service_handlers.get_service_details_using_org_id_service_id
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -1610,11 +939,8 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   service_deployment_status_notification_handler:
-    warmup: true
     private: true
     handler: registry.application.handlers.service_handlers.service_deployment_status_notification_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -1625,8 +951,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   service-update-transaction:
     handler: registry.application.handlers.service_handlers.update_transaction
@@ -1638,14 +962,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - schedule:
           rate: rate(10 minutes)
 
   get-code-build-status-for-service:
-    warmup: true
     handler: registry.application.handlers.service_handlers.get_code_build_status_for_service
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -1655,8 +976,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: GET
@@ -1673,7 +992,6 @@ functions:
               - x-requested-with
 
   update-service-assets:
-    warmup: true
     handler: registry.application.handlers.service_handlers.update_service_assets
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -1683,8 +1001,6 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - s3:
           bucket: ${file(./config.${self:provider.stage}.json):ASSETS_BUCKET}
@@ -1718,7 +1034,6 @@ functions:
           existing: true
 
   update-demo-component-build-status:
-    warmup: true
     handler: registry.application.handlers.service_handlers.update_demo_component_build_status
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -1728,11 +1043,8 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
 
   publish_service:
-    warmup: true
     handler: registry.application.handlers.service_handlers.publish_service
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -1742,12 +1054,10 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    layers:
-        - ${file(./config.${self:provider.stage}.json):SnetContract}
     events:
       - http:
           method: POST
-          path: /org/{org_uuid}/service/{service_uuid}/publish/{provider_storage}
+          path: /org/{org_uuid}/service/{service_uuid}/publish/{storage_provider}
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -1763,27 +1073,3 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-#          documentation:
-#            summary: "Validate and publish service"
-#            description: "Validate service metadata and publish onchain and offchain attributes accordingly"
-#            tags:
-#              - "service"
-#            requestHeaders:
-#              - name: "Content-Type"
-#                description: "application/json"
-#            pathParams:
-#              - name: "org_uuid"
-#                description: "Enter org_uuid"
-#              - name: "service_uuid"
-#                description: "Enter service_uuid"
-#            requestModels:
-#              "application/json": "PublishServiceInput"
-#            methodResponses:
-#              - statusCode: "200"
-#                responseBody:
-#                  description: "Service Data"
-#                responseModels:
-#                  "application/json": "PublishServiceOutput"
-#              - statusCode: "500"
-#                responseModels:
-#                  "application/json": "ErrorMessage"

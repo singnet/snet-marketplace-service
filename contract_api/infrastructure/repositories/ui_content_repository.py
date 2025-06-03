@@ -1,4 +1,4 @@
-from contract_api.infrastructure.models import Banner, CTA
+from contract_api.infrastructure.models import Banner
 from contract_api.infrastructure.repositories.base_repository import BaseRepository
 
 

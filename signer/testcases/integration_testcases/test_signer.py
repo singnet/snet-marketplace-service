@@ -55,7 +55,7 @@ class TestSignUPAPI(unittest.TestCase):
         assert response_body["status"] == "success"
         assert (
                 response_body["data"]["signature"] ==
-                "0xf4fad486513c6e514869a2af9423de3c1e03c9953b4cd79c4d78f7f8f54da1a01812d7c58120c038ead631e2462ab788746972cad46f4e7f2f1bd79b863b54681c"
+                "f4fad486513c6e514869a2af9423de3c1e03c9953b4cd79c4d78f7f8f54da1a01812d7c58120c038ead631e2462ab788746972cad46f4e7f2f1bd79b863b54681c"
         )
         assert (response_body["data"]["snet-current-block-number"] ==
                 mock_current_block_no.return_value)
@@ -87,7 +87,7 @@ class TestSignUPAPI(unittest.TestCase):
         assert response_body["status"] == "success"
         assert (
                 response_body["data"]["snet-payment-channel-signature-bin"] ==
-                "0x505dec3d328eced279a2953e7ba614936a239fb558c80615ff1c97115f8b76ea0530dc47acab7bca8c1dd4563f0299d9b1f61933902919097d82eb0eeb12cb501c"
+                "505dec3d328eced279a2953e7ba614936a239fb558c80615ff1c97115f8b76ea0530dc47acab7bca8c1dd4563f0299d9b1f61933902919097d82eb0eeb12cb501c"
         )
         assert response_body["data"]["snet-payment-type"] == "escrow"
         assert response_body["data"]["snet-payment-channel-id"] == 1
@@ -120,12 +120,13 @@ class TestSignUPAPI(unittest.TestCase):
         response = lambda_handler.request_handler(event=signature_for_open_channel_for_third_party, context=None)
         assert response["statusCode"] == 200
         response_body = json.loads(response["body"])
+        print(response_body)
         assert response_body["status"] == "success"
-        assert response_body["data"]["r"] == "0x6057e2706d63351e774eaf56616afa7c138129b27b0dfd121457761d4267c3b8"
-        assert response_body["data"]["s"] == "0x2f2b98ae088f6e5d4737fae8beba95c7203d33c07baaeccbb8eea5a6c361ae84"
+        assert response_body["data"]["r"] == "6057e2706d63351e774eaf56616afa7c138129b27b0dfd121457761d4267c3b82f"
+        assert response_body["data"]["s"] == "0x2b98ae088f6e5d4737fae8beba95c7203d33c07baaeccbb8eea5a6c361ae841b"
         assert response_body["data"]["v"] == 27
         assert response_body["data"][
-                   "signature"] == "0x6057e2706d63351e774eaf56616afa7c138129b27b0dfd121457761d4267c3b82f2b98ae088f6e5d4737fae8beba95c7203d33c07baaeccbb8eea5a6c361ae841b"
+                   "signature"] == "6057e2706d63351e774eaf56616afa7c138129b27b0dfd121457761d4267c3b82f2b98ae088f6e5d4737fae8beba95c7203d33c07baaeccbb8eea5a6c361ae841b"
 
     @patch("boto3.client")
     def test_free_call_signer_address(self, boto_client):

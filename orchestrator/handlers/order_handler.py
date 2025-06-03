@@ -1,8 +1,6 @@
 import json
 import traceback
 
-from aws_xray_sdk.core import patch_all
-
 from common.constant import StatusCode, ResponseStatus
 from common.logger import get_logger
 from common.repository import Repository
@@ -11,8 +9,6 @@ from orchestrator.config import NETWORKS, NETWORK_ID, SLACK_HOOK
 from orchestrator.errors import Error
 from orchestrator.exceptions import PaymentInitiateFailed, ChannelCreationFailed, FundChannelFailed
 from orchestrator.services.order_service import OrderService
-
-patch_all()
 
 logger = get_logger(__name__)
 utils = Utils()

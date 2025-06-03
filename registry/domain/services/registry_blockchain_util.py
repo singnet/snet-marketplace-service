@@ -39,7 +39,7 @@ class RegistryBlockChainUtil:
 
     def __organization_exist_in_blockchain(self, org_id, contract, contract_address):
         method_name = "getOrganizationById"
-        positional_inputs = (web3.Web3.toHex(text=org_id),)
+        positional_inputs = [web3.Web3.to_bytes(text = org_id).ljust(32, b'\0')[:32]]
         contract = self.__blockchain_util.contract_instance(contract_abi=contract, address=contract_address)
 
         org_data = self.__blockchain_util.call_contract_function(
@@ -51,7 +51,7 @@ class RegistryBlockChainUtil:
 
     def __service_exist_in_blockchain(self, org_id, service_id, contract, contract_address):
         method_name = "getServiceRegistrationById"
-        positional_inputs = (web3.Web3.toHex(text=org_id), web3.Web3.toHex(text=service_id))
+        positional_inputs = (web3.Web3.to_hex(text=org_id), web3.Web3.to_hex(text=service_id))
         contract = self.__blockchain_util.contract_instance(contract_abi=contract, address=contract_address)
         service_data = self.__blockchain_util.call_contract_function(contract=contract, contract_function=method_name,
                                                                      positional_inputs=positional_inputs)
