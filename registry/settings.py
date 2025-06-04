@@ -102,8 +102,8 @@ class NetworkConfig(BaseModel):
 
 
 class Settings(BaseSettings):
-    stage: str = Field(default="dev")
-    token_name: str = Field(default="FET")
+    stage: str = Field(default=config.STAGE)
+    token_name: str = Field(default=config.TOKEN_NAME)
     db: DBConfig = Field(default_factory=DBConfig)
     slack: SlackHookConfig = Field(default_factory=SlackHookConfig)
     ipfs: IPFSConfig = Field(default_factory=IPFSConfig)
