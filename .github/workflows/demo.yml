@@ -1,13 +1,13 @@
-name: tests_development
+name: tests_demo
 on:
   # push:
   #   branches: [ "development" ]
   pull_request:
-    branches: [ "development" ]
+    branches: [ "demo" ]
   workflow_dispatch:
 
 jobs:
-    run_tests_development:
+    run_tests_demo:
       runs-on: ubuntu-24.04
       services:
         mysql:
