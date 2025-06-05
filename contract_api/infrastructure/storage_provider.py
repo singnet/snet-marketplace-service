@@ -1,4 +1,3 @@
-import glob
 import json
 from enum import EnumMeta, Enum
 import os
@@ -86,8 +85,7 @@ class StorageProvider:
             try:
                 metadata_hash = self.__lighthouse_client.upload(file_path)["data"]["Hash"]
             except Exception as e:
-                raise LighthouseInternalException(
-                    "Internal Lighthouse server error. Please check your Lighthouse token.")
+                raise LighthouseInternalException()
         else:
             raise ValueError(f"Unsupported provider type: {provider_type}")
         return self.hash_to_uri(metadata_hash, provider_type)
@@ -99,6 +97,7 @@ class StorageProvider:
         :param source: str, file path to metadata JSON file or zip archive
         :param provider_type: StorageProviderType, type of the storage provider (e.g., IPFS, FILECOIN)
         :param zip_archive: bool, flag to indicate whether to publish a zip archive (default is False)
+        :param ignored_files: list[str], list of file names to be ignored
         :return: str, the URI of the uploaded metadata
         """
         logger.info(
@@ -170,18 +169,23 @@ class FileUtils:
     @staticmethod
     def convert_zip_to_temp_tar(
         zip_path: str,
-        exclude_files: List[str] = [],
-        include_files: List[str] = [],
+        exclude_files: List[str] = None,
+        include_files: List[str] = None,
     ) -> str:
         """
         Convert a zip archive into a tar file and save it as a temporary file.
 
         :param zip_path: str, full path to the zip file
-        :param ignored_files: list, files to ignore during tar creation (default is None)
+        :param exclude_files: list, files to ignore during tar creation (default is None)
         :return: str, path to the temporary tar file
         """
 
         # Validate the zip file
+        if exclude_files is None:
+            exclude_files = []
+        if include_files is None:
+            include_files = []
+
         if not os.path.isfile(zip_path):
             raise FileNotFoundError(f"Zip file '{zip_path}' does not exist.")
 

@@ -1,5 +1,5 @@
 import base64
-from datetime import datetime
+import datetime as dt
 
 from contract_api.dao.common_repository import CommonRepository
 
@@ -15,12 +15,13 @@ class MPERepository(CommonRepository):
                              "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) " \
                              "ON DUPLICATE KEY UPDATE balance_in_cogs = %s, pending = %s, nonce = %s, " \
                              "expiration = %s, row_updated = %s"
+        current_datetime = dt.datetime.now(dt.UTC)
         upsert_mpe_channel_params = [mpe_data['channelId'], mpe_data['sender'], mpe_data['recipient'],
                                      mpe_data['groupId'],
                                      mpe_data['amount'], 0.0, mpe_data['nonce'], mpe_data['expiration'],
-                                     mpe_data['signer'], datetime.utcnow(),
-                                     datetime.utcnow(), mpe_data['amount'], 0.0, mpe_data['nonce'],
-                                     mpe_data['expiration'], datetime.utcnow()]
+                                     mpe_data['signer'], current_datetime,
+                                     current_datetime, mpe_data['amount'], 0.0, mpe_data['nonce'],
+                                     mpe_data['expiration'], current_datetime]
         query_response = self.connection.execute(upsert_mpe_channel, upsert_mpe_channel_params)
 
     def create_channel(self, mpe_data):

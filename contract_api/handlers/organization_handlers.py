@@ -6,9 +6,6 @@ from common.utils import Utils, generate_lambda_response, handle_exception_with_
 from contract_api.config import NETWORKS, NETWORK_ID, SLACK_HOOK
 from contract_api.registry import Registry
 
-from aws_xray_sdk.core import patch_all
-
-patch_all()
 
 db = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
 obj_util = Utils()

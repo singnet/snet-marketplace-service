@@ -1,5 +1,5 @@
 import unittest
-from datetime import datetime as dt
+import datetime as dt
 
 from contract_api.infrastructure.repositories.service_repository import ServiceRepository, \
     OffchainServiceConfigRepository
@@ -14,6 +14,7 @@ offchain_service_repo = OffchainServiceConfigRepository()
 class TestService(unittest.TestCase):
     def setUp(self):
         self.tearDown()
+        current_datetime = dt.datetime.now(dt.UTC)
         service_repo.add_item(
             Service(
                 row_id=100,
@@ -23,8 +24,8 @@ class TestService(unittest.TestCase):
                 hash_uri="hash",
                 is_curated=1,
                 service_email="service@email.com",
-                row_updated=dt.utcnow(),
-                row_created=dt.utcnow()
+                row_updated=current_datetime,
+                row_created=current_datetime
             )
         )
         service_repo.add_item(ServiceMetadata(
@@ -46,8 +47,8 @@ class TestService(unittest.TestCase):
             service_rating={},
             ranking=1,
             contributors=[{"name": "dummy dummy", "email_id": "dummy@dummy.io"}],
-            row_created=dt.utcnow(),
-            row_updated=dt.utcnow(),
+            row_created=current_datetime,
+            row_updated=current_datetime,
         ))
 
     def test_update_service_demo_component_status(self):

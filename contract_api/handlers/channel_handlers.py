@@ -1,7 +1,6 @@
 import json
 import traceback
 
-from aws_xray_sdk.core import patch_all
 
 from common.constant import StatusCode, ResponseStatus
 from common.logger import get_logger
@@ -12,7 +11,6 @@ from contract_api.config import NETWORKS, SLACK_HOOK, NETWORK_ID
 from contract_api.errors import Error
 from contract_api.mpe import MPE
 
-patch_all()
 logger = get_logger(__name__)
 repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
 obj_mpe = MPE(obj_repo=repo)

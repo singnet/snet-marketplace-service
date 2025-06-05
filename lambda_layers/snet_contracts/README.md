@@ -1,1 +1,0 @@
-Download snet platform, staking and RFAI contracts and use it as layers. 

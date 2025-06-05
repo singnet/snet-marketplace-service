@@ -1,0 +1,8 @@
+web3==7.10.0
+pymysql==1.1.1
+rlp==4.1.0
+sqlalchemy==2.0.41
+pydantic==2.11.3
+pydantic-settings==2.8.1
+alembic==1.15.2
+boto3==1.38.28

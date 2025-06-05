@@ -1,5 +1,4 @@
 import io
-import json
 
 from common.logger import get_logger
 from contract_api.infrastructure.storage_provider import StorageProvider

@@ -1,5 +1,4 @@
 import json
-from datetime import datetime as dt
 from unittest import TestCase
 from unittest.mock import patch
 

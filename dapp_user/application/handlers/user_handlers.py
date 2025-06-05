@@ -2,7 +2,6 @@ import json
 import sys
 import traceback
 from common.constant import StatusCode
-from common.exception_handler import exception_handler
 from common.logger import get_logger
 from common.utils import validate_dict_list, handle_exception_with_slack_notification, generate_lambda_response
 from dapp_user.exceptions import BadRequestException
@@ -67,7 +66,7 @@ def register_user_post_aws_cognito_signup(event, context):
                         f"error_description: \n"
         exc_type, exc_obj, exc_tb = sys.exc_info()
         exc_tb_lines = traceback.format_tb(exc_tb)
-        error_message = error_message + e.error_message + "\n"
+        error_message = error_message + str(e)+ "\n"
         logger.exception(error_message)
         slack_message = error_message
         for exc_lines in exc_tb_lines:

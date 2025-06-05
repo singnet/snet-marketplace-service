@@ -1,14 +1,11 @@
 import traceback
 
-from aws_xray_sdk.core import patch_all
-
 from common.logger import get_logger
 from common.repository import Repository
 from common.utils import Utils
 from orchestrator.config import NETWORKS, NETWORK_ID, SLACK_HOOK
 from orchestrator.services.order_service import OrderService
 
-patch_all()
 obj_util = Utils()
 repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
 logger = get_logger(__name__)

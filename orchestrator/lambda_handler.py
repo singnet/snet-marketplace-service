@@ -1,6 +1,5 @@
 import traceback
 import re
-import json
 from common.repository import Repository
 from common.logger import get_logger
 from common.utils import extract_payload
@@ -15,9 +14,6 @@ from orchestrator.services.order_service import OrderService
 from orchestrator.config import SLACK_HOOK
 from orchestrator.services.wallet_service import WalletService
 
-from aws_xray_sdk.core import patch_all
-
-patch_all()
 
 NETWORKS_NAME = dict(
     (NETWORKS[netId]["name"], netId) for netId in NETWORKS.keys())

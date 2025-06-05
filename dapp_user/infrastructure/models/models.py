@@ -1,6 +1,6 @@
 from datetime import datetime as dt
 from sqlalchemy import Column, Integer, VARCHAR, ForeignKey, BOOLEAN, BINARY, UniqueConstraint
-from sqlalchemy.dialects.mysql import JSON, TIMESTAMP
+from sqlalchemy.dialects.mysql import TIMESTAMP
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
