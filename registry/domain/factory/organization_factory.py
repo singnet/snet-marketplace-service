@@ -51,7 +51,7 @@ class OrganizationFactory:
 
     @staticmethod
     def get_comment_from_db(comments):
-        return [Comment(comment['comment'], comment['created_by'], comment['created_on']) for comment in comments]
+        return [Comment(comment['comment'], comment['created_by'], comment['created_at']) for comment in comments]
 
     @staticmethod
     def create_organization_entity_from_request(request: 'CreateOrganizationRequest | UpdateOrganizationRequest') -> Organization:
