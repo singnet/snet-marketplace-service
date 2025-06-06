@@ -1,33 +1,75 @@
-NETWORKS = {
-    0: {
-        "name": "test",
-        "http_provider": "https://ropsten.infura.io",
-        "ws_provider": "wss://ropsten.infura.io/ws",
-        "db": {
-            "DB_HOST": "localhost",
-            "DB_USER": "unittest_root",
-            "DB_PASSWORD": "unittest_pwd",
-            "DB_NAME": "unittest_db",
-            "DB_PORT": 3306,
-        },
+from typing import Dict, TypedDict
+
+
+class NetworkConfigDict(TypedDict):
+    name: str
+    http_provider: str
+    ws_provider: str
+    contract_base_path: str
+
+
+class SlackHookConfigDict(TypedDict):
+    hostname: str
+    path: str
+
+
+class DBConfigDict(TypedDict):
+    driver: str
+    host: str
+    user: str
+    password: str
+    name: str
+    port: int
+
+
+class SignerConfigDict(TypedDict):
+    key: str
+    address: str
+    expiration_block_count: int
+
+
+class AWSConfigDict(TypedDict):
+    region_name: str
+
+
+class LambdaARNConfigDict(TypedDict):
+    get_service_details_arn: str
+
+
+NETWORK_ID = 11155111
+TOKEN_NAME = "FET"
+STAGE = "dev"
+
+NETWORKS: Dict[int, NetworkConfigDict] = {
+    11155111: {
+        "name": "sepolia",
+        "http_provider": "",
+        "ws_provider": "",
+        "contract_base_path": ".",
     }
 }
-NET_ID = 0
-TOKEN_NAME = ""
-STAGE = ""
 
-METERING_ARN = ""
-GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_ARN = ""
-GET_SERVICE_DETAILS_FOR_GIVEN_ORG_ID_AND_SERVICE_ID_REGISTRY_ARN=""
-PREFIX_FREE_CALL = ""
-SLACK_HOOK = {
-    "hostname": "",
-    "path": ""
+SLACK_HOOK: SlackHookConfigDict = {"hostname": "https://hooks.slack.com", "path": ""}
+
+DB_CONFIG: DBConfigDict = {
+    "driver": "mysql+pymysql",
+    "host": "localhost",
+    "user": "root",
+    "password": "",
+    "name": "signer",
+    "port": 3306,
 }
-# this configuration is only for testing
-SIGNER_KEY = "5d66dccb32b03871f30533fe410d2e5998d607a579fb7bc2d991cd2148e3ec69"
-SIGNER_ADDRESS = "0xBBE343b9BEf87Fb687cA83A014324d5E52cc3754"
-REGION_NAME = ""
-NETWORK_ID = 0
-config = {}
-CONTRACT_BASE_PATH = ""
+
+SIGNER: SignerConfigDict = {
+    "key": "a22bc5d20a680ca810df36bd00f9017dabea3743f5cf2cbfae5d7415f3e0564b",
+    "address": "0x5CAe9719df1a1Fc890303500F658b65bE0817C4B",
+    "expiration_block_count": 100,
+}
+
+AWS: AWSConfigDict = {
+    "region_name": "us-east-1",
+}
+
+LAMBDA_ARN: LambdaARNConfigDict = {
+    "get_service_details_arn": "",
+}

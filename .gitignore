@@ -106,17 +106,14 @@ venv.bak/
 .serverless
 .serverless/**
 
-/contract_api/node_modules/
-event_pubsub/node_modules/
-/registry/node_modules/
+# node_modules
+**/node_modules
 
 #IDE files
 .idea/
 .vscode/
 **/*/.DS_Store
-orchestrator/node_modules/*
 orchestrator/package-lock.json
-utility/node_modules/*
 utility/package-lock.json
 
 # asdf
@@ -130,3 +127,6 @@ registry/config.py
 
 # package.lock
 **/package-lock.json
+
+# ruff
+**/.ruff_cache

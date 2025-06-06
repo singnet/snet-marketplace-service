@@ -66,10 +66,6 @@ def request_handler(event, context):
         response_data = usr_obj.validate_and_set_user_feedback(
             feedback_data=payload_dict['feedback'], user_data=event['requestContext'])
 
-    elif "/usage/freecalls" == path:
-        user_service = UserService()
-        return user_service.get_free_call(event)
-
     elif "/wallet/register" == path:
         """ Deprecated """
         response_data = []
