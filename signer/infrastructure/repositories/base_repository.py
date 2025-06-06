@@ -1,0 +1,44 @@
+from functools import wraps
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import SQLAlchemyError
+
+from common.logger import get_logger
+from signer.settings import settings
+
+
+logger = get_logger(__name__)
+
+connection_string = (
+    f"{settings.db.driver}://{settings.db.user}:{settings.db.password}"
+    f"@{settings.db.host}:{settings.db.port}/{settings.db.name}"
+)
+engine = create_engine(connection_string, pool_pre_ping=True, echo=False)
+
+Session = sessionmaker(bind=engine)
+default_session = Session()
+
+
+class BaseRepository:
+    def __init__(self):
+        self.session = default_session
+
+    def __del__(self):
+        self.session.close()
+
+    @staticmethod
+    def write_ops(method):
+        @wraps(method)
+        def wrapper(self, *args, **kwargs):
+            try:
+                return method(self, *args, **kwargs)
+            except SQLAlchemyError as e:
+                logger.exception("Database error on write operations", exc_info=True)
+                self.session.rollback()
+                raise e
+            except Exception as e:
+                self.session.rollback()
+                raise e
+
+        return wrapper

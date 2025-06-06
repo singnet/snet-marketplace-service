@@ -1,0 +1,38 @@
+{
+  "SG1": "sg-1",
+  "SG2": "sg-2",
+  "VPC1": "subnet-1",
+  "VPC2": "subnet-2",
+  "AUTHORIZER": "",
+  "ROLE": "",
+  "ROLE1": "",
+  "SERVICE_ID": "",
+  "ENVIRONMENT": "example",
+  "REGION": "us-east-1",
+  "ORIGIN": "*",
+  "SIGN_AUTHORIZER": "",
+  "SIGN_HEADERS": "method.request.header.x-username, method.request.header.x-organizationid, method.request.header.x-groupid, method.request.header.x-serviceid, method.request.header.x-currentblocknumber, method.request.header.x-signature",
+  "DOMAIN_NAME": "test",
+  "JUMIO_POLICY": {
+    "Effect": "Allow",
+    "Principal": "*",
+    "Action": "execute-api:Invoke",
+    "Resource": ["execute-api:/*/*/*"],
+    "Condition": {
+        "IpAddress": {
+            "aws:SourceIp": [
+                "0.0.0.0"
+            ]
+        }
+    }
+  },
+  "rfai_cron_status": false,
+  "mpe_cron_status": false,
+  "registry_cron_status": false,
+  "token_stake_cron_status": false,
+  "service_status_cron_status": false,
+  "monitor_service_cert_expiry_cron_status": true,
+  "SnetContract" : "",
+  "GeneralPythonLibsMP": "",
+  "GrpcPythonLibsMP": ""
+}
