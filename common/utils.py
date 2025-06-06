@@ -189,7 +189,8 @@ def handle_exception_with_slack_notification(*decorator_args, **decorator_kwargs
                             f"error_description: {repr(traceback.format_tb(tb=exc_tb))}```"
 
                 logger.exception(f"{slack_msg}")
-                Utils().report_slack(slack_msg=slack_msg, SLACK_HOOK=SLACK_HOOK)
+                # TODO: Slack is deprecated, we need to create common class for al processor and then implement MattermostProcessor
+                # Utils().report_slack(slack_msg=slack_msg, SLACK_HOOK=SLACK_HOOK)
                 return generate_lambda_response(
                     status_code=500,
                     message=format_error_message(
