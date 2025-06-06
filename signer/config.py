@@ -42,9 +42,9 @@ STAGE = "dev"
 
 NETWORKS: Dict[int, NetworkConfigDict] = {
     11155111: {
-        "name": "test",
-        "http_provider": "https://sepolia.infura.io/v3/98064002908248a0b0d837940d2c647b",
-        "ws_provider": "wss://sepolia.infura.io/ws/v3/98064002908248a0b0d837940d2c647b",
+        "name": "sepolia",
+        "http_provider": "",
+        "ws_provider": "",
         "contract_base_path": ".",
     }
 }

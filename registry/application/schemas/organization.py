@@ -5,7 +5,7 @@ from pydantic import ValidationError
 from common.exceptions import MethodNotImplemented
 from registry.settings import settings
 from common.schemas import PayloadValidationError
-from common.constant import RequestPayloadType
+from common.constant import RequestPayloadType, PayloadAssertionError
 from registry.exceptions import InvalidOriginException
 from registry.constants import (
     ORG_STATUS_LIST,
@@ -24,7 +24,7 @@ class GetGroupByOrganizationIdRequest(BaseModel):
     @classmethod
     def validate_event(cls, event) -> "GetGroupByOrganizationIdRequest":
         try:
-            assert event.get(RequestPayloadType.PATH_PARAMS) is not None, "Invalid event path parameters"
+            assert event.get(RequestPayloadType.PATH_PARAMS) is not None, PayloadAssertionError.MISSING_PATH_PARAMETERS
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
             assert path_parameters.get("org_uuid") is not None, "Missing organization UUID"
             return cls.model_validate(path_parameters)
@@ -53,7 +53,7 @@ class CreateOrganizationRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "CreateOrganizationRequest":
         try:
-            assert event.get(RequestPayloadType.BODY) is not None, "Invalid event body"
+            assert event.get(RequestPayloadType.BODY) is not None, PayloadAssertionError.MISSING_BODY
             body = json.loads(event[RequestPayloadType.BODY])
             return cls.model_validate(body)
         except (ValidationError, AssertionError, json.JSONDecodeError):
@@ -108,8 +108,8 @@ class UpdateOrganizationRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "UpdateOrganizationRequest":
         try:
-            assert event.get(RequestPayloadType.PATH_PARAMS) is not None, "Missing RequestPayloadType.PATH_PARAMS"
-            assert event.get(RequestPayloadType.BODY) is not None, "Missing body"
+            assert event.get(RequestPayloadType.PATH_PARAMS) is not None, PayloadAssertionError.MISSING_PATH_PARAMETERS
+            assert event.get(RequestPayloadType.BODY) is not None, PayloadAssertionError.MISSING_BODY
 
             body = json.loads(event[RequestPayloadType.BODY])
             query_parameters = event.get(RequestPayloadType.QUERY_STRING) or {}
@@ -130,8 +130,8 @@ class PublishOrganizationRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "PublishOrganizationRequest":
         try:
-            assert event.get(RequestPayloadType.PATH_PARAMS) is not None, "Missing RequestPayloadType.PATH_PARAMS"
-            assert event.get(RequestPayloadType.BODY) is not None, "Missing body"
+            assert event.get(RequestPayloadType.PATH_PARAMS) is not None, PayloadAssertionError.MISSING_PATH_PARAMETERS
+            assert event.get(RequestPayloadType.BODY) is not None, PayloadAssertionError.MISSING_BODY
 
             body = json.loads(event[RequestPayloadType.BODY])
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
@@ -153,8 +153,8 @@ class SaveTransactionHashForOrganizationRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "SaveTransactionHashForOrganizationRequest":
         try:
-            assert event.get(RequestPayloadType.PATH_PARAMS) is not None, "Missing RequestPayloadType.PATH_PARAMS"
-            assert event.get(RequestPayloadType.BODY) is not None, "Missing body"
+            assert event.get(RequestPayloadType.PATH_PARAMS) is not None, PayloadAssertionError.MISSING_PATH_PARAMETERS
+            assert event.get(RequestPayloadType.BODY) is not None, PayloadAssertionError.MISSING_BODY
 
             body = json.loads(event[RequestPayloadType.BODY])
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
@@ -178,8 +178,8 @@ class GetAllMembersRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "GetAllMembersRequest":
         try:
-            assert event.get(RequestPayloadType.PATH_PARAMS) is not None, "Missing RequestPayloadType.PATH_PARAMS"
-            assert event.get(RequestPayloadType.QUERY_STRING) is not None, "Missing queryStringParameters"
+            assert event.get(RequestPayloadType.PATH_PARAMS) is not None, PayloadAssertionError.MISSING_PATH_PARAMETERS
+            assert event.get(RequestPayloadType.QUERY_STRING) is not None, PayloadAssertionError.MISSING_QUERY_STRING_PARAMETERS
 
             query_string_parameters = event[RequestPayloadType.QUERY_STRING]
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
@@ -201,7 +201,7 @@ class GetMemberRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "GetMemberRequest":
         try:
-            assert event.get(RequestPayloadType.PATH_PARAMS) is not None, "Missing RequestPayloadType.PATH_PARAMS"
+            assert event.get(RequestPayloadType.PATH_PARAMS) is not None, PayloadAssertionError.MISSING_PATH_PARAMETERS
             return cls.model_validate(event[RequestPayloadType.PATH_PARAMS])
 
         except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
@@ -215,8 +215,8 @@ class InviteMembersRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "InviteMembersRequest":
         try:
-            assert event.get(RequestPayloadType.PATH_PARAMS) is not None, "Missing RequestPayloadType.PATH_PARAMS"
-            assert event.get(RequestPayloadType.BODY) is not None, "Missing body"
+            assert event.get(RequestPayloadType.PATH_PARAMS) is not None, PayloadAssertionError.MISSING_PATH_PARAMETERS
+            assert event.get(RequestPayloadType.BODY) is not None, PayloadAssertionError.MISSING_BODY
 
             body = json.loads(event[RequestPayloadType.BODY])
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
@@ -238,7 +238,7 @@ class VerifyCodeRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "VerifyCodeRequest":
         try:
-            assert event.get(RequestPayloadType.QUERY_STRING) is not None, "Missing queryStringParameters"
+            assert event.get(RequestPayloadType.QUERY_STRING) is not None, PayloadAssertionError.MISSING_QUERY_STRING_PARAMETERS
             return cls.model_validate(event[RequestPayloadType.QUERY_STRING])
 
         except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
@@ -253,8 +253,8 @@ class PublishMembersRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "PublishMembersRequest":
         try:
-            assert event.get(RequestPayloadType.PATH_PARAMS) is not None, "Missing RequestPayloadType.PATH_PARAMS"
-            assert event.get(RequestPayloadType.BODY) is not None, "Missing body"
+            assert event.get(RequestPayloadType.PATH_PARAMS) is not None, PayloadAssertionError.MISSING_PATH_PARAMETERS
+            assert event.get(RequestPayloadType.BODY) is not None, PayloadAssertionError.MISSING_BODY
 
             body = json.loads(event[RequestPayloadType.BODY])
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
@@ -277,8 +277,8 @@ class DeleteMembersRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "DeleteMembersRequest":
         try:
-            assert event.get(RequestPayloadType.PATH_PARAMS) is not None, "Missing RequestPayloadType.PATH_PARAMS"
-            assert event.get(RequestPayloadType.BODY) is not None, "Missing body"
+            assert event.get(RequestPayloadType.PATH_PARAMS) is not None, PayloadAssertionError.MISSING_PATH_PARAMETERS
+            assert event.get(RequestPayloadType.BODY) is not None, PayloadAssertionError.MISSING_BODY
 
             body = json.loads(event[RequestPayloadType.BODY])
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
@@ -301,7 +301,7 @@ class RegisterMemberRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "RegisterMemberRequest":
         try:
-            assert event.get(RequestPayloadType.BODY) is not None, "Missing body"
+            assert event.get(RequestPayloadType.BODY) is not None, PayloadAssertionError.MISSING_BODY
             body = json.loads(event[RequestPayloadType.BODY])
 
             return cls.model_validate(body)
@@ -340,7 +340,7 @@ class VerifyOrgRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "VerifyOrgRequest":
         try:
-            assert event.get(RequestPayloadType.QUERY_STRING) is not None, "Missing queryStringParameters"
+            assert event.get(RequestPayloadType.QUERY_STRING) is not None, PayloadAssertionError.MISSING_QUERY_STRING_PARAMETERS
             return cls.model_validate(event[RequestPayloadType.QUERY_STRING])
         except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
@@ -352,7 +352,7 @@ class VerifyOrgIdRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "VerifyOrgIdRequest":
         try:
-            assert event.get(RequestPayloadType.QUERY_STRING) is not None, "Missing queryStringParameters"
+            assert event.get(RequestPayloadType.QUERY_STRING) is not None, PayloadAssertionError.MISSING_QUERY_STRING_PARAMETERS
             return cls.model_validate(event[RequestPayloadType.QUERY_STRING])
         except (ValidationError, AssertionError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
