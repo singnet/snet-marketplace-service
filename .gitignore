@@ -127,3 +127,6 @@ registry/config.py
 
 # package.lock
 **/package-lock.json
+
+# ruff
+**/.ruff_cache

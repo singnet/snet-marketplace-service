@@ -59,17 +59,6 @@ package:
 
 
 functions:
-  signature-authenticator:
-    handler: signer/signature_authenticator.main
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-
   get-free-call-signature:
     handler: signer/application/handlers.get_free_call_signature_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
