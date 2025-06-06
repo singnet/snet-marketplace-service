@@ -54,13 +54,11 @@ class SignerService:
                 )
             )
 
-            # daemon_endpoint, free_calls_count = self.contract_api_client.get_daemon_endpoint_and_free_call_for_group(
-            #     org_id=request.organization_id,
-            #     service_id=request.service_id,
-            #     group_id=request.group_id
-            # )
-
-            daemon_endpoint, free_calls_count = "http://localhost:3000", 3
+            daemon_endpoint, free_calls_count = self.contract_api_client.get_daemon_endpoint_and_free_call_for_group(
+                org_id=request.organization_id,
+                service_id=request.service_id,
+                group_id=request.group_id
+            )
 
             if free_calls_count == 0:
                 raise Exception("Zero available free calls count")
@@ -97,7 +95,8 @@ class SignerService:
 
         return {
             "signer_address": settings.signer.address,
-            "signature": bytes.hex(signature),
+            "signature_hex": bytes.hex(signature),
+            "free_call_token_hex": bytes.hex(free_call_token_info.token),
             "expiration_block_number": expiration_block_number,
         }
 
