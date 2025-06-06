@@ -12,8 +12,9 @@ class GetFreeCallSignatureRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "GetFreeCallSignatureRequest":
         try:
-            assert event.get(RequestPayloadType.QUERY_STRING) is not None, PayloadAssertionError.MISSING_QUERY_STRING_PARAMETERS
-            return cls.model_validate(event[RequestPayloadType.QUERY_STRING])
+            assert event.get(RequestPayloadType.QUERY_STRING) is not None, PayloadAssertionError.MISSING_BODY
+            body = json.loads(event[RequestPayloadType.BODY])
+            return cls.model_validate(body)
 
         except (ValidationError, json.JSONDecodeError, AssertionError, KeyError):
             raise PayloadValidationError()
@@ -25,8 +26,9 @@ class GetSignatureForStateServiceRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "GetSignatureForStateServiceRequest":
         try:
-            assert event.get(RequestPayloadType.QUERY_STRING) is not None, PayloadAssertionError.MISSING_QUERY_STRING_PARAMETERS
-            return cls.model_validate(event[RequestPayloadType.QUERY_STRING])
+            assert event.get(RequestPayloadType.BODY) is not None, PayloadAssertionError.MISSING_BODY
+            body = json.loads(event[RequestPayloadType.BODY])
+            return cls.model_validate(body)
 
         except (ValidationError, AssertionError, KeyError):
             raise PayloadValidationError()
@@ -40,8 +42,9 @@ class GetSignatureForRegularCallRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "GetSignatureForRegularCallRequest":
         try:
-            assert event.get(RequestPayloadType.QUERY_STRING) is not None, PayloadAssertionError.MISSING_QUERY_STRING_PARAMETERS
-            return cls.model_validate(event[RequestPayloadType.QUERY_STRING])
+            assert event.get(RequestPayloadType.BODY) is not None, PayloadAssertionError.MISSING_BODY
+            body = json.loads(event[RequestPayloadType.BODY])
+            return cls.model_validate(body)
 
         except (ValidationError, json.JSONDecodeError, AssertionError, KeyError):
             raise PayloadValidationError()
@@ -59,8 +62,9 @@ class GetSignatureForOpenChannelForThirdPartyRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "GetSignatureForOpenChannelForThirdPartyRequest":
         try:
-            assert event.get(RequestPayloadType.QUERY_STRING) is not None, PayloadAssertionError.MISSING_QUERY_STRING_PARAMETERS
-            return cls.model_validate(event[RequestPayloadType.QUERY_STRING])
+            assert event.get(RequestPayloadType.BODY) is not None, PayloadAssertionError.MISSING_BODY
+            body = json.loads(event[RequestPayloadType.BODY])
+            return cls.model_validate(body)
 
         except (ValidationError, json.JSONDecodeError, AssertionError, KeyError):
             raise PayloadValidationError()
