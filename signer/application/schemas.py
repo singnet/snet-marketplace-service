@@ -12,7 +12,7 @@ class GetFreeCallSignatureRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "GetFreeCallSignatureRequest":
         try:
-            assert event.get(RequestPayloadType.QUERY_STRING) is not None, PayloadAssertionError.MISSING_BODY
+            assert event.get(RequestPayloadType.BODY) is not None, PayloadAssertionError.MISSING_BODY
             body = json.loads(event[RequestPayloadType.BODY])
             return cls.model_validate(body)
 
