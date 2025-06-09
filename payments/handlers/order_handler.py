@@ -35,7 +35,6 @@ def create(event, context):
         logger.info(event)
         logger.error(e)
         status_code = StatusCode.INTERNAL_SERVER_ERROR
-        utils.report_slack(f"got error : {response} \n {str(e)} \n for event : {event} ", SLACK_HOOK)
     return generate_lambda_response(
         status_code=status_code,
         message=response
@@ -62,7 +61,6 @@ def get_order_details_for_user(event, context):
         logger.info(event)
         logger.error(e)
         status_code = StatusCode.INTERNAL_SERVER_ERROR
-        utils.report_slack(f"got error : {response} \n {str(e)} \n for event : {event} ", SLACK_HOOK)
     return generate_lambda_response(
         status_code=status_code,
         message=response
@@ -89,7 +87,6 @@ def get_order_from_order_id(event, context):
         logger.info(event)
         logger.error(e)
         status_code = StatusCode.INTERNAL_SERVER_ERROR
-        utils.report_slack(f"got error : {response} \n {str(e)} \n for event : {event} ", SLACK_HOOK)
     return generate_lambda_response(
         status_code=status_code,
         message=response

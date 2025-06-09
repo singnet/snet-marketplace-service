@@ -9,12 +9,11 @@ class TestSignUPAPI(unittest.TestCase):
     def setUp(self):
         pass
 
-    @patch("common.utils.Utils.report_slack")
     @patch("common.blockchain_util.BlockChainUtil.get_current_block_no")
     @patch("common.blockchain_util.BlockChainUtil.read_contract_address")
     @patch("boto3.client")
     def test_signature_for_state_service(
-        self, mock_boto_client, mock_read_contract_address, mock_current_block_no, mock_report_slack
+        self, mock_boto_client, mock_read_contract_address, mock_current_block_no
     ):
         signature_for_state_service = {
             "body": '{"channel_id": 1}',
@@ -39,12 +38,11 @@ class TestSignUPAPI(unittest.TestCase):
             response_body["data"]["snet-current-block-number"] == mock_current_block_no.return_value
         )
 
-    @patch("common.utils.Utils.report_slack")
     @patch("common.blockchain_util.BlockChainUtil.get_current_block_no")
     @patch("common.blockchain_util.BlockChainUtil.read_contract_address")
     @patch("boto3.client")
     def test_signature_for_regular_call(
-        self, mock_boto_client, mock_read_contract_address, mock_current_block_no, mock_report_slack
+        self, mock_boto_client, mock_read_contract_address, mock_current_block_no
     ):
         signature_for_regular_call = {
             "body": '{"channel_id": 1, "nonce": 6487832, "amount": 1}',
@@ -73,12 +71,11 @@ class TestSignUPAPI(unittest.TestCase):
             response_body["data"]["snet-current-block-number"] == mock_current_block_no.return_value
         )
 
-    @patch("common.utils.Utils.report_slack")
     @patch("common.blockchain_util.BlockChainUtil.get_current_block_no")
     @patch("common.blockchain_util.BlockChainUtil.read_contract_address")
     @patch("boto3.client")
     def test_signature_for_open_channel_for_third_party(
-        self, mock_boto_client, mock_read_contract_address, mock_current_block_no, mock_report_slack
+        self, mock_boto_client, mock_read_contract_address, mock_current_block_no
     ):
         signature_for_open_channel_for_third_party = {
             "body": '{"recipient": "0x9c302750c50307D3Ad88eaA9a6506874a15cE4Cb", "group_id" : "0x0d2d8ea0a49f184ffb8403bfd36de9b25e10763d0c26f62cade25b0a80075527", "amount_in_cogs" : 10, "expiration": 7487832, "message_nonce": 6487832, "signer_key": "7df9964a4f39bb035ea1c1474283348582150e363f78330de7b941577caaafa3", "executor_wallet_address": "0x3Bb9b2499c283cec176e7C707Ecb495B7a961ebf"}',

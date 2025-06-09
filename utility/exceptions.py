@@ -1,24 +1,13 @@
-from common.exceptions import CustomException
+from common.exceptions import BadRequestException
 
 
-class BadRequestException(CustomException):
-    error_message = "BAD_REQUEST"
-
+class InvalidContentType(BadRequestException):
     def __init__(self):
-        super().__init__({})
+        super().__init__(message="Invalid content type")
 
-
-class InvalidContentType(CustomException):
-    error_message = "INVALID_CONTENT_TYPE"
-
+class ProtoNotFound(BadRequestException):
     def __init__(self):
-        super().__init__({})
-
-class ProtoNotFound(CustomException):
-    error_message = "PROTO_NOT_FOUND"
-
-    def __init__(self):
-        super().__init__({})
+        super().__init__(message="Proto file not nound")
 
 
 EXCEPTIONS = (BadRequestException, InvalidContentType)

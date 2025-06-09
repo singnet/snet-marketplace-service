@@ -27,14 +27,13 @@ from registry.application.services.org_transaction_status import (
 from registry.application.services.organization_publisher_service import (
     OrganizationPublisherService,
 )
-from registry.config import NETWORK_ID, SLACK_HOOK
 from registry.constants import Action
 from registry.exceptions import BadRequestException, EXCEPTIONS
 
 logger = get_logger(__name__)
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def get_all_org(event, context):
     req_ctx = RequestContext(event)
 
@@ -47,7 +46,7 @@ def get_all_org(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 @secured(
     action=Action.CREATE,
     org_uuid_path=("pathParameters", "org_uuid"),
@@ -68,7 +67,7 @@ def get_group_for_org(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def create_organization(event, context):
     req_ctx = RequestContext(event)
 
@@ -86,7 +85,7 @@ def create_organization(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 @secured(
     action=Action.UPDATE,
     org_uuid_path=("pathParameters", "org_uuid"),
@@ -109,7 +108,7 @@ def update_org(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 @secured(
     action=Action.CREATE,
     org_uuid_path=("pathParameters", "org_uuid"),
@@ -132,7 +131,7 @@ def publish_organization(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 @secured(
     action=Action.CREATE,
     org_uuid_path=("pathParameters", "org_uuid"),
@@ -157,7 +156,7 @@ def save_transaction_hash_for_publish_org(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 @secured(
     action=Action.CREATE,
     org_uuid_path=("pathParameters", "org_uuid"),
@@ -178,7 +177,7 @@ def get_all_members(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 @secured(
     action=Action.CREATE,
     org_uuid_path=("pathParameters", "org_uuid"),
@@ -201,7 +200,7 @@ def get_member(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 @secured(
     action=Action.CREATE,
     org_uuid_path=("pathParameters", "org_uuid"),
@@ -222,7 +221,7 @@ def invite_members(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def verify_code(event, context):
     req_ctx = RequestContext(event)
 
@@ -240,7 +239,7 @@ def verify_code(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 @secured(
     action=Action.CREATE,
     org_uuid_path=("pathParameters", "org_uuid"),
@@ -263,7 +262,7 @@ def publish_members(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def delete_members(event, context):
     req_ctx = RequestContext(event)
 
@@ -280,7 +279,7 @@ def delete_members(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def register_member(event, context):
     req_ctx = RequestContext(event)
 
@@ -298,7 +297,7 @@ def register_member(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def org_verification(event, context):
     try:
         request = VerifyOrgRequest.validate_event(event)
@@ -314,7 +313,7 @@ def org_verification(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def verify_org_id(event, context):
     try:
         request = VerifyOrgIdRequest.validate_event(event)
@@ -329,7 +328,7 @@ def verify_org_id(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def update_transaction(event, context):
     OrganizationTransactionStatus().update_transaction_status()
     return generate_lambda_response(StatusCode.OK, "OK")

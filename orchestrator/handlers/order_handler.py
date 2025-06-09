@@ -42,7 +42,6 @@ def initiate(event, context):
                      f"event: {event}\n"
                      f"error: PAYMENT_INITIATE_FAILED")
         status = ResponseStatus.FAILED
-        utils.report_slack(error, SLACK_HOOK)
         status_code = StatusCode.INTERNAL_SERVER_ERROR
         traceback.print_exc()
 
@@ -55,7 +54,6 @@ def initiate(event, context):
         error = Error.UNDEFINED_ERROR
         status = ResponseStatus.FAILED
         status_code = StatusCode.INTERNAL_SERVER_ERROR
-        utils.report_slack(str(error), SLACK_HOOK)
     return generate_lambda_response(status_code, make_response_body(
         status, response, error
     ), cors_enabled=True)
@@ -86,7 +84,6 @@ def execute(event, context):
         error = Error.CHANNEL_CREATION_FAILED
         status = ResponseStatus.FAILED
         status_code = StatusCode.INTERNAL_SERVER_ERROR
-        utils.report_slack(str(error), SLACK_HOOK)
 
     except FundChannelFailed as e:
         response = "Failed to fund channel"
@@ -96,7 +93,6 @@ def execute(event, context):
         error = Error.FUND_CHANNEL_FAILED
         status = ResponseStatus.FAILED
         status_code = StatusCode.INTERNAL_SERVER_ERROR
-        utils.report_slack(str(error), SLACK_HOOK)
 
     except Exception as e:
         response = "Failed to execute order"
@@ -106,7 +102,6 @@ def execute(event, context):
         error = Error.UNDEFINED_ERROR
         status = ResponseStatus.FAILED
         status_code = StatusCode.INTERNAL_SERVER_ERROR
-        utils.report_slack(str(error), SLACK_HOOK)
         traceback.print_exc()
     return generate_lambda_response(status_code, make_response_body(
         status, response, error
@@ -115,6 +110,7 @@ def execute(event, context):
 
 def get(event, context):
     logger.info("Received request to get orders for username")
+    response = None
     try:
         username = event["requestContext"]["authorizer"]["claims"]["email"]
         order_id = None
@@ -152,7 +148,6 @@ def get(event, context):
         error = Error.UNDEFINED_ERROR
         status = ResponseStatus.FAILED
         status_code = StatusCode.INTERNAL_SERVER_ERROR
-        utils.report_slack(str(error), SLACK_HOOK)
         traceback.print_exc()
     return generate_lambda_response(status_code, make_response_body(
         status, response, error
@@ -161,6 +156,7 @@ def get(event, context):
 
 def cancel(event, context):
     logger.info("Received request for cancel order")
+    response = None
     try:
         path_parameters = event["pathParameters"]
         bad_request = False
@@ -191,7 +187,6 @@ def cancel(event, context):
         logger.error(f"response: {response}\n"
                      f"event: {event}\n"
                      f"error: {repr(e)}")
-        utils.report_slack(error, SLACK_HOOK)
         traceback.print_exc()
     return generate_lambda_response(status_code, make_response_body(
         status, response, error
@@ -222,7 +217,6 @@ def currency_to_token_conversion(event, context):
             net_id=NETWORK_ID,
             handler="currency-to-token-conversion"
         )
-        utils.report_slack(error_message, SLACK_HOOK)
         response = generate_lambda_response(500, error_message, cors_enabled=True)
         traceback.print_exc()
     return response

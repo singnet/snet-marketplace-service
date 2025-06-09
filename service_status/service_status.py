@@ -11,7 +11,7 @@ from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from common.utils import Utils
 from resources.certificates.root_certificate import certificate
-from service_status.config import REGION_NAME, NOTIFICATION_ARN, SLACK_HOOK, NETWORKS, NETWORK_ID, HOST, AUTH, \
+from service_status.config import REGION_NAME, NOTIFICATION_ARN, NETWORKS, NETWORK_ID, HOST, AUTH, \
     MAXIMUM_INTERVAL_IN_HOUR, MINIMUM_INTERVAL_IN_HOUR, NETWORK_NAME, BASE_URL_TO_RESET_SERVICE_HEALTH
 from service_status.constant import SRVC_STATUS_GRPC_TIMEOUT, LIMIT
 
@@ -182,10 +182,6 @@ class ServiceStatus:
         return False
 
     def _send_notification(self, org_id, service_id, recipients, endpoint, error_details, debug_error_string):
-        slack_message = self._get_slack_message(org_id=org_id, service_id=service_id, endpoint=endpoint,
-                                                recipients=recipients, error_details=error_details,
-                                                debug_error_string=debug_error_string)
-        util.report_slack(slack_msg=slack_message, SLACK_HOOK=SLACK_HOOK)
         for recipient in recipients:
             if recipient is None:
                 logger.info(f"Email Id is not present for Org Id: {org_id} and Service Id: {service_id}")

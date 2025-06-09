@@ -1,85 +1,89 @@
-import sys
-import traceback
-
-from common.constant import StatusCode
-from common.utils import Utils, generate_lambda_response
+import json
+from http import HTTPStatus
+from functools import wraps
+from common.constant import ResponseStatus
+from common.exceptions import CustomException, FailedResponse
+from common.alerts import AlertsProcessor, DefaultProcessor
+from common.utils import generate_lambda_response, format_response
 
 
 def exception_handler(*decorator_args, **decorator_kwargs):
+    ENVIRONMENT = decorator_kwargs.get("ENVIRONMENT", "Undefined")
+    ALERTS_PROCESSOR = decorator_kwargs.get("ALERTS_PROCESSOR", DefaultProcessor())
+    EXCEPTIONS_IGNORING_ALERT = decorator_kwargs.get("EXCEPTIONS_IGNORING_ALERT", ())
     logger = decorator_kwargs["logger"]
-    NETWORK_ID = decorator_kwargs.get("NETWORK_ID", None)
-    SLACK_HOOK = decorator_kwargs.get("SLACK_HOOK", None)
-    EXCEPTIONS = decorator_kwargs.get("EXCEPTIONS", ())
 
-    def decorator(func):
+    def decorator(handler):
 
-        def get_exec_info():
-            exec_info = sys.exc_info()
-            formatted_exec_info = traceback.format_exception(*exec_info)
-            exception_info = ""
-            for exc_lines in formatted_exec_info:
-                exception_info = exception_info + exc_lines
-            return exception_info
-
+        @wraps(handler)
         def wrapper(*args, **kwargs):
-            event = args[0] if len(args) > 0 else {}
-            logger.debug(f"lambda event: {event}")
-            handler_name = decorator_kwargs.get("handler_name", func.__name__)
-            path = event.get("path", None)
-            path_parameters = event.get("pathParameters", {})
-            query_string_parameters = event.get("queryStringParameters", {})
-            body = event.get("body", "{}")
 
-            error_message = f"Error Reported! \n" \
-                            f"network_id: {NETWORK_ID}\n" \
-                            f"path: {path}, \n" \
-                            f"handler: {handler_name} \n" \
-                            f"pathParameters: {path_parameters} \n" \
-                            f"queryStringParameters: {query_string_parameters} \n" \
-                            f"body: {body} \n" \
-                            f"x-ray-trace-id: None \n" \
-                            f"error_description: \n"
+            handler_name = handler.__name__
+            event = args[0] if len(args) > 0 else {}
+            logger.debug(f"Handler {handler_name} received event: {json.dumps(event)}")
 
             try:
-                return func(*args, **kwargs)
-            except EXCEPTIONS as e:
-                exec_info = get_exec_info()
-                slack_message = f"```{error_message}{exec_info}```"
-                logger.exception(exec_info)
-                Utils().report_slack(slack_msg=slack_message, SLACK_HOOK=SLACK_HOOK)
+                return handler(*args, **kwargs)
+            except FailedResponse as exc:
+                logger.exception(f"Failed response [code {exc.code}]: {exc.message}", exc_info=False)
+                response = format_response(ResponseStatus.FAILED, exc.to_dict())
+                return generate_lambda_response(exc.http_code, response, cors_enabled=True)
+            except Exception as exc:
+                logger.exception(f"Exception in lambda handler: {handler_name}", exc_info=True)
+                if not isinstance(exc, EXCEPTIONS_IGNORING_ALERT):
+                    if isinstance(ALERTS_PROCESSOR, AlertsProcessor):
+                        logger.info(f"Sending alert via {ALERTS_PROCESSOR.name}")
+                        ALERTS_PROCESSOR.send_handler_event_error(
+                            handler_name=handler_name,
+                            event=event,
+                            error_message=repr(exc),
+                            environment=ENVIRONMENT
+                        )
+                    else:
+                        logger.warning("Invalid alerts processor")
+                if isinstance(exc, CustomException):
+                    http_code = exc.http_code
+                    response = exc.to_dict()
+                else:
+                    http_code = HTTPStatus.INTERNAL_SERVER_ERROR
+                    response = {"code": 0, "message": "Unexpected server error", "details": {}}
+                response = format_response(ResponseStatus.FAILED, response)
+                return generate_lambda_response(http_code, response, cors_enabled=True)
 
-                return generate_lambda_response(
-                    StatusCode.INTERNAL_SERVER_ERROR,
-                    {
-                        "status": "failed",
-                        "data": "",
-                        "error": {
-                            "code": 0,
-                            "message": e.error_message,
-                            "details": e.error_details
-                        }
-                    },
-                    cors_enabled=True
-                )
-            except Exception as e:
-                exec_info = get_exec_info()
-                slack_message = f"```{error_message}{exec_info}```"
-                logger.exception(exec_info)
-                Utils().report_slack(slack_msg=slack_message, SLACK_HOOK=SLACK_HOOK)
+        return wrapper
 
-                return generate_lambda_response(
-                    StatusCode.INTERNAL_SERVER_ERROR,
-                    {
-                        "status": "failed",
-                        "data": "",
-                        "error": {
-                            "code": 0,
-                            "message": repr(e),
-                            "details": {}
-                        }
-                    },
-                    cors_enabled=True
-                )
+    return decorator
+
+def worker_exception_handler(*decorator_args, **decorator_kwargs):
+    ENVIRONMENT = decorator_kwargs.get("ENVIRONMENT", "Undefined")
+    ALERTS_PROCESSOR = decorator_kwargs.get("ALERTS_PROCESSOR", DefaultProcessor())
+    EXCEPTIONS_IGNORING_ALERT = decorator_kwargs.get("EXCEPTIONS_IGNORING_ALERT", ())
+    logger = decorator_kwargs["logger"]
+
+    def decorator(handler):
+
+        @wraps(handler)
+        def wrapper(*args, **kwargs):
+            handler_name = handler.__name__
+            event = args[0] if len(args) > 0 else {}
+            logger.debug(f"Handler {handler_name} received event: {json.dumps(event)}")
+
+            try:
+                return handler(*args, **kwargs)
+            except Exception as exc:
+                logger.exception(f"Exception in cron lambda handler: {handler_name}", exc_info=True)
+                if not isinstance(exc, EXCEPTIONS_IGNORING_ALERT):
+                    if isinstance(ALERTS_PROCESSOR, AlertsProcessor):
+                        logger.info(f"Sending alert via {ALERTS_PROCESSOR.name}")
+                        ALERTS_PROCESSOR.send_handler_event_error(
+                            handler_name=handler_name,
+                            event=event,
+                            error_message=repr(exc),
+                            environment=ENVIRONMENT
+                        )
+                    else:
+                        logger.warning("Invalid alerts processor")
+                return {}
 
         return wrapper
 

@@ -1,155 +1,98 @@
-from http import HTTPStatus
-from common.exceptions import CustomException, MethodNotImplemented, OperationNotAllowed
+from common.exceptions import (
+    BadRequestException,
+    MethodNotImplemented,
+    OperationNotAllowed,
+)
 
 
-class BadRequestException(CustomException):
-    error_message = "BAD_REQUEST"
-
+class OrganizationNotFoundException(BadRequestException):
     def __init__(self):
-        super().__init__({})
+        super().__init__(message="Bad request exception")
 
 
-class OrganizationNotFoundException(CustomException):
-    error_message = "ORGANIZATION_NOT_FOUND"
-
+class InvalidOriginException(BadRequestException):
     def __init__(self):
-        super().__init__({})
+        super().__init__(message="Invalid origin")
 
 
-class InvalidOriginException(CustomException):
-    error_message = "INVALID_ORIGIN"
-
+class InvalidOrganizationStateException(BadRequestException):
     def __init__(self):
-        super().__init__({})
+        super().__init__(message="Invalid organization state")
 
 
-class InvalidOrganizationStateException(CustomException):
-    error_message = "INVALID_ORGANIZATION_STATE"
-
+class InvalidMetadataException(BadRequestException):
     def __init__(self):
-        super().__init__({})
+        super().__init__(message="Invalid metadata")
 
 
-class InvalidMetadataException(CustomException):
-    error_message = "INVALID_METADATA_EXCEPTION"
-
+class InvalidServiceStateException(BadRequestException):
     def __init__(self):
-        super().__init__({})
+        super().__init__(message="Invalid service state")
 
 
-class InvalidServiceStateException(CustomException):
-    error_message = "INVALID_SERVICE_STATE"
-
+class ServiceProtoNotFoundException(BadRequestException):
     def __init__(self):
-        super().__init__({})
+        super().__init__(message="Service proto not found")
 
 
-class ServiceProtoNotFoundException(CustomException):
-    error_message = "SERVICE_PROTO_NOT_FOUND"
-
+class InvalidOrganizationType(BadRequestException):
     def __init__(self):
-        super().__init__({})
+        super().__init__(message="Invalid Organization type")
 
 
-class InvalidOrganizationType(CustomException):
-    error_message = "Invalid Organization Type"
-
+class OrganizationNotPublishedException(BadRequestException):
     def __init__(self):
-        super().__init__({})
+        super().__init__(message="Organization is not published")
 
 
-class OrganizationNotPublishedException(CustomException):
-    error_message = "ORGANIZATION IS NOT PUBLISHED"
-
+class ServiceNotFoundException(BadRequestException):
     def __init__(self):
-        super().__init__({})
+        super().__init__(message="Service not found")
 
 
-class ServiceNotFoundException(CustomException):
-    error_message = "SERVICE_NOT_FOUND"
-
+class ServiceGroupNotFoundException(BadRequestException):
     def __init__(self):
-        super().__init__({})
+        super().__init__(message="Service group not found")
 
 
-class ServiceGroupNotFoundException(CustomException):
-    error_message = "SERVICE_GROUP_NOT_FOUND"
-
+class EnvironmentNotFoundException(BadRequestException):
     def __init__(self):
-        super().__init__({})
+        super().__init__(message="Environmet not found")
 
 
-class EnvironmentNotFoundException(CustomException):
-    error_message = "Environment Not Found"
-
+class InvalidSlackUserException(BadRequestException):
     def __init__(self):
-        super().__init__({})
+        super().__init__(message="Invalid slack user")
 
 
-class InvalidSlackUserException(CustomException):
-    error_message = "SLACK_USER"
-
+class InvalidSlackChannelException(BadRequestException):
     def __init__(self):
-        super().__init__({})
+        super().__init__(message="Slack channel not allowed")
 
 
-class InvalidSlackChannelException(CustomException):
-    error_message = "SLACK_CHANNEL_NOT_ALLOWED"
-
+class InvalidSlackSignatureException(BadRequestException):
     def __init__(self):
-        super().__init__({})
+        super().__init__(message="Invalid slack signature")
 
 
-class InvalidSlackSignatureException(CustomException):
-    error_message = "SLACK_SIGN_NOT_ALLOWED"
-
+class InvalidFileTypeException(BadRequestException):
     def __init__(self):
-        super().__init__({})
+        super().__init__(message="Invalid file type")
 
 
-class InvalidFileTypeException(CustomException):
-    error_message = "INVALID_FILE_TYPE_EXCEPTION"
-
+class FileNotFoundException(BadRequestException):
     def __init__(self):
-        super().__init__({})
+        super().__init__(message="File not found")
 
 
-class FileNotFoundException(CustomException):
-    error_message = "FILE_NOT_FOUND"
-
+class NewMemberAddressException(BadRequestException):
     def __init__(self):
-        super().__init__({})
-
-class ForbiddenException(CustomException):
-    error_message = "FORBIDDEN_ERROR"
-
-    def __init__(self):
-        super().__init__(
-            http_code=HTTPStatus.FORBIDDEN
-        )
-
-class LighthouseInternalException(CustomException):
-    error_message = "LIGHTHOUSE_INTERNAL_SERVER_ERROR"
-
-    def __init__(self):
-        super().__init__({})
-
-class TooLargeFileException(CustomException):
-    error_message = "TOO_LARGE_FILE"
-
-    def __init__(self):
-        super().__init__({})
-
-class NewMemberAddressException(CustomException):
-    error_message = "NEW_MEMBER_ADDRESS_EQUALS_OWNER"
-
-    def __init__(self):
-        super().__init__({})
+        super().__init__(message="New member address equals owner address")
 
 EXCEPTIONS = (BadRequestException, OrganizationNotFoundException, InvalidOriginException, MethodNotImplemented,
               InvalidOrganizationStateException, InvalidMetadataException, InvalidServiceStateException,
-              ServiceProtoNotFoundException, OrganizationNotPublishedException, ForbiddenException,
+              ServiceProtoNotFoundException, OrganizationNotPublishedException,
               ServiceNotFoundException, ServiceGroupNotFoundException, EnvironmentNotFoundException,
               InvalidSlackUserException, InvalidSlackChannelException, InvalidSlackSignatureException,
               InvalidFileTypeException, FileNotFoundException, OperationNotAllowed, InvalidOrganizationType,
-              LighthouseInternalException, NewMemberAddressException, TooLargeFileException)
+              NewMemberAddressException)

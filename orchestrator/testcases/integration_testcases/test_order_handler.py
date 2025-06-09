@@ -2,14 +2,12 @@ import unittest
 import json
 
 from orchestrator.handlers.order_handler import currency_to_token_conversion
-from unittest.mock import patch
 
 class TestOrderHandler(unittest.TestCase):
     def setUp(self):
         pass
 
-    @patch("common.utils.Utils.report_slack")
-    def test_currency_to_token_conversion(self, mock_report_slack):
+    def test_currency_to_token_conversion(self):
         event = {"pathParameters": {"currency": "USD"}, "queryStringParameters": {"amount": "100"}}
         response = currency_to_token_conversion(event=event, context=None)
         print(response)

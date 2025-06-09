@@ -38,7 +38,6 @@ def initiate(event, context):
         logger.error(response)
         logger.error(e)
         status_code = StatusCode.INTERNAL_SERVER_ERROR
-        utils.report_slack(f"got error : {response} \n {str(e)} \n for event : {event} ", SLACK_HOOK)
     return generate_lambda_response(
         status_code=status_code,
         message=response
@@ -76,7 +75,6 @@ def execute(event, context):
         logger.info(event)
         logger.error(e)
         status_code = StatusCode.INTERNAL_SERVER_ERROR
-        utils.report_slack(f"got error : {response} \n {str(e)} \n for event : {event} ", SLACK_HOOK)
     return generate_lambda_response(
         status_code=status_code,
         message=response
@@ -103,7 +101,6 @@ def cancel(event, context):
         logger.info(event)
         logger.error(e)
         status_code = StatusCode.INTERNAL_SERVER_ERROR
-        utils.report_slack(f"got error : {response} \n {str(e)} \n for event : {event} ", SLACK_HOOK)
     return generate_lambda_response(
         status_code=status_code,
         message=response

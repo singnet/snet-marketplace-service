@@ -2,8 +2,9 @@ from urllib.parse import unquote
 
 from common.repository import Repository
 from common.logger import get_logger
-from common.utils import Utils, generate_lambda_response, handle_exception_with_slack_notification
-from contract_api.config import NETWORKS, NETWORK_ID, SLACK_HOOK
+from common.utils import Utils, generate_lambda_response
+from common.exception_handler import exception_handler
+from contract_api.config import NETWORKS, NETWORK_ID 
 from contract_api.registry import Registry
 
 
@@ -12,7 +13,7 @@ obj_util = Utils()
 logger = get_logger(__name__)
 
 
-@handle_exception_with_slack_notification(logger=logger, SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID)
+@exception_handler(logger=logger)
 def get_all_org(event, context):
     obj_reg = Registry(obj_repo=db)
     response_data = obj_reg.get_all_org()
@@ -20,7 +21,7 @@ def get_all_org(event, context):
         200, {"status": "success", "data": response_data}, cors_enabled=True)
 
 
-@handle_exception_with_slack_notification(logger=logger, SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID)
+@exception_handler(logger=logger)
 def get_all_group_for_org(event, context):
     obj_reg = Registry(obj_repo=db)
     org_id = event['pathParameters']['orgId']
@@ -30,7 +31,7 @@ def get_all_group_for_org(event, context):
         200, {"status": "success", "data": response_data}, cors_enabled=True)
 
 
-@handle_exception_with_slack_notification(logger=logger, SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID)
+@exception_handler(logger=logger)
 def get_group_for_org_id(event, context):
     obj_reg = Registry(obj_repo=db)
     org_id = event['pathParameters']['orgId']
@@ -40,7 +41,7 @@ def get_group_for_org_id(event, context):
         200, {"status": "success", "data": response_data}, cors_enabled=True)
 
 
-@handle_exception_with_slack_notification(logger=logger, SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID)
+@exception_handler(logger=logger)
 def get_org_for_org_id(event, context):
     org_id = event['pathParameters']['orgId']
     obj_reg = Registry(obj_repo=db)

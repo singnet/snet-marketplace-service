@@ -3,16 +3,16 @@ import json
 from common.constant import StatusCode, ResponseStatus
 from common.exception_handler import exception_handler
 from common.logger import get_logger
+from common.exceptions import BadRequestException
 from common.utils import validate_dict, generate_lambda_response
-from wallets.config import NETWORK_ID, SLACK_HOOK
-from wallets.exceptions import EXCEPTIONS, BadRequestException
 from wallets.application.service.channel_service import ChannelService
 
 logger = get_logger(__name__)
 channel_service = ChannelService()
+EXCEPTIONS = (BadRequestException, )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def create_channel(event, context):
     logger.info(f"Received request to initiate order: {event}")
     try:
@@ -39,7 +39,7 @@ def create_channel(event, context):
     return response
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def record_create_channel_event(event, context):
     logger.info(f"Received request to initiate order: {event}")
     try:
@@ -60,7 +60,7 @@ def record_create_channel_event(event, context):
     return response
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def get_transactions_for_order(event, context):
     logger.info(f"Received request to get transactions for order: {event}")
     try:
@@ -91,7 +91,7 @@ def get_transactions_for_order(event, context):
     return response
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def channel_add_funds(event, context):
     logger.info(f"Received request to add funds to channel: {event}")
     try:
@@ -111,14 +111,14 @@ def channel_add_funds(event, context):
     return response
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def update_channel_transaction_status(event, context):
     logger.info(f"Received request to update channel transaction status: {event}")
     channel_service.manage_channel_transaction_status()
     return
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def open_channel_by_third_party(event, context):
     logger.info(f"Open channel by third party {event}")
     channel_service.manage_create_channel_event()

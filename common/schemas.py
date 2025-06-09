@@ -1,5 +1,5 @@
 from enum import Enum
-from common.exceptions import BadRequestException
+from common.exceptions import CustomException
 
 
 class OrderEnum(str, Enum):
@@ -7,6 +7,6 @@ class OrderEnum(str, Enum):
     descending = "desc"
 
 
-class PayloadValidationError(BadRequestException):
+class PayloadValidationError(CustomException):
     def __init__(self):
-        super().__init__("Error in parsing payload")
+        super().__init__(message="Error in parsing payload")
