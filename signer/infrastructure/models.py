@@ -13,8 +13,8 @@ class Base(DeclarativeBase):
     pass
 
 
-class FreeCallToken(Base):
-    __tablename__ = "free_call_token"
+class FreeCallTokenInfo(Base):
+    __tablename__ = "free_call_token_info"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     username: Mapped[str] = mapped_column(VARCHAR(128), nullable=False)

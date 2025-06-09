@@ -1,9 +1,9 @@
 from signer.infrastructure.repositories.base_repository import BaseRepository
-from signer.infrastructure.models import FreeCallToken
+from signer.infrastructure.models import FreeCallTokenInfo
 from signer.domain.free_call_token import FreeCallTokenInfoEntity
 
 
-class FreeCallTokenRepository(BaseRepository):
+class FreeCallTokenInfoRepository(BaseRepository):
     def get_free_call_token_info_by_username(
         self,
         username: str,
@@ -12,7 +12,7 @@ class FreeCallTokenRepository(BaseRepository):
         group_id: str,
     ) -> FreeCallTokenInfoEntity | None:
         db_token = (
-            self.session.query(FreeCallToken)
+            self.session.query(FreeCallTokenInfo)
             .filter_by(
                 username=username,
                 organization_id=organization_id,
@@ -46,7 +46,7 @@ class FreeCallTokenRepository(BaseRepository):
         new_token: bytes,
     ) -> FreeCallTokenInfoEntity:
         db_token = (
-            self.session.query(FreeCallToken)
+            self.session.query(FreeCallTokenInfo)
             .filter_by(
                 username=username,
                 organization_id=organization_id,
@@ -61,7 +61,7 @@ class FreeCallTokenRepository(BaseRepository):
             db_token.token = new_token
             self.session.commit()
         else:
-            db_token = FreeCallToken(
+            db_token = FreeCallTokenInfo(
                 username=username,
                 organization_id=organization_id,
                 service_id=service_id,
