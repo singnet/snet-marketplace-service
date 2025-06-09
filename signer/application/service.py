@@ -10,7 +10,7 @@ from signer.application.schemas import (
 )
 from signer.infrastructure.contract_api_client import ContractAPIClient
 from signer.infrastructure.daemon_client import DaemonClient
-from signer.infrastructure.repositories.free_call_token_repository import FreeCallTokenRepository
+from signer.infrastructure.repositories.free_call_token_repository import FreeCallTokenInfoRepository
 
 
 class SignerService:
@@ -22,7 +22,7 @@ class SignerService:
         )
         self.contract_api_client = ContractAPIClient()
         self.daemon_client = DaemonClient()
-        self.free_call_token_repository = FreeCallTokenRepository()
+        self.free_call_token_repository = FreeCallTokenInfoRepository()
 
     def get_free_call_signature(self, username: str, request: GetFreeCallSignatureRequest):
         current_block = self.obj_blockchain_utils.get_current_block_no()
