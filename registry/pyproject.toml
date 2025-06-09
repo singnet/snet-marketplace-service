@@ -9,7 +9,7 @@ package-mode = false
 [tool.poetry.dependencies]
 python = "3.12.6"
 boto3 = "1.37.30"
-requests = "2.32.3"
+requests = "2.32.4"
 web3 = "7.10.0"
 pymysql = "1.1.1"
 alembic = "1.15.2"
