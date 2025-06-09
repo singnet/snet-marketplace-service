@@ -66,12 +66,7 @@ def derive_new_crypto_rate(crypto, fiat):
         percentage_in_price_change = get_change(current=latest_rate, previous=derived_rate)
 
         if percentage_in_price_change >= CRYPTO_FIAT_CONVERSION['RATE_THRESHOLD']:
-            update_rate(crypto=crypto, fiat=fiat, latest_rate=derived_rate)
-        else:
-            Utils().report_slack(
-                    "{crypto}-{fiat} didn't update as the change in percentage is {percentage_in_price_change}. Recent "
-                    "derived rate: {derived_rate}",
-                    SLACK_HOOK)     
+            update_rate(crypto=crypto, fiat=fiat, latest_rate=derived_rate)   
 
 def get_latest_crypto_rate(crypto, fiat, fiat_rate):
     try:

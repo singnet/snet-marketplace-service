@@ -14,7 +14,6 @@ from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from contract_api.config import REGION_NAME
 from utility.application.services.python_boilerplate_service import prepare_boilerplate_template
-from utility.config import SLACK_HOOK
 from utility.exceptions import ProtoNotFound
 
 TEMP_FILE_DIR = tempfile.gettempdir()
@@ -63,7 +62,6 @@ def generate_python_stubs(input_s3_path, output_s3_path, org_id, service_id):
     except ProtoNotFound:
         message = f"Proto file is not found for location :: {input_s3_path}"
         logger.info(message)
-        utils.report_slack(slack_msg=message, SLACK_HOOK=SLACK_HOOK)
     except Exception as e:
         raise e(f"Error in generating python proto stubs {repr(e)}")
 

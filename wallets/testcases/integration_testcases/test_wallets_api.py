@@ -11,9 +11,8 @@ channel_repo = ChannelRepository()
 
 
 class TestWalletAPI(unittest.TestCase):
-    @patch("common.utils.Utils.report_slack")
     @patch("wallets.infrastructure.blockchain_util.BlockChainUtil.create_account")
-    def test_create_wallet(self, mock_create_account, mock_report_slack):
+    def test_create_wallet(self, mock_create_account):
         create_wallet_event = {
             "body": '{"username": "dummy@dummy.com"}',
         }
@@ -35,20 +34,7 @@ class TestWalletAPI(unittest.TestCase):
         assert response_body["data"]["status"] == 0
         assert response_body["data"]["type"] == "GENERAL"
 
-    @patch("common.utils.Utils.report_slack")
-    def test_create_wallet_and_channel(self, mock_report_slack):
-        pass
-
-    @patch("common.utils.Utils.report_slack")
-    def test_create_channel(self, mock_report_slack):
-        pass
-
-    @patch("common.utils.Utils.report_slack")
-    def test_top_up_channel(self, mock_report_slack):
-        pass
-
-    @patch("common.utils.Utils.report_slack")
-    def test_get_wallet_details(self, mock_report_slack):
+    def test_get_wallet_details(self):
         self.tearDown()
         channel_repo.add_item(ChannelTransactionHistory(
             order_id="8c6b2568-f358-11eb-bd57-46eba0f9718d",
@@ -149,14 +135,6 @@ class TestWalletAPI(unittest.TestCase):
                  }]}
         real_dict = json.loads(response['body'])["data"]
         assert real_dict == expected_dict
-
-    @patch("common.utils.Utils.report_slack")
-    def test_register_wallets(self, mock_report_slack):
-        pass
-
-    @patch("common.utils.Utils.report_slack")
-    def test_set_default_wallet(self, mock_report_slack):
-        pass
 
     def tearDown(self):
         channel_repo.session.query(Wallet).delete()

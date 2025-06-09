@@ -30,7 +30,7 @@ from common.schemas import PayloadValidationError
 logger = get_logger(__name__)
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def verify_service_id(event, context):
@@ -47,7 +47,7 @@ def verify_service_id(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def save_transaction_hash_for_published_service(event, context):
@@ -68,7 +68,7 @@ def save_transaction_hash_for_published_service(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def save_service(event, context):
@@ -87,7 +87,7 @@ def save_service(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(logger=logger)
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def save_service_attributes(event, context):
@@ -106,7 +106,7 @@ def save_service_attributes(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def create_service(event, context):
@@ -125,7 +125,7 @@ def create_service(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def get_services_for_organization(event, context):
@@ -141,7 +141,7 @@ def get_services_for_organization(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def get_service_for_service_uuid(event, context):
@@ -161,7 +161,7 @@ def get_service_for_service_uuid(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def get_daemon_config_for_current_network(event, context):
@@ -178,7 +178,7 @@ def get_daemon_config_for_current_network(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def get_service_details_using_org_id_service_id(event, context):
     logger.info(f"event: {event}")
     query_parameters = event["queryStringParameters"]
@@ -193,7 +193,7 @@ def get_service_details_using_org_id_service_id(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def service_deployment_status_notification_handler(event, context):
     req_ctx = RequestContext(event)
 
@@ -210,14 +210,14 @@ def service_deployment_status_notification_handler(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def update_transaction(event, context):
     logger.info(f"Update transaction event :: {event}")
     ServiceTransactionStatus().update_transaction_status()
     return generate_lambda_response(StatusCode.OK, "OK")
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def get_code_build_status_for_service(event, context):
     try:
         request = GetCodeBuildStatusRequest.validate_event(event)
@@ -231,7 +231,7 @@ def get_code_build_status_for_service(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def update_service_assets(event, context):
     logger.info(f"Update service assets event :: {event}")
     response = UpdateServiceAssets().validate_and_process_service_assets(payload=event)
@@ -240,7 +240,7 @@ def update_service_assets(event, context):
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def update_demo_component_build_status(event, context):
     org_uuid = event['org_uuid']
     service_uuid = event['service_uuid']
@@ -259,7 +259,7 @@ def update_demo_component_build_status(event, context):
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def publish_service(event, context):

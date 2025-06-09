@@ -1,7 +1,8 @@
 from common.constant import StatusCode
 from common.exceptions import BadRequestException
 from common.logger import get_logger
-from common.utils import generate_lambda_response, handle_exception_with_slack_notification
+from common.utils import generate_lambda_response
+from common.exception_handler import exception_handler
 
 from signer.application.schemas import (
     GetFreeCallSignatureRequest,
@@ -13,14 +14,11 @@ from signer.application.service import SignerService
 
 from common.schemas import PayloadValidationError
 from common.request_context import RequestContext
-from signer.settings import settings
 
 logger = get_logger(__name__)
 
 
-@handle_exception_with_slack_notification(
-    SLACK_HOOK="", NETWORK_ID=settings.network.id, logger=logger
-)
+@exception_handler(logger=logger)
 def get_free_call_signature_handler(event, context):
     req_ctx = RequestContext(event)
 
@@ -37,9 +35,7 @@ def get_free_call_signature_handler(event, context):
     )
 
 
-@handle_exception_with_slack_notification(
-    SLACK_HOOK="", NETWORK_ID=settings.network.id, logger=logger
-)
+@exception_handler(logger=logger)
 def get_state_service_signature_handler(event, context):
     req_ctx = RequestContext(event)
 
@@ -58,9 +54,7 @@ def get_state_service_signature_handler(event, context):
     )
 
 
-@handle_exception_with_slack_notification(
-    SLACK_HOOK="", NETWORK_ID=settings.network.id, logger=logger
-)
+@exception_handler(logger=logger)
 def get_regular_call_signature_handler(event, context):
     req_ctx = RequestContext(event)
 
@@ -79,9 +73,7 @@ def get_regular_call_signature_handler(event, context):
     )
 
 
-@handle_exception_with_slack_notification(
-    SLACK_HOOK="", NETWORK_ID=settings.network.id, logger=logger
-)
+@exception_handler(logger=logger)
 def get_open_channel_for_third_party_signature_handler(event, context):
     try:
         request = GetSignatureForOpenChannelForThirdPartyRequest.validate_event(event)
@@ -96,9 +88,7 @@ def get_open_channel_for_third_party_signature_handler(event, context):
     )
 
 
-@handle_exception_with_slack_notification(
-    SLACK_HOOK="", NETWORK_ID=settings.network.id, logger=logger
-)
+@exception_handler(logger=logger)
 def get_free_call_signer_address_handler(event, context):
     response = SignerService().get_freecall_signer_address()
     return generate_lambda_response(

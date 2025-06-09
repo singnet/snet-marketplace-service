@@ -8,7 +8,7 @@ from zipfile import ZipFile
 
 from common.exceptions import BadRequestException
 from contract_api.config import IPFS_URL
-from contract_api.exceptions import LighthouseInternalException
+from common.exceptions import LighthouseInternalException
 from common.logger import get_logger
 
 import ipfshttpclient
@@ -84,7 +84,7 @@ class StorageProvider:
         elif provider_type == StorageProviderType.FILECOIN:
             try:
                 metadata_hash = self.__lighthouse_client.upload(file_path)["data"]["Hash"]
-            except Exception as e:
+            except Exception:
                 raise LighthouseInternalException()
         else:
             raise ValueError(f"Unsupported provider type: {provider_type}")

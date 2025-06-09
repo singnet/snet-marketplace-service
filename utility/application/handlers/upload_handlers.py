@@ -7,14 +7,14 @@ from common.exception_handler import exception_handler
 from common.logger import get_logger
 from common.utils import generate_lambda_response, validate_dict
 from utility.application.upload_service import UploadService
-from utility.config import SLACK_HOOK, NETWORK_ID, ALLOWED_CONTENT_TYPE, FILE_EXTENSION
+from utility.config import ALLOWED_CONTENT_TYPE, FILE_EXTENSION
 from utility.constants import UPLOAD_TYPE_DETAILS, TEMP_FILE_DIR
 from utility.exceptions import EXCEPTIONS, InvalidContentType, BadRequestException
 
 logger = get_logger(__name__)
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def upload_file(event, context):
     logger.debug(f"Received event: {event}")
 

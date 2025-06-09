@@ -8,7 +8,6 @@ from common.utils import generate_lambda_response
 from common.utils import validate_dict
 from orchestrator.config import NETWORKS
 from orchestrator.config import NETWORK_ID
-from orchestrator.config import SLACK_HOOK
 from orchestrator.services.order_service import OrderService
 
 REQUIRED_KEYS_FOR_CANCEL_ORDER_EVENT = ["pathParameters"]
@@ -37,7 +36,6 @@ def request_handler(event, context):
             net_id=NETWORK_ID,
             handler="cancel_order_handler"
         )
-        obj_util.report_slack(error_message, SLACK_HOOK)
         response = generate_lambda_response(500, error_message, cors_enabled=True)
         traceback.print_exc()
     return response
