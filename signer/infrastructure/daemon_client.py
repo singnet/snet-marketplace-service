@@ -53,7 +53,7 @@ class DaemonClient:
         stub = state_service_pb2_grpc.FreeCallStateServiceStub(endpoint_channel)
         response = stub.GetFreeCallsAvailable(request)
 
-        print(response)
+        logger.debug("Daemon get free calls available response: ", str(response))
 
         return response.free_calls_available
 
