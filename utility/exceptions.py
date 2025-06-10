@@ -9,5 +9,18 @@ class ProtoNotFound(BadRequestException):
     def __init__(self):
         super().__init__(message="Proto file not nound")
 
+class InvalidUploadType(BadRequestException):
+    def __init__(self):
+        super().__init__(message = "Invalid upload type")
 
-EXCEPTIONS = (BadRequestException, InvalidContentType)
+class EmptyFileException(BadRequestException):
+    def __init__(self):
+        super().__init__(message = "Empty file")
+
+class MissingUploadTypeDetailsParams(BadRequestException):
+    def __init__(self):
+        super().__init__(message = "Missing upload type details parameters")
+
+
+EXCEPTIONS = (BadRequestException, InvalidContentType, ProtoNotFound,
+              InvalidUploadType, EmptyFileException, MissingUploadTypeDetailsParams)
