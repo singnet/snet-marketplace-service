@@ -72,9 +72,11 @@ class RequestPayloadType(str, Enum):
     BODY = "body"
     PATH_PARAMS = "pathParameters"
     QUERY_STRING = "queryStringParameters"
+    HEADERS = "headers"
 
 
 class PayloadAssertionError(str, Enum):
     MISSING_PATH_PARAMETERS = "Missing pathParameters"
     MISSING_QUERY_STRING_PARAMETERS = "Missing queryStringParameters"
     MISSING_BODY = "Missing body"
+    MISSING_HEADERS = "Missing headers"
