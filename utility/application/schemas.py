@@ -32,39 +32,39 @@ class UploadFileRequest(BaseModel):
         except (ValidationError, json.JSONDecodeError, AssertionError, KeyError):
             raise PayloadValidationError()
 
-    @classmethod
     @model_validator(mode = "before")
+    @classmethod
     def headers_to_lower(cls, data: dict) -> dict:
+        print(data)
         return {k.lower().replace("-", "_"): v for k, v in data.items()}
 
-    @classmethod
     @field_validator("content_type")
+    @classmethod
     def validate_content_type(cls, v):
         if v not in settings.files.ALLOWED_CONTENT_TYPE:
             raise InvalidContentType()
         return v
 
-    @classmethod
     @field_validator("type")
+    @classmethod
     def validate_upload_type(cls, v):
         if v not in UPLOAD_TYPE_DETAILS:
             raise InvalidUploadType()
         return v
 
-    @classmethod
     @field_validator("raw_file_data")
+    @classmethod
     def validate_file_data(cls, v):
         if len(v) == 0:
             raise EmptyFileException()
         return base64.b64decode(v)
 
-    @classmethod
     @model_validator(mode = "after")
-    def validate_query_params(cls, data: dict) -> dict:
-        for key in UPLOAD_TYPE_DETAILS[data["type"]]["required_query_params"]:
-            if key not in data:
+    def validate_query_params(self) -> "UploadFileRequest":
+        for key in UPLOAD_TYPE_DETAILS[self.type]["required_query_params"]:
+            if key not in self.__dict__:
                 raise MissingUploadTypeDetailsParams()
-        return data
+        return self
 
 class ManageProtoCompilationRequest(BaseModel):
     input_s3_path: str

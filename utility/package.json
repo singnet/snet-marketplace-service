@@ -4,8 +4,12 @@
   "description": "",
   "author": "SingularityNet",
   "dependencies": {
-    "serverless-offline": "5.12.0",
     "serverless-prune-plugin": "1.4.1",
     "serverless-latest-layer-version": "2.1.2"
+  },
+  "devDependencies": {
+     "serverless-offline": "14.4.0",
+     "serverless": "4.16.1",
+     "singularitynet-platform-contracts": "2.1.0"
   }
 }
