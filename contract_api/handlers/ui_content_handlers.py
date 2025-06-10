@@ -8,7 +8,7 @@ from contract_api.services.banner_service import BannerService
 logger = get_logger(__name__)
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK)
+@exception_handler(SLACK_HOOK=SLACK_HOOK, logger = logger)
 def get_marketplace_carousel(event, context):
     carousel = BannerService().get_banners()
     return generate_lambda_response(
