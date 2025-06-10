@@ -1,42 +1,25 @@
-from common.exceptions import CustomException
+from common.exceptions import BadRequestException
 
 
-class BadRequestException(CustomException):
-    error_message = "BAD_REQUEST"
-
+class InvalidContentType(BadRequestException):
     def __init__(self):
-        super().__init__({})
+        super().__init__(message="Invalid content type")
 
-
-class InvalidContentType(CustomException):
-    error_message = "INVALID_CONTENT_TYPE"
-
+class ProtoNotFound(BadRequestException):
     def __init__(self):
-        super().__init__({})
+        super().__init__(message="Proto file not nound")
 
-class ProtoNotFound(CustomException):
-    error_message = "PROTO_NOT_FOUND"
-
+class InvalidUploadType(BadRequestException):
     def __init__(self):
-        super().__init__({})
+        super().__init__(message = "Invalid upload type")
 
-class InvalidUploadType(CustomException):
-    error_message = "INVALID_UPLOAD_TYPE"
-
+class EmptyFileException(BadRequestException):
     def __init__(self):
-        super().__init__({})
+        super().__init__(message = "Empty file")
 
-class EmptyFileException(CustomException):
-    error_message = "EMPTY_FILE"
-
+class MissingUploadTypeDetailsParams(BadRequestException):
     def __init__(self):
-        super().__init__({})
-
-class MissingUploadTypeDetailsParams(CustomException):
-    error_message = "MISSING_UPLOAD_TYPE_DETAILS_PARAMS"
-
-    def __init__(self):
-        super().__init__({})
+        super().__init__(message = "Missing upload type details parameters")
 
 
 EXCEPTIONS = (BadRequestException, InvalidContentType)

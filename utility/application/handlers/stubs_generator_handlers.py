@@ -4,13 +4,12 @@ from common.logger import get_logger
 from common.schemas import PayloadValidationError
 from utility.application.schemas import ManageProtoCompilationRequest, GeneratePythonStubsRequest
 from utility.application.services.stubs_generator_service import StubsGeneratorService
-from utility.settings import settings
 from utility.exceptions import EXCEPTIONS, BadRequestException
 
 logger = get_logger(__name__)
 
 
-@exception_handler(SLACK_HOOK=settings.slack, NETWORK_ID=settings.network.id, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def manage_proto_compilation(event, context):
     try:
         request = ManageProtoCompilationRequest.validate_event(event)
@@ -20,7 +19,7 @@ def manage_proto_compilation(event, context):
     response = StubsGeneratorService().manage_proto_compilation(request)
     return {"statusCode": StatusCode.OK, "data": response}
 
-@exception_handler(SLACK_HOOK=settings.slack, NETWORK_ID=settings.network.id, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def generate_python_stubs(event, context):
     try:
         request = GeneratePythonStubsRequest.validate_event(event)
