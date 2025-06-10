@@ -135,6 +135,10 @@ def datetime_to_string(given_time):
     return given_time.strftime("%Y-%m-%d %H:%M:%S")
 
 
+def date_time_for_filename():
+    return dt.datetime.now(dt.UTC).strftime("%Y%m%d%H%M%S")
+
+
 def download_file_from_url(file_url, file_dir):
     response = requests.get(file_url)
     filename = urlparse(file_url).path.split("/")[-1]
