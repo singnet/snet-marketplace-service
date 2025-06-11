@@ -20,16 +20,25 @@ class UploadFileRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "UploadFileRequest":
         try:
-            assert event.get(RequestPayloadType.QUERY_STRING) is not None, PayloadAssertionError.MISSING_QUERY_STRING_PARAMETERS.value
-            assert event.get(RequestPayloadType.BODY) is not None, PayloadAssertionError.MISSING_BODY.value
-            assert event.get(RequestPayloadType.HEADERS) is not None, PayloadAssertionError.MISSING_HEADERS.value
+            assert event.get(RequestPayloadType.QUERY_STRING) is not None, (
+                PayloadAssertionError.MISSING_QUERY_STRING_PARAMETERS.value
+            )
+            assert event.get(RequestPayloadType.BODY) is not None, (
+                PayloadAssertionError.MISSING_BODY.value
+            )
+            assert event.get(RequestPayloadType.HEADERS) is not None, (
+                PayloadAssertionError.MISSING_HEADERS.value
+            )
 
-            data = {"raw_file_data": event[RequestPayloadType.BODY], **event[RequestPayloadType.HEADERS], **event[RequestPayloadType.QUERY_STRING]}
+            data = {"raw_file_data": event[RequestPayloadType.BODY],
+                    **event[RequestPayloadType.HEADERS],
+                    **event[RequestPayloadType.QUERY_STRING]}
             return cls.model_validate(data)
 
         except ValidationError as e:
             missing_params = [x["loc"][0] for x in e.errors()]
-            raise BadRequestException(message = f"Missing required parameters: {', '.join(missing_params)}")
+            raise BadRequestException(message = f"Missing required parameters: "
+                                                f"{', '.join(missing_params)}")
         except AssertionError as e:
             raise BadRequestException(message = str(e))
         except BadRequestException as e:
@@ -78,3 +87,9 @@ class StubsGenerationRequest(BaseModel):
             return cls.model_validate(event)
         except (ValidationError, json.JSONDecodeError, KeyError):
             raise PayloadValidationError()
+        except ValidationError as e:
+            missing_params = [x["loc"][0] for x in e.errors()]
+            raise BadRequestException(message = f"Missing required parameters: "
+                                                f"{', '.join(missing_params)}")
+        except Exception:
+            raise BadRequestException(message = "Error while parsing payload")

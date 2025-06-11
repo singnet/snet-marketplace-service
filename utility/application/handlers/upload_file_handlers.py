@@ -13,11 +13,8 @@ logger = get_logger(__name__)
 
 @exception_handler(logger=logger)
 def upload_file(event, context):
-    try:
-        request = UploadFileRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
 
+    request = UploadFileRequest.validate_event(event)
     response = UploadService().store_file(request)
 
     return generate_lambda_response(
