@@ -5,6 +5,7 @@ from pydantic import BaseModel, ValidationError, field_validator, model_validato
 import json
 
 from common.constant import PayloadAssertionError, RequestPayloadType
+from common.exceptions import BadRequestException
 from common.schemas import PayloadValidationError
 from utility.settings import settings
 from utility.constants import UPLOAD_TYPE_DETAILS
@@ -21,15 +22,25 @@ class UploadFileRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "UploadFileRequest":
         try:
-            assert event.get(RequestPayloadType.QUERY_STRING) is not None, PayloadAssertionError.MISSING_QUERY_STRING_PARAMETERS
-            assert event.get(RequestPayloadType.BODY) is not None, PayloadAssertionError.MISSING_BODY
-            assert event.get(RequestPayloadType.HEADERS) is not None, PayloadAssertionError.MISSING_HEADERS
+            assert event.get(RequestPayloadType.QUERY_STRING) is not None, PayloadAssertionError.MISSING_QUERY_STRING_PARAMETERS.value
+            assert event.get(RequestPayloadType.BODY) is not None, PayloadAssertionError.MISSING_BODY.value
+            assert event.get(RequestPayloadType.HEADERS) is not None, PayloadAssertionError.MISSING_HEADERS.value
 
             data = {"raw_file_data": event[RequestPayloadType.BODY], **event[RequestPayloadType.HEADERS], **event[RequestPayloadType.QUERY_STRING]}
             return cls.model_validate(data)
 
-        except (ValidationError, json.JSONDecodeError, AssertionError, KeyError):
-            raise PayloadValidationError()
+        except ValidationError as e:
+            print("First")
+            raise BadRequestException(message = f"Missing required parameters: {e.errors()[0]['loc']}")
+        except AssertionError as e:
+            print("Second")
+            raise BadRequestException(message = str(e))
+        except BadRequestException as e:
+            print("Third")
+            raise e
+        except Exception:
+            print("Fourth")
+            raise BadRequestException(message = "Error while parsing payload")
 
     @model_validator(mode = "before")
     @classmethod
