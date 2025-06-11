@@ -1,7 +1,7 @@
 import base64
 from typing import Optional
 
-from pydantic import BaseModel, ValidationError, field_validator, model_validator
+from pydantic import BaseModel, ValidationError, field_validator, model_validator, Field
 import json
 
 from common.constant import PayloadAssertionError, RequestPayloadType
@@ -13,11 +13,11 @@ from utility.exceptions import InvalidContentType, InvalidUploadType, EmptyFileE
 
 
 class UploadFileRequest(BaseModel):
-    content_type: str
+    content_type: str = Field(alias = "Content-Type")
     type: str
     raw_file_data: bytes
-    org_uuid: Optional[str] = None
-    service_uuid: Optional[str] = None
+    org_uuid: str | None = None
+    service_uuid: str | None = None
 
     @classmethod
     def validate_event(cls, event: dict) -> "UploadFileRequest":
@@ -41,11 +41,6 @@ class UploadFileRequest(BaseModel):
         except Exception:
             print("Fourth")
             raise BadRequestException(message = "Error while parsing payload")
-
-    @model_validator(mode = "before")
-    @classmethod
-    def headers_to_lower(cls, data: dict) -> dict:
-        return {k.lower().replace("-", "_"): v for k, v in data.items()}
 
     @field_validator("content_type")
     @classmethod
