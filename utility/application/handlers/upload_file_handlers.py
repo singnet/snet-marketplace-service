@@ -6,12 +6,12 @@ from common.schemas import PayloadValidationError
 from common.utils import generate_lambda_response
 from utility.application.schemas import UploadFileRequest
 from utility.application.services.upload_file_service import UploadService
-from utility.exceptions import EXCEPTIONS, BadRequestException
+from utility.exceptions import BadRequestException
 
 logger = get_logger(__name__)
 
 
-@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 def upload_file(event, context):
     try:
         request = UploadFileRequest.validate_event(event)

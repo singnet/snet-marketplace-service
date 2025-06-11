@@ -15,9 +15,8 @@ class UploadFileRequest(BaseModel):
     content_type: str
     type: str
     raw_file_data: bytes
-    org_uuid: Optional[str]
-    service_uuid: Optional[str]
-
+    org_uuid: Optional[str] = None
+    service_uuid: Optional[str] = None
 
     @classmethod
     def validate_event(cls, event: dict) -> "UploadFileRequest":
@@ -35,7 +34,6 @@ class UploadFileRequest(BaseModel):
     @model_validator(mode = "before")
     @classmethod
     def headers_to_lower(cls, data: dict) -> dict:
-        print(data)
         return {k.lower().replace("-", "_"): v for k, v in data.items()}
 
     @field_validator("content_type")
@@ -62,31 +60,19 @@ class UploadFileRequest(BaseModel):
     @model_validator(mode = "after")
     def validate_query_params(self) -> "UploadFileRequest":
         for key in UPLOAD_TYPE_DETAILS[self.type]["required_query_params"]:
-            if key not in self.__dict__:
+            if key not in self.__dict__ or getattr(self, key) is None:
                 raise MissingUploadTypeDetailsParams()
         return self
 
-class ManageProtoCompilationRequest(BaseModel):
+
+class StubsGenerationRequest(BaseModel):
     input_s3_path: str
     output_s3_path: str
     org_id: str
     service_id: str
 
     @classmethod
-    def validate_event(cls, event: dict) -> "ManageProtoCompilationRequest":
-        try:
-            return cls.model_validate(event)
-        except (ValidationError, json.JSONDecodeError, KeyError):
-            raise PayloadValidationError()
-
-class GeneratePythonStubsRequest(BaseModel):
-    input_s3_path: str
-    output_s3_path: str
-    org_id: str
-    service_id: str
-
-    @classmethod
-    def validate_event(cls, event: dict) -> "GeneratePythonStubsRequest":
+    def validate_event(cls, event: dict) -> "StubsGenerationRequest":
         try:
             return cls.model_validate(event)
         except (ValidationError, json.JSONDecodeError, KeyError):
