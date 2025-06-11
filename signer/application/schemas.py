@@ -1,7 +1,7 @@
 import json
 from pydantic import BaseModel, ValidationError
 from common.constant import RequestPayloadType, PayloadAssertionError
-from common.schemas import PayloadValidationError
+from common.exceptions import BadRequestException
 
 
 class GetFreeCallSignatureRequest(BaseModel):
@@ -17,7 +17,7 @@ class GetFreeCallSignatureRequest(BaseModel):
             return cls.model_validate(body)
 
         except (ValidationError, json.JSONDecodeError, AssertionError, KeyError):
-            raise PayloadValidationError()
+            raise BadRequestException()
 
 
 class GetSignatureForStateServiceRequest(BaseModel):
@@ -31,7 +31,7 @@ class GetSignatureForStateServiceRequest(BaseModel):
             return cls.model_validate(body)
 
         except (ValidationError, AssertionError, KeyError):
-            raise PayloadValidationError()
+            raise BadRequestException()
 
 
 class GetSignatureForRegularCallRequest(BaseModel):
@@ -47,7 +47,7 @@ class GetSignatureForRegularCallRequest(BaseModel):
             return cls.model_validate(body)
 
         except (ValidationError, json.JSONDecodeError, AssertionError, KeyError):
-            raise PayloadValidationError()
+            raise BadRequestException()
 
 
 class GetSignatureForOpenChannelForThirdPartyRequest(BaseModel):
@@ -67,4 +67,4 @@ class GetSignatureForOpenChannelForThirdPartyRequest(BaseModel):
             return cls.model_validate(body)
 
         except (ValidationError, json.JSONDecodeError, AssertionError, KeyError):
-            raise PayloadValidationError()
+            raise BadRequestException()

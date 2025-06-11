@@ -8,6 +8,7 @@ from signer.application.schemas import (
     GetSignatureForRegularCallRequest,
     GetSignatureForStateServiceRequest,
 )
+from signer.exceptions import ZeroFreeCallsAvailable
 from signer.infrastructure.contract_api_client import ContractAPIClient
 from signer.infrastructure.daemon_client import DaemonClient
 from signer.infrastructure.repositories.free_call_token_repository import FreeCallTokenInfoRepository
@@ -61,7 +62,7 @@ class SignerService:
             )
 
             if free_calls_count == 0:
-                raise Exception("Zero available free calls count")
+                raise ZeroFreeCallsAvailable()
 
             new_token, expiration_block_number = self.daemon_client.get_free_call_token(
                 address=settings.signer.address,
@@ -78,7 +79,7 @@ class SignerService:
                     organization_id=request.organization_id,
                     service_id=request.service_id,
                     group_id=request.group_id,
-                    expiration_block_number=current_block,
+                    expiration_block_number=current_block + settings.signer.expiration_block_count,
                     new_token=new_token,
                 )
             )
@@ -98,6 +99,7 @@ class SignerService:
             "signature_hex": bytes.hex(signature),
             "free_call_token_hex": bytes.hex(free_call_token_info.token),
             "expiration_block_number": expiration_block_number,
+            "current_block_number": current_block,
         }
 
     def get_signature_for_state_service(
