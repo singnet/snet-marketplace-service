@@ -1,6 +1,4 @@
 import base64
-from typing import Optional
-
 from pydantic import BaseModel, ValidationError, field_validator, model_validator, Field
 import json
 
@@ -13,7 +11,7 @@ from utility.exceptions import InvalidContentType, InvalidUploadType, EmptyFileE
 
 
 class UploadFileRequest(BaseModel):
-    content_type: str = Field(alias = "Content-Type")
+    content_type: str = Field(alias = "content-type")
     type: str
     raw_file_data: bytes
     org_uuid: str | None = None
@@ -30,16 +28,13 @@ class UploadFileRequest(BaseModel):
             return cls.model_validate(data)
 
         except ValidationError as e:
-            print("First")
-            raise BadRequestException(message = f"Missing required parameters: {e.errors()[0]['loc']}")
+            missing_params = [x["loc"][0] for x in e.errors()]
+            raise BadRequestException(message = f"Missing required parameters: {', '.join(missing_params)}")
         except AssertionError as e:
-            print("Second")
             raise BadRequestException(message = str(e))
         except BadRequestException as e:
-            print("Third")
             raise e
         except Exception:
-            print("Fourth")
             raise BadRequestException(message = "Error while parsing payload")
 
     @field_validator("content_type")

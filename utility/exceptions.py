@@ -3,8 +3,7 @@ from common.exceptions import BadRequestException
 
 class InvalidContentType(BadRequestException):
     def __init__(self):
-        print("InvalidСontentType")
-        super().__init__(message="Invalid or missing content type")
+        super().__init__(message="Invalid content type")
 
 class ProtoNotFound(BadRequestException):
     def __init__(self):
@@ -12,8 +11,7 @@ class ProtoNotFound(BadRequestException):
 
 class InvalidUploadType(BadRequestException):
     def __init__(self):
-        print("InvalidUploadType")
-        super().__init__(message = "Invalid or missing upload type")
+        super().__init__(message = "Invalid upload type")
 
 class EmptyFileException(BadRequestException):
     def __init__(self):
