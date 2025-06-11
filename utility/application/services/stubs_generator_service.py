@@ -11,7 +11,7 @@ from common import utils
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from common.utils import create_text_file
-from utility.application.schemas import ManageProtoCompilationRequest, GeneratePythonStubsRequest
+from utility.application.schemas import StubsGenerationRequest
 from utility.settings import settings
 from utility.constants import PYTHON_BOILERPLATE_TEMPLATE
 from utility.exceptions import ProtoNotFound
@@ -22,7 +22,7 @@ logger = get_logger(__name__)
 
 class StubsGeneratorService:
 
-    def manage_proto_compilation(self, request: ManageProtoCompilationRequest):
+    def manage_proto_compilation(self, request: StubsGenerationRequest):
         input_s3_path = request.input_s3_path
         output_s3_path = request.output_s3_path
         org_id = request.org_id
@@ -100,7 +100,7 @@ class StubsGeneratorService:
             BotoUtils.clear_s3_files(bucket=input_bucket_name, key=temp_proto_file_path)
         return {}
 
-    def generate_python_stubs(self, request: GeneratePythonStubsRequest):
+    def generate_python_stubs(self, request: StubsGenerationRequest):
         input_s3_path = request.input_s3_path
         output_s3_path = request.output_s3_path
         org_id = request.org_id

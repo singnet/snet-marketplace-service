@@ -1,0 +1,16 @@
+{
+  "SG1": "sg-1",
+  "SG2": "sg-2",
+  "VPC1": "subnet-1",
+  "VPC2": "subnet-2",
+  "AUTHORIZER": "",
+  "ROLE": "",
+  "ROLE1": "",
+  "ENVIRONMENT": "example",
+  "REGION": "us-east-1",
+  "ORIGIN": "*",
+  "DOMAIN_NAME": "test",
+  "SnetContract" : "",
+  "GeneralPythonLibsMP": "",
+  "GrpcPythonLibsMP": ""
+}
