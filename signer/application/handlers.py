@@ -1,5 +1,4 @@
 from common.constant import StatusCode
-from common.exceptions import BadRequestException
 from common.logger import get_logger
 from common.utils import generate_lambda_response
 from common.exception_handler import exception_handler
@@ -11,8 +10,6 @@ from signer.application.schemas import (
     GetSignatureForStateServiceRequest,
 )
 from signer.application.service import SignerService
-
-from common.schemas import PayloadValidationError
 from common.request_context import RequestContext
 
 logger = get_logger(__name__)
@@ -21,13 +18,9 @@ logger = get_logger(__name__)
 @exception_handler(logger=logger)
 def get_free_call_signature_handler(event, context):
     req_ctx = RequestContext(event)
-
-    try:
-        request = GetFreeCallSignatureRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
-
+    request = GetFreeCallSignatureRequest.validate_event(event)
     response = SignerService().get_free_call_signature(username=req_ctx.username, request=request)
+
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response},
@@ -38,15 +31,11 @@ def get_free_call_signature_handler(event, context):
 @exception_handler(logger=logger)
 def get_state_service_signature_handler(event, context):
     req_ctx = RequestContext(event)
-
-    try:
-        request = GetSignatureForStateServiceRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
-
+    request = GetSignatureForStateServiceRequest.validate_event(event)
     response = SignerService().get_signature_for_state_service(
         username=req_ctx.username, request=request
     )
+
     return generate_lambda_response(
         StatusCode.OK,
         {"status": "success", "data": response},
@@ -57,11 +46,7 @@ def get_state_service_signature_handler(event, context):
 @exception_handler(logger=logger)
 def get_regular_call_signature_handler(event, context):
     req_ctx = RequestContext(event)
-
-    try:
-        request = GetSignatureForRegularCallRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
+    request = GetSignatureForRegularCallRequest.validate_event(event)
 
     response = SignerService().get_signature_for_regular_call(
         username=req_ctx.username, request=request
@@ -75,11 +60,7 @@ def get_regular_call_signature_handler(event, context):
 
 @exception_handler(logger=logger)
 def get_open_channel_for_third_party_signature_handler(event, context):
-    try:
-        request = GetSignatureForOpenChannelForThirdPartyRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
-
+    request = GetSignatureForOpenChannelForThirdPartyRequest.validate_event(event)
     response = SignerService().get_signature_for_open_channel_for_third_party(request=request)
     return generate_lambda_response(
         StatusCode.OK,
