@@ -4,7 +4,6 @@ from common.logger import get_logger
 from common.utils import generate_lambda_response
 from registry.application.access_control.authorization import secured
 from common.request_context import RequestContext
-from common.schemas import PayloadValidationError
 from registry.application.schemas.organization import (
     GetGroupByOrganizationIdRequest,
     CreateOrganizationRequest,
@@ -28,7 +27,6 @@ from registry.application.services.organization_publisher_service import (
     OrganizationPublisherService,
 )
 from registry.constants import Action
-from registry.exceptions import BadRequestException
 
 logger = get_logger(__name__)
 
