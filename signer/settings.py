@@ -1,7 +1,7 @@
 from typing import Dict
+
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
 from signer import config
 
 

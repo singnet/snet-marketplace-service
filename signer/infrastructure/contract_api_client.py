@@ -1,5 +1,6 @@
 import json
 from typing import Tuple
+
 import boto3
 from signer.settings import settings
 

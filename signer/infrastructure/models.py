@@ -1,9 +1,8 @@
 from datetime import datetime
 
 from sqlalchemy import Index, Integer, text
-from sqlalchemy.dialects.mysql import TIMESTAMP, VARCHAR, VARBINARY
+from sqlalchemy.dialects.mysql import TIMESTAMP, VARBINARY, VARCHAR
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-
 
 CreateTimestamp = text("CURRENT_TIMESTAMP")
 UpdateTimestamp = text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")

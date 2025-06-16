@@ -75,6 +75,15 @@ class OperationNotAllowed(CustomException):
         )
 
 
+class BadGateway(CustomException):
+    def __init__(self, message: str, details: Dict[str, Any] | None = None):
+        super().__init__(
+            http_code=HTTPStatus.BAD_GATEWAY,
+            message=message,
+            details=details or {}, 
+        )
+
+
 class InvalidFilePath(CustomException):
     def __init__(self, file_path: str | None = None):
         super().__init__(message=f"File not found in path {file_path}")
