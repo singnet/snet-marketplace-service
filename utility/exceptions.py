@@ -19,7 +19,7 @@ class EmptyFileException(BadRequestException):
 
 class MissingUploadTypeDetailsParams(BadRequestException):
     def __init__(self):
-        super().__init__(message = "Missing upload type details parameters")
+        super().__init__(message = "Missing required parameters: org_uuid and/or service_uuid")
 
 
 EXCEPTIONS = (BadRequestException, InvalidContentType, ProtoNotFound,

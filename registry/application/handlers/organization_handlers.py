@@ -4,7 +4,6 @@ from common.logger import get_logger
 from common.utils import generate_lambda_response
 from registry.application.access_control.authorization import secured
 from common.request_context import RequestContext
-from common.schemas import PayloadValidationError
 from registry.application.schemas.organization import (
     GetGroupByOrganizationIdRequest,
     CreateOrganizationRequest,
@@ -28,12 +27,11 @@ from registry.application.services.organization_publisher_service import (
     OrganizationPublisherService,
 )
 from registry.constants import Action
-from registry.exceptions import BadRequestException, EXCEPTIONS
 
 logger = get_logger(__name__)
 
 
-@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 def get_all_org(event, context):
     req_ctx = RequestContext(event)
 
@@ -46,17 +44,14 @@ def get_all_org(event, context):
     )
 
 
-@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 @secured(
     action=Action.CREATE,
     org_uuid_path=("pathParameters", "org_uuid"),
     username_path=("requestContext", "authorizer", "claims", "email"),
 )
 def get_group_for_org(event, context):
-    try:
-        request = GetGroupByOrganizationIdRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
+    request = GetGroupByOrganizationIdRequest.validate_event(event)
 
     response = OrganizationPublisherService().get_groups_for_org(request)
 
@@ -67,14 +62,11 @@ def get_group_for_org(event, context):
     )
 
 
-@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 def create_organization(event, context):
     req_ctx = RequestContext(event)
 
-    try:
-        request = CreateOrganizationRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
+    request = CreateOrganizationRequest.validate_event(event)
 
     response = OrganizationPublisherService().create_organization(req_ctx.username, request)
 
@@ -85,7 +77,7 @@ def create_organization(event, context):
     )
 
 
-@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 @secured(
     action=Action.UPDATE,
     org_uuid_path=("pathParameters", "org_uuid"),
@@ -94,10 +86,7 @@ def create_organization(event, context):
 def update_org(event, context):
     req_ctx = RequestContext(event)
 
-    try:
-        request = UpdateOrganizationRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
+    request = UpdateOrganizationRequest.validate_event(event)
 
     response = OrganizationPublisherService().update_organization(req_ctx.username, request)
 
@@ -108,7 +97,7 @@ def update_org(event, context):
     )
 
 
-@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 @secured(
     action=Action.CREATE,
     org_uuid_path=("pathParameters", "org_uuid"),
@@ -117,10 +106,7 @@ def update_org(event, context):
 def publish_organization(event, context):
     req_ctx = RequestContext(event)
 
-    try:
-        request = PublishOrganizationRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
+    request = PublishOrganizationRequest.validate_event(event)
 
     response = OrganizationPublisherService().publish_organization(req_ctx.username, request)
 
@@ -131,7 +117,7 @@ def publish_organization(event, context):
     )
 
 
-@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 @secured(
     action=Action.CREATE,
     org_uuid_path=("pathParameters", "org_uuid"),
@@ -140,10 +126,7 @@ def publish_organization(event, context):
 def save_transaction_hash_for_publish_org(event, context):
     req_ctx = RequestContext(event)
 
-    try:
-        request = SaveTransactionHashForOrganizationRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
+    request = SaveTransactionHashForOrganizationRequest.validate_event(event)
 
     response = OrganizationPublisherService().save_transaction_hash_for_publish_org(
         req_ctx.username, request
@@ -156,17 +139,14 @@ def save_transaction_hash_for_publish_org(event, context):
     )
 
 
-@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 @secured(
     action=Action.CREATE,
     org_uuid_path=("pathParameters", "org_uuid"),
     username_path=("requestContext", "authorizer", "claims", "email"),
 )
 def get_all_members(event, context):
-    try:
-        request = GetAllMembersRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
+    request = GetAllMembersRequest.validate_event(event)
 
     response = OrganizationPublisherService().get_all_member(request)
 
@@ -177,7 +157,7 @@ def get_all_members(event, context):
     )
 
 
-@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 @secured(
     action=Action.CREATE,
     org_uuid_path=("pathParameters", "org_uuid"),
@@ -186,10 +166,7 @@ def get_all_members(event, context):
 def get_member(event, context):
     req_ctx = RequestContext(event)
 
-    try:
-        request = GetMemberRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
+    request = GetMemberRequest.validate_event(event)
 
     response = OrganizationPublisherService().get_member(req_ctx.username, request)
 
@@ -200,17 +177,14 @@ def get_member(event, context):
     )
 
 
-@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 @secured(
     action=Action.CREATE,
     org_uuid_path=("pathParameters", "org_uuid"),
     username_path=("requestContext", "authorizer", "claims", "email"),
 )
 def invite_members(event, context):
-    try:
-        request = InviteMembersRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException
+    request = InviteMembersRequest.validate_event(event)
 
     response = OrganizationPublisherService().invite_members(request)
 
@@ -221,14 +195,11 @@ def invite_members(event, context):
     )
 
 
-@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 def verify_code(event, context):
     req_ctx = RequestContext(event)
 
-    try:
-        request = VerifyCodeRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
+    request = VerifyCodeRequest.validate_event(event)
 
     response = OrganizationPublisherService().verify_invite(req_ctx.username, request)
 
@@ -239,7 +210,7 @@ def verify_code(event, context):
     )
 
 
-@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 @secured(
     action=Action.CREATE,
     org_uuid_path=("pathParameters", "org_uuid"),
@@ -248,10 +219,7 @@ def verify_code(event, context):
 def publish_members(event, context):
     req_ctx = RequestContext(event)
 
-    try:
-        request = PublishMembersRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
+    request = PublishMembersRequest.validate_event(event)
 
     response = OrganizationPublisherService().publish_members(req_ctx.username, request)
 
@@ -262,14 +230,11 @@ def publish_members(event, context):
     )
 
 
-@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 def delete_members(event, context):
     req_ctx = RequestContext(event)
 
-    try:
-        request = DeleteMembersRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
+    request = DeleteMembersRequest.validate_event(event)
 
     response = OrganizationPublisherService().delete_members(req_ctx.username, request)
     return generate_lambda_response(
@@ -279,14 +244,11 @@ def delete_members(event, context):
     )
 
 
-@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 def register_member(event, context):
     req_ctx = RequestContext(event)
 
-    try:
-        request = RegisterMemberRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
+    request = RegisterMemberRequest.validate_event(event)
 
     response = OrganizationPublisherService().register_member(req_ctx.username, request)
 
@@ -297,12 +259,9 @@ def register_member(event, context):
     )
 
 
-@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 def org_verification(event, context):
-    try:
-        request = VerifyOrgRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException
+    request = VerifyOrgRequest.validate_event(event)
 
     response = OrganizationPublisherService().update_verification(request)
 
@@ -313,12 +272,9 @@ def org_verification(event, context):
     )
 
 
-@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 def verify_org_id(event, context):
-    try:
-        request = VerifyOrgIdRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException
+    request = VerifyOrgIdRequest.validate_event(event)
 
     response = OrganizationPublisherService().get_org_id_availability_status(request)
     return generate_lambda_response(
@@ -328,7 +284,7 @@ def verify_org_id(event, context):
     )
 
 
-@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 def update_transaction(event, context):
     OrganizationTransactionStatus().update_transaction_status()
     return generate_lambda_response(StatusCode.OK, "OK")
