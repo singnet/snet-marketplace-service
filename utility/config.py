@@ -15,8 +15,8 @@ UPLOAD_BUCKET = {
     "FEEDBACK_BUCKET": "",
     "ORG_BUCKET": ""
 }
-ALLOWED_CONTENT_TYPE = []
-FILE_EXTENSION = {}
+ALLOWED_CONTENT_TYPE = ["application/zip", "application/x-tar", "image/jpg", "image/jpeg", "image/png", "application/x-zip-compressed"]
+FILE_EXTENSION = {"application/zip": 'zip', "image/jpg": "jpg", "image/jpeg": "jpeg", "image/png": "png", "application/x-tar": "tar", "application/x-zip-compressed": "zip"}
 SLACK_FEEDBACK_HOOK = {
     "MARKETPLACE": "",
     "RFAI": "",

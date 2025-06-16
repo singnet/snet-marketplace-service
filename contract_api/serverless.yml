@@ -195,7 +195,7 @@ resources:
 
 
 functions:
-  get_all_org:
+  get-all-orgs:
     handler: contract_api/handlers.organization_handlers.get_all_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -220,65 +220,7 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-  get_org_for_org_id:
-    handler: contract_api/handlers.organization_handlers.get_org_for_org_id
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: GET
-          path: /org/{orgId}
-          request:
-            parameters:
-              paths:
-                orgId: true
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-
-  get_all_group_for_org:
-    handler: contract_api/handlers.organization_handlers.get_all_group_for_org
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: GET
-          path: /org/{orgId}/group
-          request:
-            parameters:
-              paths:
-                orgId: true
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-
-  get_group_for_org_id:
+  get-group:
     handler:  contract_api/handlers.organization_handlers.get_group_for_org_id
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -307,7 +249,7 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-  get_service_get:
+  get-all-services:
     handler: contract_api/handlers.service_handlers.get_service_get
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -332,7 +274,7 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-  get_service_post:
+  get-services:
     handler: contract_api/handlers.service_handlers.get_service_post
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -357,37 +299,7 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-  get_group_for_service:
-    handler:  contract_api/handlers.service_handlers.get_group_for_service
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: GET
-          path: /org/{orgId}/service/{serviceId}/group
-          request:
-            parameters:
-              paths:
-                orgId: true
-                serviceId: true
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-
-  get_service_for_given_org:
+  get-service:
     handler: contract_api/handlers.service_handlers.get_service_for_given_org
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -417,82 +329,7 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-  post_rating_for_given_service:
-    handler: contract_api/handlers.service_handlers.post_rating_for_given_service
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: POST
-          path: /org/{orgId}/service/{serviceId}/rating
-          request:
-            parameters:
-              paths:
-                orgId: true
-                serviceId: true
-
-  get_channels_for_group:
-    handler: contract_api/handlers.channel_handlers.get_channels_for_group
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: GET
-          path: /group/{groupId}/channel/{channelId}
-          request:
-            parameters:
-              paths:
-                orgId: true
-                serviceId: true
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-
-  get_channels_old_api:
-    handler: contract_api/handlers.channel_handlers.get_channels_old_api
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: GET
-          path: /channel
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-
-  get_channel:
+  get-channel:
     handler: contract_api/handlers.channel_handlers.get_channels
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -547,32 +384,7 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-  get_marketplace_carousel:
-    handler: contract_api/handlers.ui_content_handlers.get_marketplace_carousel
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: GET
-          path: /uicontent/marketplacecarousel
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-
-  service-curation:
+  curate-service:
     handler: contract_api.handlers.service_handlers.service_curation
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -583,7 +395,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
-  mpe_event_consumer:
+  mpe-event-consumer:
     handler: contract_api/handlers.consumer_handlers.mpe_event_consumer_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -601,7 +413,7 @@ functions:
               - Arn
           batchSize: 1
 
-  registry_event_consumer:
+  registry-event-consumer:
     handler: contract_api/handlers.consumer_handlers.registry_event_consumer_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -619,7 +431,7 @@ functions:
               - Arn
           batchSize: 1
 
-  service_create_deployment_handler:
+  service-deployment-manager:
     handler: contract_api/handlers.consumer_handlers.service_create_deployment_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE1}
     vpc:
@@ -630,7 +442,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
-  service_deploy_status_notify:
+  notify-deploy-status:
     handler: contract_api/handlers.service_handlers.service_deployment_status_notification_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -666,7 +478,7 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-  trigger-demo-component-build:
+  trigger-dapp-build:
     handler: contract_api/handlers.service_handlers.trigger_demo_component_build
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
