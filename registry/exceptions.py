@@ -2,6 +2,7 @@ from common.exceptions import (
     BadRequestException,
     MethodNotImplemented,
     OperationNotAllowed,
+    ForbiddenException
 )
 
 
