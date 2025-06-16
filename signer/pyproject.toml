@@ -31,17 +31,19 @@ mypy = "1.15.0"
 
 [tool.black]
 line-length = 100
+target-version = ['py312']
 
 [tool.isort]
 profile = "black"
+line_length = 100
 skip_gitignore = true
 
 [tool.ruff]
 line-length = 100
+target-version = "py312"
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.ruff.lint]
+extend-select = ["I"]
 
 [tool.mypy]
 strict = true
@@ -52,3 +54,7 @@ per_module_ignores = [
   "your_package_name.*_pb2",
 ]
 plugins = ["mypy_protobuf.plugin"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

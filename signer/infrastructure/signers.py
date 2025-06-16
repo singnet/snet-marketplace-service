@@ -1,10 +1,9 @@
-from web3 import Web3
-
 from common.blockchain_util import BlockChainUtil
-from common.logger import get_logger
 from common.constant import ProviderType
-from signer.settings import settings
+from common.logger import get_logger
 from signer.constant import MPE_ADDR_PATH
+from signer.settings import settings
+from web3 import Web3
 
 logger = get_logger(__name__)
 

@@ -1,6 +1,6 @@
-from signer.infrastructure.repositories.base_repository import BaseRepository
-from signer.infrastructure.models import FreeCallTokenInfo
 from signer.domain.free_call_token import FreeCallTokenInfoEntity
+from signer.infrastructure.models import FreeCallTokenInfo
+from signer.infrastructure.repositories.base_repository import BaseRepository
 
 
 class FreeCallTokenInfoRepository(BaseRepository):

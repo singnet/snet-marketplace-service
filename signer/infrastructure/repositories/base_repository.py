@@ -1,12 +1,10 @@
 from functools import wraps
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import SQLAlchemyError
-
 from common.logger import get_logger
 from signer.settings import settings
-
+from sqlalchemy import create_engine
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import sessionmaker
 
 logger = get_logger(__name__)
 
