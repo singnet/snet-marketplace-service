@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 util=Utils()
 
 
-def mpe_event_consumer_handler(event, context):
+def mpe_event_consumer(event, context):
     logger.info(f"Got MPE event from queue {event}")
     events = get_payload_from_queue_event(event)
     consumer = MPEEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"])
@@ -24,7 +24,7 @@ def mpe_event_consumer_handler(event, context):
     return {}
 
 
-def registry_event_consumer_handler(event, context):
+def registry_event_consumer(event, context):
     logger.info(f"Got Registry event {event}")
     events = get_payload_from_queue_event(event)
 
@@ -39,7 +39,7 @@ def registry_event_consumer_handler(event, context):
 
 
 @exception_handler(logger=logger)
-def service_create_deployment_handler(event, context):
+def manage_service_deployment(event, context):
     service_deployment_handler = ServiceCreatedDeploymentEventHandler(NETWORKS[NETWORK_ID]["ws_provider"])
     service_deployment_handler.on_event(event)
     return generate_lambda_response(200, StatusCode.OK)

@@ -195,8 +195,11 @@ resources:
 
 
 functions:
-  get-all-orgs:
-    handler: contract_api/handlers.organization_handlers.get_all_org
+
+# =================== org handlers ===================
+
+  get-all-organizations:
+    handler: contract_api.application.handlers.organization_handlers.get_all_organizations
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -205,23 +208,9 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: GET
-          path: /org
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
 
   get-group:
-    handler:  contract_api/handlers.organization_handlers.get_group_for_org_id
+    handler:  contract_api.application.handlers.organization_handlers.get_group
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -230,27 +219,11 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: GET
-          path: /org/{orgId}/group/{group_id}
-          request:
-            parameters:
-              paths:
-                orgId: true
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
+
+# =================== service handlers ===================
 
   get-all-services:
-    handler: contract_api/handlers.service_handlers.get_service_get
+    handler: contract_api.application.handlers.service_handlers.get_all_services
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -262,7 +235,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /service
+          path: /services
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -275,7 +248,7 @@ functions:
               - x-requested-with
 
   get-services:
-    handler: contract_api/handlers.service_handlers.get_service_post
+    handler: contract_api.application.handlers.service_handlers.get_services
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -286,7 +259,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - http:
-          method: POST
+          method: GET
           path: /service
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
@@ -300,7 +273,7 @@ functions:
               - x-requested-with
 
   get-service:
-    handler: contract_api/handlers.service_handlers.get_service_for_given_org
+    handler: contract_api.application.handlers.service_handlers.get_service
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -312,7 +285,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /org/{orgId}/service/{serviceId}
+          path: /org/{org_id}/service/{service_id}
           request:
             parameters:
               paths:
@@ -329,8 +302,32 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
+  curate-service:
+    handler: contract_api.application.handlers.service_handlers.curate_service
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+
+  save-offchain-attribute:
+    handler: contract_api.application.handlers.service_handlers.save_offchain_attribute
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+
+# =================== channel handlers ===================
+
   get-channel:
-    handler: contract_api/handlers.channel_handlers.get_channels
+    handler: contract_api.application.handlers.channel_handlers.get_channels
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -342,7 +339,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /v2/channel
+          path: /channel/{channel_id}
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -355,7 +352,7 @@ functions:
               - x-requested-with
 
   update-consumed-balance:
-    handler: contract_api/handlers.channel_handlers.update_consumed_balance
+    handler: contract_api.application.handlers.channel_handlers.update_consumed_balance
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -384,19 +381,10 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-  curate-service:
-    handler: contract_api.handlers.service_handlers.service_curation
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
+# =================== consumer handlers ===================
 
   mpe-event-consumer:
-    handler: contract_api/handlers.consumer_handlers.mpe_event_consumer_handler
+    handler: contract_api.application.handlers.consumer_handlers.mpe_event_consumer
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -414,7 +402,7 @@ functions:
           batchSize: 1
 
   registry-event-consumer:
-    handler: contract_api/handlers.consumer_handlers.registry_event_consumer_handler
+    handler: contract_api.application.handlers.consumer_handlers.registry_event_consumer
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -432,7 +420,7 @@ functions:
           batchSize: 1
 
   service-deployment-manager:
-    handler: contract_api/handlers.consumer_handlers.service_create_deployment_handler
+    handler: contract_api.application.handlers.consumer_handlers.manage_service_deployment
     role: ${file(./config.${self:provider.stage}.json):ROLE1}
     vpc:
       securityGroupIds:
@@ -442,19 +430,10 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
-  notify-deploy-status:
-    handler: contract_api/handlers.service_handlers.service_deployment_status_notification_handler
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
+# =================== dapp build handlers ===================
 
-  save-offchain-attribute:
-    handler: contract_api/application/handler/service_handler.save_offchain_attribute
+  notify-deploy-status:
+    handler: contract_api.handlers.dapp_build_handlers.notify_deploy_status
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -463,23 +442,9 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: POST
-          path: /org/{orgId}/service/{serviceId}/offchain-attributes/save
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
 
   trigger-dapp-build:
-    handler: contract_api/handlers.service_handlers.trigger_demo_component_build
+    handler: contract_api.application.handlers.dapp_build_handlers.trigger_dapp_build
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
