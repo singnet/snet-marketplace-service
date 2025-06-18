@@ -4,7 +4,7 @@ from unittest.mock import patch
 from common.repository import Repository
 from contract_api.config import NETWORKS, NETWORK_ID
 from contract_api.dao.mpe_repository import MPERepository
-from contract_api.mpe import MPE
+from contract_api.application.services.mpe import MPE
 
 
 class TestMPE(TestCase):
