@@ -8,7 +8,7 @@ class ServiceService:
         self.obj_utils = Utils()
 
     # is used in handler
-    def get_filter_attribute(self, attribute):
+    def get_service_filters(self, attribute):
         """ Method to fetch filter metadata based on attribute."""
         try:
             filter_attribute = {"attribute": attribute, "values": []}

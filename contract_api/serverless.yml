@@ -222,8 +222,8 @@ functions:
 
 # =================== service handlers ===================
 
-  get-all-services:
-    handler: contract_api.application.handlers.service_handlers.get_all_services
+  get-service-filters:
+    handler: contract_api.application.handlers.service_handlers.get_service_filters
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -235,7 +235,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /services
+          path: /service-filters
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -259,8 +259,8 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - http:
-          method: GET
-          path: /service
+          method: POST
+          path: /services
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
