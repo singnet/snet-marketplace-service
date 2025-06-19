@@ -1,39 +1,26 @@
-from dapp_user.constant import SourceDApp, CommunicationType, PreferenceType
+from dataclasses import dataclass
+from typing import List
+
+from dapp_user.constant import CommunicationType, PreferenceType, SourceDApp, Status
 
 
+@dataclass(frozen=True)
 class UserPreference:
-    def __init__(self, preference_type, communication_type, source, status, opt_out_reason=None):
-        self._communication_type = communication_type
-        self._preference_type = preference_type
-        self._source = source
-        self._status = status
-        self._opt_out_reason = opt_out_reason
+    preference_type: PreferenceType
+    communication_type: CommunicationType
+    source: SourceDApp
+    status: Status
+    opt_out_reason: str | None = None
 
-    @property
-    def communication_type(self):
-        return self._communication_type
-
-    @property
-    def preference_type(self):
-        return self._preference_type
-
-    @property
-    def source(self):
-        return self._source
-
-    @property
-    def opt_out_reason(self):
-        return self._opt_out_reason
-
-    @property
-    def status(self):
-        return self._status
-
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {
-            "preference_type": self._preference_type,
-            "communication_type": self.communication_type,
-            "source": self.source,
-            "opt_out_reason": self.opt_out_reason,
-            "status": self.status
+            "preference_type": self.preference_type.value,
+            "communication_type": self.communication_type.value,
+            "source": self.source.value,
+            "status": self.status.value,
+            "opt_out_reason": self.opt_out_reason
         }
+
+
+def user_preferences_to_dict(user_preferences: List[UserPreference]) -> List[dict]:
+    return [user_preference.to_dict() for user_preference in user_preferences]

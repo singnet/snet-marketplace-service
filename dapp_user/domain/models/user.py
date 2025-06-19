@@ -1,54 +1,38 @@
-class User:
-    def __init__(self, username, name, email, email_verified, origin, preferences):
-        self._username = username,
-        self._name = name,
-        self._email = email,
-        self._email_verified = email_verified,
-        self._email_alerts = 0,
-        self._is_terms_accepted = 0
-        self._preferences = preferences
-        self._origin = origin
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class BaseUser:
+    account_id: str
+    username: str
+    name: str
+    email: str
+    email_verified: bool
+    origin: str
+
+@dataclass(frozen=True)
+class NewUser(BaseUser):
+    def to_dict(self):
+        return {
+            "account_id": self.account_id,
+            "username": self.username,
+            "name": self.name,
+            "email": self.email,
+            "email_verified": self.email_verified,
+            "origin": self.origin
+        }
+
+@dataclass(frozen=True)
+class User(BaseUser):
+    row_id: int
 
     def to_dict(self):
         return {
-            "username": self._username,
-            "name": self._name,
-            "email": self._email,
-            "email_verified": self._email_verified,
-            "email_alerts": self._email_alerts,
-            "origin": self._origin,
-            "is_terms_accepted": self._is_terms_accepted,
-            "preferences": []
+            "row_id": self.row_id,
+            "account_id": self.account_id,
+            "username": self.username,
+            "name": self.name,
+            "email": self.email,
+            "email_verified": self.email_verified,
+            "origin": self.origin
         }
-
-    @property
-    def username(self):
-        return self._username
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def email(self):
-        return self._email
-
-    @property
-    def email_verified(self):
-        return self._email_verified
-
-    @property
-    def origin(self):
-        return self._origin
-
-    @property
-    def email_alerts(self):
-        return self._email_alerts
-
-    @property
-    def is_terms_accepted(self):
-        return self._is_terms_accepted
-
-    @property
-    def preferences(self):
-        return self._preferences
