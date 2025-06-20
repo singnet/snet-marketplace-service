@@ -13,42 +13,52 @@ from dapp_user.constant import Status
 from dapp_user.domain.factory.user_factory import UserFactory
 from dapp_user.domain.models.user_preference import user_preferences_to_dict
 from dapp_user.exceptions import UserNotFoundHTTPException
+from dapp_user.infrastructure.contract_api_client import ContractAPIClient, ContractAPIClientError
 from dapp_user.infrastructure.repositories.exceptions import UserNotFoundException
 from dapp_user.infrastructure.repositories.user_repository import UserRepository
 from dapp_user.infrastructure.wallets_client import WalletsAPIClient, WalletsAPIClientError
 
 logger = get_logger(__name__)
 
+
 class UserService:
     def __init__(self):
         self.user_factory = UserFactory()
         self.user_repo = UserRepository()
         self.wallets_api_client = WalletsAPIClient()
+        self.contract_api_client = ContractAPIClient()
 
-    def add_or_update_user_preference(self, username: str, request: AddOrUpdateUserPreferencesRequest) -> List[str]:
+    def add_or_update_user_preference(
+        self, username: str, request: AddOrUpdateUserPreferencesRequest
+    ) -> List[str]:
         user_preference_list = self.user_factory.user_preferences_from_request(request=request)
-        user = self.user_repo.get_user(username=username)
+
+        try:
+            user = self.user_repo.get_user(username=username)
+        except UserNotFoundException:
+            raise UserNotFoundHTTPException(f"User {username} not found")
 
         response = []
-        
+
         for user_preference in user_preference_list:
             if user_preference.status is False:
                 self.user_repo.disable_preference(
-                    user_preference=user_preference,
-                    user_row_id=user.row_id
+                    user_preference=user_preference, user_row_id=user.row_id
                 )
                 response.append(Status.DISABLED.value)
             else:
                 self.user_repo.enable_preference(
-                    user_preference=user_preference,
-                    user_row_id=user.row_id
+                    user_preference=user_preference, user_row_id=user.row_id
                 )
                 response.append(Status.ENABLED.value)
 
         return response
 
     def get_user(self, username: str) -> dict:
-        user = self.user_repo.get_user(username=username)
+        try:
+            user = self.user_repo.get_user(username=username)
+        except UserNotFoundException:
+            raise UserNotFoundHTTPException(username)
         return user.to_dict()
 
     def get_user_preferences(self, username: str) -> List[dict]:
@@ -76,7 +86,7 @@ class UserService:
             self.user_repo.update_user_alerts(
                 username=username,
                 email_alerts=request.email_alerts,
-                is_terms_accepted=request.is_terms_accepted
+                is_terms_accepted=request.is_terms_accepted,
             )
         except UserNotFoundException as e:
             logger.error(f"User not found: {e}")
@@ -90,7 +100,21 @@ class UserService:
         return user_service_feedback.to_dict() if user_service_feedback else {}
 
     def create_user_review(self, request: CreateUserServiceReviewRequest):
-        user_vote, user_feedback = self.user_factory.user_vote_feedback_from_request(create_review_request=request)
-        self.user_repo.insert_user_service_vote(user_vote=user_vote)
-        if user_feedback.comment:
-            self.user_repo.insert_user_service_feedback(user_feedback=user_feedback)
+        user_vote, user_feedback = self.user_factory.user_vote_feedback_from_request(
+            create_review_request=request
+        )
+        #: TODO think about rollback or distributed transaction if update service rating fails (saga pattern)
+        rating, total_users_rated = self.user_repo.submit_user_review(
+            user_vote=user_vote, user_feedback=user_feedback
+        )
+        try:
+            self.contract_api_client.update_service_rating(
+                org_id=user_vote.org_id,
+                service_id=user_vote.service_id,
+                rating=rating,
+                total_users_rated=total_users_rated,
+            )
+        except ContractAPIClientError as e:
+            msg = f"Failed to update service rating for {user_vote.org_id}/{user_vote.service_id}: {str(e)}"
+            logger.error(msg)
+            raise BadGateway(msg)

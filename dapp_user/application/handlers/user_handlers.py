@@ -18,34 +18,33 @@ logger = get_logger(__name__)
 
 
 @exception_handler(logger=logger)
-def get_user(event, context):
+def get_user_handler(event, context):
     req_ctx = RequestContext(event)
 
     response = UserService().get_user(username=req_ctx.username)
 
     return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+        StatusCode.OK, {"status": "success", "data": response}, cors_enabled=True
     )
 
 
 @exception_handler(logger=logger)
-def add_or_update_user_preference(event, context):
+def add_or_update_user_preference_handler(event, context):
     req_ctx = RequestContext(event)
-    
+
     request = AddOrUpdateUserPreferencesRequest.validate_event(event)
 
     response = UserService().add_or_update_user_preference(
-        username=req_ctx.username, request=request,
+        username=req_ctx.username,
+        request=request,
     )
 
     return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+        StatusCode.OK, {"status": "success", "data": response}, cors_enabled=True
     )
 
 
-def update_user_alerts(event, context):
+def update_user_alerts_handler(event, context):
     req_ctx = RequestContext(event)
 
     request = UpdateUserAlertRequest.validate_event(event)
@@ -53,25 +52,23 @@ def update_user_alerts(event, context):
     response = UserService().update_user_alerts(username=req_ctx.username, request=request)
 
     return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+        StatusCode.OK, {"status": "success", "data": response}, cors_enabled=True
     )
 
 
 @exception_handler(logger=logger)
-def get_user_preferences(event, context):
+def get_user_preferences_handler(event, context):
     req_ctx = RequestContext(event)
 
     response = UserService().get_user_preferences(username=req_ctx.username)
 
     return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+        StatusCode.OK, {"status": "success", "data": response}, cors_enabled=True
     )
 
 
 @exception_handler(logger=logger)
-def delete_user(event, context):
+def delete_user_handler(event, context):
     req_ctx = RequestContext(event)
 
     request = DeleteUserRequest.validate_event(event)
@@ -82,41 +79,35 @@ def delete_user(event, context):
     response = UserService().delete_user(request.username)
 
     return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response},
-        cors_enabled=True
+        StatusCode.OK, {"status": "success", "data": response}, cors_enabled=True
     )
 
 
 @exception_handler(logger=logger)
-def get_user_feedback(event, context):
+def get_user_feedback_handler(event, context):
     req_ctx = RequestContext(event)
 
     request = GetUserFeedbackRequest.validate_event(event)
 
-    response = UserService().get_user_feedback(
-        username=req_ctx.username, request=request
-    )
+    response = UserService().get_user_feedback(username=req_ctx.username, request=request)
 
     return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+        StatusCode.OK, {"status": "success", "data": response}, cors_enabled=True
     )
 
 
 @exception_handler(logger=logger)
-def create_user_service_review(event, context):
+def create_user_service_review_handler(event, context):
     request = CreateUserServiceReviewRequest.validate_event(event)
 
     response = UserService().create_user_review(request=request)
 
     return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+        StatusCode.OK, {"status": "success", "data": response}, cors_enabled=True
     )
 
 
-def register_user_post_aws_cognito_signup(event, context):
+def register_user_post_aws_cognito_signup_handler(event, context):
     cognito_event = CognitoUserPoolEvent.model_validate(event)
     if cognito_event.trigger_source == "PostConfirmation_ConfirmSignUp":
         UserService().register_user(cognito_event)

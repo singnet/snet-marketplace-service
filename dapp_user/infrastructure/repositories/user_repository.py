@@ -36,7 +36,7 @@ class UserRepository(BaseRepository):
                     communication_type=user_preference.communication_type.value,
                     source=user_preference.source.value,
                     opt_out_reason=user_preference.opt_out_reason,
-                    status=user_preference.status
+                    status=user_preference.status,
                 )
             )
             self.session.commit()
@@ -45,7 +45,7 @@ class UserRepository(BaseRepository):
                 user_row_id=user_row_id,
                 preference_type=user_preference.preference_type.value,
                 communication_type=user_preference.communication_type.value,
-                source=user_preference.source.value
+                source=user_preference.source.value,
             )
 
     def get_user(self, username: str) -> UserDomain:
@@ -57,11 +57,8 @@ class UserRepository(BaseRepository):
         return UserFactory.user_from_db_model(user_db)
 
     def update_user_alerts(
-        self,
-        username: str,
-        email_alerts: bool,
-        is_terms_accepted: bool
-    ) -> None: 
+        self, username: str, email_alerts: bool, is_terms_accepted: bool
+    ) -> None:
         try:
             stmt = (
                 update(User)
@@ -88,8 +85,7 @@ class UserRepository(BaseRepository):
                     UserPreference.source == user_preference.source,
                 )
                 .values(
-                    status=user_preference.status,
-                    opt_out_reason=user_preference.opt_out_reason
+                    status=user_preference.status, opt_out_reason=user_preference.opt_out_reason
                 )
             )
 
@@ -123,14 +119,15 @@ class UserRepository(BaseRepository):
         try:
             query = insert(User).values(
                 username=user.email,
-                account_id="",
-                origin=user.origin,
+                account_id=user.account_id,
                 name=user.name,
                 email=user.email,
                 email_verified=user.email_verified,
+                email_alerts=user.email_alerts,
                 status=user.email_verified,
-                request_id="",
-                request_time_epoch=""
+                request_id=user.request_id,
+                request_time_epoch=user.request_time_epoch,
+                is_terms_accepted=user.is_terms_accepted,
             )
 
             self.session.execute(query)
@@ -168,16 +165,13 @@ class UserRepository(BaseRepository):
         self.session.add(feedback)
 
     def __aggregate_service_rating(self, org_id: str, service_id: str) -> Tuple[float, int]:
-        agg_stmt = (
-            select(
-                func.avg(UserServiceVote.rating).label("avg_rating"),
-                func.count(UserServiceVote.rating).label("total_rated"),
-            )
-            .where(
-                UserServiceVote.org_id == org_id,
-                UserServiceVote.service_id == service_id,
-                UserServiceVote.rating.isnot(None),
-            )
+        agg_stmt = select(
+            func.avg(UserServiceVote.rating).label("avg_rating"),
+            func.count(UserServiceVote.rating).label("total_rated"),
+        ).where(
+            UserServiceVote.org_id == org_id,
+            UserServiceVote.service_id == service_id,
+            UserServiceVote.rating.isnot(None),
         )
         result = self.session.execute(agg_stmt).one()
         avg_rating, total_rated = result
@@ -199,26 +193,25 @@ class UserRepository(BaseRepository):
                 service_id=user_vote.service_id,
             )
         return avg_rating, total_rated
-    
-    def get_user_service_feedback(self, username: str, org_id: str, service_id: str) -> UserServiceFeedbackDomain | None:
+
+    def get_user_service_feedback(
+        self, username: str, org_id: str, service_id: str
+    ) -> UserServiceFeedbackDomain | None:
         query = (
             select(UserServiceFeedback)
             .join(User, User.row_id == UserServiceFeedback.user_row_id)
             .where(
                 User.username == username,
                 UserServiceFeedback.org_id == org_id,
-                UserServiceFeedback.service_id == service_id
+                UserServiceFeedback.service_id == service_id,
             )
         )
         result = self.session.execute(query)
         feedback_db = result.scalar_one_or_none()
-         
-        return UserFactory.user_service_feedback_from_db_model(feedback_db) if feedback_db else None
-    
 
-    def insert_user_service_vote(
-        self, user_vote: UserServiceVoteDomain
-    ) -> UserServiceVoteDomain:
+        return UserFactory.user_service_feedback_from_db_model(feedback_db) if feedback_db else None
+
+    def insert_user_service_vote(self, user_vote: UserServiceVoteDomain) -> UserServiceVoteDomain:
         """
         Inserts a new user service vote into the database.
         """

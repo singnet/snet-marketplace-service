@@ -1,16 +1,17 @@
 from functools import wraps
 
 from common.logger import get_logger
-from registry.settings import settings
+from dapp_user.settings import settings
 from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session as SessionType
 from sqlalchemy.orm import sessionmaker
 
 logger = get_logger(__name__)
 
 connection_string = (
-    f"{settings.db.DRIVER}://{settings.db.USER}:{settings.db.PASSWORD}"
-    f"@{settings.db.HOST}:{settings.db.PORT}/{settings.db.NAME}"
+    f"{settings.db.driver}://{settings.db.user}:{settings.db.password}"
+    f"@{settings.db.host}:{settings.db.port}/{settings.db.name}"
 )
 engine = create_engine(connection_string, pool_pre_ping=True, echo=False)
 
@@ -19,8 +20,11 @@ default_session = Session()
 
 
 class BaseRepository:
-    def __init__(self):
-        self.session = default_session
+    def __init__(self, session: SessionType | None = None):
+        if session is not None:
+            self.session = session
+        else:
+            self.session = default_session
 
     def __del__(self):
         self.session.close()

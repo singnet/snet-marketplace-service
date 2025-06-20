@@ -23,6 +23,8 @@ class AWSConfig(BaseModel):
 
 class LambdaARNConfig(BaseModel):
     delete_user_wallet_arn: str
+    update_service_rating_arn: str
+
 
 class Settings(BaseSettings):
     stage: str

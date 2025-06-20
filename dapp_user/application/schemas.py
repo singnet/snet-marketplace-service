@@ -9,12 +9,12 @@ from dapp_user.constant import (
     SourceDApp,
     Status,
 )
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 
 class AddOrUpdateUserPreferenceRequest(BaseModel):
     communication_type: CommunicationType
-    preference_type: PreferenceType 
+    preference_type: PreferenceType
     source: SourceDApp
     status: Status
     opt_out_reason: str | None = None
@@ -62,22 +62,23 @@ class DeleteUserRequest(BaseModel):
             raise BadRequestException(message="Error while parsing payload")
 
 
-
 class CognitoUserAttributes(BaseModel):
     sub: str
-    email: str 
+    email: str
     nickname: str
-    email_verified: bool = Field(..., alias="emailVerified")
+    email_verified: bytes = Field(..., alias="emailVerified")
 
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
 
 
 class CognitoRequest(BaseModel):
     user_attributes: CognitoUserAttributes = Field(..., alias="userAttributes")
 
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
 
 
 class CognitoCallerContext(BaseModel):
@@ -85,8 +86,9 @@ class CognitoCallerContext(BaseModel):
     client_id: str = Field(..., alias="clientId")
     origin: str
 
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
 
 
 class CognitoUserPoolEvent(BaseModel):
@@ -98,16 +100,18 @@ class CognitoUserPoolEvent(BaseModel):
     caller_context: CognitoCallerContext = Field(..., alias="callerContext")
     request: CognitoRequest
 
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
 
 
 class UpdateUserAlertRequest(BaseModel):
     email_alerts: bool = Field(..., alias="emailAlerts")
     is_terms_accepted: bool = Field(..., alias="isTermsAccepted")
 
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
 
     @classmethod
     def validate_event(cls, event: dict) -> "UpdateUserAlertRequest":
@@ -133,6 +137,10 @@ class GetUserFeedbackRequest(BaseModel):
     org_id: str = Field(..., alias="orgId")
     service_id: str = Field(..., alias="serviceId")
 
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+
     @classmethod
     def validate_event(cls, event: dict) -> "GetUserFeedbackRequest":
         try:
@@ -153,6 +161,10 @@ class CreateUserServiceReviewRequest(BaseModel):
     service_id: str = Field(..., alias="serviceId")
     user_rating: float = Field(..., alias="userRating")
     comment: str
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
 
     @classmethod
     def validate_event(cls, event: dict) -> "CreateUserServiceReviewRequest":

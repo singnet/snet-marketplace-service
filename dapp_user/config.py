@@ -21,6 +21,7 @@ class AWSConfigDict(TypedDict):
 
 class LambdaARNConfigDict(TypedDict):
     delete_user_wallet_arn: str
+    update_service_rating_arn: str
 
 
 STAGE = "dev"
@@ -43,6 +44,7 @@ AWS: AWSConfigDict = {
 
 LAMBDA_ARN: LambdaARNConfigDict = {
     "delete_user_wallet_arn": "",
+    "update_service_rating_arn": "",
 }
 
 CALLER_REFERENCE: Dict[str, str] = {
