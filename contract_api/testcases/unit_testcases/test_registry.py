@@ -5,7 +5,7 @@ from contract_api.config import NETWORK_ID, NETWORKS
 from contract_api.infrastructure.models import ServiceMedia, OffchainServiceConfig as OffchainServiceConfigDB
 from contract_api.infrastructure.repositories.service_media_repository import ServiceMediaRepository
 from contract_api.infrastructure.repositories.service_repository import OffchainServiceConfigRepository
-from contract_api.registry import Registry
+from contract_api.application.services.registry import Registry
 from contract_api.testcases.test_variables import GET_SERVICE_RESPONSE, TEST_ORG_ID, TEST_SERVICE_ID
 
 db = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
@@ -86,7 +86,7 @@ class TestRegistry(TestCase):
             updated_on="2021-01-08 13:31:50"
         ))
 
-        response = registry.get_service_data_by_org_id_and_service_id(TEST_ORG_ID, TEST_SERVICE_ID)
+        response = registry.get_service(TEST_ORG_ID, TEST_SERVICE_ID)
 
         result = {}
         result.update(GET_SERVICE_RESPONSE["BASE"])
@@ -118,7 +118,7 @@ class TestRegistry(TestCase):
             updated_on=modified_date,
         ))
 
-        response = registry.get_service_data_by_org_id_and_service_id(TEST_ORG_ID, TEST_SERVICE_ID)
+        response = registry.get_service(TEST_ORG_ID, TEST_SERVICE_ID)
 
         result = {}
         result.update(GET_SERVICE_RESPONSE["BASE"])
@@ -153,7 +153,7 @@ class TestRegistry(TestCase):
         VALUES(10,10,  '{TEST_ORG_ID}', '{TEST_SERVICE_ID}', """ + """ 'test_display_name', 'test_description', 'short description', 'test_url', '{"name":"test_name", "age":31, "city":"test_city"}', 'test_hash', 'proto', 'grpc', 'test_mpe_address','{"hero_image": "https://test-s3-push"}', '{"hero_image": "test_hero_image_hash"}','{"rating": 0.0, "total_users_rated": 0}', 1, '[{"name": "dummy dummy", "email_id": "dummy@dummy.io"}]', '2021-01-08 05:48:26', '2021-01-08 05:48:26')"""
         db.execute(insert_metadata_query)
 
-        response = registry.get_service_data_by_org_id_and_service_id(TEST_ORG_ID, TEST_SERVICE_ID)
+        response = registry.get_service(TEST_ORG_ID, TEST_SERVICE_ID)
         self.assertDictEqual(response, GET_SERVICE_RESPONSE["BASE"])
 
     def tearDown(self):

@@ -9,15 +9,15 @@ import boto3
 
 class S3Util(object):
 
-    def __init__(self, aws_access_key, aws_secrete_key):
+    def __init__(self, aws_access_key, aws_secret_key):
         self.aws_access_key = aws_access_key
-        self.aws_secrete_key = aws_secrete_key
+        self.aws_secret_key = aws_secret_key
 
     def get_s3_resource_from_key(self):
         s3_resource = boto3.resource(
             's3',
             aws_access_key_id=self.aws_access_key,
-            aws_secret_access_key=self.aws_secrete_key
+            aws_secret_access_key=self.aws_secret_key
 
         )
 

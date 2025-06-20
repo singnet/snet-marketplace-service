@@ -1,16 +1,21 @@
 import io
+import os
 
+from common.blockchain_util import BlockChainUtil
 from common.logger import get_logger
+from common.s3_util import S3Util
 from contract_api.infrastructure.storage_provider import StorageProvider
-from contract_api.config import ASSETS_BUCKET_NAME, ASSETS_PREFIX
+from contract_api.config import ASSETS_BUCKET_NAME, ASSETS_PREFIX, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY, NETWORKS, \
+    NETWORK_ID, CONTRACT_BASE_PATH, TOKEN_NAME, STAGE
 
 logger = get_logger(__name__)
 
 
 class EventConsumer:
-    def __init__(self, s3_util):
-        self._s3_util = s3_util
+    def __init__(self):
+        self._s3_util = S3Util(S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY)
         self._storage_provider = StorageProvider()
+        self._blockchain_util = BlockChainUtil("WS_PROVIDER", NETWORKS[NETWORK_ID]["ws_provider"])
 
     def _compare_assets_and_push_to_s3(
         self, existing_assets_hash, new_assets_hash, existing_assets_url, org_id, service_id
@@ -101,3 +106,14 @@ class EventConsumer:
                     f"hash_uri = {hash_uri}, filename = {filename}")
 
         return new_url
+
+    def _get_contract(self, contract_name: str):
+        net_id = NETWORK_ID
+        base_contract_path = os.path.abspath(
+            os.path.join(CONTRACT_BASE_PATH, 'node_modules', 'singularitynet-platform-contracts'))
+        registry_contract = self._blockchain_util.get_contract_instance(base_contract_path,
+                                                                        contract_name,
+                                                                        net_id,
+                                                                        TOKEN_NAME,
+                                                                        STAGE)
+        return registry_contract

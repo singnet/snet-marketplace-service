@@ -2,7 +2,6 @@ from unittest import TestCase
 
 from common.repository import Repository
 from contract_api.config import NETWORK_ID, NETWORKS
-from contract_api.registry import Registry
 
 db = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
 
