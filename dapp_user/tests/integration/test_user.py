@@ -11,6 +11,7 @@ def test_get_user_handler_returns_specific_user(
     monkeypatch,
     test_session,
 ):
+    expected_username = lambda_event_authorized["requestContext"]["authorizer"]["claims"]["email"]
     monkeypatch.setattr(base_repository, "default_session", test_session)
 
     result = get_user_handler(lambda_event_authorized, context={})
@@ -19,10 +20,7 @@ def test_get_user_handler_returns_specific_user(
 
     body = json.loads(result["body"])
     assert body["status"] == "success"
-    assert (
-        body["data"]["username"]
-        == lambda_event_authorized["requestContext"]["authorizer"]["claims"]["email"]
-    )
+    assert body["data"]["username"] == expected_username
 
 
 def test_get_user_handler_not_found(
@@ -30,7 +28,7 @@ def test_get_user_handler_not_found(
     monkeypatch,
     test_session,
 ):
-    username = lambda_event_authorized["requestContext"]["authorizer"]["claims"]["email"]
+    expected_username = lambda_event_authorized["requestContext"]["authorizer"]["claims"]["email"]
 
     monkeypatch.setattr(base_repository, "default_session", test_session)
 
@@ -40,4 +38,4 @@ def test_get_user_handler_not_found(
 
     body = json.loads(result["body"])
     assert body["status"] == "failed"
-    assert body["error"]["message"] == f"User with username '{username}' not found"
+    assert body["error"]["message"] == f"User with username '{expected_username}' not found"
