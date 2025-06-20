@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 from common.repository import Repository
 from contract_api.config import NETWORK_ID, NETWORKS
-from contract_api.consumers.mpe_event_consumer import MPEEventConsumer
+from contract_api.application.consumers import MPEEventConsumer
 from contract_api.dao.mpe_repository import MPERepository
 
 
@@ -36,7 +36,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
         mpe_event_consumer = MPEEventConsumer("wss://ropsten.infura.io/ws")
         mpe_repository = MPERepository(Repository(NETWORK_ID, NETWORKS=NETWORKS))
         mpe_repository.delete_mpe_channel(143)
-        mpe_event_consumer.on_event(event=event)
+        mpe_event_consumer.on_event(request =event)
 
         channel_result = mpe_repository.get_mpe_channels(143)
         assert channel_result[0]['channel_id'] == 143
@@ -64,7 +64,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
         mpe_repository = MPERepository(Repository(NETWORK_ID, NETWORKS=NETWORKS))
         mpe_repository.delete_mpe_channel(143)
 
-        mpe_event_consumer.on_event(event=create_event)
+        mpe_event_consumer.on_event(request =create_event)
 
         update_event = {"data": {'row_id': 349, 'block_no': 6629307, 'event': 'ChannelAddFunds',
                                   'json_str': "{'channelId': 143, 'additionalFunds': 10}", 'processed': b'\x00',
@@ -82,7 +82,7 @@ class TestOrganizationEventConsumer(unittest.TestCase):
         mock_get_contract_instance.return_value = Mock(
             functions=Mock(channels=Mock(return_value=Mock(call=Mock(return_value=block_chain_channel_data)))))
 
-        mpe_event_consumer.on_event(event=update_event)
+        mpe_event_consumer.on_event(request =update_event)
 
         channel_result = mpe_repository.get_mpe_channels(143)
         assert channel_result[0]['channel_id'] == 143

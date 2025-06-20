@@ -1,45 +1,46 @@
 from common.constant import StatusCode
 from common.logger import get_logger
-from common.utils import Utils, generate_lambda_response
+from common.utils import generate_lambda_response
 from common.exception_handler import exception_handler
-from contract_api.config import NETWORKS, NETWORK_ID
-from contract_api.consumers.consumer_factory import (
-    get_payload_from_queue_event,
+from contract_api.application.schemas.consumer_schemas import MpeEventConsumerRequest, RegistryEventConsumerRequest
+from contract_api.application.consumers.consumer_factory import (
     get_registry_event_consumer
 )
-from contract_api.consumers.mpe_event_consumer import MPEEventConsumer
-from contract_api.consumers.service_event_consumer import ServiceCreatedDeploymentEventHandler
+from contract_api.application.consumers.mpe_event_consumer import MPEEventConsumer
+from contract_api.application.consumers.service_event_consumer import ServiceCreatedDeploymentEventHandler
+
 
 logger = get_logger(__name__)
-util=Utils()
 
 
 def mpe_event_consumer(event, context):
-    logger.info(f"Got MPE event from queue {event}")
-    events = get_payload_from_queue_event(event)
-    consumer = MPEEventConsumer(NETWORKS[NETWORK_ID]["ws_provider"])
+    events = MpeEventConsumerRequest.get_events_from_queue(event)
+
     for e in events:
-        logger.info(f"Processing MPE event: {e}")
-        consumer.on_event(e)
+        request = MpeEventConsumerRequest.validate_event(e)
+        MPEEventConsumer().on_event(request)
+
     return {}
 
 
 def registry_event_consumer(event, context):
-    logger.info(f"Got Registry event {event}")
-    events = get_payload_from_queue_event(event)
+    events = RegistryEventConsumerRequest.get_events_from_queue(event)
 
     for e in events:
-        consumer = get_registry_event_consumer(e)
+        request = RegistryEventConsumerRequest.validate_event(e)
+        consumer = get_registry_event_consumer(request)
         if consumer is None:
             logger.info(f"Unhandled Registry event: {e}")
             continue
-        logger.info(f"Processing Registry event: {e}")
-        consumer.on_event(e)
+        consumer.on_event(request)
+
     return {}
 
 
 @exception_handler(logger=logger)
 def manage_service_deployment(event, context):
-    service_deployment_handler = ServiceCreatedDeploymentEventHandler(NETWORKS[NETWORK_ID]["ws_provider"])
-    service_deployment_handler.on_event(event)
+    request = RegistryEventConsumerRequest.validate_event(event)
+
+    ServiceCreatedDeploymentEventHandler().on_event(request)
+
     return generate_lambda_response(200, StatusCode.OK)

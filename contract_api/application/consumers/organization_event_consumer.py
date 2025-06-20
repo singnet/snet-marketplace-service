@@ -1,37 +1,24 @@
-import os
-import ast
 import json
-
 from web3 import Web3
 
 from common.logger import get_logger
-from common.blockchain_util import BlockChainUtil
-from common.s3_util import S3Util
-from contract_api.consumers.event_consumer import EventConsumer
+from contract_api.application.consumers.event_consumer import EventConsumer
+from contract_api.application.schemas.consumer_schemas import RegistryEventConsumerRequest
 from contract_api.dao.organization_repository import OrganizationRepository
 from contract_api.dao.service_repository import ServiceRepository
 from common.repository import Repository
-from contract_api.config import NETWORK_ID, NETWORKS, CONTRACT_BASE_PATH, TOKEN_NAME, STAGE
-from contract_api.config import S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY
-from contract_api.infrastructure.storage_provider import StorageProvider
+from contract_api.config import NETWORK_ID, NETWORKS
 
 logger = get_logger(__name__)
 
 
 class OrganizationEventConsumer(EventConsumer):
-    _connection = Repository(NETWORK_ID, NETWORKS=NETWORKS)
-    _organization_repository = OrganizationRepository(_connection)
-    _service_repository = ServiceRepository(_connection)
 
-    def __init__(self, ws_provider):
-        super().__init__(ws_provider)
-        self._storage_provider = StorageProvider()
-        self._blockchain_util = BlockChainUtil("WS_PROVIDER", ws_provider)
-        self._s3_util = S3Util(S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY)
-
-    def on_event(self, event):
-        # abstract method
-        pass
+    def __init__(self):
+        super().__init__()
+        self._connection = Repository(NETWORK_ID, NETWORKS = NETWORKS)
+        self._service_repository = ServiceRepository(self._connection)
+        self._organization_repository = OrganizationRepository(self._connection)
 
     def _get_new_assets_url(self, org_id, new_ipfs_data):
         new_assets_hash = new_ipfs_data.get("assets", {})
@@ -54,30 +41,8 @@ class OrganizationEventConsumer(EventConsumer):
         )
         return new_assets_url_mapping
 
-    def _get_org_id_from_event(self, event):
-        event_org_data = ast.literal_eval(event['data']['json_str'])
-        org_id_bytes = event_org_data['orgId']
-        org_id = Web3.to_text(org_id_bytes).rstrip("\x00")
-        return org_id
-
-    def _get_registry_contract(self):
-        net_id = NETWORK_ID
-        base_contract_path = os.path.abspath(
-            os.path.join(CONTRACT_BASE_PATH,'node_modules', 'singularitynet-platform-contracts'))
-        registry_contract = self._blockchain_util.get_contract_instance(base_contract_path,
-                                                                        "REGISTRY",
-                                                                        net_id,
-                                                                        TOKEN_NAME,
-                                                                        STAGE)
-
-        return registry_contract
-
-    def _get_org_details_from_blockchain(self, event, org_id=None):
-        logger.info(f"Processing organization event: {event}")
-
-        registry_contract = self._get_registry_contract()
-        if org_id is None:
-            org_id = self._get_org_id_from_event(event)
+    def _get_org_details_from_blockchain(self, org_id):
+        registry_contract = self._get_contract("REGISTRY")
 
         logger.info(f"Organization id: {org_id}")
         encoded_org_id = Web3.to_bytes(text = org_id).ljust(32, b'\0')[:32]
@@ -95,12 +60,14 @@ class OrganizationEventConsumer(EventConsumer):
 
 
 class OrganizationCreatedEventConsumer(OrganizationEventConsumer):
-    def __init__(self, ws_provider):
-        super().__init__(ws_provider)
+    def __init__(self):
+        super().__init__()
 
-    def on_event(self, event, org_id=None):
+    def on_event(self, request: RegistryEventConsumerRequest, org_id=None):
+        if org_id is None:
+            org_id = request.org_id
         org_id, blockchain_org_data, org_metadata, org_metadata_uri = (
-            self._get_org_details_from_blockchain(event, org_id)
+            self._get_org_details_from_blockchain(org_id)
         )
 
         self._process_organization_create_update_event(
@@ -147,12 +114,12 @@ class OrganizationModifiedEventConsumer(OrganizationCreatedEventConsumer):
 
 
 class OrganizationDeletedEventConsumer(OrganizationEventConsumer):
-    def __init__(self, ws_provider):
-        super().__init__(ws_provider)
+    def __init__(self):
+        super().__init__()
 
-    def on_event(self, event, org_id=None):
+    def on_event(self, request: RegistryEventConsumerRequest, org_id=None):
         if org_id is None:
-            org_id, _, _, _ = self._get_org_details_from_blockchain(event)
+            org_id = request.org_id
         self._process_organization_delete_event(org_id)
 
     def _process_organization_delete_event(self, org_id):

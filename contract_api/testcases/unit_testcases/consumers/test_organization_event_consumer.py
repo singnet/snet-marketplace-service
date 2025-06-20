@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from common.repository import Repository
 from contract_api.config import NETWORKS, NETWORK_ID
-from contract_api.consumers.organization_event_consumer import OrganizationCreatedEventConsumer
+from contract_api.application.consumers.organization_event_consumer import OrganizationCreatedEventConsumer
 from contract_api.dao.organization_repository import OrganizationRepository
 
 
