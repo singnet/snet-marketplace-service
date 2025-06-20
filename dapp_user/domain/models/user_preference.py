@@ -18,7 +18,7 @@ class UserPreference:
             "communication_type": self.communication_type.value,
             "source": self.source.value,
             "status": self.status.value,
-            "opt_out_reason": self.opt_out_reason
+            "opt_out_reason": self.opt_out_reason,
         }
 
 

@@ -7,8 +7,13 @@ class BaseUser:
     username: str
     name: str
     email: str
-    email_verified: bool
-    origin: str
+    email_verified: bytes
+    email_alerts: bytes
+    status: bytes
+    request_id: str
+    request_time_epoch: str
+    is_terms_accepted: bytes
+
 
 @dataclass(frozen=True)
 class NewUser(BaseUser):
@@ -19,8 +24,8 @@ class NewUser(BaseUser):
             "name": self.name,
             "email": self.email,
             "email_verified": self.email_verified,
-            "origin": self.origin
         }
+
 
 @dataclass(frozen=True)
 class User(BaseUser):
@@ -33,6 +38,5 @@ class User(BaseUser):
             "username": self.username,
             "name": self.name,
             "email": self.email,
-            "email_verified": self.email_verified,
-            "origin": self.origin
+            "email_verified": int(self.email_verified),
         }
