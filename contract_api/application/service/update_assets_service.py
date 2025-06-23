@@ -3,7 +3,7 @@ from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from contract_api.config import MARKETPLACE_DAPP_BUILD, REGION_NAME
 from contract_api.constant import ServiceAssetsRegex
-from contract_api.exceptions import InvalidFilePath
+from common.exceptions import InvalidFilePath
 
 logger = get_logger(__name__)
 boto_utils = BotoUtils(region_name=REGION_NAME)

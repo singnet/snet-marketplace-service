@@ -1,2 +1,0 @@
-test_initiate_redirect_url = 'https://yourcompany.netverify.com/web/v4/app?locale=en-GB&authorizationToken=xxx'
-reject_reason = {"rejectReasonCode": "100", "rejectReasonDetails": [{"detailsCode": "1001", "detailsDescription": "PHOTO"}, {"detailsCode": "1004", "detailsDescription": "DOB"}], "rejectReasonDescription": "MANIPULATED_DOCUMENT"}

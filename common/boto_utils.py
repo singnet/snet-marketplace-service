@@ -131,3 +131,14 @@ class BotoUtils:
             copy_source = {'Bucket': source_bucket, 'Key': source_key['Key']}
             dest_bucket.copy(copy_source, target_key + os.path.basename(source_key['Key']))
             s3.Object(source_bucket, source_key['Key']).delete()
+
+    @staticmethod
+    def clear_s3_files(bucket, key):
+        try:
+            to_delete_objects = BotoUtils.get_objects_from_s3(bucket = bucket, key = key)
+            for delete_obj in to_delete_objects:
+                BotoUtils.delete_objects_from_s3(bucket = bucket, key = delete_obj["Key"], key_pattern = key)
+        except Exception as e:
+            msg = f"Error in deleting stub files :: {repr(e)}"
+            logger.info(msg)
+            raise Exception(msg)

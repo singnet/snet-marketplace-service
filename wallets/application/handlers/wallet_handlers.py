@@ -3,16 +3,16 @@ import json
 from common.constant import ResponseStatus
 from common.exception_handler import exception_handler
 from common.logger import get_logger
-from common.utils import handle_exception_with_slack_notification, generate_lambda_response, make_response_body
-from wallets.config import NETWORK_ID, SLACK_HOOK
+from common.utils import generate_lambda_response, make_response_body
+from common.exceptions import BadRequestException
 from wallets.application.service.wallet_service import WalletService
-from wallets.exceptions import BadRequestException, EXCEPTIONS
 
 logger = get_logger(__name__)
 wallet_service = WalletService()
+EXCEPTIONS = (BadRequestException, )
 
 
-@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(logger=logger)
 def remove_user_wallet(event, context):
     logger.info(f"Received request to remove user wallet: {event}")
     try:
@@ -28,7 +28,7 @@ def remove_user_wallet(event, context):
 
     return response
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def create_and_register_wallet(event, context):
     logger.info(f"Received request to create and register wallet: {event}")
     try:
@@ -45,7 +45,7 @@ def create_and_register_wallet(event, context):
     return response
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def get_wallets(event, context):
     logger.info(f"Received request to get wallets: {event}")
     try:
@@ -62,7 +62,7 @@ def get_wallets(event, context):
     return response
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def register_wallet(event, context):
     logger.info(f"Received request to register wallet: {event}")
     try:
@@ -87,7 +87,7 @@ def register_wallet(event, context):
     return response
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 def set_default_wallet(event, context):
     logger.info(f"Received request to set default wallet: {event}")
     try:

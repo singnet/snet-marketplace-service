@@ -10,7 +10,7 @@ def get_org_member_invite_mail(org_name, invite_code):
                     Your invite code is <strong>{invite_code}</strong></p><br />
                 <p>Please click on the link below to
                     accept the invitation.</p>
-                <p>{settings.emails.PUBLISHER_PORTAl_DAPP_URL}</p><br /><br />
+                <p>{settings.emails.PUBLISHER_PORTAl_DAPP_URL}?invite_code={invite_code}</p><br /><br />
                 <p>
                     <em>Please do not reply to the email for any enquiries for any queries please email at
                         {settings.emails.PUBLISHER_PORTAL_SUPPORT_MAIL}.</em></p>

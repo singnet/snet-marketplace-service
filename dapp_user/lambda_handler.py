@@ -3,10 +3,10 @@ import re
 
 from common.logger import get_logger
 from common.repository import Repository
-from common.utils import Utils, handle_exception_with_slack_notification
-from dapp_user.config import NETWORKS, NETWORK_ID, SLACK_HOOK
+from common.utils import Utils
+from common.exception_handler import exception_handler
+from dapp_user.config import NETWORKS, NETWORK_ID
 from dapp_user.constant import SourceDApp
-from dapp_user.domain.services.user_service import UserService
 from dapp_user.user import User
 
 db = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 obj_util = Utils()
 
 
-@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(logger=logger)
 def request_handler(event, context):
     print(event)
     if 'path' not in event:
@@ -66,10 +66,6 @@ def request_handler(event, context):
         response_data = usr_obj.validate_and_set_user_feedback(
             feedback_data=payload_dict['feedback'], user_data=event['requestContext'])
 
-    elif "/usage/freecalls" == path:
-        user_service = UserService()
-        return user_service.get_free_call(event)
-
     elif "/wallet/register" == path:
         """ Deprecated """
         response_data = []
@@ -80,7 +76,6 @@ def request_handler(event, context):
     if response_data is None:
         err_msg = {'status': 'failed', 'error': 'Bad Request',
                    'api': event['path'], 'payload': payload_dict, 'network_id': NETWORK_ID}
-        obj_util.report_slack(str(err_msg), SLACK_HOOK)
         response = get_response(500, err_msg)
     else:
         response = get_response(

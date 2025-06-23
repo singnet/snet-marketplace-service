@@ -4,14 +4,14 @@ from common.constant import StatusCode, ResponseStatus
 from common.exception_handler import exception_handler
 from common.exceptions import BadRequestException
 from common.logger import get_logger
-from common.utils import validate_dict, generate_lambda_response, handle_exception_with_slack_notification
+from common.utils import validate_dict, generate_lambda_response
 from orchestrator.config import SLACK_HOOK, NETWORK_ID
 from orchestrator.publisher.application.services.organization_service import OrganizationOrchestratorService
 
 logger = get_logger(__name__)
 
 
-@handle_exception_with_slack_notification(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(logger=logger)
 def register_org_member(event, context):
     username = event["requestContext"]["authorizer"]["claims"]["email"]
     payload = json.loads(event["body"])
@@ -25,7 +25,7 @@ def register_org_member(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=())
+@exception_handler(logger=logger)
 def create_org(event, context):
     payload = json.loads(event["body"])
     username = event["requestContext"]["authorizer"]["claims"]["email"]

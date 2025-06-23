@@ -2,13 +2,13 @@ import json
 
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
-from common.utils import send_email_notification, Utils
+from common.utils import send_email_notification
 from orchestrator.config import REGION_NAME, REGISTRY_ARN, VERIFICATION_ARN, NOTIFICATION_ARN, \
     ORG_APPROVERS_DLIST, REGISTER_WALLET_ARN
 from orchestrator.constant import VerificationType, OrganizationType
 from orchestrator.publisher.mail_templates import get_mail_template_to_user_for_org_onboarding
 from orchestrator.publisher.mail_templates import get_org_approval_mail
-from registry.config import APPROVAL_SLACK_HOOK
+
 
 logger = get_logger(__name__)
 
@@ -86,7 +86,6 @@ class OrganizationOrchestratorService:
     def notify_approval_team(self, org_id, org_name):
         slack_msg = f"Organization with org_id {org_id} is submitted for approval"
         mail_template = get_org_approval_mail(org_id, org_name)
-        self.send_slack_message(slack_msg)
         send_email_notification([ORG_APPROVERS_DLIST], mail_template["subject"],
                                 mail_template["body"], NOTIFICATION_ARN, self.boto_client)
 
@@ -104,9 +103,6 @@ class OrganizationOrchestratorService:
             self.boto_client.invoke_lambda(lambda_function_arn=NOTIFICATION_ARN, invocation_type="RequestResponse",
                                            payload=json.dumps(send_notification_payload))
             logger.info(f"Recipient {recipient} notified for successfully starting onboarding process.")
-
-    def send_slack_message(self, slack_msg):
-        Utils().report_slack(slack_msg, APPROVAL_SLACK_HOOK)
 
     def initiate_verification(self, entity_id, verification_type, username):
         if verification_type == VerificationType.INDIVIDUAL.value:

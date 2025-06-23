@@ -27,7 +27,7 @@ class TestUtils(unittest.TestCase):
         values = ["__openChannelByThirdParty", self.mpe_address, EXECUTOR_ADDRESS, SIGNER_ADDRESS, self.recipient,
                   self.group_id, self.agi_tokens, self.expiration, message_nonce]
         signature = self.obj_utils.generate_signature(data_types=data_types, values=values, signer_key=signer_key)
-        v, r, s = Web3.toInt(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
+        v, r, s = Web3.to_int(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
         assert(v == 27 or v == 28)
         assert(len(r) == 66)
         assert(len(s) == 66)
@@ -36,7 +36,7 @@ class TestUtils(unittest.TestCase):
 
     def test_create_account(self):
         address, private_key = self.obj_utils.create_account()
-        assert (Web3.isAddress(address) is True)
+        assert (Web3.is_address(address) is True)
         return address, private_key
 
     def test_create_transaction_object1(self):
@@ -81,7 +81,7 @@ class TestUtils(unittest.TestCase):
         self.current_block_no = 6487832
         values = ["__get_channel_state", self.mpe_address, channel_id, self.current_block_no]
         signature = self.obj_utils.generate_signature(data_types=data_types, values=values, signer_key=SIGNER_KEY)
-        _, _, _ = Web3.toInt(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
+        _, _, _ = Web3.to_int(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
         assert(signature == "0x0b9bb258a0f975328fd9cd9608bd9b570e7b68cad8d337c940e32b9413e348437dd3614f9c6f776b1eb62d521a5794204a010f581721f167c5b26de0928b139d1c")
 
     def test_generate_signature_for_daemon_call(self):
@@ -91,5 +91,5 @@ class TestUtils(unittest.TestCase):
         data_types = ["string", "address", "uint256", "uint256", "uint256"]
         values = ["__MPE_claim_message", self.mpe_address, channel_id, nonce, amount]
         signature = self.obj_utils.generate_signature(data_types=data_types, values=values, signer_key=SIGNER_KEY)
-        _, _, _ = Web3.toInt(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
+        _, _, _ = Web3.to_int(hexstr="0x" + signature[-2:]), signature[:66], "0x" + signature[66:130]
         assert(signature == "0x7e50ac20909da29f72ed2ab9cf6c6375f853d8eddfcf3ce33806a4e27b30bcbd5366c41a59647467f0519b0bfc89a50d890b683cd797d5566ba03937f82819c41b")

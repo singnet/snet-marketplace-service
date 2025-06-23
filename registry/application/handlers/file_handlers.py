@@ -4,14 +4,13 @@ from common.logger import get_logger
 from common.utils import generate_lambda_response
 from registry.application.access_control.authorization import secured
 from registry.application.services.file_service.file_service import FileService
-from registry.config import SLACK_HOOK, NETWORK_ID
 from registry.constants import Action
 from registry.exceptions import EXCEPTIONS, BadRequestException
 
 logger = get_logger(__name__)
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
 @secured(action=Action.UPDATE, org_uuid_path=("queryStringParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def delete(event, context):
