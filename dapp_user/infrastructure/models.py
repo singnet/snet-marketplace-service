@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from sqlalchemy import (
-    BINARY,
     BOOLEAN,
     DECIMAL,
     VARCHAR,
@@ -30,19 +29,19 @@ class User(Base):
     account_id: Mapped[str] = mapped_column("account_id", VARCHAR(128), nullable=False)
     name: Mapped[str] = mapped_column("name", VARCHAR(128), nullable=False)
     email: Mapped[str] = mapped_column("email", VARCHAR(128), nullable=False, unique=True)
-    email_verified: Mapped[bytes] = mapped_column(
-        "email_verified", BINARY, nullable=False, default=b"0"
+    email_verified: Mapped[bool] = mapped_column(
+        "email_verified", BOOLEAN, nullable=False, default=False
     )
-    email_alerts: Mapped[bytes] = mapped_column(
-        "email_alerts", BINARY, nullable=False, default=b"0"
+    email_alerts: Mapped[bool] = mapped_column(
+        "email_alerts", BOOLEAN, nullable=False, default=False
     )
-    status: Mapped[bytes] = mapped_column("status", BINARY, nullable=False, default=b"0")
+    status: Mapped[bool] = mapped_column("status", BOOLEAN, nullable=False, default=b"0")
     request_id: Mapped[str] = mapped_column("request_id", VARCHAR(128), nullable=False)
     request_time_epoch: Mapped[str] = mapped_column(
         "request_time_epoch", VARCHAR(128), nullable=False
     )
-    is_terms_accepted: Mapped[bytes] = mapped_column(
-        "is_terms_accepted", BINARY, nullable=False, default=b"0"
+    is_terms_accepted: Mapped[bool] = mapped_column(
+        "is_terms_accepted", BOOLEAN, nullable=False, default=False
     )
 
     created_at: Mapped[datetime] = mapped_column(

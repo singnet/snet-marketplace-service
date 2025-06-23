@@ -26,4 +26,4 @@ class Status(str, Enum):
 
 
 class CognitoTriggerSource(str, Enum):
-    POST_CONFIRMATION = "PostConfirmation"
+    POST_CONFIRMATION = "PostConfirmation_ConfirmSignUp"

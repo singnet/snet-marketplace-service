@@ -1,8 +1,8 @@
 """baseline
 
-Revision ID: bd0a35db31e2
+Revision ID: e12dfc595535
 Revises:
-Create Date: 2025-06-20 13:05:36.987345
+Create Date: 2025-06-23 13:02:44.493675
 
 """
 
@@ -12,7 +12,7 @@ from sqlalchemy.dialects import mysql
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "bd0a35db31e2"
+revision = "e12dfc595535"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -27,12 +27,12 @@ def upgrade():
         sa.Column("account_id", sa.VARCHAR(length=128), nullable=False),
         sa.Column("name", sa.VARCHAR(length=128), nullable=False),
         sa.Column("email", sa.VARCHAR(length=128), nullable=False),
-        sa.Column("email_verified", sa.BINARY(), nullable=False),
-        sa.Column("email_alerts", sa.BINARY(), nullable=False),
-        sa.Column("status", sa.BINARY(), nullable=False),
+        sa.Column("email_verified", sa.BOOLEAN(), nullable=False),
+        sa.Column("email_alerts", sa.BOOLEAN(), nullable=False),
+        sa.Column("status", sa.BOOLEAN(), nullable=False),
         sa.Column("request_id", sa.VARCHAR(length=128), nullable=False),
         sa.Column("request_time_epoch", sa.VARCHAR(length=128), nullable=False),
-        sa.Column("is_terms_accepted", sa.BINARY(), nullable=False),
+        sa.Column("is_terms_accepted", sa.BOOLEAN(), nullable=False),
         sa.Column(
             "created_at",
             mysql.TIMESTAMP(),

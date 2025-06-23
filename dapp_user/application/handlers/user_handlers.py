@@ -12,6 +12,7 @@ from dapp_user.application.schemas import (
     UpdateUserAlertRequest,
 )
 from dapp_user.application.services.user_service import UserService
+from dapp_user.constant import CognitoTriggerSource
 from dapp_user.exceptions import UnauthorizedException
 
 logger = get_logger(__name__)
@@ -73,7 +74,7 @@ def delete_user_handler(event, context):
 
     request = DeleteUserRequest.validate_event(event)
 
-    if req_ctx.username != request.username:
+    if request.username and req_ctx.username != request.username:
         raise UnauthorizedException()
 
     response = UserService().delete_user(request.username)
@@ -109,6 +110,6 @@ def create_user_service_review_handler(event, context):
 
 def register_user_post_aws_cognito_signup_handler(event, context):
     cognito_event = CognitoUserPoolEvent.model_validate(event)
-    if cognito_event.trigger_source == "PostConfirmation_ConfirmSignUp":
+    if cognito_event.trigger_source == CognitoTriggerSource.POST_CONFIRMATION:
         UserService().register_user(cognito_event)
     return event

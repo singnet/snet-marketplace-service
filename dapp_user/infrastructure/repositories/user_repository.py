@@ -36,7 +36,7 @@ class UserRepository(BaseRepository):
                     communication_type=user_preference.communication_type.value,
                     source=user_preference.source.value,
                     opt_out_reason=user_preference.opt_out_reason,
-                    status=user_preference.status,
+                    status=True,
                 )
             )
             self.session.commit()
@@ -74,7 +74,7 @@ class UserRepository(BaseRepository):
             raise UserNotFoundException(username=username)
 
     @BaseRepository.write_ops
-    def disable_preference(self, user_preference: UserPreferenceDomain, user_row_id: int):
+    def disable_preference(self, user_preference: UserPreferenceDomain, user_row_id: int) -> None:
         try:
             stmt = (
                 update(UserPreference)
@@ -84,9 +84,7 @@ class UserRepository(BaseRepository):
                     UserPreference.communication_type == user_preference.communication_type,
                     UserPreference.source == user_preference.source,
                 )
-                .values(
-                    status=user_preference.status, opt_out_reason=user_preference.opt_out_reason
-                )
+                .values(status=False, opt_out_reason=user_preference.opt_out_reason)
             )
 
             self.session.execute(stmt)
@@ -180,14 +178,17 @@ class UserRepository(BaseRepository):
     def submit_user_review(
         self,
         user_vote: UserServiceVoteDomain,
-        user_feedback: UserServiceFeedbackDomain,
+        user_feedback: UserServiceFeedbackDomain | None,
     ) -> Tuple[float, int]:
         """
         Atomically sets user vote and feedback, then returns updated aggregated rating info.
         """
         with self.session.begin():
             self.__update_or_set_user_vote(user_vote)
-            self.__set_user_feedback(user_feedback)
+
+            if user_feedback is not None:
+                self.__set_user_feedback(user_feedback)
+
             avg_rating, total_rated = self.__aggregate_service_rating(
                 org_id=user_vote.org_id,
                 service_id=user_vote.service_id,

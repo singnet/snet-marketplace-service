@@ -1,13 +1,19 @@
+import os
 from typing import Generator, List
 
 import pytest
-from dapp_user.infrastructure.models import User
+from dapp_user.domain.factory.user_factory import UserFactory
+from dapp_user.domain.models.user_preference import UserPreference as UserPreferenceDomain
+from dapp_user.infrastructure.models import User, UserPreference
 from dapp_user.infrastructure.repositories import base_repository
 from dapp_user.infrastructure.repositories.user_repository import UserRepository
 from dapp_user.settings import settings
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session as SessionType
 from sqlalchemy.orm import sessionmaker
+
+from alembic import command
+from alembic.config import Config
 
 TEST_DB_URL = (
     f"{settings.db.driver}://{settings.db.user}:{settings.db.password}"
@@ -24,8 +30,25 @@ def db_engine():
     return engine
 
 
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+ALEMBIC_INI_PATH = os.path.join(ROOT_DIR, "alembic.ini")
+
+
+@pytest.fixture(scope="session", autouse=True)
+def apply_migrations():
+    """Apply Alembic migrations at the start of the test session."""
+    print("FILE::", ALEMBIC_INI_PATH)
+    alembic_cfg = Config(ALEMBIC_INI_PATH)
+    alembic_cfg.set_main_option("sqlalchemy.url", TEST_DB_URL)
+    command.upgrade(alembic_cfg, "head")
+
+    yield
+
+    command.downgrade(alembic_cfg, "base")
+
+
 @pytest.fixture(scope="function")
-def db_session(db_engine: Engine) -> Generator[SessionType, None, None]:
+def db_session(db_engine: Engine, apply_migrations) -> Generator[SessionType, None, None]:
     """Create a new database session for a test, rolling back after."""
     connection = db_engine.connect()
     session = TestSession(bind=connection)
@@ -79,12 +102,12 @@ def create_test_users(user_repo: UserRepository) -> Generator[List[User], None, 
             username="user1",
             name="Test User One",
             email="user1@example.com",
-            email_verified=b"1",
-            email_alerts=b"0",
-            status=b"1",
+            email_verified=True,
+            email_alerts=False,
+            status=True,
             request_id="req-001",
             request_time_epoch="1700000000",
-            is_terms_accepted=b"1",
+            is_terms_accepted=True,
         ),
         User(
             row_id=2,
@@ -92,12 +115,12 @@ def create_test_users(user_repo: UserRepository) -> Generator[List[User], None, 
             username="user2",
             name="Test User Two",
             email="user2@example.com",
-            email_verified=b"1",
-            email_alerts=b"0",
-            status=b"1",
+            email_verified=True,
+            email_alerts=False,
+            status=True,
             request_id="req-001",
             request_time_epoch="1700000000",
-            is_terms_accepted=b"1",
+            is_terms_accepted=True,
         ),
         User(
             row_id=3,
@@ -105,12 +128,12 @@ def create_test_users(user_repo: UserRepository) -> Generator[List[User], None, 
             username="integrationuser",  # for handler test
             name="Integration User",
             email="integration@example.com",
-            email_verified=b"1",
-            email_alerts=b"0",
-            status=b"1",
+            email_verified=True,
+            email_alerts=False,
+            status=True,
             request_id="req-001",
             request_time_epoch="1700000000",
-            is_terms_accepted=b"1",
+            is_terms_accepted=True,
         ),
     ]
 
@@ -121,3 +144,63 @@ def create_test_users(user_repo: UserRepository) -> Generator[List[User], None, 
     for user in users:
         user_repo.session.delete(user)
     user_repo.session.commit()
+
+
+@pytest.fixture
+def create_test_user_preferences(
+    user_repo: UserRepository, create_test_users: List[User]
+) -> Generator[List[UserPreferenceDomain], None, None]:
+    """Create test user preferences for a given user."""
+    user = create_test_users[2]  # integrationuser
+
+    preferences_db = [
+        UserPreference(
+            user_row_id=user.row_id,
+            preference_type="FEATURE_RELEASE",
+            communication_type="EMAIL",
+            source="MARKETPLACE_DAPP",
+            opt_out_reason=None,
+            status=True,
+        ),
+        UserPreference(
+            user_row_id=user.row_id,
+            preference_type="FEATURE_RELEASE",
+            communication_type="SMS",
+            source="MARKETPLACE_DAPP",
+            opt_out_reason=None,
+            status=True,
+        ),
+    ]
+
+    user_repo.add_all_items(preferences_db)
+    user_repo.session.commit()
+
+    yield UserFactory.user_preferences_from_db_model(preferences_db)
+
+    for pref in preferences_db:
+        user_repo.session.delete(pref)
+    user_repo.session.commit()
+
+
+@pytest.fixture
+def post_confirmation_cognito_event() -> dict:
+    return {
+        "version": "1.0",
+        "triggerSource": "PostConfirmation_ConfirmSignUp",
+        "region": "us-east-1",
+        "userPoolId": "us-east-1_example",
+        "userName": "new_test_user",
+        "callerContext": {
+            "awsSdkVersion": "aws-sdk-unknown-unknown",
+            "clientId": "exampleClientId",
+        },
+        "request": {
+            "userAttributes": {
+                "sub": "12345678-1234-1234-1234-123456789012",
+                "email_verified": "true",
+                "email": "user@example.com",
+                "cognito:username": "new_test_user",
+            }
+        },
+        "response": {},
+    }

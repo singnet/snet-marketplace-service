@@ -7,12 +7,12 @@ class BaseUser:
     username: str
     name: str
     email: str
-    email_verified: bytes
-    email_alerts: bytes
-    status: bytes
+    email_verified: bool
+    email_alerts: bool
+    status: bool
     request_id: str
     request_time_epoch: str
-    is_terms_accepted: bytes
+    is_terms_accepted: bool
 
 
 @dataclass(frozen=True)

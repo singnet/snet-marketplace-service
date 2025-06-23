@@ -65,12 +65,7 @@ class DeleteUserRequest(BaseModel):
 class CognitoUserAttributes(BaseModel):
     sub: str
     email: str
-    nickname: str
-    email_verified: bytes = Field(..., alias="emailVerified")
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
+    email_verified: bool
 
 
 class CognitoRequest(BaseModel):
@@ -84,7 +79,6 @@ class CognitoRequest(BaseModel):
 class CognitoCallerContext(BaseModel):
     aws_sdk_version: str = Field(..., alias="awsSdkVersion")
     client_id: str = Field(..., alias="clientId")
-    origin: str
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -96,7 +90,7 @@ class CognitoUserPoolEvent(BaseModel):
     trigger_source: str = Field(..., alias="triggerSource")
     region: str
     user_pool_id: str = Field(..., alias="userPoolId")
-    username: str = Field(..., alias="userName")
+    name: str = Field(..., alias="userName")
     caller_context: CognitoCallerContext = Field(..., alias="callerContext")
     request: CognitoRequest
 
@@ -160,7 +154,7 @@ class CreateUserServiceReviewRequest(BaseModel):
     org_id: str = Field(..., alias="orgId")
     service_id: str = Field(..., alias="serviceId")
     user_rating: float = Field(..., alias="userRating")
-    comment: str
+    comment: str | None
 
     model_config = ConfigDict(
         populate_by_name=True,

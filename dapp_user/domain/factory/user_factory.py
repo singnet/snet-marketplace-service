@@ -42,7 +42,7 @@ class UserFactory:
             preference_type=PreferenceType(user_preference_db.preference_type),
             communication_type=CommunicationType(user_preference_db.communication_type),
             source=SourceDApp(user_preference_db.source),
-            status=Status(user_preference_db.status),
+            status=Status.ENABLED if user_preference_db.status else Status.DISABLED,
             opt_out_reason=user_preference_db.opt_out_reason,
         )
 
@@ -75,7 +75,7 @@ class UserFactory:
     @staticmethod
     def user_vote_feedback_from_request(
         create_review_request: CreateUserServiceReviewRequest,
-    ) -> Tuple[UserServiceVote, UserServiceFeedback]:
+    ) -> Tuple[UserServiceVote, UserServiceFeedback | None]:
         user_vote = UserServiceVote(
             user_row_id=create_review_request.user_row_id,
             org_id=create_review_request.org_id,
@@ -83,12 +83,14 @@ class UserFactory:
             rating=create_review_request.user_rating,
         )
 
-        user_feedback = UserServiceFeedback(
-            user_row_id=create_review_request.user_row_id,
-            org_id=create_review_request.org_id,
-            service_id=create_review_request.service_id,
-            comment=create_review_request.comment,
-        )
+        user_feedback = None
+        if create_review_request.comment:
+            user_feedback = UserServiceFeedback(
+                user_row_id=create_review_request.user_row_id,
+                org_id=create_review_request.org_id,
+                service_id=create_review_request.service_id,
+                comment=create_review_request.comment,
+            )
 
         return user_vote, user_feedback
 
@@ -97,14 +99,14 @@ class UserFactory:
         return NewUser(
             account_id=event.request.user_attributes.sub,
             username=event.request.user_attributes.email,
-            name=event.request.user_attributes.nickname,
+            name=event.name,
             email=event.request.user_attributes.email,
             email_verified=event.request.user_attributes.email_verified,
-            email_alerts=b"0",
-            status=b"1",
+            email_alerts=False,
+            status=True,
             request_id="",
             request_time_epoch="",
-            is_terms_accepted=b"1",
+            is_terms_accepted=False,
         )
 
     @staticmethod

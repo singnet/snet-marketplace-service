@@ -36,21 +36,21 @@ class UserService:
         try:
             user = self.user_repo.get_user(username=username)
         except UserNotFoundException:
-            raise UserNotFoundHTTPException(f"User {username} not found")
+            raise UserNotFoundHTTPException(username)
 
         response = []
 
         for user_preference in user_preference_list:
-            if user_preference.status is False:
+            if user_preference.status == Status.DISABLED:
                 self.user_repo.disable_preference(
                     user_preference=user_preference, user_row_id=user.row_id
                 )
-                response.append(Status.DISABLED.value)
+                response.append(user_preference.status.value)
             else:
                 self.user_repo.enable_preference(
                     user_preference=user_preference, user_row_id=user.row_id
                 )
-                response.append(Status.ENABLED.value)
+                response.append(user_preference.status.value)
 
         return response
 
