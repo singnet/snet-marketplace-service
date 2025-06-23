@@ -16,16 +16,14 @@ class TestUpdateTransaction(unittest.TestCase):
         repo.execute("INSERT INTO transaction_history (username, order_id, order_type, raw_payment_data, status, row_created, row_updated) VALUES('dummy3@dummy.io', 'eb736cfa-dae4-11e9-9769-26327914c219', 'CREATE_WALLET_AND_CHANNEL', '{}', 'PAYMENT_INITIATION_FAILED', NOW()- INTERVAL - -20 MINUTE, NOW());")
         repo.execute("INSERT INTO transaction_history (username, order_id, order_type, raw_payment_data, status, row_created, row_updated) VALUES('dummy4@dummy.io', 'Fb736cfa-dae4-11e9-9769-26327914c219', 'CREATE_WALLET_AND_CHANNEL', '{}', 'PAYMENT_INITIATION_FAILED', NOW()- INTERVAL - -20 MINUTE, NOW());")
 
-    @patch("common.utils.Utils.report_slack")
-    def test_update_transaction_status(self, mock_report_slack):
+    def test_update_transaction_status(self):
         response = request_handler(event={}, context=None)
         assert (response == "success")
         repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
         query_response = repo.execute("SELECT * FROM transaction_history WHERE status = %s", ["ORDER_CANCELED"])
         assert (len(query_response) > 1)
 
-    @patch("common.utils.Utils.report_slack")
-    def test_cancel_given_order(self, mock_report_slack):
+    def test_cancel_given_order(self):
         event = {"path": "/orchestrator/order/Fb736cfa-dae4-11e9-9769-26327914c219/cancel",
                  "pathParameters": {"order_id": "Fb736cfa-dae4-11e9-9769-26327914c219"}, "httpMethod": "GET"}
         response = cancel_given_order(event=event, context=None)

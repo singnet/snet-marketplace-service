@@ -2,8 +2,7 @@ import json
 
 from common.logger import get_logger
 from common.utils import Utils, generate_lambda_response
-from common.utils import handle_exception_with_slack_notification
-from contract_api.config import NETWORK_ID, SLACK_HOOK
+from common.exception_handler import exception_handler
 from contract_api.application.service.registry_service import RegistryService
 
 
@@ -11,7 +10,7 @@ util = Utils()
 logger = get_logger(__name__)
 
 
-@handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
+@exception_handler(logger=logger)
 def save_offchain_attribute(event, context):
     logger.info(f"Got save offchain attribute event:: {event}")
     org_id = event["pathParameters"]["orgId"]

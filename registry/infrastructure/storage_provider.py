@@ -8,7 +8,7 @@ from zipfile import ZipFile
 
 from common.exceptions import BadRequestException
 from registry.config import IPFS_URL
-from registry.exceptions import LighthouseInternalException, TooLargeFileException
+from common.exceptions import LighthouseInternalException, TooLargeFileException
 from common.logger import get_logger
 
 import ipfshttpclient

@@ -1,24 +1,26 @@
-from common.exceptions import CustomException
+from common.exceptions import BadRequestException
 
 
-class BadRequestException(CustomException):
-    error_message = "BAD_REQUEST"
-
+class InvalidContentType(BadRequestException):
     def __init__(self):
-        super().__init__({})
+        super().__init__(message="Invalid content type")
 
-
-class InvalidContentType(CustomException):
-    error_message = "INVALID_CONTENT_TYPE"
-
+class ProtoNotFound(BadRequestException):
     def __init__(self):
-        super().__init__({})
+        super().__init__(message="Proto file not nound")
 
-class ProtoNotFound(CustomException):
-    error_message = "PROTO_NOT_FOUND"
-
+class InvalidUploadType(BadRequestException):
     def __init__(self):
-        super().__init__({})
+        super().__init__(message = "Invalid upload type")
+
+class EmptyFileException(BadRequestException):
+    def __init__(self):
+        super().__init__(message = "Empty file")
+
+class MissingUploadTypeDetailsParams(BadRequestException):
+    def __init__(self):
+        super().__init__(message = "Missing required parameters: org_uuid and/or service_uuid")
 
 
-EXCEPTIONS = (BadRequestException, InvalidContentType)
+EXCEPTIONS = (BadRequestException, InvalidContentType, ProtoNotFound,
+              InvalidUploadType, EmptyFileException, MissingUploadTypeDetailsParams)

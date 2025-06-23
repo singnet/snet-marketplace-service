@@ -1,17 +1,14 @@
-import json
 from unittest import TestCase
 from dapp_user.application.handlers.user_handlers import register_user_post_aws_cognito_signup
 from common.repository import Repository
 from dapp_user.config import NETWORK_ID, NETWORKS
-from unittest.mock import patch
+
 
 class DappUserService(TestCase):
     def setUp(self):
         self._repo = Repository(net_id=NETWORK_ID, NETWORKS=NETWORKS)
 
-    @patch("common.utils.Utils.report_slack")
-    def test_register_user_on_post_cognito_signup(self, report_slack):
-        report_slack.return_value = None
+    def test_register_user_on_post_cognito_signup(self):
         event = {
             'version': '1',
             'region': 'us-east-2',

@@ -6,11 +6,10 @@ from common.utils import generate_lambda_response, validate_dict
 from registry.application.access_control.authorization import secured
 from registry.application.services.service_publisher_service import ServicePublisherService
 from registry.application.services.service_transaction_status import ServiceTransactionStatus
-from registry.config import NETWORK_ID, SLACK_HOOK
+from registry.config import NETWORK_ID
 from registry.constants import Action
-from registry.exceptions import EXCEPTIONS
 from registry.application.services.update_service_assets import UpdateServiceAssets
-from registry.application.handlers.common import RequestContext
+from common.request_context import RequestContext
 
 from registry.application.schemas.service import (
     CreateServiceRequest,
@@ -25,19 +24,15 @@ from registry.application.schemas.service import (
     SaveServiceRequest,
     PublishServiceRequest,
 )
-from registry.application.schemas.common import PayloadValidationError
 
 logger = get_logger(__name__)
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def verify_service_id(event, context):
-    try:
-        request = VerifyServiceIdRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
+    request = VerifyServiceIdRequest.validate_event(event)
 
     response = ServicePublisherService().get_service_id_availability_status(request)
 
@@ -47,16 +42,13 @@ def verify_service_id(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def save_transaction_hash_for_published_service(event, context):
     req_context = RequestContext(event)
 
-    try:
-        request = SaveTransactionHashRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
+    request = SaveTransactionHashRequest.validate_event(event)
 
     response = ServicePublisherService().save_transaction_hash_for_published_service(
         req_context.username, request
@@ -68,16 +60,13 @@ def save_transaction_hash_for_published_service(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def save_service(event, context):
     req_ctx = RequestContext(event)
 
-    try:
-        request = SaveServiceRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
+    request = SaveServiceRequest.validate_event(event)
         
     response = ServicePublisherService().save_service(req_ctx.username, request)
 
@@ -87,16 +76,13 @@ def save_service(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(logger=logger)
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def save_service_attributes(event, context):
     req_ctx = RequestContext(event)
 
-    try:
-        request = SaveServiceGroupsRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
+    request = SaveServiceGroupsRequest.validate_event(event)
 
     response = ServicePublisherService().save_service_groups(req_ctx.username, request)
 
@@ -106,16 +92,13 @@ def save_service_attributes(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def create_service(event, context):
     req_ctx = RequestContext(event)
 
-    try:
-        request = CreateServiceRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
+    request = CreateServiceRequest.validate_event(event)
 
     response = ServicePublisherService().create_service(req_ctx.username, request)
 
@@ -125,14 +108,11 @@ def create_service(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def get_services_for_organization(event, context):
-    try:
-        request = GetServicesForOrganizationRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
+    request = GetServicesForOrganizationRequest.validate_event(event)
 
     response = ServicePublisherService().get_services_for_organization(request)
     return generate_lambda_response(
@@ -141,15 +121,12 @@ def get_services_for_organization(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def get_service_for_service_uuid(event, context):
     
-    try:
-        request = GetServiceRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
+    request = GetServiceRequest.validate_event(event)
     
     response = ServicePublisherService().get_service_for_given_service_uuid(
         request.org_uuid, request.service_uuid
@@ -161,14 +138,11 @@ def get_service_for_service_uuid(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(NETWORK_ID=NETWORK_ID, logger=logger)
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def get_daemon_config_for_current_network(event, context):
-    try:
-        request = GetDaemonConfigRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
+    request = GetDaemonConfigRequest.validate_event(event)
 
     response = ServicePublisherService().daemon_config(request)   
 
@@ -178,7 +152,7 @@ def get_daemon_config_for_current_network(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 def get_service_details_using_org_id_service_id(event, context):
     logger.info(f"event: {event}")
     query_parameters = event["queryStringParameters"]
@@ -193,14 +167,11 @@ def get_service_details_using_org_id_service_id(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 def service_deployment_status_notification_handler(event, context):
     req_ctx = RequestContext(event)
 
-    try:
-        request = ServiceDeploymentStatusRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
+    request = ServiceDeploymentStatusRequest.validate_event(event)
     
     ServicePublisherService().service_build_status_notifier(req_ctx.username, request)
 
@@ -210,19 +181,16 @@ def service_deployment_status_notification_handler(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 def update_transaction(event, context):
     logger.info(f"Update transaction event :: {event}")
     ServiceTransactionStatus().update_transaction_status()
     return generate_lambda_response(StatusCode.OK, "OK")
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 def get_code_build_status_for_service(event, context):
-    try:
-        request = GetCodeBuildStatusRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
+    request = GetCodeBuildStatusRequest.validate_event(event)
 
     response = ServicePublisherService().get_service_demo_component_build_status(request)
     return generate_lambda_response(
@@ -231,7 +199,7 @@ def get_code_build_status_for_service(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+@exception_handler(logger=logger)
 def update_service_assets(event, context):
     logger.info(f"Update service assets event :: {event}")
     response = UpdateServiceAssets().validate_and_process_service_assets(payload=event)
@@ -240,7 +208,8 @@ def update_service_assets(event, context):
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+
+@exception_handler(logger=logger)
 def update_demo_component_build_status(event, context):
     org_uuid = event['org_uuid']
     service_uuid = event['service_uuid']
@@ -259,16 +228,14 @@ def update_demo_component_build_status(event, context):
         {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger, EXCEPTIONS=EXCEPTIONS)
+
+@exception_handler(logger=logger)
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def publish_service(event, context):
     req_ctx = RequestContext(event)
     
-    try:
-        request = PublishServiceRequest.validate_event(event)
-    except PayloadValidationError:
-        raise BadRequestException()
+    request = PublishServiceRequest.validate_event(event)
 
     response = ServicePublisherService(request.lighthouse_token).publish_service(
         req_ctx.username, request

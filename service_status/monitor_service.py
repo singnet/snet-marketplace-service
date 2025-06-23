@@ -71,10 +71,6 @@ class MonitorService:
             return False
         return True
 
-    @staticmethod
-    def _send_slack_notification(slack_message):
-        util.report_slack(slack_msg=slack_message, SLACK_HOOK=SLACK_HOOK)
-
     def _get_service_provider_email(self, org_id, service_id=None):
         emails = []
         query_response = self.repo.execute("SELECT contributors FROM service_metadata WHERE org_id = %s AND "
@@ -142,9 +138,6 @@ class MonitorServiceCertificate(MonitorService):
             certificate_expiration_notification_subject=certificate_expiration_notification_subject,
             certificate_expiration_notification_message=certificate_expiration_notification_message,
             recipients=recipients)
-        slack_message = self._get_certificate_expiration_slack_notification_message(
-            org_id=org_id, service_id=service_id, endpoint=endpoint, days_left_for_expiration=days_left_for_expiration)
-        self._send_slack_notification(slack_message=slack_message)
 
     def _get_certification_expiration_date_for_given_service(self, endpoint):
         try:

@@ -1,11 +1,10 @@
 import json
 
 from common.constant import StatusCode
-from common.exception_handler import exception_handler
 from common.logger import get_logger
 from common.repository import Repository
 from common.utils import Utils, generate_lambda_response
-from common.utils import handle_exception_with_slack_notification
+from common.exception_handler import exception_handler
 from contract_api.application.service.update_assets_service import UpdateServiceAssets
 from contract_api.config import NETWORKS, NETWORK_ID, SLACK_HOOK
 from contract_api.registry import Registry
@@ -16,7 +15,7 @@ obj_util = Utils()
 logger = get_logger(__name__)
 
 
-@handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
+@exception_handler(logger=logger)
 def get_service_get(event, context):
     logger.info(f"get_service_get:: {event}")
     obj_reg = Registry(obj_repo=db)
@@ -27,7 +26,7 @@ def get_service_get(event, context):
         200, {"status": "success", "data": response_data}, cors_enabled=True)
 
 
-@handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
+@exception_handler(logger=logger)
 def get_service_post(event, context):
     logger.info(f"Got service post:: {event}")
     obj_reg = Registry(obj_repo=db)
@@ -37,7 +36,7 @@ def get_service_post(event, context):
         200, {"status": "success", "data": response_data}, cors_enabled=True)
 
 
-@handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
+@exception_handler(logger=logger)
 def get_service_for_given_org(event, context):
     logger.info(f"Got service for given org :: {event}")
     obj_reg = Registry(obj_repo=db)
@@ -50,7 +49,7 @@ def get_service_for_given_org(event, context):
         200, {"status": "success", "data": response_data}, cors_enabled=True)
 
 
-@handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
+@exception_handler(logger=logger)
 def get_group_for_service(event, context):
     logger.info(f"Got group fpr service event :: {event}")
     obj_reg = Registry(obj_repo=db)
@@ -62,7 +61,7 @@ def get_group_for_service(event, context):
         200, {"status": "success", "data": response_data}, cors_enabled=True)
 
 
-@handle_exception_with_slack_notification(logger=logger, NETWORK_ID=NETWORK_ID, SLACK_HOOK=SLACK_HOOK)
+@exception_handler(logger=logger)
 def post_rating_for_given_service(event, context):
     logger.info(f"Got post rating for given service event :: {event}")
     obj_reg = Registry(obj_repo=db)
@@ -86,7 +85,7 @@ def service_curation(event, context):
         StatusCode.CREATED, {"status": "success", "data": response}, cors_enabled=True)
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(logger=logger)
 def service_deployment_status_notification_handler(event, context):
     logger.info(f"Service Build status event {event}")
     org_id = event['org_id']
@@ -99,7 +98,7 @@ def service_deployment_status_notification_handler(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(logger=logger)
 def trigger_demo_component_build(event, context):
     logger.info(f"trigger_demo_component_build event :: {event}")
     response = UpdateServiceAssets().trigger_demo_component_build(payload=event)

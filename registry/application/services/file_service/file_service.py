@@ -50,12 +50,7 @@ class FileService:
                 raise FileNotFoundException()
             raise Exception("Failed to delete files")
 
-        self.send_slack_alert(unsuccessful_files)
         return response
-
-    def send_slack_alert(self, unsuccessful_files):
-        slack_msg = f"Failed to delete files\n```{unsuccessful_files}```"
-        return Utils().report_slack(slack_msg=slack_msg, SLACK_HOOK=SLACK_HOOK)
 
     def get_s3_bucket_and_prefix(self, file_details):
         file_type = file_details.get("type", None)

@@ -1,7 +1,8 @@
 from common.constant import StatusCode
 from common.logger import get_logger
-from common.utils import Utils, generate_lambda_response, handle_exception_with_slack_notification
-from contract_api.config import NETWORKS, NETWORK_ID, SLACK_HOOK
+from common.utils import Utils, generate_lambda_response
+from common.exception_handler import exception_handler
+from contract_api.config import NETWORKS, NETWORK_ID
 from contract_api.consumers.consumer_factory import (
     get_payload_from_queue_event,
     get_registry_event_consumer
@@ -37,7 +38,7 @@ def registry_event_consumer_handler(event, context):
     return {}
 
 
-@handle_exception_with_slack_notification(logger=logger, SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID)
+@exception_handler(logger=logger)
 def service_create_deployment_handler(event, context):
     service_deployment_handler = ServiceCreatedDeploymentEventHandler(NETWORKS[NETWORK_ID]["ws_provider"])
     service_deployment_handler.on_event(event)
