@@ -1,6 +1,7 @@
 import json
 
 import boto3
+from dapp_user.domain.interfaces.wallet_api_client_interface import AbstractWalletsAPIClient
 from dapp_user.settings import settings
 
 
@@ -13,7 +14,7 @@ class DeleteUserWalletError(WalletsAPIClientError):
         super().__init__(message)
 
 
-class WalletsAPIClient:
+class WalletsAPIClient(AbstractWalletsAPIClient):
     def __init__(self):
         self.lambda_client = boto3.client("lambda", region_name=settings.aws.region_name)
 

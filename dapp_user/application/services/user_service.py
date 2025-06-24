@@ -11,22 +11,28 @@ from dapp_user.application.schemas import (
 )
 from dapp_user.constant import Status
 from dapp_user.domain.factory.user_factory import UserFactory
+from dapp_user.domain.interfaces.contract_api_client_interface import AbstractContractAPIClient
+from dapp_user.domain.interfaces.wallet_api_client_interface import AbstractWalletsAPIClient
 from dapp_user.domain.models.user_preference import user_preferences_to_dict
 from dapp_user.exceptions import UserNotFoundHTTPException
 from dapp_user.infrastructure.contract_api_client import ContractAPIClient, ContractAPIClientError
 from dapp_user.infrastructure.repositories.exceptions import UserNotFoundException
 from dapp_user.infrastructure.repositories.user_repository import UserRepository
-from dapp_user.infrastructure.wallets_client import WalletsAPIClient, WalletsAPIClientError
+from dapp_user.infrastructure.wallets_api_client import WalletsAPIClient, WalletsAPIClientError
 
 logger = get_logger(__name__)
 
 
 class UserService:
-    def __init__(self):
+    def __init__(
+        self,
+        wallets_api_client: AbstractWalletsAPIClient | None = None,
+        contract_api_client: AbstractContractAPIClient | None = None,
+    ):
         self.user_factory = UserFactory()
         self.user_repo = UserRepository()
-        self.wallets_api_client = WalletsAPIClient()
-        self.contract_api_client = ContractAPIClient()
+        self.wallets_api_client = wallets_api_client or WalletsAPIClient()
+        self.contract_api_client = contract_api_client or ContractAPIClient()
 
     def add_or_update_user_preference(
         self, username: str, request: AddOrUpdateUserPreferencesRequest
@@ -67,7 +73,10 @@ class UserService:
 
     def delete_user(self, username):
         #: TODO think about rollback or distributed transaction if unlink wallet fails (saga pattern)
-        self.user_repo.delete_user(username)
+        try:
+            self.user_repo.delete_user(username)
+        except UserNotFoundException:
+            raise UserNotFoundHTTPException(username)
 
         try:
             self.wallets_api_client.delete_user_wallet(username=username)
@@ -99,7 +108,7 @@ class UserService:
 
         return user_service_feedback.to_dict() if user_service_feedback else {}
 
-    def create_user_review(self, request: CreateUserServiceReviewRequest):
+    def create_user_review(self, request: CreateUserServiceReviewRequest) -> None:
         user_vote, user_feedback = self.user_factory.user_vote_feedback_from_request(
             create_review_request=request
         )

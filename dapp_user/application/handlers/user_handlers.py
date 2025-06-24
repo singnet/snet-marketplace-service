@@ -18,11 +18,14 @@ from dapp_user.exceptions import UnauthorizedException
 logger = get_logger(__name__)
 
 
+__user_service = UserService()
+
+
 @exception_handler(logger=logger)
 def get_user_handler(event, context):
     req_ctx = RequestContext(event)
 
-    response = UserService().get_user(username=req_ctx.username)
+    response = __user_service.get_user(username=req_ctx.username)
 
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response}, cors_enabled=True
@@ -35,7 +38,7 @@ def add_or_update_user_preference_handler(event, context):
 
     request = AddOrUpdateUserPreferencesRequest.validate_event(event)
 
-    response = UserService().add_or_update_user_preference(
+    response = __user_service.add_or_update_user_preference(
         username=req_ctx.username,
         request=request,
     )
@@ -50,7 +53,7 @@ def update_user_alerts_handler(event, context):
 
     request = UpdateUserAlertRequest.validate_event(event)
 
-    response = UserService().update_user_alerts(username=req_ctx.username, request=request)
+    response = __user_service.update_user_alerts(username=req_ctx.username, request=request)
 
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response}, cors_enabled=True
@@ -61,7 +64,7 @@ def update_user_alerts_handler(event, context):
 def get_user_preferences_handler(event, context):
     req_ctx = RequestContext(event)
 
-    response = UserService().get_user_preferences(username=req_ctx.username)
+    response = __user_service.get_user_preferences(username=req_ctx.username)
 
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response}, cors_enabled=True
@@ -77,7 +80,7 @@ def delete_user_handler(event, context):
     if request.username and req_ctx.username != request.username:
         raise UnauthorizedException()
 
-    response = UserService().delete_user(request.username)
+    response = __user_service.delete_user(req_ctx.username)
 
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response}, cors_enabled=True
@@ -90,7 +93,7 @@ def get_user_feedback_handler(event, context):
 
     request = GetUserFeedbackRequest.validate_event(event)
 
-    response = UserService().get_user_feedback(username=req_ctx.username, request=request)
+    response = __user_service.get_user_feedback(username=req_ctx.username, request=request)
 
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response}, cors_enabled=True
@@ -101,7 +104,7 @@ def get_user_feedback_handler(event, context):
 def create_user_service_review_handler(event, context):
     request = CreateUserServiceReviewRequest.validate_event(event)
 
-    response = UserService().create_user_review(request=request)
+    response = __user_service.create_user_review(request=request)
 
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response}, cors_enabled=True
@@ -111,5 +114,5 @@ def create_user_service_review_handler(event, context):
 def register_user_post_aws_cognito_signup_handler(event, context):
     cognito_event = CognitoUserPoolEvent.model_validate(event)
     if cognito_event.trigger_source == CognitoTriggerSource.POST_CONFIRMATION:
-        UserService().register_user(cognito_event)
+        __user_service.register_user(cognito_event)
     return event

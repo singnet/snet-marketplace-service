@@ -1,6 +1,7 @@
 import json
 
 import boto3
+from dapp_user.domain.interfaces.contract_api_client_interface import AbstractContractAPIClient
 from dapp_user.settings import settings
 
 
@@ -9,7 +10,7 @@ class ContractAPIClientError(Exception):
         super().__init__(f"Contract API Client response error: {message}")
 
 
-class ContractAPIClient:
+class ContractAPIClient(AbstractContractAPIClient):
     def __init__(self):
         self.lambda_client = boto3.client("lambda", region_name=settings.aws.region_name)
 
