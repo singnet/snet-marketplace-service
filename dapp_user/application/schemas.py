@@ -44,13 +44,13 @@ class AddOrUpdateUserPreferencesRequest(BaseModel):
 
 
 class DeleteUserRequest(BaseModel):
-    username: str | None
+    username: str | None = None
 
     @classmethod
     def validate_event(cls, event: dict) -> "DeleteUserRequest":
         try:
             data = event.get(RequestPayloadType.QUERY_STRING)
-            return cls.model_validate(data)
+            return cls.model_validate(data if data else {})
         except ValidationError as e:
             missing_params = [x["loc"][0] for x in e.errors()]
             raise BadRequestException(
@@ -150,11 +150,11 @@ class GetUserFeedbackRequest(BaseModel):
 
 
 class CreateUserServiceReviewRequest(BaseModel):
-    user_row_id: int = Field(..., alias="userRowId")
+    user_row_id: int = Field(..., alias="userId")
     org_id: str = Field(..., alias="orgId")
     service_id: str = Field(..., alias="serviceId")
     user_rating: float = Field(..., alias="userRating")
-    comment: str | None
+    comment: str | None = None
 
     model_config = ConfigDict(
         populate_by_name=True,
