@@ -37,7 +37,6 @@ ALEMBIC_INI_PATH = os.path.join(ROOT_DIR, "alembic.ini")
 @pytest.fixture(scope="session", autouse=True)
 def apply_migrations():
     """Apply Alembic migrations at the start of the test session."""
-    print("FILE::", ALEMBIC_INI_PATH)
     alembic_cfg = Config(ALEMBIC_INI_PATH)
     alembic_cfg.set_main_option("sqlalchemy.url", TEST_DB_URL)
     command.upgrade(alembic_cfg, "head")
@@ -85,7 +84,21 @@ def lambda_event_authorized() -> dict:
             "authorizer": {
                 "claims": {
                     "cognito:username": "integrationuser",
-                    "email": "integrationuser",
+                    "email": "integration@example.com",
+                }
+            }
+        }
+    }
+
+
+@pytest.fixture
+def lambda_event_authorized_not_found() -> dict:
+    return {
+        "requestContext": {
+            "authorizer": {
+                "claims": {
+                    "cognito:username": "integrationuser_not_found",
+                    "email": "integrationuser_not_found@example.com",
                 }
             }
         }
@@ -99,7 +112,7 @@ def create_test_users(user_repo: UserRepository) -> Generator[List[User], None, 
         User(
             row_id=1,
             account_id="acc-test-001",
-            username="user1",
+            username="user1@example.com",
             name="Test User One",
             email="user1@example.com",
             email_verified=True,
@@ -112,7 +125,7 @@ def create_test_users(user_repo: UserRepository) -> Generator[List[User], None, 
         User(
             row_id=2,
             account_id="acc-test-002",
-            username="user2",
+            username="user2@example.com",
             name="Test User Two",
             email="user2@example.com",
             email_verified=True,
@@ -125,7 +138,7 @@ def create_test_users(user_repo: UserRepository) -> Generator[List[User], None, 
         User(
             row_id=3,
             account_id="acc-test-003",
-            username="integrationuser",  # for handler test
+            username="integration@example.com",  # for handler test
             name="Integration User",
             email="integration@example.com",
             email_verified=True,
@@ -144,6 +157,27 @@ def create_test_users(user_repo: UserRepository) -> Generator[List[User], None, 
     for user in users:
         user_repo.session.delete(user)
     user_repo.session.commit()
+
+
+@pytest.fixture
+def create_user_for_deleting(user_repo: UserRepository) -> Generator[User, None, None]:
+    user = User(
+        row_id=3,
+        account_id="acc-test-003",
+        username="integration@example.com",  # for handler test
+        name="Integration User",
+        email="integration@example.com",
+        email_verified=True,
+        email_alerts=False,
+        status=True,
+        request_id="req-001",
+        request_time_epoch="1700000000",
+        is_terms_accepted=True,
+    )
+
+    user_repo.add_item(user)
+
+    yield user
 
 
 @pytest.fixture
