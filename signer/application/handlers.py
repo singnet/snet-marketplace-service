@@ -1,4 +1,5 @@
 from common.constant import StatusCode
+from common.exceptions import BadRequestException
 from common.logger import get_logger
 from common.utils import generate_lambda_response
 from common.exception_handler import exception_handler
@@ -30,10 +31,14 @@ def get_free_call_signature_handler(event, context):
 
 @exception_handler(logger=logger)
 def get_state_service_signature_handler(event, context):
-    req_ctx = RequestContext(event)
+    try:
+        req_ctx = RequestContext(event)
+    except BadRequestException:
+        req_ctx = None
     request = GetSignatureForStateServiceRequest.validate_event(event)
     response = SignerService().get_signature_for_state_service(
-        username=req_ctx.username, request=request
+        username=req_ctx.username if req_ctx else "CONTRACT_API_SERVICE",
+        request=request
     )
 
     return generate_lambda_response(

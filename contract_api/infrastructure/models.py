@@ -39,7 +39,7 @@ class MpeChannel(Base):
     sender: Mapped[str] = mapped_column("sender", VARCHAR(128), nullable=False)
     signer: Mapped[str] = mapped_column("signer", VARCHAR(256), nullable=False)
     recipient: Mapped[str] = mapped_column("recipient", VARCHAR(128), nullable=False)
-    groupId: Mapped[str] = mapped_column("groupId", VARCHAR(128), nullable=False)
+    group_id: Mapped[str] = mapped_column("groupId", VARCHAR(128), nullable=False)
     balance_in_cogs: Mapped[int] = mapped_column(
         "balance_in_cogs", DECIMAL(38, 0), default=null
     )
@@ -62,7 +62,7 @@ class MpeChannel(Base):
     )
 
     __table_args__ = (
-        UniqueConstraint(channel_id, sender, signer, recipient, groupId, name="uq_channel"),
+        UniqueConstraint(channel_id, sender, signer, recipient, group_id, name="uq_channel"),
     )
 
 
@@ -105,9 +105,9 @@ class Organization(Base):
     org_email: Mapped[str] = mapped_column("org_email", VARCHAR(128), default=null)
     org_assets_url: Mapped[dict] = mapped_column("org_assets_url", JSON, default={})
     is_curated: Mapped[bool]  = mapped_column("is_curated", BOOLEAN, default=null)
-    description = mapped_column("description", JSON, default={})
-    assets_hash = mapped_column("assets_hash", JSON, default={})
-    contacts = mapped_column("contacts", JSON, default={})
+    description: Mapped[dict] = mapped_column("description", JSON, default={})
+    assets_hash: Mapped[dict] = mapped_column("assets_hash", JSON, default={})
+    contacts: Mapped[dict] = mapped_column("contacts", JSON, default={})
 
     created_on: Mapped[datetime] = mapped_column(
         "created_on", TIMESTAMP(timezone=False), nullable=True, server_default=func.now()

@@ -1,107 +1,87 @@
+import json
 
+import boto3
+
+from contract_api.application.schemas.channel_schemas import GetGroupChannelsRequest, GetChannelsRequest, \
+    UpdateConsumedBalanceRequest
+from contract_api.config import SIGNER_SERVICE_ARN, REGION_NAME
+from contract_api.domain.models.channel import ChannelDomain
+from contract_api.infrastructure.daemon_client import DaemonClient
+from contract_api.infrastructure.repositories.new_channel_repository import ChannelRepository
+from contract_api.infrastructure.repositories.service_repository import ServiceRepository
 
 
 class ChannelService:
-    def __init__(self, obj_repo):
-        self.repo = obj_repo
-        self.obj_util = Utils()
-        self.blockchain_util = BlockChainUtil(provider_type="WS_PROVIDER", provider=NETWORKS[NETWORK_ID]["ws_provider"])
+    def __init__(self):
+        self._channel_repo = ChannelRepository()
+        self._daemon_client = DaemonClient()
+        self._service_repo = ServiceRepository()
 
-    # is used in handler
-    def get_channels(self, user_address):
-        last_block_no = self.blockchain_util.get_current_block_no()
-        logger.info(f"got block number {last_block_no}")
-        channel_details_query = "SELECT mc.channel_id, mc.sender, mc.recipient, mc.groupId as group_id, " \
-                                "mc.balance_in_cogs, mc.pending, mc.nonce, mc.consumed_balance, mc.expiration, " \
-                                "mc.signer, og.org_id, " \
-                                "org.organization_name, IF(mc.expiration > %s, 'active','inactive') AS status, " \
-                                "og.group_name, org.org_assets_url " \
-                                "FROM mpe_channel AS mc JOIN org_group AS og ON mc.groupId = og.group_id " \
-                                "JOIN organization AS org ON og.org_id = org.org_id WHERE mc.sender = %s "
-        params = [last_block_no, user_address]
-        channel_details = self.repo.execute(
-            channel_details_query,
-            params
-        )
-        self.obj_util.clean(channel_details)
+    def get_channels(self, request: GetChannelsRequest):
+        wallet_address = request.wallet_address
+        channels = self._channel_repo.get_channels(wallet_address)
+        channel_data = self._convert_channels_data_to_response(channels)
 
-        channel_details_response = {"wallet_address": user_address,
-                                    "organizations": self._segregate_org_channel_details(channel_details)}
+        return channel_data
 
-        return channel_details_response
+    def get_group_channels(self, request: GetGroupChannelsRequest):
+        user_address = request.user_address
+        org_id = request.org_id
+        group_id = request.group_id
 
-    # is used in handler
-    def update_consumed_balance(self, channel_id, signed_amount=None, org_id=None, service_id=None):
-        mpe_repo = MPERepository(self.repo)
-        channel = mpe_repo.get_mpe_channels(channel_id)
-        if len(channel) != 0:
-            channel = channel[0]
-        else:
-            raise Exception(f"Channel with id {channel_id} not found!")
+        channels = self._channel_repo.get_group_channels(user_address, org_id, group_id)
+        channel_data = {
+            "user_address": user_address,
+            "org_id": org_id,
+            "group_id": group_id,
+            "channels": [channel.to_response() for channel in channels]
+        }
+
+        return channel_data
+
+    def update_consumed_balance(self, request: UpdateConsumedBalanceRequest):
+        channel_id = request.channel_id
+        org_id = request.org_id
+        service_id = request.service_id
+        signed_amount = request.signed_amount
+
+        channel = self._channel_repo.get_channel(channel_id)
 
         if signed_amount is None:
             signed_amount = self._get_channel_state_from_daemon(channel, org_id, service_id)
-        mpe_repo.update_consumed_balance(channel_id, signed_amount)
+
+        self._channel_repo.update_consumed_balance(channel_id, signed_amount)
 
         return {}
 
-    def _segregate_org_channel_details(self, raw_channel_data):
-        org_data = {}
-        for channel_record in raw_channel_data:
-            org_id = channel_record["org_id"]
-            group_id = channel_record["group_id"]
-
-            if org_id not in org_data:
-                org_data[org_id] = {
-                    "org_name": channel_record["organization_name"],
-                    "org_id": org_id,
-                    "hero_image": json.loads(channel_record["org_assets_url"]).get("hero_image", ""),
-                    "groups": {}
+    @staticmethod
+    def _convert_channels_data_to_response(channels_data: list):
+        channel_details_response = {}
+        for channel in channels_data:
+            org_name = channel["organization_name"]
+            if org_name not in channel_details_response:
+                channel_details_response[org_name] = {
+                    "org_id": channel["org_id"],
+                    "hero_image": channel["org_assets_url"].get("hero_image", ""),
+                    "channels": {
+                        str(channel["channel_id"]): channel["balance_in_cogs"]
+                    }
                 }
-            if group_id not in org_data[org_id]["groups"]:
-                org_data[org_id]["groups"][group_id] = {
-                    "group_id": group_id,
-                    "group_name": channel_record["group_name"],
-                    "channels": []
-                }
+            else:
+                channel_details_response[org_name]["channels"][str(channel["channel_id"])] = channel["balance_in_cogs"]
 
-            channel = {
-                "channel_id": channel_record["channel_id"],
-                "recipient": channel_record["recipient"],
-                'balance_in_cogs': channel_record['balance_in_cogs'],
-                'consumed_balance': channel_record["consumed_balance"],
-                'current_balance': str(decimal.Decimal(channel_record['balance_in_cogs']) - decimal.Decimal(
-                    channel_record["consumed_balance"])),
-                "pending": channel_record["pending"],
-                "nonce": channel_record["nonce"],
-                "expiration": channel_record["expiration"],
-                "signer": channel_record["signer"],
-                "status": channel_record["status"]
-            }
+        return channel_details_response
 
-            org_data[org_id]["groups"][group_id]["channels"].append(channel)
+    def _get_channel_state_from_daemon(self, channel: ChannelDomain, org_id: str, service_id: str):
+        channel_id = channel.channel_id
+        group_id = channel.group_id
 
-        for org_id in org_data:
-            org_data[org_id]["groups"] = list(org_data[org_id]["groups"].values())
-
-        return list(org_data.values())
-
-    def _get_channel_state_from_daemon(self, channel, org_id, service_id):
-        channel_id = channel["channel_id"]
-        group_id = channel["groupId"]
-
-        org_repo = ServiceRepository(self.repo)
-        endpoint = org_repo.get_service_endpoints(org_id, service_id, group_id)
-        if len(endpoint) != 0:
-            endpoint = endpoint[0]
-        else:
-            raise Exception(f"Endpoint with org_id {org_id}, service_id {service_id} and group_id {group_id} not found!")
-        endpoint = endpoint["endpoint"]
+        endpoint = self._service_repo.get_service_endpoint(org_id, service_id, group_id)
 
         signature, current_block_number = self._get_channel_state_signature(channel_id)
         if signature.startswith("0x"):
             signature = signature[2:]
-        signed_amount = self._get_channel_state_via_grpc(endpoint, channel_id, signature, current_block_number)
+        signed_amount = self._daemon_client.get_channel_state(endpoint, channel_id, signature, current_block_number)
 
         return signed_amount
 
@@ -129,31 +109,3 @@ class ChannelService:
             raise Exception(f"Failed to create signature for {body}")
         signature_details = json.loads(signature_response["body"])["data"]
         return signature_details["signature"], signature_details["snet-current-block-number"]
-
-    def _get_channel_state_via_grpc(self, endpoint, channel_id, signature, current_block_number):
-        endpoint_object = urlparse(endpoint)
-        if endpoint_object.port is None:
-            channel_endpoint = endpoint_object.hostname
-        else:
-            channel_endpoint = f"{endpoint_object.hostname}:{endpoint_object.port}"
-
-        if endpoint_object.scheme == "http":
-            grpc_channel = grpc.insecure_channel(channel_endpoint)
-        elif endpoint_object.scheme == "https":
-            grpc_channel = grpc.secure_channel(channel_endpoint, grpc.ssl_channel_credentials(root_certificates = certificate))
-        else:
-            raise Exception(f"Invalid service endpoint {endpoint}")
-
-        stub = state_service_pb2_grpc.PaymentChannelStateServiceStub(grpc_channel)
-        request = state_service_pb2.ChannelStateRequest(
-            channel_id = channel_id.to_bytes(4, "big"),
-            signature = bytes.fromhex(signature),
-            current_block = current_block_number
-        )
-        try:
-            response = stub.GetChannelState(request)
-        except Exception as e:
-            logger.error(str(e))
-            raise Exception(f"Failed to get channel state with id {channel_id} via grpc")
-
-        return int.from_bytes(response.current_signed_amount, "big")

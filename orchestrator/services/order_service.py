@@ -141,12 +141,10 @@ class OrderService:
     def get_payment_address_for_org(self, org_id, group_id):
 
         group_details_event = {
-            "path": f"/org/{org_id}/group/{quote(group_id, safe='')}",
             "pathParameters": {
-                "orgId": org_id,
+                "org_id": org_id,
                 "group_id": quote(group_id, safe='')
-            },
-            "httpMethod": "GET"
+            }
         }
         logger.info(f"get_group_for_org request: {org_id} and {group_id}")
         group_details_lambda_response = self.lambda_client.invoke(

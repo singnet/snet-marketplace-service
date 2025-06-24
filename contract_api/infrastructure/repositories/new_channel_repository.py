@@ -1,0 +1,67 @@
+from sqlalchemy import select, update
+
+from contract_api.domain.factory.channel_factory import ChannelFactory
+from contract_api.domain.models.channel import ChannelDomain
+from contract_api.infrastructure.models import MpeChannel, OrgGroup, Organization
+from contract_api.infrastructure.repositories.base_repository import BaseRepository
+
+
+class ChannelRepository(BaseRepository):
+    def get_channels(self, wallet_address: str) -> list[dict]:
+        query = select(
+            MpeChannel.channel_id,
+            MpeChannel.balance_in_cogs,
+            Organization.org_id,
+            Organization.organization_name,
+            Organization.org_assets_url
+        ).join(
+            OrgGroup, MpeChannel.group_id == OrgGroup.group_id
+        ).join(
+            Organization, OrgGroup.org_id == Organization.org_id
+        ).where(
+            MpeChannel.sender == wallet_address
+        )
+
+        result = self.session.execute(query)
+        return result.mappings().all()
+
+    def get_group_channels(self, user_address: str, org_id: str, group_id: str) -> list[ChannelDomain]:
+        query = select(
+            MpeChannel
+        ).join(
+            OrgGroup, MpeChannel.group_id == OrgGroup.group_id
+        ).where(
+            OrgGroup.org_id == org_id,
+            OrgGroup.group_id == group_id,
+            MpeChannel.sender == user_address,
+            MpeChannel.recipient == OrgGroup.payment["payment_address"]
+        )
+
+        result = self.session.execute(query)
+        channels_db = result.scalars().all()
+
+        return ChannelFactory.channels_from_db_model(channels_db)
+
+    def get_channel(self, channel_id: int) -> ChannelDomain:
+        query = select(
+            MpeChannel
+        ).where(
+            MpeChannel.channel_id == channel_id
+        ).limit(1)
+
+        result = self.session.execute(query)
+        channel_db = result.scalar_one_or_none()
+
+        return ChannelFactory.channel_from_db_model(channel_db)
+
+    def update_consumed_balance(self, channel_id: int, consumed_balance: int) -> None:
+        query = update(
+            MpeChannel
+        ).where(
+            MpeChannel.channel_id == channel_id
+        ).values(
+            consumed_balance=consumed_balance
+        )
+
+        self.session.execute(query)
+        self.session.commit()

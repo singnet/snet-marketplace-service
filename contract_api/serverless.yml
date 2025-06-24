@@ -326,7 +326,7 @@ functions:
 
 # =================== channel handlers ===================
 
-  get-channel:
+  get-channels:
     handler: contract_api.application.handlers.channel_handlers.get_channels
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
@@ -339,7 +339,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /channel/{channel_id}
+          path: /channel
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -350,6 +350,17 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+
+  get-channels-for-group:
+    handler: contract_api.application.handlers.channel_handlers.get_group_channels
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
 
   update-consumed-balance:
     handler: contract_api.application.handlers.channel_handlers.update_consumed_balance

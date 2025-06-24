@@ -1,4 +1,4 @@
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, model_validator, Field
 
 from common.constant import RequestPayloadType
 from common.validation_handler import validation_handler
@@ -6,7 +6,7 @@ from contract_api.exceptions import InvalidUpdatingChannelParameters
 
 
 class GetChannelsRequest(BaseModel):
-    wallet_address: str
+    wallet_address: str = Field(alias="walletAddress")
 
     @classmethod
     @validation_handler([RequestPayloadType.QUERY_STRING])
@@ -15,11 +15,23 @@ class GetChannelsRequest(BaseModel):
         return cls.model_validate(data)
 
 
+class GetGroupChannelsRequest(BaseModel):
+    user_address: str
+    org_id: str
+    group_id: str
+
+    @classmethod
+    @validation_handler([RequestPayloadType.QUERY_STRING])
+    def validate_event(cls, event: dict) -> "GetGroupChannelsRequest":
+        data = {**event[RequestPayloadType.QUERY_STRING]}
+        return cls.model_validate(data)
+
+
 class UpdateConsumedBalanceRequest(BaseModel):
-    channel_id: int
-    signed_amount: int | None = None
-    org_id: str | None = None
-    service_id: str | None = None
+    channel_id: int = Field(alias="channelId")
+    signed_amount: int | None = Field(alias="signedAmount", default = None)
+    org_id: str | None = Field(alias="orgId", default = None)
+    service_id: str | None = Field(alias="serviceId", default = None)
 
     @classmethod
     @validation_handler([RequestPayloadType.PATH_PARAMS, RequestPayloadType.BODY])

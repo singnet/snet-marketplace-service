@@ -1,6 +1,9 @@
 import datetime as dt
 
-from contract_api.infrastructure.models import Service as ServiceDB, ServiceMetadata as ServiceMetadataDB
+from sqlalchemy import select
+
+from contract_api.infrastructure.models import Service as ServiceDB, ServiceMetadata as ServiceMetadataDB, \
+    ServiceEndpoint
 from contract_api.infrastructure.models import OffchainServiceConfig
 from contract_api.infrastructure.repositories.base_repository import BaseRepository
 from contract_api.domain.factory.service_factory import ServiceFactory
@@ -10,7 +13,18 @@ service_factory = ServiceFactory()
 
 
 class ServiceRepository(BaseRepository):
-    pass
+
+    def get_service_endpoint(self, org_id: str, service_id: str, group_id: str) -> str:
+        query = select(
+            ServiceEndpoint.endpoint
+        ).where(
+            ServiceEndpoint.org_id == org_id,
+            ServiceEndpoint.service_id == service_id,
+            ServiceEndpoint.group_id == group_id
+        ).limit(1)
+
+        result = self.session.execute(query)
+        return result.scalar()
 
     def get_service(self, org_id, service_id):
         try:

@@ -9,7 +9,7 @@ class ServiceAssetsRegex(Enum):
 
 
 class SortKeys(str, Enum):
-    DISPLAY_NAME = "display_name"
+    DISPLAY_NAME = "displayName"
     RANKING = "ranking"
 
 
@@ -19,7 +19,6 @@ class SortOrder(str, Enum):
 
 
 class FilterKeys(str, Enum):
-    ORG_ID = "org_id"
-    DISPLAY_NAME = "display_name"
-    TAG_NAME = "tag_name"
-
+    ORG_ID = "orgId"
+    TAG_NAME = "tagName"
+    ONLY_AVAILABLE = "onlyAvailable"
