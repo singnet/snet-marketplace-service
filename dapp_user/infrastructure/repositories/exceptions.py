@@ -7,8 +7,8 @@ class UserRepositoryException(Exception):
 class UserNotFoundException(UserRepositoryException):
     """Exception raised when a user is not found in the repository."""
 
-    def __init__(self, username: str, e: Exception | None = None):
-        super().__init__(f"User with username '{username}' not found. Base exception: {e}")
+    def __init__(self, username: str):
+        super().__init__(f"User with username '{username}' not found.")
 
 
 class UserAlreadyExistsException(UserRepositoryException):

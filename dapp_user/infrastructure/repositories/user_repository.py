@@ -103,14 +103,12 @@ class UserRepository(BaseRepository):
 
         return UserFactory.user_preferences_from_db_model(user_preference_db)
 
-    @BaseRepository.write_ops
     def delete_user(self, username: str):
-        try:
-            query = delete(UserPreference).where(User.username == username)
-            self.session.execute(query)
-            self.session.commit
-        except IntegrityError:
+        query = delete(User).where(User.username == username)
+        result = self.session.execute(query)
+        if result.rowcount == 0:
             raise UserNotFoundException(username=username)
+        self.session.commit()
 
     @BaseRepository.write_ops
     def insert_user(self, user: UserDomain | NewUserDomain):
@@ -238,3 +236,17 @@ class UserRepository(BaseRepository):
         self.session.add(new_feedback)
         self.session.commit()
         return UserFactory.user_service_feedback_from_db_model(new_feedback)
+
+    def get_user_servce_vote(
+            self, user_row_id: int, org_id: str, service_id: str
+        ) -> UserServiceVoteDomain | None:
+        query = select(UserServiceVote).where(
+            UserServiceVote.user_row_id == user_row_id,
+            UserServiceVote.org_id == org_id,
+            UserServiceVote.service_id == service_id
+        )
+        result = self.session.execute(query)
+
+        user_service_vote_db = result.scalar_one_or_none()
+
+        return UserFactory().user_vote_from_db_model(user_service_vote_db) if user_service_vote_db else None
