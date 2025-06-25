@@ -1,54 +1,45 @@
-class User:
-    def __init__(self, username, name, email, email_verified, origin, preferences):
-        self._username = username,
-        self._name = name,
-        self._email = email,
-        self._email_verified = email_verified,
-        self._email_alerts = 0,
-        self._is_terms_accepted = 0
-        self._preferences = preferences
-        self._origin = origin
+from dataclasses import dataclass
 
+
+@dataclass(frozen=True)
+class BaseUser:
+    account_id: str
+    username: str
+    name: str
+    email: str
+    email_verified: bool
+    email_alerts: bool
+    status: bool
+    request_id: str
+    request_time_epoch: str
+    is_terms_accepted: bool
+
+
+@dataclass(frozen=True)
+class NewUser(BaseUser):
     def to_dict(self):
         return {
-            "username": self._username,
-            "name": self._name,
-            "email": self._email,
-            "email_verified": self._email_verified,
-            "email_alerts": self._email_alerts,
-            "origin": self._origin,
-            "is_terms_accepted": self._is_terms_accepted,
-            "preferences": []
+            "account_id": self.account_id,
+            "username": self.username,
+            "name": self.name,
+            "email": self.email,
+            "email_verified": self.email_verified,
         }
 
-    @property
-    def username(self):
-        return self._username
 
-    @property
-    def name(self):
-        return self._name
+@dataclass(frozen=True)
+class User(BaseUser):
+    row_id: int
 
-    @property
-    def email(self):
-        return self._email
-
-    @property
-    def email_verified(self):
-        return self._email_verified
-
-    @property
-    def origin(self):
-        return self._origin
-
-    @property
-    def email_alerts(self):
-        return self._email_alerts
-
-    @property
-    def is_terms_accepted(self):
-        return self._is_terms_accepted
-
-    @property
-    def preferences(self):
-        return self._preferences
+    def to_response(self):
+        return {
+            "rowId": self.row_id,
+            "accountId": self.account_id,
+            "username": self.username,
+            "name": self.name,
+            "email": self.email,
+            "emailVerified": self.email_verified,
+            "emailAlerts": self.email_alerts,
+            "status": self.status,
+            "requestId": self.request_id,
+        }
