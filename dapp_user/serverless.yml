@@ -90,7 +90,7 @@ functions:
               - x-requested-with
 
   enable-disable-user-preference:
-    handler: dapp_user/application/handlers/user_handlers.add_or_update_user_preference
+    handler: dapp_user/application/handlers/user_handlers.add_or_update_user_preference_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -119,8 +119,8 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-  dapp-user:
-    handler: dapp_user/lambda_handler.request_handler
+  get-user:
+    handler: dapp_user/application/handlers/user_handlers.get_user_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -132,7 +132,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /profile
+          path: /user
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -148,9 +148,21 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+
+  update-user-alerts:
+    handler: dapp_user/application/handlers/user_handlers.update_user_alerts_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
       - http:
           method: POST
-          path: /profile
+          path: /user/alerts
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -166,9 +178,21 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
+
+  get-user-service-review:
+    handler: dapp_user/application/handlers/user_handlers.get_user_service_review_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:   
       - http:
           method: GET
-          path: /wallet
+          path: /user/review
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -184,30 +208,21 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-      - http:
-          method: GET
-          path: /health
-      - http:
-          method: GET
-          path: /feedback
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
+
+  create-user-service-review:
+    handler: dapp_user/application/handlers/user_handlers.create_user_review_handler
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:     
       - http:
           method: POST
-          path: /feedback
+          path: /user/review
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -223,26 +238,9 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-with
-      - http:
-          method: POST
-          path: /wallet/register
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
+
   delete-user:
-    handler: dapp_user/application/handlers/user_handlers.delete_user
+    handler: dapp_user/application/handlers/user_handlers.delete_user_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -253,8 +251,8 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - http:
-          method: GET
-          path: /user/delete
+          method: DELETE
+          path: /user
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -272,7 +270,7 @@ functions:
               - x-requested-with
 
   register-user-post-aws-cognito-signup:
-    handler: dapp_user/application/handlers/user_handlers.register_user_post_aws_cognito_signup
+    handler: dapp_user/application/handlers/user_handlers.post_aws_cognito_signup_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:

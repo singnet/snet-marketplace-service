@@ -173,7 +173,7 @@ class UserRepository(BaseRepository):
         avg_rating, total_rated = result
         return avg_rating or 0.0, total_rated
 
-    def submit_user_review(
+    def submit_user_feedback(
         self,
         user_vote: UserServiceVoteDomain,
         user_feedback: UserServiceFeedbackDomain | None,
@@ -192,6 +192,29 @@ class UserRepository(BaseRepository):
                 service_id=user_vote.service_id,
             )
         return avg_rating, total_rated
+
+    def get_user_service_vote_and_feedback(
+        self, username: str, org_id: str, service_id: str
+    ) -> Tuple[UserServiceVoteDomain | None, UserServiceFeedbackDomain | None]:
+        query = (
+            select(UserServiceFeedback, UserServiceFeedback)
+            .join(User)
+            .where(
+                User.username == username,
+                UserServiceFeedback.org_id == org_id,
+                UserServiceFeedback.service_id == service_id,
+                UserServiceVote.org_id == org_id,
+                UserServiceVote.service_id == service_id,
+            )
+        )
+
+        result = self.session.execute(query)
+        user_service_vote_db, user_service_feedback_db = result.scalars().all()
+
+        return (
+            UserFactory().user_service_vote_from_db_model(user_service_vote_db) if user_service_vote_db else None,
+            UserFactory().user_service_feedback_from_db_model(user_service_feedback_db) if user_service_feedback_db else None,
+        )
 
     def get_user_service_feedback(
         self, username: str, org_id: str, service_id: str
@@ -222,7 +245,7 @@ class UserRepository(BaseRepository):
         )
         self.session.add(new_vote)
         self.session.commit()
-        return UserFactory.user_vote_from_db_model(new_vote)
+        return UserFactory().user_service_vote_from_db_model(new_vote)
 
     def insert_user_service_feedback(
         self, user_feedback: UserServiceFeedbackDomain
@@ -249,4 +272,4 @@ class UserRepository(BaseRepository):
 
         user_service_vote_db = result.scalar_one_or_none()
 
-        return UserFactory().user_vote_from_db_model(user_service_vote_db) if user_service_vote_db else None
+        return UserFactory().user_service_vote_from_db_model(user_service_vote_db) if user_service_vote_db else None

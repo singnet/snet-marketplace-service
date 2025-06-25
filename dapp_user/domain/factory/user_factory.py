@@ -64,7 +64,7 @@ class UserFactory:
         )
 
     @staticmethod
-    def user_vote_from_db_model(user_vote_db: UserServiceVoteDB) -> UserServiceVote:
+    def user_service_vote_from_db_model(user_vote_db: UserServiceVoteDB) -> UserServiceVote:
         return UserServiceVote(
             user_row_id=user_vote_db.user_row_id,
             org_id=user_vote_db.org_id,
@@ -74,22 +74,22 @@ class UserFactory:
 
     @staticmethod
     def user_vote_feedback_from_request(
-        create_review_request: CreateUserServiceReviewRequest,
+        create_feedback_request: CreateUserServiceReviewRequest,
     ) -> Tuple[UserServiceVote, UserServiceFeedback | None]:
         user_vote = UserServiceVote(
-            user_row_id=create_review_request.user_row_id,
-            org_id=create_review_request.org_id,
-            service_id=create_review_request.service_id,
-            rating=create_review_request.user_rating,
+            user_row_id=create_feedback_request.user_row_id,
+            org_id=create_feedback_request.org_id,
+            service_id=create_feedback_request.service_id,
+            rating=create_feedback_request.user_rating,
         )
 
         user_feedback = None
-        if create_review_request.comment:
+        if create_feedback_request.comment:
             user_feedback = UserServiceFeedback(
-                user_row_id=create_review_request.user_row_id,
-                org_id=create_review_request.org_id,
-                service_id=create_review_request.service_id,
-                comment=create_review_request.comment,
+                user_row_id=create_feedback_request.user_row_id,
+                org_id=create_feedback_request.org_id,
+                service_id=create_feedback_request.service_id,
+                comment=create_feedback_request.comment,
             )
 
         return user_vote, user_feedback

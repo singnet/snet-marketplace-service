@@ -31,12 +31,15 @@ class NewUser(BaseUser):
 class User(BaseUser):
     row_id: int
 
-    def to_dict(self):
+    def to_response(self):
         return {
-            "row_id": self.row_id,
-            "account_id": self.account_id,
+            "rowId": self.row_id,
+            "accountId": self.account_id,
             "username": self.username,
             "name": self.name,
             "email": self.email,
-            "email_verified": int(self.email_verified),
+            "emailVerified": self.email_verified,
+            "emailAlerts": self.email_alerts,
+            "status": self.status,
+            "requestId": self.request_id,
         }

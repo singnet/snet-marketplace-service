@@ -88,12 +88,12 @@ def delete_user_handler(event, context):
 
 
 @exception_handler(logger=logger)
-def get_user_feedback_handler(event, context):
+def get_user_service_review_handler(event, context):
     req_ctx = RequestContext(event)
 
     request = GetUserFeedbackRequest.validate_event(event)
 
-    response = __user_service.get_user_feedback(username=req_ctx.username, request=request)
+    response = __user_service.get_user_service_review(username=req_ctx.username, request=request)
 
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response}, cors_enabled=True
@@ -101,7 +101,7 @@ def get_user_feedback_handler(event, context):
 
 
 @exception_handler(logger=logger)
-def create_user_service_review_handler(event, context):
+def create_user_review_handler(event, context):
     request = CreateUserServiceReviewRequest.validate_event(event)
 
     response = __user_service.create_user_review(request=request)
@@ -111,7 +111,7 @@ def create_user_service_review_handler(event, context):
     )
 
 
-def register_user_post_aws_cognito_signup_handler(event, context):
+def post_aws_cognito_signup_handler(event, context):
     cognito_event = CognitoUserPoolEvent.model_validate(event)
     if cognito_event.trigger_source == CognitoTriggerSource.POST_CONFIRMATION:
         __user_service.register_user(cognito_event)

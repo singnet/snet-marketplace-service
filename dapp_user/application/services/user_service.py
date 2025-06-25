@@ -65,7 +65,7 @@ class UserService:
             user = self.user_repo.get_user(username=username)
         except UserNotFoundException:
             raise UserNotFoundHTTPException(username)
-        return user.to_dict()
+        return user.to_response()
 
     def get_user_preferences(self, username: str) -> List[dict]:
         user_preferences = self.user_repo.get_user_preferences(username=username)
@@ -101,19 +101,27 @@ class UserService:
             logger.error(f"User not found: {e}")
             raise UserNotFoundHTTPException(f"User {username} not found")
 
-    def get_user_feedback(self, username: str, request: GetUserFeedbackRequest) -> dict:
-        user_service_feedback = self.user_repo.get_user_service_feedback(
-            username=username, org_id=request.org_id, service_id=request.service_id
+    def get_user_service_review(self, username: str, request: GetUserFeedbackRequest) -> dict:
+        user_service_vote, user_service_feedback = self.user_repo.get_user_service_vote_and_feedback(
+            username=username,
+            org_id=request.org_id,
+            service_id=request.service_id
         )
 
-        return user_service_feedback.to_dict() if user_service_feedback else {}
+        response = {
+            "rating": user_service_vote.rating if user_service_vote else None,
+            "comment": user_service_feedback.comment if user_service_feedback else None
+        }
+
+        return response
+
 
     def create_user_review(self, request: CreateUserServiceReviewRequest) -> None:
         user_vote, user_feedback = self.user_factory.user_vote_feedback_from_request(
-            create_review_request=request
+            create_feedback_request=request
         )
         #: TODO think about rollback or distributed transaction if update service rating fails (saga pattern)
-        rating, total_users_rated = self.user_repo.submit_user_review(
+        rating, total_users_rated = self.user_repo.submit_user_feedback(
             user_vote=user_vote, user_feedback=user_feedback
         )
         try:
