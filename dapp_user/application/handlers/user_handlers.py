@@ -1,5 +1,5 @@
 from common.constant import StatusCode
-from common.exception_handler import exception_handler
+from common.exception_handler import exception_handler, worker_exception_handler
 from common.logger import get_logger
 from common.request_context import RequestContext
 from common.utils import generate_lambda_response
@@ -111,6 +111,7 @@ def create_user_review_handler(event, context):
     )
 
 
+@worker_exception_handler(logger=logger)
 def post_aws_cognito_signup_handler(event, context):
     cognito_event = CognitoUserPoolEvent.model_validate(event)
     if cognito_event.trigger_source == CognitoTriggerSource.POST_CONFIRMATION:
