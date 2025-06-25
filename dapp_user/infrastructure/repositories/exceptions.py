@@ -11,6 +11,13 @@ class UserNotFoundException(UserRepositoryException):
         super().__init__(f"User with username '{username}' not found.")
 
 
+class InvalidUpdateRequest(UserRepositoryException):
+    """Raised when update_user is called without any fields to update."""
+
+    def __init__(self):
+        super().__init__("At least one field (email_alerts or is_terms_accepted) must be provided.")
+
+
 class UserAlreadyExistsException(UserRepositoryException):
     """Exception raised when trying to create a user that already exists."""
 

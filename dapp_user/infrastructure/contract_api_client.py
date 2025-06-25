@@ -1,4 +1,5 @@
 import json
+from http import HTTPStatus
 
 import boto3
 from dapp_user.domain.interfaces.contract_api_client_interface import AbstractContractAPIClient
@@ -39,11 +40,8 @@ class ContractAPIClient(AbstractContractAPIClient):
                 Payload=json.dumps(lambda_payload),
             )
 
-            response_body_raw = json.loads(response.get("Payload").read())["body"]
-            get_service_response = json.loads(response_body_raw)
-            if get_service_response["status"] != "success":
-                message = get_service_response.get("message", "Unknown error occurred")
-                raise ContractAPIClientError(message=message)
+            if response["StatusCode"] != HTTPStatus.OK:
+                raise ContractAPIClientError(message=response["FunctionError"])
 
         except Exception as e:
             raise ContractAPIClientError(str(e))

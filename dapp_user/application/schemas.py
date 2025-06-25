@@ -49,7 +49,7 @@ class AddOrUpdateUserPreferencesRequest(BaseModel):
             ]
             raise BadRequestException(
                 message="Validation failed for request body.",
-                details={"validation_erros": formatted_errors},
+                details={"validation_errors": formatted_errors},
             )
         except AssertionError as e:
             raise BadRequestException(message=str(e))

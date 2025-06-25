@@ -16,6 +16,7 @@ from dapp_user.infrastructure.models import (
 )
 from dapp_user.infrastructure.repositories.base_repository import BaseRepository
 from dapp_user.infrastructure.repositories.exceptions import (
+    InvalidUpdateRequest,
     UserAlreadyExistsException,
     UserNotFoundException,
     UserPreferenceAlreadyExistsException,
@@ -56,19 +57,22 @@ class UserRepository(BaseRepository):
             raise UserNotFoundException(username=username)
         return UserFactory.user_from_db_model(user_db)
 
-    def update_user_alerts(
-        self, username: str, email_alerts: bool, is_terms_accepted: bool
+    def update_user(
+        self, username: str, email_alerts: bool | None, is_terms_accepted: bool | None
     ) -> None:
         try:
-            stmt = (
-                update(User)
-                .where(User.username == username)
-                .values(
-                    email_alerts=email_alerts,
-                    is_terms_accepted=is_terms_accepted,
-                )
-            )
-            self.session.execute(stmt)
+            if email_alerts is None and is_terms_accepted is None:
+                raise InvalidUpdateRequest()
+
+            values = {}
+            if email_alerts is not None:
+                values["email_alerts"] = email_alerts
+            if is_terms_accepted is not None:
+                values["is_terms_accepted"] = is_terms_accepted
+
+            query = update(User).where(User.username == username).values(**values)
+
+            self.session.execute(query)
             self.session.commit()
         except IntegrityError:
             raise UserNotFoundException(username=username)
@@ -76,7 +80,7 @@ class UserRepository(BaseRepository):
     @BaseRepository.write_ops
     def disable_preference(self, user_preference: UserPreferenceDomain, user_row_id: int) -> None:
         try:
-            stmt = (
+            query = (
                 update(UserPreference)
                 .where(
                     UserPreference.user_row_id == user_row_id,
@@ -87,7 +91,7 @@ class UserRepository(BaseRepository):
                 .values(status=False, opt_out_reason=user_preference.opt_out_reason)
             )
 
-            self.session.execute(stmt)
+            self.session.execute(query)
             self.session.commit()
         except IntegrityError:
             raise UserPreferenceNotFoundException(user_row_id=user_row_id)
@@ -121,8 +125,6 @@ class UserRepository(BaseRepository):
                 email_verified=user.email_verified,
                 email_alerts=user.email_alerts,
                 status=user.email_verified,
-                request_id=user.request_id,
-                request_time_epoch=user.request_time_epoch,
                 is_terms_accepted=user.is_terms_accepted,
             )
 
@@ -133,12 +135,12 @@ class UserRepository(BaseRepository):
 
     @BaseRepository.write_ops
     def __update_or_set_user_vote(self, user_vote: UserServiceVoteDomain) -> None:
-        stmt = select(UserServiceVote).where(
+        query = select(UserServiceVote).where(
             UserServiceVote.row_id == user_vote.user_row_id,
             UserServiceVote.org_id == user_vote.org_id,
             UserServiceVote.service_id == user_vote.service_id,
         )
-        vote = self.session.execute(stmt).scalar_one_or_none()
+        vote = self.session.execute(query).scalar_one_or_none()
         if vote:
             vote.rating = user_vote.rating
         else:

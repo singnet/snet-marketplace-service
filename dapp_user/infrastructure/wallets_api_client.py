@@ -1,8 +1,12 @@
 import json
+from http import HTTPStatus
 
 import boto3
+from common.logger import get_logger
 from dapp_user.domain.interfaces.wallet_api_client_interface import AbstractWalletsAPIClient
 from dapp_user.settings import settings
+
+logger = get_logger(__name__)
 
 
 class WalletsAPIClientError(Exception):
@@ -30,12 +34,8 @@ class WalletsAPIClient(AbstractWalletsAPIClient):
                 InvocationType="RequestResponse",
                 Payload=json.dumps(lambda_payload),
             )
-
-            response_body_raw = json.loads(response.get("Payload").read())["body"]
-            delete_user_wallet_response = json.loads(response_body_raw)
         except Exception as e:
             raise DeleteUserWalletError(f"Failed to invoke delete user wallet lambda: {str(e)}")
 
-        if delete_user_wallet_response["status"] == "success":
-            return True
-        return False
+        logger.debug(f"Delete user wallet response: {response}")
+        return response["StatusCode"] == HTTPStatus.OK
