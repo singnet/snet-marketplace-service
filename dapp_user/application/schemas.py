@@ -13,15 +13,23 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 
 class AddOrUpdateUserPreferenceRequest(BaseModel):
-    communication_type: CommunicationType
-    preference_type: PreferenceType
-    source: SourceDApp
-    status: Status
-    opt_out_reason: str | None = None
+    communication_type: CommunicationType = Field(..., alias="communicationType")
+    preference_type: PreferenceType = Field(..., alias="preferenceType")
+    source: SourceDApp = Field(..., alias="source")
+    status: Status = Field(..., alias="status")
+    opt_out_reason: str | None = Field(None, alias="optOutReason")
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
 
 
 class AddOrUpdateUserPreferencesRequest(BaseModel):
-    user_preferences: List[AddOrUpdateUserPreferenceRequest]
+    user_preferences: List[AddOrUpdateUserPreferenceRequest] = Field(..., min_length=1, alias="userPreferences")
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
 
     @classmethod
     def validate_event(cls, event: dict) -> "AddOrUpdateUserPreferencesRequest":
@@ -39,7 +47,8 @@ class AddOrUpdateUserPreferencesRequest(BaseModel):
             )
         except AssertionError as e:
             raise BadRequestException(message=str(e))
-        except Exception:
+        except Exception as e:
+            print(e)
             raise BadRequestException(message="Error while parsing payload")
 
 
