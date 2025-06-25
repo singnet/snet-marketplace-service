@@ -212,8 +212,12 @@ class UserRepository(BaseRepository):
         user_service_vote_db, user_service_feedback_db = result.scalars().all()
 
         return (
-            UserFactory().user_service_vote_from_db_model(user_service_vote_db) if user_service_vote_db else None,
-            UserFactory().user_service_feedback_from_db_model(user_service_feedback_db) if user_service_feedback_db else None,
+            UserFactory().user_service_vote_from_db_model(user_service_vote_db)
+            if user_service_vote_db
+            else None,
+            UserFactory().user_service_feedback_from_db_model(user_service_feedback_db)
+            if user_service_feedback_db
+            else None,
         )
 
     def get_user_service_feedback(
@@ -261,15 +265,19 @@ class UserRepository(BaseRepository):
         return UserFactory.user_service_feedback_from_db_model(new_feedback)
 
     def get_user_servce_vote(
-            self, user_row_id: int, org_id: str, service_id: str
-        ) -> UserServiceVoteDomain | None:
+        self, user_row_id: int, org_id: str, service_id: str
+    ) -> UserServiceVoteDomain | None:
         query = select(UserServiceVote).where(
             UserServiceVote.user_row_id == user_row_id,
             UserServiceVote.org_id == org_id,
-            UserServiceVote.service_id == service_id
+            UserServiceVote.service_id == service_id,
         )
         result = self.session.execute(query)
 
         user_service_vote_db = result.scalar_one_or_none()
 
-        return UserFactory().user_service_vote_from_db_model(user_service_vote_db) if user_service_vote_db else None
+        return (
+            UserFactory().user_service_vote_from_db_model(user_service_vote_db)
+            if user_service_vote_db
+            else None
+        )

@@ -25,7 +25,9 @@ class AddOrUpdateUserPreferenceRequest(BaseModel):
 
 
 class AddOrUpdateUserPreferencesRequest(BaseModel):
-    user_preferences: List[AddOrUpdateUserPreferenceRequest] = Field(..., min_length=1, alias="userPreferences")
+    user_preferences: List[AddOrUpdateUserPreferenceRequest] = Field(
+        ..., min_length=1, alias="userPreferences"
+    )
 
     model_config = ConfigDict(
         populate_by_name=True,

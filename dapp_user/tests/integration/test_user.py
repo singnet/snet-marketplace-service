@@ -11,6 +11,7 @@ from dapp_user.infrastructure.models import User
 from dapp_user.infrastructure.repositories import base_repository
 from dapp_user.infrastructure.repositories.exceptions import UserNotFoundException
 from dapp_user.infrastructure.repositories.user_repository import UserRepository
+from dapp_user.tests.integration.conftest import TEST_USER
 from pytest import MonkeyPatch
 from sqlalchemy.orm import Session as SessionType
 
@@ -145,7 +146,7 @@ def test_add_or_update_user_preference_handler_not_found(
     assert result["statusCode"] == HTTPStatus.BAD_REQUEST
     body = json.loads(result["body"])
     assert body["status"] == "failed"
-    assert body["error"]["message"] == "User with username 'integration@example.com' not found"
+    assert body["error"]["message"] == f"User with username '{TEST_USER}' not found"
 
 
 def test_update_user_alerts_handler(
@@ -297,7 +298,6 @@ def test_create_user_service_feedback_handler_with_comment(
 
     assert result["statusCode"] == HTTPStatus.OK
 
-
     vote = user_repo.get_user_servce_vote(
         expected_user_row_id,
         expected_org_id,
@@ -305,7 +305,6 @@ def test_create_user_service_feedback_handler_with_comment(
     )
     assert vote is not None
     assert vote.rating == expected_user_rating
-
 
     feedback = user_repo.get_user_service_feedback(
         expected_username,

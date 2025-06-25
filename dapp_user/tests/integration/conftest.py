@@ -32,6 +32,7 @@ def db_engine():
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 ALEMBIC_INI_PATH = os.path.join(ROOT_DIR, "alembic.ini")
+TEST_USER = "integration@example.com"
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -84,7 +85,7 @@ def lambda_event_authorized() -> dict:
             "authorizer": {
                 "claims": {
                     "cognito:username": "integrationuser",
-                    "email": "integration@example.com",
+                    "email": TEST_USER,
                 }
             }
         }
@@ -138,9 +139,9 @@ def create_test_users(user_repo: UserRepository) -> Generator[List[User], None, 
         User(
             row_id=3,
             account_id="acc-test-003",
-            username="integration@example.com",  # for handler test
-            name="Integration User",
-            email="integration@example.com",
+            username=TEST_USER,  # for handler test
+            name="Integration User 1",
+            email=TEST_USER,
             email_verified=True,
             email_alerts=False,
             status=True,
@@ -164,9 +165,9 @@ def create_user_for_deleting(user_repo: UserRepository) -> Generator[User, None,
     user = User(
         row_id=3,
         account_id="acc-test-003",
-        username="integration@example.com",  # for handler test
-        name="Integration User",
-        email="integration@example.com",
+        username=TEST_USER,  # for handler test
+        name="Integration User DELETE",
+        email=TEST_USER,
         email_verified=True,
         email_alerts=False,
         status=True,

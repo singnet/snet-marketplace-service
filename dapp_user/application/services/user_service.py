@@ -102,19 +102,18 @@ class UserService:
             raise UserNotFoundHTTPException(f"User {username} not found")
 
     def get_user_service_review(self, username: str, request: GetUserFeedbackRequest) -> dict:
-        user_service_vote, user_service_feedback = self.user_repo.get_user_service_vote_and_feedback(
-            username=username,
-            org_id=request.org_id,
-            service_id=request.service_id
+        user_service_vote, user_service_feedback = (
+            self.user_repo.get_user_service_vote_and_feedback(
+                username=username, org_id=request.org_id, service_id=request.service_id
+            )
         )
 
         response = {
             "rating": user_service_vote.rating if user_service_vote else None,
-            "comment": user_service_feedback.comment if user_service_feedback else None
+            "comment": user_service_feedback.comment if user_service_feedback else None,
         }
 
         return response
-
 
     def create_user_review(self, request: CreateUserServiceReviewRequest) -> None:
         user_vote, user_feedback = self.user_factory.user_vote_feedback_from_request(
