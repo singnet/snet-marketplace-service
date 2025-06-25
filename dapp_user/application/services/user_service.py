@@ -7,7 +7,7 @@ from dapp_user.application.schemas import (
     CognitoUserPoolEvent,
     CreateUserServiceReviewRequest,
     GetUserFeedbackRequest,
-    UpdateUserAlertRequest,
+    UpdateUserRequest,
 )
 from dapp_user.constant import Status
 from dapp_user.domain.factory.user_factory import UserFactory
@@ -90,9 +90,9 @@ class UserService:
         self.user_repo.insert_user(user=new_user)
         return new_user.to_dict()
 
-    def update_user_alerts(self, username: str, request: UpdateUserAlertRequest):
+    def update_user(self, username: str, request: UpdateUserRequest):
         try:
-            self.user_repo.update_user_alerts(
+            self.user_repo.update_user(
                 username=username,
                 email_alerts=request.email_alerts,
                 is_terms_accepted=request.is_terms_accepted,

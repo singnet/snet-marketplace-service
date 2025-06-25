@@ -1,8 +1,8 @@
 """baseline
 
-Revision ID: e12dfc595535
+Revision ID: 53a71d0e2494
 Revises:
-Create Date: 2025-06-23 13:02:44.493675
+Create Date: 2025-06-25 16:25:03.957840
 
 """
 
@@ -12,7 +12,7 @@ from sqlalchemy.dialects import mysql
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "e12dfc595535"
+revision = "53a71d0e2494"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -30,8 +30,6 @@ def upgrade():
         sa.Column("email_verified", sa.BOOLEAN(), nullable=False),
         sa.Column("email_alerts", sa.BOOLEAN(), nullable=False),
         sa.Column("status", sa.BOOLEAN(), nullable=False),
-        sa.Column("request_id", sa.VARCHAR(length=128), nullable=False),
-        sa.Column("request_time_epoch", sa.VARCHAR(length=128), nullable=False),
         sa.Column("is_terms_accepted", sa.BOOLEAN(), nullable=False),
         sa.Column(
             "created_at",
@@ -46,6 +44,7 @@ def upgrade():
             nullable=False,
         ),
         sa.PrimaryKeyConstraint("row_id"),
+        sa.UniqueConstraint("account_id"),
         sa.UniqueConstraint("email"),
         sa.UniqueConstraint("username"),
     )
@@ -90,13 +89,13 @@ def upgrade():
         sa.Column("service_id", sa.VARCHAR(length=128), nullable=False),
         sa.Column("comment", sa.VARCHAR(length=1024), nullable=True),
         sa.Column(
-            "row_created",
+            "created_at",
             mysql.TIMESTAMP(),
             server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=True,
         ),
         sa.Column(
-            "row_updated",
+            "updated_at",
             mysql.TIMESTAMP(),
             server_default=sa.text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"),
             nullable=True,
@@ -114,13 +113,13 @@ def upgrade():
         sa.Column("service_id", sa.VARCHAR(length=128), nullable=False),
         sa.Column("rating", sa.DECIMAL(precision=2, scale=1), nullable=True),
         sa.Column(
-            "row_created",
+            "created_at",
             mysql.TIMESTAMP(),
             server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=True,
         ),
         sa.Column(
-            "row_updated",
+            "updated_at",
             mysql.TIMESTAMP(),
             server_default=sa.text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"),
             nullable=True,

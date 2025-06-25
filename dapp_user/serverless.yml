@@ -149,8 +149,8 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
-  update-user-alerts:
-    handler: dapp_user/application/handlers/user_handlers.update_user_alerts_handler
+  update-user:
+    handler: dapp_user/application/handlers/user_handlers.update_user_handler
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -161,8 +161,8 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - http:
-          method: POST
-          path: /user/alerts
+          method: PUT
+          path: /user
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS

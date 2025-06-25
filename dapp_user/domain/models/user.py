@@ -10,8 +10,6 @@ class BaseUser:
     email_verified: bool
     email_alerts: bool
     status: bool
-    request_id: str
-    request_time_epoch: str
     is_terms_accepted: bool
 
 
@@ -41,5 +39,4 @@ class User(BaseUser):
             "emailVerified": self.email_verified,
             "emailAlerts": self.email_alerts,
             "status": self.status,
-            "requestId": self.request_id,
         }

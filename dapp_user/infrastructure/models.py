@@ -26,7 +26,7 @@ class User(Base):
 
     row_id: Mapped[int] = mapped_column("row_id", BigInteger, primary_key=True, autoincrement=True)
     username: Mapped[str] = mapped_column("username", VARCHAR(128), nullable=False, unique=True)
-    account_id: Mapped[str] = mapped_column("account_id", VARCHAR(128), nullable=False)
+    account_id: Mapped[str] = mapped_column("account_id", VARCHAR(128), nullable=False, unique=True)
     name: Mapped[str] = mapped_column("name", VARCHAR(128), nullable=False)
     email: Mapped[str] = mapped_column("email", VARCHAR(128), nullable=False, unique=True)
     email_verified: Mapped[bool] = mapped_column(
@@ -36,10 +36,6 @@ class User(Base):
         "email_alerts", BOOLEAN, nullable=False, default=False
     )
     status: Mapped[bool] = mapped_column("status", BOOLEAN, nullable=False, default=b"0")
-    request_id: Mapped[str] = mapped_column("request_id", VARCHAR(128), nullable=False)
-    request_time_epoch: Mapped[str] = mapped_column(
-        "request_time_epoch", VARCHAR(128), nullable=False
-    )
     is_terms_accepted: Mapped[bool] = mapped_column(
         "is_terms_accepted", BOOLEAN, nullable=False, default=False
     )
@@ -96,10 +92,10 @@ class UserServiceVote(Base):
     service_id: Mapped[str] = mapped_column(VARCHAR(128), nullable=False)
     rating: Mapped[float] = mapped_column(DECIMAL(2, 1), nullable=True)
 
-    row_created: Mapped[datetime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP, server_default=CreateTimestamp, nullable=True
     )
-    row_updated: Mapped[datetime] = mapped_column(
+    updated_at: Mapped[datetime] = mapped_column(
         TIMESTAMP, server_default=UpdateTimestamp, nullable=True
     )
 
@@ -119,9 +115,9 @@ class UserServiceFeedback(Base):
     service_id: Mapped[str] = mapped_column(VARCHAR(128), nullable=False)
     comment: Mapped[str] = mapped_column(VARCHAR(1024), nullable=True)
 
-    row_created: Mapped[datetime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP, server_default=CreateTimestamp, nullable=True
     )
-    row_updated: Mapped[datetime] = mapped_column(
+    updated_at: Mapped[datetime] = mapped_column(
         TIMESTAMP, server_default=UpdateTimestamp, nullable=True
     )

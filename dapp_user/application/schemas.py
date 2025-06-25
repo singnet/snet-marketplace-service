@@ -9,7 +9,7 @@ from dapp_user.constant import (
     SourceDApp,
     Status,
 )
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 
 class AddOrUpdateUserPreferenceRequest(BaseModel):
@@ -43,14 +43,17 @@ class AddOrUpdateUserPreferencesRequest(BaseModel):
             return cls.model_validate(body)
 
         except ValidationError as e:
-            missing_params = [x["loc"][0] for x in e.errors()]
+            formatted_errors = [
+                {"field": ".".join(str(loc) for loc in err["loc"]), "message": err["msg"]}
+                for err in e.errors()
+            ]
             raise BadRequestException(
-                message=f"Missing required parameters: {', '.join(str(p) for p in missing_params)}"
+                message="Validation failed for request body.",
+                details={"validation_erros": formatted_errors},
             )
         except AssertionError as e:
             raise BadRequestException(message=str(e))
-        except Exception as e:
-            print(e)
+        except Exception:
             raise BadRequestException(message="Error while parsing payload")
 
 
@@ -63,9 +66,13 @@ class DeleteUserRequest(BaseModel):
             data = event.get(RequestPayloadType.QUERY_STRING)
             return cls.model_validate(data if data else {})
         except ValidationError as e:
-            missing_params = [x["loc"][0] for x in e.errors()]
+            formatted_errors = [
+                {"field": ".".join(str(loc) for loc in err["loc"]), "message": err["msg"]}
+                for err in e.errors()
+            ]
             raise BadRequestException(
-                message=f"Missing required parameters: {', '.join(str(p) for p in missing_params)}"
+                message="Validation failed for request body.",
+                details={"validation_erros": formatted_errors},
             )
         except AssertionError as e:
             raise BadRequestException(message=str(e))
@@ -110,16 +117,22 @@ class CognitoUserPoolEvent(BaseModel):
     )
 
 
-class UpdateUserAlertRequest(BaseModel):
-    email_alerts: bool = Field(..., alias="emailAlerts")
-    is_terms_accepted: bool = Field(..., alias="isTermsAccepted")
+class UpdateUserRequest(BaseModel):
+    email_alerts: bool | None = Field(None, alias="emailAlerts")
+    is_terms_accepted: bool | None = Field(None, alias="isTermsAccepted")
 
     model_config = ConfigDict(
         populate_by_name=True,
     )
 
+    @model_validator(mode="after")
+    def at_least_one_field_provided(self):
+        if self.email_alerts is None and self.is_terms_accepted is None:
+            raise ValueError("At least one field must be provided")
+        return self
+
     @classmethod
-    def validate_event(cls, event: dict) -> "UpdateUserAlertRequest":
+    def validate_event(cls, event: dict) -> "UpdateUserRequest":
         try:
             assert event.get(RequestPayloadType.BODY) is not None, (
                 PayloadAssertionError.MISSING_BODY
@@ -128,9 +141,13 @@ class UpdateUserAlertRequest(BaseModel):
             return cls.model_validate(body)
 
         except ValidationError as e:
-            missing_params = [x["loc"][0] for x in e.errors()]
+            formatted_errors = [
+                {"field": ".".join(str(loc) for loc in err["loc"]), "message": err["msg"]}
+                for err in e.errors()
+            ]
             raise BadRequestException(
-                message=f"Missing required parameters: {', '.join(str(p) for p in missing_params)}"
+                message="Validation failed for request body.",
+                details={"validation_erros": formatted_errors},
             )
         except AssertionError as e:
             raise BadRequestException(message=str(e))
@@ -152,9 +169,13 @@ class GetUserFeedbackRequest(BaseModel):
             data = event.get(RequestPayloadType.PATH_PARAMS)
             return cls.model_validate(data)
         except ValidationError as e:
-            missing_params = [x["loc"][0] for x in e.errors()]
+            formatted_errors = [
+                {"field": ".".join(str(loc) for loc in err["loc"]), "message": err["msg"]}
+                for err in e.errors()
+            ]
             raise BadRequestException(
-                message=f"Missing required parameters: {', '.join(str(p) for p in missing_params)}"
+                message="Validation failed for request body.",
+                details={"validation_erros": formatted_errors},
             )
         except Exception:
             raise BadRequestException(message="Error while parsing payload")
@@ -181,9 +202,13 @@ class CreateUserServiceReviewRequest(BaseModel):
             return cls.model_validate(body)
 
         except ValidationError as e:
-            missing_params = [x["loc"][0] for x in e.errors()]
+            formatted_errors = [
+                {"field": ".".join(str(loc) for loc in err["loc"]), "message": err["msg"]}
+                for err in e.errors()
+            ]
             raise BadRequestException(
-                message=f"Missing required parameters: {', '.join(str(p) for p in missing_params)}"
+                message="Validation failed for request body.",
+                details={"validation_erros": formatted_errors},
             )
         except AssertionError as e:
             raise BadRequestException(message=str(e))

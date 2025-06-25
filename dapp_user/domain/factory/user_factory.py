@@ -104,8 +104,6 @@ class UserFactory:
             email_verified=event.request.user_attributes.email_verified,
             email_alerts=False,
             status=True,
-            request_id="",
-            request_time_epoch="",
             is_terms_accepted=False,
         )
 
@@ -120,7 +118,5 @@ class UserFactory:
             email_verified=user_db.email_verified,
             email_alerts=user_db.email_alerts,
             status=user_db.status,
-            request_id=user_db.request_id,
-            request_time_epoch=user_db.request_time_epoch,
             is_terms_accepted=user_db.is_terms_accepted,
         )
