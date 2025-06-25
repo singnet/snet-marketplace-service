@@ -285,7 +285,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /org/{org_id}/service/{service_id}
+          path: /org/{orgId}/service/{serviceId}
           request:
             parameters:
               paths:

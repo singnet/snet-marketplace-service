@@ -1,5 +1,5 @@
 from contract_api.application.schemas.organization_schemas import GetGroupRequest
-from contract_api.infrastructure.repositories.new_organization_repository import OrganizationRepository
+from contract_api.infrastructure.repositories.organization_repository import OrganizationRepository
 
 
 class OrganizationService:

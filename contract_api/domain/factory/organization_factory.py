@@ -25,24 +25,32 @@ class OrganizationFactory:
         return result
 
     @staticmethod
+    def organization_from_db_model(
+            org_db_model: Organization
+    ) -> OrganizationDomain:
+        return OrganizationDomain(
+            row_id = org_db_model.row_id,
+            org_id = org_db_model.org_id,
+            organization_name = org_db_model.organization_name,
+            owner_address = org_db_model.owner_address,
+            org_metadata_uri = org_db_model.org_metadata_uri,
+            org_email = org_db_model.org_email,
+            org_assets_url = org_db_model.org_assets_url,
+            is_curated = org_db_model.is_curated,
+            description = org_db_model.description,
+            assets_hash = org_db_model.assets_hash,
+            contacts = org_db_model.contacts,
+            created_on = org_db_model.created_on,
+            updated_on = org_db_model.updated_on
+        )
+
+    @staticmethod
     def orgs_from_db_model(
             orgs_db_model_list: Sequence[Organization]
     ) -> list[OrganizationDomain]:
         result = []
         for org_db_model in orgs_db_model_list:
-            result.append(OrganizationDomain(
-                row_id = org_db_model.row_id,
-                org_id = org_db_model.org_id,
-                organization_name = org_db_model.organization_name,
-                owner_address = org_db_model.owner_address,
-                org_metadata_uri = org_db_model.org_metadata_uri,
-                org_email = org_db_model.org_email,
-                org_assets_url = org_db_model.org_assets_url,
-                is_curated = org_db_model.is_curated,
-                description = org_db_model.description,
-                assets_hash = org_db_model.assets_hash,
-                contacts = org_db_model.contacts,
-                created_on = org_db_model.created_on,
-                updated_on = org_db_model.updated_on
-            ))
+            result.append(
+                OrganizationFactory.organization_from_db_model(org_db_model)
+            )
         return result

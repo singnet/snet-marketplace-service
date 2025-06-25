@@ -18,7 +18,7 @@ class ChannelDomain:
     created_on: datetime
     updated_on: datetime
 
-    def to_response(self):
+    def to_response(self) -> dict:
         return {
             "channel_id": self.channel_id,
             "sender": self.sender,

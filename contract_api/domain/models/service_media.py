@@ -1,3 +1,35 @@
+from dataclasses import dataclass
+from datetime import datetime
+
+
+@dataclass
+class ServiceMediaDomain:
+    row_id: str
+    service_row_id: str
+    org_id: str
+    service_id: str
+    url: str
+    order: int
+    file_type: str
+    asset_type: str
+    alt_text: str
+    hash_uri: str
+    created_on: datetime
+    updated_on: datetime
+
+    def to_response(self) -> dict:
+        return {
+            "org_id": self.org_id,
+            "service_id": self.service_id,
+            "url": self.url,
+            "order": self.order,
+            "file_type": self.file_type,
+            "asset_type": self.asset_type,
+            "alt_text": self.alt_text,
+            "hash_uri": self.hash_uri,
+        }
+
+
 class ServiceMedia:
     def __init__(self, org_id, service_id, service_row_id, url, order, file_type, asset_type, alt_text, hash_uri):
         self._service_row_id = service_row_id

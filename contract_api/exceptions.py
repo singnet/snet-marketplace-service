@@ -30,3 +30,8 @@ class InvalidFilterParameter(BadRequestException):
 class InvalidCurateParameter(BadRequestException):
     def __init__(self):
         super().__init__(message="Invalid curate parameter")
+
+
+class InvalidAttributeParameter(BadRequestException):
+    def __init__(self):
+        super().__init__(message="Invalid attribute parameter")

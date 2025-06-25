@@ -1,74 +1,93 @@
+from typing import Any
 
-
+from contract_api.application.schemas.service_schemas import GetServiceFiltersRequest, GetServicesRequest, \
+    GetServiceRequest
+from contract_api.constant import FilterKeys
+from contract_api.infrastructure.repositories.organization_repository import OrganizationRepository
+from contract_api.infrastructure.repositories.service_repository import ServiceRepository
 
 
 class ServiceService:
-    def __init__(self, obj_repo):
-        self.repo = obj_repo
-        self.obj_utils = Utils()
+    def __init__(self):
+        self._service_repo = ServiceRepository()
+        self._org_repo = OrganizationRepository()
 
-    # is used in handler
-    def get_service_filters(self, attribute):
-        """ Method to fetch filter metadata based on attribute."""
-        try:
-            filter_attribute = {"attribute": attribute, "values": []}
-            if attribute == "tag_name":
-                filter_data = self.repo.execute(
-                    "SELECT DISTINCT tag_name AS 'key', tag_name AS 'value' FROM service_tags T, service S "
-                    "WHERE S.row_id = T.service_row_id AND S.is_curated = 1")
-            elif attribute == "display_name":
-                filter_data = self.repo.execute(
-                    "SELECT DISTINCT S.service_id AS 'key',display_name AS 'value' FROM service_metadata M, service S "
-                    "WHERE S.row_id = M.service_row_id AND S.is_curated = 1")
-            elif attribute == "org_id":
-                filter_data = self.repo.execute(
-                    "SELECT DISTINCT O.org_id AS 'key' ,O.organization_name AS 'value' from organization O, service S "
-                    "WHERE S.org_id = O.org_id AND S.is_curated = 1")
-            else:
-                return filter_attribute
-            for rec in filter_data:
-                filter_attribute["values"].append(rec)
+    def get_service_filters(self, request: GetServiceFiltersRequest) -> dict[str, list | dict]:
+        attribute = request.attribute
 
-            return filter_attribute
-        except Exception as e:
-            logger.exception(repr(e))
-            raise e
+        if attribute == FilterKeys.TAG_NAME:
+            tags = self._service_repo.get_unique_service_tags()
+            filters_data = [tag.tag_name for tag in tags]
+        elif attribute == FilterKeys.ORG_ID:
+            orgs = self._org_repo.get_organizations_with_curated_services()
+            filters_data = {org.org_id: org.organization_name for org in orgs}
+        else:
+            filters_data = []
 
-    # is used in handler
-    def get_services(self, qry_param):
-        try:
-            fields_mapping = {"display_name": "display_name",
-                              "tag_name": "tag_name", "org_id": "org_id"}
-            s = qry_param.get('s', 'all')
-            q = qry_param.get('q', '')
-            offset = qry_param.get('offset', GET_ALL_SERVICE_OFFSET_LIMIT)
-            limit = qry_param.get('limit', GET_ALL_SERVICE_LIMIT)
-            sort_by = fields_mapping.get(
-                qry_param.get('sort_by', None), "ranking")
-            order_by = qry_param.get('order_by', 'desc')
-            if order_by.lower() != "desc":
-                order_by = "asc"
+        return {"values": filters_data}
 
-            sub_qry = self._prepare_subquery(s = s, q = q, fm = fields_mapping)
-            logger.info(f"get_all_srvcs::sub_qry: {sub_qry}")
+    def get_services(self, request: GetServicesRequest) -> dict[str, list | int]:
+        limit = request.limit
+        page = request.page
+        sort = request.sort
+        order = request.order
+        filters = request.filter
+        q = request.q
 
-            filter_query = ""
-            values = []
-            if qry_param.get("filters", None) is not None:
-                filter_query, values = self._filters_to_query(
-                    qry_param.get("filters"))
-            logger.info(f"get_all_srvcs::filter_query: {filter_query}, values: {values}")
-            total_count = self._get_total_count(
-                sub_qry = sub_qry, filter_query = filter_query, values = values)
-            if total_count == 0:
-                return self._search_response_format(total_count, offset, limit, [])
-            q_dta = self._search_query_data(sub_qry = sub_qry, sort_by = sort_by, order_by = order_by,
-                                            offset = offset, limit = limit, filter_query = filter_query,
-                                            values = values)
-            return self._search_response_format(total_count, offset, limit, q_dta)
-        except Exception as e:
-            logger.exception(repr(e))
-            raise e
+        services = self._service_repo.get_filtered_services(
+            limit=limit,
+            page=page,
+            sort=sort,
+            order=order,
+            filters=filters,
+            q=q
+        )
+
+        total_count = self._service_repo.get_filtered_services_count(
+            filters=filters,
+            q=q
+        )
+
+        return {
+            "totalCount": total_count,
+            "services": services
+        }
+
+    def get_service(self, request: GetServiceRequest) -> dict[str, Any]:
+        org_id = request.org_id
+        service_id = request.service_id
+
+        service, organization, service_metadata = self._service_repo.get_service(
+            org_id, service_id
+        )
+        service_media = self._service_repo.get_service_media(org_id, service_id)
+        groups_endpoints = self._service_repo.get_service_groups(org_id, service_id)
+        service_tags = self._service_repo.get_service_tags(org_id, service_id)
+        offchain_service_configs = self._service_repo.get_offchain_service_configs(org_id, service_id)
+
+        service_data = service.to_short_response()
+        service_data.update(organization.to_short_response())
+        service_data.update(service_metadata.to_response())
+        service_data["media"] = [media.to_response() for media in service_media]
+
+
+        return service_data
+
+    @staticmethod
+    def _convert_service_groups(groups_endpoints: list) -> dict[str, int | list]:
+        result = {
+            "isAvailable": False,
+            "groups": [],
+        }
+
+        for group, endpoint in groups_endpoints:
+            item = {
+                "group_id": group.group_id,
+                "group_name": group.group_name,
+                "pricing": group.pricing,
+
+            }
+
 
     # is used in handler
     def get_service(self, org_id, service_id):
@@ -377,7 +396,7 @@ class ServiceService:
     def _prepare_offchain_service_attributes(org_id, service_id):
         offchain_attributes = {}
         offchain_service_config_repo = OffchainServiceConfigRepository()
-        offchain_service_config = offchain_service_config_repo.get_offchain_service_config(
+        offchain_service_config = offchain_service_config_repo.get_offchain_service_configs(
             org_id = org_id,
             service_id = service_id
         )

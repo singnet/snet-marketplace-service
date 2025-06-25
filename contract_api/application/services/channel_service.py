@@ -7,7 +7,7 @@ from contract_api.application.schemas.channel_schemas import GetGroupChannelsReq
 from contract_api.config import SIGNER_SERVICE_ARN, REGION_NAME
 from contract_api.domain.models.channel import ChannelDomain
 from contract_api.infrastructure.daemon_client import DaemonClient
-from contract_api.infrastructure.repositories.new_channel_repository import ChannelRepository
+from contract_api.infrastructure.repositories.channel_repository import ChannelRepository
 from contract_api.infrastructure.repositories.service_repository import ServiceRepository
 
 

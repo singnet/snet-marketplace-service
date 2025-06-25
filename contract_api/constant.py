@@ -11,6 +11,8 @@ class ServiceAssetsRegex(Enum):
 class SortKeys(str, Enum):
     DISPLAY_NAME = "displayName"
     RANKING = "ranking"
+    RATING = "rating"
+    NUMBER_OF_RATINGS = "numberOfRatings"
 
 
 class SortOrder(str, Enum):

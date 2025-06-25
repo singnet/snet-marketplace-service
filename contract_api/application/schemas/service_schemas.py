@@ -1,10 +1,10 @@
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, field_validator, model_validator, Field
 
 from common.constant import RequestPayloadType
 from common.validation_handler import validation_handler
 from contract_api.constant import SortKeys, SortOrder, FilterKeys
 from contract_api.exceptions import InvalidSortParameter, InvalidOrderParameter, InvalidFilterParameter, \
-    InvalidCurateParameter
+    InvalidCurateParameter, InvalidAttributeParameter
 
 
 class GetServiceFiltersRequest(BaseModel):
@@ -16,13 +16,20 @@ class GetServiceFiltersRequest(BaseModel):
         data = {**event[RequestPayloadType.QUERY_STRING]}
         return cls.model_validate(data)
 
+    @field_validator("attribute")
+    @classmethod
+    def validate_attribute(cls, value: str):
+        if value not in FilterKeys:
+            raise InvalidAttributeParameter()
+        return value
+
 
 class GetServicesRequest(BaseModel):
     limit: int
     page: int
     sort: str
     order: str
-    filter: dict[str, str] = {}
+    filter: dict[str, bool | list[str]] = {}
     q: str = ""
 
     @classmethod
@@ -55,8 +62,8 @@ class GetServicesRequest(BaseModel):
 
 
 class GetServiceRequest(BaseModel):
-    org_id: str
-    service_id: str
+    org_id: str = Field(alias = "orgId")
+    service_id: str = Field(alias = "serviceId")
 
     @classmethod
     @validation_handler([RequestPayloadType.PATH_PARAMS])

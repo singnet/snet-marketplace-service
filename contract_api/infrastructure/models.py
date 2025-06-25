@@ -239,7 +239,7 @@ class ServiceMedia(Base):
     file_type: Mapped[str] = mapped_column("file_type", VARCHAR(128), default=null)
     asset_type: Mapped[str] = mapped_column("asset_type", VARCHAR(128), default=null)
     alt_text: Mapped[str] = mapped_column("alt_text", VARCHAR(128), default=null)
-    hash_uri = mapped_column("hash_uri", VARCHAR(512), default=null)
+    hash_uri: Mapped[str] = mapped_column("hash_uri", VARCHAR(512), default=null)
     
     created_on: Mapped[datetime] = mapped_column(
         "created_on", TIMESTAMP(timezone = False), nullable = True, server_default = func.now()

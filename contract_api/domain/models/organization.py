@@ -18,7 +18,7 @@ class OrganizationDomain:
     created_on: datetime
     updated_on: datetime
 
-    def to_response(self):
+    def to_response(self) -> dict:
         return {
             "org_id": self.org_id,
             "organization_name": self.organization_name,
@@ -29,5 +29,15 @@ class OrganizationDomain:
             "is_curated": self.is_curated,
             "description": self.description,
             "assets_hash": self.assets_hash,
+            "contacts": self.contacts
+        }
+
+    def to_short_response(self) -> dict:
+        for contact in self.contacts:
+            contact.update({"contactType": contact["contact_type"]})
+        return {
+            "orgId": self.org_id,
+            "organizationName": self.organization_name,
+            "orgImageUrl": self.org_assets_url["hero_image"],
             "contacts": self.contacts
         }
