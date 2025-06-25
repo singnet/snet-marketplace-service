@@ -206,7 +206,7 @@ def test_register_user_post_aws_cognito_signup_handler(
 ):
     monkeypatch.setattr(base_repository, "default_session", test_session)
 
-    result = user_handlers.register_user_post_aws_cognito_signup_handler(
+    result = user_handlers.post_aws_cognito_signup_handler(
         post_confirmation_cognito_event, context={}
     )
 
@@ -263,7 +263,7 @@ def test_delete_user_handler_failed(
     assert body["error"]["message"] == f"User with username '{expected_username}' not found"
 
 
-def test_create_user_service_review_handler_with_comment(
+def test_create_user_service_feedback_handler_with_comment(
     lambda_event_authorized: dict,
     create_test_users: List[User],
     monkeypatch: MonkeyPatch,
@@ -293,7 +293,7 @@ def test_create_user_service_review_handler_with_comment(
 
     lambda_event_authorized["body"] = json.dumps(request_body)
 
-    result = user_handlers.create_user_service_review_handler(lambda_event_authorized, context={})
+    result = user_handlers.create_user_review_handler(lambda_event_authorized, context={})
 
     assert result["statusCode"] == HTTPStatus.OK
 
