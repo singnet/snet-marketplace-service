@@ -19,3 +19,10 @@ class OrgGroupDomain:
             "group_name": self.group_name,
             "payment": self.payment,
         }
+
+    def to_short_response(self) -> dict:
+        return {
+            "groupId": self.group_id,
+            "groupName": self.group_name,
+            "payment": self.payment,
+        }

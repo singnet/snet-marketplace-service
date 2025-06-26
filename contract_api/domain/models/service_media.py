@@ -29,6 +29,12 @@ class ServiceMediaDomain:
             "hash_uri": self.hash_uri,
         }
 
+    def to_short_response(self) -> dict:
+        return {
+            "url": self.url,
+            "assetType": self.asset_type,
+        }
+
 
 class ServiceMedia:
     def __init__(self, org_id, service_id, service_row_id, url, order, file_type, asset_type, alt_text, hash_uri):

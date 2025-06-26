@@ -8,13 +8,15 @@ from contract_api.infrastructure.repositories.base_repository import BaseReposit
 
 
 class OrganizationRepository(BaseRepository):
-    def get_groups(self, org_id: str, group_id: str) -> list[OrgGroupDomain]:
+    def get_groups(self, org_id: str, group_id: str = None) -> list[OrgGroupDomain]:
         query = select(
             OrgGroup
         ).where(
-            OrgGroup.org_id == org_id,
-            OrgGroup.group_id == group_id
+            OrgGroup.org_id == org_id
         )
+
+        if group_id is not None:
+            query = query.where(OrgGroup.group_id == group_id)
 
         result = self.session.execute(query)
         groups_db = result.scalars().all()

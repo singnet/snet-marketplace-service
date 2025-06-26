@@ -28,3 +28,9 @@ class ServiceEndpointDomain:
             "next_check_timestamp": self.next_check_timestamp,
             "failed_status_count": self.failed_status_count,
         }
+
+    def to_short_response(self):
+        return {
+            "endpoint": self.endpoint,
+            "is_available": self.is_available,
+        }

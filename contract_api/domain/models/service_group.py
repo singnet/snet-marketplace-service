@@ -29,9 +29,9 @@ class ServiceGroupDomain:
 
     def to_short_response(self) -> dict:
         return {
-            "group_id": self.group_id,
-            "group_name": self.group_name,
-            "free_call_signer_address": self.free_call_signer_address,
-            "free_calls": self.free_calls,
+            "groupId": self.group_id,
+            "groupName": self.group_name,
+            "freeCallSignerAddress": self.free_call_signer_address,
+            "freeCalls": self.free_calls,
             "pricing": self.pricing,
         }

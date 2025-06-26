@@ -1,4 +1,3 @@
-from datetime import datetime as dt
 from typing import Sequence
 
 from contract_api.domain.models.demo_component import DemoComponent
@@ -145,9 +144,22 @@ class ServiceFactory:
                 org_id=offchain_service_config_db_model.org_id,
                 service_id=offchain_service_config_db_model.service_id,
                 parameter_name = offchain_service_config_db_model.parameter_name,
-                parameter_value = offchain_service_config_db_model.parameter_value,
-                created_on = offchain_service_config_db_model.created_on,
-                updated_on = offchain_service_config_db_model.updated_on
+                parameter_value = offchain_service_config_db_model.parameter_value
+            ))
+        return result
+
+    @staticmethod
+    def offchain_service_configs_from_demo_component(
+            demo_component: DemoComponent
+    ) -> list[OffchainServiceConfigDomain]:
+        result = []
+        for name, value in demo_component.to_dict().items():
+            result.append(OffchainServiceConfigDomain(
+                row_id=-1,
+                org_id="",
+                service_id="",
+                parameter_name = name,
+                parameter_value = value
             ))
         return result
 

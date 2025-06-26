@@ -9,8 +9,6 @@ class OffchainServiceConfigDomain:
     service_id: str
     parameter_name: str
     parameter_value: str
-    created_on: datetime
-    updated_on: datetime
 
     def to_response(self):
         return {
@@ -20,7 +18,10 @@ class OffchainServiceConfigDomain:
             "parameter_value": self.parameter_value
         }
 
-
+    def to_attribute(self):
+        return {
+            self.parameter_name: self.parameter_value
+        }
 
 
 class OffchainServiceAttribute:

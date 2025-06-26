@@ -1,6 +1,6 @@
 import datetime as dt
 
-from sqlalchemy import select, and_, or_, func
+from sqlalchemy import select, and_, or_, func, update
 from sqlalchemy.exc import SQLAlchemyError
 
 from contract_api.domain.factory.organization_factory import OrganizationFactory
@@ -289,6 +289,58 @@ class ServiceRepository(BaseRepository):
         offchain_service_config_db = result.scalars().all()
 
         return ServiceFactory.offchain_service_configs_from_db_model_list(offchain_service_config_db)
+
+    def curate_service(self, org_id, service_id, curate):
+        query = update(
+            Service
+        ).where(
+            Service.org_id == org_id,
+            Service.service_id == service_id
+        ).values(
+            is_curated=curate
+        )
+
+        self.session.execute(query)
+        self.session.commit()
+
+    def upsert_offchain_service_config(
+            self,
+            org_id: str,
+            service_id: str,
+            offchain_service_configs: list[OffchainServiceConfigDomain]) -> None:
+        for offchain_service_config in offchain_service_configs:
+            query = select(
+                OffchainServiceConfig
+            ).where(
+                OffchainServiceConfig.org_id == org_id,
+                OffchainServiceConfig.service_id == service_id,
+                OffchainServiceConfig.parameter_name == offchain_service_config.parameter_name
+            ).limit(1)
+
+            result = self.session.execute(query)
+            offchain_service_config_db = result.scalar_one_or_none()
+
+            if offchain_service_config_db:
+                query = update(
+                    OffchainServiceConfig
+                ).where(
+                    OffchainServiceConfig.org_id == org_id,
+                    OffchainServiceConfig.service_id == service_id,
+                    OffchainServiceConfig.parameter_name == offchain_service_config.parameter_name
+                ).values(
+                    parameter_value=offchain_service_config.parameter_value
+                )
+
+                self.session.execute(query)
+                self.session.commit()
+            else:
+                self.session.add(OffchainServiceConfig(
+                    org_id=org_id,
+                    service_id=service_id,
+                    parameter_name=offchain_service_config.parameter_name,
+                    parameter_value=offchain_service_config.parameter_value
+                ))
+                self.session.commit()
 
     def get_service(self, org_id, service_id):
         try:
