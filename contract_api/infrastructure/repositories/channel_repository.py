@@ -1,7 +1,7 @@
-from sqlalchemy import select, update
+from sqlalchemy import select, update, insert
 
 from contract_api.domain.factory.channel_factory import ChannelFactory
-from contract_api.domain.models.channel import ChannelDomain
+from contract_api.domain.models.channel import ChannelDomain, NewChannelDomain
 from contract_api.infrastructure.models import MpeChannel, OrgGroup, Organization
 from contract_api.infrastructure.repositories.base_repository import BaseRepository
 
@@ -64,4 +64,43 @@ class ChannelRepository(BaseRepository):
         )
 
         self.session.execute(query)
+        self.session.commit()
+
+    def upsert_channel(self, channel: NewChannelDomain) -> None:
+        query = select(
+            MpeChannel
+        ).where(
+            MpeChannel.channel_id == channel.channel_id
+        ).limit(1)
+
+        result = self.session.execute(query)
+        channel_db = result.scalar_one_or_none()
+
+        if channel_db:
+            query = update(
+                MpeChannel
+            ).where(
+                MpeChannel.channel_id == channel.channel_id
+            ).values(
+                balance_in_cogs=channel.balance_in_cogs,
+                pending=0,
+                nonce=channel.nonce,
+                expiration=channel.expiration
+            )
+            self.session.execute(query)
+        else:
+            self.session.add(
+                MpeChannel(
+                    channel_id=channel.channel_id,
+                    sender=channel.sender,
+                    signer = channel.signer,
+                    recipient=channel.recipient,
+                    group_id=channel.group_id,
+                    balance_in_cogs=channel.balance_in_cogs,
+                    pending=0,
+                    nonce=channel.nonce,
+                    expiration=channel.expiration
+                )
+            )
+
         self.session.commit()

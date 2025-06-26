@@ -31,3 +31,14 @@ class ChannelDomain:
             "pending": self.pending,
             "consumed_balance": self.consumed_balance,
         }
+
+@dataclass
+class NewChannelDomain:
+    channel_id: int
+    sender: str
+    signer: str
+    recipient: str
+    group_id: str
+    balance_in_cogs: int
+    nonce: int
+    expiration: int

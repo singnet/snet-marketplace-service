@@ -43,23 +43,3 @@ class MPERepository(CommonRepository):
                 amount=channel_data[5]
             )
         )
-
-
-    def get_mpe_channels(self, channel_id):
-        select_mp_channel = "SELECT row_id, channel_id, sender, recipient, groupId, balance_in_cogs, pending, nonce, consumed_balance, expiration, signer, row_created, row_updated from mpe_channel where channel_id = %s"
-        params = [channel_id]
-
-        query_response = self.connection.execute(select_mp_channel, params)
-        return query_response
-
-    def delete_mpe_channel(self, channel_id):
-        select_mp_channel = "delete from mpe_channel where channel_id = %s"
-        params = [channel_id]
-
-        query_response = self.connection.execute(select_mp_channel, params)
-        return query_response
-
-    def update_consumed_balance(self, channel_id, consumed_balance):
-        self.connection.execute(
-            "UPDATE `mpe_channel` SET consumed_balance = %s WHERE channel_id = %s", [consumed_balance, channel_id]
-        )

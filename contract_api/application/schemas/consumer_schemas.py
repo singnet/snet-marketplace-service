@@ -36,13 +36,13 @@ class EventConsumerRequest(BaseModel):
 
 class MpeEventConsumerRequest(EventConsumerRequest):
     channel_id: int = Field(alias = "channelId")
-    group_id: str = Field(alias = "groupId")
-    sender: str
-    signer: str
-    recipient: str
-    nonce: int
-    expiration: int
-    amount: int
+    group_id: bytes = Field(alias = "groupId", default = None)
+    sender: str | None = None
+    signer: str | None = None
+    recipient: str | None = None
+    nonce: int | None = None
+    expiration: int | None = None
+    amount: int | None = None
 
     @classmethod
     @validation_handler

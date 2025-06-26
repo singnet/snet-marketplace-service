@@ -332,7 +332,6 @@ class ServiceRepository(BaseRepository):
                 )
 
                 self.session.execute(query)
-                self.session.commit()
             else:
                 self.session.add(OffchainServiceConfig(
                     org_id=org_id,
@@ -340,7 +339,7 @@ class ServiceRepository(BaseRepository):
                     parameter_name=offchain_service_config.parameter_name,
                     parameter_value=offchain_service_config.parameter_value
                 ))
-                self.session.commit()
+            self.session.commit()
 
     def get_service(self, org_id, service_id):
         try:
