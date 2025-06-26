@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 from dapp_user.application.handlers import user_handlers
 from dapp_user.application.services.user_service import UserService
+from dapp_user.domain.interfaces.user_identity_manager_interface import UserIdentityManager
 from dapp_user.domain.models.user_preference import UserPreference as UserPreferenceDomain
 from dapp_user.infrastructure.models import User
 from dapp_user.infrastructure.repositories import base_repository
@@ -313,3 +314,23 @@ def test_create_user_service_feedback_handler_with_comment(
     )
     assert feedback is not None
     assert feedback.comment == expected_comment
+
+
+def test_sync_users_handler(
+    create_test_users: List[User],
+    monkeypatch: MonkeyPatch,
+    test_session: SessionType,
+    user_repo: UserRepository,
+    mock_user_identity_manager: UserIdentityManager,
+    fake_cognito_users: List[User],
+):
+    monkeypatch.setattr(base_repository, "default_session", test_session)
+
+    mock_user_service = UserService(user_identity_manager=mock_user_identity_manager)
+    user_handlers.__user_service = mock_user_service
+
+    user_handlers.sync_users_handler(event={}, context={})
+
+    for cognito_user in fake_cognito_users:
+        user = user_repo.get_user(username=cognito_user.username)
+        assert cognito_user.account_id == user.account_id

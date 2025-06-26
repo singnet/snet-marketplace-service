@@ -3,6 +3,7 @@ from typing import Generator, List
 
 import pytest
 from dapp_user.domain.factory.user_factory import UserFactory
+from dapp_user.domain.models.user import NewUser
 from dapp_user.domain.models.user_preference import UserPreference as UserPreferenceDomain
 from dapp_user.infrastructure.models import User, UserPreference
 from dapp_user.infrastructure.repositories import base_repository
@@ -231,3 +232,28 @@ def post_confirmation_cognito_event() -> dict:
         },
         "response": {},
     }
+
+
+@pytest.fixture
+def fake_cognito_users():
+    return [
+        NewUser(
+            account_id="abc123",
+            username="testuser",
+            name="Test User",
+            email="test@example.com",
+            email_verified=True,
+            email_alerts=True,
+            status=True,
+            is_terms_accepted=True,
+        )
+    ]
+
+
+@pytest.fixture
+def mock_user_identity_manager(fake_cognito_users: List[NewUser]):
+    class MockUserIdentityManager:
+        def get_all_users(self):
+            return fake_cognito_users
+
+    return MockUserIdentityManager()
