@@ -12,13 +12,16 @@ from dapp_user.application.schemas import (
 from dapp_user.constant import Status
 from dapp_user.domain.factory.user_factory import UserFactory
 from dapp_user.domain.interfaces.contract_api_client_interface import AbstractContractAPIClient
+from dapp_user.domain.interfaces.user_identity_manager_interface import UserIdentityManager
 from dapp_user.domain.interfaces.wallet_api_client_interface import AbstractWalletsAPIClient
 from dapp_user.domain.models.user_preference import user_preferences_to_dict
 from dapp_user.exceptions import UserNotFoundHTTPException
+from dapp_user.infrastructure.cognito_api import CognitoUserManager
 from dapp_user.infrastructure.contract_api_client import ContractAPIClient, ContractAPIClientError
 from dapp_user.infrastructure.repositories.exceptions import UserNotFoundException
 from dapp_user.infrastructure.repositories.user_repository import UserRepository
 from dapp_user.infrastructure.wallets_api_client import WalletsAPIClient, WalletsAPIClientError
+from dapp_user.settings import settings
 
 logger = get_logger(__name__)
 
@@ -28,11 +31,15 @@ class UserService:
         self,
         wallets_api_client: AbstractWalletsAPIClient | None = None,
         contract_api_client: AbstractContractAPIClient | None = None,
+        user_identity_manager: UserIdentityManager | None = None,
     ):
         self.user_factory = UserFactory()
         self.user_repo = UserRepository()
         self.wallets_api_client = wallets_api_client or WalletsAPIClient()
         self.contract_api_client = contract_api_client or ContractAPIClient()
+        self.user_identity_manager = user_identity_manager or CognitoUserManager(
+            settings.aws.cognito_pool
+        )
 
     def add_or_update_user_preference(
         self, username: str, request: AddOrUpdateUserPreferencesRequest
@@ -84,6 +91,10 @@ class UserService:
             msg = f"Failed to delete user wallet for {username}: {str(e)}"
             logger.error(msg)
             raise BadGateway(msg)
+
+    def sync_users(self):
+        users_for_sync = self.user_identity_manager.get_all_users()
+        self.user_repo.batch_insert_users(users_for_sync)
 
     def register_user(self, request: CognitoUserPoolEvent) -> dict:
         new_user = self.user_factory.user_from_cognito_request(event=request)

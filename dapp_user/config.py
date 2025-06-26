@@ -17,6 +17,7 @@ class DBConfigDict(TypedDict):
 
 class AWSConfigDict(TypedDict):
     region_name: str
+    cognito_pool: str
 
 
 class LambdaARNConfigDict(TypedDict):
@@ -40,6 +41,7 @@ DB_CONFIG: DBConfigDict = {
 
 AWS: AWSConfigDict = {
     "region_name": "us-east-1",
+    "cognito_pool": "us-east-1_xxxxxx",
 }
 
 LAMBDA_ARN: LambdaARNConfigDict = {

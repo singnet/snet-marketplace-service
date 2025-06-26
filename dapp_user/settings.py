@@ -19,6 +19,7 @@ class SlackHookConfig(BaseModel):
 
 class AWSConfig(BaseModel):
     region_name: str
+    cognito_pool: str
 
 
 class LambdaARNConfig(BaseModel):

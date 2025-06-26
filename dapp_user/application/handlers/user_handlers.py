@@ -117,3 +117,8 @@ def post_aws_cognito_signup_handler(event, context):
     if cognito_event.trigger_source == CognitoTriggerSource.POST_CONFIRMATION:
         __user_service.register_user(cognito_event)
     return event
+
+
+@worker_exception_handler(logger=logger)
+def sync_users_handler(event, context):
+    __user_service.sync_users()
