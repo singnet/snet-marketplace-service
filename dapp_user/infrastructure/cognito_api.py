@@ -32,7 +32,7 @@ class CognitoUserManager(UserIdentityManager):
 
                 new_user = NewUser(
                     account_id=attr_map["sub"],
-                    username=user["email"],
+                    username=attr_map["email"],
                     name=attr_map["nickname"],
                     email=attr_map["email"],
                     email_verified=True,
