@@ -1,21 +1,17 @@
 import base64
 
 from common.logger import get_logger
-from common.repository import Repository
 from contract_api.application.consumers.event_consumer import EventConsumer
 from contract_api.application.schemas.consumer_schemas import MpeEventConsumerRequest
-from contract_api.config import NETWORK_ID, NETWORKS
-from contract_api.dao.mpe_repository import MPERepository
 from contract_api.domain.models.channel import NewChannelDomain
 from contract_api.infrastructure.repositories.channel_repository import ChannelRepository
 
-logger=get_logger(__name__)
+logger = get_logger(__name__)
 
 
 class MPEEventConsumer(EventConsumer):
     def __init__(self):
         super().__init__()
-        self._mpe_repository = MPERepository(Repository(NETWORK_ID, NETWORKS=NETWORKS))
         self._channel_repo = ChannelRepository()
 
     def on_event(self, request: MpeEventConsumerRequest) -> None:

@@ -2,19 +2,23 @@ from dataclasses import dataclass
 from datetime import datetime
 
 
-@dataclass(frozen=True)
-class OrganizationDomain:
-    row_id: int
+@dataclass
+class NewOrganizationDomain:
     org_id: str
     organization_name: str
     owner_address: str
     org_metadata_uri: str
-    org_email: str
     org_assets_url: dict
     is_curated: bool
     description: dict
     assets_hash: dict
     contacts: dict
+
+
+@dataclass
+class OrganizationDomain(NewOrganizationDomain):
+    row_id: int
+    org_email: str
     created_on: datetime
     updated_on: datetime
 
@@ -41,3 +45,5 @@ class OrganizationDomain:
             "orgImageUrl": self.org_assets_url["hero_image"],
             "contacts": self.contacts
         }
+
+

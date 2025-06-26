@@ -1,9 +1,9 @@
-from sqlalchemy import select
+from sqlalchemy import select, delete, update
 
 from contract_api.domain.factory.organization_factory import OrganizationFactory
 from contract_api.domain.models.org_group import OrgGroupDomain
-from contract_api.domain.models.organization import OrganizationDomain
-from contract_api.infrastructure.models import OrgGroup, Organization, Service
+from contract_api.domain.models.organization import OrganizationDomain, NewOrganizationDomain
+from contract_api.infrastructure.models import OrgGroup, Organization, Service, Members
 from contract_api.infrastructure.repositories.base_repository import BaseRepository
 
 
@@ -36,3 +36,80 @@ class OrganizationRepository(BaseRepository):
         organizations_db = result.scalars().all()
 
         return OrganizationFactory.orgs_from_db_model(organizations_db)
+
+    def get_organization(self, org_id: str) -> OrganizationDomain:
+        query = select(
+            Organization
+        ).where(
+            Organization.org_id == org_id
+        ).limit(1)
+
+        result = self.session.execute(query)
+        organization_db = result.scalar_one_or_none()
+
+        return OrganizationFactory.organization_from_db_model(organization_db)
+
+    def delete_organization(self, org_id: str) -> None:
+        query = delete(
+            Organization
+        ).where(
+            Organization.org_id == org_id
+        )
+        self.session.execute(query)
+
+        self.session.commit()
+
+    def delete_members(self, org_id: str) -> None:
+        query = delete(
+            Members
+        ).where(
+            Members.org_id == org_id
+        )
+        self.session.execute(query)
+
+        self.session.commit()
+
+    def upsert_organization(self, organization: NewOrganizationDomain) -> None:
+        query = select(
+            Organization
+        ).where(
+            Organization.org_id == organization.org_id
+        ).limit(1)
+
+        result = self.session.execute(query)
+        organization_db = result.scalar_one_or_none()
+
+        if organization_db:
+            query = update(
+                Organization
+            ).where(
+                Organization.org_id == organization.org_id
+            ).values(
+                organization_name = organization.organization_name,
+                owner_address = organization.owner_address,
+                org_metadata_uri = organization.org_metadata_uri,
+                org_assets_url = organization.org_assets_url,
+                is_curated = organization.is_curated,
+                description = organization.description,
+                assets_hash = organization.assets_hash,
+                contacts = organization.contacts
+            )
+
+            self.session.execute(query)
+        else:
+            self.session.add(
+                Organization(
+                    org_id=organization.org_id,
+                    organization_name = organization.organization_name,
+                    owner_address = organization.owner_address,
+                    org_metadata_uri = organization.org_metadata_uri,
+                    org_assets_url = organization.org_assets_url,
+                    is_curated = organization.is_curated,
+                    description = organization.description,
+                    assets_hash = organization.assets_hash,
+                    contacts = organization.contacts
+                )
+            )
+
+        self.session.commit()
+
