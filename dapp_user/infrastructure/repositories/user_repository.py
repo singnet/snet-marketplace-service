@@ -1,5 +1,6 @@
 from typing import List, Tuple
 
+from common.utils import chunked
 from dapp_user.domain.factory.user_factory import UserFactory
 from dapp_user.domain.models.user import NewUser as NewUserDomain
 from dapp_user.domain.models.user import User as UserDomain
@@ -22,7 +23,8 @@ from dapp_user.infrastructure.repositories.exceptions import (
     UserPreferenceAlreadyExistsException,
     UserPreferenceNotFoundException,
 )
-from sqlalchemy import delete, func, insert, select, update
+from sqlalchemy import delete, func, select, update
+from sqlalchemy.dialects.mysql import insert
 from sqlalchemy.exc import IntegrityError
 
 
@@ -107,11 +109,47 @@ class UserRepository(BaseRepository):
 
         return UserFactory.user_preferences_from_db_model(user_preference_db)
 
+    @BaseRepository.write_ops
     def delete_user(self, username: str):
         query = delete(User).where(User.username == username)
         result = self.session.execute(query)
         if result.rowcount == 0:
             raise UserNotFoundException(username=username)
+        self.session.commit()
+
+    @BaseRepository.write_ops
+    def batch_insert_users(
+        self,
+        users: List[NewUserDomain],
+        batch_size: int = 100,
+    ):
+        if not users:
+            return
+
+        for batch in chunked(users, batch_size):
+            user_dicts = [
+                {
+                    "account_id": user.account_id,
+                    "username": user.username,
+                    "name": user.name,
+                    "email": user.email,
+                    "email_verified": user.email_verified,
+                    "email_alerts": user.email_alerts,
+                    "status": user.status,
+                    "is_terms_accepted": user.is_terms_accepted,
+                }
+                for user in batch
+            ]
+
+            stmt = insert(User).values(user_dicts)
+
+            stmt = stmt.on_duplicate_key_update(
+                name=stmt.inserted.name,
+                email=stmt.inserted.email,  # no-op
+            )
+
+            self.session.execute(stmt)
+
         self.session.commit()
 
     @BaseRepository.write_ops
