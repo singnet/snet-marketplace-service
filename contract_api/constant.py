@@ -24,3 +24,7 @@ class FilterKeys(str, Enum):
     ORG_ID = "orgId"
     TAG_NAME = "tagName"
     ONLY_AVAILABLE = "onlyAvailable"
+
+class BuildCode(int, Enum):
+    SUCCESS = 1
+    FAILED = 0

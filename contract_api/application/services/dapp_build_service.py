@@ -1,17 +1,26 @@
+from common.utils import get_logger
 from common import utils
+from common.boto_utils import BotoUtils
 from common.constant import BuildStatus
+from common.exceptions import InvalidFilePath
+from contract_api.application.schemas.dapp_build_schemas import TriggerDappBuildRequest, NotifyDeployStatusRequest
+from contract_api.config import REGION_NAME, MARKETPLACE_DAPP_BUILD
+from contract_api.constant import ServiceAssetsRegex, BuildCode
+from contract_api.domain.models.offchain_service_attribute import OffchainServiceConfigDomain
+from contract_api.infrastructure.repositories.service_repository import ServiceRepository
+
+logger = get_logger(__name__)
 
 
 class DappBuildService:
-    def __init__(self, obj_repo):
-        self.repo = obj_repo
-        self.obj_utils = Utils()
+    def __init__(self):
+        self._boto_utils = BotoUtils(REGION_NAME)
+        self._service_repo = ServiceRepository()
 
-    # is used in handler
-    @staticmethod
-    def trigger_dapp_build(payload):
-        file_path = payload["Records"][0]['s3']['object']['key']
-        org_id, service_id = UpdateServiceAssets._extract_file_details_from_file_path(file_path = file_path)
+    def trigger_dapp_build(self, request: TriggerDappBuildRequest):
+        file_path = request.file_path
+
+        org_id, service_id = self._extract_file_details_from_file_path(file_path = file_path)
         variables = {"org_id": org_id, "service_id": service_id}
         env_variables = []
         for variable in variables:
@@ -20,28 +29,32 @@ class DappBuildService:
             'projectName': MARKETPLACE_DAPP_BUILD,
             'environmentVariablesOverride': env_variables
         }
-        build_trigger_response = boto_utils.trigger_code_build(build_details = build_details)
+        build_trigger_response = self._boto_utils.trigger_code_build(build_details = build_details)
         build_id = build_trigger_response['build']['id']
         logger.info(f"Build triggered details :: {build_details} build_id :: {build_id}")
         return build_id
 
-    # is used in handler
-    @staticmethod
-    def notify_build_status(org_id, service_id, build_status):
+    def notify_build_status(self, request: NotifyDeployStatusRequest) -> dict:
+        org_id = request.org_id
+        service_id = request.service_id
+        build_status = request.build_status
         is_curated = False
-        if build_status == BUILD_CODE['SUCCESS']:
+
+        if build_status == BuildCode.SUCCESS:
             is_curated = True
-        service = new_service_repo.get_service(org_id = org_id, service_id = service_id)
-        if service:
-            service.is_curated = is_curated
-            new_service_repo.create_or_update_service(service = service)
-        else:
-            raise Exception(f"Unable to find service for service_id {service_id} and org_id {org_id}")
-        demo_build_status = BuildStatus.SUCCESS if build_status == BUILD_CODE['SUCCESS'] else BuildStatus.FAILED
-        offchain_attributes = OffchainServiceAttribute(
-            org_id, service_id, {"demo_component_status": demo_build_status}
+        self._service_repo.curate_service(org_id, service_id, is_curated)
+
+        demo_build_status = BuildStatus.SUCCESS if build_status == BuildCode.SUCCESS else BuildStatus.FAILED
+        offchain_attributes = OffchainServiceConfigDomain(
+            row_id=0, # dummy
+            org_id=org_id,
+            service_id=service_id,
+            parameter_name = "demo_component_build_status",
+            parameter_value = demo_build_status
         )
-        OffchainServiceConfigRepository().save_offchain_service_attribute(offchain_attributes)
+        self._service_repo.upsert_offchain_service_config(org_id, service_id, [offchain_attributes])
+
+        return {}
 
     @staticmethod
     def _extract_file_details_from_file_path(file_path):

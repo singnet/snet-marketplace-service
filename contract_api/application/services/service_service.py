@@ -171,5 +171,3 @@ class ServiceService:
         self._boto_utils.s3_upload_file(filename = output_path, bucket = ASSETS_COMPONENT_BUCKET_NAME, key = key)
         new_demo_url = f"https://{ASSETS_COMPONENT_BUCKET_NAME}.s3.amazonaws.com/{key}"
         return new_demo_url
-
-

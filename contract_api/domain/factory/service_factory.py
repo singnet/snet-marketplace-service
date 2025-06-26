@@ -155,9 +155,9 @@ class ServiceFactory:
         result = []
         for name, value in demo_component.to_dict().items():
             result.append(OffchainServiceConfigDomain(
-                row_id=-1,
-                org_id="",
-                service_id="",
+                row_id=0, # dummy
+                org_id="", # dummy
+                service_id="", # dummy
                 parameter_name = name,
                 parameter_value = value
             ))
