@@ -39,5 +39,5 @@ class User(BaseUser):
             "emailVerified": self.email_verified,
             "emailAlerts": self.email_alerts,
             "status": self.status,
-            "isTermsAccepted": self.is_terms_accepted
+            "isTermsAccepted": self.is_terms_accepted,
         }

@@ -2,6 +2,7 @@ import json
 from typing import Dict, List
 
 import boto3
+from dapp_user.constant import CognitoAttributes
 from dapp_user.domain.interfaces.user_identity_manager_interface import UserIdentityManager
 from dapp_user.domain.models.user import NewUser
 
@@ -39,7 +40,7 @@ class CognitoUserManager(UserIdentityManager):
                     email_alerts=True,
                     status=True,
                     is_terms_accepted=self._parse_terms_accepted(
-                        attr_map.get("custom:publisher_tnc")
+                        attr_map.get(CognitoAttributes.TNC)
                     ),
                 )
                 users.append(new_user)

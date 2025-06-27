@@ -105,7 +105,7 @@ class UserFactory:
             email_verified=event.request.user_attributes.email_verified,
             email_alerts=False,
             status=True,
-            is_terms_accepted=False,
+            is_terms_accepted=True,
         )
 
     @staticmethod

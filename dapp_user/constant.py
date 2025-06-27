@@ -27,3 +27,7 @@ class Status(str, Enum):
 
 class CognitoTriggerSource(str, Enum):
     POST_CONFIRMATION = "PostConfirmation_ConfirmSignUp"
+
+
+class CognitoAttributes(str, Enum):
+    TNC = "custom:publisher_tnc"
