@@ -182,7 +182,6 @@ class GetUserFeedbackRequest(BaseModel):
 
 
 class CreateUserServiceReviewRequest(BaseModel):
-    user_row_id: int = Field(..., alias="userId")
     org_id: str = Field(..., alias="orgId")
     service_id: str = Field(..., alias="serviceId")
     user_rating: float = Field(..., alias="userRating")

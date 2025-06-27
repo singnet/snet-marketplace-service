@@ -218,19 +218,15 @@ class UserRepository(BaseRepository):
         user_vote: UserServiceVoteDomain,
         user_feedback: UserServiceFeedbackDomain | None,
     ) -> Tuple[float, int]:
-        """
-        Atomically sets user vote and feedback, then returns updated aggregated rating info.
-        """
-        with self.session.begin():
-            self.__update_or_set_user_vote(user_vote)
+        self.__update_or_set_user_vote(user_vote)
 
-            if user_feedback is not None:
-                self.__set_user_feedback(user_feedback)
+        if user_feedback is not None:
+            self.__set_user_feedback(user_feedback)
 
-            avg_rating, total_rated = self.__aggregate_service_rating(
-                org_id=user_vote.org_id,
-                service_id=user_vote.service_id,
-            )
+        avg_rating, total_rated = self.__aggregate_service_rating(
+            org_id=user_vote.org_id,
+            service_id=user_vote.service_id,
+        )
         return avg_rating, total_rated
 
     def get_user_service_vote_and_feedback(

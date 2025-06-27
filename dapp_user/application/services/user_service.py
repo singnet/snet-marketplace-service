@@ -126,14 +126,22 @@ class UserService:
 
         return response
 
-    def create_user_review(self, request: CreateUserServiceReviewRequest) -> None:
-        user_vote, user_feedback = self.user_factory.user_vote_feedback_from_request(
-            create_feedback_request=request
-        )
-        #: TODO think about rollback or distributed transaction if update service rating fails (saga pattern)
-        rating, total_users_rated = self.user_repo.submit_user_feedback(
-            user_vote=user_vote, user_feedback=user_feedback
-        )
+    def create_user_review(
+        self,
+        username: str,
+        request: CreateUserServiceReviewRequest
+    ) -> None:
+        with self.user_repo.session.begin():
+            user = self.user_repo.get_user(username=username)
+
+            user_vote, user_feedback = self.user_factory.user_vote_feedback_from_request(
+                user_row_id=user.row_id,
+                create_feedback_request=request
+            )
+            #: TODO think about rollback or distributed transaction if update service rating fails (saga pattern)
+            rating, total_users_rated = self.user_repo.submit_user_feedback(
+                user_vote=user_vote, user_feedback=user_feedback
+            )
         try:
             self.contract_api_client.update_service_rating(
                 org_id=user_vote.org_id,

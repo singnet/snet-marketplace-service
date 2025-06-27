@@ -265,7 +265,7 @@ def test_delete_user_handler_failed(
     assert body["error"]["message"] == f"User with username '{expected_username}' not found"
 
 
-def test_create_user_service_feedback_handler_with_comment(
+def test_create_user_service_review_handler_with_comment(
     lambda_event_authorized: dict,
     create_test_users: List[User],
     monkeypatch: MonkeyPatch,

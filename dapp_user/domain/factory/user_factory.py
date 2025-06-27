@@ -74,10 +74,11 @@ class UserFactory:
 
     @staticmethod
     def user_vote_feedback_from_request(
+        user_row_id: int,
         create_feedback_request: CreateUserServiceReviewRequest,
     ) -> Tuple[UserServiceVote, UserServiceFeedback | None]:
         user_vote = UserServiceVote(
-            user_row_id=create_feedback_request.user_row_id,
+            user_row_id=user_row_id,
             org_id=create_feedback_request.org_id,
             service_id=create_feedback_request.service_id,
             rating=create_feedback_request.user_rating,
@@ -86,7 +87,7 @@ class UserFactory:
         user_feedback = None
         if create_feedback_request.comment:
             user_feedback = UserServiceFeedback(
-                user_row_id=create_feedback_request.user_row_id,
+                user_row_id=user_row_id,
                 org_id=create_feedback_request.org_id,
                 service_id=create_feedback_request.service_id,
                 comment=create_feedback_request.comment,

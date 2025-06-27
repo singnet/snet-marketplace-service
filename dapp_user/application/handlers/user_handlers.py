@@ -102,9 +102,14 @@ def get_user_service_review_handler(event, context):
 
 @exception_handler(logger=logger)
 def create_user_review_handler(event, context):
+    req_ctx = RequestContext(event)
+
     request = CreateUserServiceReviewRequest.validate_event(event)
 
-    response = __user_service.create_user_review(request=request)
+    response = __user_service.create_user_review(
+        username=req_ctx.username,
+        request=request
+    )
 
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response}, cors_enabled=True
