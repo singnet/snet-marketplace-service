@@ -106,10 +106,7 @@ def create_user_review_handler(event, context):
 
     request = CreateUserServiceReviewRequest.validate_event(event)
 
-    response = __user_service.create_user_review(
-        username=req_ctx.username,
-        request=request
-    )
+    response = __user_service.create_user_review(username=req_ctx.username, request=request)
 
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response}, cors_enabled=True
