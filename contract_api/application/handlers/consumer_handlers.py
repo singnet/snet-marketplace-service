@@ -2,12 +2,12 @@ from common.constant import StatusCode
 from common.logger import get_logger
 from common.utils import generate_lambda_response
 from common.exception_handler import exception_handler
-from contract_api.application.schemas.consumer_schemas import MpeEventConsumerRequest, RegistryEventConsumerRequest
-from contract_api.application.consumers.consumer_factory import (
-    get_registry_event_consumer
+from contract_api.application.schemas.consumer_schemas import (
+    MpeEventConsumerRequest, RegistryEventConsumerRequest
 )
+from contract_api.application.consumers.consumer_factory import get_registry_event_consumer
 from contract_api.application.consumers.mpe_event_consumer import MPEEventConsumer
-from contract_api.application.consumers.service_event_consumer import ServiceCreatedDeploymentEventHandler
+from contract_api.application.consumers.service_event_consumers import ServiceCreatedDeploymentEventHandler
 
 
 logger = get_logger(__name__)
@@ -32,7 +32,7 @@ def registry_event_consumer(event, context):
         if consumer is None:
             logger.info(f"Unhandled Registry event: {e}")
             continue
-        consumer.on_event(request)
+        consumer.on_event(request = request)
 
     return {}
 

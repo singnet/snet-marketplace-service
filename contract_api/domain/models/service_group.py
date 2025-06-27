@@ -3,8 +3,7 @@ from datetime import datetime
 
 
 @dataclass
-class ServiceGroupDomain:
-    row_id: str
+class NewServiceGroupDomain:
     service_row_id: int
     org_id: str
     service_id: str
@@ -13,6 +12,11 @@ class ServiceGroupDomain:
     free_call_signer_address: str
     free_calls: int
     pricing: dict
+
+
+@dataclass
+class ServiceGroupDomain(NewServiceGroupDomain):
+    row_id: str
     created_on: datetime
     updated_on: datetime
 

@@ -1,4 +1,5 @@
 from typing import Sequence
+from dataclasses import fields
 
 from contract_api.domain.models.demo_component import DemoComponent
 from contract_api.domain.models.service import ServiceDomain
@@ -6,7 +7,7 @@ from contract_api.domain.models.service_endpoint import ServiceEndpointDomain
 from contract_api.domain.models.service_group import ServiceGroupDomain
 from contract_api.domain.models.service_media import ServiceMediaDomain
 from contract_api.domain.models.offchain_service_attribute import OffchainServiceAttribute, OffchainServiceConfigDomain
-from contract_api.domain.models.service_metadata import ServiceMetadataDomain
+from contract_api.domain.models.service_metadata import ServiceMetadataDomain, NewServiceMetadataDomain
 from contract_api.domain.models.service_tag import ServiceTagDomain
 from contract_api.infrastructure.models import ServiceTags, ServiceMedia, Service, ServiceMetadata, ServiceGroup, \
     ServiceEndpoint, OffchainServiceConfig
@@ -15,7 +16,7 @@ from contract_api.infrastructure.models import ServiceTags, ServiceMedia, Servic
 class ServiceFactory:
 
     @staticmethod
-    def service_tags_from_db_model(
+    def service_tags_from_db_model_list(
             service_tag_db_model_list: Sequence[ServiceTags]
     ) -> list[ServiceTagDomain]:
         result = []
@@ -31,7 +32,7 @@ class ServiceFactory:
         return result
 
     @staticmethod
-    def service_media_from_db_model(
+    def service_media_from_db_model_list(
             service_media_db_model_list: Sequence[ServiceMedia]
     ) -> list[ServiceMediaDomain]:
         result = []
@@ -67,6 +68,15 @@ class ServiceFactory:
             created_on = service_db_model.created_on,
             updated_on = service_db_model.updated_on
         )
+
+    @staticmethod
+    def services_from_db_model_list(
+            service_db_model_list: Sequence[Service]
+    ) -> list[ServiceDomain]:
+        result = []
+        for service_db in service_db_model_list:
+            result.append(ServiceFactory.service_from_db_model(service_db))
+        return result
 
     @staticmethod
     def service_metadata_from_db_model(
@@ -162,6 +172,30 @@ class ServiceFactory:
                 parameter_value = value
             ))
         return result
+
+    @staticmethod
+    def service_metadata_from_metadata_dict(
+            metadata_dict: dict,
+            **kwargs
+    ) -> NewServiceMetadataDomain:
+
+        def default_field(_field):
+            if _field.type == int:
+                return 0
+            elif _field.type == str:
+                return ""
+            elif _field.type == dict:
+                return {}
+
+        attributes = {}
+        for field in fields(NewServiceMetadataDomain):
+            if field.name in kwargs:
+                attributes[field.name] = kwargs[field.name]
+            else:
+                attributes[field.name] = metadata_dict.get(field.name, default_field(field))
+
+        return NewServiceMetadataDomain(**attributes)
+
 
     @staticmethod
     def convert_service_db_model_to_entity_model(service_db):

@@ -3,13 +3,17 @@ from datetime import datetime
 
 
 @dataclass
-class ServiceDomain:
-    row_id: int
+class NewServiceDomain:
     org_id: str
     service_id: str
-    service_path: str
     hash_uri: str
     is_curated: bool
+
+
+@dataclass
+class ServiceDomain(NewServiceDomain):
+    row_id: int
+    service_path: str
     service_email: str
     created_on: datetime
     updated_on: datetime

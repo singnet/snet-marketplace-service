@@ -1,11 +1,10 @@
 from contract_api.application.schemas.consumer_schemas import RegistryEventConsumerRequest
-from contract_api.config import NETWORKS, NETWORK_ID
 from common.logger import get_logger
-from contract_api.application.consumers.service_event_consumer import (
+from contract_api.application.consumers.service_event_consumers import (
     ServiceCreatedEventConsumer,
     ServiceDeletedEventConsumer
 )
-from contract_api.application.consumers.organization_event_consumer import (
+from contract_api.application.consumers.organization_event_consumers import (
     OrganizationCreatedEventConsumer,
     OrganizationDeletedEventConsumer,
 )

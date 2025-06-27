@@ -1,9 +1,13 @@
 import io
 import os
 
+from web3.contract import Contract
+
 from common.blockchain_util import BlockChainUtil
 from common.logger import get_logger
 from common.s3_util import S3Util
+from contract_api.infrastructure.repositories.organization_repository import OrganizationRepository
+from contract_api.infrastructure.repositories.service_repository import ServiceRepository
 from contract_api.infrastructure.storage_provider import StorageProvider
 from contract_api.config import ASSETS_BUCKET_NAME, ASSETS_PREFIX, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY, NETWORKS, \
     NETWORK_ID, CONTRACT_BASE_PATH, TOKEN_NAME, STAGE
@@ -18,8 +22,13 @@ class EventConsumer:
         self._blockchain_util = BlockChainUtil("WS_PROVIDER", NETWORKS[NETWORK_ID]["ws_provider"])
 
     def _compare_assets_and_push_to_s3(
-        self, existing_assets_hash, new_assets_hash, existing_assets_url, org_id, service_id
-    ):
+            self,
+            existing_assets_hash: dict,
+            new_assets_hash: dict,
+            existing_assets_url: dict,
+            org_id: str,
+            service_id: str
+    ) -> dict:
         """
         Compare existing and new assets, push updated assets to S3, and remove outdated assets.
 
@@ -82,11 +91,18 @@ class EventConsumer:
 
         return assets_url_mapping
 
+    # abstract method
     def on_event(self, event):
         pass
 
     # TODO: check and change hash_uri parsing
-    def _push_asset_to_s3_using_hash(self, hash_uri, org_id, service_id, asset_type: str = ""):
+    def _push_asset_to_s3_using_hash(
+            self,
+            hash_uri: str,
+            org_id: str,
+            service_id: str,
+            asset_type: str = ""
+    ) -> str:
         io_bytes = self._storage_provider.get(hash_uri, to_decode = False)
         if "://" in hash_uri:
             filename = hash_uri.split("//")[1].split("/")[0]
@@ -107,13 +123,20 @@ class EventConsumer:
 
         return new_url
 
-    def _get_contract(self, contract_name: str):
+    def _get_contract(self, contract_name: str) -> Contract:
         net_id = NETWORK_ID
         base_contract_path = os.path.abspath(
             os.path.join(CONTRACT_BASE_PATH, 'node_modules', 'singularitynet-platform-contracts'))
-        registry_contract = self._blockchain_util.get_contract_instance(base_contract_path,
+        contract_instance = self._blockchain_util.get_contract_instance(base_contract_path,
                                                                         contract_name,
                                                                         net_id,
                                                                         TOKEN_NAME,
                                                                         STAGE)
-        return registry_contract
+        return contract_instance
+
+
+class RegistryEventConsumer(EventConsumer):
+    def __init__(self):
+        super().__init__()
+        self._service_repository = ServiceRepository()
+        self._organization_repository = OrganizationRepository()

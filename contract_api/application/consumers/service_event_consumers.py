@@ -7,12 +7,10 @@ import boto3
 from common import utils
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
-from common.repository import Repository
 from common.utils import download_file_from_url, extract_zip_file, make_tarfile
 from contract_api.application.schemas.consumer_schemas import RegistryEventConsumerRequest
 from contract_api.config import (
     GET_SERVICE_FROM_ORGID_SERVICE_ID_REGISTRY_ARN,
-    NETWORKS,
     NETWORK_ID,
     REGION_NAME,
     ASSET_TEMP_EXTRACT_DIRECTORY,
@@ -22,36 +20,25 @@ from contract_api.config import (
     TOKEN_NAME,
     STAGE
 )
-from contract_api.application.consumers.event_consumer import EventConsumer
-from contract_api.application.consumers.organization_event_consumer import (
+from contract_api.application.consumers.event_consumer import RegistryEventConsumer
+from contract_api.application.consumers.organization_event_consumers import (
     OrganizationDeletedEventConsumer,
     OrganizationCreatedEventConsumer
 )
-from contract_api.dao.organization_repository import OrganizationRepository
-from contract_api.dao.service_repository import ServiceRepository
+from contract_api.domain.factory.service_factory import ServiceFactory
+from contract_api.domain.models.service import NewServiceDomain
 from contract_api.domain.models.service_media import ServiceMedia
-from contract_api.infrastructure.repositories.service_media_repository import ServiceMediaRepository
-from contract_api.infrastructure.repositories.service_repository import ServiceRepository as NewServiceRepository
-
+from contract_api.domain.models.service_metadata import ServiceMetadataDomain, NewServiceMetadataDomain
 
 logger = get_logger(__name__)
-new_service_repo = NewServiceRepository()
-service_media_repo = ServiceMediaRepository()
 
 
-class ServiceEventConsumer(EventConsumer):
-    def __init__(self):
-        super().__init__()
-        self._connection = Repository(NETWORK_ID, NETWORKS = NETWORKS)
-        self._service_repository = ServiceRepository(self._connection)
-        self._organization_repository = OrganizationRepository(self._connection)
-
-class ServiceCreatedEventConsumer(ServiceEventConsumer):
+class ServiceCreatedEventConsumer(RegistryEventConsumer):
 
     def __init__(self):
         super().__init__()
 
-    def on_event(self, request: RegistryEventConsumerRequest):
+    def on_event(self, request: RegistryEventConsumerRequest) -> None:
         org_id = request.org_id
         service_id = request.service_id
         metadata_uri = request.metadata_uri
@@ -70,13 +57,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         if service_mpe_address != current_mpe_address:
             logger.info("Service's MPE address is not the same as the current MPE address.")
             try:
-                service_data = self._service_repository.get_service(org_id, service_id)
-                logger.info(f"Deleting service {service_id} from org {org_id}")
-                ServiceDeletedEventConsumer().on_event(
-                    request = None,
-                    org_id = service_data['org_id'],
-                    service_id = service_data['service_id']
-                )
+                self._service_repository.delete_service(org_id, service_id)
             except Exception:
                 logger.info(f"No service found with org_id {org_id} and service_id {service_id}")
 
@@ -87,7 +68,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             org_services = self._service_repository.get_services(org_id)
             if len(org_services) == 0:
                 logger.info(f"Deleting organization {org_id} because of the lack of services.")
-                OrganizationDeletedEventConsumer().on_event(request = None, org_id = org_id)
+                self._organization_repository.delete_organization(org_id)
             else:
                 logger.info(f"Organization {org_id} still has services. Skipping deletion.")
             return
@@ -102,14 +83,20 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
 
         self._process_service_data(org_id, service_id, metadata_uri, service_metadata)
 
-    def _get_new_assets_url(self, org_id, service_id, new_ipfs_data, existing_service_metadata):
+    def _get_new_assets_url(
+            self,
+            org_id: str,
+            service_id: str,
+            new_ipfs_data: dict,
+            existing_service_metadata: ServiceMetadataDomain | None
+    ):
         new_assets_hash = new_ipfs_data.get("assets", {})
         existing_assets_hash = {}
         existing_assets_url = {}
 
         if existing_service_metadata:
-            existing_assets_hash = json.loads(existing_service_metadata["assets_hash"])
-            existing_assets_url = json.loads(existing_service_metadata["assets_url"])
+            existing_assets_hash = existing_service_metadata.assets_hash
+            existing_assets_url = existing_service_metadata.assets_url
         assets_url_mapping = self._compare_assets_and_push_to_s3(
             existing_assets_hash, new_assets_hash, existing_assets_url, org_id, service_id
         )
@@ -119,7 +106,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
     def create_service_media(self, org_id, service_id, service_media):
         count = 0
         if len(service_media) > 0:
-            service = new_service_repo.get_service(org_id=org_id, service_id=service_id)
+            service, _, _ = self._service_repository.get_service(org_id=org_id, service_id=service_id)
             if not service:
                 raise Exception(f"Unable to find service for given org_id {org_id} and service_id {service_id}")
             service_media_list = []
@@ -148,39 +135,55 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                     service_media_list.append(media_item)
                     if service_media_item.get('order', 0) > count:
                         count = service_media_item.get('order', 0)
-            service_media_repo.update_service_media(org_id=org_id, service_id=service_id,
+            self._service_repository.update_service_media(org_id=org_id, service_id=service_id,
                                                     service_media_list=service_media_list,
                                                     asset_types=['hero_image', 'media_gallery']
                                                     )
 
-    def _process_service_data(self, org_id, service_id, new_hash, new_data):
-        try:
-            self._connection.begin_transaction()
+    def _process_service_data(
+            self,
+            org_id: str,
+            service_id: str,
+            new_hash: str,
+            new_service_metadata: dict
+    ) -> None:
+        with self._service_repository.session.begin():
             existing_service_metadata = self._service_repository.get_service_metadata(org_id, service_id)
-            logger.info(f"Existing service metadata :: {existing_service_metadata}")
+            logger.info(f"Existing service metadata :: {
+                existing_service_metadata.to_response() if existing_service_metadata else None
+            }")
 
-            assets_url = self._get_new_assets_url(org_id, service_id, new_data, existing_service_metadata)    
+            assets_url = self._get_new_assets_url(
+                org_id,
+                service_id,
+                new_service_metadata,
+                existing_service_metadata
+            )
             logger.info(f"Get new assets url :: {assets_url}")
 
             self._service_repository.delete_service_dependents(org_id=org_id, service_id=service_id)
-        
-            service_data = self._service_repository.create_or_update_service(org_id, service_id, new_hash)
-            service_row_id = service_data['last_row_id']
+
+            service_data = self._service_repository.upsert_service(
+                NewServiceDomain(
+                    org_id = org_id,
+                    service_id = service_id,
+                    hash_uri = new_hash,
+                    is_curated = True
+                )
+            )
+            service_row_id = service_data.row_id
             logger.info(f"Created service with service :: {service_row_id}")
 
-            self._service_repository.curate_service(org_id, service_id, 1)
-            logger.info(f"Curated service with service :: {service_row_id}")
-
-            self._service_repository.create_or_update_service_metadata(
-                service_row_id=service_row_id,
-                org_id=org_id,
-                service_id=service_id,
-                service_metadata=new_data,
-                assets_url=assets_url
+            self._service_repository.upsert_service_metadata(
+                ServiceFactory.service_metadata_from_metadata_dict(
+                    metadata_dict = new_service_metadata,
+                    service_row_id = service_row_id,
+                    org_id = org_id,
+                    service_id = service_id,
+                    assets_url = assets_url
+                )
             )
-
-            groups = new_data.get("groups", [])
-            group_insert_count = 0
+            groups = new_service_metadata.get("groups", [])
             for group in groups:
                 service_group_data = self._service_repository.create_group(
                     service_row_id=service_row_id, org_id=org_id,
@@ -193,9 +196,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                         "pricing": json.dumps(group["pricing"])
                     }
                 )
-                group_insert_count = group_insert_count + service_group_data[0]
                 endpoints = group.get("endpoints", [])
-                endpoint_insert_count = 0
                 for endpoint in endpoints:
                     service_data = self._service_repository.create_endpoints(
                         service_row_id=service_row_id,
@@ -206,9 +207,8 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                             "group_id": group["group_id"],
                         }
                     )
-                    endpoint_insert_count = endpoint_insert_count + service_data[0]
 
-            tags_data = new_data.get("tags", [])
+            tags_data = new_service_metadata.get("tags", [])
             # logger.info(f"Tags data: {' '.join(tags_data)}")
             for tag in tags_data:
                 self._service_repository.create_tags(service_row_id=service_row_id, org_id=org_id,
@@ -216,34 +216,24 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                                                      tag_name=tag,
                                                      )
 
-            service_media = new_data.get("media", [])
+            service_media = new_service_metadata.get("media", [])
             self.create_service_media(org_id=org_id, service_id=service_id,
                                       service_media=service_media)
 
             update_proto_stubs = False
             if not existing_service_metadata or (
-                    existing_service_metadata["model_hash"] != new_data["service_api_source"]):
+                    existing_service_metadata["model_hash"] != new_service_metadata["service_api_source"]):
                 update_proto_stubs = True
-
-            self._connection.commit_transaction()
-
-        except Exception as e:
-            self._connection.rollback_transaction()
-            raise e
 
         ServiceCreatedDeploymentEventHandler().process_service_deployment(
             org_id=org_id,
             service_id=service_id,
-            proto_hash=new_data["service_api_source"],
+            proto_hash=new_service_metadata["service_api_source"],
             update_proto_stubs=update_proto_stubs
         )
 
 
-class ServiceMetadataModifiedConsumer(ServiceCreatedEventConsumer):
-    pass
-
-
-class ServiceDeletedEventConsumer(ServiceEventConsumer):
+class ServiceDeletedEventConsumer(RegistryEventConsumer):
     def __init__(self):
         super().__init__()
 
@@ -251,11 +241,10 @@ class ServiceDeletedEventConsumer(ServiceEventConsumer):
         if org_id is None or service_id is None:
             org_id = request.org_id
             service_id = request.service_id
-        self._service_repository.delete_service_dependents(org_id, service_id)
         self._service_repository.delete_service(org_id, service_id)
 
 
-class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
+class ServiceCreatedDeploymentEventHandler(RegistryEventConsumer):
 
     def __init__(self):
         super().__init__()
@@ -336,9 +325,8 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
             logger.info(msg)
             raise Exception(msg)
 
-    @staticmethod
-    def update_proto_stubs(org_id, service_id, proto_stubs):
-        service = new_service_repo.get_service(org_id=org_id, service_id=service_id)
+    def update_proto_stubs(self, org_id, service_id, proto_stubs):
+        service = self._service_repository.get_service(org_id=org_id, service_id=service_id)
         if not service:
             raise Exception(f"Unable to find service for given org_id {org_id} and service_id {service_id}")
         proto_media_list = []
@@ -356,7 +344,7 @@ class ServiceCreatedDeploymentEventHandler(ServiceEventConsumer):
                 hash_uri=""
             )
             proto_media_list.append(media_item)
-        service_media_repo.update_service_media(org_id=org_id, service_id=service_id,
+        self._service_repository.update_service_media(org_id=org_id, service_id=service_id,
                                                 service_media_list=proto_media_list,
                                                 asset_types=['grpc-stub/nodejs', 'grpc-stub/python']
                                                 )

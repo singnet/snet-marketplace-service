@@ -3,15 +3,13 @@ from datetime import datetime
 
 
 @dataclass
-class ServiceMetadataDomain:
-    row_id: int
+class NewServiceMetadataDomain:
     service_row_id: int
     org_id: str
     service_id: str
     display_name: str
     description: str
     short_description: str
-    demo_component_available: bool
     url: str
     json: str
     model_hash: str
@@ -21,8 +19,14 @@ class ServiceMetadataDomain:
     assets_url: dict
     assets_hash: dict
     service_rating: dict
-    ranking: int
     contributors: dict
+
+
+@dataclass
+class ServiceMetadataDomain(NewServiceMetadataDomain):
+    row_id: int
+    demo_component_available: bool
+    ranking: int
     created_on: datetime
     updated_on: datetime
 
