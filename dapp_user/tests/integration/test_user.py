@@ -286,7 +286,6 @@ def test_create_user_service_review_handler_with_comment(
     user_handlers.__user_service = mock_user_service
 
     request_body = {
-        "userId": expected_user_row_id,
         "orgId": expected_org_id,
         "serviceId": expected_service_id,
         "user_rating": expected_user_rating,
