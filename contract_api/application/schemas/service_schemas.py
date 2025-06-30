@@ -1,3 +1,5 @@
+import json
+
 from pydantic import BaseModel, field_validator, model_validator, Field
 
 from common.constant import RequestPayloadType
@@ -35,8 +37,8 @@ class GetServicesRequest(BaseModel):
     @classmethod
     @validation_handler([RequestPayloadType.BODY])
     def validate_event(cls, event: dict) -> "GetServicesRequest":
-        data = {**event[RequestPayloadType.BODY]}
-        return cls.model_validate(data)
+        body = json.loads(event[RequestPayloadType.BODY])
+        return cls.model_validate(**body)
 
     @field_validator("sort")
     @classmethod
@@ -103,5 +105,20 @@ class SaveOffchainAttributeRequest(BaseModel):
     @classmethod
     @validation_handler([RequestPayloadType.QUERY_STRING, RequestPayloadType.BODY])
     def validate_event(cls, event: dict) -> "SaveOffchainAttributeRequest":
-        data = {**event[RequestPayloadType.QUERY_STRING], **event[RequestPayloadType.BODY]}
+        body = json.loads(event[RequestPayloadType.BODY])
+        data = {**event[RequestPayloadType.QUERY_STRING], **body}
+        return cls.model_validate(data)
+
+
+class UpdateServiceRatingRequest(BaseModel):
+    org_id: str
+    service_id: str
+    rating: float
+    total_users_rated: int
+
+    @classmethod
+    @validation_handler([RequestPayloadType.PATH_PARAMS, RequestPayloadType.BODY])
+    def validate_event(cls, event: dict) -> "UpdateServiceRatingRequest":
+        body = json.loads(event[RequestPayloadType.BODY])
+        data = {**event[RequestPayloadType.PATH_PARAMS], **body}
         return cls.model_validate(data)

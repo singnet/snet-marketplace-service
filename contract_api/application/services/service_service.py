@@ -8,7 +8,7 @@ from common.boto_utils import BotoUtils
 from common.constant import BuildStatus
 from common.utils import download_file_from_url, extract_zip_file, make_tarfile
 from contract_api.application.schemas.service_schemas import GetServiceFiltersRequest, GetServicesRequest, \
-    GetServiceRequest, CurateServiceRequest, SaveOffchainAttributeRequest
+    GetServiceRequest, CurateServiceRequest, SaveOffchainAttributeRequest, UpdateServiceRatingRequest
 from contract_api.config import REGION_NAME, ASSETS_COMPONENT_BUCKET_NAME
 from contract_api.constant import FilterKeys
 from contract_api.domain.factory.service_factory import ServiceFactory
@@ -123,6 +123,20 @@ class ServiceService:
             attributes.update(config.to_attribute())
 
         return {"org_id": org_id, "service_id": service_id, "attributes": attributes}
+
+    def update_service_rating(self, request: UpdateServiceRatingRequest) -> dict:
+        org_id = request.org_id
+        service_id = request.service_id
+        rating = request.rating
+        total_users_rated = request.total_users_rated
+
+        service_rating = {
+            "rating": rating,
+            "total_users_rated": total_users_rated
+        }
+        self._service_repo.update_service_rating(org_id, service_id, service_rating)
+
+        return {"org_id": org_id, "service_id": service_id, "rating": service_rating}
 
     @staticmethod
     def _convert_service_groups(

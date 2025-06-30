@@ -101,8 +101,6 @@ class OrganizationRepository(BaseRepository):
                 )
             )
 
-        self.session.commit()
-
     def delete_org_groups(self, org_id: str) -> None:
         query = delete(
             OrgGroup

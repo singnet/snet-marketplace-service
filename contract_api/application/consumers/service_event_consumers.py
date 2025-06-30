@@ -22,15 +22,14 @@ from contract_api.config import (
 )
 from contract_api.application.consumers.event_consumer import RegistryEventConsumer
 from contract_api.application.consumers.organization_event_consumers import (
-    OrganizationDeletedEventConsumer,
     OrganizationCreatedEventConsumer
 )
 from contract_api.domain.factory.service_factory import ServiceFactory
 from contract_api.domain.models.service import NewServiceDomain, ServiceDomain
 from contract_api.domain.models.service_endpoint import NewServiceEndpointDomain
 from contract_api.domain.models.service_group import NewServiceGroupDomain
-from contract_api.domain.models.service_media import ServiceMedia, NewServiceMediaDomain, ServiceMediaDomain
-from contract_api.domain.models.service_metadata import ServiceMetadataDomain, NewServiceMetadataDomain
+from contract_api.domain.models.service_media import NewServiceMediaDomain
+from contract_api.domain.models.service_metadata import ServiceMetadataDomain
 from contract_api.domain.models.service_tag import NewServiceTagDomain
 
 logger = get_logger(__name__)

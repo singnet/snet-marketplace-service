@@ -8,7 +8,7 @@ from contract_api.application.schemas.service_schemas import (
     GetServicesRequest,
     GetServiceRequest,
     CurateServiceRequest,
-    SaveOffchainAttributeRequest
+    SaveOffchainAttributeRequest, UpdateServiceRatingRequest
 )
 from contract_api.application.services.service_service import ServiceService
 
@@ -65,6 +65,16 @@ def save_offchain_attribute(event, context):
     request = SaveOffchainAttributeRequest.validate_event(event)
 
     response = ServiceService().save_offchain_service_attribute(request)
+
+    return generate_lambda_response(
+        200, {"status": "success", "data": response}, cors_enabled = True
+    )
+
+@exception_handler(logger=logger)
+def update_service_rating(event, context):
+    request = UpdateServiceRatingRequest.validate_event(event)
+
+    response = ServiceService().update_service_rating(request)
 
     return generate_lambda_response(
         200, {"status": "success", "data": response}, cors_enabled = True

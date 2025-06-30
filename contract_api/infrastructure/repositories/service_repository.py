@@ -687,4 +687,22 @@ class ServiceRepository(BaseRepository):
 
         return ServiceFactory.service_media_from_db_model(service_media_db)
 
+    def update_service_rating(
+            self,
+            org_id: str,
+            service_id: str,
+            rating: dict
+    ) -> None:
+        query = update(
+            ServiceMetadata
+        ).where(
+            ServiceMetadata.org_id == org_id,
+            ServiceMetadata.service_id == service_id
+        ).values(
+            service_rating = rating
+        ).returning()
+
+        self.session.execute(query)
+        self.session.commit()
+
 

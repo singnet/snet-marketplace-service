@@ -1,3 +1,5 @@
+import json
+
 from pydantic import BaseModel, model_validator, Field
 
 from common.constant import RequestPayloadType
@@ -36,7 +38,8 @@ class UpdateConsumedBalanceRequest(BaseModel):
     @classmethod
     @validation_handler([RequestPayloadType.PATH_PARAMS, RequestPayloadType.BODY])
     def validate_event(cls, event: dict) -> "UpdateConsumedBalanceRequest":
-        data = {**event[RequestPayloadType.PATH_PARAMS], **event[RequestPayloadType.BODY]}
+        body = json.loads(event[RequestPayloadType.BODY])
+        data = {**event[RequestPayloadType.PATH_PARAMS], **body}
         return cls.model_validate(data)
 
     @model_validator(mode="after")
