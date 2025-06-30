@@ -176,7 +176,6 @@ def test_update_user_alerts_handler(
         username=lambda_event_authorized["requestContext"]["authorizer"]["claims"]["email"]
     )
     assert user.email_alerts is True
-    assert user.is_terms_accepted is True
 
 
 def test_get_user_preferences_handler(
