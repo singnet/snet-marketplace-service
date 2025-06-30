@@ -58,13 +58,9 @@ class UserRepository(BaseRepository):
             raise UserNotFoundException(username=username)
         return UserFactory.user_from_db_model(user_db)
 
-    def update_user(
-        self, username: str, email_alerts: bool
-    ) -> None:
+    def update_user(self, username: str, email_alerts: bool) -> None:
         try:
-            query = update(User).where(User.username == username).values(
-                email_alerts = email_alerts
-            )
+            query = update(User).where(User.username == username).values(email_alerts=email_alerts)
             self.session.execute(query)
             self.session.commit()
         except IntegrityError:
