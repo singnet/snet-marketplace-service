@@ -9,7 +9,7 @@ from dapp_user.constant import (
     SourceDApp,
     Status,
 )
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 
 class AddOrUpdateUserPreferenceRequest(BaseModel):
@@ -117,22 +117,15 @@ class CognitoUserPoolEvent(BaseModel):
     )
 
 
-class UpdateUserRequest(BaseModel):
-    email_alerts: bool | None = Field(None, alias="emailAlerts")
-    is_terms_accepted: bool | None = Field(None, alias="isTermsAccepted")
+class UpdateUserAlertsRequest(BaseModel):
+    email_alerts: bool = Field(..., alias="emailAlerts")
 
     model_config = ConfigDict(
         populate_by_name=True,
     )
 
-    @model_validator(mode="after")
-    def at_least_one_field_provided(self):
-        if self.email_alerts is None and self.is_terms_accepted is None:
-            raise ValueError("At least one field must be provided")
-        return self
-
     @classmethod
-    def validate_event(cls, event: dict) -> "UpdateUserRequest":
+    def validate_event(cls, event: dict) -> "UpdateUserAlertsRequest":
         try:
             assert event.get(RequestPayloadType.BODY) is not None, (
                 PayloadAssertionError.MISSING_BODY

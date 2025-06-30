@@ -9,7 +9,7 @@ from dapp_user.application.schemas import (
     CreateUserServiceReviewRequest,
     DeleteUserRequest,
     GetUserFeedbackRequest,
-    UpdateUserRequest,
+    UpdateUserAlertsRequest,
 )
 from dapp_user.application.services.user_service import UserService
 from dapp_user.constant import CognitoTriggerSource
@@ -48,10 +48,10 @@ def add_or_update_user_preference_handler(event, context):
     )
 
 
-def update_user_handler(event, context):
+def update_user_alerts_handler(event, context):
     req_ctx = RequestContext(event)
 
-    request = UpdateUserRequest.validate_event(event)
+    request = UpdateUserAlertsRequest.validate_event(event)
 
     response = __user_service.update_user(username=req_ctx.username, request=request)
 

@@ -17,7 +17,6 @@ from dapp_user.infrastructure.models import (
 )
 from dapp_user.infrastructure.repositories.base_repository import BaseRepository
 from dapp_user.infrastructure.repositories.exceptions import (
-    InvalidUpdateRequest,
     UserAlreadyExistsException,
     UserNotFoundException,
     UserPreferenceAlreadyExistsException,
@@ -60,20 +59,12 @@ class UserRepository(BaseRepository):
         return UserFactory.user_from_db_model(user_db)
 
     def update_user(
-        self, username: str, email_alerts: bool | None, is_terms_accepted: bool | None
+        self, username: str, email_alerts: bool
     ) -> None:
         try:
-            if email_alerts is None and is_terms_accepted is None:
-                raise InvalidUpdateRequest()
-
-            values = {}
-            if email_alerts is not None:
-                values["email_alerts"] = email_alerts
-            if is_terms_accepted is not None:
-                values["is_terms_accepted"] = is_terms_accepted
-
-            query = update(User).where(User.username == username).values(**values)
-
+            query = update(User).where(User.username == username).values(
+                email_alerts = email_alerts
+            )
             self.session.execute(query)
             self.session.commit()
         except IntegrityError:

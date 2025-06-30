@@ -160,13 +160,12 @@ def test_update_user_alerts_handler(
     monkeypatch.setattr(base_repository, "default_session", test_session)
 
     request_body = {
-        "email_alerts": True,
-        "is_terms_accepted": True,
+        "emailAlerts": True,
     }
 
     lambda_event_authorized["body"] = json.dumps(request_body)
 
-    result = user_handlers.update_user_handler(lambda_event_authorized, context={})
+    result = user_handlers.update_user_alerts_handler(lambda_event_authorized, context={})
 
     assert result["statusCode"] == HTTPStatus.OK
 

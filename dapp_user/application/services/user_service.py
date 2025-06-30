@@ -7,7 +7,7 @@ from dapp_user.application.schemas import (
     CognitoUserPoolEvent,
     CreateUserServiceReviewRequest,
     GetUserFeedbackRequest,
-    UpdateUserRequest,
+    UpdateUserAlertsRequest,
 )
 from dapp_user.constant import Status
 from dapp_user.domain.factory.user_factory import UserFactory
@@ -101,12 +101,11 @@ class UserService:
         self.user_repo.insert_user(user=new_user)
         return new_user.to_dict()
 
-    def update_user(self, username: str, request: UpdateUserRequest):
+    def update_user(self, username: str, request: UpdateUserAlertsRequest):
         try:
             self.user_repo.update_user(
                 username=username,
                 email_alerts=request.email_alerts,
-                is_terms_accepted=request.is_terms_accepted,
             )
         except UserNotFoundException as e:
             logger.error(f"User not found: {e}")
