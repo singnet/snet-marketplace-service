@@ -24,8 +24,7 @@ class ContractAPIClient(AbstractContractAPIClient):
     ) -> None:
         try:
             lambda_payload = {
-                "httpMethod": "GET",
-                "pathParameters": {"orgId": org_id, "serviceId": service_id},
+                "pathParameters": {"org_id": org_id, "service_id": service_id},
                 "body": json.dumps(
                     {
                         "rating": rating,
