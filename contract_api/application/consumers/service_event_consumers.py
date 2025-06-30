@@ -26,9 +26,12 @@ from contract_api.application.consumers.organization_event_consumers import (
     OrganizationCreatedEventConsumer
 )
 from contract_api.domain.factory.service_factory import ServiceFactory
-from contract_api.domain.models.service import NewServiceDomain
-from contract_api.domain.models.service_media import ServiceMedia
+from contract_api.domain.models.service import NewServiceDomain, ServiceDomain
+from contract_api.domain.models.service_endpoint import NewServiceEndpointDomain
+from contract_api.domain.models.service_group import NewServiceGroupDomain
+from contract_api.domain.models.service_media import ServiceMedia, NewServiceMediaDomain, ServiceMediaDomain
 from contract_api.domain.models.service_metadata import ServiceMetadataDomain, NewServiceMetadataDomain
+from contract_api.domain.models.service_tag import NewServiceTagDomain
 
 logger = get_logger(__name__)
 
@@ -89,7 +92,7 @@ class ServiceCreatedEventConsumer(RegistryEventConsumer):
             service_id: str,
             new_ipfs_data: dict,
             existing_service_metadata: ServiceMetadataDomain | None
-    ):
+    ) -> dict:
         new_assets_hash = new_ipfs_data.get("assets", {})
         existing_assets_hash = {}
         existing_assets_url = {}
@@ -103,42 +106,40 @@ class ServiceCreatedEventConsumer(RegistryEventConsumer):
 
         return assets_url_mapping
 
-    def create_service_media(self, org_id, service_id, service_media):
-        count = 0
+    def _create_service_media(
+            self,
+            service: ServiceDomain,
+            service_media: list[dict],
+    ) -> None:
         if len(service_media) > 0:
-            service, _, _ = self._service_repository.get_service(org_id=org_id, service_id=service_id)
-            if not service:
-                raise Exception(f"Unable to find service for given org_id {org_id} and service_id {service_id}")
-            service_media_list = []
             for service_media_item in service_media:
                 if service_media_item.get('file_type') in ['image', 'video']:
-                    url = service_media_item.get("url", {})
+                    url = service_media_item.get("url", "")
                     if utils.if_external_link(link=url):
                         updated_url = url
                         hash_uri = ''
                     else:
-                        updated_url = self._push_asset_to_s3_using_hash(org_id=org_id, service_id=service_id, hash_uri=url)
+                        updated_url = self._push_asset_to_s3_using_hash(
+                            org_id=service.org_id, service_id=service.service_id, hash_uri=url
+                        )
                         hash_uri = service_media_item.get("url", "")
-                    # insert service media data
-                    asset_type = 'media_gallery' if service_media_item.get('asset_type', {}) != 'hero_image' else service_media_item.get('asset_type')
-                    media_item = ServiceMedia(
-                        service_row_id=service.row_id,
-                        org_id=org_id,
-                        service_id=service_id,
-                        url=updated_url,
-                        file_type=service_media_item['file_type'],
-                        order=service_media_item['order'],
-                        asset_type=asset_type,
-                        alt_text=service_media_item.get('alt_text', ""),
-                        hash_uri=hash_uri
+
+                    asset_type = service_media_item.get('asset_type', "")
+                    if asset_type != 'hero_image':
+                        asset_type = 'media_gallery'
+                    self._service_repository.upsert_service_media(
+                        NewServiceMediaDomain(
+                            service_row_id=service.row_id,
+                            org_id=service.org_id,
+                            service_id=service.service_id,
+                            url=updated_url,
+                            order=service_media_item.get('order', 0),
+                            file_type=service_media_item.get('file_type', ''),
+                            asset_type=asset_type,
+                            alt_text=service_media_item.get('alt_text', ""),
+                            hash_uri=hash_uri
+                        )
                     )
-                    service_media_list.append(media_item)
-                    if service_media_item.get('order', 0) > count:
-                        count = service_media_item.get('order', 0)
-            self._service_repository.update_service_media(org_id=org_id, service_id=service_id,
-                                                    service_media_list=service_media_list,
-                                                    asset_types=['hero_image', 'media_gallery']
-                                                    )
 
     def _process_service_data(
             self,
@@ -172,72 +173,78 @@ class ServiceCreatedEventConsumer(RegistryEventConsumer):
                 )
             )
             service_row_id = service_data.row_id
-            logger.info(f"Created service with service :: {service_row_id}")
+            logger.info(f"Created service with service row id :: {service_row_id}")
 
-            self._service_repository.upsert_service_metadata(
+            service_metadata = self._service_repository.upsert_service_metadata(
                 ServiceFactory.service_metadata_from_metadata_dict(
                     metadata_dict = new_service_metadata,
                     service_row_id = service_row_id,
                     org_id = org_id,
                     service_id = service_id,
-                    assets_url = assets_url
+                    assets_url = assets_url,
+                    model_hash = new_service_metadata.get("service_api_source", ""),
                 )
             )
             groups = new_service_metadata.get("groups", [])
             for group in groups:
-                service_group_data = self._service_repository.create_group(
-                    service_row_id=service_row_id, org_id=org_id,
-                    service_id=service_id,
-                    grp_data = {
-                        "free_calls": group.get("free_calls", 0),
-                        "free_call_signer_address": group.get("free_call_signer_address", ""),
-                        "group_id": group["group_id"],
-                        "group_name": group["group_name"],
-                        "pricing": json.dumps(group["pricing"])
-                    }
+                self._service_repository.upsert_service_group(
+                    NewServiceGroupDomain(
+                        service_row_id = service_row_id,
+                        org_id = org_id,
+                        service_id = service_id,
+                        group_id = group["group_id"],
+                        group_name = group["group_name"],
+                        free_call_signer_address = group.get("free_call_signer_address", ""),
+                        free_calls = group.get("free_calls", 0),
+                        pricing = group.get("pricing", {})
+                    )
                 )
                 endpoints = group.get("endpoints", [])
                 for endpoint in endpoints:
-                    service_data = self._service_repository.create_endpoints(
-                        service_row_id=service_row_id,
-                        org_id=org_id,
-                        service_id=service_id,
-                        endpt_data={
-                            "endpoint": endpoint,
-                            "group_id": group["group_id"],
-                        }
+                    self._service_repository.upsert_service_endpoint(
+                        NewServiceEndpointDomain(
+                            service_row_id = service_row_id,
+                            org_id = org_id,
+                            service_id = service_id,
+                            group_id = group["group_id"],
+                            endpoint = endpoint,
+                            is_available = True
+                        )
                     )
 
             tags_data = new_service_metadata.get("tags", [])
-            # logger.info(f"Tags data: {' '.join(tags_data)}")
-            for tag in tags_data:
-                self._service_repository.create_tags(service_row_id=service_row_id, org_id=org_id,
-                                                     service_id=service_id,
-                                                     tag_name=tag,
-                                                     )
+            for tag_name in tags_data:
+                self._service_repository.create_service_tag(
+                    NewServiceTagDomain(
+                        service_row_id = service_row_id,
+                        org_id = org_id,
+                        service_id = service_id,
+                        tag_name = tag_name
+                    )
+                )
 
             service_media = new_service_metadata.get("media", [])
-            self.create_service_media(org_id=org_id, service_id=service_id,
-                                      service_media=service_media)
+            self._create_service_media(
+                service = service_data,
+                service_media=service_media
+            )
 
-            update_proto_stubs = False
-            if not existing_service_metadata or (
-                    existing_service_metadata["model_hash"] != new_service_metadata["service_api_source"]):
-                update_proto_stubs = True
-
-        ServiceCreatedDeploymentEventHandler().process_service_deployment(
-            org_id=org_id,
-            service_id=service_id,
-            proto_hash=new_service_metadata["service_api_source"],
-            update_proto_stubs=update_proto_stubs
-        )
+        if not existing_service_metadata or (
+                existing_service_metadata.model_hash != new_service_metadata["service_api_source"]):
+            ServiceCreatedDeploymentEventHandler().process_service_deployment(
+                service_metadata
+            )
 
 
 class ServiceDeletedEventConsumer(RegistryEventConsumer):
     def __init__(self):
         super().__init__()
 
-    def on_event(self, request: RegistryEventConsumerRequest, org_id=None, service_id=None):
+    def on_event(
+            self,
+            request: RegistryEventConsumerRequest,
+            org_id: str=None,
+            service_id: str=None) -> None:
         if org_id is None or service_id is None:
             org_id = request.org_id
             service_id = request.service_id
@@ -250,12 +257,17 @@ class ServiceCreatedDeploymentEventHandler(RegistryEventConsumer):
         super().__init__()
         self.lambda_client = boto3.client("lambda", region_name=REGION_NAME)
 
-    def on_event(self, request: RegistryEventConsumerRequest):
+    def on_event(self, request: RegistryEventConsumerRequest) -> None:
         org_id = request.org_id
         service_id = request.service_id
-        self.process_service_deployment(org_id=org_id, service_id=service_id, update_proto_stubs=None, proto_hash=None)
+        service_metadata = self._service_repository.get_service_metadata(org_id, service_id)
+        if service_metadata is not None:
+            self.process_service_deployment(service_metadata)
 
-    def _extract_zip_and_and_tar(self, org_id, service_id, s3_url):
+    @staticmethod
+    def _extract_zip_and_and_tar(
+            org_id: str, service_id: str, s3_url: str
+    ) -> str:
         root_directory = ASSET_TEMP_EXTRACT_DIRECTORY
         zip_directory = root_directory + org_id + "/" + service_id
         extracted_zip_directory = root_directory + "extracted/" + org_id + "/" + service_id
@@ -270,7 +282,9 @@ class ServiceCreatedDeploymentEventHandler(RegistryEventConsumer):
 
         return tar_file_path
 
-    def _get_s3_path_url_for_proto_and_component(self, org_id, service_id):
+    def _get_s3_path_url_for_proto_and_component(
+            self, org_id, service_id
+    ) -> tuple[str, str]:
         proto_file_s3_path = ""
         component_files_s3_path = ""
         lambda_payload = {
@@ -298,7 +312,7 @@ class ServiceCreatedDeploymentEventHandler(RegistryEventConsumer):
         return proto_file_s3_path, component_files_s3_path
 
     @staticmethod
-    def compile_proto_stubs(org_id, service_id):
+    def compile_proto_stubs(org_id: str, service_id: str) -> list[str]:
         boto_utils = BotoUtils(region_name=REGION_NAME)
         base_url = f"s3://{ASSETS_COMPONENT_BUCKET_NAME}/assets/{org_id}/{service_id}/proto.tar.gz"
         output_url = f"s3://{ASSETS_COMPONENT_BUCKET_NAME}/assets/{org_id}/{service_id}/"
@@ -325,29 +339,26 @@ class ServiceCreatedDeploymentEventHandler(RegistryEventConsumer):
             logger.info(msg)
             raise Exception(msg)
 
-    def update_proto_stubs(self, org_id, service_id, proto_stubs):
-        service = self._service_repository.get_service(org_id=org_id, service_id=service_id)
-        if not service:
-            raise Exception(f"Unable to find service for given org_id {org_id} and service_id {service_id}")
-        proto_media_list = []
+    def update_proto_stubs(
+            self,
+            service_metadata: ServiceMetadataDomain,
+            proto_stubs: list[str]
+    ) -> None:
         for stub in proto_stubs:
             filename, extension = utils.get_file_name_and_extension_from_path(path=stub)
-            media_item = ServiceMedia(
-                service_row_id=service.row_id,
-                org_id=org_id,
-                service_id=service_id,
-                url=stub,
-                file_type="grpc-stub",
-                order=0,
-                asset_type=f"grpc-stub/{filename}",
-                alt_text="",
-                hash_uri=""
+            self._service_repository.upsert_service_media(
+                NewServiceMediaDomain(
+                    service_row_id=service_metadata.service_row_id,
+                    org_id=service_metadata.org_id,
+                    service_id=service_metadata.service_id,
+                    url=stub,
+                    file_type="grpc-stub",
+                    order=0,
+                    asset_type=f"grpc-stub/{filename}",
+                    alt_text="",
+                    hash_uri=""
+                )
             )
-            proto_media_list.append(media_item)
-        self._service_repository.update_service_media(org_id=org_id, service_id=service_id,
-                                                service_media_list=proto_media_list,
-                                                asset_types=['grpc-stub/nodejs', 'grpc-stub/python']
-                                                )
 
     def upload_proto_file_from_hash_to_bucket(self, org_id, service_id, asset_hash):
         temp_dir = tempfile.gettempdir()
@@ -365,9 +376,11 @@ class ServiceCreatedDeploymentEventHandler(RegistryEventConsumer):
         self._s3_util.push_file_to_s3(temp_output_path, ASSETS_COMPONENT_BUCKET_NAME,
                                       f"assets/{org_id}/{service_id}/proto.tar.gz")
 
-    def process_service_deployment(self, org_id, service_id, update_proto_stubs, proto_hash):
+    def process_service_deployment(self, service_metadata: ServiceMetadataDomain) -> None:
+        org_id = service_metadata.org_id
+        service_id = service_metadata.service_id
+        model_hash = service_metadata.model_hash
         logger.info(f"Processing Service deployment for {org_id} {service_id}")
-        if update_proto_stubs:
-            self.upload_proto_file_from_hash_to_bucket(org_id=org_id, service_id=service_id, asset_hash=proto_hash)
-            proto_stubs = self.compile_proto_stubs(org_id=org_id, service_id=service_id)
-            self.update_proto_stubs(org_id=org_id, service_id=service_id, proto_stubs=proto_stubs)
+        self.upload_proto_file_from_hash_to_bucket(org_id=org_id, service_id=service_id, asset_hash=model_hash)
+        proto_stubs = self.compile_proto_stubs(org_id=org_id, service_id=service_id)
+        self.update_proto_stubs(service_metadata = service_metadata, proto_stubs=proto_stubs)

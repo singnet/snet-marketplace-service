@@ -1,16 +1,19 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-
 @dataclass
-class ServiceEndpointDomain:
-    row_id: str
+class NewServiceEndpointDomain:
     service_row_id: str
     org_id: str
     service_id: str
     group_id: str
     endpoint: str
     is_available: bool
+
+
+@dataclass
+class ServiceEndpointDomain(NewServiceEndpointDomain):
+    row_id: str
     last_check_timestamp: datetime
     next_check_timestamp: datetime
     failed_status_count: int

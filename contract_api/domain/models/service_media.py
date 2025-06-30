@@ -3,9 +3,8 @@ from datetime import datetime
 
 
 @dataclass
-class ServiceMediaDomain:
-    row_id: str
-    service_row_id: str
+class NewServiceMediaDomain:
+    service_row_id: int
     org_id: str
     service_id: str
     url: str
@@ -14,6 +13,11 @@ class ServiceMediaDomain:
     asset_type: str
     alt_text: str
     hash_uri: str
+
+
+@dataclass
+class ServiceMediaDomain(NewServiceMediaDomain):
+    row_id: str
     created_on: datetime
     updated_on: datetime
 

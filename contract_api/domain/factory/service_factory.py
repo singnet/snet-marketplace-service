@@ -16,20 +16,46 @@ from contract_api.infrastructure.models import ServiceTags, ServiceMedia, Servic
 class ServiceFactory:
 
     @staticmethod
+    def service_tag_from_db_model(
+            service_tag_db_model: ServiceTags
+    ) -> ServiceTagDomain:
+        return ServiceTagDomain(
+            row_id=service_tag_db_model.row_id,
+            service_row_id = service_tag_db_model.service_row_id,
+            org_id=service_tag_db_model.org_id,
+            service_id=service_tag_db_model.service_id,
+            tag_name=service_tag_db_model.tag_name,
+            created_on=service_tag_db_model.created_on,
+            updated_on=service_tag_db_model.updated_on
+        )
+
+    @staticmethod
     def service_tags_from_db_model_list(
             service_tag_db_model_list: Sequence[ServiceTags]
     ) -> list[ServiceTagDomain]:
         result = []
         for service_tag_db in service_tag_db_model_list:
-            result.append(ServiceTagDomain(
-                row_id=service_tag_db.row_id,
-                org_id=service_tag_db.org_id,
-                service_id=service_tag_db.service_id,
-                tag_name=service_tag_db.tag_name,
-                created_on=service_tag_db.created_on,
-                updated_on=service_tag_db.updated_on
-            ))
+            result.append(ServiceFactory.service_tag_from_db_model(service_tag_db))
         return result
+
+    @staticmethod
+    def service_media_from_db_model(
+            service_media_db_model: ServiceMedia
+    ) -> ServiceMediaDomain:
+        return ServiceMediaDomain(
+            row_id=service_media_db_model.row_id,
+            service_row_id=service_media_db_model.service_row_id,
+            org_id=service_media_db_model.org_id,
+            service_id=service_media_db_model.service_id,
+            url=service_media_db_model.url,
+            order=service_media_db_model.order,
+            file_type=service_media_db_model.file_type,
+            asset_type=service_media_db_model.asset_type,
+            alt_text=service_media_db_model.alt_text,
+            hash_uri=service_media_db_model.hash_uri,
+            created_on=service_media_db_model.created_on,
+            updated_on=service_media_db_model.updated_on
+        )
 
     @staticmethod
     def service_media_from_db_model_list(
@@ -37,20 +63,7 @@ class ServiceFactory:
     ) -> list[ServiceMediaDomain]:
         result = []
         for service_media_db in service_media_db_model_list:
-            result.append(ServiceMediaDomain(
-                row_id=service_media_db.row_id,
-                service_row_id=service_media_db.service_row_id,
-                org_id=service_media_db.org_id,
-                service_id=service_media_db.service_id,
-                url=service_media_db.url,
-                order=service_media_db.order,
-                file_type=service_media_db.file_type,
-                asset_type=service_media_db.asset_type,
-                alt_text=service_media_db.alt_text,
-                hash_uri=service_media_db.hash_uri,
-                created_on=service_media_db.created_on,
-                updated_on=service_media_db.updated_on
-            ))
+            result.append(ServiceFactory.service_media_from_db_model(service_media_db))
         return result
 
     @staticmethod

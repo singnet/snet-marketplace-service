@@ -26,10 +26,8 @@ class OrganizationCreatedEventConsumer(RegistryEventConsumer):
 
     def _process_organization_create_update_event(self, org_id, org_data, org_metadata, org_metadata_uri):
 
-        try:
-            if org_data is not None and org_data[0]:
-                self._organization_repository.begin_transaction()
-
+        if org_data is not None and org_data[0]:
+            with self._organization_repository.session.begin():
                 new_assets_hash = org_metadata.get("assets", {})
                 new_assets_url_mapping = self._get_new_assets_url(org_id, org_metadata)
                 description = org_metadata.get("description", "")
@@ -53,9 +51,6 @@ class OrganizationCreatedEventConsumer(RegistryEventConsumer):
                 # self.organization_dao.create_or_update_members(org_id, org_data[4])
                 self._organization_repository.commit_transaction()
 
-        except Exception as e:
-            self._organization_repository.rollback_transaction()
-            raise e
 
     def _get_new_assets_url(self, org_id, new_ipfs_data):
         new_assets_hash = new_ipfs_data.get("assets", {})
@@ -103,23 +98,6 @@ class OrganizationDeletedEventConsumer(RegistryEventConsumer):
     def on_event(self, request: RegistryEventConsumerRequest, org_id=None):
         if org_id is None:
             org_id = request.org_id
-        self._process_organization_delete_event(org_id)
+        self._organization_repository.delete_organization(org_id)
 
-    def _process_organization_delete_event(self, org_id):
-        try:
-            self._connection.begin_transaction()
-            self._organization_repository.delete_organization(org_id=org_id)
-            self._organization_repository.delete_organization_groups(org_id=org_id)
-            services = self._service_repository.get_services(org_id=org_id)
-            for service in services:
-                self._service_repository.delete_service_dependents(
-                    org_id=org_id, service_id=service['service_id'])
-                self._service_repository.delete_service(
-                    org_id=org_id, service_id=service['service_id'])
-
-            self._connection.commit_transaction()
-        except Exception as e:
-            logger.exception(str(e))
-            self._connection.rollback_transaction()
-            raise e
 

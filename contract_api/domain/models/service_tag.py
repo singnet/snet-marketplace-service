@@ -3,11 +3,16 @@ from datetime import datetime
 
 
 @dataclass
-class ServiceTagDomain:
-    row_id: int
+class NewServiceTagDomain:
+    service_row_id: int
     org_id: str
     service_id: str
     tag_name: str
+
+
+@dataclass
+class ServiceTagDomain(NewServiceTagDomain):
+    row_id: int
     created_on: datetime
     updated_on: datetime
 
