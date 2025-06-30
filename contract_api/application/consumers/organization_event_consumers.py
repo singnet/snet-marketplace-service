@@ -4,6 +4,7 @@ from web3 import Web3
 from common.logger import get_logger
 from contract_api.application.consumers.event_consumer import RegistryEventConsumer
 from contract_api.application.schemas.consumer_schemas import RegistryEventConsumerRequest
+from contract_api.domain.models.organization import NewOrganizationDomain
 
 logger = get_logger(__name__)
 
@@ -23,7 +24,6 @@ class OrganizationCreatedEventConsumer(RegistryEventConsumer):
             org_id, blockchain_org_data, org_metadata, org_metadata_uri
         )
 
-
     def _process_organization_create_update_event(self, org_id, org_data, org_metadata, org_metadata_uri):
 
         if org_data is not None and org_data[0]:
@@ -33,23 +33,22 @@ class OrganizationCreatedEventConsumer(RegistryEventConsumer):
                 description = org_metadata.get("description", "")
                 contacts= org_metadata.get("contacts", {})
 
-                self._organization_repository.create_or_updatet_organization(
-                    org_id=org_id,
-                    org_name=org_metadata["org_name"],
-                    owner_address=org_data[3],
-                    org_metadata_uri=org_metadata_uri,
-                    is_curated=1,
-                    description=json.dumps(description),
-                    assets_hash=json.dumps(new_assets_hash),
-                    assets_url=json.dumps(new_assets_url_mapping),
-                    contacts=json.dumps(contacts)
+                self._organization_repository.upsert_organization(
+                    NewOrganizationDomain(
+                        org_id=org_id,
+                        organization_name=org_metadata["org_name"],
+                        owner_address=org_data[3],
+                        org_metadata_uri=org_metadata_uri,
+                        org_assets_url=new_assets_url_mapping,
+                        is_curated=True,
+                        description=description,
+                        assets_hash=new_assets_hash,
+                        contacts=contacts
+                    )
                 )
-                self._organization_repository.delete_organization_groups(org_id=org_id)
-                self._organization_repository.create_organization_groups(
+                self._organization_repository.delete_org_groups(org_id=org_id)
+                self._organization_repository.create_org_groups(
                     org_id=org_id, groups=org_metadata["groups"])
-                self._organization_repository.del_members(org_id=org_id)
-                # self.organization_dao.create_or_update_members(org_id, org_data[4])
-                self._organization_repository.commit_transaction()
 
 
     def _get_new_assets_url(self, org_id, new_ipfs_data):

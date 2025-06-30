@@ -9,29 +9,6 @@ class Base(DeclarativeBase):
     pass
 
 
-class Members(Base):
-    __tablename__ = "members"
-    row_id: Mapped[int] = mapped_column("row_id", Integer, autoincrement=True, primary_key=True)
-    org_id: Mapped[str] = mapped_column(
-        "org_id", VARCHAR(128),
-        ForeignKey("organization.org_id", ondelete="CASCADE", onupdate = "CASCADE"),
-        nullable=False,
-        index=True
-    )
-    member: Mapped[str] = mapped_column("member", VARCHAR(128), nullable=False)
-
-    created_on: Mapped[datetime] = mapped_column(
-        "created_on", TIMESTAMP(timezone=False), nullable=True, server_default=func.now()
-    )
-    updated_on: Mapped[datetime] = mapped_column(
-        "updated_on", 
-        TIMESTAMP(timezone=False), 
-        nullable=True, 
-        server_default=func.now(), 
-        onupdate=func.now()
-    )
-
-
 class MpeChannel(Base):
     __tablename__ = "mpe_channel"
     row_id: Mapped[int] = mapped_column("row_id", Integer, autoincrement=True, primary_key=True)

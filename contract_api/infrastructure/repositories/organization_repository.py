@@ -1,7 +1,7 @@
 from sqlalchemy import select, delete, update
 
 from contract_api.domain.factory.organization_factory import OrganizationFactory
-from contract_api.domain.models.org_group import OrgGroupDomain
+from contract_api.domain.models.org_group import OrgGroupDomain, NewOrgGroupDomain
 from contract_api.domain.models.organization import OrganizationDomain, NewOrganizationDomain
 from contract_api.infrastructure.models import OrgGroup, Organization, Service, Members
 from contract_api.infrastructure.repositories.base_repository import BaseRepository
@@ -59,16 +59,6 @@ class OrganizationRepository(BaseRepository):
 
         self.session.commit()
 
-    def delete_members(self, org_id: str) -> None:
-        query = delete(
-            Members
-        ).where(
-            Members.org_id == org_id
-        )
-        self.session.execute(query)
-
-        self.session.commit()
-
     def upsert_organization(self, organization: NewOrganizationDomain) -> None:
         query = select(
             Organization
@@ -112,4 +102,28 @@ class OrganizationRepository(BaseRepository):
             )
 
         self.session.commit()
+
+    def delete_org_groups(self, org_id: str) -> None:
+        query = delete(
+            OrgGroup
+        ).where(
+            OrgGroup.org_id == org_id
+        )
+        self.session.execute(query)
+
+    def create_org_groups(
+            self,
+            groups: list[NewOrgGroupDomain]
+    ) -> None:
+        for group in groups:
+            self.session.add(
+                OrgGroup(
+                    org_id=group.org_id,
+                    group_id=group.group_id,
+                    group_name=group.group_name,
+                    payment=group.payment
+                )
+            )
+
+
 

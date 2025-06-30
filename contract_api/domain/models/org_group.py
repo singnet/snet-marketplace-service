@@ -2,13 +2,17 @@ from dataclasses import dataclass
 from datetime import datetime
 
 
-@dataclass(frozen=True)
-class OrgGroupDomain:
-    row_id: int
+@dataclass
+class NewOrgGroupDomain:
     org_id: str
     group_id: str
     group_name: str
     payment: dict
+
+
+@dataclass
+class OrgGroupDomain(NewOrgGroupDomain):
+    row_id: int
     created_on: datetime
     updated_on: datetime
 
