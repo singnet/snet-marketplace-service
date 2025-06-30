@@ -21,6 +21,11 @@ class UserAlreadyExistException(BadRequestException):
         super().__init__(message="User already exist")
 
 
+class UserReviewAlreadyExistHTTPException(BadRequestException):
+    def __init__(self):
+        super().__init__(message="User rewiew already exist")
+
+
 class UserNotFoundHTTPException(BadRequestException):
     def __init__(self, username: str):
         super().__init__(message=f"User with username '{username}' not found")

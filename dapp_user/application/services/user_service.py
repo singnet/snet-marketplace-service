@@ -15,10 +15,14 @@ from dapp_user.domain.interfaces.contract_api_client_interface import AbstractCo
 from dapp_user.domain.interfaces.user_identity_manager_interface import UserIdentityManager
 from dapp_user.domain.interfaces.wallet_api_client_interface import AbstractWalletsAPIClient
 from dapp_user.domain.models.user_preference import user_preferences_to_dict
-from dapp_user.exceptions import UserNotFoundHTTPException
+from dapp_user.exceptions import UserNotFoundHTTPException, UserReviewAlreadyExistHTTPException
 from dapp_user.infrastructure.cognito_api import CognitoUserManager
 from dapp_user.infrastructure.contract_api_client import ContractAPIClient, ContractAPIClientError
-from dapp_user.infrastructure.repositories.exceptions import UserNotFoundException
+from dapp_user.infrastructure.repositories.exceptions import (
+    FeedbackAlreadyExistsException,
+    UserNotFoundException,
+    VoteAlreadyExistsException,
+)
 from dapp_user.infrastructure.repositories.user_repository import UserRepository
 from dapp_user.infrastructure.wallets_api_client import WalletsAPIClient, WalletsAPIClientError
 from dapp_user.settings import settings
@@ -133,9 +137,13 @@ class UserService:
                 user_row_id=user.row_id, create_feedback_request=request
             )
             #: TODO think about rollback or distributed transaction if update service rating fails (saga pattern)
-            rating, total_users_rated = self.user_repo.submit_user_feedback(
-                user_vote=user_vote, user_feedback=user_feedback
-            )
+            try:
+                rating, total_users_rated = self.user_repo.submit_user_feedback(
+                    user_vote=user_vote, user_feedback=user_feedback
+                )
+            except (VoteAlreadyExistsException, FeedbackAlreadyExistsException):
+                raise UserReviewAlreadyExistHTTPException()
+
         try:
             self.contract_api_client.update_service_rating(
                 org_id=user_vote.org_id,

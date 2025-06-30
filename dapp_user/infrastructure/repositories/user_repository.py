@@ -17,12 +17,14 @@ from dapp_user.infrastructure.models import (
 )
 from dapp_user.infrastructure.repositories.base_repository import BaseRepository
 from dapp_user.infrastructure.repositories.exceptions import (
+    FeedbackAlreadyExistsException,
     UserAlreadyExistsException,
     UserNotFoundException,
     UserPreferenceAlreadyExistsException,
     UserPreferenceNotFoundException,
+    VoteAlreadyExistsException,
 )
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import and_, delete, func, select, update
 from sqlalchemy.dialects.mysql import insert
 from sqlalchemy.exc import IntegrityError
 
@@ -205,10 +207,16 @@ class UserRepository(BaseRepository):
         user_vote: UserServiceVoteDomain,
         user_feedback: UserServiceFeedbackDomain | None,
     ) -> Tuple[float, int]:
-        self.__update_or_set_user_vote(user_vote)
+        try:
+           self.__update_or_set_user_vote(user_vote)
+        except IntegrityError:
+            raise VoteAlreadyExistsException()
 
         if user_feedback is not None:
-            self.__set_user_feedback(user_feedback)
+            try:
+                self.__set_user_feedback(user_feedback)
+            except IntegrityError:
+                raise FeedbackAlreadyExistsException()
 
         avg_rating, total_rated = self.__aggregate_service_rating(
             org_id=user_vote.org_id,
@@ -220,19 +228,34 @@ class UserRepository(BaseRepository):
         self, username: str, org_id: str, service_id: str
     ) -> Tuple[UserServiceVoteDomain | None, UserServiceFeedbackDomain | None]:
         query = (
-            select(UserServiceFeedback, UserServiceFeedback)
-            .join(User)
+            select(UserServiceFeedback, UserServiceVote)
+            .join_from(
+                UserServiceFeedback, User, UserServiceFeedback.user_row_id == User.row_id
+            )
+            .join_from(
+                UserServiceFeedback,
+                UserServiceVote,
+                and_(
+                    UserServiceVote.user_row_id == User.row_id,
+                    UserServiceVote.org_id == UserServiceFeedback.org_id,
+                    UserServiceVote.service_id == UserServiceFeedback.service_id,
+                ),
+            )
             .where(
-                User.username == username,
-                UserServiceFeedback.org_id == org_id,
-                UserServiceFeedback.service_id == service_id,
-                UserServiceVote.org_id == org_id,
-                UserServiceVote.service_id == service_id,
+                and_(
+                    User.username == username,
+                    UserServiceFeedback.org_id == org_id,
+                    UserServiceFeedback.service_id == service_id,
+                )
             )
         )
 
-        result = self.session.execute(query)
-        user_service_vote_db, user_service_feedback_db = result.scalars().all()
+        result = self.session.execute(query).one_or_none()
+
+        if result:
+            user_service_feedback_db, user_service_vote_db = result
+        else:
+            user_service_feedback_db = user_service_vote_db = None
 
         return (
             UserFactory().user_service_vote_from_db_model(user_service_vote_db)

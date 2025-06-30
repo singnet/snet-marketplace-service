@@ -11,6 +11,18 @@ class UserNotFoundException(UserRepositoryException):
         super().__init__(f"User with username '{username}' not found.")
 
 
+class FeedbackAlreadyExistsException(UserRepositoryException):
+    """Exception raised when a feedback is already exists in the repository"""
+    def __init__(self):
+        super().__init__("User feedback is already exists")
+
+
+class VoteAlreadyExistsException(UserRepositoryException):
+    """Exception raised when a vote is already exists in the repository"""
+    def __init__(self):
+        super().__init__("User vote is already exists")
+
+
 class InvalidUpdateRequest(UserRepositoryException):
     """Raised when update_user is called without any fields to update."""
 

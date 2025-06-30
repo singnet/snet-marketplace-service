@@ -159,7 +159,7 @@ class GetUserFeedbackRequest(BaseModel):
     @classmethod
     def validate_event(cls, event: dict) -> "GetUserFeedbackRequest":
         try:
-            data = event.get(RequestPayloadType.PATH_PARAMS)
+            data = event.get(RequestPayloadType.QUERY_STRING)
             return cls.model_validate(data)
         except ValidationError as e:
             formatted_errors = [
