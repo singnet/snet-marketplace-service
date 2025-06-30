@@ -330,8 +330,8 @@ class ServiceCreatedDeploymentEventHandler(RegistryEventConsumer):
         if response['statusCode'] == 200:
             output_bucket, output_key = boto_utils.get_bucket_and_key_from_url(url=f"{output_url}stubs")
             stub_objects = boto_utils.get_objects_from_s3(bucket=output_bucket, key=output_key)
-            for object in stub_objects:
-                generated_stubs_url.append(f"https://{output_bucket}.s3.{REGION_NAME}.amazonaws.com/{object['Key']}")
+            for stub_object in stub_objects:
+                generated_stubs_url.append(f"https://{output_bucket}.s3.{REGION_NAME}.amazonaws.com/{stub_object['Key']}")
             return generated_stubs_url
         else:
             msg = f"Error generating stubs :: {response}"

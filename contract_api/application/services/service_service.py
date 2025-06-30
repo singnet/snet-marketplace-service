@@ -17,6 +17,8 @@ from contract_api.domain.models.offchain_service_attribute import OffchainServic
 from contract_api.domain.models.org_group import OrgGroupDomain
 from contract_api.domain.models.service_endpoint import ServiceEndpointDomain
 from contract_api.domain.models.service_group import ServiceGroupDomain
+from contract_api.exceptions import ServiceNotFoundException, ServiceCurationFailedException, \
+    UpsertOffchainConfigsFailedException, UpdateServiceRatingFailedException
 from contract_api.infrastructure.repositories.organization_repository import OrganizationRepository
 from contract_api.infrastructure.repositories.service_repository import ServiceRepository
 
@@ -72,9 +74,12 @@ class ServiceService:
         org_id = request.org_id
         service_id = request.service_id
 
-        service, organization, service_metadata = self._service_repo.get_service(
-            org_id, service_id
-        )
+        service_data = self._service_repo.get_service(org_id, service_id)
+
+        if service_data is None:
+            raise ServiceNotFoundException(org_id, service_id)
+
+        service, organization, service_metadata = service_data
         service_media = self._service_repo.get_service_media(org_id, service_id)
         org_groups = self._org_repo.get_groups(org_id)
         groups_endpoints = self._service_repo.get_service_groups(org_id, service_id)
@@ -95,7 +100,10 @@ class ServiceService:
         org_id = request.org_id
         service_id = request.service_id
         curate = request.curate
-        self._service_repo.curate_service(org_id, service_id, curate)
+        try:
+            self._service_repo.curate_service(org_id, service_id, curate)
+        except Exception:
+            raise ServiceCurationFailedException(org_id, service_id)
 
         return {}
 
@@ -116,7 +124,10 @@ class ServiceService:
             demo_component.demo_component_status = BuildStatus.PENDING
 
         updated_offchain_attributes = ServiceFactory.offchain_service_configs_from_demo_component(demo_component)
-        self._service_repo.upsert_offchain_service_config(org_id, service_id, updated_offchain_attributes)
+        try:
+            self._service_repo.upsert_offchain_service_config(org_id, service_id, updated_offchain_attributes)
+        except Exception:
+            raise UpsertOffchainConfigsFailedException(org_id, service_id)
 
         attributes = {}
         for config in updated_offchain_attributes:
@@ -134,7 +145,11 @@ class ServiceService:
             "rating": rating,
             "total_users_rated": total_users_rated
         }
-        self._service_repo.update_service_rating(org_id, service_id, service_rating)
+
+        try:
+            self._service_repo.update_service_rating(org_id, service_id, service_rating)
+        except Exception:
+            raise UpdateServiceRatingFailedException(org_id, service_id)
 
         return {"org_id": org_id, "service_id": service_id, "rating": service_rating}
 

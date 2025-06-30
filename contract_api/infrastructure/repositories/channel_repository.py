@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sqlalchemy import select, update, insert
 
 from contract_api.domain.factory.channel_factory import ChannelFactory
@@ -23,7 +25,8 @@ class ChannelRepository(BaseRepository):
         )
 
         result = self.session.execute(query)
-        return result.mappings().all()
+        result_list = list(result.mappings().all())
+        return result_list
 
     def get_group_channels(self, user_address: str, org_id: str, group_id: str) -> list[ChannelDomain]:
         query = select(
@@ -42,7 +45,7 @@ class ChannelRepository(BaseRepository):
 
         return ChannelFactory.channels_from_db_model(channels_db)
 
-    def get_channel(self, channel_id: int) -> ChannelDomain:
+    def get_channel(self, channel_id: int) -> Optional[ChannelDomain]:
         query = select(
             MpeChannel
         ).where(
@@ -52,8 +55,12 @@ class ChannelRepository(BaseRepository):
         result = self.session.execute(query)
         channel_db = result.scalar_one_or_none()
 
+        if channel_db is None:
+            return None
+
         return ChannelFactory.channel_from_db_model(channel_db)
 
+    @BaseRepository.write_ops
     def update_consumed_balance(self, channel_id: int, consumed_balance: int) -> None:
         query = update(
             MpeChannel
@@ -66,6 +73,7 @@ class ChannelRepository(BaseRepository):
         self.session.execute(query)
         self.session.commit()
 
+    @BaseRepository.write_ops
     def upsert_channel(self, channel: NewChannelDomain) -> None:
         query = select(
             MpeChannel

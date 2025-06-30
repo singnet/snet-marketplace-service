@@ -6,14 +6,12 @@ class OrganizationService:
     def __init__(self):
         self._org_repo = OrganizationRepository()
 
-    # is used in handler
     def get_all_organizations(self) -> list[dict]:
         orgs = self._org_repo.get_organizations_with_curated_services()
         org_data = [org.to_response() for org in orgs]
 
         return org_data
 
-    # is used in handler
     def get_group(self, request: GetGroupRequest) -> dict:
         org_id = request.org_id
         group_id = request.group_id

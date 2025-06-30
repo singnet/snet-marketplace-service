@@ -17,7 +17,7 @@ class TriggerDappBuildRequest(BaseModel):
     def get_file_path(cls, event: dict) -> str:
         try:
             file_path = event["Records"][0]['s3']['object']['key']
-        except Exception as e:
+        except Exception:
             raise MissingFilePathException()
         return file_path
 

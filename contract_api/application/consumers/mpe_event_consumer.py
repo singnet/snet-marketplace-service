@@ -19,7 +19,7 @@ class MPEEventConsumer(EventConsumer):
         channel_id = request.channel_id
 
         if event_name == 'ChannelOpen':
-            channel_data = self._get_channel_data_from_blockchain(channel_id)
+            channel_data = self._convert_channel_to_domain(request)
             logger.info(f"Created channel {channel_id}")
         elif event_name in ['ChannelClaim', 'ChannelExtend', 'ChannelAddFunds']:
             channel_data = self._get_channel_data_from_blockchain(channel_id)
@@ -28,10 +28,14 @@ class MPEEventConsumer(EventConsumer):
             logger.info(f"Unhandled event: {event_name}")
             return
 
-        self._channel_repo.upsert_channel(channel_data)
+        try:
+            self._channel_repo.upsert_channel(channel_data)
+        except Exception as e:
+            logger.error(str(e))
+            raise Exception(f"Failed to upsert channel with id {channel_id} in mpe event consumer")
 
     @staticmethod
-    def convert_channel_to_domain(request_data: MpeEventConsumerRequest) -> NewChannelDomain:
+    def _convert_channel_to_domain(request_data: MpeEventConsumerRequest) -> NewChannelDomain:
         group_id = request_data.group_id
         if request_data.group_id[0:2] == '0x':
             group_id = request_data.group_id[2:]

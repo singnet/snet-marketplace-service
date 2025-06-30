@@ -35,5 +35,5 @@ class ServiceEndpointDomain(NewServiceEndpointDomain):
     def to_short_response(self):
         return {
             "endpoint": self.endpoint,
-            "is_available": self.is_available,
+            "isAvailable": self.is_available,
         }

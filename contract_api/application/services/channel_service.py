@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 import boto3
 
@@ -6,6 +7,8 @@ from contract_api.application.schemas.channel_schemas import GetGroupChannelsReq
     UpdateConsumedBalanceRequest
 from contract_api.config import SIGNER_SERVICE_ARN, REGION_NAME
 from contract_api.domain.models.channel import ChannelDomain
+from contract_api.exceptions import ChannelNotFoundException, CreatingSignatureFailedException, \
+    DaemonInteractionFailedException
 from contract_api.infrastructure.daemon_client import DaemonClient
 from contract_api.infrastructure.repositories.channel_repository import ChannelRepository
 from contract_api.infrastructure.repositories.service_repository import ServiceRepository
@@ -17,14 +20,17 @@ class ChannelService:
         self._daemon_client = DaemonClient()
         self._service_repo = ServiceRepository()
 
-    def get_channels(self, request: GetChannelsRequest):
+    def get_channels(self, request: GetChannelsRequest) -> dict:
         wallet_address = request.wallet_address
         channels = self._channel_repo.get_channels(wallet_address)
-        channel_data = self._convert_channels_data_to_response(channels)
+        org_channels_data = self._convert_channels_data_to_response(channels)
 
-        return channel_data
+        return {
+            "walletAddress": wallet_address,
+            "organizations": org_channels_data
+        }
 
-    def get_group_channels(self, request: GetGroupChannelsRequest):
+    def get_group_channels(self, request: GetGroupChannelsRequest) -> dict:
         user_address = request.user_address
         org_id = request.org_id
         group_id = request.group_id
@@ -39,13 +45,16 @@ class ChannelService:
 
         return channel_data
 
-    def update_consumed_balance(self, request: UpdateConsumedBalanceRequest):
+    def update_consumed_balance(self, request: UpdateConsumedBalanceRequest) -> dict:
         channel_id = request.channel_id
         org_id = request.org_id
         service_id = request.service_id
         signed_amount = request.signed_amount
 
         channel = self._channel_repo.get_channel(channel_id)
+
+        if channel is None:
+            raise ChannelNotFoundException(channel_id)
 
         if signed_amount is None:
             signed_amount = self._get_channel_state_from_daemon(channel, org_id, service_id)
@@ -55,12 +64,12 @@ class ChannelService:
         return {}
 
     @staticmethod
-    def _convert_channels_data_to_response(channels_data: list):
-        channel_details_response = {}
+    def _convert_channels_data_to_response(channels_data: list[dict]) -> list[dict]:
+        org_channels = {}
         for channel in channels_data:
             org_name = channel["organization_name"]
-            if org_name not in channel_details_response:
-                channel_details_response[org_name] = {
+            if org_name not in org_channels:
+                org_channels[org_name] = {
                     "org_id": channel["org_id"],
                     "hero_image": channel["org_assets_url"].get("hero_image", ""),
                     "channels": {
@@ -68,11 +77,23 @@ class ChannelService:
                     }
                 }
             else:
-                channel_details_response[org_name]["channels"][str(channel["channel_id"])] = channel["balance_in_cogs"]
+                org_channels[org_name]["channels"][str(channel["channel_id"])] = channel["balance_in_cogs"]
 
-        return channel_details_response
+        if not org_channels:
+            return []
 
-    def _get_channel_state_from_daemon(self, channel: ChannelDomain, org_id: str, service_id: str):
+        channels_details_response = []
+        for org_name, org_channels_data in org_channels.items():
+            channels_details_response.append({
+                "orgName": org_name,
+                "orgId": org_channels_data["org_id"],
+                "heroImage": org_channels_data["hero_image"],
+                "channels": org_channels_data["channels"]
+            })
+
+        return channels_details_response
+
+    def _get_channel_state_from_daemon(self, channel: ChannelDomain, org_id: str, service_id: str) -> int:
         channel_id = channel.channel_id
         group_id = channel.group_id
 
@@ -81,12 +102,15 @@ class ChannelService:
         signature, current_block_number = self._get_channel_state_signature(channel_id)
         if signature.startswith("0x"):
             signature = signature[2:]
-        signed_amount = self._daemon_client.get_channel_state(endpoint, channel_id, signature, current_block_number)
+        try:
+            signed_amount = self._daemon_client.get_channel_state(endpoint, channel_id, signature, current_block_number)
+        except Exception:
+            raise DaemonInteractionFailedException()
 
         return signed_amount
 
     @staticmethod
-    def _get_channel_state_signature(channel_id):
+    def _get_channel_state_signature(channel_id) -> tuple[str, Any]:
         body = {
             'channel_id': channel_id
         }
@@ -106,6 +130,6 @@ class ChannelService:
 
         signature_response = json.loads(signature_response.get("Payload").read())
         if signature_response["statusCode"] != 200:
-            raise Exception(f"Failed to create signature for {body}")
+            raise CreatingSignatureFailedException()
         signature_details = json.loads(signature_response["body"])["data"]
         return signature_details["signature"], signature_details["snet-current-block-number"]

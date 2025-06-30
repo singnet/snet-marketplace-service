@@ -1,7 +1,6 @@
-import datetime as dt
+from typing import Optional
 
 from sqlalchemy import select, and_, or_, func, update, delete
-from sqlalchemy.exc import SQLAlchemyError
 
 from contract_api.domain.factory.organization_factory import OrganizationFactory
 from contract_api.domain.models.offchain_service_attribute import OffchainServiceConfigDomain
@@ -12,8 +11,15 @@ from contract_api.domain.models.service_group import ServiceGroupDomain, NewServ
 from contract_api.domain.models.service_media import ServiceMediaDomain, NewServiceMediaDomain
 from contract_api.domain.models.service_metadata import ServiceMetadataDomain, NewServiceMetadataDomain
 from contract_api.domain.models.service_tag import ServiceTagDomain, NewServiceTagDomain
-from contract_api.infrastructure.models import Service as ServiceDB, ServiceMetadata as ServiceMetadataDB, \
-    ServiceEndpoint, ServiceTags, Service, ServiceMetadata, Organization, ServiceMedia, ServiceGroup
+from contract_api.infrastructure.models import (
+    ServiceEndpoint,
+    ServiceTags,
+    Service,
+    ServiceMetadata,
+    Organization,
+    ServiceMedia,
+    ServiceGroup
+)
 from contract_api.infrastructure.models import OffchainServiceConfig
 from contract_api.infrastructure.repositories.base_repository import BaseRepository
 from contract_api.domain.factory.service_factory import ServiceFactory
@@ -197,7 +203,7 @@ class ServiceRepository(BaseRepository):
 
     def get_service(
             self, org_id: str, service_id: str
-    ) -> tuple[ServiceDomain, OrganizationDomain, ServiceMetadataDomain]:
+    ) -> Optional[tuple[ServiceDomain, OrganizationDomain, ServiceMetadataDomain]]:
         query = select(
             Service,
             Organization,
@@ -213,7 +219,11 @@ class ServiceRepository(BaseRepository):
         ).limit(1)
 
         result = self.session.execute(query)
-        service, organization, service_metadata = result.scalar_one_or_none()
+        result = result.scalar_one_or_none()
+        if not result:
+            return None
+
+        service, organization, service_metadata = result
         return (
             ServiceFactory.service_from_db_model(service),
             OrganizationFactory.organization_from_db_model(organization),
@@ -290,7 +300,7 @@ class ServiceRepository(BaseRepository):
 
         return ServiceFactory.offchain_service_configs_from_db_model_list(offchain_service_config_db)
 
-    def get_service_metadata(self, org_id: str, service_id: str) -> ServiceMetadataDomain:
+    def get_service_metadata(self, org_id: str, service_id: str) -> Optional[ServiceMetadataDomain]:
         query = select(
             ServiceMetadata
         ).where(
@@ -301,8 +311,12 @@ class ServiceRepository(BaseRepository):
         result = self.session.execute(query)
         service_metadata_db = result.scalar_one_or_none()
 
+        if service_metadata_db is None:
+            return None
+
         return ServiceFactory.service_metadata_from_db_model(service_metadata_db)
 
+    @BaseRepository.write_ops
     def curate_service(self, org_id, service_id, curate):
         query = update(
             Service
@@ -316,6 +330,7 @@ class ServiceRepository(BaseRepository):
         self.session.execute(query)
         self.session.commit()
 
+    @BaseRepository.write_ops
     def upsert_offchain_service_config(
             self,
             org_id: str,
@@ -354,6 +369,7 @@ class ServiceRepository(BaseRepository):
                 ))
             self.session.commit()
 
+    @BaseRepository.write_ops
     def delete_services(self, org_id) -> None:
         query = delete(
             Service
@@ -364,6 +380,7 @@ class ServiceRepository(BaseRepository):
 
         self.session.commit()
 
+    @BaseRepository.write_ops
     def delete_service(self, org_id, service_id) -> None:
         query = delete(
             Service
@@ -687,6 +704,7 @@ class ServiceRepository(BaseRepository):
 
         return ServiceFactory.service_media_from_db_model(service_media_db)
 
+    @BaseRepository.write_ops
     def update_service_rating(
             self,
             org_id: str,

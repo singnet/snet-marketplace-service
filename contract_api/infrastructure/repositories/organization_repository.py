@@ -1,9 +1,11 @@
+from typing import Optional
+
 from sqlalchemy import select, delete, update
 
 from contract_api.domain.factory.organization_factory import OrganizationFactory
 from contract_api.domain.models.org_group import OrgGroupDomain, NewOrgGroupDomain
 from contract_api.domain.models.organization import OrganizationDomain, NewOrganizationDomain
-from contract_api.infrastructure.models import OrgGroup, Organization, Service, Members
+from contract_api.infrastructure.models import OrgGroup, Organization, Service
 from contract_api.infrastructure.repositories.base_repository import BaseRepository
 
 
@@ -37,7 +39,7 @@ class OrganizationRepository(BaseRepository):
 
         return OrganizationFactory.orgs_from_db_model(organizations_db)
 
-    def get_organization(self, org_id: str) -> OrganizationDomain:
+    def get_organization(self, org_id: str) -> Optional[OrganizationDomain]:
         query = select(
             Organization
         ).where(
@@ -47,8 +49,12 @@ class OrganizationRepository(BaseRepository):
         result = self.session.execute(query)
         organization_db = result.scalar_one_or_none()
 
+        if organization_db is None:
+            return None
+
         return OrganizationFactory.organization_from_db_model(organization_db)
 
+    @BaseRepository.write_ops
     def delete_organization(self, org_id: str) -> None:
         query = delete(
             Organization

@@ -52,6 +52,7 @@ class DaemonClient:
             response = stub.GetChannelState(request)
         except Exception as e:
             logger.error(str(e))
-            raise Exception(f"Failed to get channel state with id {channel_id} via grpc")
+            raise Exception(f"Failed to get channel state with id {channel_id} "
+                            f"via grpc to daemon with endpoint {daemon_endpoint}")
 
         return int.from_bytes(response.current_signed_amount, "big")
