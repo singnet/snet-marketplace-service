@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+from contract_api.domain.models.base_domain import BaseDomain
+
 
 @dataclass
 class NewServiceTagDomain:
@@ -11,14 +13,7 @@ class NewServiceTagDomain:
 
 
 @dataclass
-class ServiceTagDomain(NewServiceTagDomain):
+class ServiceTagDomain(NewServiceTagDomain, BaseDomain):
     row_id: int
     created_on: datetime
     updated_on: datetime
-
-    def to_response(self) -> dict:
-        return {
-            "org_id": self.org_id,
-            "service_id": self.service_id,
-            "tag_name": self.tag_name,
-        }

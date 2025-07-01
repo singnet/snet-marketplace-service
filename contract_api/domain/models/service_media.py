@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+from contract_api.domain.models.base_domain import BaseDomain
+
 
 @dataclass
 class NewServiceMediaDomain:
@@ -16,22 +18,10 @@ class NewServiceMediaDomain:
 
 
 @dataclass
-class ServiceMediaDomain(NewServiceMediaDomain):
+class ServiceMediaDomain(NewServiceMediaDomain, BaseDomain):
     row_id: str
     created_on: datetime
     updated_on: datetime
-
-    def to_response(self) -> dict:
-        return {
-            "org_id": self.org_id,
-            "service_id": self.service_id,
-            "url": self.url,
-            "order": self.order,
-            "file_type": self.file_type,
-            "asset_type": self.asset_type,
-            "alt_text": self.alt_text,
-            "hash_uri": self.hash_uri,
-        }
 
     def to_short_response(self) -> dict:
         return {

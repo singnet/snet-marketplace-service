@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+from contract_api.domain.models.base_domain import BaseDomain
+
+
 @dataclass
 class NewServiceEndpointDomain:
     service_row_id: str
@@ -12,25 +15,13 @@ class NewServiceEndpointDomain:
 
 
 @dataclass
-class ServiceEndpointDomain(NewServiceEndpointDomain):
+class ServiceEndpointDomain(NewServiceEndpointDomain, BaseDomain):
     row_id: str
     last_check_timestamp: datetime
     next_check_timestamp: datetime
     failed_status_count: int
     created_on: datetime
     updated_on: datetime
-
-    def to_response(self):
-        return {
-            "org_id": self.org_id,
-            "service_id": self.service_id,
-            "group_id": self.group_id,
-            "endpoint": self.endpoint,
-            "is_available": self.is_available,
-            "last_check_timestamp": self.last_check_timestamp,
-            "next_check_timestamp": self.next_check_timestamp,
-            "failed_status_count": self.failed_status_count,
-        }
 
     def to_short_response(self):
         return {

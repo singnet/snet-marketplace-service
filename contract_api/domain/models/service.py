@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+from contract_api.domain.models.base_domain import BaseDomain
+
 
 @dataclass
 class NewServiceDomain:
@@ -11,22 +13,12 @@ class NewServiceDomain:
 
 
 @dataclass
-class ServiceDomain(NewServiceDomain):
+class ServiceDomain(NewServiceDomain, BaseDomain):
     row_id: int
     service_path: str
     service_email: str
     created_on: datetime
     updated_on: datetime
-
-    def to_response(self) -> dict:
-        return {
-            "org_id": self.org_id,
-            "service_id": self.service_id,
-            "service_path": self.service_path,
-            "hash_uri": self.hash_uri,
-            "is_curated": self.is_curated,
-            "service_email": self.service_email,
-        }
 
     def to_short_response(self) -> dict:
         return {

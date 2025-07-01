@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+from contract_api.domain.models.base_domain import BaseDomain
+
 
 @dataclass
 class NewServiceMetadataDomain:
@@ -23,33 +25,12 @@ class NewServiceMetadataDomain:
 
 
 @dataclass
-class ServiceMetadataDomain(NewServiceMetadataDomain):
+class ServiceMetadataDomain(NewServiceMetadataDomain, BaseDomain):
     row_id: int
     demo_component_available: bool
     ranking: int
     created_on: datetime
     updated_on: datetime
-
-    def to_response(self) -> dict:
-        return {
-            "org_id": self.org_id,
-            "service_id": self.service_id,
-            "display_name": self.display_name,
-            "description": self.description,
-            "short_description": self.short_description,
-            "demo_component_available": self.demo_component_available,
-            "url": self.url,
-            "json": self.json,
-            "model_hash": self.model_hash,
-            "encoding": self.encoding,
-            "type": self.type,
-            "mpe_address": self.mpe_address,
-            "assets_url": self.assets_url,
-            "assets_hash": self.assets_hash,
-            "service_rating": self.service_rating,
-            "ranking": self.ranking,
-            "contributors": self.contributors,
-        }
 
     def to_short_response(self) -> dict:
         return {

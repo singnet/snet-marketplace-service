@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+from contract_api.domain.models.base_domain import BaseDomain
+
 
 @dataclass
 class NewOrganizationDomain:
@@ -16,25 +18,11 @@ class NewOrganizationDomain:
 
 
 @dataclass
-class OrganizationDomain(NewOrganizationDomain):
+class OrganizationDomain(NewOrganizationDomain, BaseDomain):
     row_id: int
     org_email: str
     created_on: datetime
     updated_on: datetime
-
-    def to_response(self) -> dict:
-        return {
-            "org_id": self.org_id,
-            "organization_name": self.organization_name,
-            "owner_address": self.owner_address,
-            "org_metadata_uri": self.org_metadata_uri,
-            "org_email": self.org_email,
-            "org_assets_url": self.org_assets_url,
-            "is_curated": self.is_curated,
-            "description": self.description,
-            "assets_hash": self.assets_hash,
-            "contacts": self.contacts
-        }
 
     def to_short_response(self) -> dict:
         for contact in self.contacts:
