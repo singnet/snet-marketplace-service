@@ -103,10 +103,10 @@ class SaveOffchainAttributeRequest(BaseModel):
     demo_component: dict
 
     @classmethod
-    @validation_handler([RequestPayloadType.QUERY_STRING, RequestPayloadType.BODY])
+    @validation_handler([RequestPayloadType.PATH_PARAMS, RequestPayloadType.BODY])
     def validate_event(cls, event: dict) -> "SaveOffchainAttributeRequest":
         body = json.loads(event[RequestPayloadType.BODY])
-        data = {**event[RequestPayloadType.QUERY_STRING], **body}
+        data = {**event[RequestPayloadType.PATH_PARAMS], **body}
         return cls.model_validate(data)
 
 

@@ -12,8 +12,7 @@ class ContractAPIClient:
         self, org_id: str, service_id: str, group_id: str
     ) -> Tuple[str, int]:
         lambda_payload = {
-            "httpMethod": "GET",
-            "pathParameters": {"orgId": org_id, "serviceId": service_id},
+            "pathParameters": {"org_id": org_id, "service_id": service_id},
         }
 
         response = self.lambda_client.invoke(

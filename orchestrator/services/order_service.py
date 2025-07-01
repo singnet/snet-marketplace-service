@@ -499,14 +499,10 @@ class OrderService:
         return {"orders": orders}
 
     def get_organizations_from_contract(self):
-        org_details_event = {
-            "path": f"/org",
-            "httpMethod": "GET"
-        }
         org_details_response = self.boto_client.invoke_lambda(
             lambda_function_arn=GET_ALL_ORG_API_ARN,
             invocation_type='RequestResponse',
-            payload=json.dumps(org_details_event)
+            payload=json.dumps([{}])
         )
         if org_details_response["statusCode"] != 200:
             raise Exception("Failed to get org details")
