@@ -1,5 +1,0 @@
-
-
-class RepositoryException(Exception):
-    pass
-

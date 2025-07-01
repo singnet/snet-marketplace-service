@@ -28,12 +28,12 @@ class MpeChannel(Base):
     )
 
     created_on: Mapped[datetime] = mapped_column(
-        "created_on", TIMESTAMP(timezone=False), nullable=True, server_default=func.now()
+        "created_on", TIMESTAMP(timezone=False), nullable=False, server_default=func.now()
     )
     updated_on: Mapped[datetime] = mapped_column(
         "updated_on", 
         TIMESTAMP(timezone=False), 
-        nullable=True, 
+        nullable=False, 
         server_default=func.now(), 
         onupdate=func.now()
     )
@@ -57,12 +57,12 @@ class OrgGroup(Base):
     payment: Mapped[dict] = mapped_column("payment", JSON, default=null)
 
     created_on: Mapped[datetime] = mapped_column(
-        "created_on", TIMESTAMP(timezone=False), nullable=True, server_default=func.now()
+        "created_on", TIMESTAMP(timezone=False), nullable=False, server_default=func.now()
     )
     updated_on: Mapped[datetime] = mapped_column(
         "updated_on", 
         TIMESTAMP(timezone=False), 
-        nullable=True, 
+        nullable=False, 
         server_default=func.now(), 
         onupdate=func.now()
     )
@@ -87,12 +87,12 @@ class Organization(Base):
     contacts: Mapped[dict] = mapped_column("contacts", JSON, default={})
 
     created_on: Mapped[datetime] = mapped_column(
-        "created_on", TIMESTAMP(timezone=False), nullable=True, server_default=func.now()
+        "created_on", TIMESTAMP(timezone=False), nullable=False, server_default=func.now()
     )
     updated_on: Mapped[datetime] = mapped_column(
         "updated_on", 
         TIMESTAMP(timezone=False), 
-        nullable=True, 
+        nullable=False, 
         server_default=func.now(), 
         onupdate=func.now()
     )
@@ -114,12 +114,12 @@ class Service(Base):
     service_email: Mapped[str] = mapped_column("service_email", VARCHAR(128), default=null)
 
     created_on: Mapped[datetime] = mapped_column(
-        "created_on", TIMESTAMP(timezone=False), nullable=True, server_default=func.now()
+        "created_on", TIMESTAMP(timezone=False), nullable=False, server_default=func.now()
     )
     updated_on: Mapped[datetime] = mapped_column(
         "updated_on", 
         TIMESTAMP(timezone=False), 
-        nullable=True, 
+        nullable=False, 
         server_default=func.now(), 
         onupdate=func.now()
     )
@@ -154,12 +154,12 @@ class ServiceEndpoint(Base):
     failed_status_count: Mapped[int] = mapped_column("failed_status_count", Integer, default=1)
 
     created_on: Mapped[datetime] = mapped_column(
-        "created_on", TIMESTAMP(timezone=False), nullable=True, server_default=func.now()
+        "created_on", TIMESTAMP(timezone=False), nullable=False, server_default=func.now()
     )
     updated_on: Mapped[datetime] = mapped_column(
         "updated_on", 
         TIMESTAMP(timezone=False), 
-        nullable=True, 
+        nullable=False, 
         server_default=func.now(), 
         onupdate=func.now()
     )
@@ -185,12 +185,12 @@ class ServiceGroup(Base):
     pricing: Mapped[dict] = mapped_column("pricing", JSON, default={})
 
     created_on: Mapped[datetime] = mapped_column(
-        "created_on", TIMESTAMP(timezone=False), nullable=True, server_default=func.now()
+        "created_on", TIMESTAMP(timezone=False), nullable=False, server_default=func.now()
     )
     updated_on: Mapped[datetime] = mapped_column(
         "updated_on", 
         TIMESTAMP(timezone=False), 
-        nullable=True, 
+        nullable=False, 
         server_default=func.now(), 
         onupdate=func.now()
     )
@@ -219,12 +219,12 @@ class ServiceMedia(Base):
     hash_uri: Mapped[str] = mapped_column("hash_uri", VARCHAR(512), default=null)
     
     created_on: Mapped[datetime] = mapped_column(
-        "created_on", TIMESTAMP(timezone = False), nullable = True, server_default = func.now()
+        "created_on", TIMESTAMP(timezone=False), nullable=False, server_default=func.now()
     )
     updated_on: Mapped[datetime] = mapped_column(
         "updated_on", 
         TIMESTAMP(timezone=False), 
-        nullable=True, 
+        nullable=False, 
         server_default=func.now(), 
         onupdate=func.now()
     )
@@ -260,12 +260,12 @@ class ServiceMetadata(Base):
     contributors: Mapped[dict] = mapped_column("contributors", JSON, default={})
 
     created_on: Mapped[datetime] = mapped_column(
-        "created_on", TIMESTAMP(timezone=False), nullable=True, server_default=func.now()
+        "created_on", TIMESTAMP(timezone=False), nullable=False, server_default=func.now()
     )
     updated_on: Mapped[datetime] = mapped_column(
         "updated_on", 
         TIMESTAMP(timezone=False), 
-        nullable=True, 
+        nullable=False, 
         server_default=func.now(), 
         onupdate=func.now()
     )
@@ -289,12 +289,12 @@ class ServiceTags(Base):
     tag_name: Mapped[str] = mapped_column("tag_name", VARCHAR(128), default=null)
     
     created_on: Mapped[datetime] = mapped_column(
-        "created_on", TIMESTAMP(timezone=False), nullable=True, server_default=func.now()
+        "created_on", TIMESTAMP(timezone=False), nullable=False, server_default=func.now()
     )
     updated_on: Mapped[datetime] = mapped_column(
         "updated_on", 
         TIMESTAMP(timezone=False), 
-        nullable=True, 
+        nullable=False, 
         server_default=func.now(), 
         onupdate=func.now()
     )
@@ -313,12 +313,12 @@ class OffchainServiceConfig(Base):
     parameter_value: Mapped[str] = mapped_column("parameter_value", VARCHAR(512), nullable=False)
     
     created_on: Mapped[datetime] = mapped_column(
-        "created_on", TIMESTAMP(timezone=False), nullable=True, server_default=func.now()
+        "created_on", TIMESTAMP(timezone=False), nullable=False, server_default=func.now()
     )
     updated_on: Mapped[datetime] = mapped_column(
         "updated_on", 
         TIMESTAMP(timezone=False), 
-        nullable=True, 
+        nullable=False, 
         server_default=func.now(), 
         onupdate=func.now()
     )
