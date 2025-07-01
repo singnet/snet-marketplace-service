@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy import select, update, insert
+from sqlalchemy import select, update, delete
 
 from contract_api.domain.factory.channel_factory import ChannelFactory
 from contract_api.domain.models.channel import ChannelDomain, NewChannelDomain
@@ -111,4 +111,14 @@ class ChannelRepository(BaseRepository):
                 )
             )
 
+        self.session.commit()
+
+    def delete_channel(self, channel_id: int) -> None:
+        query = delete(
+            MpeChannel
+        ).where(
+            MpeChannel.channel_id == channel_id
+        )
+
+        self.session.execute(query)
         self.session.commit()

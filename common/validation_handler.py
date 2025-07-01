@@ -23,7 +23,7 @@ def validation_handler(payload_types: list[RequestPayloadType] = None):
                     assert event.get(payload_type) is not None, (
                         PAYLOAD_TYPES_ERRORS_RELATIONSHIP[payload_type].value
                     )
-                func(cls, event, *args, **kwargs)
+                return func(cls, event, *args, **kwargs)
             except ValidationError as e:
                 missing_params = [x["loc"][0] for x in e.errors()]
                 raise BadRequestException(message = f"Missing required parameters: "

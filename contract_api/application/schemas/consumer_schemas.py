@@ -7,7 +7,7 @@ from common.validation_handler import validation_handler
 
 
 class EventConsumerRequest(BaseModel):
-    event_name: str
+    event_name: str = Field(alias = "name")
 
     @classmethod
     def get_events_from_queue(cls, event: dict):
@@ -24,11 +24,11 @@ class EventConsumerRequest(BaseModel):
                         converted_events.append(payload["blockchain_event"])
         return converted_events
 
-    @model_validator(mode = 'before')
+    @model_validator(mode = "before")
     @classmethod
     def convert_data(cls, data: dict) -> dict:
         converted_data = {
-            "event_name": data["name"],
+            "name": data["name"],
             **ast.literal_eval(data["data"]["json_str"])
         }
         return converted_data
@@ -45,9 +45,9 @@ class MpeEventConsumerRequest(EventConsumerRequest):
     amount: int | None = None
 
     @classmethod
-    @validation_handler
+    @validation_handler()
     def validate_event(cls, event: dict) -> "MpeEventConsumerRequest":
-        return cls.model_validate(**event)
+        return cls.model_validate(event)
 
 
 class RegistryEventConsumerRequest(EventConsumerRequest):
@@ -56,9 +56,9 @@ class RegistryEventConsumerRequest(EventConsumerRequest):
     metadata_uri: str | None = Field(alias = "metadataURI", default = None)
 
     @classmethod
-    @validation_handler
+    @validation_handler()
     def validate_event(cls, event: dict) -> "RegistryEventConsumerRequest":
-        return cls.model_validate(**event)
+        return cls.model_validate(event)
 
     @field_validator("org_id")
     @classmethod

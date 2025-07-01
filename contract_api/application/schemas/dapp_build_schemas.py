@@ -8,18 +8,18 @@ class TriggerDappBuildRequest(BaseModel):
     file_path: str
 
     @classmethod
-    @validation_handler
+    @validation_handler()
     def validate_event(cls, event: dict) -> "TriggerDappBuildRequest":
-        file_path = cls.get_file_path(event = event)
-        return cls.model_validate({"file_path": file_path})
+        return cls.model_validate(event)
 
+    @model_validator(mode = 'before')
     @classmethod
-    def get_file_path(cls, event: dict) -> str:
+    def get_file_path(cls, event: dict) -> dict:
         try:
             file_path = event["Records"][0]['s3']['object']['key']
         except Exception:
             raise MissingFilePathException()
-        return file_path
+        return {"file_path": file_path}
 
 class NotifyDeployStatusRequest(BaseModel):
     org_id: str
@@ -27,9 +27,9 @@ class NotifyDeployStatusRequest(BaseModel):
     build_status: int
 
     @classmethod
-    @validation_handler
+    @validation_handler()
     def validate_event(cls, event: dict) -> "NotifyDeployStatusRequest":
-        return cls.model_validate(**event)
+        return cls.model_validate(event)
 
     @model_validator(mode = 'before')
     @classmethod

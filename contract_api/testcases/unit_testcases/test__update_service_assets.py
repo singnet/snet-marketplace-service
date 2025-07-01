@@ -2,7 +2,7 @@ import json
 from unittest import TestCase
 from unittest.mock import patch
 
-from contract_api.application.handlers.service_handlers import trigger_demo_component_build
+from contract_api.application.handlers.dapp_build_handlers import trigger_dapp_build
 
 
 class TestServiceAssets(TestCase):
@@ -19,7 +19,7 @@ class TestServiceAssets(TestCase):
             ]
         }
         mock_code_build_trigger.return_value = {'build': {'id': "dummy_build_id"}}
-        response = trigger_demo_component_build(event=event, context=None)
+        response = trigger_dapp_build(event=event, context=None)
         assert response["statusCode"] == 201
         assert json.loads(response["body"])["data"] == "dummy_build_id"
 
@@ -32,7 +32,7 @@ class TestServiceAssets(TestCase):
                  }
             ]
         }
-        response = trigger_demo_component_build(event=event, context=None)
+        response = trigger_dapp_build(event=event, context=None)
         assert response["statusCode"] == 500
 
         key = 'assets/test_org_id/test_service_id/component.ar.gz'
@@ -44,7 +44,7 @@ class TestServiceAssets(TestCase):
                  }
             ]
         }
-        response = trigger_demo_component_build(event=event, context=None)
+        response = trigger_dapp_build(event=event, context=None)
         assert response["statusCode"] == 500
 
         key = 'assets//test_service_id/component.ar.gz'
@@ -56,5 +56,5 @@ class TestServiceAssets(TestCase):
                  }
             ]
         }
-        response = trigger_demo_component_build(event=event, context=None)
+        response = trigger_dapp_build(event=event, context=None)
         assert response["statusCode"] == 500

@@ -37,8 +37,8 @@ class GetServicesRequest(BaseModel):
     @classmethod
     @validation_handler([RequestPayloadType.BODY])
     def validate_event(cls, event: dict) -> "GetServicesRequest":
-        body = json.loads(event[RequestPayloadType.BODY])
-        return cls.model_validate(**body)
+        data = {**json.loads(event[RequestPayloadType.BODY])}
+        return cls.model_validate(data)
 
     @field_validator("sort")
     @classmethod
