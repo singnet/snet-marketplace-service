@@ -5,7 +5,7 @@ import boto3
 
 from contract_api.application.schemas.channel_schemas import GetGroupChannelsRequest, GetChannelsRequest, \
     UpdateConsumedBalanceRequest
-from contract_api.config import SIGNER_SERVICE_ARN, REGION_NAME
+from contract_api.config import GET_STATE_SERVICE_SIGNATURE_ARN, REGION_NAME
 from contract_api.domain.models.channel import ChannelDomain
 from contract_api.exceptions import ChannelNotFoundException, CreatingSignatureFailedException, \
     DaemonInteractionFailedException
@@ -116,14 +116,12 @@ class ChannelService:
         }
 
         payload = {
-            "path": "/signer/state-service",
-            "body": json.dumps(body),
-            "httpMethod": "POST"
+            "body": json.dumps(body)
         }
 
         lambda_client = boto3.client('lambda', region_name = REGION_NAME)
         signature_response = lambda_client.invoke(
-            FunctionName = SIGNER_SERVICE_ARN,
+            FunctionName = GET_STATE_SERVICE_SIGNATURE_ARN,
             InvocationType = 'RequestResponse',
             Payload = json.dumps(payload)
         )
