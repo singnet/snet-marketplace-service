@@ -9,7 +9,6 @@ from dapp_user.application.schemas import (
     GetUserFeedbackRequest,
     UpdateUserAlertsRequest,
 )
-from dapp_user.constant import Status
 from dapp_user.domain.factory.user_factory import UserFactory
 from dapp_user.domain.interfaces.contract_api_client_interface import AbstractContractAPIClient
 from dapp_user.domain.interfaces.user_identity_manager_interface import UserIdentityManager
@@ -55,20 +54,7 @@ class UserService:
         except UserNotFoundException:
             raise UserNotFoundHTTPException(username)
 
-        response = []
-
-        for user_preference in user_preference_list:
-            if user_preference.status == Status.DISABLED:
-                self.user_repo.disable_preference(
-                    user_preference=user_preference, user_row_id=user.row_id
-                )
-                response.append(user_preference.status.value)
-            else:
-                self.user_repo.enable_preference(
-                    user_preference=user_preference, user_row_id=user.row_id
-                )
-                response.append(user_preference.status.value)
-
+        response = self.user_repo.update_preferences(user_preference_list, user.row_id)
         return response
 
     def get_user(self, username: str) -> dict:
@@ -138,7 +124,7 @@ class UserService:
             )
             #: TODO think about rollback or distributed transaction if update service rating fails (saga pattern)
             try:
-                rating, total_users_rated = self.user_repo.submit_user_feedback(
+                rating, total_users_rated = self.user_repo.submit_user_review(
                     user_vote=user_vote, user_feedback=user_feedback
                 )
             except (VoteAlreadyExistsException, FeedbackAlreadyExistsException):

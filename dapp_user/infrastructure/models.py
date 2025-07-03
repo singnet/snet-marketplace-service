@@ -63,8 +63,8 @@ class UserPreference(Base):
         "communication_type", VARCHAR(128), nullable=False
     )
     source: Mapped[str] = mapped_column("source", VARCHAR(128), nullable=False)
-    opt_out_reason: Mapped[str] = mapped_column("opt_out_reason", VARCHAR(256), nullable=True)
-    status: Mapped[str] = mapped_column("status", BOOLEAN, nullable=False)
+    opt_out_reason: Mapped[str | None] = mapped_column("opt_out_reason", VARCHAR(256), nullable=True)
+    status: Mapped[bool] = mapped_column("status", BOOLEAN, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP, server_default=CreateTimestamp, nullable=False
