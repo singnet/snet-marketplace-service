@@ -54,15 +54,15 @@ SLACK_HOOK: SlackHookConfigDict = {"hostname": "https://hooks.slack.com", "path"
 DB_CONFIG: DBConfigDict = {
     "driver": "mysql+pymysql",
     "host": "localhost",
-    "user": "root",
-    "password": "",
-    "name": "signer",
-    "port": 3306,
+    "user": "unittest_root",
+    "password": "unittest_pwd",
+    "name": "signer_unittest_db",
+    "port": 3306
 }
 
 SIGNER: SignerConfigDict = {
-    "key": "a22bc5d20a680ca810df36bd00f9017dabea3743f5cf2cbfae5d7415f3e0564b",
-    "address": "0x5CAe9719df1a1Fc890303500F658b65bE0817C4B",
+    "key": "5d66dccb32b03871f30533fe410d2e5998d607a579fb7bc2d991cd2148e3ec69",
+    "address": "0xBBE343b9BEf87Fb687cA83A014324d5E52cc3754",
     "expiration_block_count": 100,
 }
 

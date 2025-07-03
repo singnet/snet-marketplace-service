@@ -1,17 +1,19 @@
 from common.blockchain_util import BlockChainUtil
 from common.constant import ProviderType
-from signer.settings import settings
-from signer.infrastructure.signers import Signer
 from signer.application.schemas import (
     GetFreeCallSignatureRequest,
     GetSignatureForOpenChannelForThirdPartyRequest,
     GetSignatureForRegularCallRequest,
     GetSignatureForStateServiceRequest,
 )
-from signer.exceptions import ZeroFreeCallsAvailable
+from signer.exceptions import DaemonUnavailable, ZeroFreeCallsAvailable
 from signer.infrastructure.contract_api_client import ContractAPIClient
-from signer.infrastructure.daemon_client import DaemonClient
-from signer.infrastructure.repositories.free_call_token_repository import FreeCallTokenInfoRepository
+from signer.infrastructure.daemon_client import DaemonClient, GetFreeCallTokenError
+from signer.infrastructure.repositories.free_call_token_repository import (
+    FreeCallTokenInfoRepository,
+)
+from signer.infrastructure.signers import Signer
+from signer.settings import settings
 
 
 class SignerService:
@@ -45,8 +47,7 @@ class SignerService:
             or expiration_block_number <= current_block
         ):
             signature_to_get_free_call_token = (
-                self.signer.generate_signature_to_get_free_call_token(
-                    address=settings.signer.address,
+                self.signer.generate_signature_to_get_free_call_token( address=settings.signer.address,
                     username=username,
                     organization_id=request.organization_id,
                     service_id=request.service_id,
@@ -64,14 +65,17 @@ class SignerService:
             if free_calls_count == 0:
                 raise ZeroFreeCallsAvailable()
 
-            new_token, expiration_block_number = self.daemon_client.get_free_call_token(
-                address=settings.signer.address,
-                signature=signature_to_get_free_call_token,
-                current_block=current_block,
-                username=username,
-                daemon_endpoint=daemon_endpoint,
-                token_lifetime_in_blocks=settings.signer.expiration_block_count,
-            )
+            try:
+                new_token, expiration_block_number = self.daemon_client.get_free_call_token(
+                    address=settings.signer.address,
+                    signature=signature_to_get_free_call_token,
+                    current_block=current_block,
+                    username=username,
+                    daemon_endpoint=daemon_endpoint,
+                    token_lifetime_in_blocks=settings.signer.expiration_block_count,
+                )
+            except GetFreeCallTokenError:
+                raise DaemonUnavailable()
 
             free_call_token_info = (
                 self.free_call_token_repository.insert_or_update_free_call_token_info(

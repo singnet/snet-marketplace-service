@@ -85,8 +85,6 @@ class StubsGenerationRequest(BaseModel):
     def validate_event(cls, event: dict) -> "StubsGenerationRequest":
         try:
             return cls.model_validate(event)
-        except (ValidationError, json.JSONDecodeError, KeyError):
-            raise PayloadValidationError()
         except ValidationError as e:
             missing_params = [x["loc"][0] for x in e.errors()]
             raise BadRequestException(message = f"Missing required parameters: "

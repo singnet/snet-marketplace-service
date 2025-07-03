@@ -1,12 +1,19 @@
 from urllib.parse import urlparse
 
 import grpc
-from signer.stubs import state_service_pb2, state_service_pb2_grpc
-from resources.certificates.root_certificate import certificate
 from common.logger import get_logger
-
+from resources.certificates.root_certificate import certificate
+from signer.stubs import state_service_pb2, state_service_pb2_grpc
 
 logger = get_logger(__name__)
+
+
+class GetFreeCallTokenError(Exception):
+    """Raised when the get free call token request to daemon fails."""
+
+    def __init__(self):
+        message = "Error in making get free call token request to daemon"
+        super().__init__(message)
 
 
 class DaemonClient:
@@ -93,4 +100,4 @@ class DaemonClient:
                 daemon_endpoint,
                 token_lifetime_in_blocks,
             )
-            raise Exception("Error in making get free call token request to daemon")
+            raise GetFreeCallTokenError()

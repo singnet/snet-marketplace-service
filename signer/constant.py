@@ -1,4 +1,5 @@
 import os
+
 from signer.settings import settings
 
 NETWORK_ID = settings.network.id
