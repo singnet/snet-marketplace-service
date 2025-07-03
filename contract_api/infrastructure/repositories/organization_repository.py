@@ -75,7 +75,7 @@ class OrganizationRepository(BaseRepository):
         result = self.session.execute(query)
         organization_db = result.scalar_one_or_none()
 
-        if organization_db:
+        if organization_db is not None:
             query = update(
                 Organization
             ).where(

@@ -24,7 +24,6 @@ class EventConsumerRequest(BaseModel):
                         converted_events.append(payload["blockchain_event"])
         return converted_events
 
-    @model_validator(mode = "before")
     @classmethod
     def convert_data(cls, data: dict) -> dict:
         converted_data = {
@@ -49,6 +48,12 @@ class MpeEventConsumerRequest(EventConsumerRequest):
     def validate_event(cls, event: dict) -> "MpeEventConsumerRequest":
         return cls.model_validate(event)
 
+    @model_validator(mode = "before")
+    @classmethod
+    def convert_data_types(cls, data: dict) -> dict:
+        data = cls.convert_data(data)
+        return data
+
 
 class RegistryEventConsumerRequest(EventConsumerRequest):
     org_id: str = Field(alias = "orgId")
@@ -60,17 +65,14 @@ class RegistryEventConsumerRequest(EventConsumerRequest):
     def validate_event(cls, event: dict) -> "RegistryEventConsumerRequest":
         return cls.model_validate(event)
 
-    @field_validator("org_id")
+    @model_validator(mode = "before")
     @classmethod
-    def convert_org_id(cls, value) -> str:
-        return Web3.to_text(value).rstrip("\x00")
-
-    @field_validator("service_id")
-    @classmethod
-    def convert_service_id(cls, value) -> str:
-        return Web3.to_text(value).rstrip("\x00")
-
-    @field_validator("metadata_uri")
-    @classmethod
-    def convert_metadata_uri(cls, value) -> str:
-        return Web3.to_text(value).rstrip("\u0000")
+    def convert_data_types(cls, data: dict) -> dict:
+        data = cls.convert_data(data)
+        converted_data = {}
+        for key, value in data.items():
+            new_value = value
+            if key != "name":
+                new_value = Web3.to_text(value).rstrip("\x00")
+            converted_data[key] = new_value
+        return converted_data

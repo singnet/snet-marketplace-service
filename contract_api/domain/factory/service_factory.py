@@ -176,7 +176,7 @@ class ServiceFactory:
             demo_component: DemoComponent
     ) -> list[OffchainServiceConfigDomain]:
         result = []
-        for name, value in demo_component.to_dict().items():
+        for name, value in demo_component.to_short_dict().items():
             result.append(OffchainServiceConfigDomain(
                 row_id=0, # dummy
                 org_id="", # dummy

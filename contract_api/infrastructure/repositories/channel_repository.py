@@ -84,7 +84,7 @@ class ChannelRepository(BaseRepository):
         result = self.session.execute(query)
         channel_db = result.scalar_one_or_none()
 
-        if channel_db:
+        if channel_db is not None:
             query = update(
                 MpeChannel
             ).where(

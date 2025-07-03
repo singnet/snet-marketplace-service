@@ -12,12 +12,12 @@ class NewServiceEndpointDomain:
     group_id: str
     endpoint: str
     is_available: bool
+    last_check_timestamp: datetime
 
 
 @dataclass
 class ServiceEndpointDomain(NewServiceEndpointDomain, BaseDomain):
     row_id: str
-    last_check_timestamp: datetime
     next_check_timestamp: datetime
     failed_status_count: int
     created_on: datetime

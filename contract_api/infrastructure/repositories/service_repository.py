@@ -218,8 +218,8 @@ class ServiceRepository(BaseRepository):
             Service.is_curated == True
         ).limit(1)
 
-        result = self.session.execute(query)
-        result = result.scalar_one_or_none()
+        result = self.session.execute(query).first()
+
         if not result:
             return None
 
@@ -348,7 +348,7 @@ class ServiceRepository(BaseRepository):
             result = self.session.execute(query)
             offchain_service_config_db = result.scalar_one_or_none()
 
-            if offchain_service_config_db:
+            if offchain_service_config_db is not None:
                 query = update(
                     OffchainServiceConfig
                 ).where(
@@ -443,17 +443,17 @@ class ServiceRepository(BaseRepository):
             self,
             service: NewServiceDomain
     ) -> ServiceDomain:
-        query = select(
+        select_query = select(
             Service
         ).where(
             Service.org_id == service.org_id,
             Service.service_id == service.service_id
         ).limit(1)
 
-        result = self.session.execute(query)
+        result = self.session.execute(select_query)
         service_db = result.scalar_one_or_none()
 
-        if service_db:
+        if service_db is not None:
             query = update(
                 Service
             ).where(
@@ -462,10 +462,9 @@ class ServiceRepository(BaseRepository):
             ).values(
                 hash_uri = service.hash_uri,
                 is_curated = service.is_curated
-            ).returning()
+            )
 
             self.session.execute(query)
-            service_db = result.scalar_one()
         else:
             service_db = Service(
                 org_id = service.org_id,
@@ -475,7 +474,9 @@ class ServiceRepository(BaseRepository):
             )
 
             self.session.add(service_db)
-            self.session.refresh(service_db)
+
+        result = self.session.execute(select_query)
+        service_db = result.scalar_one()
 
         return ServiceFactory.service_from_db_model(service_db)
 
@@ -483,17 +484,17 @@ class ServiceRepository(BaseRepository):
             self,
             service_metadata: NewServiceMetadataDomain
     ) -> ServiceMetadataDomain:
-        query = select(
+        select_query = select(
             ServiceMetadata
         ).where(
             ServiceMetadata.org_id == service_metadata.org_id,
             ServiceMetadata.service_id == service_metadata.service_id
         ).limit(1)
 
-        result = self.session.execute(query)
+        result = self.session.execute(select_query)
         service_metadata_db = result.scalar_one_or_none()
 
-        if service_metadata_db:
+        if service_metadata_db is not None:
             query = update(
                 ServiceMetadata
             ).where(
@@ -513,7 +514,7 @@ class ServiceRepository(BaseRepository):
                 assets_url = service_metadata.assets_url,
                 assets_hash = service_metadata.assets_hash,
                 contributors = service_metadata.contributors
-            ).returning()
+            )
 
             self.session.execute(query)
         else:
@@ -536,11 +537,16 @@ class ServiceRepository(BaseRepository):
                 contributors = service_metadata.contributors
             )
             self.session.add(service_metadata_db)
-            self.session.refresh(service_metadata_db)
+
+        result = self.session.execute(select_query)
+        service_metadata_db = result.scalar_one()
 
         return ServiceFactory.service_metadata_from_db_model(service_metadata_db)
 
-    def upsert_service_group(self, service_group: NewServiceGroupDomain) -> ServiceGroupDomain:
+    def upsert_service_group(
+            self,
+            service_group: NewServiceGroupDomain
+    ) -> None:
         query = select(
             ServiceGroup
         ).where(
@@ -552,7 +558,7 @@ class ServiceRepository(BaseRepository):
         result = self.session.execute(query)
         service_group_db = result.scalar_one_or_none()
 
-        if service_group_db:
+        if service_group_db is not None:
             query = update(
                 ServiceGroup
             ).where(
@@ -565,9 +571,9 @@ class ServiceRepository(BaseRepository):
                 pricing = service_group.pricing,
                 free_call_signer_address = service_group.free_call_signer_address,
                 free_calls = service_group.free_calls
-            ).returning()
+            )
+
             self.session.execute(query)
-            service_group_db = result.scalar_one()
         else:
             service_group_db = ServiceGroup(
                 service_row_id = service_group.service_row_id,
@@ -580,14 +586,11 @@ class ServiceRepository(BaseRepository):
                 free_calls = service_group.free_calls
             )
             self.session.add(service_group_db)
-            self.session.refresh(service_group_db)
-
-        return ServiceFactory.service_group_from_db_model(service_group_db)
 
     def upsert_service_endpoint(
             self,
             service_endpoint: NewServiceEndpointDomain
-    ) -> ServiceEndpointDomain:
+    ) -> None:
         query = select(
             ServiceEndpoint
         ).where(
@@ -599,7 +602,7 @@ class ServiceRepository(BaseRepository):
         result = self.session.execute(query)
         service_endpoint_db = result.scalar_one_or_none()
 
-        if service_endpoint_db:
+        if service_endpoint_db is not None:
             query = update(
                 ServiceEndpoint
             ).where(
@@ -609,10 +612,11 @@ class ServiceRepository(BaseRepository):
             ).values(
                 service_row_id = service_endpoint.service_row_id,
                 endpoint = service_endpoint.endpoint,
-                is_available = service_endpoint.is_available
-            ).returning()
+                is_available = service_endpoint.is_available,
+                last_check_timestamp = service_endpoint.last_check_timestamp
+            )
+
             self.session.execute(query)
-            service_endpoint_db = result.scalar_one()
         else:
             service_endpoint_db = ServiceEndpoint(
                 service_row_id = service_endpoint.service_row_id,
@@ -620,17 +624,15 @@ class ServiceRepository(BaseRepository):
                 service_id = service_endpoint.service_id,
                 group_id = service_endpoint.group_id,
                 endpoint = service_endpoint.endpoint,
-                is_available = service_endpoint.is_available
+                is_available = service_endpoint.is_available,
+                last_check_timestamp = service_endpoint.last_check_timestamp
             )
             self.session.add(service_endpoint_db)
-            self.session.refresh(service_endpoint_db)
-
-        return ServiceFactory.service_endpoint_from_db_model(service_endpoint_db)
 
     def create_service_tag(
             self,
             service_tag: NewServiceTagDomain
-    ) -> ServiceTagDomain:
+    ) -> None:
         query = select(
             ServiceTags
         ).where(
@@ -643,7 +645,7 @@ class ServiceRepository(BaseRepository):
         result = self.session.execute(query)
         service_tag_db = result.scalar_one_or_none()
 
-        if not service_tag_db:
+        if service_tag_db is not None:
             service_tag_db = ServiceTags(
                 service_row_id = service_tag.service_row_id,
                 org_id = service_tag.org_id,
@@ -651,14 +653,13 @@ class ServiceRepository(BaseRepository):
                 tag_name = service_tag.tag_name
             )
             self.session.add(service_tag_db)
-            self.session.refresh(service_tag_db)
 
-        return ServiceFactory.service_tag_from_db_model(service_tag_db)
+        self.session.execute(query)
 
     def upsert_service_media(
             self,
             service_media: NewServiceMediaDomain
-    ) -> ServiceMediaDomain:
+    ) -> None:
         query = select(
             ServiceMedia
         ).where(
@@ -670,7 +671,7 @@ class ServiceRepository(BaseRepository):
         result = self.session.execute(query)
         service_media_db = result.scalar_one_or_none()
 
-        if service_media_db:
+        if service_media_db is not None:
             query = update(
                 ServiceMedia
             ).where(
@@ -684,9 +685,9 @@ class ServiceRepository(BaseRepository):
                 file_type = service_media.file_type,
                 alt_text = service_media.alt_text,
                 hash_uri = service_media.hash_uri
-            ).returning()
+            )
+
             self.session.execute(query)
-            service_media_db = result.scalar_one()
         else:
             service_media_db = ServiceMedia(
                 service_row_id = service_media.service_row_id,
@@ -700,9 +701,6 @@ class ServiceRepository(BaseRepository):
                 hash_uri = service_media.hash_uri
             )
             self.session.add(service_media_db)
-            self.session.refresh(service_media_db)
-
-        return ServiceFactory.service_media_from_db_model(service_media_db)
 
     @BaseRepository.write_ops
     def update_service_rating(

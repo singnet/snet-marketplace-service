@@ -3,6 +3,7 @@ import os
 import tempfile
 import uuid
 import boto3
+from datetime import datetime, UTC
 
 from common import utils
 from common.boto_utils import BotoUtils
@@ -147,6 +148,7 @@ class ServiceCreatedEventConsumer(RegistryEventConsumer):
             new_hash: str,
             new_service_metadata: dict
     ) -> None:
+        self._service_repository.session.commit()
         with self._service_repository.session.begin():
             existing_service_metadata = self._service_repository.get_service_metadata(org_id, service_id)
             logger.info(f"Existing service metadata :: {
@@ -207,7 +209,8 @@ class ServiceCreatedEventConsumer(RegistryEventConsumer):
                             service_id = service_id,
                             group_id = group["group_id"],
                             endpoint = endpoint,
-                            is_available = True
+                            is_available = True,
+                            last_check_timestamp = datetime.now(UTC)
                         )
                     )
 

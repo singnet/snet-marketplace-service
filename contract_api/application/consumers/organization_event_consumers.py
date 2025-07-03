@@ -4,6 +4,7 @@ from web3 import Web3
 from common.logger import get_logger
 from contract_api.application.consumers.event_consumer import RegistryEventConsumer
 from contract_api.application.schemas.consumer_schemas import RegistryEventConsumerRequest
+from contract_api.domain.models.org_group import NewOrgGroupDomain
 from contract_api.domain.models.organization import NewOrganizationDomain
 
 logger = get_logger(__name__)
@@ -47,9 +48,13 @@ class OrganizationCreatedEventConsumer(RegistryEventConsumer):
                     )
                 )
                 self._organization_repository.delete_org_groups(org_id=org_id)
-                self._organization_repository.create_org_groups(
-                    org_id=org_id, groups=org_metadata["groups"])
-
+                new_groups = [NewOrgGroupDomain(
+                    org_id=org_id,
+                    group_id=group["group_id"],
+                    group_name=group["group_name"],
+                    payment=group["payment"]
+                ) for group in org_metadata.get("groups", [])]
+                self._organization_repository.create_org_groups(groups=new_groups)
 
     def _get_new_assets_url(self, org_id, new_ipfs_data):
         new_assets_hash = new_ipfs_data.get("assets", {})
@@ -58,11 +63,9 @@ class OrganizationCreatedEventConsumer(RegistryEventConsumer):
         existing_assets_url = {}
 
         existing_organization = self._organization_repository.get_organization(org_id)
-        if existing_organization:
-            existing_assets_hash = json.loads(existing_organization["assets_hash"])
-            logger.info(f"Existing_assets_hash: {existing_assets_hash}")
-            existing_assets_url = json.loads(existing_organization["org_assets_url"])
-            logger.info(f"Existing_assets_url: {existing_assets_url}")
+        if existing_organization is not None:
+            existing_assets_hash = existing_organization.assets_hash
+            existing_assets_url = existing_organization.org_assets_url
         new_assets_url_mapping = self._compare_assets_and_push_to_s3(
             existing_assets_hash,
             new_assets_hash,
