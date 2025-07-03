@@ -1,237 +1,322 @@
-import datetime as dt
+from datetime import datetime
 
-from sqlalchemy import Column, VARCHAR, Integer, ForeignKey, UniqueConstraint, null, DECIMAL, BIGINT, Index, TEXT
-from sqlalchemy.dialects.mysql import JSON, TIMESTAMP, TINYINT, BIT
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
-
-Base = declarative_base()
+from sqlalchemy import VARCHAR, Integer, ForeignKey, UniqueConstraint, null, DECIMAL, BIGINT, func, BOOLEAN, text
+from sqlalchemy.dialects.mysql import JSON, TIMESTAMP
+from sqlalchemy.orm import relationship, Mapped, mapped_column, DeclarativeBase
 
 
-class DaemonToken(Base):
-    __tablename__ = "daemon_token"
-    row_id = Column("row_id", Integer, autoincrement=True, primary_key=True)
-    daemon_id = Column("daemon_id", VARCHAR(256), nullable=False)
-    token = Column("token", VARCHAR(128), nullable=False)
-    expiration = Column("expiration", VARCHAR(256), nullable=False)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
-    UniqueConstraint(daemon_id, name="uq_daemon_id")
-    Index("daemon_id_idx", daemon_id)
+CreateTimestamp = text("CURRENT_TIMESTAMP")
+UpdateTimestamp = text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
 
 
-class Members(Base):
-    __tablename__ = "members"
-    row_id = Column("row_id", Integer, autoincrement=True, primary_key=True)
-    org_id = Column("org_id", VARCHAR(128),
-                    ForeignKey("organization.org_id", ondelete="CASCADE"),
-                    nullable=False)
-    member = Column("member", VARCHAR(128), nullable=False)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
-    Index("MembersFK_idx", org_id)
+class Base(DeclarativeBase):
+    pass
 
 
 class MpeChannel(Base):
     __tablename__ = "mpe_channel"
-    row_id = Column("row_id", Integer, autoincrement=True, primary_key=True)
-    channel_id = Column("channel_id", Integer, nullable=False)
-    sender = Column("sender", VARCHAR(128), nullable=False)
-    recipient = Column("recipient", VARCHAR(128), nullable=False)
-    groupId = Column("groupId", VARCHAR(128), nullable=False)
-    balance_in_cogs = Column("balance_in_cogs", DECIMAL(38, 0), default=null)
-    pending = Column("pending", DECIMAL(38, 0), default=null)
-    nonce = Column("nonce", Integer, default=null)
-    expiration = Column("expiration", BIGINT, default=null)
-    signer = Column("signer", VARCHAR(256), nullable=False)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
-    consumed_balance = Column("consumed_balance", DECIMAL(38, 0), default=0)
-    UniqueConstraint(channel_id, sender, recipient, groupId, name="uq_channel")
+    row_id: Mapped[int] = mapped_column("row_id", Integer, autoincrement=True, primary_key=True)
+    channel_id: Mapped[int] = mapped_column("channel_id", Integer, nullable=False)
+    sender: Mapped[str] = mapped_column("sender", VARCHAR(128), nullable=False)
+    signer: Mapped[str] = mapped_column("signer", VARCHAR(256), nullable=False)
+    recipient: Mapped[str] = mapped_column("recipient", VARCHAR(128), nullable=False)
+    group_id: Mapped[str] = mapped_column("groupId", VARCHAR(128), nullable=False)
+    balance_in_cogs: Mapped[int] = mapped_column(
+        "balance_in_cogs", DECIMAL(38, 0), nullable=True, default=null
+    )
+    nonce: Mapped[int] = mapped_column("nonce", Integer, nullable=True, default=null)
+    expiration: Mapped[int] = mapped_column("expiration", BIGINT, nullable=True, default=null)
+    pending: Mapped[int] = mapped_column("pending", DECIMAL(38, 0), nullable=True, default=null)
+    consumed_balance: Mapped[int] = mapped_column(
+        "consumed_balance", DECIMAL(38, 0), default=0
+    )
+
+    created_on: Mapped[datetime] = mapped_column(
+        "created_on", TIMESTAMP(timezone=False), nullable=False, server_default=CreateTimestamp
+    )
+    updated_on: Mapped[datetime] = mapped_column(
+        "updated_on", 
+        TIMESTAMP(timezone=False), 
+        nullable=False, 
+        server_default=UpdateTimestamp
+    )
+
+    __table_args__ = (
+        UniqueConstraint(channel_id, sender, signer, recipient, group_id, name="uq_channel"),
+    )
 
 
 class OrgGroup(Base):
     __tablename__ = "org_group"
-    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
-    org_id = Column("org_id", VARCHAR(128), nullable=False)
-    group_id = Column("group_id", VARCHAR(256), default=null)
-    group_name = Column("group_name", VARCHAR(128), default=null)
-    payment = Column("payment", JSON, default=null)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
-    UniqueConstraint(org_id, group_id, name="uq_org_grp")
+    row_id: Mapped[int] = mapped_column("row_id", Integer, primary_key=True, autoincrement=True)
+    org_id: Mapped[str] = mapped_column(
+        "org_id", VARCHAR(128),
+        ForeignKey("organization.org_id", ondelete="CASCADE", onupdate = "CASCADE"),
+        nullable=False,
+        index=True
+    )
+    group_id: Mapped[str] = mapped_column("group_id", VARCHAR(256), nullable=True, default=null)
+    group_name: Mapped[str] = mapped_column("group_name", VARCHAR(128), nullable=True, default=null)
+    payment: Mapped[dict] = mapped_column("payment", JSON, nullable=False, default={})
+
+    created_on: Mapped[datetime] = mapped_column(
+        "created_on", TIMESTAMP(timezone=False), nullable=False, server_default=CreateTimestamp
+    )
+    updated_on: Mapped[datetime] = mapped_column(
+        "updated_on", 
+        TIMESTAMP(timezone=False), 
+        nullable=False, 
+        server_default=UpdateTimestamp
+    )
+
+    __table_args__ = (
+        UniqueConstraint(org_id, group_id, name="uq_org_grp"),
+    )
 
 
 class Organization(Base):
     __tablename__ = "organization"
-    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
-    org_id = Column("org_id", VARCHAR(128), nullable=False)
-    organization_name = Column("organization_name", VARCHAR(128), default=null)
-    owner_address = Column("owner_address", VARCHAR(256), default=null)
-    org_metadata_uri = Column("org_metadata_uri", VARCHAR(128), default=null)
-    org_email = Column("org_email", VARCHAR(128), default=null)
-    org_assets_url = Column("org_assets_url", JSON, default=null)
-    is_curated = Column("is_curated", TINYINT, default=null)
-    description = Column("description", VARCHAR(256), default=null)
-    assets_hash = Column("assets_hash", JSON, default=null)
-    contacts = Column("contacts", JSON, default=null)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
-    UniqueConstraint(org_id, name="uq_org")
+    row_id: Mapped[int] = mapped_column("row_id", Integer, primary_key=True, autoincrement=True)
+    org_id: Mapped[str] = mapped_column("org_id", VARCHAR(128), nullable=False, unique=True)
+    organization_name: Mapped[str] = mapped_column("organization_name", VARCHAR(128), nullable=True, default=null)
+    owner_address: Mapped[str] = mapped_column("owner_address", VARCHAR(256), nullable=True, default=null)
+    org_metadata_uri: Mapped[str] = mapped_column("org_metadata_uri", VARCHAR(128), nullable=True, default=null)
+    org_email: Mapped[str] = mapped_column("org_email", VARCHAR(128), nullable=True, default=null)
+    org_assets_url: Mapped[dict] = mapped_column("org_assets_url", JSON, nullable=False, default={})
+    is_curated: Mapped[bool]  = mapped_column("is_curated", BOOLEAN, nullable=True, default=null)
+    description: Mapped[dict] = mapped_column("description", JSON, nullable=False, default={})
+    assets_hash: Mapped[dict] = mapped_column("assets_hash", JSON, nullable=False, default={})
+    contacts: Mapped[dict] = mapped_column("contacts", JSON, nullable=False, default={})
+
+    created_on: Mapped[datetime] = mapped_column(
+        "created_on", TIMESTAMP(timezone=False), nullable=False, server_default=CreateTimestamp
+    )
+    updated_on: Mapped[datetime] = mapped_column(
+        "updated_on", 
+        TIMESTAMP(timezone=False), 
+        nullable=False, 
+        server_default=UpdateTimestamp
+    )
 
 
 class Service(Base):
     __tablename__ = "service"
-    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
-    org_id = Column("org_id", VARCHAR(128), nullable=False)
-    service_id = Column("service_id", VARCHAR(128), nullable=False)
-    service_path = Column("service_path", VARCHAR(128), default=null)
-    hash_uri = Column("hash_uri", VARCHAR(128), default=null)
-    is_curated = Column("is_curated", TINYINT, default=null)
-    service_email = Column("service_email", VARCHAR(128), default=null)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
+    row_id: Mapped[int] = mapped_column("row_id", Integer, primary_key=True, autoincrement=True)
+    org_id: Mapped[str] = mapped_column(
+        "org_id", VARCHAR(128),
+        ForeignKey("organization.org_id", ondelete="CASCADE", onupdate = "CASCADE"),
+        nullable=False,
+        index=True
+    )
+    service_id: Mapped[str] = mapped_column("service_id", VARCHAR(128), nullable=False)
+    service_path: Mapped[str] = mapped_column("service_path", VARCHAR(128), nullable=True, default=null)
+    hash_uri: Mapped[str] = mapped_column("hash_uri", VARCHAR(128), nullable=True, default=null)
+    is_curated: Mapped[bool] = mapped_column("is_curated", BOOLEAN, nullable=True, default=null)
+    service_email: Mapped[str] = mapped_column("service_email", VARCHAR(128), nullable=True, default=null)
+
+    created_on: Mapped[datetime] = mapped_column(
+        "created_on", TIMESTAMP(timezone=False), nullable=False, server_default=CreateTimestamp
+    )
+    updated_on: Mapped[datetime] = mapped_column(
+        "updated_on", 
+        TIMESTAMP(timezone=False), 
+        nullable=False, 
+        server_default=UpdateTimestamp
+    )
+
     service_metadata = relationship("ServiceMetadata", uselist=False)
-    UniqueConstraint(org_id, service_id, name="uq_srvc")
+
+    __table_args__ = (
+        UniqueConstraint(org_id, service_id, name = "uq_srvc"),
+    )
 
 
 class ServiceEndpoint(Base):
     __tablename__ = "service_endpoint"
-    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
-    service_row_id = Column("service_row_id", Integer,
-                            ForeignKey("service.row_id", ondelete="CASCADE"),
-                            nullable=False)
-    org_id = Column("org_id", VARCHAR(128), nullable=False)
-    service_id = Column("service_id", VARCHAR(128), nullable=False)
-    group_id = Column("group_id", VARCHAR(256), nullable=False)
-    endpoint = Column("endpoint", VARCHAR(256), default=null)
-    is_available = Column("is_available", BIT(1), default=null)
-    last_check_timestamp = Column("last_check_timestamp", TIMESTAMP(timezone=False), nullable=True, default=null)
-    next_check_timestamp = Column("next_check_timestamp", TIMESTAMP(timezone=False), nullable=True,
-                                  default=dt.datetime.now(dt.UTC))
-    failed_status_count = Column("failed_status_count", Integer, default=1)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
-    Index("ServiceFK_idx", service_row_id)
+    row_id: Mapped[int] = mapped_column("row_id", Integer, primary_key=True, autoincrement=True)
+    service_row_id: Mapped[int] = mapped_column(
+        "service_row_id", Integer,
+        ForeignKey("service.row_id", ondelete="CASCADE", onupdate = "CASCADE"),
+        nullable=False,
+        index=True
+    )
+    org_id: Mapped[str] = mapped_column("org_id", VARCHAR(128), nullable=False)
+    service_id: Mapped[str] = mapped_column("service_id", VARCHAR(128), nullable=False)
+    group_id: Mapped[str] = mapped_column("group_id", VARCHAR(256), nullable=False)
+    endpoint: Mapped[str] = mapped_column("endpoint", VARCHAR(256), nullable=True, default=null)
+    is_available: Mapped[bool] = mapped_column("is_available", BOOLEAN, nullable=True, default=null)
+    last_check_timestamp: Mapped[datetime] = mapped_column(
+        "last_check_timestamp", TIMESTAMP(timezone=False), nullable=True, default=null
+    )
+    next_check_timestamp: Mapped[datetime] = mapped_column(
+        "next_check_timestamp", TIMESTAMP(timezone=False), nullable=True, server_default=func.now()
+    )
+    failed_status_count: Mapped[int] = mapped_column("failed_status_count", Integer, default=1)
+
+    created_on: Mapped[datetime] = mapped_column(
+        "created_on", TIMESTAMP(timezone=False), nullable=False, server_default=CreateTimestamp
+    )
+    updated_on: Mapped[datetime] = mapped_column(
+        "updated_on", 
+        TIMESTAMP(timezone=False), 
+        nullable=False, 
+        server_default=UpdateTimestamp
+    )
 
 
 class ServiceGroup(Base):
     __tablename__ = "service_group"
-    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
-    service_row_id = Column("service_row_id", Integer,
-                            ForeignKey("service.row_id", ondelete="CASCADE"),
-                            nullable=False)
-    org_id = Column("org_id", VARCHAR(128), nullable=False)
-    service_id = Column("service_id", VARCHAR(128), nullable=False)
-    free_call_signer_address = Column("free_call_signer_address", VARCHAR(256), default=null)
-    free_calls = Column("free_calls", Integer, default=null)
-    group_id = Column("group_id", VARCHAR(256), nullable=False)
-    group_name = Column("group_name", VARCHAR(128), nullable=False)
-    pricing = Column("pricing", JSON, default=null)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
-    Index("ServiceFK_idx", service_row_id)
-    UniqueConstraint(org_id, service_id, group_id, name="uq_srvc_grp")
+    row_id: Mapped[int] = mapped_column("row_id", Integer, primary_key=True, autoincrement=True)
+    service_row_id: Mapped[int] = mapped_column(
+        "service_row_id", Integer,
+        ForeignKey("service.row_id", ondelete = "CASCADE", onupdate = "CASCADE"),
+        nullable = False,
+        index = True
+    )
+    org_id: Mapped[str] = mapped_column("org_id", VARCHAR(128), nullable=False)
+    service_id: Mapped[str] = mapped_column("service_id", VARCHAR(128), nullable=False)
+    free_call_signer_address: Mapped[str] = mapped_column(
+        "free_call_signer_address", VARCHAR(256), nullable=True, default=null
+    )
+    free_calls: Mapped[int] = mapped_column("free_calls", Integer, nullable=True, default=null)
+    group_id: Mapped[str] = mapped_column("group_id", VARCHAR(256), nullable=False)
+    group_name: Mapped[str] = mapped_column("group_name", VARCHAR(128), nullable=False)
+    pricing: Mapped[dict] = mapped_column("pricing", JSON, nullable=False, default={})
+
+    created_on: Mapped[datetime] = mapped_column(
+        "created_on", TIMESTAMP(timezone=False), nullable=False, server_default=CreateTimestamp
+    )
+    updated_on: Mapped[datetime] = mapped_column(
+        "updated_on", 
+        TIMESTAMP(timezone=False), 
+        nullable=False, 
+        server_default=UpdateTimestamp
+    )
+
+    __table_args__ = (
+        UniqueConstraint(org_id, service_id, group_id, name = "uq_srvc_grp"),
+    )
 
 
 class ServiceMedia(Base):
     __tablename__ = "service_media"
-    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
-    org_id = Column("org_id", VARCHAR(100), nullable=False)
-    service_id = Column("service_id", VARCHAR(100), nullable=False)
-    url = Column("url", VARCHAR(512), default=null)
-    order = Column("order", Integer, default=null)
-    file_type = Column("file_type", VARCHAR(100), default=null)
-    asset_type = Column("asset_type", VARCHAR(100), default=null)
-    alt_text = Column("alt_text", VARCHAR(100), default=null)
-    created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=True, default=null)
-    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=True, default=null)
-    hash_uri = Column("hash_uri", VARCHAR(512), default=null)
-    service_row_id = Column("service_row_id", Integer,
-                            ForeignKey("service.row_id", ondelete="CASCADE"),
-                            default=null)
-    Index("ServiceMedisFK", service_row_id)
+    row_id: Mapped[int] = mapped_column("row_id", Integer, primary_key=True, autoincrement=True)
+    service_row_id: Mapped[int] = mapped_column(
+        "service_row_id", Integer,
+        ForeignKey("service.row_id", ondelete = "CASCADE", onupdate = "CASCADE"),
+        nullable = False,
+        index = True
+    )
+    org_id: Mapped[str] = mapped_column("org_id", VARCHAR(128), nullable=False)
+    service_id: Mapped[str] = mapped_column("service_id", VARCHAR(128), nullable=False)
+    url: Mapped[str] = mapped_column("url", VARCHAR(512), nullable=True, default=null)
+    order: Mapped[int] = mapped_column("order", Integer, nullable=True, default=null)
+    file_type: Mapped[str] = mapped_column("file_type", VARCHAR(128), nullable=True, default=null)
+    asset_type: Mapped[str] = mapped_column("asset_type", VARCHAR(128), nullable=True, default=null)
+    alt_text: Mapped[str] = mapped_column("alt_text", VARCHAR(128), nullable=True, default=null)
+    hash_uri: Mapped[str] = mapped_column("hash_uri", VARCHAR(512), nullable=True, default=null)
+    
+    created_on: Mapped[datetime] = mapped_column(
+        "created_on", TIMESTAMP(timezone=False), nullable=False, server_default=CreateTimestamp
+    )
+    updated_on: Mapped[datetime] = mapped_column(
+        "updated_on", 
+        TIMESTAMP(timezone=False), 
+        nullable=False, 
+        server_default=UpdateTimestamp
+    )
 
 
 class ServiceMetadata(Base):
     __tablename__ = "service_metadata"
-    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
-    service_row_id = Column("service_row_id", Integer,
-                            ForeignKey("service.row_id", ondelete="CASCADE"),
-                            nullable=False)
-    org_id = Column("org_id", VARCHAR(128), nullable=False)
-    service_id = Column("service_id", VARCHAR(128), nullable=False)
-    display_name = Column("display_name", VARCHAR(256), default=null)
-    description = Column("description", VARCHAR(1024), default=null)
-    short_description = Column("short_description", VARCHAR(1024), default=null)
-    demo_component_available = Column("demo_component_available", TINYINT(1), default=0, server_default="0",
-                                      nullable=False)
-    url = Column("url", VARCHAR(256), default=null)
-    json = Column("json", VARCHAR(1024), default=null)
-    model_hash = Column("model_hash", VARCHAR(256), default=null)
-    encoding = Column("encoding", VARCHAR(128), default=null)
-    type = Column("type", VARCHAR(128), default=null)
-    mpe_address = Column("mpe_address", VARCHAR(256), default=null)
-    assets_url = Column("assets_url", JSON, default=null)
-    assets_hash = Column("assets_hash", JSON, default=null)
-    service_rating = Column("service_rating", JSON, default=null)
-    ranking = Column("ranking", Integer, default=1)
-    contributors = Column("contributors", JSON, default=null)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
-    UniqueConstraint(org_id, service_id, name="uq_srvc_mdata")
-    Index("ServiceFK_idx", service_row_id)
+    row_id: Mapped[int] = mapped_column("row_id", Integer, primary_key=True, autoincrement=True)
+    service_row_id: Mapped[int] = mapped_column(
+        "service_row_id", Integer,
+        ForeignKey("service.row_id", ondelete = "CASCADE", onupdate = "CASCADE"),
+        nullable = False,
+        index = True
+    )
+    org_id: Mapped[str] = mapped_column("org_id", VARCHAR(128), nullable=False)
+    service_id: Mapped[str] = mapped_column("service_id", VARCHAR(128), nullable=False)
+    display_name: Mapped[str] = mapped_column("display_name", VARCHAR(256), nullable=True, default=null)
+    description: Mapped[str] = mapped_column("description", VARCHAR(1024), nullable=True, default=null)
+    short_description: Mapped[str] = mapped_column("short_description", VARCHAR(1024), nullable=True, default=null)
+    demo_component_available: Mapped[bool] = mapped_column(
+        "demo_component_available", BOOLEAN, default=0, server_default="0", nullable=False
+    )
+    url: Mapped[str] = mapped_column("url", VARCHAR(256), nullable=True, default=null)
+    json: Mapped[str] = mapped_column("json", VARCHAR(1024), nullable=True, default=null)
+    model_hash: Mapped[str] = mapped_column("model_hash", VARCHAR(256), nullable=True, default=null)
+    encoding: Mapped[str] = mapped_column("encoding", VARCHAR(128), nullable=True, default=null)
+    type: Mapped[str] = mapped_column("type", VARCHAR(128), nullable=True, default=null)
+    mpe_address: Mapped[str] = mapped_column("mpe_address", VARCHAR(256), nullable=True, default=null)
+    assets_url: Mapped[dict] = mapped_column("assets_url", JSON, nullable=False, default={})
+    assets_hash: Mapped[dict] = mapped_column("assets_hash", JSON, nullable=False, default={})
+    service_rating: Mapped[dict] = mapped_column("service_rating", JSON, nullable=False, default={})
+    ranking: Mapped[int]  = mapped_column("ranking", Integer, default=1)
+    contributors: Mapped[dict] = mapped_column("contributors", JSON, nullable=False, default={})
+
+    created_on: Mapped[datetime] = mapped_column(
+        "created_on", TIMESTAMP(timezone=False), nullable=False, server_default=CreateTimestamp
+    )
+    updated_on: Mapped[datetime] = mapped_column(
+        "updated_on", 
+        TIMESTAMP(timezone=False), 
+        nullable=False, 
+        server_default=UpdateTimestamp
+    )
+
+    __table_args__ = (
+        UniqueConstraint(org_id, service_id, name = "uq_srvc_mdata"),
+    )
 
 
 class ServiceTags(Base):
     __tablename__ = "service_tags"
-    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
-    service_row_id = Column("service_row_id", Integer,
-                            ForeignKey("service.row_id", ondelete="CASCADE"),
-                            nullable=False)
-    org_id = Column("org_id", VARCHAR(128), nullable=False)
-    service_id = Column("service_id", VARCHAR(128), default=null)
-    tag_name = Column("tag_name", VARCHAR(128), default=null)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
-    UniqueConstraint(org_id, service_id, tag_name, name="uq_srvc_tag")
-    Index("ServiceFK_idx", service_row_id)
-
-
-class Banner(Base):
-    __tablename__ = "banner"
-    id = Column("id", Integer, primary_key=True)
-    image = Column("image", VARCHAR(256))
-    image_alignment = Column("image_alignment", VARCHAR(128))
-    alt_text = Column("alt_text", VARCHAR(256))
-    title = Column("title", VARCHAR(256))
-    rank = Column("rank", Integer)
-    description = Column("description", TEXT)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
-    cta_order_rank = relationship("CTA", backref="banner", lazy="joined", order_by="CTA.rank")
-
-
-class CTA(Base):
-    __tablename__ = "cta"
-    id = Column("id", Integer, primary_key=True)
-    banner_id = Column("banner_id", Integer, ForeignKey("banner.id", ondelete="CASCADE", onupdate="CASCADE"))
-    text = Column("text", VARCHAR(256))
-    url = Column("url", VARCHAR(256))
-    type = Column("type", VARCHAR(256))
-    variant = Column("variant", VARCHAR(256))
-    rank = Column("rank", Integer)
-    row_created = Column("row_created", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
-    row_updated = Column("row_updated", TIMESTAMP(timezone=False), nullable=True, default=dt.datetime.now(dt.UTC))
+    row_id: Mapped[int] = mapped_column("row_id", Integer, primary_key=True, autoincrement=True)
+    service_row_id: Mapped[int] = mapped_column(
+        "service_row_id", Integer,
+        ForeignKey("service.row_id", ondelete = "CASCADE", onupdate = "CASCADE"),
+        nullable = False,
+        index = True
+    )
+    org_id: Mapped[str] = mapped_column("org_id", VARCHAR(128), nullable=False)
+    service_id: Mapped[str] = mapped_column("service_id", VARCHAR(128), nullable=True, default=null)
+    tag_name: Mapped[str] = mapped_column("tag_name", VARCHAR(128), nullable=True, default=null)
+    
+    created_on: Mapped[datetime] = mapped_column(
+        "created_on", TIMESTAMP(timezone=False), nullable=False, server_default=CreateTimestamp
+    )
+    updated_on: Mapped[datetime] = mapped_column(
+        "updated_on", 
+        TIMESTAMP(timezone=False), 
+        nullable=False, 
+        server_default=UpdateTimestamp
+    )
+    
+    __table_args__ = (
+        UniqueConstraint(org_id, service_id, tag_name, name = "uq_srvc_tag"),
+    )
 
 
 class OffchainServiceConfig(Base):
     __tablename__ = "offchain_service_config"
-    row_id = Column("row_id", Integer, primary_key=True, autoincrement=True)
-    org_id = Column("org_id", VARCHAR(128), nullable=False)
-    service_id = Column("service_id", VARCHAR(128), nullable=False)
-    parameter_name = Column("parameter_name", VARCHAR(128), nullable=False)
-    parameter_value = Column("parameter_value", VARCHAR(512), nullable=False)
-    created_on = Column("created_on", TIMESTAMP(timezone=False), nullable=False)
-    updated_on = Column("updated_on", TIMESTAMP(timezone=False), nullable=False, default=dt.datetime.now(dt.UTC))
-    UniqueConstraint(org_id, service_id, parameter_name, name="uq_off")
+    row_id: Mapped[int] = mapped_column("row_id", Integer, primary_key=True, autoincrement=True)
+    org_id: Mapped[str] = mapped_column("org_id", VARCHAR(128), nullable=False)
+    service_id: Mapped[str] = mapped_column("service_id", VARCHAR(128), nullable=False)
+    parameter_name: Mapped[str] = mapped_column("parameter_name", VARCHAR(128), nullable=False)
+    parameter_value: Mapped[str] = mapped_column("parameter_value", VARCHAR(512), nullable=False)
+    
+    created_on: Mapped[datetime] = mapped_column(
+        "created_on", TIMESTAMP(timezone=False), nullable=False, server_default=CreateTimestamp
+    )
+    updated_on: Mapped[datetime] = mapped_column(
+        "updated_on", 
+        TIMESTAMP(timezone=False), 
+        nullable=False, 
+        server_default=UpdateTimestamp
+    )
+    
+    __table_args__ = (
+        UniqueConstraint(org_id, service_id, parameter_name, name="uq_off"),
+    )
