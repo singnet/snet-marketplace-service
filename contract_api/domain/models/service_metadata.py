@@ -33,6 +33,7 @@ class ServiceMetadataDomain(NewServiceMetadataDomain, BaseDomain):
     updated_on: datetime
 
     def to_short_response(self) -> dict:
+        contributors = [contributor["name"] for contributor in self.contributors]
         return {
             "orgId": self.org_id,
             "serviceId": self.service_id,
@@ -42,6 +43,6 @@ class ServiceMetadataDomain(NewServiceMetadataDomain, BaseDomain):
             "url": self.url,
             "rating": self.service_rating["rating"],
             "numberOfRatings": self.service_rating["total_users_rated"],
-            "contributors": self.contributors,
+            "contributors": contributors
         }
 

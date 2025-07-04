@@ -25,13 +25,20 @@ class OrganizationDomain(NewOrganizationDomain, BaseDomain):
     updated_on: datetime
 
     def to_short_response(self) -> dict:
+        support_contacts = {
+            "email": "",
+            "phone": "",
+        }
         for contact in self.contacts:
-            contact.update({"contactType": contact["contact_type"]})
+            if contact["contact_type"] == "support":
+                support_contacts["email"] = contact["email"]
+                support_contacts["phone"] = contact["phone"]
+                break
         return {
             "orgId": self.org_id,
             "organizationName": self.organization_name,
             "orgImageUrl": self.org_assets_url["hero_image"],
-            "contacts": self.contacts
+            "supportContacts": support_contacts
         }
 
 

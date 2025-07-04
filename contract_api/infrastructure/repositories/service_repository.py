@@ -41,19 +41,19 @@ class ServiceRepository(BaseRepository):
         result = self.session.execute(query)
         return result.scalar()
 
-    def get_unique_service_tags(self) -> list[ServiceTagDomain]:
+    def get_unique_service_tags(self) -> list[str]:
         query = select(
-            ServiceTags
+            ServiceTags.tag_name
         ).join(
             Service, ServiceTags.service_row_id == Service.row_id
         ).where(
             Service.is_curated == True
-        ).distinct(ServiceTags.tag_name)
+        ).distinct()
 
         result = self.session.execute(query)
-        tags_db = result.scalars().all()
+        tags_db = result.all()
 
-        return ServiceFactory.service_tags_from_db_model_list(tags_db)
+        return [tag[0] for tag in tags_db]
 
     def get_filtered_services(
             self,
