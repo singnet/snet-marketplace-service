@@ -73,11 +73,11 @@ class ChannelService:
                     "org_id": channel["org_id"],
                     "hero_image": channel["org_assets_url"].get("hero_image", ""),
                     "channels": {
-                        str(channel["channel_id"]): channel["balance_in_cogs"]
+                        str(channel["channel_id"]): int(channel["balance_in_cogs"])
                     }
                 }
             else:
-                org_channels[org_name]["channels"][str(channel["channel_id"])] = channel["balance_in_cogs"]
+                org_channels[org_name]["channels"][str(channel["channel_id"])] = int(channel["balance_in_cogs"])
 
         if not org_channels:
             return []
