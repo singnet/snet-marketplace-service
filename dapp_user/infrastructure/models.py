@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 
 from sqlalchemy import (
     BOOLEAN,
@@ -63,7 +64,9 @@ class UserPreference(Base):
         "communication_type", VARCHAR(128), nullable=False
     )
     source: Mapped[str] = mapped_column("source", VARCHAR(128), nullable=False)
-    opt_out_reason: Mapped[str | None] = mapped_column("opt_out_reason", VARCHAR(256), nullable=True)
+    opt_out_reason: Mapped[str | None] = mapped_column(
+        "opt_out_reason", VARCHAR(256), nullable=True
+    )
     status: Mapped[bool] = mapped_column("status", BOOLEAN, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(
@@ -90,7 +93,7 @@ class UserServiceVote(Base):
     )
     org_id: Mapped[str] = mapped_column(VARCHAR(128), nullable=False)
     service_id: Mapped[str] = mapped_column(VARCHAR(128), nullable=False)
-    rating: Mapped[float] = mapped_column(DECIMAL(2, 1), nullable=True)
+    rating: Mapped[Decimal] = mapped_column(DECIMAL(2, 1), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP, server_default=CreateTimestamp, nullable=True

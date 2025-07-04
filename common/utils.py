@@ -15,7 +15,7 @@ import requests
 from common.constant import COGS_TO_AGI, ResponseStatus
 from common.logger import get_logger
 
-IGNORED_LIST = ['row_id', 'row_created', 'row_updated']
+IGNORED_LIST = ["row_id", "row_created", "row_updated"]
 logger = get_logger(__name__)
 
 
@@ -33,9 +33,9 @@ class Utils:
             if isinstance(row[key], decimal.Decimal) or isinstance(row[key], dt.datetime):
                 row[key] = str(row[key])
             elif isinstance(row[key], bytes):
-                if row[key] == b'\x01':
+                if row[key] == b"\x01":
                     row[key] = 1
-                elif row[key] == b'\x00':
+                elif row[key] == b"\x00":
                     row[key] = 0
                 else:
                     raise Exception("Unsupported bytes object. Key " +
@@ -92,17 +92,17 @@ def make_response_body(status, data, error):
 
 def generate_lambda_response(status_code, message, headers=None, cors_enabled=False):
     response = {
-        'statusCode': status_code,
-        'body': json.dumps(message),
-        'headers': {'Content-Type': 'application/json'}
+        "statusCode": status_code,
+        "body": json.dumps(message),
+        "headers": {"Content-Type": "application/json"}
     }
     if cors_enabled:
         response["headers"].update({
-            "X-Requested-With": '*',
-            "Access-Control-Allow-Headers": 'Access-Control-Allow-Origin, Content-Type, X-Amz-Date, Authorization,'
-                                            'X-Api-Key,x-requested-with',
-            "Access-Control-Allow-Origin": '*',
-            "Access-Control-Allow-Methods": 'GET,OPTIONS,POST'
+            "X-Requested-With": "*",
+            "Access-Control-Allow-Headers": "Access-Control-Allow-Origin, Content-Type, X-Amz-Date, Authorization,"
+                                            "X-Api-Key,x-requested-with",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET,OPTIONS,POST"
         })
     if headers is not None:
         response["headers"].update(headers)
@@ -113,10 +113,10 @@ def extract_payload(method, event):
     method_found = True
     payload_dict = None
     path_parameters = event.get("pathParameters", None)
-    if method == 'POST':
-        payload_dict = json.loads(event['body'])
-    elif method == 'GET':
-        payload_dict = event.get('queryStringParameters', {})
+    if method == "POST":
+        payload_dict = json.loads(event["body"])
+    elif method == "GET":
+        payload_dict = event.get("queryStringParameters", {})
     else:
         method_found = False
     return method_found, path_parameters, payload_dict
@@ -124,11 +124,11 @@ def extract_payload(method, event):
 
 def format_error_message(status, error, payload, net_id, handler=None, resource=None):
     return json.dumps(
-        {'status': status, 'error': error, 'resource': resource, 'payload': payload, 'network_id': net_id,
-         'handler': handler})
+        {"status": status, "error": error, "resource": resource, "payload": payload, "network_id": net_id,
+         "handler": handler})
 
 def json_to_file(payload, filename):
-    with open(filename, 'w') as f:
+    with open(filename, "w") as f:
         f.write(json.dumps(payload, indent=4))
 
 
@@ -145,7 +145,7 @@ def download_file_from_url(file_url, file_dir):
     filename = urlparse(file_url).path.split("/")[-1]
     if not os.path.exists(file_dir):
         os.makedirs(file_dir)
-    with open(f"{file_dir}/{filename}", 'wb') as asset_file:
+    with open(f"{file_dir}/{filename}", "wb") as asset_file:
         asset_file.write(response.content)
     return filename
 
@@ -169,7 +169,7 @@ def send_email_notification(recipients, notification_subject, notification_messa
 
 def extract_zip_file(zip_file_path, extracted_path):
     if zip_file_path.endswith(".zip"):
-        with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+        with zipfile.ZipFile(zip_file_path, "r") as zip_ref:
             zip_ref.extractall(extracted_path)
     if zip_file_path.endswith("tar.gz"):
         tar = tarfile.open(zip_file_path, "r:gz")
@@ -182,7 +182,7 @@ def extract_zip_file(zip_file_path, extracted_path):
 
 
 def zip_file(source_path, zipped_path):
-    outZipFile = zipfile.ZipFile(zipped_path, 'w', zipfile.ZIP_DEFLATED)
+    outZipFile = zipfile.ZipFile(zipped_path, "w", zipfile.ZIP_DEFLATED)
     for dir_path, dir_names, filenames in os.walk(source_path):
         for filename in filenames:
             filepath = os.path.join(dir_path, filename)
