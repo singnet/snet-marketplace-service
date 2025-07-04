@@ -260,14 +260,14 @@ class ServiceRepository(BaseRepository):
         )
 
         result = self.session.execute(query)
-        groups_endpoints_db = result.scalars().all()
+        groups_endpoints_db = result.all()
 
         return [
             (
-                ServiceFactory.service_group_from_db_model(group_endpoint_db[0]),
-                ServiceFactory.service_endpoint_from_db_model(group_endpoint_db[1])
+                ServiceFactory.service_group_from_db_model(group),
+                ServiceFactory.service_endpoint_from_db_model(endpoint)
             )
-            for group_endpoint_db in groups_endpoints_db
+            for group, endpoint in groups_endpoints_db
         ]
 
     def get_service_tags(
