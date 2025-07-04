@@ -251,7 +251,7 @@ class ServiceRepository(BaseRepository):
             ServiceEndpoint
         ).join(
             ServiceEndpoint, and_(
-                ServiceEndpoint.service_row_id == ServiceGroup.service_id,
+                ServiceEndpoint.service_row_id == ServiceGroup.service_row_id,
                 ServiceEndpoint.group_id == ServiceGroup.group_id
             )
         ).where(
