@@ -7,8 +7,15 @@ from typing import Any
 from common.boto_utils import BotoUtils
 from common.constant import BuildStatus
 from common.utils import download_file_from_url, extract_zip_file, make_tarfile
-from contract_api.application.schemas.service_schemas import GetServiceFiltersRequest, GetServicesRequest, \
-    GetServiceRequest, CurateServiceRequest, SaveOffchainAttributeRequest, UpdateServiceRatingRequest
+from common.logger import get_logger
+from contract_api.application.schemas.service_schemas import (
+    GetServiceFiltersRequest,
+    GetServicesRequest,
+    GetServiceRequest,
+    CurateServiceRequest,
+    SaveOffchainAttributeRequest,
+    UpdateServiceRatingRequest
+)
 from contract_api.config import REGION_NAME, ASSETS_COMPONENT_BUCKET_NAME
 from contract_api.constant import FilterKeys
 from contract_api.domain.factory.service_factory import ServiceFactory
@@ -17,10 +24,17 @@ from contract_api.domain.models.offchain_service_attribute import OffchainServic
 from contract_api.domain.models.org_group import OrgGroupDomain
 from contract_api.domain.models.service_endpoint import ServiceEndpointDomain
 from contract_api.domain.models.service_group import ServiceGroupDomain
-from contract_api.exceptions import ServiceNotFoundException, ServiceCurationFailedException, \
-    UpsertOffchainConfigsFailedException, UpdateServiceRatingFailedException
+from contract_api.exceptions import (
+    ServiceNotFoundException,
+    ServiceCurationFailedException,
+    UpsertOffchainConfigsFailedException,
+    UpdateServiceRatingFailedException
+)
 from contract_api.infrastructure.repositories.organization_repository import OrganizationRepository
 from contract_api.infrastructure.repositories.service_repository import ServiceRepository
+
+
+logger = get_logger(__name__)
 
 
 class ServiceService:
@@ -34,7 +48,7 @@ class ServiceService:
 
         if attribute == FilterKeys.TAG_NAME:
             tags = self._service_repo.get_unique_service_tags()
-            filters_data = [tag.tag_name for tag in tags]
+            filters_data = tags
         elif attribute == FilterKeys.ORG_ID:
             orgs = self._org_repo.get_organizations_with_curated_services()
             filters_data = {org.org_id: org.organization_name for org in orgs}
@@ -113,7 +127,7 @@ class ServiceService:
         org_id = request.org_id
         service_id = request.service_id
         demo_component_dict = request.demo_component
-        demo_component = DemoComponent(demo_component_dict)
+        demo_component = DemoComponent(**demo_component_dict)
 
         if demo_component.demo_component_required == 1 and demo_component.change_in_demo_component:
             demo_component.demo_component_url = self._publish_demo_component(
@@ -158,6 +172,8 @@ class ServiceService:
             groups_endpoints: list[tuple[ServiceGroupDomain, ServiceEndpointDomain]],
             org_groups: list[OrgGroupDomain]
     ) -> dict[str, int | list]:
+        logger.info(f"Groups endpoints: {groups_endpoints}")
+        logger.info(f"Org groups: {org_groups}")
         org_group_dict = {group.group_id: group.to_short_response() for group in org_groups}
 
         result = {
@@ -173,6 +189,7 @@ class ServiceService:
             if endpoint.is_available:
                 result["isAvailable"] = True
 
+        logger.info(f"Result (_convert_service_groups): {result}")
         return result
 
     @staticmethod
