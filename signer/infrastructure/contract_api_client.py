@@ -27,8 +27,8 @@ class ContractAPIClient:
         if get_service_response["status"] == "success":
             groups_data = get_service_response["data"].get("groups", [])
             for group_data in groups_data:
-                if group_data["group_id"] == group_id:
-                    return group_data["endpoints"][0]["endpoint"], group_data.get("free_calls", 0)
+                if group_data["groupId"] == group_id:
+                    return group_data["endpoints"][0]["endpoint"], group_data.get("freeСalls", 0)
         raise Exception(
             "Unable to fetch daemon Endpoint information for service %s under organization %s for %s group.",
             service_id,
