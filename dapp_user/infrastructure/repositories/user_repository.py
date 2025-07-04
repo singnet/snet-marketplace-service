@@ -30,7 +30,9 @@ from sqlalchemy.exc import IntegrityError
 
 class UserRepository(BaseRepository):
     @BaseRepository.write_ops
-    def update_preferences(self, user_preferences: List[UserPreferenceDomain], user_row_id: int) -> List[str]:
+    def update_preferences(
+        self, user_preferences: List[UserPreferenceDomain], user_row_id: int
+    ) -> List[str]:
         statuses: List[str] = []
 
         for preference in user_preferences:
@@ -200,7 +202,7 @@ class UserRepository(BaseRepository):
         user_feedback: UserServiceFeedbackDomain | None,
     ) -> Tuple[float, int]:
         try:
-           self.__update_or_set_user_vote(user_vote)
+            self.__update_or_set_user_vote(user_vote)
         except IntegrityError:
             raise VoteAlreadyExistsException()
 
@@ -221,9 +223,7 @@ class UserRepository(BaseRepository):
     ) -> Tuple[UserServiceVoteDomain | None, UserServiceFeedbackDomain | None]:
         query = (
             select(UserServiceFeedback, UserServiceVote)
-            .join_from(
-                UserServiceFeedback, User, UserServiceFeedback.user_row_id == User.row_id
-            )
+            .join_from(UserServiceFeedback, User, UserServiceFeedback.user_row_id == User.row_id)
             .join_from(
                 UserServiceFeedback,
                 UserServiceVote,
@@ -285,7 +285,7 @@ class UserRepository(BaseRepository):
 
         self.session.add(new_vote)
         self.session.commit()
-    
+
         return UserFactory().user_service_vote_from_db_model(new_vote)
 
     def insert_user_service_feedback(
@@ -300,7 +300,7 @@ class UserRepository(BaseRepository):
 
         self.session.add(new_feedback)
         self.session.commit()
-    
+
         return UserFactory.user_service_feedback_from_db_model(new_feedback)
 
     def get_user_servce_vote(

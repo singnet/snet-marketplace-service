@@ -1,5 +1,6 @@
 from typing import List
 
+from common.constant import TokenSymbol
 from common.exceptions import BadGateway
 from common.logger import get_logger
 from dapp_user.application.schemas import (
@@ -68,19 +69,25 @@ class UserService:
         user_preferences = self.user_repo.get_user_preferences(username=username)
         return user_preferences_to_dict(user_preferences)
 
-    def delete_user(self, username):
+    def delete_user(self, origin: str, username: str):
         #: TODO think about rollback or distributed transaction if unlink wallet fails (saga pattern)
         try:
-            self.user_repo.delete_user(username)
-        except UserNotFoundException:
-            raise UserNotFoundHTTPException(username)
+            try:
+                self.user_repo.delete_user(username)
+            except UserNotFoundException:
+                raise UserNotFoundHTTPException(username)
 
-        try:
-            self.wallets_api_client.delete_user_wallet(username=username)
-        except WalletsAPIClientError as e:
-            msg = f"Failed to delete user wallet for {username}: {str(e)}"
-            logger.error(msg)
-            raise BadGateway(msg)
+            token_name = self.__get_token_from_origin(origin)
+
+            try:
+                self.wallets_api_client.delete_user_wallet(username=username, token_name=token_name)
+            except WalletsAPIClientError as e:
+                msg = f"Failed to delete user wallet for {username}: {str(e)}"
+                logger.error(msg)
+                raise BadGateway(msg)
+        except Exception as e:
+            print(e)
+            raise e
 
     def sync_users(self):
         users_for_sync = self.user_identity_manager.get_all_users()
@@ -115,7 +122,14 @@ class UserService:
 
         return response
 
-    def create_user_review(self, username: str, request: CreateUserServiceReviewRequest) -> None:
+    def __get_token_from_origin(self, origin: str) -> TokenSymbol:
+        if "agix" in origin:
+            return TokenSymbol.AGIX
+        return TokenSymbol.FET
+
+    def create_user_review(
+        self, origin: str, username: str, request: CreateUserServiceReviewRequest
+    ) -> None:
         with self.user_repo.session.begin():
             user = self.user_repo.get_user(username=username)
 
@@ -130,12 +144,15 @@ class UserService:
             except (VoteAlreadyExistsException, FeedbackAlreadyExistsException):
                 raise UserReviewAlreadyExistHTTPException()
 
+        token_name = self.__get_token_from_origin(origin)
+
         try:
             self.contract_api_client.update_service_rating(
                 org_id=user_vote.org_id,
                 service_id=user_vote.service_id,
                 rating=rating,
                 total_users_rated=total_users_rated,
+                token_name=token_name,
             )
         except ContractAPIClientError as e:
             msg = f"Failed to update service rating for {user_vote.org_id}/{user_vote.service_id}: {str(e)}"

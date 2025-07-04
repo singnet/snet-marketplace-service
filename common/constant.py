@@ -61,6 +61,7 @@ class TokenSymbol(Enum):
     NTX = "NTX"
     RJV = "RJV"
     CGV = "CGV"
+    FET = "FET"
 
 
 class ProviderType(Enum):

@@ -20,9 +20,19 @@ class AWSConfigDict(TypedDict):
     cognito_pool: str
 
 
+class DeleteUserWalletDict(TypedDict):
+    fet: str
+    agix: str
+
+
+class UpdateServiceRatingDict(TypedDict):
+    fet: str
+    agix: str
+
+
 class LambdaARNConfigDict(TypedDict):
-    delete_user_wallet_arn: str
-    update_service_rating_arn: str
+    delete_user_wallet_arn: DeleteUserWalletDict
+    update_service_rating_arn: UpdateServiceRatingDict
 
 
 STAGE = "dev"
@@ -35,7 +45,7 @@ DB_CONFIG: DBConfigDict = {
     "user": "unittest_root",
     "password": "unittest_pwd",
     "name": "dapp_user_unittest_db",
-    "port": 3306
+    "port": 3306,
 }
 
 
@@ -45,8 +55,14 @@ AWS: AWSConfigDict = {
 }
 
 LAMBDA_ARN: LambdaARNConfigDict = {
-    "delete_user_wallet_arn": "",
-    "update_service_rating_arn": "",
+    "delete_user_wallet_arn": {
+        "fet": "",
+        "agix": "",
+    },
+    "update_service_rating_arn": {
+        "fet": "",
+        "agix": "",
+    },
 }
 
 CALLER_REFERENCE: Dict[str, str] = {

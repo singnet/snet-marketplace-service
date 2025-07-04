@@ -80,7 +80,7 @@ def delete_user_handler(event, context):
     if request.username and req_ctx.username != request.username:
         raise UnauthorizedException()
 
-    response = __user_service.delete_user(req_ctx.username)
+    response = __user_service.delete_user(req_ctx.origin, req_ctx.username)
 
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response}, cors_enabled=True
@@ -106,7 +106,7 @@ def create_user_review_handler(event, context):
 
     request = CreateUserServiceReviewRequest.validate_event(event)
 
-    response = __user_service.create_user_review(username=req_ctx.username, request=request)
+    response = __user_service.create_user_review(origin=req_ctx.origin, username=req_ctx.username, request=request)
 
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response}, cors_enabled=True
