@@ -148,7 +148,7 @@ class ServiceRepository(BaseRepository):
 
         result = self.session.execute(query)
 
-        return result.mappings().all()
+        return [dict(row) for row in result.mappings().all()]
 
     def get_filtered_services_count(
             self,
