@@ -391,7 +391,7 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
-          path: /channel/{channel_id}/balance
+          path: /channel/{channelId}/balance
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
