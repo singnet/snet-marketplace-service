@@ -41,7 +41,7 @@ class ServiceMetadataDomain(NewServiceMetadataDomain, BaseDomain):
             "shortDescription": self.short_description,
             "url": self.url,
             "rating": self.service_rating["rating"],
-            "numberOfRatings": self.service_rating["number_of_ratings"],
+            "numberOfRatings": self.service_rating["total_users_rated"],
             "contributors": self.contributors,
         }
 
