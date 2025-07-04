@@ -72,22 +72,18 @@ class UserService:
     def delete_user(self, origin: str, username: str):
         #: TODO think about rollback or distributed transaction if unlink wallet fails (saga pattern)
         try:
-            try:
-                self.user_repo.delete_user(username)
-            except UserNotFoundException:
-                raise UserNotFoundHTTPException(username)
+            self.user_repo.delete_user(username)
+        except UserNotFoundException:
+            raise UserNotFoundHTTPException(username)
 
-            token_name = self.__get_token_from_origin(origin)
+        token_name = self.__get_token_from_origin(origin)
 
-            try:
-                self.wallets_api_client.delete_user_wallet(username=username, token_name=token_name)
-            except WalletsAPIClientError as e:
-                msg = f"Failed to delete user wallet for {username}: {str(e)}"
-                logger.error(msg)
-                raise BadGateway(msg)
-        except Exception as e:
-            print(e)
-            raise e
+        try:
+            self.wallets_api_client.delete_user_wallet(username=username, token_name=token_name)
+        except WalletsAPIClientError as e:
+            msg = f"Failed to delete user wallet for {username}: {str(e)}"
+            logger.error(msg)
+            raise BadGateway(msg)
 
     def sync_users(self):
         users_for_sync = self.user_identity_manager.get_all_users()
@@ -116,7 +112,7 @@ class UserService:
         )
 
         response = {
-            "rating": user_service_vote.rating if user_service_vote else None,
+            "rating": float(user_service_vote.rating) if user_service_vote else None,
             "comment": user_service_feedback.comment if user_service_feedback else None,
         }
 
