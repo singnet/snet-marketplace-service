@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from common.constant import TokenSymbol
+
 
 class AbstractContractAPIClient(ABC):
     @abstractmethod
@@ -9,4 +11,5 @@ class AbstractContractAPIClient(ABC):
         service_id: str,
         rating: float,
         total_users_rated: int,
+        token_name: TokenSymbol,
     ) -> None: ...

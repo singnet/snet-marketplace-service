@@ -2,6 +2,8 @@ import json
 from http import HTTPStatus
 
 import boto3
+from common.constant import TokenSymbol
+from common.exceptions import WrongTokenSymbolException
 from dapp_user.domain.interfaces.contract_api_client_interface import AbstractContractAPIClient
 from dapp_user.settings import settings
 
@@ -21,6 +23,7 @@ class ContractAPIClient(AbstractContractAPIClient):
         service_id: str,
         rating: float,
         total_users_rated: int,
+        token_name: TokenSymbol,
     ) -> None:
         try:
             lambda_payload = {
@@ -33,8 +36,16 @@ class ContractAPIClient(AbstractContractAPIClient):
                 ),
             }
 
+            lambda_arn: str = ""
+            if token_name == TokenSymbol.FET:
+                lambda_arn = settings.lambda_arn.update_service_rating_arn.fet
+            elif token_name == TokenSymbol.AGIX:
+                lambda_arn = settings.lambda_arn.update_service_rating_arn.agix
+            else:
+                raise WrongTokenSymbolException()
+
             response = self.lambda_client.invoke(
-                FunctionName=settings.lambda_arn.update_service_rating_arn,
+                FunctionName=lambda_arn,
                 InvocationType="RequestResponse",
                 Payload=json.dumps(lambda_payload),
             )

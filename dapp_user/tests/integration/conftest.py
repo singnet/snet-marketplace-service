@@ -82,6 +82,9 @@ def user_repo() -> UserRepository:
 def lambda_event_authorized() -> dict:
     """Simulate a Lambda event with an authorized user."""
     return {
+        "headers": {
+            "origin": "testnet.marketplace.dev",
+        },
         "requestContext": {
             "authorizer": {
                 "claims": {
@@ -96,6 +99,9 @@ def lambda_event_authorized() -> dict:
 @pytest.fixture
 def lambda_event_authorized_not_found() -> dict:
     return {
+        "headers": {
+            "origin": "testnet.marketplace.dev",
+        },
         "requestContext": {
             "authorizer": {
                 "claims": {

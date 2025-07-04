@@ -13,12 +13,14 @@ class UserNotFoundException(UserRepositoryException):
 
 class FeedbackAlreadyExistsException(UserRepositoryException):
     """Exception raised when a feedback is already exists in the repository"""
+
     def __init__(self):
         super().__init__("User feedback is already exists")
 
 
 class VoteAlreadyExistsException(UserRepositoryException):
     """Exception raised when a vote is already exists in the repository"""
+
     def __init__(self):
         super().__init__("User vote is already exists")
 
