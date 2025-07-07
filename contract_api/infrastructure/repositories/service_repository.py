@@ -3,7 +3,8 @@ from typing import Optional
 from sqlalchemy import select, and_, or_, func, update, delete
 
 from contract_api.domain.factory.organization_factory import OrganizationFactory
-from contract_api.domain.models.offchain_service_attribute import OffchainServiceConfigDomain
+from contract_api.domain.models.offchain_service_attribute import OffchainServiceConfigDomain, \
+    NewOffchainServiceConfigDomain
 from contract_api.domain.models.organization import OrganizationDomain
 from contract_api.domain.models.service import ServiceDomain, NewServiceDomain
 from contract_api.domain.models.service_endpoint import ServiceEndpointDomain, NewServiceEndpointDomain
@@ -333,15 +334,14 @@ class ServiceRepository(BaseRepository):
     @BaseRepository.write_ops
     def upsert_offchain_service_config(
             self,
-            org_id: str,
-            service_id: str,
-            offchain_service_configs: list[OffchainServiceConfigDomain]) -> None:
+            offchain_service_configs: list[NewOffchainServiceConfigDomain]
+    ) -> list[OffchainServiceConfigDomain]:
         for offchain_service_config in offchain_service_configs:
             query = select(
                 OffchainServiceConfig
             ).where(
-                OffchainServiceConfig.org_id == org_id,
-                OffchainServiceConfig.service_id == service_id,
+                OffchainServiceConfig.org_id == offchain_service_config.org_id,
+                OffchainServiceConfig.service_id == offchain_service_config.service_id,
                 OffchainServiceConfig.parameter_name == offchain_service_config.parameter_name
             ).limit(1)
 
@@ -352,8 +352,8 @@ class ServiceRepository(BaseRepository):
                 query = update(
                     OffchainServiceConfig
                 ).where(
-                    OffchainServiceConfig.org_id == org_id,
-                    OffchainServiceConfig.service_id == service_id,
+                    OffchainServiceConfig.org_id == offchain_service_config.org_id,
+                    OffchainServiceConfig.service_id == offchain_service_config.service_id,
                     OffchainServiceConfig.parameter_name == offchain_service_config.parameter_name
                 ).values(
                     parameter_value=offchain_service_config.parameter_value
@@ -362,12 +362,17 @@ class ServiceRepository(BaseRepository):
                 self.session.execute(query)
             else:
                 self.session.add(OffchainServiceConfig(
-                    org_id=org_id,
-                    service_id=service_id,
+                    org_id=offchain_service_config.org_id,
+                    service_id=offchain_service_config.service_id,
                     parameter_name=offchain_service_config.parameter_name,
                     parameter_value=offchain_service_config.parameter_value
                 ))
             self.session.commit()
+
+        return self.get_offchain_service_configs(
+            org_id = offchain_service_configs[0].org_id,
+            service_id = offchain_service_configs[0].service_id
+        )
 
     @BaseRepository.write_ops
     def delete_services(self, org_id) -> None:

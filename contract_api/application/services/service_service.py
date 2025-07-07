@@ -3,6 +3,7 @@ import tempfile
 import uuid
 from pathlib import Path
 from typing import Any
+from datetime import datetime
 
 from common.boto_utils import BotoUtils
 from common.constant import BuildStatus
@@ -137,14 +138,16 @@ class ServiceService:
             )
             demo_component.demo_component_status = BuildStatus.PENDING
 
-        updated_offchain_attributes = ServiceFactory.offchain_service_configs_from_demo_component(demo_component)
+        new_configs = ServiceFactory.offchain_service_configs_from_demo_component(
+            org_id, service_id, demo_component
+        )
         try:
-            self._service_repo.upsert_offchain_service_config(org_id, service_id, updated_offchain_attributes)
+            updated_configs = self._service_repo.upsert_offchain_service_config(org_id, service_id, new_configs)
         except Exception:
             raise UpsertOffchainConfigsFailedException(org_id, service_id)
 
         attributes = {}
-        for config in updated_offchain_attributes:
+        for config in updated_configs:
             attributes.update(config.to_attribute())
 
         return {"org_id": org_id, "service_id": service_id, "attributes": attributes}
@@ -153,17 +156,23 @@ class ServiceService:
         org_id = request.org_id
         service_id = request.service_id
 
+        service_result = self._service_repo.get_service(org_id, service_id)
+        if service_result is None:
+            return {}
+        hash_uri = service_result[0].hash_uri
+
         offchain_service_configs = self._service_repo.get_offchain_service_configs(org_id, service_id)
 
         attributes = {}
         for config in offchain_service_configs:
             attributes.update(config.to_attribute())
             if config.parameter_name == "demo_component_url":
-                attributes["demo_component_last_modified"] = config
+                attributes.update({"demo_component_last_modified": datetime.isoformat(config.updated_on)})
 
-
-
-
+        return {
+            "hash_uri": hash_uri,
+            "demo_component": attributes
+        }
 
     def update_service_rating(self, request: UpdateServiceRatingRequest) -> dict:
         org_id = request.org_id
@@ -215,7 +224,7 @@ class ServiceService:
         for config in offchain_service_configs:
             if config.parameter_name == "demo_component_required":
                 return {"demoComponentRequired": config.parameter_value == "1"}
-        return {"demoComponentAvailable": False}
+        return {"demoComponentRequired": False}
 
     def _publish_demo_component(self, org_id, service_id, demo_file_url):
         root_directory = os.path.join(tempfile.gettempdir(), str(uuid.uuid4()))
