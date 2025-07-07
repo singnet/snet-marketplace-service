@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from datetime import datetime
 
 from contract_api.domain.models.base_domain import BaseDomain
 
@@ -26,11 +25,8 @@ class NewServiceMetadataDomain:
 
 @dataclass
 class ServiceMetadataDomain(NewServiceMetadataDomain, BaseDomain):
-    row_id: int
     demo_component_available: bool
     ranking: int
-    created_on: datetime
-    updated_on: datetime
 
     def to_short_response(self) -> dict:
         contributors = [contributor["name"] for contributor in self.contributors]

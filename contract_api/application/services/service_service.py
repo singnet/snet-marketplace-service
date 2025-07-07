@@ -150,7 +150,20 @@ class ServiceService:
         return {"org_id": org_id, "service_id": service_id, "attributes": attributes}
 
     def get_offchain_service_attribute(self, request: GetServiceRequest) -> dict:
-        pass
+        org_id = request.org_id
+        service_id = request.service_id
+
+        offchain_service_configs = self._service_repo.get_offchain_service_configs(org_id, service_id)
+
+        attributes = {}
+        for config in offchain_service_configs:
+            attributes.update(config.to_attribute())
+            if config.parameter_name == "demo_component_url":
+                attributes["demo_component_last_modified"] = config
+
+
+
+
 
     def update_service_rating(self, request: UpdateServiceRatingRequest) -> dict:
         org_id = request.org_id

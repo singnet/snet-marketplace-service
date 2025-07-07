@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from datetime import datetime
 
 from contract_api.domain.models.base_domain import BaseDomain
 
@@ -18,9 +17,6 @@ class NewChannelDomain:
 
 @dataclass
 class ChannelDomain(NewChannelDomain, BaseDomain):
-    row_id: int
     pending: int
     consumed_balance: int
-    created_on: datetime
-    updated_on: datetime
 
