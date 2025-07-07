@@ -607,8 +607,8 @@ class ServicePublisherService:
         logger.info(f"get service arn: {get_service_arn}")
         payload = {
             "pathParameters": {
-                "org_id": org_id,
-                "service_id": service_id
+                "orgId": org_id,
+                "serviceId": service_id
             }
         }
         response = boto_util.invoke_lambda(

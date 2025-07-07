@@ -30,7 +30,7 @@ class GetGroupChannelsRequest(BaseModel):
 
 
 class UpdateConsumedBalanceRequest(BaseModel):
-    channel_id: int
+    channel_id: int = Field(alias="channelId")
     signed_amount: int | None = Field(alias="signedAmount", default = None)
     org_id: str | None = Field(alias="orgId", default = None)
     service_id: str | None = Field(alias="serviceId", default = None)

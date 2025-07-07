@@ -149,6 +149,9 @@ class ServiceService:
 
         return {"org_id": org_id, "service_id": service_id, "attributes": attributes}
 
+    def get_offchain_service_attribute(self, request: GetServiceRequest) -> dict:
+        pass
+
     def update_service_rating(self, request: UpdateServiceRatingRequest) -> dict:
         org_id = request.org_id
         service_id = request.service_id
