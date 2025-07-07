@@ -1,22 +1,18 @@
 from dataclasses import dataclass
-from datetime import datetime
+
+from contract_api.domain.models.base_domain import BaseDomain
 
 
 @dataclass
-class OffchainServiceConfigDomain:
-    row_id: int
+class NewOffchainServiceConfigDomain:
     org_id: str
     service_id: str
     parameter_name: str
     parameter_value: str
 
-    def to_response(self):
-        return {
-            "org_id": self.org_id,
-            "service_id": self.service_id,
-            "parameter_name": self.parameter_name,
-            "parameter_value": self.parameter_value
-        }
+
+@dataclass
+class OffchainServiceConfigDomain(NewOffchainServiceConfigDomain, BaseDomain):
 
     def to_attribute(self):
         return {

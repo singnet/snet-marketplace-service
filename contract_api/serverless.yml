@@ -313,6 +313,17 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
+  get-offchain-attribute:
+    handler: contract_api.application.handlers.service_handlers.get_offchain_attribute
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+
   save-offchain-attribute:
     handler: contract_api.application.handlers.service_handlers.save_offchain_attribute
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -391,7 +402,7 @@ functions:
             type: COGNITO_USER_POOLS
             arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
             identitySource: method.request.header.Authorization
-          path: /channel/{channel_id}/balance
+          path: /channel/{channelId}/balance
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:

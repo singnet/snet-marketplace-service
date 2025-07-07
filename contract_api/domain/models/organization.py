@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from datetime import datetime
 
 from contract_api.domain.models.base_domain import BaseDomain
 
@@ -19,10 +18,7 @@ class NewOrganizationDomain:
 
 @dataclass
 class OrganizationDomain(NewOrganizationDomain, BaseDomain):
-    row_id: int
     org_email: str
-    created_on: datetime
-    updated_on: datetime
 
     def to_short_response(self) -> dict:
         support_contacts = {

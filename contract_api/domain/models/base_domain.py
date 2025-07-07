@@ -1,8 +1,13 @@
 from dataclasses import dataclass, asdict
+from datetime import datetime
 
 
 @dataclass
 class BaseDomain:
+    row_id: int
+    created_on: datetime
+    updated_on: datetime
+
     def to_response(self):
         result = asdict(self)
         del result["row_id"]

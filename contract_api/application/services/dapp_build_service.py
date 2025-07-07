@@ -5,12 +5,18 @@ from common import utils
 from common.boto_utils import BotoUtils
 from common.constant import BuildStatus
 from common.exceptions import InvalidFilePath
-from contract_api.application.schemas.dapp_build_schemas import TriggerDappBuildRequest, NotifyDeployStatusRequest
+from contract_api.application.schemas.dapp_build_schemas import (
+    TriggerDappBuildRequest,
+    NotifyDeployStatusRequest
+)
 from contract_api.config import REGION_NAME, MARKETPLACE_DAPP_BUILD
 from contract_api.constant import ServiceAssetsRegex, BuildCode
-from contract_api.domain.models.offchain_service_attribute import OffchainServiceConfigDomain
-from contract_api.exceptions import BuildTriggerFailedException, UpsertOffchainConfigsFailedException, \
+from contract_api.domain.models.offchain_service_attribute import NewOffchainServiceConfigDomain
+from contract_api.exceptions import (
+    BuildTriggerFailedException,
+    UpsertOffchainConfigsFailedException,
     ServiceCurationFailedException
+)
 from contract_api.infrastructure.repositories.service_repository import ServiceRepository
 
 logger = get_logger(__name__)
@@ -56,8 +62,7 @@ class DappBuildService:
             raise ServiceCurationFailedException(org_id = org_id, service_id = service_id)
 
         demo_build_status = BuildStatus.SUCCESS if build_status == BuildCode.SUCCESS else BuildStatus.FAILED
-        offchain_attributes = OffchainServiceConfigDomain(
-            row_id=0, # dummy
+        offchain_attributes = NewOffchainServiceConfigDomain(
             org_id=org_id,
             service_id=service_id,
             parameter_name = "demo_component_build_status",

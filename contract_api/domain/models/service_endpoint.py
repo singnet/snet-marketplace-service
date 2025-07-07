@@ -17,11 +17,8 @@ class NewServiceEndpointDomain:
 
 @dataclass
 class ServiceEndpointDomain(NewServiceEndpointDomain, BaseDomain):
-    row_id: str
     next_check_timestamp: datetime
     failed_status_count: int
-    created_on: datetime
-    updated_on: datetime
 
     def to_short_response(self):
         return {

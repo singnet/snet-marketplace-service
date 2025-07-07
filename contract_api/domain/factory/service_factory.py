@@ -6,7 +6,8 @@ from contract_api.domain.models.service import ServiceDomain
 from contract_api.domain.models.service_endpoint import ServiceEndpointDomain
 from contract_api.domain.models.service_group import ServiceGroupDomain
 from contract_api.domain.models.service_media import ServiceMediaDomain
-from contract_api.domain.models.offchain_service_attribute import OffchainServiceConfigDomain
+from contract_api.domain.models.offchain_service_attribute import OffchainServiceConfigDomain, \
+    NewOffchainServiceConfigDomain
 from contract_api.domain.models.service_metadata import ServiceMetadataDomain, NewServiceMetadataDomain
 from contract_api.domain.models.service_tag import ServiceTagDomain
 from contract_api.infrastructure.models import ServiceTags, ServiceMedia, Service, ServiceMetadata, ServiceGroup, \
@@ -167,20 +168,23 @@ class ServiceFactory:
                 org_id=offchain_service_config_db_model.org_id,
                 service_id=offchain_service_config_db_model.service_id,
                 parameter_name = offchain_service_config_db_model.parameter_name,
-                parameter_value = offchain_service_config_db_model.parameter_value
+                parameter_value = offchain_service_config_db_model.parameter_value,
+                created_on = offchain_service_config_db_model.created_on,
+                updated_on = offchain_service_config_db_model.updated_on
             ))
         return result
 
     @staticmethod
     def offchain_service_configs_from_demo_component(
+            org_id: str,
+            service_id: str,
             demo_component: DemoComponent
-    ) -> list[OffchainServiceConfigDomain]:
+    ) -> list[NewOffchainServiceConfigDomain]:
         result = []
         for name, value in demo_component.to_short_dict().items():
-            result.append(OffchainServiceConfigDomain(
-                row_id=0, # dummy
-                org_id="", # dummy
-                service_id="", # dummy
+            result.append(NewOffchainServiceConfigDomain(
+                org_id=org_id,
+                service_id=service_id,
                 parameter_name = name,
                 parameter_value = value
             ))

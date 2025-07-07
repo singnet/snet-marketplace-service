@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from datetime import datetime
 
 from contract_api.domain.models.base_domain import BaseDomain
 
@@ -14,9 +13,6 @@ class NewOrgGroupDomain:
 
 @dataclass
 class OrgGroupDomain(NewOrgGroupDomain, BaseDomain):
-    row_id: int
-    created_on: datetime
-    updated_on: datetime
 
     def to_short_response(self) -> dict:
         return {
