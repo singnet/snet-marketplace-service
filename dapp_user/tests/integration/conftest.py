@@ -92,7 +92,7 @@ def lambda_event_authorized() -> dict:
                     "email": TEST_USER,
                 }
             }
-        }
+        },
     }
 
 
@@ -109,7 +109,7 @@ def lambda_event_authorized_not_found() -> dict:
                     "email": "integrationuser_not_found@example.com",
                 }
             }
-        }
+        },
     }
 
 

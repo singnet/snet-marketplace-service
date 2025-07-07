@@ -21,14 +21,12 @@ class GetFreeCallSignatureRequest(BaseModel):
 
         except ValidationError as e:
             formatted_errors = [
-                {
-                    "field": ".".join(str(loc) for loc in err["loc"]),
-                    "message": err["msg"]
-                } for err in e.errors()
+                {"field": ".".join(str(loc) for loc in err["loc"]), "message": err["msg"]}
+                for err in e.errors()
             ]
             raise BadRequestException(
                 message="Validation failed for request body.",
-                details={"validation_erros": formatted_errors}
+                details={"validation_erros": formatted_errors},
             )
         except AssertionError as e:
             raise BadRequestException(message=str(e))
@@ -50,14 +48,12 @@ class GetSignatureForStateServiceRequest(BaseModel):
 
         except ValidationError as e:
             formatted_errors = [
-                {
-                    "field": ".".join(str(loc) for loc in err["loc"]),
-                    "message": err["msg"]
-                } for err in e.errors()
+                {"field": ".".join(str(loc) for loc in err["loc"]), "message": err["msg"]}
+                for err in e.errors()
             ]
             raise BadRequestException(
                 message="Validation failed for request body.",
-                details={"validation_erros": formatted_errors}
+                details={"validation_erros": formatted_errors},
             )
         except AssertionError as e:
             raise BadRequestException(message=str(e))
@@ -81,14 +77,12 @@ class GetSignatureForRegularCallRequest(BaseModel):
 
         except ValidationError as e:
             formatted_errors = [
-                {
-                    "field": ".".join(str(loc) for loc in err["loc"]),
-                    "message": err["msg"]
-                } for err in e.errors()
+                {"field": ".".join(str(loc) for loc in err["loc"]), "message": err["msg"]}
+                for err in e.errors()
             ]
             raise BadRequestException(
                 message="Validation failed for request body.",
-                details={"validation_erros": formatted_errors}
+                details={"validation_erros": formatted_errors},
             )
         except AssertionError as e:
             raise BadRequestException(message=str(e))
@@ -116,14 +110,12 @@ class GetSignatureForOpenChannelForThirdPartyRequest(BaseModel):
 
         except ValidationError as e:
             formatted_errors = [
-                {
-                    "field": ".".join(str(loc) for loc in err["loc"]),
-                    "message": err["msg"]
-                } for err in e.errors()
+                {"field": ".".join(str(loc) for loc in err["loc"]), "message": err["msg"]}
+                for err in e.errors()
             ]
             raise BadRequestException(
                 message="Validation failed for request body.",
-                details={"validation_erros": formatted_errors}
+                details={"validation_erros": formatted_errors},
             )
         except AssertionError as e:
             raise BadRequestException(message=str(e))

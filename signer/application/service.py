@@ -47,7 +47,8 @@ class SignerService:
             or expiration_block_number <= current_block
         ):
             signature_to_get_free_call_token = (
-                self.signer.generate_signature_to_get_free_call_token( address=settings.signer.address,
+                self.signer.generate_signature_to_get_free_call_token(
+                    address=settings.signer.address,
                     username=username,
                     organization_id=request.organization_id,
                     service_id=request.service_id,
@@ -56,10 +57,12 @@ class SignerService:
                 )
             )
 
-            daemon_endpoint, free_calls_count = self.contract_api_client.get_daemon_endpoint_and_free_call_for_group(
-                org_id=request.organization_id,
-                service_id=request.service_id,
-                group_id=request.group_id
+            daemon_endpoint, free_calls_count = (
+                self.contract_api_client.get_daemon_endpoint_and_free_call_for_group(
+                    org_id=request.organization_id,
+                    service_id=request.service_id,
+                    group_id=request.group_id,
+                )
             )
 
             if free_calls_count == 0:

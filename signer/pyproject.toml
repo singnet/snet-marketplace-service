@@ -41,6 +41,12 @@ skip_gitignore = true
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+exclude = [
+  "stubs/state_service_pb2.py",
+  "stubs/state_service_pb2.pyi",
+  "stubs/state_service_pb2_grpc.py",
+  "stubs/state_service_pb2_grpc.pyi"
+]
 
 [tool.ruff.lint]
 extend-select = ["I"]
@@ -49,10 +55,6 @@ extend-select = ["I"]
 strict = true
 ignore_missing_imports = true
 python_version = "3.12"
-per_module_ignores = [
-  "your_package_name.*_pb2_grpc",
-  "your_package_name.*_pb2",
-]
 plugins = ["mypy_protobuf.plugin"]
 
 [build-system]
