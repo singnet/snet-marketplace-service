@@ -146,7 +146,7 @@ class UserService:
             self.contract_api_client.update_service_rating(
                 org_id=user_vote.org_id,
                 service_id=user_vote.service_id,
-                rating=rating,
+                rating=float(rating),
                 total_users_rated=total_users_rated,
                 token_name=token_name,
             )
