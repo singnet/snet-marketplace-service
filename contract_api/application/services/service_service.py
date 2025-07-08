@@ -142,7 +142,7 @@ class ServiceService:
             org_id, service_id, demo_component
         )
         try:
-            updated_configs = self._service_repo.upsert_offchain_service_config(org_id, service_id, new_configs)
+            updated_configs = self._service_repo.upsert_offchain_service_config(new_configs)
         except Exception:
             raise UpsertOffchainConfigsFailedException(org_id, service_id)
 
