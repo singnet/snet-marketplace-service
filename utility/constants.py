@@ -1,5 +1,6 @@
 import tempfile
 from enum import Enum
+from typing import List, Dict, TypedDict
 
 from utility.settings import settings
 
@@ -13,7 +14,13 @@ class UploadType(Enum):
     SERVICE_PROTO_FILES = "SERVICE_PROTO_FILES"
 
 
-UPLOAD_TYPE_DETAILS = {
+class UploadTypeDetail(TypedDict):
+    required_query_params: List[str]
+    bucket: str
+    bucket_path: str
+
+
+UPLOAD_TYPE_DETAILS: Dict[str, UploadTypeDetail] = {
     UploadType.FEEDBACK.value: {
         "required_query_params": [],
         "bucket": settings.aws.S3.FEEDBACK_BUCKET,
@@ -43,8 +50,9 @@ UPLOAD_TYPE_DETAILS = {
         "required_query_params": ["org_uuid", "service_uuid"],
         "bucket": settings.aws.S3.ORG_BUCKET,
         "bucket_path": "{}/services/{}/proto/{}_proto_files.{}",
-    }
+    },
 }
+
 
 SERVICE_PY_CONTENT = """
 from snet import sdk
@@ -71,39 +79,33 @@ if __name__ == "__main__":
 """
 
 PYTHON_BOILERPLATE_TEMPLATE = {
-    "requirement": {
-        "extension": ".txt",
-        "content": "snet-sdk"
-    },
+    "requirement": {"extension": ".txt", "content": "snet-sdk"},
     "readme": {
         "extension": ".txt",
-        "content": "Follow below instructions to setup dependencies :\n" \
-                   "1.Create virtual environment\n" \
-                   "   Once boilerplate is downloaded cd into the service_id_placeholder-boilerplate folder and execute below commands\n" \
-                   "   For unix/macOS:\n" \
-                   "      -sudo apt-get install python3-venv\n" \
-                   "      -sudo python3 -m venv venv\n" \
-                   "      -source ./venv/bin/activate\n" \
-                   "   For Windows:\n" \
-                   "      -py -m pip install --user virtualenv\n" \
-                   "      -py -m venv venv\n" \
-                   "      -.\\venv\\Scripts\\activate\n" \
-                   "2.Run following command to install dependencies\n" \
-                   "   - pip install -r requirement.txt\n" \
-                   "3.Replace appropriate values in config.py, service.py and run below command to invoke service" \
-                   "   - python service.py" \
-        },
+        "content": "Follow below instructions to setup dependencies :\n"
+        "1.Create virtual environment\n"
+        "   Once boilerplate is downloaded cd into the service_id_placeholder-boilerplate folder and execute below commands\n"
+        "   For unix/macOS:\n"
+        "      -sudo apt-get install python3-venv\n"
+        "      -sudo python3 -m venv venv\n"
+        "      -source ./venv/bin/activate\n"
+        "   For Windows:\n"
+        "      -py -m pip install --user virtualenv\n"
+        "      -py -m venv venv\n"
+        "      -.\\venv\\Scripts\\activate\n"
+        "2.Run following command to install dependencies\n"
+        "   - pip install -r requirement.txt\n"
+        "3.Replace appropriate values in config.py, service.py and run below command to invoke service"
+        "   - python service.py",
+    },
     "config": {
         "extension": ".py",
-        "content": 'PRIVATE_KEY = "<your wallet\'s private key>"\n' \
-                   f'ETH_RPC_ENDPOINT = "https://{settings.network.networks[settings.network.id].name}.infura.io/v3/<your infura key>"\n'
-                   f'ORG_ID = "org_id_placeholder"\n' \
-                   f'SERVICE_ID = "service_id_placeholder"\n'
+        "content": 'PRIVATE_KEY = "<your wallet\'s private key>"\n'
+        f'ETH_RPC_ENDPOINT = "https://{settings.network.networks[settings.network.id].name}.infura.io/v3/<your infura key>"\n'
+        f'ORG_ID = "org_id_placeholder"\n'
+        f'SERVICE_ID = "service_id_placeholder"\n',
     },
-    "service": {
-        "extension": ".py",
-        "content": SERVICE_PY_CONTENT
-    }
+    "service": {"extension": ".py", "content": SERVICE_PY_CONTENT},
 }
 
 
