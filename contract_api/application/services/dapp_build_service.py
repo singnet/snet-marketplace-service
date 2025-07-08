@@ -69,7 +69,7 @@ class DappBuildService:
             parameter_value = demo_build_status
         )
         try:
-            self._service_repo.upsert_offchain_service_config(org_id, service_id, [offchain_attributes])
+            self._service_repo.upsert_offchain_service_config([offchain_attributes])
         except Exception:
             raise UpsertOffchainConfigsFailedException(org_id = org_id, service_id = service_id)
 

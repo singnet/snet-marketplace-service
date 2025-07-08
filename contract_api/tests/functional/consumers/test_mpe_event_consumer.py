@@ -9,7 +9,7 @@ from contract_api.infrastructure.repositories.channel_repository import ChannelR
 from contract_api.application.handlers.consumer_handlers import mpe_event_consumer
 
 
-class TestOrganizationEventConsumer(unittest.TestCase):
+class TestMPEEventConsumer(unittest.TestCase):
     def setUp(self):
         self.channel_repository = ChannelRepository()
 
