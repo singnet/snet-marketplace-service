@@ -527,6 +527,11 @@ class ServiceRepository(BaseRepository):
 
             self.session.execute(query)
         else:
+            default_service_rating = {
+                "rating": 0.0,
+                "total_users_rated": 0
+            }
+
             service_metadata_db = ServiceMetadata(
                 service_row_id = service_metadata.service_row_id,
                 org_id = service_metadata.org_id,
@@ -542,7 +547,7 @@ class ServiceRepository(BaseRepository):
                 mpe_address = service_metadata.mpe_address,
                 assets_url = service_metadata.assets_url,
                 assets_hash = service_metadata.assets_hash,
-                service_rating = service_metadata.service_rating,
+                service_rating = default_service_rating,
                 contributors = service_metadata.contributors
             )
             self.session.add(service_metadata_db)

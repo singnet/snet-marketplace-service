@@ -19,7 +19,6 @@ class NewServiceMetadataDomain:
     mpe_address: str
     assets_url: dict
     assets_hash: dict
-    service_rating: dict
     contributors: dict
 
 
@@ -27,6 +26,7 @@ class NewServiceMetadataDomain:
 class ServiceMetadataDomain(NewServiceMetadataDomain, BaseDomain):
     demo_component_available: bool
     ranking: int
+    service_rating: dict
 
     def to_short_response(self) -> dict:
         contributors = [contributor["name"] for contributor in self.contributors]

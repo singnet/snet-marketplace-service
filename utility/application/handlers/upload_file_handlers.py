@@ -15,6 +15,5 @@ def upload_file(event, context):
     response = UploadService().store_file(request)
 
     return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled = True
+        StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )

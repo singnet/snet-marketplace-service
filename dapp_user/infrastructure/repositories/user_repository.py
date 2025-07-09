@@ -18,10 +18,8 @@ from dapp_user.infrastructure.models import (
 )
 from dapp_user.infrastructure.repositories.base_repository import BaseRepository
 from dapp_user.infrastructure.repositories.exceptions import (
-    FeedbackAlreadyExistsException,
     UserAlreadyExistsException,
     UserNotFoundException,
-    VoteAlreadyExistsException,
 )
 from sqlalchemy import and_, delete, func, select, update
 from sqlalchemy.dialects.mysql import insert
@@ -157,7 +155,7 @@ class UserRepository(BaseRepository):
     @BaseRepository.write_ops
     def __update_or_set_user_vote(self, user_vote: UserServiceVoteDomain) -> None:
         query = select(UserServiceVote).where(
-            UserServiceVote.row_id == user_vote.user_row_id,
+            UserServiceVote.user_row_id == user_vote.user_row_id,
             UserServiceVote.org_id == user_vote.org_id,
             UserServiceVote.service_id == user_vote.service_id,
         )
@@ -174,14 +172,23 @@ class UserRepository(BaseRepository):
             self.session.add(new_vote)
 
     @BaseRepository.write_ops
-    def __set_user_feedback(self, user_feedback: UserServiceFeedbackDomain) -> None:
-        feedback = UserServiceFeedback(
-            user_row_id=user_feedback.user_row_id,
-            org_id=user_feedback.org_id,
-            service_id=user_feedback.service_id,
-            comment=user_feedback.comment,
+    def __update_or_set_user_feedback(self, user_feedback: UserServiceFeedbackDomain) -> None:
+        query = select(UserServiceFeedback).where(
+            UserServiceFeedback.user_row_id == user_feedback.user_row_id,
+            UserServiceFeedback.org_id == user_feedback.org_id,
+            UserServiceFeedback.service_id == user_feedback.service_id,
         )
-        self.session.add(feedback)
+        feedback = self.session.execute(query).scalar_one_or_none()
+        if feedback:
+            feedback.comment = user_feedback.comment
+        else:
+            new_feedback = UserServiceFeedback(
+                user_row_id=user_feedback.user_row_id,
+                org_id=user_feedback.org_id,
+                service_id=user_feedback.service_id,
+                comment=user_feedback.comment,
+            )
+            self.session.add(new_feedback)
 
     def __aggregate_service_rating(self, org_id: str, service_id: str) -> Tuple[float, int]:
         agg_stmt = select(
@@ -201,16 +208,10 @@ class UserRepository(BaseRepository):
         user_vote: UserServiceVoteDomain,
         user_feedback: UserServiceFeedbackDomain | None,
     ) -> Tuple[float, int]:
-        try:
-            self.__update_or_set_user_vote(user_vote)
-        except IntegrityError:
-            raise VoteAlreadyExistsException()
+        self.__update_or_set_user_vote(user_vote)
 
         if user_feedback is not None:
-            try:
-                self.__set_user_feedback(user_feedback)
-            except IntegrityError:
-                raise FeedbackAlreadyExistsException()
+            self.__update_or_set_user_feedback(user_feedback)
 
         avg_rating, total_rated = self.__aggregate_service_rating(
             org_id=user_vote.org_id,

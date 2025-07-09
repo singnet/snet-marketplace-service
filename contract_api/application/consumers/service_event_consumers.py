@@ -184,6 +184,8 @@ class ServiceCreatedEventConsumer(RegistryEventConsumer):
                     service_id = service_id,
                     assets_url = assets_url,
                     model_hash = new_service_metadata.get("service_api_source", ""),
+                    type = new_service_metadata.get("service_type", ""),
+                    **new_service_metadata["service_description"]
                 )
             )
             groups = new_service_metadata.get("groups", [])

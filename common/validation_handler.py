@@ -1,4 +1,5 @@
 from functools import wraps
+from typing import Callable
 from pydantic import ValidationError
 
 from common.constant import RequestPayloadType, PayloadAssertionError
@@ -12,10 +13,10 @@ PAYLOAD_TYPES_ERRORS_RELATIONSHIP = {
 }
 
 
-def validation_handler(payload_types: list[RequestPayloadType] = None):
+def validation_handler(payload_types: list[RequestPayloadType] | None = None):
     if payload_types is None:
         payload_types = []
-    def decorator(func: callable):
+    def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(cls, event: dict, *args, **kwargs):
             try:
@@ -25,9 +26,14 @@ def validation_handler(payload_types: list[RequestPayloadType] = None):
                     )
                 return func(cls, event, *args, **kwargs)
             except ValidationError as e:
-                missing_params = [x["loc"][0] for x in e.errors()]
-                raise BadRequestException(message = f"Missing required parameters: "
-                                                    f"{', '.join(missing_params)}")
+                formatted_errors = [
+                    {"field": ".".join(str(loc) for loc in err["loc"]), "message": err["msg"]}
+                    for err in e.errors()
+                ]
+                raise BadRequestException(
+                    message="Validation failed for request body.",
+                    details={"validation_erros": formatted_errors},
+                )
             except AssertionError as e:
                 raise BadRequestException(message = str(e))
             except BadRequestException as e:

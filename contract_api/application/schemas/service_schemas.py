@@ -88,9 +88,9 @@ class CurateServiceRequest(BaseModel):
     @model_validator(mode = "before")
     @classmethod
     def validate_curate(cls, data: dict):
-        if data['curate'] == 'true':
+        if data['curate'].lower() == "true":
             data['curate'] = True
-        elif data['curate'] == 'false':
+        elif data['curate'].lower() == "false":
             data['curate'] = False
         else:
             raise InvalidCurateParameter()
