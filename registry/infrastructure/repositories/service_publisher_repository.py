@@ -2,11 +2,11 @@ from typing import List
 
 import sqlalchemy
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 
 from registry.domain.factory.service_factory import ServiceFactory
 from registry.infrastructure.models import (
     Service,
-    ServiceGroup,
     ServiceState,
     Organization,
     ServiceComment,
@@ -77,20 +77,13 @@ class ServicePublisherRepository(BaseRepository):
         self.add_item(service_db_model)
 
     @BaseRepository.write_ops
-    def save_service(self, username, service, state):
-        service_group_db_model = [
-            ServiceFactory().convert_service_group_entity_model_to_db_model(group)
-            for group in service.groups
-        ]
+    def save_service(self, username: str, service: ServiceEntity, state: str):
         try:
-            self.session.query(ServiceGroup).filter(
-                ServiceGroup.org_uuid == service.org_uuid
-            ).filter(ServiceGroup.service_uuid == service.uuid).delete(synchronize_session="fetch")
-
             service_db = (
                 self.session.query(Service)
                 .filter(Service.org_uuid == service.org_uuid)
                 .filter(Service.uuid == service.uuid)
+                .options(joinedload(Service.groups))
                 .first()
             )
 
@@ -112,11 +105,32 @@ class ServicePublisherRepository(BaseRepository):
             service_db.contributors = service.contributors
             service_db.tags = service.tags
             service_db.mpe_address = service.mpe_address
-            service_db.groups = service_group_db_model
-            service_db.service_state.state = state
             service_db.service_type = service.service_type
+
+            service_db.service_state.state = state
             service_db.service_state.transaction_hash = service.service_state.transaction_hash
             service_db.service_state.updated_by = username
+
+            existing_groups_by_key = {
+                (group.org_uuid, group.service_uuid, group.group_id): group
+                for group in service_db.groups
+            }
+
+            for incoming_group in service.groups:
+                key = (incoming_group.org_uuid, incoming_group.service_uuid, incoming_group.group_id)
+                
+                if key in existing_groups_by_key:
+                    existing_group = existing_groups_by_key[key]
+                    existing_group.group_name = incoming_group.group_name
+                    existing_group.pricing = incoming_group.pricing
+                    existing_group.endpoints = incoming_group.endpoints
+                    existing_group.test_endpoints = incoming_group.test_endpoints
+                    existing_group.daemon_address = incoming_group.daemon_address
+                    existing_group.free_calls = incoming_group.free_calls
+                    existing_group.free_call_signer_address = incoming_group.free_call_signer_address
+                else:
+                    new_group = ServiceFactory().convert_service_group_entity_model_to_db_model(incoming_group)
+                    service_db.groups.append(new_group)
             self.session.commit()
         except Exception as e:
             self.session.rollback()

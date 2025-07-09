@@ -213,9 +213,9 @@ class Service(Base):
         TIMESTAMP(timezone=False), nullable=False, server_default=func.now(), onupdate=func.now()
     )
 
-    groups = relationship("ServiceGroup", back_populates="service", cascade="all, delete-orphan")
-    service_state = relationship("ServiceState", uselist=False)
-    offchain_service_config = relationship("OffchainServiceConfig", uselist=True)
+    groups: Mapped[List["ServiceGroup"]] = relationship("ServiceGroup", back_populates="service", cascade="all, delete-orphan")
+    service_state: Mapped["ServiceState"] = relationship("ServiceState", uselist=False)
+    offchain_service_config: Mapped["OffchainServiceConfig"] = relationship("OffchainServiceConfig", uselist=True)
 
 
 class ServiceState(Base):
@@ -278,7 +278,7 @@ class ServiceGroup(Base):
 
     __table_args__ = (UniqueConstraint(org_uuid, service_uuid, group_id, name="uq_org_srvc_grp"),)
 
-    service = relationship("Service", back_populates="groups")
+    service: Mapped[Service] = relationship("Service", back_populates="groups")
 
 
 class ServiceReviewHistory(Base):
@@ -309,7 +309,7 @@ class ServiceComment(Base):
     support_type: Mapped[str] = mapped_column("support_type", VARCHAR(128), nullable=False)
     user_type: Mapped[str] = mapped_column("user_type", VARCHAR(128), nullable=False)
     commented_by: Mapped[str] = mapped_column("commented_by", VARCHAR(128), nullable=False)
-    comment = mapped_column("comment", TEXT, nullable=False)
+    comment: Mapped[str] = mapped_column("comment", TEXT, nullable=False)
 
     created_on: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=False), nullable=False, server_default=func.now()
