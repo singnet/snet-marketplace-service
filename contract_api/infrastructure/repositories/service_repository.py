@@ -655,7 +655,7 @@ class ServiceRepository(BaseRepository):
         result = self.session.execute(query)
         service_tag_db = result.scalar_one_or_none()
 
-        if service_tag_db is not None:
+        if service_tag_db is None:
             service_tag_db = ServiceTags(
                 service_row_id = service_tag.service_row_id,
                 org_id = service_tag.org_id,
