@@ -20,3 +20,10 @@ class ChannelDomain(NewChannelDomain, BaseDomain):
     pending: int
     consumed_balance: int
 
+    def to_response(self):
+        result = super().to_response()
+        for key in ["balance_in_cogs", "pending", "consumed_balance"]:
+            result[key] = int(result[key])
+        return result
+
+

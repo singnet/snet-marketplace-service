@@ -318,7 +318,9 @@ class ServiceRepository(BaseRepository):
         return ServiceFactory.service_metadata_from_db_model(service_metadata_db)
 
     @BaseRepository.write_ops
-    def curate_service(self, org_id, service_id, curate):
+    def curate_service(
+            self, org_id: str, service_id: str, curate: bool
+    ) -> None:
         query = update(
             Service
         ).where(
@@ -369,6 +371,8 @@ class ServiceRepository(BaseRepository):
                 ))
             self.session.commit()
 
+        if len(offchain_service_configs) == 0:
+            return []
         return self.get_offchain_service_configs(
             org_id = offchain_service_configs[0].org_id,
             service_id = offchain_service_configs[0].service_id
@@ -730,5 +734,20 @@ class ServiceRepository(BaseRepository):
 
         self.session.execute(query)
         self.session.commit()
+
+    def service_curated(
+            self, org_id: str, service_id: str
+    ) -> bool:
+        query = select(
+            Service
+        ).where(
+            Service.org_id == org_id,
+            Service.service_id == service_id
+        ).limit(1)
+
+        result = self.session.execute(query)
+        service_db = result.scalar_one_or_none()
+
+        return service_db.is_curated
 
 

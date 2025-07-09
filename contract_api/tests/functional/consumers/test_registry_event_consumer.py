@@ -11,9 +11,6 @@ class TestRegistryEventConsumer(TestCase):
         self.service_repository = ServiceRepository()
         self.organization_repository = OrganizationRepository()
 
-    def tearDown(self):
-        pass
-
     @patch('contract_api.application.consumers.organization_event_consumers.OrganizationCreatedEventConsumer._get_org_details_from_blockchain')
     @patch('contract_api.application.consumers.event_consumer.EventConsumer._push_asset_to_s3_using_hash')
     def test_a_organization_created(self, push_assets_to_s3, get_org_details_from_blockchain):
