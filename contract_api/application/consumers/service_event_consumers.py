@@ -233,11 +233,11 @@ class ServiceCreatedEventConsumer(RegistryEventConsumer):
                 service_media=service_media
             )
 
-        if not existing_service_metadata or (
-                existing_service_metadata.model_hash != new_service_metadata["service_api_source"]):
-            ServiceCreatedDeploymentEventHandler().process_service_deployment(
-                service_metadata
-            )
+            if not existing_service_metadata or (
+                    existing_service_metadata.model_hash != new_service_metadata["service_api_source"]):
+                ServiceCreatedDeploymentEventHandler().process_service_deployment(
+                    service_metadata
+                )
 
 
 class ServiceDeletedEventConsumer(RegistryEventConsumer):
