@@ -106,6 +106,7 @@ jobs:
         env:
           PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: "python"
           AWS_XRAY_SDK_ENABLED: "false"
+          PYTHONPATH: "./.."
         run: |
           python3 -m coverage run -m pytest tests/integration
 
