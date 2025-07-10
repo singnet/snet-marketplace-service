@@ -346,6 +346,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         org_repo.add_item(owner)
         event = {
             "pathParameters": {"org_uuid": test_org_uuid},
+            "headers": {"origin": "testnet.marketplace"},
             "requestContext": {"authorizer": {"claims": {"email": username}}},
             "queryStringParameters": {"action": "DRAFT"},
             "body": json.dumps(
@@ -383,7 +384,9 @@ class TestOrganizationPublisherService(unittest.TestCase):
                 }
             ),
         }
-        update_org(event, None)
+        response = update_org(event, None)
+        assert response["statusCode"] == 200
+
         updated_org = org_repo.get_organization(org_id=test_org_id)
         owner = (
             org_repo.session.query(OrganizationMember)

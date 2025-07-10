@@ -167,6 +167,7 @@ class TestService(TestCase):
 
         event = {
             "requestContext": {"authorizer": {"claims": {"email": "dummy_user1@dummy.io"}}},
+            "headers":{"origin": "testnet.marketplace"},
             "httpMethod": "POST",
             "pathParameters": {"org_uuid": "test_org_uuid"},
             "body": json.dumps({"display_name": "test_display_name"}),
@@ -477,6 +478,7 @@ class TestService(TestCase):
         event = {
             "path": "/org/test_org_uuid/service",
             "requestContext": {"authorizer": {"claims": {"email": "dummy_user1@dummy.io"}}},
+            "headers": {"origin": "testnet.marketplace"},
             "httpMethod": "PUT",
             "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"},
             "body": json.dumps(
@@ -520,6 +522,7 @@ class TestService(TestCase):
         event = {
             "path": "/org/test_org_uuid/service",
             "requestContext": {"authorizer": {"claims": {"email": "dummy_user1@dummy.io"}}},
+            "headers": {"origin": "testnet.marketplace"},
             "httpMethod": "PUT",
             "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"},
             "body": json.dumps(
@@ -700,6 +703,7 @@ class TestService(TestCase):
         event = {
             "path": "/org/test_org_uuid/service/test_service_uuid/transaction",
             "requestContext": {"authorizer": {"claims": {"email": "dummy_user1@dummy.io"}}},
+            "headers": {"origin": "testnet.marketplace"},
             "httpMethod": "POST",
             "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"},
             "body": json.dumps({"transaction_hash": "0xtest_trxn_hash"}),
@@ -965,6 +969,7 @@ class TestService(TestCase):
         event = {
             "path": "/org/test_org_uuid/service",
             "requestContext": {"authorizer": {"claims": {"email": "dummy_user1@dummy.io"}}},
+            "headers": {"origin": "testnet.marketplace"},
             "httpMethod": "PUT",
             "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"},
             "body": json.dumps(

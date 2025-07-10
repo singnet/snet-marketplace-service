@@ -51,6 +51,7 @@ class TestOrganizationPublisher(TestCase):
         )
         event = {
             "requestContext": {"authorizer": {"claims": {"email": username}}},
+            "headers":{"origin": "testnet.marketplace"},
             "pathParameters": {"org_uuid": test_org_uuid},
             "body": json.dumps(
                 {
@@ -60,7 +61,9 @@ class TestOrganizationPublisher(TestCase):
                 }
             ),
         }
-        save_transaction_hash_for_publish_org(event, None)
+        response = save_transaction_hash_for_publish_org(event, None)
+        assert response["statusCode"] == 200
+
         organization = (
             org_repo.session.query(Organization).filter(Organization.uuid == test_org_uuid).first()
         )
