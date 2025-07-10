@@ -6,7 +6,7 @@ from contract_api.domain.models.base_domain import BaseDomain
 
 @dataclass
 class NewServiceEndpointDomain:
-    service_row_id: str
+    service_row_id: int
     org_id: str
     service_id: str
     group_id: str

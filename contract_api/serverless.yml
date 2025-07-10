@@ -466,7 +466,7 @@ functions:
 # =================== dapp build handlers ===================
 
   notify-deploy-status:
-    handler: contract_api.handlers.dapp_build_handlers.notify_deploy_status
+    handler: contract_api.application.handlers.dapp_build_handlers.notify_deploy_status
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:

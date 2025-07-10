@@ -70,6 +70,7 @@ def save_offchain_attribute(event, context):
         200, {"status": "success", "data": response}, cors_enabled = True
     )
 
+
 @exception_handler(logger=logger)
 def get_offchain_attribute(event, context):
     request = GetServiceRequest.validate_event(event)
@@ -79,6 +80,7 @@ def get_offchain_attribute(event, context):
     return generate_lambda_response(
         200, {"status": "success", "data": response}, cors_enabled = True
     )
+
 
 @exception_handler(logger=logger)
 def update_service_rating(event, context):

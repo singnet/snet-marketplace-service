@@ -123,10 +123,13 @@ jobs:
           PYTHONPATH=$PWD python3 -m coverage run -m pytest utility/testcases/functional_testcases/*.py
 
       - name: contract_api tests
+        working-directory: ./contract_api
+        env:
+          PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: "python"
+          AWS_XRAY_SDK_ENABLED: "false"
+          PYTHONPATH: "./.."
         run: |
-          export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-          export AWS_XRAY_SDK_ENABLED=false
-          PYTHONPATH=$PWD python3 -m coverage run -m pytest contract_api/tests/functional
+          python3 -m coverage run -m pytest tests/functional tests/functional/consumers
 
       - name: orchestrator tests
         run: |

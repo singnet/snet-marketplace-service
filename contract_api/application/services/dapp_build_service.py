@@ -65,7 +65,7 @@ class DappBuildService:
         offchain_attributes = NewOffchainServiceConfigDomain(
             org_id=org_id,
             service_id=service_id,
-            parameter_name = "demo_component_build_status",
+            parameter_name = "demo_component_status",
             parameter_value = demo_build_status
         )
         try:

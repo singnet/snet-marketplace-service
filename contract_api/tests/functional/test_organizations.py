@@ -112,16 +112,34 @@ class TestOrganizations(TestCase):
             'org_email': 'NULL'
         }
 
-        assert data[-2] == expected_org_1
-        assert data[-1] == expected_org_2
+        self.assertDictEqual(data[-2], expected_org_1)
+        self.assertDictEqual(data[-1], expected_org_2)
 
     def test_get_group(self):
         event = {
-            "org_id": "test_org_id",
-            "group_id": "NSf/28//MmwM+ktwr1gO0vVFoWqvctAT+Qko6lO3Xzo="
+            "pathParameters": {
+                "org_id": "test_org_id",
+                "group_id": "NSf/28//MmwM+ktwr1gO0vVFoWqvctAT+Qko6lO3Xzo="
+            }
         }
         response = get_group(event, None)
 
         assert response["statusCode"] == 200
 
         data = json.loads(response["body"])["data"]
+        print(data)
+
+        expected_result = {
+            "groups": [
+                {
+                    "org_id": "test_org_id",
+                    "group_id": "NSf/28//MmwM+ktwr1gO0vVFoWqvctAT+Qko6lO3Xzo=",
+                    "group_name": "default_group",
+                    "payment": {
+                        "payment_address": "0x4DD0668f583c92b006A81743c9704Bd40c876fDE"
+                    }
+                }
+            ]
+        }
+
+        self.assertDictEqual(data, expected_result)
