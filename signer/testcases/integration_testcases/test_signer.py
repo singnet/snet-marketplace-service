@@ -50,6 +50,7 @@ class TestSignUPAPI(unittest.TestCase):
                 "stage": "ropsten",
                 "authorizer": {"claims": {"email": "dummy@dummy.com"}},
             },
+            "headers": {"origin": "testnet.marketplace"},
         }
         mock_current_block_no.return_value = 6521925
         mock_read_contract_address.return_value = "0x8FB1dC8df86b388C7e00689d1eCb533A160B4D0C"
