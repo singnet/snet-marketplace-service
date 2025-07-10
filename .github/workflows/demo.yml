@@ -102,10 +102,12 @@ jobs:
           PYTHONPATH=$PWD python3 -m coverage run -m pytest wallets/testcases/integration_testcases/*.py wallets/testcases/unit_testcases/*.py
 
       - name: dapp_user tests
+        working-directory: ./dapp_user
+        env:
+          PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: "python"
+          AWS_XRAY_SDK_ENABLED: "false"
         run: |
-          export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-          export AWS_XRAY_SDK_ENABLED=false
-          PYTHONPATH=$PWD python3 -m coverage run -m pytest dapp_user/tests/integration
+          python3 -m coverage run -m pytest tests/integration
 
       - name: payments tests
         run: |
