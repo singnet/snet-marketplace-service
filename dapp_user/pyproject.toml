@@ -2,7 +2,7 @@
 name = "dapp_user"
 version = "0.1.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
+authors = ["snet"]
 readme = "README.md"
 package-mode = false
 
@@ -24,6 +24,7 @@ schema = "0.7.7"
 [tool.poetry.group.dev.dependencies]
 ruff = "0.11.4"
 pytest = "8.3.5"
+boto3-stubs = "1.39.4"
 
 [tool.black]
 line-length = 100
@@ -43,12 +44,7 @@ extend-select = ["I"]
 
 [tool.mypy]
 strict = true
-ignore_missing_imports = true
 python_version = "3.12"
-per_module_ignores = [
-  "your_package_name.*_pb2_grpc",
-  "your_package_name.*_pb2",
-]
 plugins = ["mypy_protobuf.plugin"]
 
 [build-system]

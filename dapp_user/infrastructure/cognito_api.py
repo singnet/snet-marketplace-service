@@ -5,11 +5,12 @@ import boto3
 from dapp_user.constant import CognitoAttributes
 from dapp_user.domain.interfaces.user_identity_manager_interface import UserIdentityManager
 from dapp_user.domain.models.user import NewUser
+from dapp_user.settings import settings
 
 
 class CognitoUserManager(UserIdentityManager):
     def __init__(self, user_pool_id: str):
-        self.client = boto3.client("cognito-idp")
+        self.client = boto3.client("cognito-idp", region_name=settings.aws.region_name)
         self.user_pool_id = user_pool_id
 
     def get_all_users(self) -> List[NewUser]:
