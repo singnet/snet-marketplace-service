@@ -2,10 +2,15 @@ from common.exceptions import BadRequestException
 
 
 class RequestContext:
-    def __init__(self, event):
+    def __init__(
+        self,
+        event: dict,
+        username: str | None = None,
+        origin: str | None = None
+    ):
         self.event = event
-        self.username = self._extract_username()
-        self.origin = self._extract_origin()
+        self.username = username or self._extract_username()
+        self.origin = origin or self._extract_origin()
 
     def _extract_username(self):
         try:

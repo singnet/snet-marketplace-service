@@ -3,12 +3,19 @@ from typing import Any
 
 import boto3
 
-from contract_api.application.schemas.channel_schemas import GetGroupChannelsRequest, GetChannelsRequest, \
-    UpdateConsumedBalanceRequest
-from contract_api.config import GET_STATE_SERVICE_SIGNATURE_ARN, REGION_NAME
+from common.constant import TokenSymbol
+from contract_api.application.schemas.channel_schemas import (
+    GetGroupChannelsRequest,
+    GetChannelsRequest,
+    UpdateConsumedBalanceRequest,
+)
+from contract_api.config import GET_STATE_SERVICE_SIGNATURE_ARN, REGION_NAME, TOKEN_NAME
 from contract_api.domain.models.channel import ChannelDomain
-from contract_api.exceptions import ChannelNotFoundException, CreatingSignatureFailedException, \
-    DaemonInteractionFailedException
+from contract_api.exceptions import (
+    ChannelNotFoundException,
+    CreatingSignatureFailedException,
+    DaemonInteractionFailedException,
+)
 from contract_api.infrastructure.daemon_client import DaemonClient
 from contract_api.infrastructure.repositories.channel_repository import ChannelRepository
 from contract_api.infrastructure.repositories.service_repository import ServiceRepository
@@ -112,10 +119,16 @@ class ChannelService:
     @staticmethod
     def _get_channel_state_signature(channel_id) -> tuple[str, Any]:
         body = {
-            'channel_id': channel_id
+            "channel_id": channel_id
         }
 
+        # TODO: Fix this after adding settings, maybe add RequestContext
+        origin = "testnet.marketplace-api" if TOKEN_NAME == TokenSymbol.FET.value else "testnet.agix-marketplace-api"
+
         payload = {
+            "headers": {
+                "origin": origin,
+            },
             "body": json.dumps(body)
         }
 
