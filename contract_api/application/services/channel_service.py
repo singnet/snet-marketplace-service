@@ -123,7 +123,7 @@ class ChannelService:
         }
 
         # TODO: Fix this after adding settings, maybe add RequestContext
-        origin = "testnet.agix-marketplace-api" if TOKEN_NAME == TokenSymbol.FET.value else "testnet.agix-marketplace-api"
+        origin = "testnet.marketplace-api" if TOKEN_NAME == TokenSymbol.FET.value else "testnet.agix-marketplace-api"
 
         payload = {
             "headers": {
