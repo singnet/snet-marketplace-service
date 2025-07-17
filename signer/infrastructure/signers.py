@@ -18,7 +18,7 @@ class Signer:
             net_id=settings.network.id,
             path=MPE_ADDR_PATH,
             key="address",
-            token_name=token_name,
+            token_name=token_name.value,
             stage=settings.stage,
         )
         self.current_block_no = self.obj_blockchain_utils.get_current_block_no()
