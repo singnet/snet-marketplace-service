@@ -33,17 +33,17 @@ We define three core entities in the storage layer:
 
 Represents a deployed daemon instance tied to a user’s published AI service.
 
-| Field           | Type     | Notes                                |
-|-----------------|----------|--------------------------------------|
-| `id`            | UUID     | Primary key                          |
-| `account_id`    | UUID     | Cognito id from dapp_user service    |
-| `service_id`    | string   | Indexed, unique per service          |
-| `status`        | enum     | `init`, `starting`, `up`, `down`     |
-| `from_date`     | datetime |                                      |
-| `end_date`      | datetime |                                      |
-| `daemon_config` | JSON     |                                      |
-| `created_at`    | datetime |                                      |
-| `updated_at`    | datetime |                                      |
+| Field           | Type     | Notes                                        |
+|-----------------|----------|----------------------------------------------|
+| `id`            | UUID     | Primary key                                  |
+| `account_id`    | UUID     | Cognito id from dapp_user service            |
+| `service_id`    | string   | Indexed, unique per service                  |
+| `status`        | enum     | `init`, `paid`, `starting`, `up`, `down`     |
+| `from_date`     | datetime |                                              |
+| `end_date`      | datetime |                                              |
+| `daemon_config` | JSON     |                                              |
+| `created_at`    | datetime |                                              |
+| `updated_at`    | datetime |                                              |
 
 
 ### `order`
