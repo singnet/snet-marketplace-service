@@ -33,17 +33,17 @@ We define three core entities in the storage layer:
 
 Represents a deployed daemon instance tied to a user’s published AI service.
 
-| Field           | Type     | Notes                                        |
-|-----------------|----------|----------------------------------------------|
-| `id`            | UUID     | Primary key                                  |
-| `account_id`    | UUID     | Cognito id from dapp_user service            |
-| `service_id`    | string   | Indexed, unique per service                  |
-| `status`        | enum     | `init`, `paid`, `starting`, `up`, `down`     |
-| `from_date`     | datetime |                                              |
-| `end_date`      | datetime |                                              |
-| `daemon_config` | JSON     |                                              |
-| `created_at`    | datetime |                                              |
-| `updated_at`    | datetime |                                              |
+| Field           | Type     | Notes                                       |
+|-----------------|----------|---------------------------------------------|
+| `id`            | UUID     | Primary key                                 |
+| `account_id`    | UUID     | Cognito id from dapp_user service           |
+| `service_id`    | string   | Indexed, unique per service                 |
+| `status`        | enum     | `init`, `starting`, `deleting`, `up`, `down`|
+| `from_date`     | datetime |                                             |
+| `end_date`      | datetime |                                             |
+| `daemon_config` | JSON     |                                             |
+| `created_at`    | datetime |                                             |
+| `updated_at`    | datetime |                                             |
 
 
 ### `order`
@@ -90,11 +90,18 @@ We define **order** and **evm_transaction** to implement more flexible payment w
 
 #### `GET /deployer/daemons/:userId`
 
+#### `DELETE /deployer/daemon:orgId/:servicId`
+
+
 ### Lambas
+
+As HaaS api for managing daemons is async, we need to implement additional lambas for hanling async invokes.
 
 #### stop-haas-daemon
 
-### start-haas-daemon
+#### start-haas-daemon (deployer consumer lambda)
+
+#### cron-daemon-checker (used for checking daemon pods status and updating it in hosted_daemon table) 
 
 
 
