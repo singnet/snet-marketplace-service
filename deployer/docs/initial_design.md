@@ -95,7 +95,7 @@ We define **order** and **evm_transaction** to implement more flexible payment w
 
 ### Lambas
 
-As HaaS api for managing daemons is async, we need to implement additional lambas for hanling async invokes.
+As HaaS api for managing daemons is async, we need to implement additional lambas for handling async invocations.
 
 #### stop-haas-daemon
 
