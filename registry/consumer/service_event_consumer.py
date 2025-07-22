@@ -253,9 +253,11 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
     @staticmethod
     def __curate_service_in_marketplace(service_id, org_id, curated):
         curate_service_payload = {
-            "pathParameters": {"orgId": org_id, "serviceId": service_id},
-            "queryStringParameters": {"curate": str(curated)},
-            "body": None,
+            "queryStringParameters": {
+                "org_id": org_id,
+                "service_id": service_id,
+                "curate": str(curated)
+            }
         }
 
         curate_service_response = boto_utils.BotoUtils(

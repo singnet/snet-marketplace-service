@@ -20,9 +20,13 @@ class GetFreeCallSignatureRequest(BaseModel):
             return cls.model_validate(body)
 
         except ValidationError as e:
-            missing_params = [x["loc"][0] for x in e.errors()]
+            formatted_errors = [
+                {"field": ".".join(str(loc) for loc in err["loc"]), "message": err["msg"]}
+                for err in e.errors()
+            ]
             raise BadRequestException(
-                message=f"Missing required parameters: {', '.join(str(p) for p in missing_params)}"
+                message="Validation failed for request body.",
+                details={"validation_erros": formatted_errors},
             )
         except AssertionError as e:
             raise BadRequestException(message=str(e))
@@ -43,9 +47,13 @@ class GetSignatureForStateServiceRequest(BaseModel):
             return cls.model_validate(body)
 
         except ValidationError as e:
-            missing_params = [x["loc"][0] for x in e.errors()]
+            formatted_errors = [
+                {"field": ".".join(str(loc) for loc in err["loc"]), "message": err["msg"]}
+                for err in e.errors()
+            ]
             raise BadRequestException(
-                message=f"Missing required parameters: {', '.join(str(p) for p in missing_params)}"
+                message="Validation failed for request body.",
+                details={"validation_erros": formatted_errors},
             )
         except AssertionError as e:
             raise BadRequestException(message=str(e))
@@ -68,9 +76,13 @@ class GetSignatureForRegularCallRequest(BaseModel):
             return cls.model_validate(body)
 
         except ValidationError as e:
-            missing_params = [x["loc"][0] for x in e.errors()]
+            formatted_errors = [
+                {"field": ".".join(str(loc) for loc in err["loc"]), "message": err["msg"]}
+                for err in e.errors()
+            ]
             raise BadRequestException(
-                message=f"Missing required parameters: {', '.join(str(p) for p in missing_params)}"
+                message="Validation failed for request body.",
+                details={"validation_erros": formatted_errors},
             )
         except AssertionError as e:
             raise BadRequestException(message=str(e))
@@ -97,9 +109,13 @@ class GetSignatureForOpenChannelForThirdPartyRequest(BaseModel):
             return cls.model_validate(body)
 
         except ValidationError as e:
-            missing_params = [x["loc"][0] for x in e.errors()]
+            formatted_errors = [
+                {"field": ".".join(str(loc) for loc in err["loc"]), "message": err["msg"]}
+                for err in e.errors()
+            ]
             raise BadRequestException(
-                message=f"Missing required parameters: {', '.join(str(p) for p in missing_params)}"
+                message="Validation failed for request body.",
+                details={"validation_erros": formatted_errors},
             )
         except AssertionError as e:
             raise BadRequestException(message=str(e))

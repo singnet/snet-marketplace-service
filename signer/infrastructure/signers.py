@@ -1,5 +1,5 @@
 from common.blockchain_util import BlockChainUtil
-from common.constant import ProviderType
+from common.constant import ProviderType, TokenSymbol
 from common.logger import get_logger
 from signer.constant import MPE_ADDR_PATH
 from signer.settings import settings
@@ -9,7 +9,7 @@ logger = get_logger(__name__)
 
 
 class Signer:
-    def __init__(self):
+    def __init__(self, token_name: TokenSymbol = TokenSymbol.FET):
         self.obj_blockchain_utils = BlockChainUtil(
             provider_type=ProviderType.http.value,
             provider=settings.network.networks[settings.network.id].http_provider,
@@ -18,7 +18,7 @@ class Signer:
             net_id=settings.network.id,
             path=MPE_ADDR_PATH,
             key="address",
-            token_name=settings.token_name,
+            token_name=token_name.value,
             stage=settings.stage,
         )
         self.current_block_no = self.obj_blockchain_utils.get_current_block_no()

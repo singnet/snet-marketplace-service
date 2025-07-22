@@ -6,6 +6,7 @@ import os.path
 import re
 import shutil
 import tarfile
+from typing import Generator, Iterable, TypeVar
 import zipfile
 from urllib.parse import urlparse
 
@@ -237,3 +238,21 @@ def format_response(status, response):
         return {"status": status, "error": error_data}
     else:
         return {}
+
+
+T = TypeVar("T")
+
+def chunked(items: Iterable[T], size: int) -> Generator[list[T], None, None]:
+    """
+    Splits an iterable into chunks of the given size.
+
+    Args:
+        items: Any iterable of T (e.g., List[NewUser])
+        size: Batch size
+
+    Yields:
+        Lists of size up to `size`, each containing items of type T
+    """
+    items = list(items)  # support generators/iterables too
+    for i in range(0, len(items), size):
+        yield items[i:i + size]

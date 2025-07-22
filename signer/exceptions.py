@@ -15,6 +15,4 @@ class DaemonUnavailable(BadGateway):
     """Raised when the daemon service is not responding."""
 
     def __init__(self) -> None:
-        super().__init__(
-            message="The daemon is not responding. Please contact the service owner."
-        )
+        super().__init__(message="The daemon is not responding. Please contact the service owner.")

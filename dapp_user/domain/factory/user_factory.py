@@ -1,51 +1,123 @@
+from typing import List, Sequence, Tuple
+
+from dapp_user.application.schemas import (
+    AddOrUpdateUserPreferencesRequest,
+    CognitoUserPoolEvent,
+    CreateUserServiceReviewRequest,
+)
+from dapp_user.constant import CommunicationType, PreferenceType, SourceDApp, Status
+from dapp_user.domain.models.user import NewUser, User
 from dapp_user.domain.models.user_preference import UserPreference
-from dapp_user.domain.models.user import User
-from dapp_user.constant import SourceDApp, CommunicationType, PreferenceType
-from dapp_user.config import CALLER_REFERENCE
-from dapp_user.exceptions import InvalidCallerReferenceException
+from dapp_user.domain.models.user_service_feedback import UserServiceFeedback
+from dapp_user.domain.models.user_service_vote import UserServiceVote
+from dapp_user.infrastructure.models import User as UserDB
+from dapp_user.infrastructure.models import UserPreference as UserPreferenceDB
+from dapp_user.infrastructure.models import UserServiceFeedback as UserServiceFeedbackDB
+from dapp_user.infrastructure.models import UserServiceVote as UserServiceVoteDB
 
 
 class UserFactory:
+    @staticmethod
+    def user_preferences_from_request(
+        request: AddOrUpdateUserPreferencesRequest,
+    ) -> List[UserPreference]:
+        user_preferences = []
+
+        for user_preference_payload in request.user_preferences:
+            user_preferences.append(
+                UserPreference(
+                    preference_type=user_preference_payload.preference_type,
+                    communication_type=user_preference_payload.communication_type,
+                    source=user_preference_payload.source,
+                    status=user_preference_payload.status,
+                    opt_out_reason=user_preference_payload.opt_out_reason,
+                )
+            )
+
+        return user_preferences
 
     @staticmethod
-    def parse_raw_user_preference_data(payload):
-        user_preference_list = []
-        for record in payload:
-            communication_type = getattr(CommunicationType, record["communication_type"].upper()).value
-            preference_type = getattr(PreferenceType, record["preference_type"].upper()).value
-            source = getattr(SourceDApp, record["source"].upper()).value
-            status = record["status"]
-            opt_out_reason = record.get("opt_out_reason", None)
-            user_preference = UserPreference(
-                communication_type=communication_type, preference_type=preference_type,
-                source=source, status=status, opt_out_reason=opt_out_reason)
-            user_preference_list.append(user_preference)
-        return user_preference_list
-
-    def parse_user_preference_raw_data(self, user_preference_raw_data):
-        preferences = []
-        for record in user_preference_raw_data:
-            communication_type = record["communication_type"]
-            preference_type = record["preference_type"]
-            source = record["source"]
-            status = record["status"]
-            opt_out_reason = record.get("opt_out_reason", None)
-            preference = UserPreference(
-                communication_type=communication_type, preference_type=preference_type,
-                source=source, status=status, opt_out_reason=opt_out_reason)
-            preferences.append(preference)
-        return preferences
+    def user_preference_from_db_model(user_preference_db: UserPreferenceDB) -> UserPreference:
+        return UserPreference(
+            preference_type=PreferenceType(user_preference_db.preference_type),
+            communication_type=CommunicationType(user_preference_db.communication_type),
+            source=SourceDApp(user_preference_db.source),
+            status=Status.ENABLED if user_preference_db.status else Status.DISABLED,
+            opt_out_reason=user_preference_db.opt_out_reason,
+        )
 
     @staticmethod
-    def create_user_domain_model(payload, client_id):
-        origin = CALLER_REFERENCE.get(client_id, None)
-        if not origin:
-            raise InvalidCallerReferenceException()
+    def user_preferences_from_db_model(
+        user_preferences_db: Sequence[UserPreferenceDB],
+    ) -> List[UserPreference]:
+        return [UserFactory.user_preference_from_db_model(up) for up in user_preferences_db]
+
+    @staticmethod
+    def user_service_feedback_from_db_model(
+        user_feedback_db: UserServiceFeedbackDB,
+    ) -> UserServiceFeedback:
+        return UserServiceFeedback(
+            user_row_id=user_feedback_db.user_row_id,
+            org_id=user_feedback_db.org_id,
+            service_id=user_feedback_db.service_id,
+            comment=user_feedback_db.comment,
+        )
+
+    @staticmethod
+    def user_service_vote_from_db_model(user_vote_db: UserServiceVoteDB) -> UserServiceVote:
+        return UserServiceVote(
+            user_row_id=user_vote_db.user_row_id,
+            org_id=user_vote_db.org_id,
+            service_id=user_vote_db.service_id,
+            rating=user_vote_db.rating,
+        )
+
+    @staticmethod
+    def user_vote_feedback_from_request(
+        user_row_id: int,
+        create_feedback_request: CreateUserServiceReviewRequest,
+    ) -> Tuple[UserServiceVote, UserServiceFeedback | None]:
+        user_vote = UserServiceVote(
+            user_row_id=user_row_id,
+            org_id=create_feedback_request.org_id,
+            service_id=create_feedback_request.service_id,
+            rating=create_feedback_request.user_rating,
+        )
+
+        user_feedback = None
+        if create_feedback_request.comment:
+            user_feedback = UserServiceFeedback(
+                user_row_id=user_row_id,
+                org_id=create_feedback_request.org_id,
+                service_id=create_feedback_request.service_id,
+                comment=create_feedback_request.comment,
+            )
+
+        return user_vote, user_feedback
+
+    @staticmethod
+    def user_from_cognito_request(event: CognitoUserPoolEvent) -> NewUser:
+        return NewUser(
+            account_id=event.request.user_attributes.sub,
+            username=event.request.user_attributes.email,
+            name=event.name,
+            email=event.request.user_attributes.email,
+            email_verified=event.request.user_attributes.email_verified,
+            email_alerts=False,
+            status=True,
+            is_terms_accepted=True,
+        )
+
+    @staticmethod
+    def user_from_db_model(user_db: UserDB) -> User:
         return User(
-            username=payload["email"],
-            name=payload["nickname"],
-            email=payload["email"],
-            email_verified=int(bool(payload['email_verified'])),
-            origin=origin,
-            preferences=[]
+            row_id=user_db.row_id,
+            username=user_db.username,
+            account_id=user_db.account_id,
+            name=user_db.name,
+            email=user_db.email,
+            email_verified=user_db.email_verified,
+            email_alerts=user_db.email_alerts,
+            status=user_db.status,
+            is_terms_accepted=user_db.is_terms_accepted,
         )
