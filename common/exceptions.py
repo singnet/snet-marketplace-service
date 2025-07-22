@@ -99,4 +99,9 @@ class LighthouseInternalException(BadRequestException):
         super().__init__(message="Lighthouse internal exception")
 
 
+class WrongTokenSymbolException(BadRequestException):
+    def __init__(self):
+        super().__init__(message="Wrong token symbol")
+
+
 EXCEPTIONS_IGNORING_ALERT: tuple[type[CustomException], ...] = (FailedResponse,)

@@ -1,22 +1,24 @@
-from dapp_user.config import NETWORKS, NETWORK_ID
-from dapp_user.infrastructure.models.models import Base
 from logging.config import fileConfig
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+
+from dapp_user.infrastructure.models import Base
+from dapp_user.settings import settings
+from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-MYSQL_CONNECTION_STRING = f"mysql+pymysql://{NETWORKS[NETWORK_ID]['db']['DB_USER']}:" \
-                          f"{NETWORKS[NETWORK_ID]['db']['DB_PASSWORD']}" \
-                          f"@{NETWORKS[NETWORK_ID]['db']['DB_HOST']}:" \
-                          f"{NETWORKS[NETWORK_ID]['db']['DB_PORT']}/{NETWORKS[NETWORK_ID]['db']['DB_NAME']}"
-config.set_main_option('sqlalchemy.url', MYSQL_CONNECTION_STRING)
+MYSQL_CONNECTION_STRING = (
+    f"mysql+pymysql://{settings.db.user}:{settings.db.password}"
+    f"@{settings.db.host}:{settings.db.port}/{settings.db.name}"
+)
+config.set_main_option("sqlalchemy.url", MYSQL_CONNECTION_STRING)
+
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
-fileConfig(config.config_file_name)
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
@@ -62,16 +64,22 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
+    ini_section = config.get_section(config.config_ini_section)
+
+    if ini_section is None:
+        raise RuntimeError("Failed to load Alembic config section")
+
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
+        ini_section,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata,
-            version_table="alembic_version_dapp_user"
+            connection=connection,
+            target_metadata=target_metadata,
+            version_table="alembic_version_dapp_user",
         )
 
         with context.begin_transaction():

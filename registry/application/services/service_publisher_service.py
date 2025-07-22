@@ -582,12 +582,11 @@ class ServicePublisherService:
         publish_offchain_attributes_arn = settings.lambda_arn.PUBLISH_OFFCHAIN_ATTRIBUTES_ARN[token_name]
         logger.info(f"publish attributes arn: {publish_offchain_attributes_arn}")
         payload = {
-            "httpMethod": "POST",
             "pathParameters": {
-                "orgId": org_id,
-                "serviceId": service_id
+                "org_id": org_id,
+                "service_id": service_id
             },
-            "body": payload
+            "body": json.dumps(payload)
         }
         response = boto_util.invoke_lambda(
             publish_offchain_attributes_arn,
@@ -607,7 +606,6 @@ class ServicePublisherService:
         get_service_arn = settings.lambda_arn.GET_SERVICE_FOR_GIVEN_ORG_LAMBDAS[token_name]
         logger.info(f"get service arn: {get_service_arn}")
         payload = {
-            "httpMethod": "GET",
             "pathParameters": {
                 "orgId": org_id,
                 "serviceId": service_id
@@ -708,7 +706,7 @@ class ServicePublisherService:
         self.publish_offchain_service_configs(
             org_id=organization.id,
             service_id=current_service.service_id,
-            payload=json.dumps(new_offchain_configs),
+            payload=new_offchain_configs,
             token_name=token_name
         )
 

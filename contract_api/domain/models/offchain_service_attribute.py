@@ -1,28 +1,20 @@
-class OffchainServiceAttribute:
-    def __init__(self, org_id, service_id, attributes):
-        self._org_id = org_id
-        self._service_id = service_id
-        self._attributes = attributes
+from dataclasses import dataclass
 
-    def to_dict(self):
+from contract_api.domain.models.base_domain import BaseDomain
+
+
+@dataclass
+class NewOffchainServiceConfigDomain:
+    org_id: str
+    service_id: str
+    parameter_name: str
+    parameter_value: str
+
+
+@dataclass
+class OffchainServiceConfigDomain(NewOffchainServiceConfigDomain, BaseDomain):
+
+    def to_attribute(self):
         return {
-            "org_id": self._org_id,
-            "service_id": self._service_id,
-            "attributes": self._attributes
+            self.parameter_name: self.parameter_value
         }
-
-    @property
-    def org_id(self):
-        return self._org_id
-
-    @property
-    def service_id(self):
-        return self._service_id
-
-    @property
-    def attributes(self):
-        return self._attributes
-
-    @attributes.setter
-    def attributes(self, attributes):
-        self._attributes = attributes

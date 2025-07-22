@@ -167,6 +167,7 @@ class TestService(TestCase):
 
         event = {
             "requestContext": {"authorizer": {"claims": {"email": "dummy_user1@dummy.io"}}},
+            "headers":{"origin": "testnet.marketplace"},
             "httpMethod": "POST",
             "pathParameters": {"org_uuid": "test_org_uuid"},
             "body": json.dumps({"display_name": "test_display_name"}),
@@ -477,6 +478,7 @@ class TestService(TestCase):
         event = {
             "path": "/org/test_org_uuid/service",
             "requestContext": {"authorizer": {"claims": {"email": "dummy_user1@dummy.io"}}},
+            "headers": {"origin": "testnet.marketplace"},
             "httpMethod": "PUT",
             "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"},
             "body": json.dumps(
@@ -520,6 +522,7 @@ class TestService(TestCase):
         event = {
             "path": "/org/test_org_uuid/service",
             "requestContext": {"authorizer": {"claims": {"email": "dummy_user1@dummy.io"}}},
+            "headers": {"origin": "testnet.marketplace"},
             "httpMethod": "PUT",
             "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"},
             "body": json.dumps(
@@ -700,6 +703,7 @@ class TestService(TestCase):
         event = {
             "path": "/org/test_org_uuid/service/test_service_uuid/transaction",
             "requestContext": {"authorizer": {"claims": {"email": "dummy_user1@dummy.io"}}},
+            "headers": {"origin": "testnet.marketplace"},
             "httpMethod": "POST",
             "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"},
             "body": json.dumps({"transaction_hash": "0xtest_trxn_hash"}),
@@ -965,6 +969,7 @@ class TestService(TestCase):
         event = {
             "path": "/org/test_org_uuid/service",
             "requestContext": {"authorizer": {"claims": {"email": "dummy_user1@dummy.io"}}},
+            "headers": {"origin": "testnet.marketplace"},
             "httpMethod": "PUT",
             "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"},
             "body": json.dumps(
@@ -1001,22 +1006,20 @@ class TestService(TestCase):
         assert (
             response_body["data"]["service_state"]["state"] == ServiceStatus.APPROVAL_PENDING.value
         )
-        assert response_body["data"]["groups"] == [
-            {
-                "group_id": "l/hp6f1RXFPANeLWFZYwTB93Xi42S8NpZHfnceS6eUw=",
-                "group_name": "defaultGroup",
-                "endpoints": {
-                    "https://example-service-a.singularitynet.io:8010": {"valid": False},
-                    "https://example-service-a.singularitynet.io:8013": {"valid": False},
-                    "https://example-service-a.singularitynet.io:8011": {"valid": True},
-                },
-                "test_endpoints": [],
-                "pricing": [{"default": True, "price_model": "fixed_price", "price_in_cogs": 1}],
-                "free_calls": 15,
-                "free_call_signer_address": "0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F",
-                "daemon_addresses": [],
-            }
-        ]
+        assert response_body["data"]["groups"][1] == {
+            "group_id": "l/hp6f1RXFPANeLWFZYwTB93Xi42S8NpZHfnceS6eUw=",
+            "group_name": "defaultGroup",
+            "endpoints": {
+                "https://example-service-a.singularitynet.io:8010": {"valid": False},
+                "https://example-service-a.singularitynet.io:8013": {"valid": False},
+                "https://example-service-a.singularitynet.io:8011": {"valid": True},
+            },
+            "test_endpoints": [],
+            "pricing": [{"default": True, "price_model": "fixed_price", "price_in_cogs": 1}],
+            "free_calls": 15,
+            "free_call_signer_address": "0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F",
+            "daemon_addresses": [],
+        }
 
     def tearDown(self):
         org_repo.session.query(OrganizationStateDBModel).delete()

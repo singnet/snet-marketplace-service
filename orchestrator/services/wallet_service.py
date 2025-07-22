@@ -2,7 +2,7 @@ import json
 from common.boto_utils import BotoUtils
 from common.constant import TransactionStatus
 from common.logger import get_logger
-from orchestrator.config import REGION_NAME, GET_CHANNEL_API_OLD_ARN, \
+from orchestrator.config import REGION_NAME, GET_CHANNELS_FOR_GROUP, \
     CREATE_CHANNEL_EVENT_ARN, GET_CHANNEL_TRANSACTIONS_ARN, GET_WALLETS_ARN, REGISTER_WALLET_ARN, SET_DEFAULT_WALLET_ARN
 
 logger = get_logger(__name__)
@@ -79,8 +79,6 @@ class WalletService:
 
     def get_channels_from_contract(self, user_address, org_id, group_id):
         event = {
-            "httpMethod": "GET",
-            "path": "/channel",
             "queryStringParameters": {
                 "user_address": user_address,
                 "org_id": org_id,
@@ -89,9 +87,10 @@ class WalletService:
         }
 
         channel_details_response = self.boto_client.invoke_lambda(
-            lambda_function_arn=GET_CHANNEL_API_OLD_ARN,
+            lambda_function_arn=GET_CHANNELS_FOR_GROUP,
             invocation_type="RequestResponse",
-            payload=json.dumps(event))
+            payload=json.dumps(event)
+        )
 
         if "statusCode" not in channel_details_response:
             logger.error(f"contract API boto call failed {channel_details_response}")

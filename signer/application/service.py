@@ -1,5 +1,6 @@
 from common.blockchain_util import BlockChainUtil
-from common.constant import ProviderType
+from common.constant import ProviderType, TokenSymbol
+from common.request_context import RequestContext
 from signer.application.schemas import (
     GetFreeCallSignatureRequest,
     GetSignatureForOpenChannelForThirdPartyRequest,
@@ -18,7 +19,6 @@ from signer.settings import settings
 
 class SignerService:
     def __init__(self):
-        self.signer = Signer()
         self.obj_blockchain_utils = BlockChainUtil(
             provider_type=ProviderType.http.value,
             provider=settings.network.networks[settings.network.id].http_provider,
@@ -27,11 +27,21 @@ class SignerService:
         self.daemon_client = DaemonClient()
         self.free_call_token_repository = FreeCallTokenInfoRepository()
 
-    def get_free_call_signature(self, username: str, request: GetFreeCallSignatureRequest):
+    def __get_token_from_origin(self, origin: str) -> TokenSymbol:
+        if "agix" in origin:
+            return TokenSymbol.AGIX
+        return TokenSymbol.FET
+
+    def get_free_call_signature(
+        self, req_ctx: RequestContext, request: GetFreeCallSignatureRequest
+    ):
+        token_name = self.__get_token_from_origin(req_ctx.origin)
+        signer = Signer(token_name)
+
         current_block = self.obj_blockchain_utils.get_current_block_no()
 
         free_call_token_info = self.free_call_token_repository.get_free_call_token_info_by_username(
-            username=username,
+            username=req_ctx.username,
             organization_id=request.organization_id,
             service_id=request.service_id,
             group_id=request.group_id,
@@ -46,20 +56,21 @@ class SignerService:
             or expiration_block_number is None
             or expiration_block_number <= current_block
         ):
-            signature_to_get_free_call_token = (
-                self.signer.generate_signature_to_get_free_call_token( address=settings.signer.address,
-                    username=username,
-                    organization_id=request.organization_id,
-                    service_id=request.service_id,
-                    group_id=request.group_id,
-                    current_block=current_block,
-                )
+            signature_to_get_free_call_token = signer.generate_signature_to_get_free_call_token(
+                address=settings.signer.address,
+                username=req_ctx.username,
+                organization_id=request.organization_id,
+                service_id=request.service_id,
+                group_id=request.group_id,
+                current_block=current_block,
             )
 
-            daemon_endpoint, free_calls_count = self.contract_api_client.get_daemon_endpoint_and_free_call_for_group(
-                org_id=request.organization_id,
-                service_id=request.service_id,
-                group_id=request.group_id
+            daemon_endpoint, free_calls_count = (
+                self.contract_api_client.get_daemon_endpoint_and_free_call_for_group(
+                    org_id=request.organization_id,
+                    service_id=request.service_id,
+                    group_id=request.group_id,
+                )
             )
 
             if free_calls_count == 0:
@@ -70,7 +81,7 @@ class SignerService:
                     address=settings.signer.address,
                     signature=signature_to_get_free_call_token,
                     current_block=current_block,
-                    username=username,
+                    username=req_ctx.username,
                     daemon_endpoint=daemon_endpoint,
                     token_lifetime_in_blocks=settings.signer.expiration_block_count,
                 )
@@ -79,7 +90,7 @@ class SignerService:
 
             free_call_token_info = (
                 self.free_call_token_repository.insert_or_update_free_call_token_info(
-                    username=username,
+                    username=req_ctx.username,
                     organization_id=request.organization_id,
                     service_id=request.service_id,
                     group_id=request.group_id,
@@ -88,9 +99,9 @@ class SignerService:
                 )
             )
 
-        signature = self.signer.generate_signature_for_free_call(
+        signature = signer.generate_signature_for_free_call(
             address=settings.signer.address,
-            username=username,
+            username=req_ctx.username,
             organization_id=request.organization_id,
             service_id=request.service_id,
             group_id=request.group_id,
@@ -107,26 +118,35 @@ class SignerService:
         }
 
     def get_signature_for_state_service(
-        self, username: str, request: GetSignatureForStateServiceRequest
+        self, req_ctx: RequestContext, request: GetSignatureForStateServiceRequest
     ):
-        return self.signer.signature_for_state_service(
-            username=username, channel_id=request.channel_id
+        token_name = self.__get_token_from_origin(req_ctx.origin)
+        signer = Signer(token_name)
+
+        return signer.signature_for_state_service(
+            username=req_ctx.username, channel_id=request.channel_id
         )
 
     def get_signature_for_regular_call(
-        self, username: str, request: GetSignatureForRegularCallRequest
+        self, req_ctx: RequestContext, request: GetSignatureForRegularCallRequest
     ):
-        return self.signer.signature_for_regular_call(
-            username=username,
+        token_name = self.__get_token_from_origin(req_ctx.origin)
+        signer = Signer(token_name)
+
+        return signer.signature_for_regular_call(
+            username=req_ctx.username,
             channel_id=request.channel_id,
             nonce=request.nonce,
             amount=request.amount,
         )
 
     def get_signature_for_open_channel_for_third_party(
-        self, request: GetSignatureForOpenChannelForThirdPartyRequest
+        self, req_ctx: RequestContext, request: GetSignatureForOpenChannelForThirdPartyRequest
     ):
-        return self.signer.signature_for_open_channel_for_third_party(
+        token_name = self.__get_token_from_origin(origin=req_ctx.origin)
+        signer = Signer(token_name)
+
+        return signer.signature_for_open_channel_for_third_party(
             recipient=request.recipient,
             group_id=request.group_id,
             amount_in_cogs=request.amount_in_cogs,

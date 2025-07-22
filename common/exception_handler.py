@@ -71,7 +71,7 @@ def worker_exception_handler(*decorator_args, **decorator_kwargs):
             try:
                 return handler(*args, **kwargs)
             except Exception as exc:
-                logger.exception(f"Exception in cron lambda handler: {handler_name}", exc_info=True)
+                logger.exception(f"Exception in cron/trigger lambda handler: {handler_name}", exc_info=True)
                 if not isinstance(exc, EXCEPTIONS_IGNORING_ALERT):
                     if isinstance(ALERTS_PROCESSOR, AlertsProcessor):
                         logger.info(f"Sending alert via {ALERTS_PROCESSOR.name}")

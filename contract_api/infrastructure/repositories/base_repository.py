@@ -1,7 +1,14 @@
+from functools import wraps
+
 from sqlalchemy import create_engine
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 
+from common.logger import get_logger
 from contract_api.config import NETWORKS, NETWORK_ID
+
+logger = get_logger(__name__)
+
 
 engine = create_engine(
     f"{NETWORKS[NETWORK_ID]['db']['DB_DRIVER']}://{NETWORKS[NETWORK_ID]['db']['DB_USER']}:"
@@ -16,6 +23,22 @@ default_session = Session()
 class BaseRepository:
     def __init__(self):
         self.session = default_session
+
+    @staticmethod
+    def write_ops(method):
+        @wraps(method)
+        def wrapper(self, *args, **kwargs):
+            try:
+                return method(self, *args, **kwargs)
+            except SQLAlchemyError as e:
+                logger.exception("Database error on write operations", exc_info = True)
+                self.session.rollback()
+                raise e
+            except Exception as e:
+                self.session.rollback()
+                raise e
+
+        return wrapper
 
     def add_item(self, item):
         try:
