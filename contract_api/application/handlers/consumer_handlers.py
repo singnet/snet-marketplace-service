@@ -32,7 +32,7 @@ def registry_event_consumer(event, context):
         if consumer is None:
             logger.info(f"Unhandled Registry event: {e}")
             continue
-        consumer.on_event(request = request)
+        consumer.on_event(request)
 
     return {}
 

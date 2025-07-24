@@ -19,10 +19,13 @@ engine = create_engine(
 Session = sessionmaker(bind=engine)
 default_session = Session()
 
-
+# TODO: Implement a context manager for session handling for proper session management
 class BaseRepository:
     def __init__(self):
         self.session = default_session
+
+    def __del__(self):
+        self.session.close()
 
     @staticmethod
     def write_ops(method):

@@ -1,9 +1,7 @@
 name: tests_demo
 on:
-  # push:
-  #   branches: [ "development" ]
   pull_request:
-    branches: [ "demo" ]
+    branches: [ "demo", "development" ]
   workflow_dispatch:
 
 jobs:
