@@ -50,7 +50,7 @@ class BlockChainUtil(object):
 
     def read_contract_address(self, net_id, path, token_name, stage, key='address'):
         contract = self.load_contract(path)
-        print(contract)
+        logger.info("contract: {}".format(contract))
         return Web3.to_checksum_address(contract[str(net_id)][token_name][stage][key])
 
     def contract_instance(self, contract_abi, address):
