@@ -8,6 +8,7 @@
     "serverless-latest-layer-version": "2.1.2"
   },
   "devDependencies": {
-    "serverless-offline": "^14.4.0"
+    "serverless-offline": "^14.4.0",
+    "singularitynet-platform-contracts": "2.1.0"
   }
 }

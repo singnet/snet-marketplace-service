@@ -1,0 +1,722 @@
+from typing import Optional
+
+from sqlalchemy import select, and_, or_, func, update, delete
+
+from contract_api.domain.factory.organization_factory import OrganizationFactory
+from contract_api.domain.models.offchain_service_attribute import (
+    OffchainServiceConfigDomain,
+    NewOffchainServiceConfigDomain,
+)
+from contract_api.domain.models.organization import OrganizationDomain
+from contract_api.domain.models.service import ServiceDomain, NewServiceDomain
+from contract_api.domain.models.service_endpoint import (
+    ServiceEndpointDomain,
+    NewServiceEndpointDomain,
+)
+from contract_api.domain.models.service_group import ServiceGroupDomain, NewServiceGroupDomain
+from contract_api.domain.models.service_media import ServiceMediaDomain, NewServiceMediaDomain
+from contract_api.domain.models.service_metadata import (
+    ServiceMetadataDomain,
+    NewServiceMetadataDomain,
+)
+from contract_api.domain.models.service_tag import ServiceTagDomain, NewServiceTagDomain
+from contract_api.infrastructure.models import (
+    ServiceEndpoint,
+    ServiceTags,
+    Service,
+    ServiceMetadata,
+    Organization,
+    ServiceMedia,
+    ServiceGroup,
+)
+from contract_api.infrastructure.models import OffchainServiceConfig
+from contract_api.infrastructure.repositories.base_repository import BaseRepository
+from contract_api.domain.factory.service_factory import ServiceFactory
+from contract_api.constant import SortKeys, SortOrder, FilterKeys
+
+from sqlalchemy.orm import Session
+
+
+class NewServiceRepository(BaseRepository):
+    def get_service_endpoint(
+        self, session: Session, org_id: str, service_id: str, group_id: str
+    ) -> str | None:
+        query = (
+            select(ServiceEndpoint.endpoint)
+            .where(
+                ServiceEndpoint.org_id == org_id,
+                ServiceEndpoint.service_id == service_id,
+                ServiceEndpoint.group_id == group_id,
+            )
+            .limit(1)
+        )
+
+        result = session.execute(query)
+        return result.scalar()
+
+    def get_unique_service_tags(self, session: Session) -> list[str]:
+        query = (
+            select(ServiceTags.tag_name)
+            .join(Service, ServiceTags.service_row_id == Service.row_id)
+            .where(Service.is_curated == True)
+            .distinct()
+        )
+
+        result = session.execute(query)
+        tags_db = result.all()
+
+        return [tag[0] for tag in tags_db]
+
+    def get_filtered_services(
+        self, session: Session, limit: int, page: int, sort: str, order: str, filters: dict, q: str
+    ) -> list[dict]:
+        query = (
+            select(
+                Service.org_id.label("orgId"),
+                Organization.organization_name.label("organizationName"),
+                Service.service_id.label("serviceId"),
+                ServiceMetadata.display_name.label("displayName"),
+                ServiceMetadata.service_rating["rating"].label("rating"),
+                ServiceMetadata.service_rating["total_users_rated"].label("numberOfRatings"),
+                ServiceMetadata.short_description.label("shortDescription"),
+                func.max(ServiceEndpoint.is_available).label("isAvailable"),
+                Organization.org_assets_url["hero_image"].label("orgImageUrl"),
+                ServiceMedia.url.label("serviceImageUrl"),
+            )
+            .join(ServiceMetadata, ServiceMetadata.service_row_id == Service.row_id)
+            .join(Organization, Organization.org_id == Service.org_id)
+            .join(ServiceEndpoint, ServiceEndpoint.service_row_id == Service.row_id, isouter=True)
+            .join(
+                ServiceMedia,
+                and_(
+                    ServiceMedia.service_row_id == Service.row_id,
+                    ServiceMedia.asset_type == "hero_image",
+                ),
+                isouter=True,
+            )
+            .where(Service.is_curated == True)
+            .group_by(
+                Service.org_id,
+                Organization.organization_name,
+                Service.service_id,
+                ServiceMetadata.display_name,
+                ServiceMetadata.service_rating["rating"],
+                ServiceMetadata.service_rating["total_users_rated"],
+                ServiceMetadata.short_description,
+                ServiceEndpoint.is_available,
+                Organization.org_assets_url["hero_image"],
+                ServiceMedia.url,
+            )
+        )
+
+        if filters:
+            query_filters = []
+
+            if FilterKeys.ORG_ID in filters and filters[FilterKeys.ORG_ID]:
+                query_filters.append(Service.org_id.in_(filters[FilterKeys.ORG_ID]))
+
+            if FilterKeys.TAG_NAME in filters and filters[FilterKeys.TAG_NAME]:
+                tag_subquery = (
+                    select(ServiceTags.service_row_id)
+                    .where(ServiceTags.tag_name.in_(filters[FilterKeys.TAG_NAME]))
+                    .subquery()
+                )
+                query_filters.append(Service.row_id.in_(tag_subquery))
+
+            if FilterKeys.ONLY_AVAILABLE in filters and filters[FilterKeys.ONLY_AVAILABLE]:
+                query_filters.append(ServiceEndpoint.is_available == True)
+
+            if query_filters:
+                query = query.where(and_(*query_filters))
+
+        if q:
+            search = f"%{q}%"
+            query = query.where(
+                or_(
+                    ServiceMetadata.display_name.ilike(search),
+                    ServiceMetadata.short_description.ilike(search),
+                )
+            )
+
+        sort_mapping = {
+            SortKeys.DISPLAY_NAME.value: ServiceMetadata.display_name,
+            SortKeys.RANKING.value: ServiceMetadata.ranking,
+            SortKeys.RATING.value: ServiceMetadata.service_rating["rating"].as_integer(),
+            SortKeys.NUMBER_OF_RATINGS.value: ServiceMetadata.service_rating[
+                "total_users_rated"
+            ].as_integer(),
+        }
+
+        if sort in sort_mapping:
+            sort_column = sort_mapping[sort]
+            if order == SortOrder.DESC:
+                sort_column = sort_column.desc()
+            query = query.order_by(sort_column)
+
+        query = query.limit(limit).offset((page - 1) * limit)
+
+        result = session.execute(query)
+
+        return [dict(row) for row in result.mappings().all()]
+
+    def get_filtered_services_count(self, session: Session, filters: dict, q: str) -> int | None:
+        subquery = (
+            select(Service.row_id)
+            .join(ServiceMetadata, ServiceMetadata.service_row_id == Service.row_id)
+            .join(Organization, Organization.org_id == Service.org_id)
+            .join(ServiceEndpoint, ServiceEndpoint.service_row_id == Service.row_id, isouter=True)
+            .where(Service.is_curated == True)
+        )
+
+        if filters:
+            query_filters = []
+
+            if FilterKeys.ORG_ID in filters and filters[FilterKeys.ORG_ID]:
+                query_filters.append(Service.org_id.in_(filters[FilterKeys.ORG_ID]))
+
+            if FilterKeys.TAG_NAME in filters and filters[FilterKeys.TAG_NAME]:
+                tag_subquery = (
+                    select(ServiceTags.service_row_id)
+                    .where(ServiceTags.tag_name.in_(filters[FilterKeys.TAG_NAME]))
+                    .subquery()
+                )
+                query_filters.append(Service.row_id.in_(tag_subquery))
+
+            if FilterKeys.ONLY_AVAILABLE in filters and filters[FilterKeys.ONLY_AVAILABLE]:
+                query_filters.append(ServiceEndpoint.is_available == True)
+
+            if query_filters:
+                subquery = subquery.where(and_(*query_filters))
+
+        if q:
+            search = f"%{q}%"
+            subquery = subquery.where(
+                or_(
+                    ServiceMetadata.display_name.ilike(search),
+                    ServiceMetadata.short_description.ilike(search),
+                )
+            )
+
+        count_query = select(func.count()).select_from(subquery.subquery())
+
+        result = session.execute(count_query)
+        return result.scalar()
+
+    def get_service(
+        self, session: Session, org_id: str, service_id: str
+    ) -> Optional[tuple[ServiceDomain, OrganizationDomain, ServiceMetadataDomain]]:
+        query = (
+            select(
+                Service,
+                Organization,
+                ServiceMetadata,
+            )
+            .join(Organization, Organization.org_id == Service.org_id)
+            .join(ServiceMetadata, ServiceMetadata.service_row_id == Service.row_id)
+            .where(
+                Service.org_id == org_id,
+                Service.service_id == service_id,
+                Service.is_curated == True,
+            )
+            .limit(1)
+        )
+
+        result = session.execute(query).first()
+
+        if not result:
+            return None
+
+        service, organization, service_metadata = result
+        return (
+            ServiceFactory.service_from_db_model(service),
+            OrganizationFactory.organization_from_db_model(organization),
+            ServiceFactory.service_metadata_from_db_model(service_metadata),
+        )
+
+    def get_service_media(
+        self, session: Session, org_id: str, service_id: str
+    ) -> list[ServiceMediaDomain]:
+        query = select(ServiceMedia).where(
+            ServiceMedia.org_id == org_id, ServiceMedia.service_id == service_id
+        )
+
+        result = session.execute(query)
+        service_media_db = result.scalars().all()
+
+        return ServiceFactory.service_media_from_db_model_list(service_media_db)
+
+    def get_service_groups(
+        self, session: Session, org_id: str, service_id: str
+    ) -> list[tuple[ServiceGroupDomain, ServiceEndpointDomain]]:
+        query = (
+            select(ServiceGroup, ServiceEndpoint)
+            .join(
+                ServiceEndpoint,
+                and_(
+                    ServiceEndpoint.service_row_id == ServiceGroup.service_row_id,
+                    ServiceEndpoint.group_id == ServiceGroup.group_id,
+                ),
+            )
+            .where(ServiceGroup.org_id == org_id, ServiceGroup.service_id == service_id)
+        )
+
+        result = session.execute(query)
+        groups_endpoints_db = result.all()
+
+        return [
+            (
+                ServiceFactory.service_group_from_db_model(group),
+                ServiceFactory.service_endpoint_from_db_model(endpoint),
+            )
+            for group, endpoint in groups_endpoints_db
+        ]
+
+    def get_service_tags(
+        self, session: Session, org_id: str, service_id: str
+    ) -> list[ServiceTagDomain]:
+        query = select(ServiceTags).where(
+            ServiceTags.org_id == org_id, ServiceTags.service_id == service_id
+        )
+
+        result = session.execute(query)
+        service_tags_db = result.scalars().all()
+
+        return ServiceFactory.service_tags_from_db_model_list(service_tags_db)
+
+    def get_offchain_service_configs(
+        self, session: Session, org_id: str, service_id: str
+    ) -> list[OffchainServiceConfigDomain]:
+        query = select(OffchainServiceConfig).where(
+            OffchainServiceConfig.org_id == org_id, OffchainServiceConfig.service_id == service_id
+        )
+
+        result = session.execute(query)
+        offchain_service_config_db = result.scalars().all()
+
+        return ServiceFactory.offchain_service_configs_from_db_model_list(
+            offchain_service_config_db
+        )
+
+    def get_service_metadata(
+        self, session: Session, org_id: str, service_id: str
+    ) -> Optional[ServiceMetadataDomain]:
+        query = (
+            select(ServiceMetadata)
+            .where(ServiceMetadata.org_id == org_id, ServiceMetadata.service_id == service_id)
+            .limit(1)
+        )
+
+        result = session.execute(query)
+        service_metadata_db = result.scalar_one_or_none()
+
+        if service_metadata_db is None:
+            return None
+
+        return ServiceFactory.service_metadata_from_db_model(service_metadata_db)
+
+    @BaseRepository.write_ops
+    def curate_service(self, session: Session, org_id: str, service_id: str, curate: bool) -> None:
+        query = (
+            update(Service)
+            .where(Service.org_id == org_id, Service.service_id == service_id)
+            .values(is_curated=curate)
+        )
+
+        session.execute(query)
+        session.commit()
+
+    @BaseRepository.write_ops
+    def upsert_offchain_service_config(
+        self, session: Session, offchain_service_configs: list[NewOffchainServiceConfigDomain]
+    ) -> list[OffchainServiceConfigDomain]:
+        for offchain_service_config in offchain_service_configs:
+            query = (
+                select(OffchainServiceConfig)
+                .where(
+                    OffchainServiceConfig.org_id == offchain_service_config.org_id,
+                    OffchainServiceConfig.service_id == offchain_service_config.service_id,
+                    OffchainServiceConfig.parameter_name == offchain_service_config.parameter_name,
+                )
+                .limit(1)
+            )
+
+            result = session.execute(query)
+            offchain_service_config_db = result.scalar_one_or_none()
+
+            if offchain_service_config_db is not None:
+                update_query = (
+                    update(OffchainServiceConfig)
+                    .where(
+                        OffchainServiceConfig.org_id == offchain_service_config.org_id,
+                        OffchainServiceConfig.service_id == offchain_service_config.service_id,
+                        OffchainServiceConfig.parameter_name
+                        == offchain_service_config.parameter_name,
+                    )
+                    .values(parameter_value=offchain_service_config.parameter_value)
+                )
+
+                session.execute(update_query)
+            else:
+                session.add(
+                    OffchainServiceConfig(
+                        org_id=offchain_service_config.org_id,
+                        service_id=offchain_service_config.service_id,
+                        parameter_name=offchain_service_config.parameter_name,
+                        parameter_value=offchain_service_config.parameter_value,
+                    )
+                )
+            session.commit()
+
+        if len(offchain_service_configs) == 0:
+            return []
+        return self.get_offchain_service_configs(
+            session=session,
+            org_id=offchain_service_configs[0].org_id,
+            service_id=offchain_service_configs[0].service_id,
+        )
+
+    @BaseRepository.write_ops
+    def delete_services(self, session: Session, org_id: str) -> None:
+        query = delete(Service).where(Service.org_id == org_id)
+        session.execute(query)
+
+        session.commit()
+
+    @BaseRepository.write_ops
+    def delete_service(self, session: Session, org_id: str, service_id: str) -> None:
+        query = delete(Service).where(Service.org_id == org_id, Service.service_id == service_id)
+        session.execute(query)
+
+        session.commit()
+
+    def get_services(
+        self,
+        session: Session,
+        org_id: str,
+    ) -> list[ServiceDomain]:
+        query = select(Service).where(Service.org_id == org_id)
+
+        result = session.execute(query)
+        services_db = result.scalars().all()
+
+        return ServiceFactory.services_from_db_model_list(services_db)
+
+    def delete_service_dependents(self, session: Session, org_id: str, service_id: str) -> None:
+        self._delete_service_groups(session, org_id, service_id)
+        self._delete_tags(session, org_id, service_id)
+        self._delete_service_endpoints(session, org_id, service_id)
+        session.commit()
+
+    def _delete_service_groups(self, session: Session, org_id: str, service_id: str) -> None:
+        query = delete(ServiceGroup).where(
+            ServiceGroup.org_id == org_id, ServiceGroup.service_id == service_id
+        )
+
+        session.execute(query)
+
+    def _delete_tags(self, session: Session, org_id: str, service_id: str) -> None:
+        query = delete(ServiceTags).where(
+            ServiceTags.org_id == org_id, ServiceTags.service_id == service_id
+        )
+
+        session.execute(query)
+
+    def _delete_service_endpoints(self, session: Session, org_id: str, service_id: str) -> None:
+        query = delete(ServiceEndpoint).where(
+            ServiceEndpoint.org_id == org_id, ServiceEndpoint.service_id == service_id
+        )
+
+        session.execute(query)
+
+    def upsert_service(self, session: Session, service: NewServiceDomain) -> ServiceDomain:
+        select_query = (
+            select(Service)
+            .where(Service.org_id == service.org_id, Service.service_id == service.service_id)
+            .limit(1)
+        )
+
+        result = session.execute(select_query)
+        service_db = result.scalar_one_or_none()
+
+        if service_db is not None:
+            query = (
+                update(Service)
+                .where(Service.org_id == service.org_id, Service.service_id == service.service_id)
+                .values(hash_uri=service.hash_uri, is_curated=service.is_curated)
+            )
+
+            session.execute(query)
+        else:
+            service_db = Service(
+                org_id=service.org_id,
+                service_id=service.service_id,
+                hash_uri=service.hash_uri,
+                is_curated=service.is_curated,
+            )
+
+            session.add(service_db)
+
+        session.commit()
+        result = session.execute(select_query)
+        service_db = result.scalar_one()
+
+        return ServiceFactory.service_from_db_model(service_db)
+
+    def upsert_service_metadata(
+        self, session: Session, service_metadata: NewServiceMetadataDomain
+    ) -> ServiceMetadataDomain:
+        select_query = (
+            select(ServiceMetadata)
+            .where(
+                ServiceMetadata.org_id == service_metadata.org_id,
+                ServiceMetadata.service_id == service_metadata.service_id,
+            )
+            .limit(1)
+        )
+
+        result = session.execute(select_query)
+        service_metadata_db = result.scalar_one_or_none()
+
+        if service_metadata_db is not None:
+            query = (
+                update(ServiceMetadata)
+                .where(
+                    ServiceMetadata.org_id == service_metadata.org_id,
+                    ServiceMetadata.service_id == service_metadata.service_id,
+                )
+                .values(
+                    service_row_id=service_metadata.service_row_id,
+                    display_name=service_metadata.display_name,
+                    description=service_metadata.description,
+                    short_description=service_metadata.short_description,
+                    url=service_metadata.url,
+                    json=service_metadata.json,
+                    model_hash=service_metadata.model_hash,
+                    encoding=service_metadata.encoding,
+                    type=service_metadata.type,
+                    mpe_address=service_metadata.mpe_address,
+                    assets_url=service_metadata.assets_url,
+                    assets_hash=service_metadata.assets_hash,
+                    contributors=service_metadata.contributors,
+                )
+            )
+
+            session.execute(query)
+        else:
+            default_service_rating = {"rating": 0.0, "total_users_rated": 0}
+
+            service_metadata_db = ServiceMetadata(
+                service_row_id=service_metadata.service_row_id,
+                org_id=service_metadata.org_id,
+                service_id=service_metadata.service_id,
+                display_name=service_metadata.display_name,
+                description=service_metadata.description,
+                short_description=service_metadata.short_description,
+                url=service_metadata.url,
+                json=service_metadata.json,
+                model_hash=service_metadata.model_hash,
+                encoding=service_metadata.encoding,
+                type=service_metadata.type,
+                mpe_address=service_metadata.mpe_address,
+                assets_url=service_metadata.assets_url,
+                assets_hash=service_metadata.assets_hash,
+                service_rating=default_service_rating,
+                contributors=service_metadata.contributors,
+            )
+            session.add(service_metadata_db)
+
+        result = session.execute(select_query)
+        service_metadata_db = result.scalar_one()
+
+        return ServiceFactory.service_metadata_from_db_model(service_metadata_db)
+
+    def upsert_service_group(self, session: Session, service_group: NewServiceGroupDomain) -> None:
+        query = (
+            select(ServiceGroup)
+            .where(
+                ServiceGroup.org_id == service_group.org_id,
+                ServiceGroup.service_id == service_group.service_id,
+                ServiceGroup.group_id == service_group.group_id,
+            )
+            .limit(1)
+        )
+
+        result = session.execute(query)
+        service_group_db = result.scalar_one_or_none()
+
+        if service_group_db is not None:
+            update_query = (
+                update(ServiceGroup)
+                .where(
+                    ServiceGroup.org_id == service_group.org_id,
+                    ServiceGroup.service_id == service_group.service_id,
+                    ServiceGroup.group_id == service_group.group_id,
+                )
+                .values(
+                    service_row_id=service_group.service_row_id,
+                    group_name=service_group.group_name,
+                    pricing=service_group.pricing,
+                    free_call_signer_address=service_group.free_call_signer_address,
+                    free_calls=service_group.free_calls,
+                )
+            )
+
+            session.execute(update_query)
+        else:
+            service_group_db = ServiceGroup(
+                service_row_id=service_group.service_row_id,
+                org_id=service_group.org_id,
+                service_id=service_group.service_id,
+                group_id=service_group.group_id,
+                group_name=service_group.group_name,
+                pricing=service_group.pricing,
+                free_call_signer_address=service_group.free_call_signer_address,
+                free_calls=service_group.free_calls,
+            )
+            session.add(service_group_db)
+
+    def upsert_service_endpoint(
+        self, session: Session, service_endpoint: NewServiceEndpointDomain
+    ) -> None:
+        query = (
+            select(ServiceEndpoint)
+            .where(
+                ServiceEndpoint.org_id == service_endpoint.org_id,
+                ServiceEndpoint.service_id == service_endpoint.service_id,
+                ServiceEndpoint.group_id == service_endpoint.group_id,
+            )
+            .limit(1)
+        )
+
+        result = session.execute(query)
+        service_endpoint_db = result.scalar_one_or_none()
+
+        if service_endpoint_db is not None:
+            update_query = (
+                update(ServiceEndpoint)
+                .where(
+                    ServiceEndpoint.org_id == service_endpoint.org_id,
+                    ServiceEndpoint.service_id == service_endpoint.service_id,
+                    ServiceEndpoint.group_id == service_endpoint.group_id,
+                )
+                .values(
+                    service_row_id=service_endpoint.service_row_id,
+                    endpoint=service_endpoint.endpoint,
+                    is_available=service_endpoint.is_available,
+                    last_check_timestamp=service_endpoint.last_check_timestamp,
+                )
+            )
+
+            session.execute(update_query)
+        else:
+            service_endpoint_db = ServiceEndpoint(
+                service_row_id=service_endpoint.service_row_id,
+                org_id=service_endpoint.org_id,
+                service_id=service_endpoint.service_id,
+                group_id=service_endpoint.group_id,
+                endpoint=service_endpoint.endpoint,
+                is_available=service_endpoint.is_available,
+                last_check_timestamp=service_endpoint.last_check_timestamp,
+            )
+            session.add(service_endpoint_db)
+
+    def create_service_tag(self, session: Session, service_tag: NewServiceTagDomain) -> None:
+        query = (
+            select(ServiceTags)
+            .where(
+                ServiceTags.service_row_id == service_tag.service_row_id,
+                ServiceTags.org_id == service_tag.org_id,
+                ServiceTags.service_id == service_tag.service_id,
+                ServiceTags.tag_name == service_tag.tag_name,
+            )
+            .limit(1)
+        )
+
+        result = session.execute(query)
+        service_tag_db = result.scalar_one_or_none()
+
+        if service_tag_db is None:
+            service_tag_db = ServiceTags(
+                service_row_id=service_tag.service_row_id,
+                org_id=service_tag.org_id,
+                service_id=service_tag.service_id,
+                tag_name=service_tag.tag_name,
+            )
+            session.add(service_tag_db)
+
+        session.execute(query)
+
+    def upsert_service_media(self, session: Session, service_media: NewServiceMediaDomain) -> None:
+        query = (
+            select(ServiceMedia)
+            .where(
+                ServiceMedia.org_id == service_media.org_id,
+                ServiceMedia.service_id == service_media.service_id,
+                ServiceMedia.asset_type == service_media.asset_type,
+            )
+            .limit(1)
+        )
+
+        result = session.execute(query)
+        service_media_db = result.scalar_one_or_none()
+
+        if service_media_db is not None:
+            update_query = (
+                update(ServiceMedia)
+                .where(
+                    ServiceMedia.org_id == service_media.org_id,
+                    ServiceMedia.service_id == service_media.service_id,
+                    ServiceMedia.asset_type == service_media.asset_type,
+                )
+                .values(
+                    service_row_id=service_media.service_row_id,
+                    url=service_media.url,
+                    order=service_media.order,
+                    file_type=service_media.file_type,
+                    alt_text=service_media.alt_text,
+                    hash_uri=service_media.hash_uri,
+                )
+            )
+
+            session.execute(update_query)
+        else:
+            service_media_db = ServiceMedia(
+                service_row_id=service_media.service_row_id,
+                org_id=service_media.org_id,
+                service_id=service_media.service_id,
+                url=service_media.url,
+                order=service_media.order,
+                file_type=service_media.file_type,
+                asset_type=service_media.asset_type,
+                alt_text=service_media.alt_text,
+                hash_uri=service_media.hash_uri,
+            )
+            session.add(service_media_db)
+
+    @BaseRepository.write_ops
+    def update_service_rating(
+        self, session: Session, org_id: str, service_id: str, rating: dict
+    ) -> None:
+        query = (
+            update(ServiceMetadata)
+            .where(ServiceMetadata.org_id == org_id, ServiceMetadata.service_id == service_id)
+            .values(service_rating=rating)
+            .returning()
+        )
+
+        session.execute(query)
+        session.commit()
+
+    def service_curated(self, session: Session, org_id: str, service_id: str) -> bool:
+        query = (
+            select(Service)
+            .where(Service.org_id == org_id, Service.service_id == service_id)
+            .limit(1)
+        )
+
+        result = session.execute(query)
+        service_db = result.scalar_one_or_none()
+        if service_db is None:
+            return False
+
+        return service_db.is_curated
