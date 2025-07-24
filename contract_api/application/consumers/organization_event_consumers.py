@@ -41,7 +41,7 @@ class OrganizationCreatedEventConsumer(EventConsumer):
         if org_data is not None and org_data[0]:
             with session_scope(self._session_factory) as session:
                 new_assets_hash = org_metadata.get("assets", {})
-                self._get_new_assets_url(session, org_id, org_metadata)
+                new_assets_url_mapping = self._get_new_assets_url(session, org_id, org_metadata)
                 description = org_metadata.get("description", "")
                 contacts = org_metadata.get("contacts", {})
 
@@ -52,7 +52,7 @@ class OrganizationCreatedEventConsumer(EventConsumer):
                         organization_name=org_metadata["org_name"],
                         owner_address=org_data[3],
                         org_metadata_uri=org_metadata_uri,
-                        org_assets_url={},
+                        org_assets_url=new_assets_url_mapping,
                         is_curated=True,
                         description=description,
                         assets_hash=new_assets_hash,

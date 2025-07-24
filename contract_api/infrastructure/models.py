@@ -109,10 +109,10 @@ class Service(Base):
         index=True
     )
     service_id: Mapped[str] = mapped_column("service_id", VARCHAR(128), nullable=False)
-    service_path: Mapped[str] = mapped_column("service_path", VARCHAR(128), nullable=True)
-    hash_uri: Mapped[str] = mapped_column("hash_uri", VARCHAR(128), nullable=True)
-    is_curated: Mapped[bool] = mapped_column("is_curated", BOOLEAN, nullable=True)
-    service_email: Mapped[str] = mapped_column("service_email", VARCHAR(128), nullable=True)
+    service_path: Mapped[str] = mapped_column("service_path", VARCHAR(128), nullable=True, default=null)
+    hash_uri: Mapped[str] = mapped_column("hash_uri", VARCHAR(128), nullable=True, default=null)
+    is_curated: Mapped[bool] = mapped_column("is_curated", BOOLEAN, nullable=True, default=null)
+    service_email: Mapped[str] = mapped_column("service_email", VARCHAR(128), nullable=True, default=null)
 
     created_on: Mapped[datetime] = mapped_column(
         "created_on", TIMESTAMP(timezone=False), nullable=False, server_default=CreateTimestamp
