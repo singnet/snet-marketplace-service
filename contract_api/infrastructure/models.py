@@ -78,10 +78,10 @@ class Organization(Base):
     __tablename__ = "organization"
     row_id: Mapped[int] = mapped_column("row_id", Integer, primary_key=True, autoincrement=True)
     org_id: Mapped[str] = mapped_column("org_id", VARCHAR(128), nullable=False, unique=True)
-    organization_name: Mapped[str] = mapped_column("organization_name", VARCHAR(128), nullable=True)
-    owner_address: Mapped[str] = mapped_column("owner_address", VARCHAR(256), nullable=True)
-    org_metadata_uri: Mapped[str] = mapped_column("org_metadata_uri", VARCHAR(128), nullable=True)
-    org_email: Mapped[str] = mapped_column("org_email", VARCHAR(128), nullable=True)
+    organization_name: Mapped[str] = mapped_column("organization_name", VARCHAR(128), nullable=True, default=null)
+    owner_address: Mapped[str] = mapped_column("owner_address", VARCHAR(256), nullable=True, default=null)
+    org_metadata_uri: Mapped[str] = mapped_column("org_metadata_uri", VARCHAR(128), nullable=True, default=null)
+    org_email: Mapped[str] = mapped_column("org_email", VARCHAR(128), nullable=True, default=null)
     org_assets_url: Mapped[dict] = mapped_column("org_assets_url", JSON, nullable=False, default={})
     is_curated: Mapped[bool]  = mapped_column("is_curated", BOOLEAN, nullable=True, default=null)
     description: Mapped[dict] = mapped_column("description", JSON, nullable=False, default={})
@@ -109,10 +109,10 @@ class Service(Base):
         index=True
     )
     service_id: Mapped[str] = mapped_column("service_id", VARCHAR(128), nullable=False)
-    service_path: Mapped[str] = mapped_column("service_path", VARCHAR(128), nullable=True)
-    hash_uri: Mapped[str] = mapped_column("hash_uri", VARCHAR(128), nullable=True)
-    is_curated: Mapped[bool] = mapped_column("is_curated", BOOLEAN, nullable=True)
-    service_email: Mapped[str] = mapped_column("service_email", VARCHAR(128), nullable=True)
+    service_path: Mapped[str] = mapped_column("service_path", VARCHAR(128), nullable=True, default=null)
+    hash_uri: Mapped[str] = mapped_column("hash_uri", VARCHAR(128), nullable=True, default=null)
+    is_curated: Mapped[bool] = mapped_column("is_curated", BOOLEAN, nullable=True, default=null)
+    service_email: Mapped[str] = mapped_column("service_email", VARCHAR(128), nullable=True, default=null)
 
     created_on: Mapped[datetime] = mapped_column(
         "created_on", TIMESTAMP(timezone=False), nullable=False, server_default=CreateTimestamp
