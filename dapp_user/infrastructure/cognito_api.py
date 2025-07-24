@@ -32,6 +32,9 @@ class CognitoUserManager(UserIdentityManager):
                     attr["Name"]: attr["Value"] for attr in user.get("Attributes", [])
                 }
 
+                if not attr_map.get("nickname"):
+                    continue
+
                 new_user = NewUser(
                     account_id=attr_map["sub"],
                     username=attr_map["email"],
