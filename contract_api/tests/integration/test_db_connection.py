@@ -2,14 +2,14 @@ from sqlalchemy import text
 
 
 def test_database_connection(db_session):
-    """Проверяем, что БД работает и миграции применены."""
+    """Check that the database works and migrations are applied."""
     result = db_session.execute(text("SELECT 1")).fetchone()  
     assert result[0] == 1
     
-    # Проверяем, что таблицы созданы
+    # Check that tables are created
     tables_result = db_session.execute(text("SHOW TABLES")).fetchall()      
     table_names = [row[0] for row in tables_result]
     
-    # Должна быть хотя бы таблица organization
+    # There should be at least the organization table
     assert 'organization' in table_names
-    print(f"✅ Найдены таблицы: {table_names}")
+    print(f"✅ Found tables: {table_names}")

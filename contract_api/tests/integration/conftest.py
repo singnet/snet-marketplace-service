@@ -15,7 +15,7 @@ from contract_api.domain.models.service_metadata import NewServiceMetadataDomain
 from contract_api.infrastructure.repositories.new_service_repository import NewServiceRepository
 from contract_api.domain.factory.service_factory import ServiceFactory
 
-# Строим URL из конфига (как в db.py)
+# Build URL from config (like in db.py)
 db_config = NETWORKS[NETWORK_ID]['db']
 TEST_DB_URL = (
     f"{db_config['DB_DRIVER']}://{db_config['DB_USER']}:{db_config['DB_PASSWORD']}"
@@ -26,35 +26,35 @@ engine = create_engine(TEST_DB_URL, pool_pre_ping=True)
 TestSession = sessionmaker(bind=engine)
 
 def cleanup_test_db():
-    """Очищаем тестовую базу данных."""
+    """Clean up the test database."""
     with engine.connect() as conn:
-        # Отключаем проверки внешних ключей
+        # Disable foreign key checks
         conn.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
         
-        # Получаем все таблицы и удаляем их
+        # Get all tables and drop them
         result = conn.execute(text("SHOW TABLES"))
         tables = [row[0] for row in result]
         
         for table in tables:
             conn.execute(text(f"DROP TABLE IF EXISTS {table}"))
         
-        # Включаем обратно проверки внешних ключей
+        # Re-enable foreign key checks
         conn.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
         conn.commit()
 
 @pytest.fixture(scope="session", autouse=True)
 def apply_migrations():
-    """Применяем alembic миграции для тестов."""
+    """Apply alembic migrations for tests."""
     alembic_cfg = Config("alembic.ini")
     alembic_cfg.set_main_option("sqlalchemy.url", TEST_DB_URL)
     command.upgrade(alembic_cfg, "head")
     yield
-    # Вместо downgrade просто очищаем базу
+    # Instead of downgrade, just clean up the database
     cleanup_test_db()
 
 @pytest.fixture(scope="function")
 def db_session():
-    """Создаём тестовую сессию для каждого теста."""
+    """Create a test session for each test."""
     session = TestSession()
     yield session
     session.rollback()
@@ -62,7 +62,7 @@ def db_session():
 
 @pytest.fixture(scope="function", autouse=True)
 def mock_db_session(db_session):
-    """Подменяем сессию в BaseRepository."""
+    """Replace the session in BaseRepository."""
     original_session = base_repository.default_session
     base_repository.default_session = db_session
     yield db_session
