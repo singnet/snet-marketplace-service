@@ -591,8 +591,11 @@ class TestGetServices:
         # Create multiple services
         org_data = test_data_factory.create_organization_data(org_id="test-org-pagination")
         org_repo.upsert_organization(db_session, org_data)
+        db_session.commit()
+
         group_data = test_data_factory.create_org_group_data(org_data.org_id)
         org_repo.create_org_groups(db_session, [group_data])
+        db_session.commit()
         
         # Create 5 services
         for i in range(5):
@@ -744,7 +747,8 @@ class TestGetServices:
                 service_id=f"service-rating-{i}"
             )
             service = service_repo.upsert_service(db_session, service_data)
-            
+            db_session.commit()
+
             metadata_data = test_data_factory.create_service_metadata_data(
                 service.row_id, 
                 base_organization.org_id, 
@@ -752,6 +756,7 @@ class TestGetServices:
                 display_name=f"Service Rating {i}"
             )
             service_repo.upsert_service_metadata(db_session, metadata_data)
+            db_session.commit()
             
             # Update rating
             service_repo.update_service_rating(
@@ -788,6 +793,7 @@ class TestGetServices:
         
         response = get_services(event, context=None)
         body = json.loads(response["body"])
+        print(body)
         services = body["data"]["services"]
         
         # Check that services are sorted by rating in descending order
@@ -800,8 +806,11 @@ class TestGetServices:
         # Create another organization with services
         org2_data = test_data_factory.create_organization_data(org_id="test-org-2")
         org_repo.upsert_organization(db_session, org2_data)
+        db_session.commit()
+
         group2_data = test_data_factory.create_org_group_data(org2_data.org_id)
         org_repo.create_org_groups(db_session, [group2_data])
+        db_session.commit()
         
         service2_data = test_data_factory.create_service_data(org2_data.org_id, service_id="service-org2")
         service2 = service_repo.upsert_service(db_session, service2_data)
@@ -933,7 +942,7 @@ class TestGetServices:
             service_id="unavailable-service"
         )
         service = service_repo.upsert_service(db_session, service_data)
-        
+        db_session.commit()
         metadata_data = test_data_factory.create_service_metadata_data(
             service.row_id, 
             base_organization.org_id, 
