@@ -4,10 +4,13 @@ from datetime import datetime, UTC
 from unittest.mock import patch
 
 from contract_api.application.handlers.service_handlers import get_service
-from contract_api.application.services.service_service import ServiceService
-from contract_api.exceptions import ServiceNotFoundException
 from contract_api.domain.models.service_tag import NewServiceTagDomain
 from contract_api.domain.models.service_media import NewServiceMediaDomain
+from contract_api.domain.models.service_group import NewServiceGroupDomain
+from contract_api.domain.models.org_group import NewOrgGroupDomain
+from contract_api.application.handlers.service_handlers import get_services
+from contract_api.constant import SortKeys, SortOrder, FilterKeys
+from contract_api.domain.models.service_endpoint import NewServiceEndpointDomain
 
 
 class TestGetService:
@@ -194,9 +197,7 @@ class TestGetService:
     def test_get_service_unavailable_endpoint(self, db_session, base_service, base_organization, service_repo, org_repo):
         """Test service with unavailable endpoint."""
         # Create unavailable endpoint
-        from contract_api.domain.models.service_endpoint import NewServiceEndpointDomain
-        from contract_api.domain.models.service_group import NewServiceGroupDomain
-        from contract_api.domain.models.org_group import NewOrgGroupDomain
+
         
         # First create org group for the unavailable group
         unavailable_org_group = NewOrgGroupDomain(
@@ -548,3 +549,704 @@ class TestGetService:
         
         # Service should be marked as unavailable
         assert data["isAvailable"] is False
+        
+
+class TestGetServices:
+    """Tests for get_services handler."""
+    
+    def test_get_services_basic(self, db_session, base_service):
+        """Test basic get services without filters."""
+        event = {
+            "body": json.dumps({
+                "limit": 10,
+                "page": 1,
+                "sort": SortKeys.DISPLAY_NAME.value,
+                "order": SortOrder.ASC.value,
+                "filter": {},
+                "q": ""
+            })
+        }
+        
+        response = get_services(event, context=None)
+        
+        assert response["statusCode"] == 200
+        body = json.loads(response["body"])
+        assert body["status"] == "success"
+        assert "data" in body
+        
+        data = body["data"]
+        assert "totalCount" in data
+        assert "services" in data
+        assert data["totalCount"] == 1
+        assert len(data["services"]) == 1
+        
+        service = data["services"][0]
+        assert service["orgId"] == base_service.org_id
+        assert service["serviceId"] == base_service.service_id
+        assert service["displayName"] == "Test Service"
+        assert service["isAvailable"] is True
+    
+    def test_get_services_pagination(self, db_session, org_repo, service_repo, test_data_factory):
+        """Test pagination functionality."""
+        # Create multiple services
+        org_data = test_data_factory.create_organization_data(org_id="test-org-pagination")
+        org_repo.upsert_organization(db_session, org_data)
+        group_data = test_data_factory.create_org_group_data(org_data.org_id)
+        org_repo.create_org_groups(db_session, [group_data])
+        
+        # Create 5 services
+        for i in range(5):
+            service_data = test_data_factory.create_service_data(
+                org_data.org_id, 
+                service_id=f"service-{i}"
+            )
+            service = service_repo.upsert_service(db_session, service_data)
+            
+            metadata_data = test_data_factory.create_service_metadata_data(
+                service.row_id, 
+                org_data.org_id, 
+                service_data.service_id,
+                display_name=f"Service {i}"
+            )
+            service_repo.upsert_service_metadata(db_session, metadata_data)
+            
+            # Add group and endpoint
+            group = test_data_factory.create_service_group_data(
+                service.row_id, org_data.org_id, service_data.service_id
+            )
+            service_repo.upsert_service_group(db_session, group)
+            
+            endpoint = test_data_factory.create_service_endpoint_data(
+                service.row_id, org_data.org_id, service_data.service_id
+            )
+            service_repo.upsert_service_endpoint(db_session, endpoint)
+        
+        db_session.commit()
+        
+        # Test first page
+        event = {
+            "body": json.dumps({
+                "limit": 2,
+                "page": 1,
+                "sort": SortKeys.DISPLAY_NAME.value,
+                "order": SortOrder.ASC.value,
+                "filter": {},
+                "q": ""
+            })
+        }
+        
+        response = get_services(event, context=None)
+        body = json.loads(response["body"])
+        data = body["data"]
+        
+        assert data["totalCount"] == 6  # 5 new + 1 from base_service
+        assert len(data["services"]) == 2
+        
+        # Test second page
+        event["body"] = json.dumps({
+            "limit": 2,
+            "page": 2,
+            "sort": SortKeys.DISPLAY_NAME.value,
+            "order": SortOrder.ASC.value,
+            "filter": {},
+            "q": ""
+        })
+        
+        response = get_services(event, context=None)
+        body = json.loads(response["body"])
+        data = body["data"]
+        
+        assert len(data["services"]) == 2
+    
+    def test_get_services_sort_by_display_name(self, db_session, org_repo, service_repo, test_data_factory, base_organization):
+        """Test sorting by display name."""
+        # Create services with different names
+        services_names = ["Zebra Service", "Alpha Service", "Beta Service"]
+        
+        for i, name in enumerate(services_names):
+            service_data = test_data_factory.create_service_data(
+                base_organization.org_id, 
+                service_id=f"service-sort-{i}"
+            )
+            service = service_repo.upsert_service(db_session, service_data)
+            
+            metadata_data = test_data_factory.create_service_metadata_data(
+                service.row_id, 
+                base_organization.org_id, 
+                service_data.service_id,
+                display_name=name
+            )
+            service_repo.upsert_service_metadata(db_session, metadata_data)
+            
+            # Add group and endpoint
+            group = test_data_factory.create_service_group_data(
+                service.row_id, base_organization.org_id, service_data.service_id
+            )
+            service_repo.upsert_service_group(db_session, group)
+            
+            endpoint = test_data_factory.create_service_endpoint_data(
+                service.row_id, base_organization.org_id, service_data.service_id
+            )
+            service_repo.upsert_service_endpoint(db_session, endpoint)
+        
+        db_session.commit()
+        
+        # Test ASC order
+        event = {
+            "body": json.dumps({
+                "limit": 10,
+                "page": 1,
+                "sort": SortKeys.DISPLAY_NAME.value,
+                "order": SortOrder.ASC.value,
+                "filter": {},
+                "q": ""
+            })
+        }
+        
+        response = get_services(event, context=None)
+        body = json.loads(response["body"])
+        services = body["data"]["services"]
+        
+        # Check ascending order
+        display_names = [s["displayName"] for s in services]
+        assert display_names == sorted(display_names)
+        
+        # Test DESC order
+        event["body"] = json.dumps({
+            "limit": 10,
+            "page": 1,
+            "sort": SortKeys.DISPLAY_NAME.value,
+            "order": SortOrder.DESC.value,
+            "filter": {},
+            "q": ""
+        })
+        
+        response = get_services(event, context=None)
+        body = json.loads(response["body"])
+        services = body["data"]["services"]
+        
+        # Check descending order
+        display_names = [s["displayName"] for s in services]
+        assert display_names == sorted(display_names, reverse=True)
+    
+    def test_get_services_sort_by_rating(self, db_session, org_repo, service_repo, test_data_factory, base_organization):
+        """Test sorting by rating."""
+        # Create services with different ratings
+        ratings = [
+            {"rating": 4.5, "total_users_rated": 100},
+            {"rating": 3.0, "total_users_rated": 50},
+            {"rating": 5.0, "total_users_rated": 200}
+        ]
+        
+        for i, rating_data in enumerate(ratings):
+            service_data = test_data_factory.create_service_data(
+                base_organization.org_id, 
+                service_id=f"service-rating-{i}"
+            )
+            service = service_repo.upsert_service(db_session, service_data)
+            
+            metadata_data = test_data_factory.create_service_metadata_data(
+                service.row_id, 
+                base_organization.org_id, 
+                service_data.service_id,
+                display_name=f"Service Rating {i}"
+            )
+            service_repo.upsert_service_metadata(db_session, metadata_data)
+            
+            # Update rating
+            service_repo.update_service_rating(
+                db_session, 
+                base_organization.org_id, 
+                service_data.service_id, 
+                rating_data
+            )
+            
+            # Add group and endpoint
+            group = test_data_factory.create_service_group_data(
+                service.row_id, base_organization.org_id, service_data.service_id
+            )
+            service_repo.upsert_service_group(db_session, group)
+            
+            endpoint = test_data_factory.create_service_endpoint_data(
+                service.row_id, base_organization.org_id, service_data.service_id
+            )
+            service_repo.upsert_service_endpoint(db_session, endpoint)
+        
+        db_session.commit()
+        
+        # Test sorting by rating DESC
+        event = {
+            "body": json.dumps({
+                "limit": 10,
+                "page": 1,
+                "sort": SortKeys.RATING.value,
+                "order": SortOrder.DESC.value,
+                "filter": {},
+                "q": ""
+            })
+        }
+        
+        response = get_services(event, context=None)
+        body = json.loads(response["body"])
+        services = body["data"]["services"]
+        
+        # Check that services are sorted by rating in descending order
+        ratings = [s["rating"] for s in services if s["rating"] > 0]
+        assert ratings == sorted(ratings, reverse=True)
+        assert ratings[0] == 5.0
+    
+    def test_get_services_filter_by_org_id(self, db_session, org_repo, service_repo, test_data_factory, base_service):
+        """Test filtering by organization ID."""
+        # Create another organization with services
+        org2_data = test_data_factory.create_organization_data(org_id="test-org-2")
+        org_repo.upsert_organization(db_session, org2_data)
+        group2_data = test_data_factory.create_org_group_data(org2_data.org_id)
+        org_repo.create_org_groups(db_session, [group2_data])
+        
+        service2_data = test_data_factory.create_service_data(org2_data.org_id, service_id="service-org2")
+        service2 = service_repo.upsert_service(db_session, service2_data)
+        
+        metadata2_data = test_data_factory.create_service_metadata_data(
+            service2.row_id, org2_data.org_id, service2_data.service_id
+        )
+        service_repo.upsert_service_metadata(db_session, metadata2_data)
+        
+        # Add group and endpoint for service2
+        group = test_data_factory.create_service_group_data(
+            service2.row_id, org2_data.org_id, service2_data.service_id
+        )
+        service_repo.upsert_service_group(db_session, group)
+        
+        endpoint = test_data_factory.create_service_endpoint_data(
+            service2.row_id, org2_data.org_id, service2_data.service_id
+        )
+        service_repo.upsert_service_endpoint(db_session, endpoint)
+        
+        db_session.commit()
+        
+        # Filter by first org
+        event = {
+            "body": json.dumps({
+                "limit": 10,
+                "page": 1,
+                "sort": SortKeys.DISPLAY_NAME.value,
+                "order": SortOrder.ASC.value,
+                "filter": {
+                    FilterKeys.ORG_ID.value: [base_service.org_id]
+                },
+                "q": ""
+            })
+        }
+        
+        response = get_services(event, context=None)
+        body = json.loads(response["body"])
+        data = body["data"]
+        
+        assert data["totalCount"] == 1
+        assert len(data["services"]) == 1
+        assert data["services"][0]["orgId"] == base_service.org_id
+        
+        # Filter by both orgs
+        event["body"] = json.dumps({
+            "limit": 10,
+            "page": 1,
+            "sort": SortKeys.DISPLAY_NAME.value,
+            "order": SortOrder.ASC.value,
+            "filter": {
+                FilterKeys.ORG_ID.value: [base_service.org_id, org2_data.org_id]
+            },
+            "q": ""
+        })
+        
+        response = get_services(event, context=None)
+        body = json.loads(response["body"])
+        data = body["data"]
+        
+        assert data["totalCount"] == 2
+        assert len(data["services"]) == 2
+    
+    def test_get_services_filter_by_tags(self, db_session, base_service, service_repo):
+        """Test filtering by tags."""
+        # Add tags to base service
+        tag1 = NewServiceTagDomain(
+            service_row_id=base_service.row_id,
+            org_id=base_service.org_id,
+            service_id=base_service.service_id,
+            tag_name="ai"
+        )
+        tag2 = NewServiceTagDomain(
+            service_row_id=base_service.row_id,
+            org_id=base_service.org_id,
+            service_id=base_service.service_id,
+            tag_name="nlp"
+        )
+        service_repo.create_service_tag(db_session, tag1)
+        service_repo.create_service_tag(db_session, tag2)
+        
+        db_session.commit()
+        
+        # Filter by one tag
+        event = {
+            "body": json.dumps({
+                "limit": 10,
+                "page": 1,
+                "sort": SortKeys.DISPLAY_NAME.value,
+                "order": SortOrder.ASC.value,
+                "filter": {
+                    FilterKeys.TAG_NAME.value: ["ai"]
+                },
+                "q": ""
+            })
+        }
+        
+        response = get_services(event, context=None)
+        body = json.loads(response["body"])
+        data = body["data"]
+        
+        assert data["totalCount"] == 1
+        assert len(data["services"]) == 1
+        
+        # Filter by non-existent tag
+        event["body"] = json.dumps({
+            "limit": 10,
+            "page": 1,
+            "sort": SortKeys.DISPLAY_NAME.value,
+            "order": SortOrder.ASC.value,
+            "filter": {
+                FilterKeys.TAG_NAME.value: ["blockchain"]
+            },
+            "q": ""
+        })
+        
+        response = get_services(event, context=None)
+        body = json.loads(response["body"])
+        data = body["data"]
+        
+        assert data["totalCount"] == 0
+        assert len(data["services"]) == 0
+    
+    def test_get_services_filter_only_available(self, db_session, org_repo, service_repo, test_data_factory, base_organization):
+        """Test filtering only available services."""
+        # Create service with unavailable endpoint
+        service_data = test_data_factory.create_service_data(
+            base_organization.org_id, 
+            service_id="unavailable-service"
+        )
+        service = service_repo.upsert_service(db_session, service_data)
+        
+        metadata_data = test_data_factory.create_service_metadata_data(
+            service.row_id, 
+            base_organization.org_id, 
+            service_data.service_id,
+            display_name="Unavailable Service"
+        )
+        service_repo.upsert_service_metadata(db_session, metadata_data)
+        
+        # Add group and unavailable endpoint
+        group = test_data_factory.create_service_group_data(
+            service.row_id, base_organization.org_id, service_data.service_id
+        )
+        service_repo.upsert_service_group(db_session, group)
+        
+        endpoint = test_data_factory.create_service_endpoint_data(
+            service.row_id, 
+            base_organization.org_id, 
+            service_data.service_id,
+            is_available=False
+        )
+        service_repo.upsert_service_endpoint(db_session, endpoint)
+        
+        db_session.commit()
+        
+        # Filter only available
+        event = {
+            "body": json.dumps({
+                "limit": 10,
+                "page": 1,
+                "sort": SortKeys.DISPLAY_NAME.value,
+                "order": SortOrder.ASC.value,
+                "filter": {
+                    FilterKeys.ONLY_AVAILABLE.value: True
+                },
+                "q": ""
+            })
+        }
+        
+        response = get_services(event, context=None)
+        body = json.loads(response["body"])
+        data = body["data"]
+        
+        # Should only return services with available endpoints
+        assert data["totalCount"] == 1
+        assert all(s["isAvailable"] for s in data["services"])
+    
+    def test_get_services_search_query(self, db_session, org_repo, service_repo, test_data_factory, base_organization):
+        """Test search functionality."""
+        # Create services with searchable content
+        services_data = [
+            ("neural-network", "Neural Network Service", "Deep learning neural networks"),
+            ("image-recognition", "Image Recognition", "Computer vision and image analysis"),
+            ("text-analysis", "Text Analysis", "Natural language processing")
+        ]
+        
+        for service_id, display_name, description in services_data:
+            service_data = test_data_factory.create_service_data(
+                base_organization.org_id, 
+                service_id=service_id
+            )
+            service = service_repo.upsert_service(db_session, service_data)
+            
+            metadata_data = test_data_factory.create_service_metadata_data(
+                service.row_id, 
+                base_organization.org_id, 
+                service_data.service_id,
+                display_name=display_name,
+                short_description=description
+            )
+            service_repo.upsert_service_metadata(db_session, metadata_data)
+            
+            # Add group and endpoint
+            group = test_data_factory.create_service_group_data(
+                service.row_id, base_organization.org_id, service_data.service_id
+            )
+            service_repo.upsert_service_group(db_session, group)
+            
+            endpoint = test_data_factory.create_service_endpoint_data(
+                service.row_id, base_organization.org_id, service_data.service_id
+            )
+            service_repo.upsert_service_endpoint(db_session, endpoint)
+        
+        db_session.commit()
+        
+        # Search by display name
+        event = {
+            "body": json.dumps({
+                "limit": 10,
+                "page": 1,
+                "sort": SortKeys.DISPLAY_NAME.value,
+                "order": SortOrder.ASC.value,
+                "filter": {},
+                "q": "neural"
+            })
+        }
+        
+        response = get_services(event, context=None)
+        body = json.loads(response["body"])
+        data = body["data"]
+        
+        assert data["totalCount"] == 1
+        assert "neural" in data["services"][0]["displayName"].lower()
+        
+        # Search by description
+        event["body"] = json.dumps({
+            "limit": 10,
+            "page": 1,
+            "sort": SortKeys.DISPLAY_NAME.value,
+            "order": SortOrder.ASC.value,
+            "filter": {},
+            "q": "vision"
+        })
+        
+        response = get_services(event, context=None)
+        body = json.loads(response["body"])
+        data = body["data"]
+        
+        assert data["totalCount"] == 1
+        assert "vision" in data["services"][0]["shortDescription"].lower()
+    
+    def test_get_services_with_media(self, db_session, base_service, service_repo):
+        """Test services with media (hero image)."""
+        # Add hero image to base service
+        hero_media = NewServiceMediaDomain(
+            service_row_id=base_service.row_id,
+            org_id=base_service.org_id,
+            service_id=base_service.service_id,
+            url="https://example.com/hero.jpg",
+            order=1,
+            file_type="image",
+            asset_type="hero_image",
+            alt_text="Hero image",
+            hash_uri="ipfs://hero-hash"
+        )
+        service_repo.upsert_service_media(db_session, hero_media)
+        
+        db_session.commit()
+        
+        event = {
+            "body": json.dumps({
+                "limit": 10,
+                "page": 1,
+                "sort": SortKeys.DISPLAY_NAME.value,
+                "order": SortOrder.ASC.value,
+                "filter": {},
+                "q": ""
+            })
+        }
+        
+        response = get_services(event, context=None)
+        body = json.loads(response["body"])
+        data = body["data"]
+        
+        assert len(data["services"]) == 1
+        service = data["services"][0]
+        assert "serviceImageUrl" in service
+        assert service["serviceImageUrl"] == "https://example.com/hero.jpg"
+    
+    def test_get_services_invalid_sort_key(self):
+        """Test with invalid sort key."""
+        event = {
+            "body": json.dumps({
+                "limit": 10,
+                "page": 1,
+                "sort": "invalidSort",
+                "order": SortOrder.ASC.value,
+                "filter": {},
+                "q": ""
+            })
+        }
+        
+        response = get_services(event, context=None)
+        
+        assert response["statusCode"] == 400
+        body = json.loads(response["body"])
+        assert "Invalid sort parameter" in str(body)
+    
+    def test_get_services_invalid_order(self):
+        """Test with invalid order."""
+        event = {
+            "body": json.dumps({
+                "limit": 10,
+                "page": 1,
+                "sort": SortKeys.DISPLAY_NAME.value,
+                "order": "invalidOrder",
+                "filter": {},
+                "q": ""
+            })
+        }
+        
+        response = get_services(event, context=None)
+        
+        assert response["statusCode"] == 400
+        body = json.loads(response["body"])
+        assert "Invalid order parameter" in str(body)
+    
+    def test_get_services_invalid_filter_key(self):
+        """Test with invalid filter key."""
+        event = {
+            "body": json.dumps({
+                "limit": 10,
+                "page": 1,
+                "sort": SortKeys.DISPLAY_NAME.value,
+                "order": SortOrder.ASC.value,
+                "filter": {
+                    "invalidFilter": ["value"]
+                },
+                "q": ""
+            })
+        }
+        
+        response = get_services(event, context=None)
+        
+        assert response["statusCode"] == 400
+        body = json.loads(response["body"])
+        assert "Invalid filter parameter" in str(body)
+    
+    def test_get_services_empty_result(self, db_session):
+        """Test when no services match criteria."""
+        event = {
+            "body": json.dumps({
+                "limit": 10,
+                "page": 1,
+                "sort": SortKeys.DISPLAY_NAME.value,
+                "order": SortOrder.ASC.value,
+                "filter": {},
+                "q": "nonexistentservice123456"
+            })
+        }
+        
+        response = get_services(event, context=None)
+        
+        assert response["statusCode"] == 200
+        body = json.loads(response["body"])
+        data = body["data"]
+        
+        assert data["totalCount"] == 0
+        assert len(data["services"]) == 0
+    
+    def test_get_services_uncurated_excluded(self, db_session, org_repo, service_repo, test_data_factory, base_organization):
+        """Test that uncurated services are excluded."""
+        # Create uncurated service
+        service_data = test_data_factory.create_service_data(
+            base_organization.org_id, 
+            service_id="uncurated-service",
+            is_curated=False
+        )
+        service = service_repo.upsert_service(db_session, service_data)
+        
+        metadata_data = test_data_factory.create_service_metadata_data(
+            service.row_id, 
+            base_organization.org_id, 
+            service_data.service_id
+        )
+        service_repo.upsert_service_metadata(db_session, metadata_data)
+        
+        db_session.commit()
+        
+        event = {
+            "body": json.dumps({
+                "limit": 10,
+                "page": 1,
+                "sort": SortKeys.DISPLAY_NAME.value,
+                "order": SortOrder.ASC.value,
+                "filter": {},
+                "q": ""
+            })
+        }
+        
+        response = get_services(event, context=None)
+        body = json.loads(response["body"])
+        data = body["data"]
+        
+        # Should only return curated services
+        assert data["totalCount"] == 1  # Only base_service
+        assert all(s["serviceId"] != "uncurated-service" for s in data["services"])
+    
+    def test_get_services_invalid_body(self):
+        """Test with invalid request body."""
+        event = {
+            "body": "invalid json"
+        }
+        
+        response = get_services(event, context=None)
+        assert response["statusCode"] == 400
+    
+    def test_get_services_missing_required_fields(self):
+        """Test with missing required fields."""
+        event = {
+            "body": json.dumps({
+                "limit": 10,
+                # Missing page, sort, order
+            })
+        }
+        
+        response = get_services(event, context=None)
+        assert response["statusCode"] == 400
+    
+    @patch('contract_api.application.services.service_service.ServiceService.get_services')
+    def test_get_services_internal_error(self, mock_get_services):
+        """Test internal error handling."""
+        mock_get_services.side_effect = Exception("Database error")
+        
+        event = {
+            "body": json.dumps({
+                "limit": 10,
+                "page": 1,
+                "sort": SortKeys.DISPLAY_NAME.value,
+                "order": SortOrder.ASC.value,
+                "filter": {},
+                "q": ""
+            })
+        }
+        
+        response = get_services(event, context=None)
+        assert response["statusCode"] == 500
