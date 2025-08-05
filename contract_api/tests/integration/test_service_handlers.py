@@ -11,15 +11,15 @@ from contract_api.domain.models.service_media import NewServiceMediaDomain
 
 
 class TestGetService:
-    """Тесты для хендлера get_service."""
+    """Tests for get_service handler."""
     
     def test_get_service_success(self, db_session, base_service, base_organization, service_repo):
-        """Тест успешного получения сервиса."""
-        # Подготовка
+        """Test successful service retrieval."""
+        # Setup
         org_id = base_organization.org_id
         service_id = base_service.service_id
         
-        # Добавляем теги
+        # Add tags
         tag1 = NewServiceTagDomain(
             service_row_id=base_service.row_id,
             org_id=org_id,
@@ -35,7 +35,7 @@ class TestGetService:
         service_repo.create_service_tag(db_session, tag1)
         service_repo.create_service_tag(db_session, tag2)
         
-        # Добавляем медиа
+        # Add media
         hero_media = NewServiceMediaDomain(
             service_row_id=base_service.row_id,
             org_id=org_id,
@@ -63,7 +63,7 @@ class TestGetService:
         
         db_session.commit()
         
-        # Формируем event для Lambda
+        # Create Lambda event
         event = {
             "pathParameters": {
                 "orgId": org_id,
@@ -71,10 +71,10 @@ class TestGetService:
             }
         }
         
-        # Выполнение
+        # Execute
         response = get_service(event, context=None)
         
-        # Проверки
+        # Assertions
         assert response["statusCode"] == 200
         
         body = json.loads(response["body"])
@@ -83,7 +83,7 @@ class TestGetService:
         
         data = body["data"]
         
-        # Проверяем основные поля
+        # Check main fields
         assert data["orgId"] == org_id
         assert data["serviceId"] == service_id
         assert data["displayName"] == "Test Service"
@@ -91,16 +91,16 @@ class TestGetService:
         assert data["shortDescription"] == "Short test description"
         assert data["organizationName"] == "Test Organization"
         
-        # Проверяем контакты
+        # Check contacts
         assert "supportContacts" in data
         assert data["supportContacts"]["email"] == "support@test.com"
         assert data["supportContacts"]["phone"] == "+1234567890"
         
-        # Проверяем теги
+        # Check tags
         assert "tags" in data
         assert set(data["tags"]) == {"ai", "machine-learning"}
         
-        # Проверяем медиа
+        # Check media
         assert "media" in data
         assert len(data["media"]) == 2
         media_by_type = {m["assetType"]: m for m in data["media"]}
@@ -108,7 +108,7 @@ class TestGetService:
         assert "media_gallery" in media_by_type
         assert media_by_type["hero_image"]["url"] == "https://example.com/hero.jpg"
         
-        # Проверяем группы и эндпоинты
+        # Check groups and endpoints
         assert "groups" in data
         assert len(data["groups"]) == 1
         group = data["groups"][0]
@@ -120,23 +120,23 @@ class TestGetService:
         assert endpoint["endpoint"] == "https://test-service-endpoint.com:8080"
         assert endpoint["isAvailable"] is True
         
-        # Проверяем доступность
+        # Check availability
         assert data["isAvailable"] is True
         
-        # Проверяем demo component
+        # Check demo component
         assert "demoComponentRequired" in data
         assert data["demoComponentRequired"] is False
         
-        # Проверяем рейтинг
+        # Check rating
         assert data["rating"] == 0.0
         assert data["numberOfRatings"] == 0
         
-        # Проверяем contributors
+        # Check contributors
         assert "contributors" in data
         assert data["contributors"] == ["Test Developer"]
     
     def test_get_service_not_found(self, db_session):
-        """Тест получения несуществующего сервиса."""
+        """Test getting non-existent service."""
         event = {
             "pathParameters": {
                 "orgId": "non-existent-org",
@@ -148,27 +148,26 @@ class TestGetService:
         
         assert response["statusCode"] == 400
         body = json.loads(response["body"])
-        # Проверяем что ошибка содержит информацию о том, что сервис не найден
-        # Структура может быть {"status": "error", "message": "..."} или другая
-        assert "Service not found" in str(body).lower() or "not found" in str(body).lower()
+        # Check that error contains information about service not found
+        assert "Service not found" in str(body) or "not found" in str(body).lower()
     
     def test_get_service_uncurated(self, db_session, org_repo, service_repo, test_data_factory):
-        """Тест получения некурированного сервиса (должен возвращать 404)."""
-        # Создаем организацию
+        """Test getting uncurated service (should return 404)."""
+        # Create organization
         org_data = test_data_factory.create_organization_data(org_id="test-org-uncurated")
         org_repo.upsert_organization(db_session, org_data)
-        db_session.commit()  # Сначала сохраняем организацию
+        db_session.commit()  # First save organization
         
-        # Создаем группу
+        # Create group
         group_data = test_data_factory.create_org_group_data(org_data.org_id)
         org_repo.create_org_groups(db_session, [group_data])
-        db_session.commit()  # Потом сохраняем группу
+        db_session.commit()  # Then save group
 
-        # Создаем некурированный сервис
+        # Create uncurated service
         service_data = test_data_factory.create_service_data(
             org_data.org_id, 
             service_id="uncurated-service",
-            is_curated=False  # Некурированный
+            is_curated=False  # Uncurated
         )
         service = service_repo.upsert_service(db_session, service_data)
         
@@ -190,25 +189,29 @@ class TestGetService:
         
         assert response["statusCode"] == 400
         body = json.loads(response["body"])
-        assert "Service not found" in str(body).lower() or "not found" in str(body).lower()
+        assert "Service not found" in str(body) or "not found" in str(body).lower()
     
-    def test_get_service_unavailable_endpoint(self, db_session, base_service, base_organization, service_repo):
-        """Тест сервиса с недоступным эндпоинтом."""
-        # Создаем недоступный эндпоинт
+    def test_get_service_unavailable_endpoint(self, db_session, base_service, base_organization, service_repo, org_repo):
+        """Test service with unavailable endpoint."""
+        # Create unavailable endpoint
         from contract_api.domain.models.service_endpoint import NewServiceEndpointDomain
-        
-        unavailable_endpoint = NewServiceEndpointDomain(
-            service_row_id=base_service.row_id,
-            org_id=base_organization.org_id,
-            service_id=base_service.service_id,
-            group_id="unavailable-group",
-            endpoint="https://unavailable-endpoint.com:8080",
-            is_available=False,
-            last_check_timestamp=datetime.now(UTC)
-        )
-        
-        # Создаем группу для этого эндпоинта
         from contract_api.domain.models.service_group import NewServiceGroupDomain
+        from contract_api.domain.models.org_group import NewOrgGroupDomain
+        
+        # First create org group for the unavailable group
+        unavailable_org_group = NewOrgGroupDomain(
+            org_id=base_organization.org_id,
+            group_id="unavailable-group",
+            group_name="Unavailable Group",
+            payment={
+                "payment_address": "0xabcdef1234567890",
+                "payment_expiration_threshold": 3600,
+                "payment_channel_storage_type": "etcd"
+            }
+        )
+        org_repo.create_org_groups(db_session, [unavailable_org_group])
+        
+        # Create service group
         unavailable_group = NewServiceGroupDomain(
             service_row_id=base_service.row_id,
             org_id=base_organization.org_id,
@@ -218,6 +221,17 @@ class TestGetService:
             free_call_signer_address="0xabcdef1234567890",
             free_calls=0,
             pricing=[]
+        )
+        
+        # Create unavailable endpoint
+        unavailable_endpoint = NewServiceEndpointDomain(
+            service_row_id=base_service.row_id,
+            org_id=base_organization.org_id,
+            service_id=base_service.service_id,
+            group_id="unavailable-group",
+            endpoint="https://unavailable-endpoint.com:8080",
+            is_available=False,
+            last_check_timestamp=datetime.now(UTC)
         )
         
         service_repo.upsert_service_group(db_session, unavailable_group)
@@ -237,11 +251,11 @@ class TestGetService:
         body = json.loads(response["body"])
         data = body["data"]
         
-        # Должно быть 2 группы, но общая доступность True из-за базового эндпоинта
+        # Should be 2 groups, but overall availability True due to base endpoint
         assert len(data["groups"]) == 2
-        assert data["isAvailable"] is True  # Есть хотя бы один доступный эндпоинт
+        assert data["isAvailable"] is True  # At least one available endpoint exists
         
-        # Проверяем, что недоступный эндпоинт помечен правильно
+        # Check that unavailable endpoint is marked correctly
         unavailable_group_data = None
         for group in data["groups"]:
             if group["groupId"] == "unavailable-group":
@@ -252,8 +266,8 @@ class TestGetService:
         assert unavailable_group_data["endpoints"][0]["isAvailable"] is False
     
     def test_get_service_with_rating(self, db_session, base_service, base_organization, service_repo):
-        """Тест сервиса с рейтингом."""
-        # Обновляем рейтинг через репозиторий
+        """Test service with rating."""
+        # Update rating through repository
         rating_data = {
             "rating": 4.5,
             "total_users_rated": 150
@@ -283,8 +297,8 @@ class TestGetService:
         assert data["numberOfRatings"] == 150
     
     def test_get_service_invalid_path_parameters(self):
-        """Тест с неверными параметрами пути."""
-        # Тест без orgId
+        """Test with invalid path parameters."""
+        # Test without orgId
         event = {
             "pathParameters": {
                 "serviceId": "test-service"
@@ -294,7 +308,7 @@ class TestGetService:
         response = get_service(event, context=None)
         assert response["statusCode"] == 400
         
-        # Тест без serviceId
+        # Test without serviceId
         event = {
             "pathParameters": {
                 "orgId": "test-org"
@@ -304,14 +318,14 @@ class TestGetService:
         response = get_service(event, context=None)
         assert response["statusCode"] == 400
         
-        # Тест без pathParameters
+        # Test without pathParameters
         event = {}
         
         response = get_service(event, context=None)
         assert response["statusCode"] == 400
     
     def test_get_service_empty_values(self):
-        """Тест с пустыми значениями параметров."""
+        """Test with empty parameter values."""
         event = {
             "pathParameters": {
                 "orgId": "",
@@ -324,7 +338,7 @@ class TestGetService:
     
     @patch('contract_api.application.services.service_service.ServiceService.get_service')
     def test_get_service_internal_error(self, mock_get_service, base_organization):
-        """Тест обработки внутренней ошибки."""
+        """Test internal error handling."""
         mock_get_service.side_effect = Exception("Database error")
         
         event = {
@@ -338,7 +352,7 @@ class TestGetService:
         assert response["statusCode"] == 500
     
     def test_get_service_cors_headers(self, db_session, base_service, base_organization):
-        """Тест наличия CORS заголовков."""
+        """Test CORS headers presence."""
         event = {
             "pathParameters": {
                 "orgId": base_organization.org_id,
@@ -350,11 +364,12 @@ class TestGetService:
         
         assert response["statusCode"] == 200
         assert "headers" in response
-        # Проверяем наличие CORS заголовков (если они добавляются в хендлере)
-        # В текущем коде CORS настраивается в serverless.yml, но можно проверить структуру ответа
+        # Check for CORS headers
+        assert response["headers"]["Access-Control-Allow-Origin"] == "*"
+        assert "Access-Control-Allow-Headers" in response["headers"]
     
     def test_get_service_multiple_media_types(self, db_session, base_service, base_organization, service_repo):
-        """Тест сервиса с разными типами медиа."""
+        """Test service with different media types."""
         media_items = [
             NewServiceMediaDomain(
                 service_row_id=base_service.row_id,
@@ -411,7 +426,125 @@ class TestGetService:
         
         assert len(data["media"]) == 3
         
-        # Проверяем, что все типы медиа присутствуют
+        # Check that all media types are present
         asset_types = {m["assetType"] for m in data["media"]}
         expected_types = {"hero_image", "media_gallery", "grpc-stub/python"}
         assert asset_types == expected_types
+    
+    def test_get_service_without_tags(self, db_session, base_service, base_organization):
+        """Test service without any tags."""
+        event = {
+            "pathParameters": {
+                "orgId": base_organization.org_id,
+                "serviceId": base_service.service_id
+            }
+        }
+        
+        response = get_service(event, context=None)
+        
+        assert response["statusCode"] == 200
+        body = json.loads(response["body"])
+        data = body["data"]
+        
+        # Service should have empty tags list
+        assert "tags" in data
+        assert data["tags"] == []
+    
+    def test_get_service_without_media(self, db_session, base_service, base_organization):
+        """Test service without any media."""
+        event = {
+            "pathParameters": {
+                "orgId": base_organization.org_id,
+                "serviceId": base_service.service_id
+            }
+        }
+        
+        response = get_service(event, context=None)
+        
+        assert response["statusCode"] == 200
+        body = json.loads(response["body"])
+        data = body["data"]
+        
+        # Service should have empty media list
+        assert "media" in data
+        assert data["media"] == []
+    
+    def test_get_service_with_demo_component_config(self, db_session, base_service, base_organization, service_repo):
+        """Test service with demo component configuration."""
+        from contract_api.domain.models.offchain_service_attribute import NewOffchainServiceConfigDomain
+        
+        # Add demo component config
+        demo_config = NewOffchainServiceConfigDomain(
+            org_id=base_organization.org_id,
+            service_id=base_service.service_id,
+            parameter_name="demo_component_required",
+            parameter_value="1"
+        )
+        
+        service_repo.upsert_offchain_service_config(db_session, [demo_config])
+        db_session.commit()
+        
+        event = {
+            "pathParameters": {
+                "orgId": base_organization.org_id,
+                "serviceId": base_service.service_id
+            }
+        }
+        
+        response = get_service(event, context=None)
+        
+        assert response["statusCode"] == 200
+        body = json.loads(response["body"])
+        data = body["data"]
+        
+        # Demo component should be required
+        assert data["demoComponentRequired"] is True
+    
+    def test_get_service_all_endpoints_unavailable(self, db_session, org_repo, service_repo, test_data_factory):
+        """Test service where all endpoints are unavailable."""
+        # Create new org and service
+        org_data = test_data_factory.create_organization_data(org_id="test-org-no-endpoints")
+        org_repo.upsert_organization(db_session, org_data)
+        db_session.commit()
+        
+        group_data = test_data_factory.create_org_group_data(org_data.org_id)
+        org_repo.create_org_groups(db_session, [group_data])
+        db_session.commit()
+        
+        service_data = test_data_factory.create_service_data(org_data.org_id, service_id="no-available-endpoints")
+        service = service_repo.upsert_service(db_session, service_data)
+        
+        metadata_data = test_data_factory.create_service_metadata_data(
+            service.row_id, org_data.org_id, service_data.service_id
+        )
+        service_repo.upsert_service_metadata(db_session, metadata_data)
+        
+        # Create group and unavailable endpoint
+        group = test_data_factory.create_service_group_data(
+            service.row_id, org_data.org_id, service_data.service_id
+        )
+        service_repo.upsert_service_group(db_session, group)
+        
+        endpoint = test_data_factory.create_service_endpoint_data(
+            service.row_id, org_data.org_id, service_data.service_id,
+            is_available=False
+        )
+        service_repo.upsert_service_endpoint(db_session, endpoint)
+        
+        db_session.commit()
+        
+        event = {
+            "pathParameters": {
+                "orgId": org_data.org_id,
+                "serviceId": service_data.service_id
+            }
+        }
+        
+        response = get_service(event, context=None)
+        
+        assert response["statusCode"] == 200
+        body = json.loads(response["body"])
+        data = body["data"]
+        
+        # Service should be marked as unavailable
+        assert data["isAvailable"] is False
