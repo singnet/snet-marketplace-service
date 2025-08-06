@@ -2,6 +2,7 @@ import pytest
 import json
 from datetime import datetime, UTC
 from unittest.mock import patch
+from http import HTTPStatus
 
 from contract_api.application.handlers.service_handlers import get_service
 from contract_api.domain.models.service_tag import NewServiceTagDomain
@@ -78,7 +79,7 @@ class TestGetService:
         response = get_service(event, context=None)
         
         # Assertions
-        assert response["statusCode"] == 200
+        assert response["statusCode"] == HTTPStatus.OK
         
         body = json.loads(response["body"])
         assert body["status"] == "success"
@@ -149,13 +150,13 @@ class TestGetService:
         
         response = get_service(event, context=None)
         
-        assert response["statusCode"] == 400
+        assert response["statusCode"] == HTTPStatus.BAD_REQUEST
         body = json.loads(response["body"])
         # Check that error contains information about service not found
         assert "Service not found" in str(body) or "not found" in str(body).lower()
     
     def test_get_service_uncurated(self, db_session, org_repo, service_repo, test_data_factory):
-        """Test getting uncurated service (should return 404)."""
+        """Test getting uncurated service (should return 400)."""
         # Create organization
         org_data = test_data_factory.create_organization_data(org_id="test-org-uncurated")
         org_repo.upsert_organization(db_session, org_data)
@@ -190,7 +191,7 @@ class TestGetService:
         
         response = get_service(event, context=None)
         
-        assert response["statusCode"] == 400
+        assert response["statusCode"] == HTTPStatus.BAD_REQUEST
         body = json.loads(response["body"])
         assert "Service not found" in str(body) or "not found" in str(body).lower()
     
@@ -248,7 +249,7 @@ class TestGetService:
         
         response = get_service(event, context=None)
         
-        assert response["statusCode"] == 200
+        assert response["statusCode"] == HTTPStatus.OK
         body = json.loads(response["body"])
         data = body["data"]
         
@@ -290,7 +291,7 @@ class TestGetService:
         
         response = get_service(event, context=None)
         
-        assert response["statusCode"] == 200
+        assert response["statusCode"] == HTTPStatus.OK
         body = json.loads(response["body"])
         data = body["data"]
         
@@ -307,7 +308,7 @@ class TestGetService:
         }
         
         response = get_service(event, context=None)
-        assert response["statusCode"] == 400
+        assert response["statusCode"] == HTTPStatus.BAD_REQUEST
         
         # Test without serviceId
         event = {
@@ -317,13 +318,13 @@ class TestGetService:
         }
         
         response = get_service(event, context=None)
-        assert response["statusCode"] == 400
+        assert response["statusCode"] == HTTPStatus.BAD_REQUEST
         
         # Test without pathParameters
         event = {}
         
         response = get_service(event, context=None)
-        assert response["statusCode"] == 400
+        assert response["statusCode"] == HTTPStatus.BAD_REQUEST
     
     def test_get_service_empty_values(self):
         """Test with empty parameter values."""
@@ -335,7 +336,7 @@ class TestGetService:
         }
         
         response = get_service(event, context=None)
-        assert response["statusCode"] == 400
+        assert response["statusCode"] == HTTPStatus.BAD_REQUEST
     
     @patch('contract_api.application.services.service_service.ServiceService.get_service')
     def test_get_service_internal_error(self, mock_get_service, base_organization):
@@ -350,7 +351,7 @@ class TestGetService:
         }
         
         response = get_service(event, context=None)
-        assert response["statusCode"] == 500
+        assert response["statusCode"] == HTTPStatus.INTERNAL_SERVER_ERROR
     
     def test_get_service_cors_headers(self, db_session, base_service, base_organization):
         """Test CORS headers presence."""
@@ -363,7 +364,7 @@ class TestGetService:
         
         response = get_service(event, context=None)
         
-        assert response["statusCode"] == 200
+        assert response["statusCode"] == HTTPStatus.OK
         assert "headers" in response
         # Check for CORS headers
         assert response["headers"]["Access-Control-Allow-Origin"] == "*"
@@ -421,7 +422,7 @@ class TestGetService:
         
         response = get_service(event, context=None)
         
-        assert response["statusCode"] == 200
+        assert response["statusCode"] == HTTPStatus.OK
         body = json.loads(response["body"])
         data = body["data"]
         
@@ -443,7 +444,7 @@ class TestGetService:
         
         response = get_service(event, context=None)
         
-        assert response["statusCode"] == 200
+        assert response["statusCode"] == HTTPStatus.OK
         body = json.loads(response["body"])
         data = body["data"]
         
@@ -462,7 +463,7 @@ class TestGetService:
         
         response = get_service(event, context=None)
         
-        assert response["statusCode"] == 200
+        assert response["statusCode"] == HTTPStatus.OK
         body = json.loads(response["body"])
         data = body["data"]
         
@@ -494,7 +495,7 @@ class TestGetService:
         
         response = get_service(event, context=None)
         
-        assert response["statusCode"] == 200
+        assert response["statusCode"] == HTTPStatus.OK
         body = json.loads(response["body"])
         data = body["data"]
         
@@ -543,7 +544,7 @@ class TestGetService:
         
         response = get_service(event, context=None)
         
-        assert response["statusCode"] == 200
+        assert response["statusCode"] == HTTPStatus.OK
         body = json.loads(response["body"])
         data = body["data"]
         
@@ -569,7 +570,7 @@ class TestGetServices:
         
         response = get_services(event, context=None)
         
-        assert response["statusCode"] == 200
+        assert response["statusCode"] == HTTPStatus.OK
         body = json.loads(response["body"])
         assert body["status"] == "success"
         assert "data" in body
@@ -586,7 +587,7 @@ class TestGetServices:
         assert service["displayName"] == "Test Service"
         assert service["isAvailable"] is True
     
-    def test_get_services_pagination(self, db_session, org_repo, service_repo, test_data_factory):
+    def test_get_services_pagination(self, db_session, org_repo, service_repo, test_data_factory, base_service):
         """Test pagination functionality."""
         # Create multiple services
         org_data = test_data_factory.create_organization_data(org_id="test-org-pagination")
@@ -961,7 +962,7 @@ class TestGetServices:
             service.row_id, 
             base_organization.org_id, 
             service_data.service_id,
-            is_available=False
+            is_available=True
         )
         service_repo.upsert_service_endpoint(db_session, endpoint)
         
@@ -984,7 +985,7 @@ class TestGetServices:
         response = get_services(event, context=None)
         body = json.loads(response["body"])
         data = body["data"]
-        
+
         # Should only return services with available endpoints
         assert data["totalCount"] == 1
         assert all(s["isAvailable"] for s in data["services"])
@@ -1116,7 +1117,7 @@ class TestGetServices:
         
         response = get_services(event, context=None)
         
-        assert response["statusCode"] == 400
+        assert response["statusCode"] == HTTPStatus.BAD_REQUEST
         body = json.loads(response["body"])
         assert "Invalid sort parameter" in str(body)
     
@@ -1135,7 +1136,7 @@ class TestGetServices:
         
         response = get_services(event, context=None)
         
-        assert response["statusCode"] == 400
+        assert response["statusCode"] == HTTPStatus.BAD_REQUEST
         body = json.loads(response["body"])
         assert "Invalid order parameter" in str(body)
     
@@ -1156,7 +1157,7 @@ class TestGetServices:
         
         response = get_services(event, context=None)
         
-        assert response["statusCode"] == 400
+        assert response["statusCode"] == HTTPStatus.BAD_REQUEST
         body = json.loads(response["body"])
         assert "Invalid filter parameter" in str(body)
     
@@ -1175,14 +1176,14 @@ class TestGetServices:
         
         response = get_services(event, context=None)
         
-        assert response["statusCode"] == 200
+        assert response["statusCode"] == HTTPStatus.OK
         body = json.loads(response["body"])
         data = body["data"]
         
         assert data["totalCount"] == 0
         assert len(data["services"]) == 0
     
-    def test_get_services_uncurated_excluded(self, db_session, org_repo, service_repo, test_data_factory, base_organization):
+    def test_get_services_uncurated_excluded(self, db_session, org_repo, service_repo, test_data_factory, base_organization, base_service):
         """Test that uncurated services are excluded."""
         # Create uncurated service
         service_data = test_data_factory.create_service_data(
@@ -1227,7 +1228,7 @@ class TestGetServices:
         }
         
         response = get_services(event, context=None)
-        assert response["statusCode"] == 400
+        assert response["statusCode"] == HTTPStatus.BAD_REQUEST
     
     def test_get_services_missing_required_fields(self):
         """Test with missing required fields."""
@@ -1239,7 +1240,7 @@ class TestGetServices:
         }
         
         response = get_services(event, context=None)
-        assert response["statusCode"] == 400
+        assert response["statusCode"] == HTTPStatus.BAD_REQUEST
     
     @patch('contract_api.application.services.service_service.ServiceService.get_services')
     def test_get_services_internal_error(self, mock_get_services):
@@ -1258,4 +1259,4 @@ class TestGetServices:
         }
         
         response = get_services(event, context=None)
-        assert response["statusCode"] == 500
+        assert response["statusCode"] == HTTPStatus.INTERNAL_SERVER_ERROR
