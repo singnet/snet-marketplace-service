@@ -139,7 +139,7 @@ class TestGetService:
         assert "contributors" in data
         assert data["contributors"] == ["Test Developer"]
     
-    def test_get_service_not_found(self, db_session):
+    def test_get_service_not_found(self):
         """Test getting non-existent service."""
         event = {
             "pathParameters": {
@@ -353,7 +353,7 @@ class TestGetService:
         response = get_service(event, context=None)
         assert response["statusCode"] == HTTPStatus.INTERNAL_SERVER_ERROR
     
-    def test_get_service_cors_headers(self, db_session, base_service, base_organization):
+    def test_get_service_cors_headers(self, base_service, base_organization):
         """Test CORS headers presence."""
         event = {
             "pathParameters": {
@@ -433,7 +433,7 @@ class TestGetService:
         expected_types = {"hero_image", "media_gallery", "grpc-stub/python"}
         assert asset_types == expected_types
     
-    def test_get_service_without_tags(self, db_session, base_service, base_organization):
+    def test_get_service_without_tags(self, base_service, base_organization):
         """Test service without any tags."""
         event = {
             "pathParameters": {
@@ -452,7 +452,7 @@ class TestGetService:
         assert "tags" in data
         assert data["tags"] == []
     
-    def test_get_service_without_media(self, db_session, base_service, base_organization):
+    def test_get_service_without_media(self, base_service, base_organization):
         """Test service without any media."""
         event = {
             "pathParameters": {
@@ -555,7 +555,7 @@ class TestGetService:
 class TestGetServices:
     """Tests for get_services handler."""
     
-    def test_get_services_basic(self, db_session, base_service):
+    def test_get_services_basic(self, base_service):
         """Test basic get services without filters."""
         event = {
             "body": json.dumps({
@@ -587,7 +587,7 @@ class TestGetServices:
         assert service["displayName"] == "Test Service"
         assert service["isAvailable"] is True
     
-    def test_get_services_pagination(self, db_session, org_repo, service_repo, test_data_factory, base_service):
+    def test_get_services_pagination(self, db_session, org_repo, service_repo, test_data_factory):
         """Test pagination functionality."""
         # Create multiple services
         org_data = test_data_factory.create_organization_data(org_id="test-org-pagination")
@@ -643,7 +643,7 @@ class TestGetServices:
         body = json.loads(response["body"])
         data = body["data"]
         
-        assert data["totalCount"] == 6  # 5 new + 1 from base_service
+        assert data["totalCount"] == 5  # 5 new + 1 from base_service
         assert len(data["services"]) == 2
         
         # Test second page
@@ -662,7 +662,7 @@ class TestGetServices:
         
         assert len(data["services"]) == 2
     
-    def test_get_services_sort_by_display_name(self, db_session, org_repo, service_repo, test_data_factory, base_organization):
+    def test_get_services_sort_by_display_name(self, db_session, service_repo, test_data_factory, base_organization):
         """Test sorting by display name."""
         # Create services with different names
         services_names = ["Zebra Service", "Alpha Service", "Beta Service"]
@@ -733,7 +733,7 @@ class TestGetServices:
         display_names = [s["displayName"] for s in services]
         assert display_names == sorted(display_names, reverse=True)
     
-    def test_get_services_sort_by_rating(self, db_session, org_repo, service_repo, test_data_factory, base_organization):
+    def test_get_services_sort_by_rating(self, db_session, service_repo, test_data_factory, base_organization):
         """Test sorting by rating."""
         # Create services with different ratings
         ratings = [
@@ -748,7 +748,6 @@ class TestGetServices:
                 service_id=f"service-rating-{i}"
             )
             service = service_repo.upsert_service(db_session, service_data)
-            db_session.commit()
 
             metadata_data = test_data_factory.create_service_metadata_data(
                 service.row_id, 
@@ -757,17 +756,7 @@ class TestGetServices:
                 display_name=f"Service Rating {i}"
             )
             service_repo.upsert_service_metadata(db_session, metadata_data)
-            db_session.commit()
             
-            # Update rating
-            service_repo.update_service_rating(
-                db_session, 
-                base_organization.org_id, 
-                service_data.service_id, 
-                rating_data
-            )
-            
-            # Add group and endpoint
             group = test_data_factory.create_service_group_data(
                 service.row_id, base_organization.org_id, service_data.service_id
             )
@@ -777,6 +766,16 @@ class TestGetServices:
                 service.row_id, base_organization.org_id, service_data.service_id
             )
             service_repo.upsert_service_endpoint(db_session, endpoint)
+            # Update rating
+            service_repo.update_service_rating(
+                db_session, 
+                base_organization.org_id, 
+                service_data.service_id, 
+                rating_data
+            )
+            
+            # Add group and endpoint
+
         
         db_session.commit()
         
@@ -794,7 +793,6 @@ class TestGetServices:
         
         response = get_services(event, context=None)
         body = json.loads(response["body"])
-        print(body)
         services = body["data"]["services"]
         
         # Check that services are sorted by rating in descending order
@@ -1161,7 +1159,7 @@ class TestGetServices:
         body = json.loads(response["body"])
         assert "Invalid filter parameter" in str(body)
     
-    def test_get_services_empty_result(self, db_session):
+    def test_get_services_empty_result(self):
         """Test when no services match criteria."""
         event = {
             "body": json.dumps({
