@@ -22,7 +22,7 @@ This service is responsible for four primary workflows:
 
 While some logic exists in `payments` and `orchestration`, it’s currently difficult to maintain due to legacy decisions and tightly coupled code.  
 This service aims to encapsulate **all HaaS-related lifecycle and billing logic** in a clean and maintainable way.
-Also another main reason - we need to create service that can work with multiple networks and token.
+Also another main reason - we need to create service that can work with multiple networks and tokens.
 ---
 
 ## Storage Model
@@ -86,7 +86,7 @@ We define **order** and **evm_transaction** to implement more flexible payment w
 
 #### `GET /deployer/order/status?order_id=<uuid>`
 
-#### `GET /deployer/daemon/:orgId/:servicId`
+#### `GET /deployer/daemon/:orgId/:serviceId`
 
 #### `GET /deployer/daemons/:userId`
 
