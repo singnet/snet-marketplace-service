@@ -29,7 +29,7 @@ Also another main reason - we need to create service that can work with multiple
 
 We define three core entities in the storage layer:
 
-### `hosted_daemon`
+### `daemon`
 
 Represents a deployed daemon instance tied to a user’s published AI service.
 
