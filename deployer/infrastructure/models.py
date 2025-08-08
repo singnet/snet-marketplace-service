@@ -19,12 +19,12 @@ class DaemonStatus(PythonEnum):
     STARTING = "starting" # deploying
     DELETING = "deleting" # deleting
     UP = "up" # deployed and working
+    CLAIMING = "claiming" # temporary working for claiming
     DOWN = "down" # not paid
     ERROR = "error" # error during deployment
 
 
 class OrderStatus(PythonEnum):
-    INIT = "init" # only the entity is created, before transactions
     PROCESSING = "processing" # waiting for payment
     SUCCESS = "success" # payment successful
     FAILED = "failed" # payment failed
@@ -51,6 +51,10 @@ class Daemon(Base):
     from_date: Mapped[datetime] = mapped_column("from_date", TIMESTAMP(timezone = False))
     end_date: Mapped[datetime] = mapped_column("end_date", TIMESTAMP(timezone = False))
     daemon_config: Mapped[dict] = mapped_column("daemon_config", JSON, nullable = False, default = {})
+    last_claiming_on: Mapped[datetime] = mapped_column(
+        "last_claiming_on",
+        TIMESTAMP(timezone = False)
+    )
 
     created_on: Mapped[datetime] = mapped_column(
         "created_on",
@@ -80,7 +84,7 @@ class Order(Base):
         "status",
         Enum(OrderStatus),
         nullable=False,
-        default = OrderStatus.INIT
+        default = OrderStatus.PROCESSING
     )
 
     created_on: Mapped[datetime] = mapped_column(
