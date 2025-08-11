@@ -25,3 +25,6 @@ class DaemonService:
 
     def unpause_daemon(self, request: DaemonRequest):
         pass
+
+    def delete_daemon(self, request: DaemonRequest):
+        pass

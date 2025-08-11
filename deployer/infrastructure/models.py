@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum as PythonEnum
 
 from sqlalchemy import text, VARCHAR, TIMESTAMP, JSON, ForeignKey, Enum
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 CreateTimestamp = text("CURRENT_TIMESTAMP")
@@ -48,12 +48,13 @@ class Daemon(Base):
         nullable=False,
         default = DaemonStatus.INIT
     )
-    from_date: Mapped[datetime] = mapped_column("from_date", TIMESTAMP(timezone = False))
-    end_date: Mapped[datetime] = mapped_column("end_date", TIMESTAMP(timezone = False))
+    start_on: Mapped[datetime] = mapped_column("from_date", TIMESTAMP(timezone = False), nullable = True)
+    end_ob: Mapped[datetime] = mapped_column("end_date", TIMESTAMP(timezone = False), nullable = True)
     daemon_config: Mapped[dict] = mapped_column("daemon_config", JSON, nullable = False, default = {})
     last_claiming_on: Mapped[datetime] = mapped_column(
         "last_claiming_on",
-        TIMESTAMP(timezone = False)
+        TIMESTAMP(timezone = False),
+        nullable = True
     )
 
     created_on: Mapped[datetime] = mapped_column(
@@ -69,6 +70,13 @@ class Daemon(Base):
         server_default = UpdateTimestamp
     )
 
+    orders: Mapped[list["Order"]] = relationship(
+        "Order",
+        backref = "daemon",
+        lazy = "joined",
+        uselist = True
+    )
+
 
 class Order(Base):
     __tablename__ = "order"
@@ -77,7 +85,7 @@ class Order(Base):
         "daemon_id",
         VARCHAR(128),
         ForeignKey("hosted_daemon.id", ondelete = "CASCADE", onupdate = "CASCADE"),
-        nullable=True,
+        nullable=False,
         index = True
     )
     status: Mapped[OrderStatus] = mapped_column(
@@ -100,10 +108,17 @@ class Order(Base):
         server_default = UpdateTimestamp
     )
 
+    evm_transactions: Mapped[list["EvmTransaction"]] = relationship(
+        "EvmTransaction",
+        backref = "order",
+        lazy = "joined",
+        uselist = True
+    )
+
 
 class EvmTransaction(Base):
     __tablename__ = "evm_transaction"
-    id: Mapped[str] = mapped_column("id", VARCHAR(128), primary_key=True)
+    hash: Mapped[str] = mapped_column("hash", VARCHAR(128), primary_key=True)
     order_id: Mapped[str] = mapped_column(
         "order_id",
         VARCHAR(128),

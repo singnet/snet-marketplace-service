@@ -44,3 +44,63 @@ def start_daemon_for_claiming(event, context):
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled = True
     )
+
+
+@exception_handler(logger=logger)
+def start_daemon(event, context):
+    request = DaemonRequest.validate_event(event)
+
+    response = DaemonService().start_daemon(request)
+
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled = True
+    )
+
+
+@exception_handler(logger=logger)
+def stop_daemon(event, context):
+    request = DaemonRequest.validate_event(event)
+
+    response = DaemonService().stop_daemon(request)
+
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled = True
+    )
+
+
+@exception_handler(logger=logger)
+def pause_daemon(event, context):
+    request = DaemonRequest.validate_event(event)
+
+    response = DaemonService().pause_daemon(request)
+
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled = True
+    )
+
+
+@exception_handler(logger=logger)
+def unpause_daemon(event, context):
+    request = DaemonRequest.validate_event(event)
+
+    response = DaemonService().unpause_daemon(request)
+
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled = True
+    )
+
+
+@exception_handler(logger=logger)
+def delete_daemon(event, context):
+    request = DaemonRequest.validate_event(event)
+
+    response = DaemonService().delete_daemon(request)
+
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled = True
+    )
