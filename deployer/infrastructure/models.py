@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum as PythonEnum
 
-from sqlalchemy import text, VARCHAR, TIMESTAMP, JSON, ForeignKey, Enum
+from sqlalchemy import text, VARCHAR, TIMESTAMP, JSON, ForeignKey, Enum, Integer
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -19,9 +19,11 @@ class DaemonStatus(PythonEnum):
     STARTING = "starting" # deploying
     DELETING = "deleting" # deleting
     UP = "up" # deployed and working
-    CLAIMING = "claiming" # temporary working for claiming
+    # CLAIMING = "claiming"
     DOWN = "down" # not paid
-    ERROR = "error" # error during deployment
+    ERROR_STARTING = "error" # error during deployment
+    ERROR_DELETING = "error" # error during deleting
+    # DELETED = "deleted"
 
 
 class OrderStatus(PythonEnum):
@@ -34,6 +36,11 @@ class EvmTransactionStatus(PythonEnum):
     PENDING = "pending" # transaction pending
     SUCCESS = "success" # transaction successful
     FAILED = "failed" # transaction failed
+
+
+class ClaimingPeriodStatus(PythonEnum):
+    ACTIVE = "active"
+    INACTIVE = "inactive"
 
 
 class Daemon(Base):
@@ -49,13 +56,8 @@ class Daemon(Base):
         default = DaemonStatus.INIT
     )
     start_on: Mapped[datetime] = mapped_column("from_date", TIMESTAMP(timezone = False), nullable = True)
-    end_ob: Mapped[datetime] = mapped_column("end_date", TIMESTAMP(timezone = False), nullable = True)
+    end_on: Mapped[datetime] = mapped_column("end_date", TIMESTAMP(timezone = False), nullable = True)
     daemon_config: Mapped[dict] = mapped_column("daemon_config", JSON, nullable = False, default = {})
-    last_claiming_on: Mapped[datetime] = mapped_column(
-        "last_claiming_on",
-        TIMESTAMP(timezone = False),
-        nullable = True
-    )
 
     created_on: Mapped[datetime] = mapped_column(
         "created_on",
@@ -73,7 +75,7 @@ class Daemon(Base):
     orders: Mapped[list["Order"]] = relationship(
         "Order",
         backref = "daemon",
-        lazy = "joined",
+        lazy = "select",
         uselist = True
     )
 
@@ -84,7 +86,7 @@ class Order(Base):
     daemon_id: Mapped[str] = mapped_column(
         "daemon_id",
         VARCHAR(128),
-        ForeignKey("hosted_daemon.id", ondelete = "CASCADE", onupdate = "CASCADE"),
+        ForeignKey("daemon.id", ondelete = "CASCADE", onupdate = "CASCADE"),
         nullable=False,
         index = True
     )
@@ -108,22 +110,22 @@ class Order(Base):
         server_default = UpdateTimestamp
     )
 
-    evm_transactions: Mapped[list["EvmTransaction"]] = relationship(
-        "EvmTransaction",
+    evm_transactions: Mapped[list["EVMTransaction"]] = relationship(
+        "EVMTransaction",
         backref = "order",
-        lazy = "joined",
+        lazy = "select",
         uselist = True
     )
 
 
-class EvmTransaction(Base):
+class EVMTransaction(Base):
     __tablename__ = "evm_transaction"
     hash: Mapped[str] = mapped_column("hash", VARCHAR(128), primary_key=True)
     order_id: Mapped[str] = mapped_column(
         "order_id",
         VARCHAR(128),
         ForeignKey("order.id", ondelete = "CASCADE", onupdate = "CASCADE"),
-        nullable=True,
+        nullable=False,
         index = True
     )
     status: Mapped[EvmTransactionStatus] = mapped_column(
@@ -147,4 +149,35 @@ class EvmTransaction(Base):
     )
 
 
+class ClaimingPeriod(Base):
+    __tablename__ = "claiming_period"
+    id: Mapped[int] = mapped_column("id", Integer, primary_key=True)
+    daemon_id: Mapped[str] = mapped_column(
+        "daemon_id",
+        VARCHAR(128),
+        ForeignKey("daemon.id", ondelete = "CASCADE", onupdate = "CASCADE"),
+        nullable=False,
+        index = True
+    )
+    start_on: Mapped[datetime] = mapped_column("start_on", TIMESTAMP(timezone = False), nullable = False)
+    end_on: Mapped[datetime] = mapped_column("end_on", TIMESTAMP(timezone = False), nullable = False)
+    status: Mapped[ClaimingPeriodStatus] = mapped_column(
+        "status",
+        Enum(ClaimingPeriodStatus),
+        nullable=False,
+        default = ClaimingPeriodStatus.INACTIVE
+    )
+
+    created_on: Mapped[datetime] = mapped_column(
+        "created_on",
+        TIMESTAMP(timezone = False),
+        nullable = False,
+        server_default = CreateTimestamp
+    )
+    updated_on: Mapped[datetime] = mapped_column(
+        "updated_on",
+        TIMESTAMP(timezone = False),
+        nullable = False,
+        server_default = UpdateTimestamp
+    )
 

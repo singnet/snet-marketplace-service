@@ -16,7 +16,6 @@ class NewDaemonDomain:
     daemon_config: dict
     start_on: datetime | None = None
     end_on: datetime | None = None
-    last_claiming_on: datetime | None = None
 
 
 @dataclass
