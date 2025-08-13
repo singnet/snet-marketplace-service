@@ -1,0 +1,13 @@
+{
+  "name": "deployer",
+  "version": "1.0.0",
+  "description": "",
+  "author": "SingularityNet",
+  "dependencies": {
+    "serverless-prune-plugin": "2.1.0",
+    "serverless-latest-layer-version": "2.1.2"
+  },
+  "devDependencies": {
+    "serverless-offline": "^14.4.0"
+  }
+}
