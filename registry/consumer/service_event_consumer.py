@@ -132,7 +132,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         except ServiceNotFoundException:
             existing_service = None
 
-        org_uuid = self._organization_repository.get_organization().uuid
+        org_uuid = self._organization_repository.get_organization(org_id=org_id).uuid
 
         return org_uuid, existing_service
 

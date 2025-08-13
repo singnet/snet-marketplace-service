@@ -112,7 +112,7 @@ venv.bak/
 #IDE files
 .idea/
 .vscode/
-**/*/.DS_Store
+**/.DS_Store
 orchestrator/package-lock.json
 utility/package-lock.json
 
