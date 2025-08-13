@@ -6,6 +6,7 @@ import os.path
 import re
 import shutil
 import tarfile
+import uuid
 from typing import Generator, Iterable, TypeVar
 import zipfile
 from urllib.parse import urlparse
@@ -256,3 +257,7 @@ def chunked(items: Iterable[T], size: int) -> Generator[list[T], None, None]:
     items = list(items)  # support generators/iterables too
     for i in range(0, len(items), size):
         yield items[i:i + size]
+
+
+def generate_uuid() -> str:
+    return str(uuid.uuid4())

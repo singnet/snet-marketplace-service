@@ -21,3 +21,11 @@ class NewDaemonDomain:
 @dataclass
 class DaemonDomain(NewDaemonDomain, BaseDomain):
     orders: list[OrderDomain] | None = None
+
+    def to_short_response(self):
+        return {
+            "id": self.id,
+            "status": self.status.value,
+            "startOn": self.start_on,
+            "endOn": self.end_on
+        }
