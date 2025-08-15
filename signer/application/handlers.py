@@ -38,6 +38,7 @@ def get_state_service_signature_handler(event, context):
         req_ctx = RequestContext(
             event=event,
             username="CONTRACT_API_SERVICE",
+            account_id = "CONTRACT_API_SERVICE",
         )
 
     request = GetSignatureForStateServiceRequest.validate_event(event)

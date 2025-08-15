@@ -13,7 +13,7 @@ class InitiateOrderRequest(BaseModel):
     org_id: str = Field(alias="orgId")
     service_id: str = Field(alias="serviceId")
     service_endpoint: str = Field(alias="serviceEndpoint")
-    daemon_storage_type: str = Field(alias="storageType")
+    storage_type: str = Field(alias="storageType")
     parameters: Optional[dict] = {}
 
     @classmethod

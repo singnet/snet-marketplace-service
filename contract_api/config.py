@@ -26,7 +26,7 @@ IPFS_URL = {
     'port': '80',
 
 }
-REGION_NAME = "us-east-2"
+REGION_NAME = ""
 S3_BUCKET_ACCESS_KEY = ""
 S3_BUCKET_SECRET_KEY = ""
 ASSETS_BUCKET_NAME = ""

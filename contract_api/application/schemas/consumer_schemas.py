@@ -1,5 +1,5 @@
 import ast
-from pydantic import BaseModel, model_validator, Field, field_validator
+from pydantic import BaseModel, model_validator, Field
 import json
 from web3 import Web3
 
