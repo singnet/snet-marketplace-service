@@ -1,19 +1,20 @@
 from sqlalchemy import update, select
+from sqlalchemy.orm import Session
 
 from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
-from deployer.infrastructure.db import BaseRepository
 from deployer.infrastructure.models import EVMTransaction
 
 
-class TransactionRepository(BaseRepository):
-    def upsert_transaction(self, transaction: NewEVMTransactionDomain) -> None:
+class TransactionRepository:
+    @staticmethod
+    def upsert_transaction(session: Session, transaction: NewEVMTransactionDomain) -> None:
         query = select(
             EVMTransaction
         ).where(
             EVMTransaction.hash == transaction.hash
         ).limit(1)
 
-        result = self.session.execute(query)
+        result = session.execute(query)
         transaction_db = result.scalar_one_or_none()
 
         if transaction_db is not None:
@@ -25,7 +26,7 @@ class TransactionRepository(BaseRepository):
                 status=transaction.status
             )
 
-            self.session.execute(query)
+            session.execute(query)
         else:
             transaction_db = EVMTransaction(
                 hash=transaction.hash,
@@ -33,4 +34,4 @@ class TransactionRepository(BaseRepository):
                 status=transaction.status
             )
 
-            self.session.add(transaction_db)
+            session.add(transaction_db)

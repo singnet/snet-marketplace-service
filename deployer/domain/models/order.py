@@ -15,3 +15,13 @@ class NewOrderDomain:
 @dataclass
 class OrderDomain(NewOrderDomain, BaseDomain):
     evm_transactions: list[EVMTransactionDomain] | None = None
+
+    def to_response(self):
+        result = super().to_response()
+        result["evm_transactions"] = [transaction.to_response() for transaction in self.evm_transactions]
+        return result
+
+    def to_short_response(self):
+        result = super().to_response()
+        del result["evm_transactions"]
+        return result

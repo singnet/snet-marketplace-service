@@ -1,3 +1,4 @@
+from deployer.application.schemas.daemon_schemas import DaemonRequest
 from deployer.application.schemas.job_schemas import RegistryEventConsumerRequest
 
 
@@ -24,4 +25,10 @@ class JobService:
         pass
 
     def update_transaction_status(self):
+        pass
+
+    def check_daemons(self):
+        pass
+
+    def update_daemon_status(self, request: DaemonRequest):
         pass

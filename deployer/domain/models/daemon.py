@@ -29,3 +29,8 @@ class DaemonDomain(NewDaemonDomain, BaseDomain):
             "startOn": self.start_on,
             "endOn": self.end_on
         }
+
+    def to_response(self):
+        result = super().to_response()
+        result["orders"] = [order.to_response() for order in self.orders]
+        return result

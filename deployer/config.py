@@ -20,5 +20,5 @@ STAGE = "dev"
 IPFS_URL = {
     'url': 'ipfs.singularitynet.io',
     'port': '80',
-
 }
+REGION_NAME = ""

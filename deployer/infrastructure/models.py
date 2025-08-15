@@ -14,33 +14,34 @@ class Base(DeclarativeBase):
 
 
 class DaemonStatus(PythonEnum):
-    INIT = "init" # only the entity is created, before payment
-    READY_TO_START = "ready_to_start" # paid but not deployed
-    STARTING = "starting" # deploying
-    DELETING = "deleting" # deleting
-    UP = "up" # deployed and working
+    INIT = "INIT" # only the entity is created, before payment
+    READY_TO_START = "READY_TO_START" # paid but not deployed
+    STARTING = "STARTING" # deploying
+    DELETING = "DELETING" # deleting
+    UP = "UP" # deployed and working
     # CLAIMING = "claiming"
-    DOWN = "down" # not paid
-    ERROR_STARTING = "error" # error during deployment
-    ERROR_DELETING = "error" # error during deleting
+    DOWN = "DOWN" # not paid
+    ERROR_STARTING = "ERROR_STARTING" # error during deployment
+    ERROR_DELETING = "ERROR_DELETING" # error during deleting
     # DELETED = "deleted"
 
 
 class OrderStatus(PythonEnum):
-    PROCESSING = "processing" # waiting for payment
-    SUCCESS = "success" # payment successful
-    FAILED = "failed" # payment failed
+    PROCESSING = "PROCESSING" # waiting for payment
+    SUCCESS = "SUCCESS" # payment successful
+    FAILED = "FAILED" # payment failed
 
 
 class EvmTransactionStatus(PythonEnum):
-    PENDING = "pending" # transaction pending
-    SUCCESS = "success" # transaction successful
-    FAILED = "failed" # transaction failed
+    PENDING = "PENDING" # transaction pending
+    SUCCESS = "SUCCESS" # transaction successful
+    FAILED = "FAILED" # transaction failed
 
 
 class ClaimingPeriodStatus(PythonEnum):
-    ACTIVE = "active"
-    INACTIVE = "inactive"
+    ACTIVE = "ACTIVE" # daemon is deploying and working for the period
+    INACTIVE = "INACTIVE" # daemon is deleted and not working
+    FAILED = "FAILED" # error during deployment, illegitimate period
 
 
 class Daemon(Base):
@@ -151,7 +152,7 @@ class EVMTransaction(Base):
 
 class ClaimingPeriod(Base):
     __tablename__ = "claiming_period"
-    id: Mapped[int] = mapped_column("id", Integer, primary_key=True)
+    id: Mapped[int] = mapped_column("id", Integer, autoincrement = True, primary_key=True)
     daemon_id: Mapped[str] = mapped_column(
         "daemon_id",
         VARCHAR(128),
