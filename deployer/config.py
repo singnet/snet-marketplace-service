@@ -1,3 +1,5 @@
+from deployer.constant import DaemonStorageType
+
 NETWORKS = {
     11155111: {
         "name": "test",
@@ -22,3 +24,17 @@ IPFS_URL = {
     'port': '80',
 }
 REGION_NAME = ""
+
+HAAS_BASE_URL = ""
+HAAS_LOGIN = ""
+HAAS_PASSWORD = ""
+HAAS_REGISTRY = ""
+HAAS_REG_REPO = ""
+HAAS_BASE_IMAGE = ""
+
+
+START_DAEMON_ARN = ""
+DELETE_DAEMON_ARN = ""
+UPDATE_DAEMON_STATUS_ARN = ""
+
+DEFAULT_DAEMON_STORAGE_TYPE = DaemonStorageType.ETCD

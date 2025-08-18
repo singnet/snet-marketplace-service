@@ -92,3 +92,13 @@ def unpause_daemon(event, context):
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled = True
     )
+
+
+@exception_handler(logger=logger)
+def get_public_key(event, context):
+    response = DaemonService().get_public_key()
+
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled = True
+    )

@@ -1,5 +1,6 @@
 from common.utils import generate_uuid
 from deployer.application.schemas.order_schemas import InitiateOrderRequest, GetOrderRequest
+from deployer.config import DEFAULT_DAEMON_STORAGE_TYPE
 from deployer.domain.models.daemon import NewDaemonDomain
 from deployer.domain.models.order import NewOrderDomain
 from deployer.infrastructure.db import session_scope, DefaultSessionFactory
@@ -16,6 +17,15 @@ class OrderService:
         daemon_id = generate_uuid()
         order_uuid = generate_uuid()
 
+        daemon_config = {
+            "service_endpoint": request.service_endpoint,
+            "payment_channel_storage_type": DEFAULT_DAEMON_STORAGE_TYPE.value
+        }
+        if request.auth_parameters is not None:
+            daemon_config["service_cred_key"] = request.auth_parameters["key"]
+            daemon_config["service_cred_value"] = request.auth_parameters["value"]
+            daemon_config["service_cred_location"] = request.auth_parameters["location"]
+
         with session_scope(self.session_factory) as session:
             DaemonRepository.create_daemon(
                 session,
@@ -25,13 +35,8 @@ class OrderService:
                     org_id=request.org_id,
                     service_id=request.service_id,
                     status=DaemonStatus.INIT,
-                    daemon_config={
-                        "service_endpoint": request.service_endpoint,
-                        "payment_channel_storage_type": request.storage_type,
-                        "service_cred_key": request.parameters.get("key"),
-                        "service_cred_value": request.parameters.get("value"),
-                        "service_cred_location": request.parameters.get("location"),
-                    },
+                    daemon_config=daemon_config,
+                    service_published=False
                 )
             )
 

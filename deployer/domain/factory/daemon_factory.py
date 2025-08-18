@@ -19,6 +19,7 @@ class DaemonFactory:
             daemon_config=daemon_db_model.daemon_config,
             start_on=daemon_db_model.start_on,
             end_on=daemon_db_model.end_on,
+            service_published=daemon_db_model.service_published,
             created_on=daemon_db_model.created_on,
             updated_on=daemon_db_model.updated_on,
             orders=OrderFactory.orders_from_db_model(daemon_db_model.orders)

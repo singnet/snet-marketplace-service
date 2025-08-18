@@ -1,6 +1,18 @@
+import json
+from typing import Optional
+
 import boto3
 
-from deployer.config import REGION_NAME
+from common.logger import get_logger
+from deployer.config import (
+    REGION_NAME,
+    START_DAEMON_ARN,
+    DELETE_DAEMON_ARN,
+    UPDATE_DAEMON_STATUS_ARN
+)
+
+
+logger = get_logger(__name__)
 
 
 class DeployerClientError(Exception):
@@ -12,9 +24,58 @@ class DeployerClient:
     def __init__(self):
         self.lambda_client = boto3.client("lambda", region_name=REGION_NAME)
 
-    def start_daemon(self, daemon_id: str):
-        pass
+    def _invoke_lambda(
+            self,
+            lambda_function_arn: str,
+            headers: Optional[dict] = None,
+            path_parameters: Optional[dict] = None,
+            query_parameters: Optional[dict] = None,
+            body: Optional[dict] = None,
+            asynchronous=False
+    ) -> Optional[dict]:
+        payload = {}
+        if path_parameters:
+            payload["pathParameters"] = path_parameters
+        if query_parameters:
+            payload["queryStringParameters"] = query_parameters
+        if body:
+            payload["body"] = json.dumps(body)
+        if headers:
+            payload["headers"] = headers
+        try:
+            response = self.lambda_client.invoke(
+                FunctionName=lambda_function_arn,
+                InvocationType="RequestResponse" if not asynchronous else "Event",
+                Payload=json.dumps(payload),
+            )
 
-    def stop_daemon(self, daemon_id: str):
-        pass
+            if not asynchronous:
+                response_body = json.loads(json.loads(response.get("Payload").read())["body"])
+                if response_body["status"] == "success":
+                    return response_body["data"]
+                else:
+                    raise DeployerClientError(response_body)
 
+        except Exception as e:
+            raise DeployerClientError(str(e))
+
+    def start_daemon(self, daemon_id: str, asynchronous=False):
+        return self._invoke_lambda(
+            lambda_function_arn=START_DAEMON_ARN,
+            path_parameters={"daemon_id": daemon_id},
+            asynchronous=asynchronous
+        )
+
+    def stop_daemon(self, daemon_id: str, asynchronous=False):
+        return self._invoke_lambda(
+            lambda_function_arn=DELETE_DAEMON_ARN,
+            path_parameters={"daemon_id": daemon_id},
+            asynchronous=asynchronous
+        )
+
+    def update_daemon_status(self, daemon_id: str, asynchronous=False):
+        return self._invoke_lambda(
+            lambda_function_arn=UPDATE_DAEMON_STATUS_ARN,
+            path_parameters={"daemon_id": daemon_id},
+            asynchronous=asynchronous
+        )

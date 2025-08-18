@@ -19,8 +19,10 @@ class DaemonRepository:
             service_id = daemon.service_id,
             status = daemon.status,
             daemon_config = daemon.daemon_config,
-            start_on = datetime.now(UTC)
+            start_on = datetime.now(UTC),
+            service_published = False
         )
+
         session.add(daemon_model)
 
     @staticmethod
@@ -55,6 +57,18 @@ class DaemonRepository:
             Daemon.id == daemon_id
         ).values(
             daemon_config=daemon_config
+        )
+
+        session.execute(update_query)
+
+    @staticmethod
+    def update_daemon_service_published(session: Session, daemon_id: str, service_published: bool) -> None:
+        update_query = update(
+            Daemon
+        ).where(
+            Daemon.id == daemon_id
+        ).values(
+            service_published=service_published
         )
 
         session.execute(update_query)

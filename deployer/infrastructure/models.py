@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum as PythonEnum
 
-from sqlalchemy import text, VARCHAR, TIMESTAMP, JSON, ForeignKey, Enum, Integer
+from sqlalchemy import text, VARCHAR, TIMESTAMP, JSON, ForeignKey, Enum, Integer, BOOLEAN
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -21,8 +21,7 @@ class DaemonStatus(PythonEnum):
     UP = "UP" # deployed and working
     # CLAIMING = "claiming"
     DOWN = "DOWN" # not paid
-    ERROR_STARTING = "ERROR_STARTING" # error during deployment
-    ERROR_DELETING = "ERROR_DELETING" # error during deleting
+    ERROR = "ERROR" # error during deployment
     # DELETED = "deleted"
 
 
@@ -59,6 +58,12 @@ class Daemon(Base):
     start_on: Mapped[datetime] = mapped_column("from_date", TIMESTAMP(timezone = False), nullable = True)
     end_on: Mapped[datetime] = mapped_column("end_date", TIMESTAMP(timezone = False), nullable = True)
     daemon_config: Mapped[dict] = mapped_column("daemon_config", JSON, nullable = False, default = {})
+    service_published: Mapped[bool] = mapped_column(
+        "service_published",
+        BOOLEAN,
+        nullable = False,
+        default = False
+    )
 
     created_on: Mapped[datetime] = mapped_column(
         "created_on",
@@ -182,3 +187,24 @@ class ClaimingPeriod(Base):
         server_default = UpdateTimestamp
     )
 
+
+class TransactionsMetadata:
+    __tablename__ = "transactions_metadata"
+    id: Mapped[int] = mapped_column("id", Integer, autoincrement=True, primary_key=True)
+    recipient: Mapped[str] = mapped_column("recipient", VARCHAR(128), nullable=False)
+    last_block_no: Mapped[int] = mapped_column("last_block_no", Integer, nullable=False)
+    fetch_limit: Mapped[int] = mapped_column("fetch_limit", Integer, nullable=False)
+    block_adjustment: Mapped[int] = mapped_column("block_adjustment", Integer, nullable=False)
+
+    created_on: Mapped[datetime] = mapped_column(
+        "created_on",
+        TIMESTAMP(timezone = False),
+        nullable = False,
+        server_default = CreateTimestamp
+    )
+    updated_on: Mapped[datetime] = mapped_column(
+        "updated_on",
+        TIMESTAMP(timezone = False),
+        nullable = False,
+        server_default = UpdateTimestamp
+    )

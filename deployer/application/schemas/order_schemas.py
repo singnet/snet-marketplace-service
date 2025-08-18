@@ -5,16 +5,15 @@ from pydantic import BaseModel, Field, field_validator
 
 from common.constant import RequestPayloadType
 from common.validation_handler import validation_handler
-from deployer.constant import DaemonStorageType
-from deployer.exceptions import InvalidDaemonStorageTypeParameter
+from deployer.constant import AUTH_PARAMETERS
+from deployer.exceptions import InvalidServiceAuthParameters
 
 
 class InitiateOrderRequest(BaseModel):
     org_id: str = Field(alias="orgId")
     service_id: str = Field(alias="serviceId")
     service_endpoint: str = Field(alias="serviceEndpoint")
-    storage_type: str = Field(alias="storageType")
-    parameters: Optional[dict] = {}
+    auth_parameters: Optional[dict] = Field(alias="authParameters", default=None)
 
     @classmethod
     @validation_handler([RequestPayloadType.BODY])
@@ -22,11 +21,13 @@ class InitiateOrderRequest(BaseModel):
         body = json.loads(event[RequestPayloadType.BODY])
         return cls.model_validate(body)
 
-    @field_validator("storage_type")
+    @field_validator("auth_parameters")
     @classmethod
-    def validate_storage_type(cls, value: str):
-        if value not in DaemonStorageType:
-            raise InvalidDaemonStorageTypeParameter()
+    def validate_auth_parameters(cls, value: Optional[dict]):
+        if value is not None: # auth parameters are optional
+            for param in AUTH_PARAMETERS:
+                if param not in value.keys():
+                    raise InvalidServiceAuthParameters()
 
 
 class GetOrderRequest(BaseModel):

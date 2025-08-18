@@ -1,9 +1,9 @@
 from common.exceptions import BadRequestException
 
 
-class InvalidDaemonStorageTypeParameter(BadRequestException):
+class InvalidServiceAuthParameters(BadRequestException):
     def __init__(self):
-        super().__init__(message = "Invalid daemon storage type parameter")
+        super().__init__(message = "Invalid service auth parameters. Must be 'key', 'value' and 'location'")
 
 
 class MissingServiceEventParameters(BadRequestException):
