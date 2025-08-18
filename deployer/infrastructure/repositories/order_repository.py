@@ -57,3 +57,21 @@ class OrderRepository:
         orders_db = result.scalars().all()
 
         return OrderFactory.orders_from_db_model(orders_db)
+
+    @staticmethod
+    def get_last_order(session: Session, daemon_id: str) -> Optional[OrderDomain]:
+        query = select(
+            Order
+        ).where(
+            daemon_id == Order.daemon_id
+        ).order_by(
+            Order.id.desc()
+        ).limit(1)
+
+        result = session.execute(query)
+
+        order_db = result.scalar_one_or_none()
+        if order_db is None:
+            return None
+
+        return OrderFactory.order_from_db_model(order_db)

@@ -3,7 +3,7 @@ from common.exception_handler import exception_handler
 from common.logger import get_logger
 from common.request_context import RequestContext
 from common.utils import generate_lambda_response
-from deployer.application.schemas.daemon_schemas import DaemonRequest
+from deployer.application.schemas.daemon_schemas import DaemonRequest, UpdateConfigRequest, SearchDaemonRequest
 from deployer.application.services.daemon_service import DaemonService
 
 
@@ -97,6 +97,30 @@ def unpause_daemon(event, context):
 @exception_handler(logger=logger)
 def get_public_key(event, context):
     response = DaemonService().get_public_key()
+
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled = True
+    )
+
+
+@exception_handler(logger=logger)
+def update_config(event, context):
+    request = UpdateConfigRequest.validate_event(event)
+
+    response = DaemonService().update_config(request)
+
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled = True
+    )
+
+
+@exception_handler(logger=logger)
+def search_daemon(event, context):
+    request = SearchDaemonRequest.validate_event(event)
+
+    response = DaemonService().search_daemon(request)
 
     return generate_lambda_response(
         StatusCode.OK,

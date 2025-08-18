@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum as PythonEnum
 
-from sqlalchemy import text, VARCHAR, TIMESTAMP, JSON, ForeignKey, Enum, Integer, BOOLEAN
+from sqlalchemy import text, VARCHAR, TIMESTAMP, JSON, ForeignKey, Enum, Integer, BOOLEAN, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -64,6 +64,7 @@ class Daemon(Base):
         nullable = False,
         default = False
     )
+    daemon_endpoint: Mapped[str] = mapped_column("daemon_endpoint", VARCHAR(256), nullable = False)
 
     created_on: Mapped[datetime] = mapped_column(
         "created_on",
@@ -78,12 +79,7 @@ class Daemon(Base):
         server_default = UpdateTimestamp
     )
 
-    orders: Mapped[list["Order"]] = relationship(
-        "Order",
-        backref = "daemon",
-        lazy = "select",
-        uselist = True
-    )
+    __table_args__ = (UniqueConstraint(org_id, service_id, name = "uq_org_srvc"),)
 
 
 class Order(Base):

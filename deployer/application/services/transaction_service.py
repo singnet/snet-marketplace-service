@@ -1,6 +1,7 @@
 from deployer.application.schemas.transaction_schemas import SaveEVMTransactionRequest, GetTransactionsRequest
 from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
 from deployer.infrastructure.db import DefaultSessionFactory, session_scope
+from deployer.infrastructure.models import EvmTransactionStatus
 from deployer.infrastructure.repositories.transaction_repository import TransactionRepository
 
 
@@ -15,7 +16,7 @@ class TransactionService:
                 NewEVMTransactionDomain(
                     hash=request.transaction_hash,
                     order_id=request.order_id,
-                    status=request.status
+                    status=EvmTransactionStatus.PENDING
                 )
             )
 

@@ -12,7 +12,7 @@ from deployer.exceptions import InvalidServiceAuthParameters
 class InitiateOrderRequest(BaseModel):
     org_id: str = Field(alias="orgId")
     service_id: str = Field(alias="serviceId")
-    service_endpoint: str = Field(alias="serviceEndpoint")
+    service_endpoint: Optional[str] = Field(alias="serviceEndpoint", default=None)
     auth_parameters: Optional[dict] = Field(alias="authParameters", default=None)
 
     @classmethod
@@ -26,7 +26,7 @@ class InitiateOrderRequest(BaseModel):
     def validate_auth_parameters(cls, value: Optional[dict]):
         if value is not None: # auth parameters are optional
             for param in AUTH_PARAMETERS:
-                if param not in value.keys():
+                if param not in value.keys() or not value[param]:
                     raise InvalidServiceAuthParameters()
 
 

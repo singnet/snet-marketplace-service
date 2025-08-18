@@ -15,23 +15,19 @@ class NewDaemonDomain:
     status: DaemonStatus
     daemon_config: dict
     service_published: bool
+    daemon_endpoint: str | None = None
     start_on: datetime | None = None
     end_on: datetime | None = None
 
 
 @dataclass
 class DaemonDomain(NewDaemonDomain, BaseDomain):
-    orders: list[OrderDomain] | None = None
 
     def to_short_response(self):
         return {
             "id": self.id,
             "status": self.status.value,
             "startOn": self.start_on,
-            "endOn": self.end_on
+            "endOn": self.end_on,
+            "daemonEndpoint": self.daemon_endpoint
         }
-
-    def to_response(self):
-        result = super().to_response()
-        result["orders"] = [order.to_response() for order in self.orders]
-        return result

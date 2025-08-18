@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 
+from common.exceptions import BadRequestException
 from common.logger import get_logger
 from deployer.config import NETWORKS, NETWORK_ID
 from sqlalchemy import create_engine
@@ -27,6 +28,10 @@ def session_scope(session_factory):
         logger.exception("Database error during session scope", exc_info=True)
         session.rollback()
         raise
+    except BadRequestException as e:
+        logger.exception("Bad request error during session scope")
+        session.rollback()
+        raise e
     except Exception:
         logger.exception("Unexpected error during session scope", exc_info=True)
         session.rollback()

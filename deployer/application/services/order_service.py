@@ -3,6 +3,7 @@ from deployer.application.schemas.order_schemas import InitiateOrderRequest, Get
 from deployer.config import DEFAULT_DAEMON_STORAGE_TYPE
 from deployer.domain.models.daemon import NewDaemonDomain
 from deployer.domain.models.order import NewOrderDomain
+from deployer.exceptions import MissingServiceEndpointException
 from deployer.infrastructure.db import session_scope, DefaultSessionFactory
 from deployer.infrastructure.models import DaemonStatus, OrderStatus
 from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
@@ -18,27 +19,39 @@ class OrderService:
         order_uuid = generate_uuid()
 
         daemon_config = {
-            "service_endpoint": request.service_endpoint,
             "payment_channel_storage_type": DEFAULT_DAEMON_STORAGE_TYPE.value
         }
+        if request.service_endpoint is not None:
+            daemon_config["service_endpoint"] = request.service_endpoint
         if request.auth_parameters is not None:
             daemon_config["service_cred_key"] = request.auth_parameters["key"]
             daemon_config["service_cred_value"] = request.auth_parameters["value"]
             daemon_config["service_cred_location"] = request.auth_parameters["location"]
 
         with session_scope(self.session_factory) as session:
-            DaemonRepository.create_daemon(
-                session,
-                NewDaemonDomain(
-                    id=daemon_id,
-                    account_id=request.account_id,
-                    org_id=request.org_id,
-                    service_id=request.service_id,
-                    status=DaemonStatus.INIT,
-                    daemon_config=daemon_config,
-                    service_published=False
+            daemon = DaemonRepository.search_daemon(session, request.org_id, request.service_id)
+            if daemon is None:
+                if request.service_endpoint is None:
+                    raise MissingServiceEndpointException()
+                DaemonRepository.create_daemon(
+                    session,
+                    NewDaemonDomain(
+                        id=daemon_id,
+                        account_id=request.account_id,
+                        org_id=request.org_id,
+                        service_id=request.service_id,
+                        status=DaemonStatus.INIT,
+                        daemon_config=daemon_config,
+                        service_published=False
+                    )
                 )
-            )
+            else:
+                daemon_id = daemon.id
+                if len(daemon_config.keys()) != 1:
+                    new_daemon_config = daemon_config
+                    daemon_config = daemon.daemon_config
+                    daemon_config.update(new_daemon_config)
+                    DaemonRepository.update_daemon_config(session, daemon_id, daemon_config)
 
             OrderRepository.create_order(
                 session,
@@ -49,8 +62,10 @@ class OrderService:
                 )
             )
 
+        return {"order_id": order_uuid}
+
     def get_order(self, request: GetOrderRequest) -> dict:
         with session_scope(self.session_factory) as session:
             order = OrderRepository.get_order(session, request.order_id)
-        return order.to_response()
+        return order.to_short_response()
 

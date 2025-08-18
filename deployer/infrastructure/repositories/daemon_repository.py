@@ -101,3 +101,19 @@ class DaemonRepository:
         daemons_db = result.scalars().all()
 
         return DaemonFactory.daemons_from_db_model(daemons_db)
+
+    @staticmethod
+    def search_daemon(session: Session, org_id: str, service_id: str) -> Optional[DaemonDomain]:
+        query = select(
+            Daemon
+        ).where(
+            Daemon.org_id == org_id, Daemon.service_id == service_id
+        ).limit(1)
+
+        result = session.execute(query)
+
+        daemon_db = result.scalar_one_or_none()
+        if daemon_db is None:
+            return None
+
+        return DaemonFactory.daemon_from_db_model(daemon_db)
