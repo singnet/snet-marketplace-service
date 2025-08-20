@@ -2,7 +2,7 @@ from common.exception_handler import exception_handler
 from common.logger import get_logger
 from deployer.application.schemas.daemon_schemas import DaemonRequest
 from deployer.application.schemas.job_schemas import RegistryEventConsumerRequest
-from deployer.application.services.job_services import ServiceEventConsumer, JobService
+from deployer.application.services.job_services import JobService
 
 logger = get_logger(__name__)
 
@@ -13,7 +13,7 @@ def registry_event_consumer(event, context):
     for e in events:
         request = RegistryEventConsumerRequest.validate_event(e)
         if request.event_name in ["ServiceCreated", "ServiceMetadataModified", "ServiceDeleted"]:
-            ServiceEventConsumer().on_event(request)
+            JobService().process_registry_event(request)
 
     return {}
 

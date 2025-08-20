@@ -32,7 +32,7 @@ class OrderStatus(PythonEnum):
     FAILED = "FAILED" # payment failed
 
 
-class EvmTransactionStatus(PythonEnum):
+class EVMTransactionStatus(PythonEnum):
     PENDING = "PENDING" # transaction pending
     SUCCESS = "SUCCESS" # transaction successful
     FAILED = "FAILED" # transaction failed
@@ -131,11 +131,11 @@ class EVMTransaction(Base):
         nullable=False,
         index = True
     )
-    status: Mapped[EvmTransactionStatus] = mapped_column(
+    status: Mapped[EVMTransactionStatus] = mapped_column(
         "status",
-        Enum(EvmTransactionStatus),
+        Enum(EVMTransactionStatus),
         nullable=False,
-        default = EvmTransactionStatus.PENDING
+        default = EVMTransactionStatus.PENDING
     )
     sender: Mapped[str] = mapped_column("sender", VARCHAR(128), nullable=False)
     recipient: Mapped[str] = mapped_column("receiver", VARCHAR(128), nullable=False)

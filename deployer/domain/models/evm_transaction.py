@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 
 from deployer.domain.models.base_domain import BaseDomain
-from deployer.infrastructure.models import EvmTransactionStatus
+from deployer.infrastructure.models import EVMTransactionStatus
 
 
 @dataclass
 class NewEVMTransactionDomain:
     hash: str
     order_id: str
-    status: EvmTransactionStatus
+    status: EVMTransactionStatus
     sender: str
     recipient: str
 
