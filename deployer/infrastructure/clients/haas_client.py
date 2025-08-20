@@ -51,12 +51,8 @@ class HaaSClient:
             "base_image": HAAS_BASE_IMAGE,
             "payment_channel_storage_type": daemon_config["payment_channel_storage_type"]
         }
-        if ("service_cred_key" in daemon_config
-                and "service_cred_value" in daemon_config
-                and "service_cred_location" in daemon_config):
-            request_data["service_cred_key"] = daemon_config["service_cred_key"]
-            request_data["service_cred_value"] = daemon_config["service_cred_value"]
-            request_data["service_cred_location"] = daemon_config["service_cred_location"]
+        if "service_credentials" in daemon_config:
+            request_data["service_credentials"] = daemon_config["service_credentials"]
 
         try:
             result = requests.post(path, data=request_data, auth=self.auth)
@@ -83,7 +79,35 @@ class HaaSClient:
         except Exception as e:
             raise HaaSClientError(str(e))
 
-    def check_daemon(self, org_id: str, service_id: str) -> (HaaSDaemonStatus, datetime | None):
+    def redeploy_daemon(
+            self,
+            org_id: str,
+            service_id: str,
+            daemon_config: dict,
+    ):
+        path = HAAS_BASE_URL + "/v1/daemon/redeploy"
+        request_data = {
+            "registry": HAAS_REGISTRY,
+            "reg_repo": HAAS_REG_REPO,
+            "org": org_id,
+            "service": service_id,
+            "daemon_group": daemon_config["daemon_group"],
+            "service_class": daemon_config["service_class"],
+            "service_endpoint": daemon_config["service_endpoint"],
+            "base_image": HAAS_BASE_IMAGE,
+            "payment_channel_storage_type": daemon_config["payment_channel_storage_type"]
+        }
+        if "service_credentials" in daemon_config:
+            request_data["service_credentials"] = daemon_config["service_credentials"]
+
+        try:
+            result = requests.post(path, data = request_data, auth = self.auth)
+            if not result.ok:
+                raise HaaSClientError(result.text)
+        except Exception as e:
+            raise HaaSClientError(str(e))
+
+    def check_daemon(self, org_id: str, service_id: str) -> tuple[HaaSDaemonStatus, datetime | None]:
         path = HAAS_BASE_URL + "/v1/daemon/check" + f"?org={org_id}&service={service_id}"
         try:
             result = requests.get(path, auth=self.auth)

@@ -16,7 +16,9 @@ class TransactionService:
                 NewEVMTransactionDomain(
                     hash=request.transaction_hash,
                     order_id=request.order_id,
-                    status=EvmTransactionStatus.PENDING
+                    status=EvmTransactionStatus.PENDING,
+                    sender = request.sender,
+                    recipient = request.recipient
                 )
             )
 

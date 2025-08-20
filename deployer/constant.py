@@ -14,3 +14,5 @@ AUTH_PARAMETERS = [
     "value",
     "location"
 ]
+
+TRANSACTION_TTL = timedelta(minutes = 10)

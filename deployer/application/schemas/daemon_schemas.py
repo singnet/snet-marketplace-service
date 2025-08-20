@@ -22,7 +22,7 @@ class DaemonRequest(BaseModel):
 class UpdateConfigRequest(BaseModel):
     daemon_id: str = Field(alias="daemonId")
     service_endpoint: Optional[str] = Field(alias = "serviceEndpoint", default = None)
-    auth_parameters: Optional[dict] = Field(alias = "authParameters", default = None)
+    service_credentials: Optional[list[dict]] = Field(alias="serviceCredentials", default=None)
 
     @classmethod
     @validation_handler([RequestPayloadType.PATH_PARAMS, RequestPayloadType.BODY])
@@ -31,13 +31,14 @@ class UpdateConfigRequest(BaseModel):
         data = {**event[RequestPayloadType.PATH_PARAMS], **body}
         return cls.model_validate(data)
 
-    @field_validator("auth_parameters")
+    @field_validator("service_credentials")
     @classmethod
-    def validate_auth_parameters(cls, value: Optional[dict]):
-        if value is not None:  # auth parameters are optional
-            for param in AUTH_PARAMETERS:
-                if param not in value.keys() or not value[param]:
-                    raise InvalidServiceAuthParameters()
+    def validate_credentials(cls, values: Optional[list[dict]]):
+        if values is not None:  # auth parameters are optional
+            for value in values:
+                for param in AUTH_PARAMETERS:
+                    if param not in value.keys() or not value[param]:
+                        raise InvalidServiceAuthParameters()
 
 
 class SearchDaemonRequest(BaseModel):

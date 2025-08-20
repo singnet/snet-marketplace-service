@@ -8,7 +8,8 @@ from deployer.config import (
     REGION_NAME,
     START_DAEMON_ARN,
     DELETE_DAEMON_ARN,
-    UPDATE_DAEMON_STATUS_ARN
+    UPDATE_DAEMON_STATUS_ARN,
+    REDEPLOY_DAEMON_ARN
 )
 
 
@@ -22,7 +23,7 @@ class DeployerClientError(Exception):
 
 class DeployerClient:
     def __init__(self):
-        self.lambda_client = boto3.client("lambda", region_name=REGION_NAME)
+        self._lambda_client = boto3.client("lambda", region_name=REGION_NAME)
 
     def _invoke_lambda(
             self,
@@ -43,9 +44,9 @@ class DeployerClient:
         if headers:
             payload["headers"] = headers
         try:
-            response = self.lambda_client.invoke(
+            response = self._lambda_client.invoke(
                 FunctionName=lambda_function_arn,
-                InvocationType="RequestResponse" if not asynchronous else "Event",
+                InvocationType="Event" if asynchronous else "RequestResponse",
                 Payload=json.dumps(payload),
             )
 
@@ -55,6 +56,8 @@ class DeployerClient:
                     return response_body["data"]
                 else:
                     raise DeployerClientError(response_body)
+            elif response['ResponseMetadata']['HTTPStatusCode'] != 202:
+                raise DeployerClientError(response)
 
         except Exception as e:
             raise DeployerClientError(str(e))
@@ -73,9 +76,17 @@ class DeployerClient:
             asynchronous=asynchronous
         )
 
+    def redeploy_daemon(self, daemon_id: str, asynchronous=False):
+        return self._invoke_lambda(
+            lambda_function_arn=REDEPLOY_DAEMON_ARN,
+            path_parameters={"daemon_id": daemon_id},
+            asynchronous=asynchronous
+        )
+
     def update_daemon_status(self, daemon_id: str, asynchronous=False):
         return self._invoke_lambda(
             lambda_function_arn=UPDATE_DAEMON_STATUS_ARN,
             path_parameters={"daemon_id": daemon_id},
             asynchronous=asynchronous
         )
+

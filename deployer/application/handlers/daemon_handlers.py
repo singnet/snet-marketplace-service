@@ -126,3 +126,15 @@ def search_daemon(event, context):
         StatusCode.OK,
         {"status": "success", "data": response, "error": {}}, cors_enabled = True
     )
+
+
+@exception_handler(logger=logger)
+def redeploy_daemon(event, context):
+    request = DaemonRequest.validate_event(event)
+
+    response = DaemonService().redeploy_daemon(request)
+
+    return generate_lambda_response(
+        StatusCode.OK,
+        {"status": "success", "data": response, "error": {}}, cors_enabled = True
+    )

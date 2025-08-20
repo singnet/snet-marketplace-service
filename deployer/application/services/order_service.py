@@ -8,6 +8,7 @@ from deployer.infrastructure.db import session_scope, DefaultSessionFactory
 from deployer.infrastructure.models import DaemonStatus, OrderStatus
 from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
 from deployer.infrastructure.repositories.order_repository import OrderRepository
+from deployer.utils import get_daemon_endpoint
 
 
 class OrderService:
@@ -23,10 +24,8 @@ class OrderService:
         }
         if request.service_endpoint is not None:
             daemon_config["service_endpoint"] = request.service_endpoint
-        if request.auth_parameters is not None:
-            daemon_config["service_cred_key"] = request.auth_parameters["key"]
-            daemon_config["service_cred_value"] = request.auth_parameters["value"]
-            daemon_config["service_cred_location"] = request.auth_parameters["location"]
+        if request.service_credentials is not None:
+            daemon_config["service_credentials"] = request.service_credentials
 
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.search_daemon(session, request.org_id, request.service_id)
@@ -42,7 +41,8 @@ class OrderService:
                         service_id=request.service_id,
                         status=DaemonStatus.INIT,
                         daemon_config=daemon_config,
-                        service_published=False
+                        service_published=False,
+                        daemon_endpoint = get_daemon_endpoint(request.org_id, request.service_id)
                     )
                 )
             else:

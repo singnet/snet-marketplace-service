@@ -17,6 +17,7 @@ class DaemonStatus(PythonEnum):
     INIT = "INIT" # only the entity is created, before payment
     READY_TO_START = "READY_TO_START" # paid but not deployed
     STARTING = "STARTING" # deploying
+    RESTARTING = "RESTARTING" # redeploying
     DELETING = "DELETING" # deleting
     UP = "UP" # deployed and working
     # CLAIMING = "claiming"
@@ -136,6 +137,8 @@ class EVMTransaction(Base):
         nullable=False,
         default = EvmTransactionStatus.PENDING
     )
+    sender: Mapped[str] = mapped_column("sender", VARCHAR(128), nullable=False)
+    recipient: Mapped[str] = mapped_column("receiver", VARCHAR(128), nullable=False)
 
     created_on: Mapped[datetime] = mapped_column(
         "created_on",

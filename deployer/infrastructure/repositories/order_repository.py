@@ -1,8 +1,10 @@
+from datetime import datetime, UTC
 from typing import Optional
 
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
+from deployer.constant import TRANSACTION_TTL
 from deployer.domain.factory.order_factory import OrderFactory
 from deployer.domain.models.order import NewOrderDomain, OrderDomain
 from deployer.infrastructure.models import Order, OrderStatus
@@ -75,3 +77,17 @@ class OrderRepository:
             return None
 
         return OrderFactory.order_from_db_model(order_db)
+
+    @staticmethod
+    def fail_old_orders(session: Session) -> None:
+        current_time = datetime.now(UTC)
+        query = update(
+            Order
+        ).where(
+            Order.status == OrderStatus.PROCESSING,
+            Order.updated_on < current_time - TRANSACTION_TTL
+        ).values(
+            status = OrderStatus.FAILED
+        )
+
+        session.execute(query)

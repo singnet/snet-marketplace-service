@@ -9,6 +9,8 @@ class NewEVMTransactionDomain:
     hash: str
     order_id: str
     status: EvmTransactionStatus
+    sender: str
+    recipient: str
 
 
 @dataclass

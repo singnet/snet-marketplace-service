@@ -1,8 +1,13 @@
+from datetime import datetime, UTC, timedelta
+
 from sqlalchemy import update, select
 from sqlalchemy.orm import Session
 
+from deployer.constant import TRANSACTION_TTL
+from deployer.domain.factory.transaction_factory import TransactionFactory
 from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
-from deployer.infrastructure.models import EVMTransaction
+from deployer.domain.models.transactions_metadata import TransactionsMetadataDomain
+from deployer.infrastructure.models import EVMTransaction, TransactionsMetadata, EvmTransactionStatus
 
 
 class TransactionRepository:
@@ -35,3 +40,26 @@ class TransactionRepository:
             )
 
             session.add(transaction_db)
+
+    @staticmethod
+    def get_transactions_metadata(session: Session) -> list[TransactionsMetadataDomain]:
+        query = select(TransactionsMetadata)
+
+        result = session.execute(query)
+        transactions_metadata_db = result.scalars().all()
+
+        return TransactionFactory.transactions_metadata_list_from_db_model(transactions_metadata_db)
+
+    @staticmethod
+    def fail_old_transactions(session: Session) -> None:
+        current_time = datetime.now(UTC)
+        query = update(
+            EVMTransaction
+        ).where(
+            EVMTransaction.status == EvmTransactionStatus.PENDING,
+            EVMTransaction.updated_on < current_time - TRANSACTION_TTL
+        ).values(
+            status = EvmTransactionStatus.FAILED
+        )
+
+        session.execute(query)

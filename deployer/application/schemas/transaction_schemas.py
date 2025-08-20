@@ -10,6 +10,8 @@ from common.validation_handler import validation_handler
 class SaveEVMTransactionRequest(BaseModel):
     order_id: str = Field(alias="orderId")
     transaction_hash: str = Field(alias="transactionHash")
+    sender: str
+    recipient: str
 
     @classmethod
     @validation_handler([RequestPayloadType.BODY])

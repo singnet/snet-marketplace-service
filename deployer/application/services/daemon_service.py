@@ -12,8 +12,8 @@ from deployer.infrastructure.repositories.order_repository import OrderRepositor
 class DaemonService:
     def __init__(self):
         self.session_factory = DefaultSessionFactory
-        self.deployer_client = DeployerClient()
-        self.haas_client = HaaSClient()
+        self._deployer_client = DeployerClient()
+        self._haas_client = HaaSClient()
 
     def get_user_daemons(self, username: str) -> list[dict]:
         with session_scope(self.session_factory) as session:
@@ -36,7 +36,7 @@ class DaemonService:
         with session_scope(self.session_factory) as session:
             ClaimingPeriodRepository.create_claiming_period(session, request.daemon_id)
 
-            self.deployer_client.start_daemon(request.daemon_id)
+            self._deployer_client.start_daemon(request.daemon_id)
         return {}
 
     def start_daemon(self, request: DaemonRequest):
@@ -44,6 +44,10 @@ class DaemonService:
 
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.get_daemon(session, daemon_id)
+
+            if daemon is None:
+                raise DaemonNotFoundException(daemon_id)
+
             org_id = daemon.org_id
             service_id = daemon.service_id
             daemon_config = daemon.daemon_config
@@ -51,7 +55,7 @@ class DaemonService:
             if daemon.status != DaemonStatus.READY_TO_START or not daemon.service_published:
                 return {}
 
-            self.haas_client.start_daemon(
+            self._haas_client.start_daemon(
                 org_id = org_id,
                 service_id = service_id,
                 daemon_config = daemon_config
@@ -66,30 +70,54 @@ class DaemonService:
 
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.get_daemon(session, daemon_id)
+
+            if daemon is None:
+                raise DaemonNotFoundException(daemon_id)
+
             org_id = daemon.org_id
             service_id = daemon.service_id
 
             if daemon.status != DaemonStatus.UP:
                 return {}
 
-            self.haas_client.delete_daemon(org_id, service_id)
+            self._haas_client.delete_daemon(org_id, service_id)
             DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.DELETING)
 
         return {}
 
-    def pause_daemon(self, request: DaemonRequest):
-        pass
+    def redeploy_daemon(self, request: DaemonRequest):
+        daemon_id = request.daemon_id
 
-    def unpause_daemon(self, request: DaemonRequest):
-        pass
+        with session_scope(self.session_factory) as session:
+            daemon = DaemonRepository.get_daemon(session, daemon_id)
+
+            if daemon is None:
+                raise DaemonNotFoundException(daemon_id)
+
+            org_id = daemon.org_id
+            service_id = daemon.service_id
+            daemon_config = daemon.daemon_config
+
+            if daemon.status != DaemonStatus.UP:
+                return {}
+
+            self._haas_client.redeploy_daemon(
+                org_id = org_id,
+                service_id = service_id,
+                daemon_config = daemon_config
+            )
+
+            DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.RESTARTING)
+
+        return {}
 
     def get_public_key(self) -> dict:
-        public_key = self.haas_client.get_public_key()
+        public_key = self._haas_client.get_public_key()
         return {"publicKey": public_key}
 
     def update_config(self, request: UpdateConfigRequest) -> dict:
         service_endpoint = request.service_endpoint
-        auth_parameters = request.auth_parameters
+        service_credentials = request.service_credentials
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.get_daemon(session, request.daemon_id)
             if daemon is None:
@@ -98,12 +126,12 @@ class DaemonService:
             daemon_config = daemon.daemon_config
             if service_endpoint:
                 daemon_config["service_endpoint"] = service_endpoint
-            if auth_parameters:
-                daemon_config["service_cred_key"] = auth_parameters["key"]
-                daemon_config["service_cred_value"] = auth_parameters["value"]
-                daemon_config["service_cred_location"] = auth_parameters["location"]
+            if service_credentials:
+                daemon_config["service_credentials"] = service_credentials
 
             DaemonRepository.update_daemon_config(session, request.daemon_id, daemon_config)
+
+            self._deployer_client.redeploy_daemon(request.daemon_id)
 
         return {}
 
@@ -116,3 +144,9 @@ class DaemonService:
                 return {}
             order = OrderRepository.get_last_order(session, daemon.id)
             return {"daemon": daemon.to_response(), "order": order.to_short_response()}
+
+    def pause_daemon(self, request: DaemonRequest):
+        pass
+
+    def unpause_daemon(self, request: DaemonRequest):
+        pass

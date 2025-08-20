@@ -4,7 +4,7 @@ from deployer.domain.models.base_domain import BaseDomain
 
 
 @dataclass
-class NewTransactionMetadata:
+class NewTransactionsMetadataDomain:
     id: int
     recipient: str
     last_block_no: int
@@ -13,5 +13,5 @@ class NewTransactionMetadata:
 
 
 @dataclass
-class TransactionsMetadata(NewTransactionMetadata, BaseDomain):
+class TransactionsMetadataDomain(NewTransactionsMetadataDomain, BaseDomain):
     pass

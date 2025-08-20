@@ -15,7 +15,7 @@ class NewDaemonDomain:
     status: DaemonStatus
     daemon_config: dict
     service_published: bool
-    daemon_endpoint: str | None = None
+    daemon_endpoint: str
     start_on: datetime | None = None
     end_on: datetime | None = None
 

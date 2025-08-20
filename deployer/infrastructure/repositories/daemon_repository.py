@@ -117,3 +117,16 @@ class DaemonRepository:
             return None
 
         return DaemonFactory.daemon_from_db_model(daemon_db)
+
+    @staticmethod
+    def get_daemons_without_statuses(session: Session, statuses: list[DaemonStatus]) -> list[DaemonDomain]:
+        query = select(
+            Daemon
+        ).where(
+            Daemon.status.notin_(statuses)
+        )
+
+        result = session.execute(query)
+        daemons_db = result.scalars().all()
+
+        return DaemonFactory.daemons_from_db_model(daemons_db)
