@@ -1,4 +1,4 @@
-# from deployer.constant import DaemonStorageType
+from deployer.constant import DaemonStorageType
 
 NETWORKS = {
     11155111: {
@@ -38,7 +38,7 @@ DELETE_DAEMON_ARN = ""
 UPDATE_DAEMON_STATUS_ARN = ""
 REDEPLOY_DAEMON_ARN = ""
 
-# DEFAULT_DAEMON_STORAGE_TYPE = DaemonStorageType.ETCD
+DEFAULT_DAEMON_STORAGE_TYPE = DaemonStorageType.ETCD
 
 CLAIMING_PERIOD_IN_HOURS = 0
 BREAK_PERIOD_IN_HOURS = 0

@@ -269,17 +269,15 @@ class JobService:
         tar_stream = io.BytesIO(tar_bytes)
 
         try:
-            # Открываем tar архив из байтов
             with tarfile.open(fileobj = tar_stream, mode = 'r:*') as tar:
                 members = [m for m in tar.getmembers() if m.isfile()]
 
                 if not members:
                     raise Exception("No files found in tar archive")
 
-                members.sort(key = lambda x: x.name)
                 first_member = members[0]
-
                 file_content = tar.extractfile(first_member)
+
                 if file_content is None:
                     raise Exception("Failed to extract file from tar archive")
 
@@ -288,7 +286,6 @@ class JobService:
                 for line in content_text.splitlines():
                     line = line.strip()
                     if line.startswith('package ') and line.endswith(';'):
-                        # Извлекаем название пакета
                         package_line = line
                         package_name = package_line.replace('package ', '').replace(';', '').strip()
                         return package_name
