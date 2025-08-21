@@ -1,3 +1,5 @@
+from datetime import datetime, UTC
+
 from common.utils import generate_uuid
 from deployer.application.schemas.order_schemas import InitiateOrderRequest, GetOrderRequest
 from deployer.config import DEFAULT_DAEMON_STORAGE_TYPE
@@ -18,6 +20,8 @@ class OrderService:
     def initiate_order(self, request: InitiateOrderRequest):
         daemon_id = generate_uuid()
         order_uuid = generate_uuid()
+
+        current_time = datetime.now(UTC)
 
         daemon_config = {
             "payment_channel_storage_type": DEFAULT_DAEMON_STORAGE_TYPE.value
@@ -42,7 +46,9 @@ class OrderService:
                         status=DaemonStatus.INIT,
                         daemon_config=daemon_config,
                         service_published=False,
-                        daemon_endpoint = get_daemon_endpoint(request.org_id, request.service_id)
+                        daemon_endpoint = get_daemon_endpoint(request.org_id, request.service_id),
+                        start_on = current_time,
+                        end_on = current_time
                     )
                 )
             else:

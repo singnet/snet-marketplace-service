@@ -18,6 +18,7 @@ class DaemonService:
     def get_user_daemons(self, username: str) -> list[dict]:
         with session_scope(self.session_factory) as session:
             user_daemons = DaemonRepository.get_user_daemons(session, username)
+        # TODO: add other fields
         return [daemon.to_short_response() for daemon in user_daemons]
 
     def get_service_daemon(self, request: DaemonRequest) -> dict:

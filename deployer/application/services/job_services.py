@@ -1,11 +1,15 @@
+import io
 import os
+import tarfile
 from datetime import datetime, UTC, timedelta
+from dateutil.relativedelta import relativedelta
 
 from eth_typing import HexStr
 from web3 import Web3
 
 from common.blockchain_util import BlockChainUtil
 from common.logger import get_logger
+from common.storage_provider import StorageProvider
 from deployer.application.schemas.daemon_schemas import DaemonRequest
 from deployer.application.schemas.job_schemas import RegistryEventConsumerRequest
 from deployer.config import (
@@ -13,7 +17,9 @@ from deployer.config import (
     NETWORK_ID,
     CONTRACT_BASE_PATH,
     TOKEN_JSON_FILE_NAME,
-    TRANSFER_TARGET_ADDRESS, DAEMON_STARTING_TTL_IN_MINUTES, DAEMON_RESTARTING_TTL_IN_MINUTES
+    TRANSFER_TARGET_ADDRESS,
+    DAEMON_STARTING_TTL_IN_MINUTES,
+    DAEMON_RESTARTING_TTL_IN_MINUTES
 )
 from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
 from deployer.domain.models.transactions_metadata import TransactionsMetadataDomain
@@ -21,7 +27,13 @@ from deployer.exceptions import DaemonNotFoundException
 from deployer.infrastructure.clients.deployer_cleint import DeployerClient
 from deployer.infrastructure.clients.haas_client import HaaSClient, HaaSDaemonStatus
 from deployer.infrastructure.db import session_scope, DefaultSessionFactory
-from deployer.infrastructure.models import DaemonStatus, OrderStatus, EVMTransactionStatus
+from deployer.infrastructure.models import (
+    DaemonStatus,
+    OrderStatus,
+    EVMTransactionStatus,
+    ClaimingPeriodStatus
+)
+from deployer.infrastructure.repositories.claiming_period_repository import ClaimingPeriodRepository
 from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
 from deployer.infrastructure.repositories.order_repository import OrderRepository
 from deployer.infrastructure.repositories.transaction_repository import TransactionRepository
@@ -35,6 +47,7 @@ class JobService:
         self.session_factory = DefaultSessionFactory
         self._deployer_client = DeployerClient()
         self._haas_client = HaaSClient()
+        self._storage_provider = StorageProvider()
 
     def process_registry_event(self, request: RegistryEventConsumerRequest):
         event_name = request.event_name
@@ -43,8 +56,35 @@ class JobService:
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.search_daemon(session, org_id, service_id)
             if daemon is None:
+                logger.info(f"Service (org_id {org_id}, service_id {service_id}) doesn't use HaaS")
                 return
             daemon_id = daemon.id
+
+            metadata_uri = request.metadata_uri
+            metadata: dict = self._storage_provider.get(metadata_uri)
+            daemon_group = metadata["groups"][0]
+            daemon_endpoint = daemon_group["endpoints"][0]
+            group_name = daemon_group["group_name"]
+
+            service_api_source = metadata["service_api_source"]
+            service_class = self._get_service_class(service_api_source)
+
+            if daemon.daemon_endpoint != daemon_endpoint:
+                logger.info(f"Service (org_id {org_id}, service_id {service_id}) doesn't use HaaS")
+                if daemon.status == DaemonStatus.UP:
+                    logger.info(f"Stopping daemon {daemon_id}")
+                    self._deployer_client.stop_daemon(daemon_id)
+                return
+
+            new_config = daemon.daemon_config
+            new_config["daemon_group"] = group_name
+            new_config["service_class"] = service_class
+
+            DaemonRepository.update_daemon_config(
+                session,
+                daemon_id,
+                new_config
+            )
 
             if event_name == "ServiceDeleted":
                 DaemonRepository.update_daemon_service_published(session, daemon_id, False)
@@ -72,7 +112,20 @@ class JobService:
 
                     order = OrderRepository.get_order(session, new_transaction.order_id)
                     OrderRepository.update_order_status(session, new_transaction.order_id, OrderStatus.SUCCESS)
-                    DaemonRepository.update_daemon_status(session, order.daemon_id, DaemonStatus.READY_TO_START)
+
+                    daemon = DaemonRepository.get_daemon(session, order.daemon_id)
+                    # TODO: find a way to handle the first order with not published service
+                    if (daemon.service_published and daemon.status == DaemonStatus.DOWN) or not daemon.service_published:
+                        DaemonRepository.update_daemon_status(
+                            session, order.daemon_id, DaemonStatus.READY_TO_START
+                        )
+                        DaemonRepository.update_daemon_end_on(
+                            session, order.daemon_id, datetime.now(UTC) + relativedelta(months=+1)
+                        )
+                    elif daemon.status == DaemonStatus.UP:
+                        DaemonRepository.update_daemon_end_on(
+                            session, order.daemon_id, daemon.end_on + relativedelta(months = +1)
+                        )
 
                     TransactionRepository.update_transactions_metadata(session, transactions_metadata.id, last_block)
 
@@ -85,6 +138,7 @@ class JobService:
                 session,
                 [DaemonStatus.INIT, DaemonStatus.ERROR, DaemonStatus.DOWN]
             )
+            logger.info(f"Found {len(daemons)} daemons to check")
         for daemon in daemons:
             if daemon.status == DaemonStatus.READY_TO_START and not daemon.service_published:
                 continue
@@ -103,9 +157,20 @@ class JobService:
                 raise DaemonNotFoundException(daemon_id)
 
             haas_daemon_status, started_on = self._haas_client.check_daemon(daemon.org_id, daemon.service_id)
-            last_order = OrderRepository.get_last_order(session, daemon_id)
-
+            last_claiming_period = ClaimingPeriodRepository.get_last_claiming_period(session, daemon_id)
             current_time = datetime.now(UTC)
+
+            if (last_claiming_period
+                    and last_claiming_period.status == ClaimingPeriodStatus.ACTIVE
+                    and last_claiming_period.end_on < current_time):
+                ClaimingPeriodRepository.update_claiming_period_status(
+                    session, last_claiming_period.id, ClaimingPeriodStatus.INACTIVE
+                )
+
+            logger.info(f"Daemon {daemon_id}, status: {daemon_status}, HaaS status: {haas_daemon_status}, "
+                        f"service published: {service_published}, updated on: {daemon.updated_on}, "
+                        f"last claiming period: {last_claiming_period.to_response() if last_claiming_period else None}")
+
             if service_published:
                 if haas_daemon_status == HaaSDaemonStatus.DOWN:
                     if daemon_status == DaemonStatus.READY_TO_START:
@@ -113,17 +178,26 @@ class JobService:
                     elif daemon_status == DaemonStatus.STARTING:
                         if daemon.updated_on + timedelta(minutes = DAEMON_STARTING_TTL_IN_MINUTES) < current_time:
                             DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.ERROR)
+                            if last_claiming_period and last_claiming_period.status == ClaimingPeriodStatus.ACTIVE:
+                                ClaimingPeriodRepository.update_claiming_period_status(
+                                    session, last_claiming_period.id, ClaimingPeriodStatus.FAILED
+                                )
                     elif daemon_status == DaemonStatus.UP or DaemonStatus.DELETING:
                         DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.DOWN)
                     elif daemon_status == DaemonStatus.RESTARTING:
                         if daemon.updated_on + timedelta(minutes = DAEMON_RESTARTING_TTL_IN_MINUTES) < current_time:
                             DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.ERROR)
-                else:
-
-
-
-
-
+                            if last_claiming_period and last_claiming_period.status == ClaimingPeriodStatus.ACTIVE:
+                                ClaimingPeriodRepository.update_claiming_period_status(
+                                    session, last_claiming_period.id, ClaimingPeriodStatus.FAILED
+                                )
+                elif haas_daemon_status == HaaSDaemonStatus.UP:
+                    if daemon_status == DaemonStatus.STARTING or daemon_status == DaemonStatus.RESTARTING:
+                        DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.UP)
+                    elif daemon_status == DaemonStatus.UP:
+                        if daemon.end_on < current_time:
+                            if last_claiming_period and last_claiming_period.status != ClaimingPeriodStatus.ACTIVE:
+                                self._deployer_client.stop_daemon(daemon_id)
 
     @staticmethod
     def _get_transactions_from_blockchain(tx_metadata: TransactionsMetadataDomain) -> tuple[list[NewEVMTransactionDomain], int]:
@@ -190,6 +264,37 @@ class JobService:
             logger.exception(f"Failed to get order id from transaction {tx_hash}: {e}")
             raise e
 
+    def _get_service_class(self, service_api_source: str) -> str:
+        tar_bytes = self._storage_provider.get(service_api_source, to_decode = False)
+        tar_stream = io.BytesIO(tar_bytes)
+
+        try:
+            # Открываем tar архив из байтов
+            with tarfile.open(fileobj = tar_stream, mode = 'r:*') as tar:
+                members = [m for m in tar.getmembers() if m.isfile()]
+
+                if not members:
+                    raise Exception("No files found in tar archive")
+
+                members.sort(key = lambda x: x.name)
+                first_member = members[0]
+
+                file_content = tar.extractfile(first_member)
+                if file_content is None:
+                    raise Exception("Failed to extract file from tar archive")
+
+                content_text = file_content.read().decode('utf-8')
+
+                for line in content_text.splitlines():
+                    line = line.strip()
+                    if line.startswith('package ') and line.endswith(';'):
+                        # Извлекаем название пакета
+                        package_line = line
+                        package_name = package_line.replace('package ', '').replace(';', '').strip()
+                        return package_name
+
+        except (tarfile.TarError, IOError, UnicodeDecodeError, Exception) as e:
+            raise Exception(f"Error processing tar file: {e}")
 
 
 

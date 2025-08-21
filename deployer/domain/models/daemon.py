@@ -16,8 +16,8 @@ class NewDaemonDomain:
     daemon_config: dict
     service_published: bool
     daemon_endpoint: str
-    start_on: datetime | None = None
-    end_on: datetime | None = None
+    start_on: datetime
+    end_on: datetime
 
 
 @dataclass

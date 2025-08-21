@@ -56,8 +56,8 @@ class Daemon(Base):
         nullable=False,
         default = DaemonStatus.INIT
     )
-    start_on: Mapped[datetime] = mapped_column("from_date", TIMESTAMP(timezone = False), nullable = True)
-    end_on: Mapped[datetime] = mapped_column("end_date", TIMESTAMP(timezone = False), nullable = True)
+    start_on: Mapped[datetime] = mapped_column("from_date", TIMESTAMP(timezone = False), nullable = False)
+    end_on: Mapped[datetime] = mapped_column("end_date", TIMESTAMP(timezone = False), nullable = False)
     daemon_config: Mapped[dict] = mapped_column("daemon_config", JSON, nullable = False, default = {})
     service_published: Mapped[bool] = mapped_column(
         "service_published",
