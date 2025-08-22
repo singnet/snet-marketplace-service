@@ -5,7 +5,7 @@ from deployer.application.schemas.order_schemas import InitiateOrderRequest, Get
 from deployer.config import DEFAULT_DAEMON_STORAGE_TYPE
 from deployer.domain.models.daemon import NewDaemonDomain
 from deployer.domain.models.order import NewOrderDomain
-from deployer.exceptions import MissingServiceEndpointException
+from deployer.exceptions import MissingServiceEndpointException, TopUpNotAvailableException
 from deployer.infrastructure.db import session_scope, DefaultSessionFactory
 from deployer.infrastructure.models import DaemonStatus, OrderStatus
 from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
@@ -53,6 +53,8 @@ class OrderService:
                 )
             else:
                 daemon_id = daemon.id
+                if daemon.status not in [DaemonStatus.UP, DaemonStatus.DOWN, DaemonStatus.READY_TO_START]:
+                    raise TopUpNotAvailableException()
                 if len(daemon_config.keys()) != 1:
                     new_daemon_config = daemon_config
                     daemon_config = daemon.daemon_config

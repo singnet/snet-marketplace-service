@@ -13,8 +13,8 @@ class OrderFactory:
             daemon_id=order_db_model.daemon_id,
             status=order_db_model.status,
             evm_transactions = TransactionFactory.transactions_from_db_model(order_db_model.evm_transactions),
-            created_on = order_db_model.created_on,
-            updated_on = order_db_model.updated_on
+            created_at = order_db_model.created_at,
+            updated_at = order_db_model.updated_at
         )
 
     @staticmethod

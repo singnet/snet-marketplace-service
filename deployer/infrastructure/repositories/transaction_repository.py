@@ -86,7 +86,7 @@ class TransactionRepository:
             EVMTransaction
         ).where(
             EVMTransaction.status == EVMTransactionStatus.PENDING,
-            EVMTransaction.updated_on < current_time - TRANSACTION_TTL
+            EVMTransaction.updated_at < current_time - TRANSACTION_TTL
         ).values(
             status = EVMTransactionStatus.FAILED
         )

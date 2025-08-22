@@ -27,7 +27,5 @@ class DaemonDomain(NewDaemonDomain, BaseDomain):
         return {
             "id": self.id,
             "status": self.status.value,
-            "startOn": self.start_on,
-            "endOn": self.end_on,
-            "daemonEndpoint": self.daemon_endpoint
+            "endOn": self.end_on
         }

@@ -122,7 +122,7 @@ class JobService:
                         DaemonRepository.update_daemon_end_on(
                             session, order.daemon_id, datetime.now(UTC) + relativedelta(months=+1)
                         )
-                    elif daemon.status == DaemonStatus.UP:
+                    elif daemon.status in [DaemonStatus.UP, DaemonStatus.READY_TO_START]:
                         DaemonRepository.update_daemon_end_on(
                             session, order.daemon_id, daemon.end_on + relativedelta(months = +1)
                         )
@@ -168,7 +168,7 @@ class JobService:
                 )
 
             logger.info(f"Daemon {daemon_id}, status: {daemon_status}, HaaS status: {haas_daemon_status}, "
-                        f"service published: {service_published}, updated on: {daemon.updated_on}, "
+                        f"service published: {service_published}, updated on: {daemon.updated_at}, "
                         f"last claiming period: {last_claiming_period.to_response() if last_claiming_period else None}")
 
             if service_published:
@@ -176,7 +176,7 @@ class JobService:
                     if daemon_status == DaemonStatus.READY_TO_START:
                         self._deployer_client.start_daemon(daemon_id)
                     elif daemon_status == DaemonStatus.STARTING:
-                        if daemon.updated_on + timedelta(minutes = DAEMON_STARTING_TTL_IN_MINUTES) < current_time:
+                        if daemon.updated_at + timedelta(minutes = DAEMON_STARTING_TTL_IN_MINUTES) < current_time:
                             DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.ERROR)
                             if last_claiming_period and last_claiming_period.status == ClaimingPeriodStatus.ACTIVE:
                                 ClaimingPeriodRepository.update_claiming_period_status(
@@ -185,7 +185,7 @@ class JobService:
                     elif daemon_status == DaemonStatus.UP or DaemonStatus.DELETING:
                         DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.DOWN)
                     elif daemon_status == DaemonStatus.RESTARTING:
-                        if daemon.updated_on + timedelta(minutes = DAEMON_RESTARTING_TTL_IN_MINUTES) < current_time:
+                        if daemon.updated_at + timedelta(minutes = DAEMON_RESTARTING_TTL_IN_MINUTES) < current_time:
                             DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.ERROR)
                             if last_claiming_period and last_claiming_period.status == ClaimingPeriodStatus.ACTIVE:
                                 ClaimingPeriodRepository.update_claiming_period_status(

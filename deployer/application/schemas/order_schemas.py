@@ -12,7 +12,7 @@ from deployer.exceptions import InvalidServiceAuthParameters
 class InitiateOrderRequest(BaseModel):
     org_id: str = Field(alias="orgId")
     service_id: str = Field(alias="serviceId")
-    service_endpoint: Optional[str] = Field(alias="serviceEndpoint")
+    service_endpoint: Optional[str] = Field(alias="serviceEndpoint", default=None)
     service_credentials: Optional[list[dict]] = Field(alias="serviceCredentials", default=None)
 
     @classmethod

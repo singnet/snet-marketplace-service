@@ -85,7 +85,7 @@ class OrderRepository:
             Order
         ).where(
             Order.status == OrderStatus.PROCESSING,
-            Order.updated_on < current_time - TRANSACTION_TTL
+            Order.updated_at < current_time - TRANSACTION_TTL
         ).values(
             status = OrderStatus.FAILED
         )

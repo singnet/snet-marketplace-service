@@ -20,8 +20,8 @@ class TransactionFactory:
             status=transaction_db_model.status,
             sender=transaction_db_model.sender,
             recipient=transaction_db_model.recipient,
-            created_on=transaction_db_model.created_on,
-            updated_on=transaction_db_model.updated_on
+            created_at =transaction_db_model.created_at,
+            updated_at =transaction_db_model.updated_at
         )
 
     @staticmethod
@@ -43,8 +43,8 @@ class TransactionFactory:
             last_block_no=transactions_metadata_db_model.last_block_no,
             fetch_limit=transactions_metadata_db_model.fetch_limit,
             block_adjustment=transactions_metadata_db_model.block_adjustment,
-            created_on=transactions_metadata_db_model.created_on,
-            updated_on=transactions_metadata_db_model.updated_on
+            created_at =transactions_metadata_db_model.created_at,
+            updated_at =transactions_metadata_db_model.updated_at
         )
 
     @staticmethod

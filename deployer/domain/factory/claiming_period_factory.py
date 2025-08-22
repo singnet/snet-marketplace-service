@@ -15,8 +15,8 @@ class ClaimingPeriodFactory:
             start_on = claiming_period_db_model.start_on,
             end_on = claiming_period_db_model.end_on,
             status = claiming_period_db_model.status,
-            created_on = claiming_period_db_model.created_on,
-            updated_on = claiming_period_db_model.updated_on
+            created_at = claiming_period_db_model.created_at,
+            updated_at = claiming_period_db_model.updated_at
         )
 
     @staticmethod

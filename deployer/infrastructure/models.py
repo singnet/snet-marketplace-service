@@ -67,14 +67,14 @@ class Daemon(Base):
     )
     daemon_endpoint: Mapped[str] = mapped_column("daemon_endpoint", VARCHAR(256), nullable = False)
 
-    created_on: Mapped[datetime] = mapped_column(
-        "created_on",
+    created_at: Mapped[datetime] = mapped_column(
+        "created_at",
         TIMESTAMP(timezone = False),
         nullable = False,
         server_default = CreateTimestamp
     )
-    updated_on: Mapped[datetime] = mapped_column(
-        "updated_on",
+    updated_at: Mapped[datetime] = mapped_column(
+        "updated_at",
         TIMESTAMP(timezone = False),
         nullable = False,
         server_default = UpdateTimestamp
@@ -100,14 +100,14 @@ class Order(Base):
         default = OrderStatus.PROCESSING
     )
 
-    created_on: Mapped[datetime] = mapped_column(
-        "created_on",
+    created_at: Mapped[datetime] = mapped_column(
+        "created_at",
         TIMESTAMP(timezone = False),
         nullable = False,
         server_default = CreateTimestamp
     )
-    updated_on: Mapped[datetime] = mapped_column(
-        "updated_on",
+    updated_at: Mapped[datetime] = mapped_column(
+        "updated_at",
         TIMESTAMP(timezone = False),
         nullable = False,
         server_default = UpdateTimestamp
@@ -140,14 +140,14 @@ class EVMTransaction(Base):
     sender: Mapped[str] = mapped_column("sender", VARCHAR(128), nullable=False)
     recipient: Mapped[str] = mapped_column("receiver", VARCHAR(128), nullable=False)
 
-    created_on: Mapped[datetime] = mapped_column(
-        "created_on",
+    created_at: Mapped[datetime] = mapped_column(
+        "created_at",
         TIMESTAMP(timezone = False),
         nullable = False,
         server_default = CreateTimestamp
     )
-    updated_on: Mapped[datetime] = mapped_column(
-        "updated_on",
+    updated_at: Mapped[datetime] = mapped_column(
+        "updated_at",
         TIMESTAMP(timezone = False),
         nullable = False,
         server_default = UpdateTimestamp
@@ -173,14 +173,14 @@ class ClaimingPeriod(Base):
         default = ClaimingPeriodStatus.INACTIVE
     )
 
-    created_on: Mapped[datetime] = mapped_column(
-        "created_on",
+    created_at: Mapped[datetime] = mapped_column(
+        "created_at",
         TIMESTAMP(timezone = False),
         nullable = False,
         server_default = CreateTimestamp
     )
-    updated_on: Mapped[datetime] = mapped_column(
-        "updated_on",
+    updated_at: Mapped[datetime] = mapped_column(
+        "updated_at",
         TIMESTAMP(timezone = False),
         nullable = False,
         server_default = UpdateTimestamp
@@ -195,14 +195,14 @@ class TransactionsMetadata:
     fetch_limit: Mapped[int] = mapped_column("fetch_limit", Integer, nullable=False)
     block_adjustment: Mapped[int] = mapped_column("block_adjustment", Integer, nullable=False)
 
-    created_on: Mapped[datetime] = mapped_column(
-        "created_on",
+    created_at: Mapped[datetime] = mapped_column(
+        "created_at",
         TIMESTAMP(timezone = False),
         nullable = False,
         server_default = CreateTimestamp
     )
-    updated_on: Mapped[datetime] = mapped_column(
-        "updated_on",
+    updated_at: Mapped[datetime] = mapped_column(
+        "updated_at",
         TIMESTAMP(timezone = False),
         nullable = False,
         server_default = UpdateTimestamp

@@ -21,8 +21,8 @@ class DaemonFactory:
             end_on=daemon_db_model.end_on,
             service_published=daemon_db_model.service_published,
             daemon_endpoint=daemon_db_model.daemon_endpoint,
-            created_on=daemon_db_model.created_on,
-            updated_on=daemon_db_model.updated_on
+            created_at =daemon_db_model.created_at,
+            updated_at =daemon_db_model.updated_at
         )
 
     @staticmethod
