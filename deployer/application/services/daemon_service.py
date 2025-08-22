@@ -1,7 +1,7 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from deployer.application.schemas.daemon_schemas import DaemonRequest, UpdateConfigRequest, SearchDaemonRequest
-from deployer.constant import BREAK_PERIOD
+from deployer.config import BREAK_PERIOD_IN_HOURS
 from deployer.exceptions import DaemonNotFoundException, ClaimingNotAvailableException, \
     UpdateConfigNotAvailableException
 from deployer.infrastructure.clients.deployer_cleint import DeployerClient
@@ -72,7 +72,7 @@ class DaemonService:
             last_claiming_period = ClaimingPeriodRepository.get_last_claiming_period(session, request.daemon_id)
             if (last_claiming_period is not None
                     and last_claiming_period.status != ClaimingPeriodStatus.FAILED
-                    and last_claiming_period.end_on + BREAK_PERIOD > current_time):
+                    and last_claiming_period.end_on + timedelta(hours = BREAK_PERIOD_IN_HOURS) > current_time):
                 raise ClaimingNotAvailableException(
                     reason = "time", last_claimed_at = last_claiming_period.end_on.isoformat()
                 )

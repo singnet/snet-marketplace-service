@@ -1,10 +1,10 @@
-from datetime import datetime, UTC
+from datetime import datetime, UTC, timedelta
 from typing import Optional
 
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
-from deployer.constant import TRANSACTION_TTL
+from deployer.config import TRANSACTION_TTL_IN_MINUTES
 from deployer.domain.factory.order_factory import OrderFactory
 from deployer.domain.models.order import NewOrderDomain, OrderDomain
 from deployer.infrastructure.models import Order, OrderStatus
@@ -85,7 +85,7 @@ class OrderRepository:
             Order
         ).where(
             Order.status == OrderStatus.PROCESSING,
-            Order.updated_at < current_time - TRANSACTION_TTL
+            Order.updated_at < current_time - timedelta(minutes = TRANSACTION_TTL_IN_MINUTES)
         ).values(
             status = OrderStatus.FAILED
         )

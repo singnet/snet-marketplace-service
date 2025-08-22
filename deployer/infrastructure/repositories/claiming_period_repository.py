@@ -1,10 +1,10 @@
-from datetime import datetime, UTC
+from datetime import datetime, UTC, timedelta
 from typing import Optional
 
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
-from deployer.constant import CLAIMING_PERIOD
+from deployer.config import CLAIMING_PERIOD_IN_HOURS
 from deployer.domain.factory.claiming_period_factory import ClaimingPeriodFactory
 from deployer.domain.models.claiming_period import ClaimingPeriodDomain
 from deployer.infrastructure.models import ClaimingPeriod, ClaimingPeriodStatus
@@ -17,7 +17,7 @@ class ClaimingPeriodRepository:
         claiming_period_model = ClaimingPeriod(
             daemon_id = daemon_id,
             start_on = current_time,
-            end_on = current_time + CLAIMING_PERIOD,
+            end_on = current_time + timedelta(hours = CLAIMING_PERIOD_IN_HOURS),
             status = ClaimingPeriodStatus.ACTIVE
         )
 

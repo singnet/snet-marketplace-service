@@ -1,10 +1,10 @@
-from datetime import datetime, UTC
+from datetime import datetime, UTC, timedelta
 from typing import Optional
 
 from sqlalchemy import update, select
 from sqlalchemy.orm import Session
 
-from deployer.constant import TRANSACTION_TTL
+from deployer.config import TRANSACTION_TTL_IN_MINUTES
 from deployer.domain.factory.transaction_factory import TransactionFactory
 from deployer.domain.models.evm_transaction import NewEVMTransactionDomain, EVMTransactionDomain
 from deployer.domain.models.transactions_metadata import TransactionsMetadataDomain
@@ -86,7 +86,7 @@ class TransactionRepository:
             EVMTransaction
         ).where(
             EVMTransaction.status == EVMTransactionStatus.PENDING,
-            EVMTransaction.updated_at < current_time - TRANSACTION_TTL
+            EVMTransaction.updated_at < current_time - timedelta(minutes = TRANSACTION_TTL_IN_MINUTES)
         ).values(
             status = EVMTransactionStatus.FAILED
         )

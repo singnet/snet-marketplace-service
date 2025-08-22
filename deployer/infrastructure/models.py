@@ -187,7 +187,7 @@ class ClaimingPeriod(Base):
     )
 
 
-class TransactionsMetadata:
+class TransactionsMetadata(Base):
     __tablename__ = "transactions_metadata"
     id: Mapped[int] = mapped_column("id", Integer, autoincrement=True, primary_key=True)
     recipient: Mapped[str] = mapped_column("recipient", VARCHAR(128), nullable=False)
