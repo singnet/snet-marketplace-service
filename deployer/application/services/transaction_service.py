@@ -22,5 +22,5 @@ class TransactionService:
                 )
             )
 
-    def get_transactions(self, request: GetTransactionsRequest, username: str):
+    def get_transactions(self, request: GetTransactionsRequest, account_id: str):
         pass

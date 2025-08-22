@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from deployer.domain.factory.daemon_factory import DaemonFactory
 from deployer.domain.models.daemon import NewDaemonDomain, DaemonDomain
-from deployer.infrastructure.models import Daemon, DaemonStatus
+from deployer.infrastructure.models import Daemon, DaemonStatus, Order
 
 
 class DaemonRepository:
@@ -130,3 +130,37 @@ class DaemonRepository:
         daemons_db = result.scalars().all()
 
         return DaemonFactory.daemons_from_db_model(daemons_db)
+
+    @staticmethod
+    def get_daemon_by_account_and_order(session: Session, account_id: str, order_id: str) -> Optional[DaemonDomain]:
+        query = select(
+            Daemon
+        ).join(
+            Order, Daemon.id == Order.daemon_id
+        ).where(
+            Order.id == order_id, Daemon.account_id == account_id
+        ).limit(1)
+
+        result = session.execute(query)
+
+        daemon_db = result.scalar_one_or_none()
+        if daemon_db is None:
+            return None
+
+        return DaemonFactory.daemon_from_db_model(daemon_db)
+
+    @staticmethod
+    def get_daemon_by_account_and_daemon(session: Session, account_id: str, daemon_id: str) -> Optional[DaemonDomain]:
+        query = select(
+            Daemon
+        ).where(
+            Daemon.id == daemon_id, Daemon.account_id == account_id
+        ).limit(1)
+
+        result = session.execute(query)
+
+        daemon_db = result.scalar_one_or_none()
+        if daemon_db is None:
+            return None
+
+        return DaemonFactory.daemon_from_db_model(daemon_db)

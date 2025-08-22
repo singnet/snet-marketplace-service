@@ -15,9 +15,9 @@ class DaemonService:
         self._deployer_client = DeployerClient()
         self._haas_client = HaaSClient()
 
-    def get_user_daemons(self, username: str) -> list[dict]:
+    def get_user_daemons(self, account_id: str) -> list[dict]:
         with session_scope(self.session_factory) as session:
-            user_daemons = DaemonRepository.get_user_daemons(session, username)
+            user_daemons = DaemonRepository.get_user_daemons(session, account_id)
         # TODO: add other fields
         return [daemon.to_short_response() for daemon in user_daemons]
 
@@ -35,8 +35,8 @@ class DaemonService:
 
     def start_daemon_for_claiming(self, request: DaemonRequest):
         with session_scope(self.session_factory) as session:
+            # TODO: check status
             ClaimingPeriodRepository.create_claiming_period(session, request.daemon_id)
-
             self._deployer_client.start_daemon(request.daemon_id)
         return {}
 
@@ -123,6 +123,8 @@ class DaemonService:
             daemon = DaemonRepository.get_daemon(session, request.daemon_id)
             if daemon is None:
                 raise DaemonNotFoundException(request.daemon_id)
+
+            # TODO: check status
 
             daemon_config = daemon.daemon_config
             if service_endpoint:

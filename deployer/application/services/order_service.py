@@ -17,9 +17,9 @@ class OrderService:
     def __init__(self):
         self.session_factory = DefaultSessionFactory
 
-    def initiate_order(self, request: InitiateOrderRequest):
+    def initiate_order(self, request: InitiateOrderRequest, account_id: str) -> dict:
         daemon_id = generate_uuid()
-        order_uuid = generate_uuid()
+        order_id = generate_uuid()
 
         current_time = datetime.now(UTC)
 
@@ -40,7 +40,7 @@ class OrderService:
                     session,
                     NewDaemonDomain(
                         id=daemon_id,
-                        account_id=request.account_id,
+                        account_id=account_id,
                         org_id=request.org_id,
                         service_id=request.service_id,
                         status=DaemonStatus.INIT,
@@ -62,13 +62,13 @@ class OrderService:
             OrderRepository.create_order(
                 session,
                 NewOrderDomain(
-                    id=order_uuid,
+                    id=order_id,
                     daemon_id=daemon_id,
                     status=OrderStatus.PROCESSING
                 )
             )
 
-        return {"order_id": order_uuid}
+        return {"order_id": order_id}
 
     def get_order(self, request: GetOrderRequest) -> dict:
         with session_scope(self.session_factory) as session:

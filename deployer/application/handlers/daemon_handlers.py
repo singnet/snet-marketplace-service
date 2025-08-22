@@ -3,6 +3,7 @@ from common.exception_handler import exception_handler
 from common.logger import get_logger
 from common.request_context import RequestContext
 from common.utils import generate_lambda_response
+from deployer.application.handlers.authorization import AuthorizationHandler
 from deployer.application.schemas.daemon_schemas import DaemonRequest, UpdateConfigRequest, SearchDaemonRequest
 from deployer.application.services.daemon_service import DaemonService
 
@@ -12,7 +13,11 @@ logger = get_logger(__name__)
 
 @exception_handler(logger=logger)
 def get_service_daemon(event, context):
+    req_ctx = RequestContext(event)
+
     request = DaemonRequest.validate_event(event)
+
+    AuthorizationHandler().check_access(req_ctx.account_id, daemon_id = request.daemon_id)
 
     response = DaemonService().get_service_daemon(request)
 
@@ -26,7 +31,7 @@ def get_service_daemon(event, context):
 def get_user_daemons(event, context):
     req_ctx = RequestContext(event)
 
-    response = DaemonService().get_user_daemons(username = req_ctx.username)
+    response = DaemonService().get_user_daemons(account_id = req_ctx.account_id)
 
     return generate_lambda_response(
         StatusCode.OK,
@@ -36,9 +41,13 @@ def get_user_daemons(event, context):
 
 @exception_handler(logger=logger)
 def start_daemon_for_claiming(event, context):
+    req_ctx = RequestContext(event)
+
     request = DaemonRequest.validate_event(event)
 
-    response = DaemonService().get_service_daemon(request)
+    AuthorizationHandler().check_access(req_ctx.account_id, daemon_id = request.daemon_id)
+
+    response = DaemonService().start_daemon_for_claiming(request)
 
     return generate_lambda_response(
         StatusCode.OK,
@@ -106,7 +115,11 @@ def get_public_key(event, context):
 
 @exception_handler(logger=logger)
 def update_config(event, context):
+    req_ctx = RequestContext(event)
+
     request = UpdateConfigRequest.validate_event(event)
+
+    AuthorizationHandler().check_access(req_ctx.account_id, daemon_id = request.daemon_id)
 
     response = DaemonService().update_config(request)
 
