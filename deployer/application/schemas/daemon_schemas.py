@@ -1,5 +1,5 @@
 import json
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -21,8 +21,8 @@ class DaemonRequest(BaseModel):
 
 class UpdateConfigRequest(BaseModel):
     daemon_id: str = Field(alias="daemonId")
-    service_endpoint: Optional[str] = Field(alias = "serviceEndpoint", default = None)
-    service_credentials: Optional[list[dict]] = Field(alias="serviceCredentials", default=None)
+    service_endpoint: Optional[str] = Field(alias="serviceEndpoint", default=None)
+    service_credentials: Optional[List[dict]] = Field(alias="serviceCredentials", default=None)
 
     @classmethod
     @validation_handler([RequestPayloadType.PATH_PARAMS, RequestPayloadType.BODY])
@@ -33,7 +33,7 @@ class UpdateConfigRequest(BaseModel):
 
     @field_validator("service_credentials")
     @classmethod
-    def validate_credentials(cls, values: Optional[list[dict]]):
+    def validate_credentials(cls, values: Optional[List[dict]]):
         if values is not None:  # auth parameters are optional
             for value in values:
                 for param in AUTH_PARAMETERS:

@@ -9,7 +9,7 @@ from deployer.config import (
     START_DAEMON_ARN,
     DELETE_DAEMON_ARN,
     UPDATE_DAEMON_STATUS_ARN,
-    REDEPLOY_DAEMON_ARN
+    REDEPLOY_DAEMON_ARN,
 )
 
 
@@ -26,13 +26,13 @@ class DeployerClient:
         self._lambda_client = boto3.client("lambda", region_name=REGION_NAME)
 
     def _invoke_lambda(
-            self,
-            lambda_function_arn: str,
-            headers: Optional[dict] = None,
-            path_parameters: Optional[dict] = None,
-            query_parameters: Optional[dict] = None,
-            body: Optional[dict] = None,
-            asynchronous=False
+        self,
+        lambda_function_arn: str,
+        headers: Optional[dict] = None,
+        path_parameters: Optional[dict] = None,
+        query_parameters: Optional[dict] = None,
+        body: Optional[dict] = None,
+        asynchronous=False,
     ) -> Optional[dict]:
         payload = {}
         if path_parameters:
@@ -56,7 +56,7 @@ class DeployerClient:
                     return response_body["data"]
                 else:
                     raise DeployerClientError(response_body)
-            elif response['ResponseMetadata']['HTTPStatusCode'] != 202:
+            elif response["ResponseMetadata"]["HTTPStatusCode"] != 202:
                 raise DeployerClientError(response)
 
         except Exception as e:
@@ -66,27 +66,26 @@ class DeployerClient:
         return self._invoke_lambda(
             lambda_function_arn=START_DAEMON_ARN,
             path_parameters={"daemon_id": daemon_id},
-            asynchronous=asynchronous
+            asynchronous=asynchronous,
         )
 
     def stop_daemon(self, daemon_id: str, asynchronous=False):
         return self._invoke_lambda(
             lambda_function_arn=DELETE_DAEMON_ARN,
             path_parameters={"daemon_id": daemon_id},
-            asynchronous=asynchronous
+            asynchronous=asynchronous,
         )
 
     def redeploy_daemon(self, daemon_id: str, asynchronous=False):
         return self._invoke_lambda(
             lambda_function_arn=REDEPLOY_DAEMON_ARN,
             path_parameters={"daemon_id": daemon_id},
-            asynchronous=asynchronous
+            asynchronous=asynchronous,
         )
 
     def update_daemon_status(self, daemon_id: str, asynchronous=False):
         return self._invoke_lambda(
             lambda_function_arn=UPDATE_DAEMON_STATUS_ARN,
             path_parameters={"daemon_id": daemon_id},
-            asynchronous=asynchronous
+            asynchronous=asynchronous,
         )
-

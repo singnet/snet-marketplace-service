@@ -1,4 +1,7 @@
-from deployer.application.schemas.transaction_schemas import SaveEVMTransactionRequest, GetTransactionsRequest
+from deployer.application.schemas.transaction_schemas import (
+    SaveEVMTransactionRequest,
+    GetTransactionsRequest,
+)
 from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
 from deployer.infrastructure.db import DefaultSessionFactory, session_scope
 from deployer.infrastructure.models import EVMTransactionStatus
@@ -17,9 +20,9 @@ class TransactionService:
                     hash=request.transaction_hash,
                     order_id=request.order_id,
                     status=EVMTransactionStatus.PENDING,
-                    sender = request.sender,
-                    recipient = request.recipient
-                )
+                    sender=request.sender,
+                    recipient=request.recipient,
+                ),
             )
 
     def get_transactions(self, request: GetTransactionsRequest, account_id: str):

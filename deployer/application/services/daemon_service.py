@@ -1,13 +1,21 @@
 from datetime import UTC, datetime, timedelta
+from typing import List
 
-from deployer.application.schemas.daemon_schemas import DaemonRequest, UpdateConfigRequest, SearchDaemonRequest
+from deployer.application.schemas.daemon_schemas import (
+    DaemonRequest,
+    UpdateConfigRequest,
+    SearchDaemonRequest,
+)
 from deployer.config import BREAK_PERIOD_IN_HOURS
-from deployer.exceptions import DaemonNotFoundException, ClaimingNotAvailableException, \
-    UpdateConfigNotAvailableException
+from deployer.exceptions import (
+    DaemonNotFoundException,
+    ClaimingNotAvailableException,
+    UpdateConfigNotAvailableException,
+)
 from deployer.infrastructure.clients.deployer_cleint import DeployerClient
 from deployer.infrastructure.clients.haas_client import HaaSClient
 from deployer.infrastructure.db import DefaultSessionFactory, session_scope
-from deployer.infrastructure.models import DaemonStatus, OrderStatus, ClaimingPeriodStatus
+from deployer.infrastructure.models import DaemonStatus, ClaimingPeriodStatus
 from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
 from deployer.infrastructure.repositories.claiming_period_repository import ClaimingPeriodRepository
 from deployer.infrastructure.repositories.order_repository import OrderRepository
@@ -19,33 +27,33 @@ class DaemonService:
         self._deployer_client = DeployerClient()
         self._haas_client = HaaSClient()
 
-    def get_user_daemons(self, account_id: str) -> list[dict]:
+    def get_user_daemons(self, account_id: str) -> List[dict]:
         result = []
 
         with session_scope(self.session_factory) as session:
             user_daemons = DaemonRepository.get_user_daemons(session, account_id)
-            for daemon in user_daemons:
-                daemon_response = daemon.to_short_response()
+            daemon_ids = [daemon.id for daemon in user_daemons]
 
-                last_claiming_period = ClaimingPeriodRepository.get_last_claiming_period(session, daemon.id)
-                if last_claiming_period is not None:
-                    if last_claiming_period.status == ClaimingPeriodStatus.ACTIVE:
-                        daemon_response["status"] = "CLAIMING"
-                    daemon_response["lastClaimedAt"] = last_claiming_period.end_on.isoformat()
-                else:
-                    daemon_response["lastClaimedAt"] = ""
+            claiming_periods = ClaimingPeriodRepository.get_last_claiming_periods_batch(
+                session, daemon_ids
+            )
+            orders = OrderRepository.get_last_successful_orders_batch(session, daemon_ids)
 
-                orders = OrderRepository.get_daemon_orders(session, daemon.id)
-                if len(orders) > 0:
-                    orders.sort(key=lambda o: o.created_at, reverse=True)
-                    for order in orders:
-                        if order.status == OrderStatus.SUCCESS:
-                            daemon_response["lastPayment"] = order.updated_at.isoformat()
-                            break
-                    if daemon_response.get("lastPayment", None) is None:
-                        daemon_response["lastPayment"] = None
+        for daemon in user_daemons:
+            daemon_response = daemon.to_short_response()
 
-                result.append(daemon_response)
+            last_claiming_period = claiming_periods.get(daemon.id, None)
+            if last_claiming_period is not None:
+                daemon_response.update(last_claiming_period.to_daemon_response())
+            else:
+                daemon_response["lastClaimedAt"] = ""
+
+            order = orders.get(daemon.id, None)
+            daemon_response["lastPayment"] = (
+                order.updated_at.isoformat() if order is not None else ""
+            )
+
+            result.append(daemon_response)
 
         return result
 
@@ -68,13 +76,18 @@ class DaemonService:
             if daemon is None:
                 raise DaemonNotFoundException(request.daemon_id)
             if daemon.status != DaemonStatus.DOWN:
-                raise ClaimingNotAvailableException(reason = "status")
-            last_claiming_period = ClaimingPeriodRepository.get_last_claiming_period(session, request.daemon_id)
-            if (last_claiming_period is not None
-                    and last_claiming_period.status != ClaimingPeriodStatus.FAILED
-                    and last_claiming_period.end_on + timedelta(hours = BREAK_PERIOD_IN_HOURS) > current_time):
+                raise ClaimingNotAvailableException(reason="status")
+            last_claiming_period = ClaimingPeriodRepository.get_last_claiming_period(
+                session, request.daemon_id
+            )
+            if (
+                last_claiming_period is not None
+                and last_claiming_period.status != ClaimingPeriodStatus.FAILED
+                and last_claiming_period.end_on + timedelta(hours=BREAK_PERIOD_IN_HOURS)
+                > current_time
+            ):
                 raise ClaimingNotAvailableException(
-                    reason = "time", last_claimed_at = last_claiming_period.end_on.isoformat()
+                    reason="time", last_claimed_at=last_claiming_period.end_on.isoformat()
                 )
             ClaimingPeriodRepository.create_claiming_period(session, request.daemon_id)
             self._deployer_client.start_daemon(request.daemon_id)
@@ -89,17 +102,13 @@ class DaemonService:
             if daemon is None:
                 raise DaemonNotFoundException(daemon_id)
 
-            org_id = daemon.org_id
-            service_id = daemon.service_id
-            daemon_config = daemon.daemon_config
-
             if daemon.status != DaemonStatus.READY_TO_START or not daemon.service_published:
                 return {}
 
             self._haas_client.start_daemon(
-                org_id = org_id,
-                service_id = service_id,
-                daemon_config = daemon_config
+                org_id=daemon.org_id,
+                service_id=daemon.service_id,
+                daemon_config=daemon.daemon_config,
             )
 
             DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.STARTING)
@@ -135,17 +144,13 @@ class DaemonService:
             if daemon is None:
                 raise DaemonNotFoundException(daemon_id)
 
-            org_id = daemon.org_id
-            service_id = daemon.service_id
-            daemon_config = daemon.daemon_config
-
             if daemon.status != DaemonStatus.UP:
                 return {}
 
             self._haas_client.redeploy_daemon(
-                org_id = org_id,
-                service_id = service_id,
-                daemon_config = daemon_config
+                org_id=daemon.org_id,
+                service_id=daemon.service_id,
+                daemon_config=daemon.daemon_config,
             )
 
             DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.RESTARTING)

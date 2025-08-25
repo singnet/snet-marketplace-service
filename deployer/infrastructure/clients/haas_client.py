@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 from enum import Enum
+from typing import Tuple
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -12,7 +13,7 @@ from deployer.config import (
     HAAS_PASSWORD,
     HAAS_REGISTRY,
     HAAS_REG_REPO,
-    HAAS_BASE_IMAGE
+    HAAS_BASE_IMAGE,
 )
 
 
@@ -34,10 +35,10 @@ class HaaSClient:
         self.auth = HTTPBasicAuth(HAAS_LOGIN, HAAS_PASSWORD)
 
     def start_daemon(
-            self,
-            org_id: str,
-            service_id: str,
-            daemon_config: dict,
+        self,
+        org_id: str,
+        service_id: str,
+        daemon_config: dict,
     ):
         path = HAAS_BASE_URL + "/v1/daemon/create"
         request_data = {
@@ -49,7 +50,7 @@ class HaaSClient:
             "service_class": daemon_config["service_class"],
             "service_endpoint": daemon_config["service_endpoint"],
             "base_image": HAAS_BASE_IMAGE,
-            "payment_channel_storage_type": daemon_config["payment_channel_storage_type"]
+            "payment_channel_storage_type": daemon_config["payment_channel_storage_type"],
         }
         if "service_credentials" in daemon_config:
             request_data["service_credentials"] = daemon_config["service_credentials"]
@@ -61,29 +62,29 @@ class HaaSClient:
         except Exception as e:
             raise HaaSClientError(str(e))
 
-    def delete_daemon(
-            self,
-            org_id: str,
-            service_id: str
-    ):
+    def delete_daemon(self, org_id: str, service_id: str):
         path = HAAS_BASE_URL + "/v1/daemon/delete"
         try:
-            result = requests.post(path, data={
-                "registry": HAAS_REGISTRY,
-                "reg_repo": HAAS_REG_REPO,
-                "org": org_id,
-                "service": service_id
-            }, auth=self.auth)
+            result = requests.post(
+                path,
+                data={
+                    "registry": HAAS_REGISTRY,
+                    "reg_repo": HAAS_REG_REPO,
+                    "org": org_id,
+                    "service": service_id,
+                },
+                auth=self.auth,
+            )
             if not result.ok:
                 raise HaaSClientError(result.text)
         except Exception as e:
             raise HaaSClientError(str(e))
 
     def redeploy_daemon(
-            self,
-            org_id: str,
-            service_id: str,
-            daemon_config: dict,
+        self,
+        org_id: str,
+        service_id: str,
+        daemon_config: dict,
     ):
         path = HAAS_BASE_URL + "/v1/daemon/redeploy"
         request_data = {
@@ -95,24 +96,28 @@ class HaaSClient:
             "service_class": daemon_config["service_class"],
             "service_endpoint": daemon_config["service_endpoint"],
             "base_image": HAAS_BASE_IMAGE,
-            "payment_channel_storage_type": daemon_config["payment_channel_storage_type"]
+            "payment_channel_storage_type": daemon_config["payment_channel_storage_type"],
         }
         if "service_credentials" in daemon_config:
             request_data["service_credentials"] = daemon_config["service_credentials"]
 
         try:
-            result = requests.post(path, data = request_data, auth = self.auth)
+            result = requests.post(path, data=request_data, auth=self.auth)
             if not result.ok:
                 raise HaaSClientError(result.text)
         except Exception as e:
             raise HaaSClientError(str(e))
 
-    def check_daemon(self, org_id: str, service_id: str) -> tuple[HaaSDaemonStatus, datetime | None]:
+    def check_daemon(
+        self, org_id: str, service_id: str
+    ) -> Tuple[HaaSDaemonStatus, datetime | None]:
         path = HAAS_BASE_URL + "/v1/daemon/check" + f"?org={org_id}&service={service_id}"
         try:
             result = requests.get(path, auth=self.auth)
             if result.ok:
-                started_at = datetime.fromisoformat(json.loads(result.json())[0]["running"]["startedAt"])
+                started_at = datetime.fromisoformat(
+                    json.loads(result.json())[0]["running"]["startedAt"]
+                )
                 return HaaSDaemonStatus.UP, started_at
             elif result.status_code == 400:
                 return HaaSDaemonStatus.DOWN, None

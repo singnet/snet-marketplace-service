@@ -16,3 +16,12 @@ class NewClaimingPeriodDomain:
 @dataclass
 class ClaimingPeriodDomain(NewClaimingPeriodDomain, BaseDomain):
     id: int
+
+    def to_daemon_response(self):
+        response = {
+            "lastClaimedAt": self.end_on.isoformat(),
+        }
+        if self.status == ClaimingPeriodStatus.ACTIVE:
+            response["status"] = "CLAIMING"
+
+        return response

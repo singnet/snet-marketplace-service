@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TypedDict, NotRequired
 
 from deployer.domain.models.base_domain import BaseDomain
-from deployer.domain.models.order import OrderDomain
 from deployer.infrastructure.models import DaemonStatus
 
 
@@ -22,10 +22,5 @@ class NewDaemonDomain:
 
 @dataclass
 class DaemonDomain(NewDaemonDomain, BaseDomain):
-
     def to_short_response(self):
-        return {
-            "id": self.id,
-            "status": self.status.value,
-            "endOn": self.end_on
-        }
+        return {"id": self.id, "status": self.status.value, "endOn": self.end_on}

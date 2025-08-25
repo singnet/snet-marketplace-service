@@ -1,15 +1,12 @@
-from typing import Iterable
+from typing import Iterable, List
 
-from deployer.domain.factory.order_factory import OrderFactory
 from deployer.domain.models.daemon import DaemonDomain
 from deployer.infrastructure.models import Daemon
 
 
 class DaemonFactory:
     @staticmethod
-    def daemon_from_db_model(
-            daemon_db_model: Daemon
-    ) -> DaemonDomain:
+    def daemon_from_db_model(daemon_db_model: Daemon) -> DaemonDomain:
         return DaemonDomain(
             id=daemon_db_model.id,
             account_id=daemon_db_model.account_id,
@@ -21,14 +18,12 @@ class DaemonFactory:
             end_on=daemon_db_model.end_on,
             service_published=daemon_db_model.service_published,
             daemon_endpoint=daemon_db_model.daemon_endpoint,
-            created_at =daemon_db_model.created_at,
-            updated_at =daemon_db_model.updated_at
+            created_at=daemon_db_model.created_at,
+            updated_at=daemon_db_model.updated_at,
         )
 
     @staticmethod
-    def daemons_from_db_model(
-            daemons_db_model: Iterable[Daemon]
-    ) -> list[DaemonDomain]:
+    def daemons_from_db_model(daemons_db_model: Iterable[Daemon]) -> List[DaemonDomain]:
         return [
             DaemonFactory.daemon_from_db_model(daemon_db_model)
             for daemon_db_model in daemons_db_model

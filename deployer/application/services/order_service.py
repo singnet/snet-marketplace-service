@@ -23,9 +23,7 @@ class OrderService:
 
         current_time = datetime.now(UTC)
 
-        daemon_config = {
-            "payment_channel_storage_type": DEFAULT_DAEMON_STORAGE_TYPE.value
-        }
+        daemon_config = {"payment_channel_storage_type": DEFAULT_DAEMON_STORAGE_TYPE.value}
         if request.service_endpoint is not None:
             daemon_config["service_endpoint"] = request.service_endpoint
         if request.service_credentials is not None:
@@ -46,14 +44,18 @@ class OrderService:
                         status=DaemonStatus.INIT,
                         daemon_config=daemon_config,
                         service_published=False,
-                        daemon_endpoint = get_daemon_endpoint(request.org_id, request.service_id),
-                        start_on = current_time,
-                        end_on = current_time
-                    )
+                        daemon_endpoint=get_daemon_endpoint(request.org_id, request.service_id),
+                        start_on=current_time,
+                        end_on=current_time,
+                    ),
                 )
             else:
                 daemon_id = daemon.id
-                if daemon.status not in [DaemonStatus.UP, DaemonStatus.DOWN, DaemonStatus.READY_TO_START]:
+                if daemon.status not in [
+                    DaemonStatus.UP,
+                    DaemonStatus.DOWN,
+                    DaemonStatus.READY_TO_START,
+                ]:
                     raise TopUpNotAvailableException()
                 if len(daemon_config.keys()) != 1:
                     new_daemon_config = daemon_config
@@ -63,11 +65,7 @@ class OrderService:
 
             OrderRepository.create_order(
                 session,
-                NewOrderDomain(
-                    id=order_id,
-                    daemon_id=daemon_id,
-                    status=OrderStatus.PROCESSING
-                )
+                NewOrderDomain(id=order_id, daemon_id=daemon_id, status=OrderStatus.PROCESSING),
             )
 
         return {"order_id": order_id}
@@ -76,4 +74,3 @@ class OrderService:
         with session_scope(self.session_factory) as session:
             order = OrderRepository.get_order(session, request.order_id)
         return order.to_short_response()
-

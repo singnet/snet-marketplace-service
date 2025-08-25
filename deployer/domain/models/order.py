@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import List
 
 from deployer.domain.models.base_domain import BaseDomain
 from deployer.domain.models.evm_transaction import EVMTransactionDomain
@@ -14,11 +15,13 @@ class NewOrderDomain:
 
 @dataclass
 class OrderDomain(NewOrderDomain, BaseDomain):
-    evm_transactions: list[EVMTransactionDomain] | None = None
+    evm_transactions: List[EVMTransactionDomain] | None = None
 
     def to_response(self):
         result = super().to_response()
-        result["evm_transactions"] = [transaction.to_response() for transaction in self.evm_transactions]
+        result["evm_transactions"] = [
+            transaction.to_response() for transaction in self.evm_transactions
+        ]
         return result
 
     def to_short_response(self):

@@ -3,8 +3,12 @@ from common.exception_handler import exception_handler
 from common.logger import get_logger
 from common.request_context import RequestContext
 from common.utils import generate_lambda_response
-from deployer.application.handlers.authorization import AuthorizationHandler
-from deployer.application.schemas.daemon_schemas import DaemonRequest, UpdateConfigRequest, SearchDaemonRequest
+from deployer.application.handlers.authorization import AuthorizationService
+from deployer.application.schemas.daemon_schemas import (
+    DaemonRequest,
+    UpdateConfigRequest,
+    SearchDaemonRequest,
+)
 from deployer.application.services.daemon_service import DaemonService
 
 
@@ -17,13 +21,12 @@ def get_service_daemon(event, context):
 
     request = DaemonRequest.validate_event(event)
 
-    AuthorizationHandler().check_access(req_ctx.account_id, daemon_id = request.daemon_id)
+    AuthorizationService().check_access(req_ctx.account_id, daemon_id=request.daemon_id)
 
     response = DaemonService().get_service_daemon(request)
 
     return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled = True
+        StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
 
@@ -31,11 +34,10 @@ def get_service_daemon(event, context):
 def get_user_daemons(event, context):
     req_ctx = RequestContext(event)
 
-    response = DaemonService().get_user_daemons(account_id = req_ctx.account_id)
+    response = DaemonService().get_user_daemons(account_id=req_ctx.account_id)
 
     return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled = True
+        StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
 
@@ -45,13 +47,12 @@ def start_daemon_for_claiming(event, context):
 
     request = DaemonRequest.validate_event(event)
 
-    AuthorizationHandler().check_access(req_ctx.account_id, daemon_id = request.daemon_id)
+    AuthorizationService().check_access(req_ctx.account_id, daemon_id=request.daemon_id)
 
     response = DaemonService().start_daemon_for_claiming(request)
 
     return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled = True
+        StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
 
@@ -62,8 +63,7 @@ def start_daemon(event, context):
     response = DaemonService().start_daemon(request)
 
     return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled = True
+        StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
 
@@ -74,8 +74,7 @@ def stop_daemon(event, context):
     response = DaemonService().stop_daemon(request)
 
     return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled = True
+        StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
 
@@ -86,8 +85,7 @@ def pause_daemon(event, context):
     response = DaemonService().pause_daemon(request)
 
     return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled = True
+        StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
 
@@ -98,8 +96,7 @@ def unpause_daemon(event, context):
     response = DaemonService().unpause_daemon(request)
 
     return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled = True
+        StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
 
@@ -108,8 +105,7 @@ def get_public_key(event, context):
     response = DaemonService().get_public_key()
 
     return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled = True
+        StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
 
@@ -119,13 +115,12 @@ def update_config(event, context):
 
     request = UpdateConfigRequest.validate_event(event)
 
-    AuthorizationHandler().check_access(req_ctx.account_id, daemon_id = request.daemon_id)
+    AuthorizationService().check_access(req_ctx.account_id, daemon_id=request.daemon_id)
 
     response = DaemonService().update_config(request)
 
     return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled = True
+        StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
 
@@ -136,8 +131,7 @@ def search_daemon(event, context):
     response = DaemonService().search_daemon(request)
 
     return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled = True
+        StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
 
@@ -148,6 +142,5 @@ def redeploy_daemon(event, context):
     response = DaemonService().redeploy_daemon(request)
 
     return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled = True
+        StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )

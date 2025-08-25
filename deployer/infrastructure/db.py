@@ -13,7 +13,9 @@ engine = create_engine(
     f"{NETWORKS[NETWORK_ID]['db']['DB_DRIVER']}://{NETWORKS[NETWORK_ID]['db']['DB_USER']}:"
     f"{NETWORKS[NETWORK_ID]['db']['DB_PASSWORD']}"
     f"@{NETWORKS[NETWORK_ID]['db']['DB_HOST']}:"
-    f"{NETWORKS[NETWORK_ID]['db']['DB_PORT']}/{NETWORKS[NETWORK_ID]['db']['DB_NAME']}", echo=False)
+    f"{NETWORKS[NETWORK_ID]['db']['DB_PORT']}/{NETWORKS[NETWORK_ID]['db']['DB_NAME']}",
+    echo=False,
+)
 
 DefaultSessionFactory = sessionmaker(bind=engine)
 
