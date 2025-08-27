@@ -54,7 +54,7 @@ class SaveTransactionHashRequest(BaseModel):
             body = json.loads(event[RequestPayloadType.BODY])
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
 
-            data = {**path_parameters, **body}
+            data = {**body, **path_parameters}
 
             return cls.model_validate(data)
 
@@ -99,7 +99,7 @@ class SaveServiceRequest(BaseModel):
             body = json.loads(event[RequestPayloadType.BODY])
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
 
-            data = {**path_parameters, **body}
+            data = {**body, **path_parameters}
 
             return cls.model_validate(data)
 
@@ -129,7 +129,7 @@ class SaveServiceGroupsRequest(BaseModel):
             body = json.loads(event[RequestPayloadType.BODY])
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
 
-            data = {**path_parameters, **body}
+            data = {**body, **path_parameters}
 
             return cls.model_validate(data)
 
@@ -176,7 +176,7 @@ class CreateServiceRequest(BaseModel):
             body = json.loads(event[RequestPayloadType.BODY])
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
 
-            data = {**path_parameters, **body}
+            data = {**body, **path_parameters}
 
             return cls.model_validate(data)
 
@@ -213,7 +213,7 @@ class GetServicesForOrganizationRequest(BaseModel):
             body = json.loads(event[RequestPayloadType.BODY])
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
 
-            data = {**path_parameters, **body}
+            data = {**body, **path_parameters}
 
             return cls.model_validate(data)
 
@@ -265,7 +265,7 @@ class GetDaemonConfigRequest(BaseModel):
             query_string_parameters = event[RequestPayloadType.QUERY_STRING]
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
 
-            data = {**path_parameters, **query_string_parameters}
+            data = {**query_string_parameters, **path_parameters}
 
             return cls.model_validate(data)
 
@@ -344,7 +344,7 @@ class PublishServiceRequest(BaseModel):
             body = json.loads(event[RequestPayloadType.BODY])
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
 
-            data = {**path_parameters, **body}
+            data = {**body, **path_parameters}
 
             return cls.model_validate(data)
 

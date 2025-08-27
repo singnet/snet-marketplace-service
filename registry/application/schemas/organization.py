@@ -166,7 +166,7 @@ class PublishOrganizationRequest(BaseModel):
             body = json.loads(event[RequestPayloadType.BODY])
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
 
-            data = {**path_parameters, **body}
+            data = {**body, **path_parameters}
 
             return cls.model_validate(data)
 
