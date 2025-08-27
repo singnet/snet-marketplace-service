@@ -132,8 +132,9 @@ class UpdateOrganizationRequest(BaseModel):
 
             body = json.loads(event[RequestPayloadType.BODY])
             query_parameters = event.get(RequestPayloadType.QUERY_STRING) or {}
+            path_parameters = event[RequestPayloadType.PATH_PARAMS]
 
-            data = {**body, "action": query_parameters.get("action")}
+            data = {**body, "action": query_parameters.get("action"), **path_parameters}
 
             return cls.model_validate(data)
 
