@@ -45,8 +45,8 @@ class OrderService:
                         daemon_config=daemon_config,
                         service_published=False,
                         daemon_endpoint=get_daemon_endpoint(request.org_id, request.service_id),
-                        start_on=current_time,
-                        end_on=current_time,
+                        start_at=current_time,
+                        end_at=current_time,
                     ),
                 )
             else:
@@ -68,7 +68,7 @@ class OrderService:
                 NewOrderDomain(id=order_id, daemon_id=daemon_id, status=OrderStatus.PROCESSING),
             )
 
-        return {"order_id": order_id}
+        return {"orderId": order_id}
 
     def get_order(self, request: GetOrderRequest) -> dict:
         with session_scope(self.session_factory) as session:

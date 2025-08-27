@@ -64,10 +64,10 @@ class Daemon(Base):
     status: Mapped[str] = mapped_column(
         "status", Enum(DaemonStatus), nullable=False, default=DaemonStatus.INIT
     )
-    start_on: Mapped[datetime] = mapped_column(
-        "from_date", TIMESTAMP(timezone=False), nullable=False
+    start_at: Mapped[datetime] = mapped_column(
+        "start_at", TIMESTAMP(timezone=False), nullable=False
     )
-    end_on: Mapped[datetime] = mapped_column("end_date", TIMESTAMP(timezone=False), nullable=False)
+    end_at: Mapped[datetime] = mapped_column("end_at", TIMESTAMP(timezone=False), nullable=False)
     daemon_config: Mapped[dict] = mapped_column("daemon_config", JSON, nullable=False, default={})
     service_published: Mapped[bool] = mapped_column(
         "service_published", BOOLEAN, nullable=False, default=False
@@ -124,7 +124,7 @@ class EVMTransaction(Base):
         "status", Enum(EVMTransactionStatus), nullable=False, default=EVMTransactionStatus.PENDING
     )
     sender: Mapped[str] = mapped_column("sender", VARCHAR(128), nullable=False)
-    recipient: Mapped[str] = mapped_column("receiver", VARCHAR(128), nullable=False)
+    recipient: Mapped[str] = mapped_column("recipient", VARCHAR(128), nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(
         "created_at", TIMESTAMP(timezone=False), nullable=False, server_default=CreateTimestamp
@@ -144,10 +144,10 @@ class ClaimingPeriod(Base):
         nullable=False,
         index=True,
     )
-    start_on: Mapped[datetime] = mapped_column(
-        "start_on", TIMESTAMP(timezone=False), nullable=False
+    start_at: Mapped[datetime] = mapped_column(
+        "start_at", TIMESTAMP(timezone=False), nullable=False
     )
-    end_on: Mapped[datetime] = mapped_column("end_on", TIMESTAMP(timezone=False), nullable=False)
+    end_at: Mapped[datetime] = mapped_column("end_at", TIMESTAMP(timezone=False), nullable=False)
     status: Mapped[ClaimingPeriodStatus] = mapped_column(
         "status", Enum(ClaimingPeriodStatus), nullable=False, default=ClaimingPeriodStatus.INACTIVE
     )

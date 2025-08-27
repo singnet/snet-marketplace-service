@@ -142,7 +142,7 @@ class JobService:
                         )
                     elif daemon.status in [DaemonStatus.UP, DaemonStatus.READY_TO_START]:
                         DaemonRepository.update_daemon_end_on(
-                            session, order.daemon_id, daemon.end_on + relativedelta(months=+1)
+                            session, order.daemon_id, daemon.end_at + relativedelta(months=+1)
                         )
 
                     TransactionRepository.update_transactions_metadata(
@@ -186,7 +186,7 @@ class JobService:
             if (
                 last_claiming_period
                 and last_claiming_period.status == ClaimingPeriodStatus.ACTIVE
-                and last_claiming_period.end_on < current_time
+                and last_claiming_period.end_at < current_time
             ):
                 ClaimingPeriodRepository.update_claiming_period_status(
                     session, last_claiming_period.id, ClaimingPeriodStatus.INACTIVE
@@ -241,7 +241,7 @@ class JobService:
                     ):
                         DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.UP)
                     elif daemon_status == DaemonStatus.UP:
-                        if daemon.end_on < current_time:
+                        if daemon.end_at < current_time:
                             if (
                                 last_claiming_period
                                 and last_claiming_period.status != ClaimingPeriodStatus.ACTIVE

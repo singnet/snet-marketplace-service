@@ -1,3 +1,4 @@
+import os
 from contextlib import contextmanager
 
 from common.exceptions import BadRequestException
@@ -7,14 +8,16 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 
+
 logger = get_logger(__name__)
+
 
 engine = create_engine(
     f"{NETWORKS[NETWORK_ID]['db']['DB_DRIVER']}://{NETWORKS[NETWORK_ID]['db']['DB_USER']}:"
     f"{NETWORKS[NETWORK_ID]['db']['DB_PASSWORD']}"
     f"@{NETWORKS[NETWORK_ID]['db']['DB_HOST']}:"
     f"{NETWORKS[NETWORK_ID]['db']['DB_PORT']}/{NETWORKS[NETWORK_ID]['db']['DB_NAME']}",
-    echo=False,
+    echo=os.environ.get("LOG_LEVEL", "INFO") == "DEBUG",
 )
 
 DefaultSessionFactory = sessionmaker(bind=engine)

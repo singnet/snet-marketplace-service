@@ -83,11 +83,11 @@ class DaemonService:
             if (
                 last_claiming_period is not None
                 and last_claiming_period.status != ClaimingPeriodStatus.FAILED
-                and last_claiming_period.end_on + timedelta(hours=BREAK_PERIOD_IN_HOURS)
+                and last_claiming_period.end_at + timedelta(hours=BREAK_PERIOD_IN_HOURS)
                 > current_time
             ):
                 raise ClaimingNotAvailableException(
-                    reason="time", last_claimed_at=last_claiming_period.end_on.isoformat()
+                    reason="time", last_claimed_at=last_claiming_period.end_at.isoformat()
                 )
             ClaimingPeriodRepository.create_claiming_period(session, request.daemon_id)
             self._deployer_client.start_daemon(request.daemon_id)

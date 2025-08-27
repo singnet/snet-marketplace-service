@@ -19,12 +19,12 @@ class OrderDomain(NewOrderDomain, BaseDomain):
 
     def to_response(self):
         result = super().to_response()
-        result["evm_transactions"] = [
+        result["evmTransactions"] = [
             transaction.to_response() for transaction in self.evm_transactions
         ]
         return result
 
     def to_short_response(self):
         result = super().to_response()
-        del result["evm_transactions"]
+        del result["evmTransactions"]
         return result

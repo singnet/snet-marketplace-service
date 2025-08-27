@@ -3,7 +3,7 @@ from common.exception_handler import exception_handler
 from common.logger import get_logger
 from common.request_context import RequestContext
 from common.utils import generate_lambda_response
-from deployer.application.handlers.authorization import AuthorizationService
+from deployer.application.services.authorization_service import AuthorizationService
 from deployer.application.schemas.transaction_schemas import (
     SaveEVMTransactionRequest,
     GetTransactionsRequest,

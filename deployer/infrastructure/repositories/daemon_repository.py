@@ -19,8 +19,10 @@ class DaemonRepository:
             service_id=daemon.service_id,
             status=daemon.status,
             daemon_config=daemon.daemon_config,
-            start_on=datetime.now(UTC),
+            start_at=daemon.start_at,
+            end_at=daemon.end_at,
             service_published=False,
+            daemon_endpoint=daemon.daemon_endpoint,
         )
 
         session.add(daemon_model)

@@ -33,7 +33,11 @@ class TransactionRepository:
             session.execute(query)
         else:
             transaction_db = EVMTransaction(
-                hash=transaction.hash, order_id=transaction.order_id, status=transaction.status
+                hash=transaction.hash,
+                order_id=transaction.order_id,
+                status=transaction.status,
+                sender=transaction.sender,
+                recipient=transaction.recipient
             )
 
             session.add(transaction_db)

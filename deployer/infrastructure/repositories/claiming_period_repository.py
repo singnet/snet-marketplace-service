@@ -30,7 +30,7 @@ class ClaimingPeriodRepository:
         query = (
             select(ClaimingPeriod)
             .where(ClaimingPeriod.daemon_id == daemon_id)
-            .order_by(ClaimingPeriod.end_on.desc())
+            .order_by(ClaimingPeriod.end_at.desc())
             .limit(1)
         )
 
@@ -50,7 +50,7 @@ class ClaimingPeriodRepository:
             return {}
 
         subquery = (
-            select(ClaimingPeriod.daemon_id, func.max(ClaimingPeriod.end_on).label("max_end_on"))
+            select(ClaimingPeriod.daemon_id, func.max(ClaimingPeriod.end_at).label("max_end_on"))
             .where(ClaimingPeriod.daemon_id.in_(daemon_ids))
             .group_by(ClaimingPeriod.daemon_id)
             .subquery()
@@ -60,7 +60,7 @@ class ClaimingPeriodRepository:
             subquery,
             and_(
                 ClaimingPeriod.daemon_id == subquery.c.daemon_id,
-                ClaimingPeriod.end_on == subquery.c.max_end_on,
+                ClaimingPeriod.end_at == subquery.c.max_end_on,
             ),
         )
 

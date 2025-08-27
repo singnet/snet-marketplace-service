@@ -1,8 +1,7 @@
 import json
 from typing import Optional
 
-import boto3
-
+from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from deployer.config import (
     REGION_NAME,
@@ -23,7 +22,7 @@ class DeployerClientError(Exception):
 
 class DeployerClient:
     def __init__(self):
-        self._lambda_client = boto3.client("lambda", region_name=REGION_NAME)
+        self._lambda_client = BotoUtils(REGION_NAME).get_lambda_client()
 
     def _invoke_lambda(
         self,

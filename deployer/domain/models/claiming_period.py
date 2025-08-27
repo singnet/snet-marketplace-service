@@ -8,8 +8,8 @@ from deployer.infrastructure.models import ClaimingPeriodStatus
 @dataclass
 class NewClaimingPeriodDomain:
     daemon_id: str
-    start_on: datetime
-    end_on: datetime
+    start_at: datetime
+    end_at: datetime
     status: ClaimingPeriodStatus
 
 
@@ -19,7 +19,7 @@ class ClaimingPeriodDomain(NewClaimingPeriodDomain, BaseDomain):
 
     def to_daemon_response(self):
         response = {
-            "lastClaimedAt": self.end_on.isoformat(),
+            "lastClaimedAt": self.end_at.isoformat(),
         }
         if self.status == ClaimingPeriodStatus.ACTIVE:
             response["status"] = "CLAIMING"

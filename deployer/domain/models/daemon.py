@@ -16,11 +16,15 @@ class NewDaemonDomain:
     daemon_config: dict
     service_published: bool
     daemon_endpoint: str
-    start_on: datetime
-    end_on: datetime
+    start_at: datetime
+    end_at: datetime
 
 
 @dataclass
 class DaemonDomain(NewDaemonDomain, BaseDomain):
     def to_short_response(self):
-        return {"id": self.id, "status": self.status.value, "endOn": self.end_on}
+        return {"id": self.id, "status": self.status.value, "endOn": self.end_at.isoformat()}
+
+    def to_response(self):
+        result = super().to_response()
+        del result["accountId"]
