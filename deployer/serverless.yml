@@ -565,7 +565,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - schedule:
-          rate: rate(1 minutes)
+          rate: rate(1 minute)
 
   check-daemons:
     handler: deployer.application.handlers.job_handlers.check_daemons
@@ -579,7 +579,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - schedule:
-          rate: rate(1 minutes)
+          rate: rate(1 minute)
 
   update-daemon-status:
     handler: deployer.application.handlers.job_handlers.update_daemon_status
