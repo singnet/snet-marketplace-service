@@ -97,7 +97,7 @@ class TestRegistryEventConsumer(TestCase):
                     }
 
 
-    @patch('contract_api.infrastructure.storage_provider.StorageProvider.get')
+    @patch('common.storage_provider.StorageProvider.get')
     @patch('common.blockchain_util.BlockChainUtil.read_contract_address')
     @patch('contract_api.application.consumers.event_consumer.EventConsumer._push_asset_to_s3_using_hash')
     @patch('contract_api.application.consumers.service_event_consumers.ServiceCreatedDeploymentEventHandler.process_service_deployment')

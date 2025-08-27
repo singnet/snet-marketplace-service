@@ -2,7 +2,7 @@
 name = "contract-api"
 version = "0.1.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
+authors = ["snet"]
 readme = "README.md"
 package-mode = false
 

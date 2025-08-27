@@ -3,24 +3,29 @@ from common.exception_handler import exception_handler
 from common.logger import get_logger
 from common.request_context import RequestContext
 from common.utils import generate_lambda_response
+from deployer.application.services.authorization_service import AuthorizationService
 from deployer.application.schemas.transaction_schemas import (
     SaveEVMTransactionRequest,
-    GetTransactionsRequest
+    GetTransactionsRequest,
 )
 from deployer.application.services.transaction_service import TransactionService
+
 
 logger = get_logger(__name__)
 
 
 @exception_handler(logger=logger)
 def save_evm_transaction(event, context):
+    req_ctx = RequestContext(event)
+
     request = SaveEVMTransactionRequest.validate_event(event)
+
+    AuthorizationService().check_access(req_ctx.account_id, order_id=request.order_id)
 
     response = TransactionService().save_evm_transaction(request)
 
     return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled = True
+        StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
 
@@ -30,10 +35,12 @@ def get_transactions(event, context):
 
     request = GetTransactionsRequest.validate_event(event)
 
-    response = TransactionService().get_transactions(request, req_ctx.username)
-
-    return generate_lambda_response(
-        StatusCode.OK,
-        {"status": "success", "data": response, "error": {}}, cors_enabled = True
+    AuthorizationService().check_access(
+        req_ctx.account_id, daemon_id=request.daemon_id, order_id=request.order_id
     )
 
+    response = TransactionService().get_transactions(request, req_ctx.account_id)
+
+    return generate_lambda_response(
+        StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
