@@ -203,7 +203,7 @@ class JobService:
                         self._deployer_client.start_daemon(daemon_id)
                     elif daemon_status == DaemonStatus.STARTING:
                         if (
-                            daemon.updated_at + timedelta(minutes=DAEMON_STARTING_TTL_IN_MINUTES)
+                            daemon.updated_at.replace(tzinfo = UTC) + timedelta(minutes=DAEMON_STARTING_TTL_IN_MINUTES)
                             < current_time
                         ):
                             DaemonRepository.update_daemon_status(
@@ -220,7 +220,7 @@ class JobService:
                         DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.DOWN)
                     elif daemon_status == DaemonStatus.RESTARTING:
                         if (
-                            daemon.updated_at + timedelta(minutes=DAEMON_RESTARTING_TTL_IN_MINUTES)
+                            daemon.updated_at.replace(tzinfo = UTC) + timedelta(minutes=DAEMON_RESTARTING_TTL_IN_MINUTES)
                             < current_time
                         ):
                             DaemonRepository.update_daemon_status(
