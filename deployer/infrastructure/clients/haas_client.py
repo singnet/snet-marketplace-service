@@ -42,7 +42,7 @@ class HaaSClient:
         path = HAAS_BASE_URL + "/v1/daemon/create"
         request_data = {
             "registry": HAAS_REGISTRY,
-            "reg_repo": HAAS_REG_REPO,
+            "regrepo": HAAS_REG_REPO,
             "org": org_id,
             "service": service_id,
             "daemon_group": daemon_config["daemon_group"],
@@ -55,7 +55,7 @@ class HaaSClient:
             request_data["service_credentials"] = daemon_config["service_credentials"]
 
         try:
-            result = requests.post(path, data=request_data, auth=self.auth)
+            result = requests.post(path, json=request_data, auth=self.auth)
             if not result.ok:
                 raise HaaSClientError(result.text)
         except Exception as e:
@@ -66,9 +66,9 @@ class HaaSClient:
         try:
             result = requests.post(
                 path,
-                data={
+                json={
                     "registry": HAAS_REGISTRY,
-                    "reg_repo": HAAS_REG_REPO,
+                    "regrepo": HAAS_REG_REPO,
                     "org": org_id,
                     "service": service_id,
                 },
@@ -101,7 +101,7 @@ class HaaSClient:
             request_data["service_credentials"] = daemon_config["service_credentials"]
 
         try:
-            result = requests.post(path, data=request_data, auth=self.auth)
+            result = requests.post(path, json=request_data, auth=self.auth)
             if not result.ok:
                 raise HaaSClientError(result.text)
         except Exception as e:
