@@ -19,7 +19,6 @@ from deployer.config import (
     NETWORK_ID,
     CONTRACT_BASE_PATH,
     TOKEN_JSON_FILE_NAME,
-    TRANSFER_TARGET_ADDRESS,
     DAEMON_STARTING_TTL_IN_MINUTES,
     DAEMON_RESTARTING_TTL_IN_MINUTES,
 )
@@ -263,7 +262,7 @@ class JobService:
         )
 
         transaction_filter = contract.events.Transfer.createFilter(
-            fromBlock=from_block, toBlock=to_block, argument_filters={"to": TRANSFER_TARGET_ADDRESS}
+            fromBlock=from_block, toBlock=to_block, argument_filters={"to": tx_metadata.recipient}
         )
 
         events = transaction_filter.get_all_entries()
