@@ -116,7 +116,7 @@ class HaaSClient:
             result = requests.get(path, auth=self.auth)
             if result.ok:
                 started_at = datetime.fromisoformat(
-                    json.loads(result.json())[0]["running"]["startedAt"]
+                    result.json()[0]["running"]["startedAt"]
                 )
                 return HaaSDaemonStatus.UP, started_at
             elif result.status_code == 400:
@@ -131,7 +131,7 @@ class HaaSClient:
         try:
             result = requests.get(path, auth=self.auth)
             if result.ok:
-                return json.loads(result.json())["public_key"]
+                return result.json()["public_key"]
             else:
                 raise HaaSClientError(result.text)
         except Exception as e:
