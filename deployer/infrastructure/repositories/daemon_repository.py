@@ -1,4 +1,4 @@
-from datetime import datetime, UTC
+from datetime import datetime
 from typing import Optional, List
 
 from sqlalchemy import update, select

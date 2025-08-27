@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TypedDict, NotRequired
 
 from deployer.domain.models.base_domain import BaseDomain
 from deployer.infrastructure.models import DaemonStatus

@@ -1,4 +1,3 @@
-import json
 from datetime import datetime
 from enum import Enum
 from typing import Tuple
@@ -115,9 +114,7 @@ class HaaSClient:
         try:
             result = requests.get(path, auth=self.auth)
             if result.ok:
-                started_at = datetime.fromisoformat(
-                    result.json()[0]["running"]["startedAt"]
-                )
+                started_at = datetime.fromisoformat(result.json()[0]["running"]["startedAt"])
                 return HaaSDaemonStatus.UP, started_at
             elif result.status_code == 400:
                 return HaaSDaemonStatus.DOWN, None

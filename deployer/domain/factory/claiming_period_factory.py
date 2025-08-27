@@ -12,8 +12,8 @@ class ClaimingPeriodFactory:
         return ClaimingPeriodDomain(
             id=claiming_period_db_model.id,
             daemon_id=claiming_period_db_model.daemon_id,
-            start_at =claiming_period_db_model.start_at,
-            end_at =claiming_period_db_model.end_at,
+            start_at=claiming_period_db_model.start_at,
+            end_at=claiming_period_db_model.end_at,
             status=claiming_period_db_model.status,
             created_at=claiming_period_db_model.created_at,
             updated_at=claiming_period_db_model.updated_at,

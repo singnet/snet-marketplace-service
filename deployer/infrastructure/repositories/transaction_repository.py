@@ -37,7 +37,7 @@ class TransactionRepository:
                 order_id=transaction.order_id,
                 status=transaction.status,
                 sender=transaction.sender,
-                recipient=transaction.recipient
+                recipient=transaction.recipient,
             )
 
             session.add(transaction_db)
