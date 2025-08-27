@@ -64,27 +64,27 @@ class DeployerClient:
     def start_daemon(self, daemon_id: str, asynchronous=False):
         return self._invoke_lambda(
             lambda_function_arn=START_DAEMON_ARN,
-            path_parameters={"daemon_id": daemon_id},
+            path_parameters={"daemonId": daemon_id},
             asynchronous=asynchronous,
         )
 
     def stop_daemon(self, daemon_id: str, asynchronous=False):
         return self._invoke_lambda(
             lambda_function_arn=DELETE_DAEMON_ARN,
-            path_parameters={"daemon_id": daemon_id},
+            path_parameters={"daemonId": daemon_id},
             asynchronous=asynchronous,
         )
 
     def redeploy_daemon(self, daemon_id: str, asynchronous=False):
         return self._invoke_lambda(
             lambda_function_arn=REDEPLOY_DAEMON_ARN,
-            path_parameters={"daemon_id": daemon_id},
+            path_parameters={"daemonId": daemon_id},
             asynchronous=asynchronous,
         )
 
     def update_daemon_status(self, daemon_id: str, asynchronous=False):
         return self._invoke_lambda(
             lambda_function_arn=UPDATE_DAEMON_STATUS_ARN,
-            path_parameters={"daemon_id": daemon_id},
+            path_parameters={"daemonId": daemon_id},
             asynchronous=asynchronous,
         )
