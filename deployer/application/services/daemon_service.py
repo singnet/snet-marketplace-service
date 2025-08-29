@@ -193,7 +193,9 @@ class DaemonService:
             if daemon is None:
                 return {}
             order = OrderRepository.get_last_order(session, daemon.id)
-            return {"daemon": daemon.to_response(), "order": order.to_short_response()}
+        daemon_response = daemon.to_response()
+        del daemon_response["daemonConfig"]
+        return {"daemon": daemon_response, "order": order.to_short_response()}
 
     def pause_daemon(self, request: DaemonRequest):
         pass

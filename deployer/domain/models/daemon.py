@@ -24,6 +24,7 @@ class DaemonDomain(NewDaemonDomain, BaseDomain):
     def to_short_response(self):
         return {"id": self.id, "status": self.status.value, "endOn": self.end_at.isoformat()}
 
-    def to_response(self):
+    def to_response(self) -> dict:
         result = super().to_response()
         del result["accountId"]
+        return result

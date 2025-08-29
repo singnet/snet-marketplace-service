@@ -228,35 +228,35 @@ functions:
               - X-Amz-User-Agent
               - x-requested-wit
 
-  get-transactions:
-    handler: deployer.application.handlers.transaction_handlers.get_transactions
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: GET
-          path: /transactions
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-wit
+#  get-transactions:
+#    handler: deployer.application.handlers.transaction_handlers.get_transactions
+#    role: ${file(./config.${self:provider.stage}.json):ROLE}
+#    vpc:
+#      securityGroupIds:
+#        - ${file(./config.${self:provider.stage}.json):SG1}
+#        - ${file(./config.${self:provider.stage}.json):SG2}
+#      subnetIds:
+#        - ${file(./config.${self:provider.stage}.json):VPC1}
+#        - ${file(./config.${self:provider.stage}.json):VPC2}
+#    events:
+#      - http:
+#          method: GET
+#          path: /transactions
+#          authorizer:
+#            name: user-authorizer
+#            type: COGNITO_USER_POOLS
+#            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+#            identitySource: method.request.header.Authorization
+#          cors:
+#            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+#            headers:
+#              - Content-Type
+#              - X-Amz-Date
+#              - Authorization
+#              - X-Api-Key
+#              - X-Amz-Security-Token
+#              - X-Amz-User-Agent
+#              - x-requested-wit
 
   # ============= DAEMON HANDLERS ============
 
@@ -563,9 +563,9 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - schedule:
-          rate: rate(1 minute)
+#    events:
+#      - schedule:
+#          rate: rate(1 minute)
 
   check-daemons:
     handler: deployer.application.handlers.job_handlers.check_daemons

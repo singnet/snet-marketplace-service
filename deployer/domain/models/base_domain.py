@@ -10,7 +10,7 @@ class BaseDomain:
     created_at: datetime
     updated_at: datetime
 
-    def to_response(self):
+    def to_response(self) -> dict:
         result = asdict(self)
 
         del result["created_at"]
@@ -22,5 +22,5 @@ class BaseDomain:
             elif isinstance(v, datetime):
                 result[k] = v.isoformat()
 
-        result = dict_keys_to_camel_case(result)
+        result = dict_keys_to_camel_case(result, recursively=True)
         return result

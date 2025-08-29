@@ -25,5 +25,7 @@ class TransactionService:
                 ),
             )
 
+        return {}
+
     def get_transactions(self, request: GetTransactionsRequest, account_id: str):
         pass
