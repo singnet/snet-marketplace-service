@@ -1,7 +1,30 @@
 """
 Fixtures for deployer service integration tests.
+
+Test Architecture:
+==================
+These are integration tests that verify the interaction between:
+- Lambda handlers
+- Application services  
+- Domain logic
+- Database repositories
+- Real MySQL database
+
+What we mock (and why):
+- External APIs (HaaS, blockchain) - cannot call in tests
+- Logger - to reduce noise in test output
+
+What we DON'T mock:
+- Authorization logic - testing real access control
+- Database - using real MySQL with test data
+- Service layer - testing real business logic
+- Repositories - testing real DB operations
+
+This gives us confidence that our service works correctly
+while keeping tests fast and deterministic.
 """
 import os
+import json
 import pytest
 from datetime import datetime, UTC, timedelta
 from typing import Generator, Dict, Any, Optional
@@ -117,7 +140,11 @@ def mock_db_session_factory(db_session):
 
 @pytest.fixture(scope="function")
 def mock_haas_client():
-    """Mock HaaS client for daemon operations."""
+    """Mock HaaS client for daemon operations.
+    
+    NOTE: This is necessary for integration tests as we cannot call real HaaS API.
+    This is acceptable as we're testing our service logic, not HaaS integration.
+    """
     with patch('deployer.infrastructure.clients.haas_client.HaasClient') as mock_client:
         instance = MagicMock()
         mock_client.return_value = instance
@@ -219,15 +246,51 @@ def get_order_event(authorized_event):
     return authorized_event
 
 
+@pytest.fixture
+def save_evm_transaction_event(authorized_event):
+    """Create an event for save_evm_transaction handler."""
+    authorized_event.update({
+        "body": json.dumps({
+            "orderId": "test-order-id",
+            "transactionHash": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+            "sender": "0xSenderAddress1234567890abcdef1234567890",
+            "recipient": "0xRecipientAddress1234567890abcdef123456"
+        }),
+        "httpMethod": "POST",
+        "resource": "/transaction",
+        "path": "/transaction"
+    })
+    return authorized_event
+
+
+@pytest.fixture
+def get_transactions_event(authorized_event):
+    """Create an event for get_transactions handler."""
+    authorized_event.update({
+        "queryStringParameters": {
+            "orderId": "test-order-id"
+        },
+        "httpMethod": "GET",
+        "resource": "/transactions",
+        "path": "/transactions"
+    })
+    return authorized_event
+
+
 # ========================= Test Data Factories =========================
 
 class TestDataFactory:
-    """Factory for creating test data."""
+    """Factory for creating test data.
+    
+    IMPORTANT: The default account_id="test-user-id-123" matches the 'sub' claim
+    in the authorized_event fixture. This ensures authorization checks pass.
+    If you change one, you must change the other!
+    """
     
     @staticmethod
     def create_daemon(
         daemon_id: Optional[str] = None,
-        account_id: str = "test-user-id-123",
+        account_id: str = "test-user-id-123",  # Must match authorized_event['sub']
         org_id: str = "test-org",
         service_id: str = "test-service",
         status: DaemonStatus = DaemonStatus.INIT,
@@ -327,25 +390,25 @@ def test_data_factory():
 
 @pytest.fixture
 def daemon_repo():
-    """Provide DaemonRepository instance."""
+    """Provide DaemonRepository class."""
     return DaemonRepository
 
 
 @pytest.fixture
 def order_repo():
-    """Provide OrderRepository instance."""
+    """Provide OrderRepository class."""
     return OrderRepository
 
 
 @pytest.fixture
 def transaction_repo():
-    """Provide TransactionRepository instance."""
+    """Provide TransactionRepository class."""
     return TransactionRepository
 
 
 @pytest.fixture
 def claiming_period_repo():
-    """Provide ClaimingPeriodRepository instance."""
+    """Provide ClaimingPeriodRepository class."""
     return ClaimingPeriodRepository
 
 
@@ -389,7 +452,7 @@ def test_order(db_session, order_repo, test_daemon, test_data_factory):
 def test_transaction(db_session, transaction_repo, test_order, test_data_factory):
     """Create a test transaction in the database."""
     transaction = test_data_factory.create_transaction(order_id=test_order.id)
-    transaction_repo.create_transaction(db_session, transaction)
+    transaction_repo.upsert_transaction(db_session, transaction)
     db_session.commit()
     return transaction
 
@@ -408,14 +471,16 @@ def mock_contract_api():
         yield mock_get_info
 
 
-@pytest.fixture
-def mock_authorization_service():
-    """Mock authorization service."""
-    with patch('deployer.application.services.authorization_service.AuthorizationService') as mock_auth:
-        instance = MagicMock()
-        mock_auth.return_value = instance
-        instance.check_access.return_value = True
-        yield instance
+# REMOVED: Authorization service should NOT be mocked in integration tests
+# We want to test real authorization logic
+# @pytest.fixture
+# def mock_authorization_service():
+#     """Mock authorization service."""
+#     with patch('deployer.application.services.authorization_service.AuthorizationService') as mock_auth:
+#         instance = MagicMock()
+#         mock_auth.return_value = instance
+#         instance.check_access.return_value = True
+#         yield instance
 
 
 @pytest.fixture(autouse=True)
