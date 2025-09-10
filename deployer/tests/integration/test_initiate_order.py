@@ -87,3 +87,15 @@ class TestInitiateOrderHandler:
         assert order is not None
         assert order.daemon_id == test_daemon_up.id
         assert order.status == OrderStatus.PROCESSING
+    
+    def test_initiate_order_authorization_check(self, initiate_order_event, lambda_context):
+        """Test that authorization is actually being checked (not mocked)."""
+        # Arrange - remove authorization from event
+        event = initiate_order_event
+        event["requestContext"] = {}  # No authorization
+        
+        # Act
+        response = initiate_order(event, lambda_context)
+        
+        # Assert - should fail with 400 (RequestContext throws BadRequestException)
+        assert response["statusCode"] == StatusCode.BAD_REQUEST
