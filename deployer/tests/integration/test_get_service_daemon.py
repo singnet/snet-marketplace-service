@@ -171,9 +171,9 @@ class TestGetServiceDaemonHandler:
         
         # Verify daemon config is included
         assert "daemonConfig" in daemon_data
-        assert daemon_data["daemonConfig"]["service_endpoint"] == "https://custom-endpoint.ai"
-        assert "service_credentials" in daemon_data["daemonConfig"]
-        assert len(daemon_data["daemonConfig"]["service_credentials"]) == 1
+        assert daemon_data["daemonConfig"]["serviceEndpoint"] == "https://custom-endpoint.ai"
+        assert "serviceCredentials" in daemon_data["daemonConfig"]
+        assert len(daemon_data["daemonConfig"]["serviceCredentials"]) == 1
         
         # Verify empty orders list when no orders exist
         assert "orders" in daemon_data
