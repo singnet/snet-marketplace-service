@@ -5,7 +5,7 @@ Test Architecture:
 ==================
 These are integration tests that verify the interaction between:
 - Lambda handlers
-- Application services  
+- Application services
 - Domain logic
 - Database repositories
 - Real MySQL database
@@ -23,12 +23,12 @@ What we DON'T mock:
 This gives us confidence that our service works correctly
 while keeping tests fast and deterministic.
 """
+
 import io
-import os
 import json
 import pytest
 from datetime import datetime, UTC, timedelta
-from typing import Generator, Dict, Any, Optional
+from typing import Generator, Optional
 from unittest.mock import patch, MagicMock
 
 from alembic.config import Config
@@ -39,8 +39,10 @@ from sqlalchemy.orm import sessionmaker, Session as SessionType
 from deployer.config import NETWORKS, NETWORK_ID
 from deployer.infrastructure import db
 from deployer.infrastructure.models import (
-    Daemon, Order, EVMTransaction, ClaimingPeriod, TransactionsMetadata,
-    DaemonStatus, OrderStatus, EVMTransactionStatus, ClaimingPeriodStatus
+    DaemonStatus,
+    OrderStatus,
+    EVMTransactionStatus,
+    ClaimingPeriodStatus,
 )
 from deployer.domain.models.daemon import NewDaemonDomain
 from deployer.domain.models.order import NewOrderDomain
@@ -56,7 +58,7 @@ from common.utils import generate_uuid
 
 
 # Test database configuration
-db_config = NETWORKS[NETWORK_ID]['db']
+db_config = NETWORKS[NETWORK_ID]["db"]
 TEST_DB_URL = (
     f"{db_config['DB_DRIVER']}://{db_config['DB_USER']}:{db_config['DB_PASSWORD']}"
     f"@{db_config['DB_HOST']}:{db_config['DB_PORT']}/{db_config['DB_NAME']}"
@@ -70,10 +72,8 @@ TestSessionFactory = sessionmaker(bind=test_engine)
 @pytest.fixture(scope="function", autouse=True)
 def mock_boto3_client():
     with patch("boto3.client") as mock_client_factory:
-        # общий фейковый клиент
         fake = MagicMock()
 
-        # пример заглушки для lambda.invoke (подправь под свои параметры)
         payload_stream = io.BytesIO(b'{"status":"ok"}')
         fake.invoke.return_value = {
             "StatusCode": 200,
@@ -83,6 +83,7 @@ def mock_boto3_client():
         mock_client_factory.return_value = fake
         yield
 
+
 def cleanup_test_db():
     """Clear all tables in the test database."""
     with test_engine.connect() as conn:
@@ -91,7 +92,7 @@ def cleanup_test_db():
         tables = [row[0] for row in result]
         for table in tables:
             # Важно: экранируем таблицу order обратными кавычками
-            if table == 'order':
+            if table == "order":
                 conn.execute(text(f"DROP TABLE IF EXISTS `{table}`"))
             else:
                 conn.execute(text(f"DROP TABLE IF EXISTS {table}"))
@@ -103,16 +104,16 @@ def cleanup_test_db():
 def setup_database():
     """Create the database schema once per test session."""
     cleanup_test_db()
-    
+
     # Setup alembic config
     alembic_cfg = Config("alembic.ini")
     alembic_cfg.set_main_option("sqlalchemy.url", TEST_DB_URL)
-    
+
     # Run migrations
     command.upgrade(alembic_cfg, "head")
-    
+
     yield
-    
+
     # Cleanup after all tests
     cleanup_test_db()
 
@@ -127,9 +128,9 @@ def clean_data(setup_database):
         result = conn.execute(text("SHOW TABLES"))
         tables = [row[0] for row in result]
         for table in tables:
-            if table not in ['alembic_version']:
+            if table not in ["alembic_version"]:
                 # Важно: экранируем таблицу order обратными кавычками
-                if table == 'order':
+                if table == "order":
                     conn.execute(text(f"TRUNCATE TABLE `{table}`"))
                 else:
                     conn.execute(text(f"TRUNCATE TABLE {table}"))
@@ -158,40 +159,41 @@ def mock_db_session_factory(db_session):
 @pytest.fixture(scope="function")
 def mock_haas_client():
     """Mock HaaS client for daemon operations.
-    
+
     NOTE: This is necessary for integration tests as we cannot call real HaaS API.
     This is acceptable as we're testing our service logic, not HaaS integration.
     """
-    with patch('deployer.infrastructure.clients.haas_client.HaasClient') as mock_client:
+    with patch("deployer.infrastructure.clients.haas_client.HaasClient") as mock_client:
         instance = MagicMock()
         mock_client.return_value = instance
-        
+
         # Mock successful responses
         instance.create_daemon.return_value = {"status": "success", "daemon_id": "test-daemon-id"}
         instance.delete_daemon.return_value = {"status": "success"}
         instance.get_daemon_status.return_value = {"status": "running"}
-        
+
         yield instance
 
 
 @pytest.fixture(scope="function")
 def mock_deployer_client():
     """Mock Deployer client for blockchain operations."""
-    with patch('deployer.infrastructure.clients.deployer_cleint.DeployerClient') as mock_client:
+    with patch("deployer.infrastructure.clients.deployer_cleint.DeployerClient") as mock_client:
         instance = MagicMock()
         mock_client.return_value = instance
-        
+
         # Mock successful responses
         instance.get_service_info.return_value = {
             "service_endpoint": "https://test-service.example.com",
-            "published": True
+            "published": True,
         }
         instance.get_transaction_status.return_value = "success"
-        
+
         yield instance
 
 
 # ========================= Lambda Event Factories =========================
+
 
 @pytest.fixture
 def lambda_context():
@@ -211,111 +213,124 @@ def authorized_event():
     return {
         "headers": {
             "origin": "https://marketplace.singularitynet.io",
-            "content-type": "application/json"
+            "content-type": "application/json",
         },
         "requestContext": {
             "authorizer": {
                 "claims": {
                     "cognito:username": "test-user",
                     "email": "test@example.com",
-                    "sub": "test-user-id-123"
+                    "sub": "test-user-id-123",
                 }
             }
         },
         "httpMethod": "POST",
         "resource": "/order",
-        "path": "/order"
+        "path": "/order",
     }
 
 
 @pytest.fixture
 def initiate_order_event(authorized_event):
     """Create an event for initiate_order handler."""
-    authorized_event.update({
-        "body": '{"orgId": "test-org", "serviceId": "test-service"}',
-        "httpMethod": "POST",
-        "resource": "/order",
-        "path": "/order"
-    })
+    authorized_event.update(
+        {
+            "body": '{"orgId": "test-org", "serviceId": "test-service"}',
+            "httpMethod": "POST",
+            "resource": "/order",
+            "path": "/order",
+        }
+    )
     return authorized_event
 
 
 @pytest.fixture
 def initiate_order_event_with_credentials(authorized_event):
     """Create an event for initiate_order handler with service credentials."""
-    authorized_event.update({
-        "body": '{"orgId": "test-org", "serviceId": "test-service", '
-                '"serviceEndpoint": "https://custom-endpoint.com", '
-                '"serviceCredentials": [{"key": "API_KEY", "value": "test-key", "isSecret": true}]}'
-    })
+    authorized_event.update(
+        {
+            "body": '{"orgId": "test-org", "serviceId": "test-service", '
+            '"serviceEndpoint": "https://custom-endpoint.com", '
+            '"serviceCredentials": [{"key": "API_KEY", "value": "test-key", "isSecret": true}]}'
+        }
+    )
     return authorized_event
 
 
 @pytest.fixture
 def get_order_event(authorized_event):
     """Create an event for get_order handler."""
-    authorized_event.update({
-        "pathParameters": {"orderId": "test-order-id"},
-        "httpMethod": "GET",
-        "resource": "/order/{orderId}",
-        "path": "/order/test-order-id"
-    })
+    authorized_event.update(
+        {
+            "pathParameters": {"orderId": "test-order-id"},
+            "httpMethod": "GET",
+            "resource": "/order/{orderId}",
+            "path": "/order/test-order-id",
+        }
+    )
     return authorized_event
 
 
 @pytest.fixture
 def save_evm_transaction_event(authorized_event):
     """Create an event for save_evm_transaction handler."""
-    authorized_event.update({
-        "body": json.dumps({
-            "orderId": "test-order-id",
-            "transactionHash": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
-            "sender": "0xSenderAddress1234567890abcdef1234567890",
-            "recipient": "0xRecipientAddress1234567890abcdef123456"
-        }),
-        "httpMethod": "POST",
-        "resource": "/transaction",
-        "path": "/transaction"
-    })
+    authorized_event.update(
+        {
+            "body": json.dumps(
+                {
+                    "orderId": "test-order-id",
+                    "transactionHash": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+                    "sender": "0xSenderAddress1234567890abcdef1234567890",
+                    "recipient": "0xRecipientAddress1234567890abcdef123456",
+                }
+            ),
+            "httpMethod": "POST",
+            "resource": "/transaction",
+            "path": "/transaction",
+        }
+    )
     return authorized_event
 
 
 @pytest.fixture
 def get_transactions_event(authorized_event):
     """Create an event for get_transactions handler."""
-    authorized_event.update({
-        "queryStringParameters": {
-            "orderId": "test-order-id"
-        },
-        "httpMethod": "GET",
-        "resource": "/transactions",
-        "path": "/transactions"
-    })
+    authorized_event.update(
+        {
+            "queryStringParameters": {"orderId": "test-order-id"},
+            "httpMethod": "GET",
+            "resource": "/transactions",
+            "path": "/transactions",
+        }
+    )
     return authorized_event
 
 
 @pytest.fixture
 def get_service_daemon_event(authorized_event):
     """Create an event for get_service_daemon handler."""
-    authorized_event.update({
-        "pathParameters": {"daemonId": "test-daemon-id"},
-        "httpMethod": "GET",
-        "resource": "/daemon/{daemonId}",
-        "path": "/daemon/test-daemon-id"
-    })
+    authorized_event.update(
+        {
+            "pathParameters": {"daemonId": "test-daemon-id"},
+            "httpMethod": "GET",
+            "resource": "/daemon/{daemonId}",
+            "path": "/daemon/test-daemon-id",
+        }
+    )
     return authorized_event
 
 
 # ========================= Test Data Factories =========================
 
+
 class TestDataFactory:
     """Factory for creating test data.
-    
+
     IMPORTANT: The default account_id="test-user-id-123" matches the 'sub' claim
     in the authorized_event fixture. This ensures authorization checks pass.
     If you change one, you must change the other!
     """
-    
+
     @staticmethod
     def create_daemon(
         daemon_id: Optional[str] = None,
@@ -323,90 +338,71 @@ class TestDataFactory:
         org_id: str = "test-org",
         service_id: str = "test-service",
         status: DaemonStatus = DaemonStatus.INIT,
-        **kwargs
+        **kwargs,
     ) -> NewDaemonDomain:
         """Create a daemon domain object."""
         if daemon_id is None:
             daemon_id = generate_uuid()
-        
+
         current_time = datetime.now(UTC)
         defaults = {
             "daemon_config": {"payment_channel_storage_type": DaemonStorageType.ETCD.value},
             "service_published": False,
             "daemon_endpoint": get_daemon_endpoint(org_id, service_id),
             "start_at": current_time,
-            "end_at": current_time + timedelta(days=30)
+            "end_at": current_time + timedelta(days=30),
         }
         defaults.update(kwargs)
-        
+
         return NewDaemonDomain(
             id=daemon_id,
             account_id=account_id,
             org_id=org_id,
             service_id=service_id,
             status=status,
-            **defaults
+            **defaults,
         )
-    
+
     @staticmethod
     def create_order(
         order_id: Optional[str] = None,
         daemon_id: str = "test-daemon-id",
-        status: OrderStatus = OrderStatus.PROCESSING
+        status: OrderStatus = OrderStatus.PROCESSING,
     ) -> NewOrderDomain:
         """Create an order domain object."""
         if order_id is None:
             order_id = generate_uuid()
-        
-        return NewOrderDomain(
-            id=order_id,
-            daemon_id=daemon_id,
-            status=status
-        )
-    
+
+        return NewOrderDomain(id=order_id, daemon_id=daemon_id, status=status)
+
     @staticmethod
     def create_transaction(
         hash: Optional[str] = None,
         order_id: str = "test-order-id",
         status: EVMTransactionStatus = EVMTransactionStatus.PENDING,
-        **kwargs
+        **kwargs,
     ) -> NewEVMTransactionDomain:
         """Create a transaction domain object."""
         if hash is None:
             hash = f"0x{''.join(['a' for _ in range(64)])}"
-        
-        defaults = {
-            "sender": "0x1234567890abcdef",
-            "recipient": "0xabcdef1234567890"
-        }
+
+        defaults = {"sender": "0x1234567890abcdef", "recipient": "0xabcdef1234567890"}
         defaults.update(kwargs)
-        
-        return NewEVMTransactionDomain(
-            hash=hash,
-            order_id=order_id,
-            status=status,
-            **defaults
-        )
-    
+
+        return NewEVMTransactionDomain(hash=hash, order_id=order_id, status=status, **defaults)
+
     @staticmethod
     def create_claiming_period(
         daemon_id: str = "test-daemon-id",
         status: ClaimingPeriodStatus = ClaimingPeriodStatus.INACTIVE,
-        **kwargs
+        **kwargs,
     ) -> NewClaimingPeriodDomain:
         """Create a claiming period domain object."""
         current_time = datetime.now(UTC)
-        defaults = {
-            "start_at": current_time,
-            "end_at": current_time + timedelta(hours=24)
-        }
+        defaults = {"start_at": current_time, "end_at": current_time + timedelta(hours=24)}
         defaults.update(kwargs)
-        
-        return NewClaimingPeriodDomain(
-            daemon_id=daemon_id,
-            status=status,
-            **defaults
-        )
+
+        return NewClaimingPeriodDomain(daemon_id=daemon_id, status=status, **defaults)
 
 
 @pytest.fixture
@@ -416,6 +412,7 @@ def test_data_factory():
 
 
 # ========================= Database Fixtures =========================
+
 
 @pytest.fixture
 def daemon_repo():
@@ -488,14 +485,15 @@ def test_transaction(db_session, transaction_repo, test_order, test_data_factory
 
 # ========================= Mock External Services =========================
 
+
 @pytest.fixture
 def mock_contract_api():
     """Mock contract API calls."""
-    with patch('deployer.application.services.order_service.get_service_info') as mock_get_info:
+    with patch("deployer.application.services.order_service.get_service_info") as mock_get_info:
         mock_get_info.return_value = {
             "service_endpoint": "https://test-service.example.com",
             "published": True,
-            "groups": [{"group_id": "default-group"}]
+            "groups": [{"group_id": "default-group"}],
         }
         yield mock_get_info
 
@@ -515,5 +513,5 @@ def mock_contract_api():
 @pytest.fixture(autouse=True)
 def mock_logger():
     """Mock logger to prevent log output during tests."""
-    with patch('deployer.application.handlers.order_handlers.logger') as mock_log:
+    with patch("deployer.application.handlers.order_handlers.logger") as mock_log:
         yield mock_log
