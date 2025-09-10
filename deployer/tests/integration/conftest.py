@@ -91,7 +91,6 @@ def cleanup_test_db():
         result = conn.execute(text("SHOW TABLES"))
         tables = [row[0] for row in result]
         for table in tables:
-            # Важно: экранируем таблицу order обратными кавычками
             if table == "order":
                 conn.execute(text(f"DROP TABLE IF EXISTS `{table}`"))
             else:
@@ -129,7 +128,6 @@ def clean_data(setup_database):
         tables = [row[0] for row in result]
         for table in tables:
             if table not in ["alembic_version"]:
-                # Важно: экранируем таблицу order обратными кавычками
                 if table == "order":
                     conn.execute(text(f"TRUNCATE TABLE `{table}`"))
                 else:
