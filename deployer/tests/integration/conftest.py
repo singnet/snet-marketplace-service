@@ -23,6 +23,7 @@ What we DON'T mock:
 This gives us confidence that our service works correctly
 while keeping tests fast and deterministic.
 """
+import io
 import os
 import json
 import pytest
@@ -65,6 +66,22 @@ TEST_DB_URL = (
 test_engine = create_engine(TEST_DB_URL, pool_pre_ping=True, echo=False)
 TestSessionFactory = sessionmaker(bind=test_engine)
 
+
+@pytest.fixture(scope="function", autouse=True)
+def mock_boto3_client():
+    with patch("boto3.client") as mock_client_factory:
+        # общий фейковый клиент
+        fake = MagicMock()
+
+        # пример заглушки для lambda.invoke (подправь под свои параметры)
+        payload_stream = io.BytesIO(b'{"status":"ok"}')
+        fake.invoke.return_value = {
+            "StatusCode": 200,
+            "Payload": payload_stream,
+        }
+
+        mock_client_factory.return_value = fake
+        yield
 
 def cleanup_test_db():
     """Clear all tables in the test database."""
