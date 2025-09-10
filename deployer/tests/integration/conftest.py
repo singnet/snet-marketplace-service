@@ -277,6 +277,18 @@ def get_transactions_event(authorized_event):
     return authorized_event
 
 
+@pytest.fixture
+def get_service_daemon_event(authorized_event):
+    """Create an event for get_service_daemon handler."""
+    authorized_event.update({
+        "pathParameters": {"daemonId": "test-daemon-id"},
+        "httpMethod": "GET",
+        "resource": "/daemon/{daemonId}",
+        "path": "/daemon/test-daemon-id"
+    })
+    return authorized_event
+
+
 # ========================= Test Data Factories =========================
 
 class TestDataFactory:
