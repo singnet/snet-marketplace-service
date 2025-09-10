@@ -72,15 +72,15 @@ TestSessionFactory = sessionmaker(bind=test_engine)
 @pytest.fixture(scope="function", autouse=True)
 def mock_boto3_client():
     with patch("boto3.client") as mock_client_factory:
-        fake = MagicMock()
+        mock = MagicMock()
 
         payload_stream = io.BytesIO(b'{"status":"ok"}')
-        fake.invoke.return_value = {
+        mock.invoke.return_value = {
             "StatusCode": 200,
             "Payload": payload_stream,
         }
 
-        mock_client_factory.return_value = fake
+        mock_client_factory.return_value = mock
         yield
 
 
