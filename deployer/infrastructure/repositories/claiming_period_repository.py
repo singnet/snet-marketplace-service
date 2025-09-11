@@ -16,8 +16,8 @@ class ClaimingPeriodRepository:
         current_time = datetime.now(UTC)
         claiming_period_model = ClaimingPeriod(
             daemon_id=daemon_id,
-            start_on=current_time,
-            end_on=current_time + timedelta(hours=CLAIMING_PERIOD_IN_HOURS),
+            start_at=current_time,
+            end_at=current_time + timedelta(hours=CLAIMING_PERIOD_IN_HOURS),
             status=ClaimingPeriodStatus.ACTIVE,
         )
 
@@ -50,7 +50,7 @@ class ClaimingPeriodRepository:
             return {}
 
         subquery = (
-            select(ClaimingPeriod.daemon_id, func.max(ClaimingPeriod.end_at).label("max_end_on"))
+            select(ClaimingPeriod.daemon_id, func.max(ClaimingPeriod.end_at).label("max_end_at"))
             .where(ClaimingPeriod.daemon_id.in_(daemon_ids))
             .group_by(ClaimingPeriod.daemon_id)
             .subquery()
@@ -60,7 +60,7 @@ class ClaimingPeriodRepository:
             subquery,
             and_(
                 ClaimingPeriod.daemon_id == subquery.c.daemon_id,
-                ClaimingPeriod.end_at == subquery.c.max_end_on,
+                ClaimingPeriod.end_at == subquery.c.max_end_at,
             ),
         )
 
