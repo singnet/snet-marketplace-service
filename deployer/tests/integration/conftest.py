@@ -331,6 +331,20 @@ def get_user_daemons_event(authorized_event):
     return authorized_event
 
 
+@pytest.fixture
+def start_daemon_for_claiming_event(authorized_event):
+    """Create an event for start_daemon_for_claiming handler."""
+    authorized_event.update(
+        {
+            "pathParameters": {"daemonId": "test-daemon-id"},
+            "httpMethod": "GET",
+            "resource": "/daemon/{daemonId}/start",
+            "path": "/daemon/test-daemon-id/start",
+        }
+    )
+    return authorized_event
+
+
 # ========================= Test Data Factories =========================
 
 
@@ -471,6 +485,15 @@ def test_daemon_ready(db_session, daemon_repo, test_data_factory):
 def test_daemon_up(db_session, daemon_repo, test_data_factory):
     """Create a test daemon with UP status."""
     daemon = test_data_factory.create_daemon(status=DaemonStatus.UP)
+    daemon_repo.create_daemon(db_session, daemon)
+    db_session.commit()
+    return daemon
+
+
+@pytest.fixture
+def test_daemon_down(db_session, daemon_repo, test_data_factory):
+    """Create a test daemon with DOWN status."""
+    daemon = test_data_factory.create_daemon(status=DaemonStatus.DOWN)
     daemon_repo.create_daemon(db_session, daemon)
     db_session.commit()
     return daemon
