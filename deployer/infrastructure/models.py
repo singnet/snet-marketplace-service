@@ -134,32 +134,6 @@ class EVMTransaction(Base):
     )
 
 
-class ClaimingPeriod(Base):
-    __tablename__ = "claiming_period"
-    id: Mapped[int] = mapped_column("id", Integer, autoincrement=True, primary_key=True)
-    daemon_id: Mapped[str] = mapped_column(
-        "daemon_id",
-        VARCHAR(128),
-        ForeignKey("daemon.id", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False,
-        index=True,
-    )
-    start_at: Mapped[datetime] = mapped_column(
-        "start_at", TIMESTAMP(timezone=False), nullable=False
-    )
-    end_at: Mapped[datetime] = mapped_column("end_at", TIMESTAMP(timezone=False), nullable=False)
-    status: Mapped[ClaimingPeriodStatus] = mapped_column(
-        "status", Enum(ClaimingPeriodStatus), nullable=False, default=ClaimingPeriodStatus.INACTIVE
-    )
-
-    created_at: Mapped[datetime] = mapped_column(
-        "created_at", TIMESTAMP(timezone=False), nullable=False, server_default=CreateTimestamp
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        "updated_at", TIMESTAMP(timezone=False), nullable=False, server_default=UpdateTimestamp
-    )
-
-
 class TransactionsMetadata(Base):
     __tablename__ = "transactions_metadata"
     id: Mapped[int] = mapped_column("id", Integer, autoincrement=True, primary_key=True)
