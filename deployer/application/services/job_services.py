@@ -136,11 +136,11 @@ class JobService:
                         DaemonRepository.update_daemon_status(
                             session, order.daemon_id, DaemonStatus.READY_TO_START
                         )
-                        DaemonRepository.update_daemon_end_on(
+                        DaemonRepository.update_daemon_end_at(
                             session, order.daemon_id, datetime.now(UTC) + relativedelta(months=+1)
                         )
                     elif daemon.status in [DaemonStatus.UP, DaemonStatus.READY_TO_START]:
-                        DaemonRepository.update_daemon_end_on(
+                        DaemonRepository.update_daemon_end_at(
                             session, order.daemon_id, daemon.end_at + relativedelta(months=+1)
                         )
 

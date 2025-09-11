@@ -34,8 +34,8 @@ class DaemonRepository:
         session.execute(update_query)
 
     @staticmethod
-    def update_daemon_end_on(session: Session, daemon_id: str, end_on: datetime) -> None:
-        update_query = update(Daemon).where(Daemon.id == daemon_id).values(end_on=end_on)
+    def update_daemon_end_at(session: Session, daemon_id: str, end_at: datetime) -> None:
+        update_query = update(Daemon).where(Daemon.id == daemon_id).values(end_at=end_at)
 
         session.execute(update_query)
 

@@ -563,9 +563,9 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-#    events:
-#      - schedule:
-#          rate: rate(1 minute)
+    events:
+      - schedule:
+          rate: rate(1 minute)
 
   check-daemons:
     handler: deployer.application.handlers.job_handlers.check_daemons

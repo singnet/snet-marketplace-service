@@ -19,9 +19,14 @@ class OrderDomain(NewOrderDomain, BaseDomain):
 
     def to_response(self):
         result = super().to_response()
-        result["evmTransactions"] = [
-            transaction.to_response() for transaction in self.evm_transactions
-        ]
+        result["updatedAt"] = self.updated_at.isoformat()
+
+        result["evmTransactions"] = []
+        for transaction in self.evm_transactions:
+            transaction_result = transaction.to_response()
+            transaction_result["updatedAt"] = transaction.updated_at.isoformat()
+            result["evmTransactions"].append(transaction_result)
+
         return result
 
     def to_short_response(self):
