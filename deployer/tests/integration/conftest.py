@@ -318,6 +318,19 @@ def get_service_daemon_event(authorized_event):
     return authorized_event
 
 
+@pytest.fixture
+def get_user_daemons_event(authorized_event):
+    """Create an event for get_user_daemons handler."""
+    authorized_event.update(
+        {
+            "httpMethod": "GET",
+            "resource": "/daemons",
+            "path": "/daemons",
+        }
+    )
+    return authorized_event
+
+
 # ========================= Test Data Factories =========================
 
 
