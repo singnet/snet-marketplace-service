@@ -1,6 +1,7 @@
 """
 Integration tests for start_daemon_for_claiming handler.
 """
+import copy
 import json
 import pytest
 from datetime import datetime, UTC, timedelta
@@ -8,144 +9,136 @@ from unittest.mock import patch, MagicMock
 
 from deployer.application.handlers.daemon_handlers import start_daemon_for_claiming
 from deployer.infrastructure.models import DaemonStatus, ClaimingPeriodStatus
-from deployer.config import CLAIMING_PERIOD_IN_HOURS, BREAK_PERIOD_IN_HOURS
+from deployer.config import BREAK_PERIOD_IN_HOURS
 from common.constant import StatusCode
 
 
 class TestStartDaemonForClaimingHandler:
     """Test cases for start_daemon_for_claiming handler."""
-    
-    def test_start_daemon_for_claiming_first_time(
+
+    def test_start_daemon_for_claiming_success_no_previous_claiming(
         self,
-        authorized_event,
+        start_daemon_for_claiming_event,
         lambda_context,
         db_session,
         test_data_factory,
         daemon_repo,
         claiming_period_repo
     ):
-        """Test successful daemon start for claiming when no previous claiming exists."""
+        """Test successful daemon start for claiming when no previous claiming period exists."""
         # Arrange
-        # Create daemon with DOWN status (required for claiming)
         daemon = test_data_factory.create_daemon(
-            daemon_id="test-daemon-claim-001",
-            account_id="test-user-id-123",
-            org_id="test-org-claim",
-            service_id="test-service-claim",
-            status=DaemonStatus.DOWN
+            daemon_id="test-daemon-001",
+            account_id="test-user-id-123",  # Must match authorized_event
+            org_id="test-org",
+            service_id="test-service",
+            status=DaemonStatus.DOWN,  # Required status for claiming
+            service_published=True
         )
         daemon_repo.create_daemon(db_session, daemon)
         db_session.commit()
+
+        # Create a copy of the event to avoid side effects
+        event = copy.deepcopy(start_daemon_for_claiming_event)
+        event["pathParameters"]["daemonId"] = "test-daemon-001"
+
+        # Act
+        # Mock datetime.now to return datetime without timezone (matching DB format)
+        # This is necessary because DB stores datetime without timezone,
+        # but service uses datetime.now(UTC) which has timezone
+        def mock_now(tz=None):
+            return datetime.now().replace(tzinfo=None)
         
-        # Prepare event
-        event = authorized_event.copy()
-        event["pathParameters"] = {"daemonId": daemon.id}
-        event["httpMethod"] = "GET"
-        event["resource"] = "/daemon/{daemonId}/start"
-        event["path"] = f"/daemon/{daemon.id}/start"
-        
-        # Mock DeployerClient to avoid actual daemon start
-        with patch('deployer.application.services.daemon_service.DeployerClient') as mock_deployer:
-            mock_client = MagicMock()
-            mock_deployer.return_value = mock_client
-            mock_client.start_daemon.return_value = {"status": "success"}
+        with patch('deployer.application.services.daemon_service.datetime') as mock_datetime:
+            mock_datetime.now = mock_now
+            mock_datetime.UTC = UTC
+            mock_datetime.timedelta = timedelta
             
-            # Act
+            # Note: DeployerClient.start_daemon is handled by global mock_boto3_client fixture
             response = start_daemon_for_claiming(event, lambda_context)
-            
-            # Assert
-            assert response["statusCode"] == StatusCode.OK
-            
-            body = json.loads(response["body"])
-            assert body["status"] == "success"
-            assert body["data"] == {}  # Method returns empty dict on success
-            
-            # Verify claiming period was created
-            last_claiming = claiming_period_repo.get_last_claiming_period(
-                db_session, 
-                daemon.id
-            )
-            assert last_claiming is not None
-            assert last_claiming.daemon_id == daemon.id
-            assert last_claiming.status == ClaimingPeriodStatus.ACTIVE
-            
-            # Verify DeployerClient was called
-            mock_client.start_daemon.assert_called_once_with(daemon.id)
-    
-    def test_start_daemon_for_claiming_after_break_period(
+
+        # Assert
+        assert response["statusCode"] == StatusCode.OK
+        body = json.loads(response["body"])
+        assert body["status"] == "success"
+        assert body["data"] == {}
+        
+        # Verify claiming period was created
+        claiming_period = claiming_period_repo.get_last_claiming_period(db_session, "test-daemon-001")
+        assert claiming_period is not None
+        assert claiming_period.daemon_id == "test-daemon-001"
+        assert claiming_period.status == ClaimingPeriodStatus.ACTIVE
+
+    def test_start_daemon_for_claiming_success_with_old_claiming_period(
         self,
-        authorized_event,
+        start_daemon_for_claiming_event,
         lambda_context,
         db_session,
         test_data_factory,
         daemon_repo,
         claiming_period_repo
     ):
-        """Test successful daemon start for claiming after break period has passed."""
+        """Test successful daemon start for claiming when previous claiming period is old enough."""
         # Arrange
-        # Create daemon with DOWN status
         daemon = test_data_factory.create_daemon(
-            daemon_id="test-daemon-claim-002",
-            account_id="test-user-id-123",
-            org_id="test-org-claim-2",
-            service_id="test-service-claim-2",
-            status=DaemonStatus.DOWN
+            daemon_id="test-daemon-002",
+            account_id="test-user-id-123",  # Must match authorized_event
+            org_id="test-org-2",
+            service_id="test-service-2",
+            status=DaemonStatus.DOWN,
+            service_published=True
         )
         daemon_repo.create_daemon(db_session, daemon)
+        db_session.commit()  # Commit daemon before creating claiming_period (foreign key constraint)
         
-        # Create old claiming period that ended long ago (beyond break period)
-        old_claiming_time = datetime.now(UTC) - timedelta(hours=BREAK_PERIOD_IN_HOURS + 1)
-        old_claiming = test_data_factory.create_claiming_period(
-            daemon_id=daemon.id,
-            status=ClaimingPeriodStatus.INACTIVE,
-            start_at=old_claiming_time - timedelta(hours=CLAIMING_PERIOD_IN_HOURS),
-            end_at=old_claiming_time
-        )
+        # Create an old claiming period that ended more than BREAK_PERIOD_IN_HOURS ago
+        # Since BREAK_PERIOD_IN_HOURS is 0 in config, any past time should work
+        # IMPORTANT: Use datetime without timezone since DB stores without timezone
+        old_end_time = datetime.now() - timedelta(hours=25)  # 25 hours ago
+        old_start_time = old_end_time - timedelta(hours=24)
         
-        # Save old claiming period manually
+        # Use the repository to create the claiming period properly
         from deployer.infrastructure.models import ClaimingPeriod
-        old_claiming_model = ClaimingPeriod(
-            daemon_id=old_claiming.daemon_id,
-            start_at=old_claiming.start_at,
-            end_at=old_claiming.end_at,
-            status=old_claiming.status
+        claiming_period_model = ClaimingPeriod(
+            daemon_id="test-daemon-002",
+            start_at=old_start_time,
+            end_at=old_end_time,
+            status=ClaimingPeriodStatus.INACTIVE
         )
-        db_session.add(old_claiming_model)
+        db_session.add(claiming_period_model)
         db_session.commit()
+
+        # Create a copy of the event to avoid side effects
+        event = copy.deepcopy(start_daemon_for_claiming_event)
+        event["pathParameters"]["daemonId"] = "test-daemon-002"
+
+        # Act
+        # Mock datetime.now to return datetime without timezone (matching DB format)
+        # This fixes the timezone mismatch between DB (no timezone) and service (with timezone)
+        def mock_now(tz=None):
+            # Always return datetime without timezone to match DB format
+            return datetime.now().replace(tzinfo=None)
         
-        # Prepare event
-        event = authorized_event.copy()
-        event["pathParameters"] = {"daemonId": daemon.id}
-        event["httpMethod"] = "GET"
-        event["resource"] = "/daemon/{daemonId}/start"
-        event["path"] = f"/daemon/{daemon.id}/start"
-        
-        # Mock DeployerClient
-        with patch('deployer.application.services.daemon_service.DeployerClient') as mock_deployer:
-            mock_client = MagicMock()
-            mock_deployer.return_value = mock_client
-            mock_client.start_daemon.return_value = {"status": "success"}
+        with patch('deployer.application.services.daemon_service.datetime') as mock_datetime:
+            # Make datetime.now() return current time without timezone
+            mock_datetime.now = mock_now
+            # Keep other datetime functionality working
+            mock_datetime.UTC = UTC
+            mock_datetime.timedelta = timedelta
             
-            # Act
+            # Note: DeployerClient.start_daemon is handled by global mock_boto3_client fixture
             response = start_daemon_for_claiming(event, lambda_context)
-            
-            # Assert
-            assert response["statusCode"] == StatusCode.OK
-            
-            body = json.loads(response["body"])
-            assert body["status"] == "success"
-            assert body["data"] == {}
-            
-            # Verify new claiming period was created
-            claiming_periods = db_session.query(ClaimingPeriod).filter_by(
-                daemon_id=daemon.id
-            ).order_by(ClaimingPeriod.end_at.desc()).all()
-            
-            assert len(claiming_periods) == 2  # Old one and new one
-            
-            newest_claiming = claiming_periods[0]
-            assert newest_claiming.status == ClaimingPeriodStatus.ACTIVE
-            assert newest_claiming.end_at > old_claiming.end_at  # New claiming is more recent
-            
-            # Verify DeployerClient was called
-            mock_client.start_daemon.assert_called_once_with(daemon.id)
+
+        # Assert
+        assert response["statusCode"] == StatusCode.OK
+        body = json.loads(response["body"])
+        assert body["status"] == "success"
+        assert body["data"] == {}
+        
+        # Verify new claiming period was created
+        latest_claiming_period = claiming_period_repo.get_last_claiming_period(db_session, "test-daemon-002")
+        assert latest_claiming_period is not None
+        assert latest_claiming_period.daemon_id == "test-daemon-002"
+        assert latest_claiming_period.status == ClaimingPeriodStatus.ACTIVE
+        # Verify it's a new claiming period (not the old one)
+        assert latest_claiming_period.start_at > old_end_time

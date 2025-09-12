@@ -74,12 +74,16 @@ def mock_boto3_client():
     with patch("boto3.client") as mock_client_factory:
         mock = MagicMock()
 
-        payload_stream = io.BytesIO(b'{"status":"ok"}')
-        mock.invoke.return_value = {
-            "StatusCode": 200,
-            "Payload": payload_stream,
-        }
-
+        # DeployerClient expects response with 'body' field containing JSON
+        def mock_invoke(*args, **kwargs):
+            payload_data = json.dumps({"body": json.dumps({"status": "success", "data": {}})})
+            payload_stream = io.BytesIO(payload_data.encode())
+            return {
+                "StatusCode": 200,
+                "Payload": payload_stream,
+            }
+        
+        mock.invoke = mock_invoke
         mock_client_factory.return_value = mock
         yield
 
