@@ -349,6 +349,34 @@ def start_daemon_for_claiming_event(authorized_event):
     return authorized_event
 
 
+@pytest.fixture
+def pause_daemon_event(authorized_event):
+    """Create an event for pause_daemon handler."""
+    authorized_event.update(
+        {
+            "pathParameters": {"daemonId": "test-daemon-id"},
+            "httpMethod": "GET",
+            "resource": "/daemon/{daemonId}/pause",
+            "path": "/daemon/test-daemon-id/pause",
+        }
+    )
+    return authorized_event
+
+
+@pytest.fixture
+def unpause_daemon_event(authorized_event):
+    """Create an event for unpause_daemon handler."""
+    authorized_event.update(
+        {
+            "pathParameters": {"daemonId": "test-daemon-id"},
+            "httpMethod": "GET",
+            "resource": "/daemon/{daemonId}/unpause",
+            "path": "/daemon/test-daemon-id/unpause",
+        }
+    )
+    return authorized_event
+
+
 # ========================= Test Data Factories =========================
 
 
