@@ -3,13 +3,11 @@ Integration tests for start_daemon_for_claiming handler.
 """
 import copy
 import json
-import pytest
 from datetime import datetime, UTC, timedelta
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from deployer.application.handlers.daemon_handlers import start_daemon_for_claiming
 from deployer.infrastructure.models import DaemonStatus, ClaimingPeriodStatus
-from deployer.config import BREAK_PERIOD_IN_HOURS
 from common.constant import StatusCode
 
 

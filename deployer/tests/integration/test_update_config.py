@@ -3,8 +3,6 @@ Integration tests for update_config handler.
 """
 import copy
 import json
-import pytest
-from unittest.mock import patch
 
 from deployer.application.handlers.daemon_handlers import update_config
 from deployer.infrastructure.models import DaemonStatus
@@ -17,6 +15,7 @@ from conftest import TestSessionFactory
 class TestUpdateConfigHandler:
     """Test cases for update_config handler."""
 
+    # Bug fixed: Now properly creates a copy of daemon_config to ensure SQLAlchemy change detection
     def test_update_config_success_daemon_down(
         self,
         update_config_event,
@@ -72,26 +71,18 @@ class TestUpdateConfigHandler:
         
         # Verify config was updated in the database
         # Need to create new session to see changes from handler's session
-        db_session.rollback()  # Rollback any pending changes
-        db_session.close()  # Close the session
+        db_session.rollback()
+        db_session.close()
+        
         new_session = TestSessionFactory()
         try:
             updated_daemon = daemon_repo.get_daemon(new_session, "test-daemon-001")
             
+            # Test EXPECTED behavior
             assert updated_daemon.daemon_config["service_endpoint"] == "https://updated-endpoint.example.com"
-            
-            # NOTE: There appears to be a bug in the update_config implementation
-            # where service_credentials are not properly updated in the database.
-            # This might be due to SQLAlchemy not detecting changes in nested JSON fields.
-            # For now, we'll test the actual behavior rather than expected behavior.
-            
-            # Expected (but failing due to bug):
-            # assert updated_daemon.daemon_config["service_credentials"][0]["key"] == "NEW_API_KEY"
-            # assert updated_daemon.daemon_config["service_credentials"][0]["value"] == "new-secret-value"
-            
-            # Actual behavior (bug - credentials not updated):
-            assert updated_daemon.daemon_config["service_credentials"][0]["key"] == "OLD_KEY"
-            assert updated_daemon.daemon_config["service_credentials"][0]["value"] == "old-value"
+            assert updated_daemon.daemon_config["service_credentials"][0]["key"] == "NEW_API_KEY"
+            assert updated_daemon.daemon_config["service_credentials"][0]["value"] == "new-secret-value"
+            assert updated_daemon.daemon_config["service_credentials"][0]["location"] == "header"
             # Original config should still be preserved
             assert updated_daemon.daemon_config["payment_channel_storage_type"] == "etcd"
         finally:

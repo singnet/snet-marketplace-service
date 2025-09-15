@@ -3,7 +3,6 @@ Integration tests for pause_daemon handler.
 """
 import copy
 import json
-import pytest
 
 from deployer.application.handlers.daemon_handlers import pause_daemon
 from deployer.infrastructure.models import DaemonStatus

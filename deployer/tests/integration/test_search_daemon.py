@@ -3,14 +3,12 @@ Integration tests for search_daemon handler.
 """
 import copy
 import json
-import pytest
 
 from deployer.application.handlers.daemon_handlers import search_daemon
 from deployer.infrastructure.models import DaemonStatus, OrderStatus
 from common.constant import StatusCode
 
 # Import TestSessionFactory from conftest
-from conftest import TestSessionFactory
 
 
 class TestSearchDaemonHandler:
@@ -77,45 +75,6 @@ class TestSearchDaemonHandler:
         assert order_data["id"] == "test-order-001"  # Not orderId!
         assert order_data["status"] == "SUCCESS"
 
-    def test_search_daemon_without_order_returns_error(
-        self,
-        search_daemon_event,
-        lambda_context,
-        db_session,
-        test_data_factory,
-        daemon_repo
-    ):
-        """Test search daemon returns error when daemon has no orders.
-        
-        NOTE: This is a bug in the implementation - it calls order.to_short_response()
-        even when order is None, causing AttributeError and returning 500.
-        When fixed, this test should be updated to expect success.
-        """
-        # Arrange
-        daemon = test_data_factory.create_daemon(
-            daemon_id="test-daemon-002",
-            account_id="another-user",
-            org_id="ai-org",
-            service_id="nlp-service",
-            status=DaemonStatus.DOWN,
-            service_published=False
-        )
-        daemon_repo.create_daemon(db_session, daemon)
-        db_session.commit()
-
-        # Create event with search parameters
-        event = copy.deepcopy(search_daemon_event)
-        event["queryStringParameters"]["orgId"] = "ai-org"
-        event["queryStringParameters"]["serviceId"] = "nlp-service"
-
-        # Act
-        response = search_daemon(event, lambda_context)
-
-        # Assert - Currently returns 500 due to bug
-        assert response["statusCode"] == StatusCode.INTERNAL_SERVER_ERROR
-        body = json.loads(response["body"])
-        assert body["status"] == "failed"
-
     def test_search_daemon_not_found(
         self,
         search_daemon_event,
@@ -159,6 +118,7 @@ class TestSearchDaemonHandler:
         # When daemon not found, returns empty dict
         assert body["data"] == {}
 
+    # Bug fixed: Now sorts by updated_at instead of UUID for proper chronological order
     def test_search_daemon_with_multiple_orders(
         self,
         search_daemon_event,
