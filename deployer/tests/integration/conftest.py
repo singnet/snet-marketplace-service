@@ -377,6 +377,44 @@ def unpause_daemon_event(authorized_event):
     return authorized_event
 
 
+@pytest.fixture
+def update_config_event(authorized_event):
+    """Create an event for update_config handler."""
+    authorized_event.update(
+        {
+            "pathParameters": {"daemonId": "test-daemon-id"},
+            "body": json.dumps({
+                "serviceEndpoint": "https://new-endpoint.example.com",
+                "serviceCredentials": [
+                    {
+                        "key": "API_KEY",
+                        "value": "new-test-key",
+                        "location": "header"
+                    }
+                ]
+            }),
+            "httpMethod": "POST",
+            "resource": "/daemon/{daemonId}/config",
+            "path": "/daemon/test-daemon-id/config",
+        }
+    )
+    return authorized_event
+
+
+@pytest.fixture
+def search_daemon_event(authorized_event):
+    """Create an event for search_daemon handler."""
+    authorized_event.update(
+        {
+            "queryStringParameters": {"orgId": "test-org", "serviceId": "test-service"},
+            "httpMethod": "GET",
+            "resource": "/daemon/search",
+            "path": "/daemon/search",
+        }
+    )
+    return authorized_event
+
+
 # ========================= Test Data Factories =========================
 
 
