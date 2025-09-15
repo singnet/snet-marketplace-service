@@ -30,6 +30,7 @@ import pytest
 from datetime import datetime, UTC, timedelta
 from typing import Generator, Optional
 from unittest.mock import patch, MagicMock
+from sqlalchemy.orm import close_all_sessions
 
 from alembic.config import Config
 from alembic import command
@@ -90,6 +91,10 @@ def mock_boto3_client():
 
 def cleanup_test_db():
     """Clear all tables in the test database."""
+    try:
+        close_all_sessions()
+    except Exception:
+        pass
     with test_engine.connect() as conn:
         conn.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
         result = conn.execute(text("SHOW TABLES"))
@@ -125,6 +130,18 @@ def setup_database():
 def clean_data(setup_database):
     """Truncate data in all tables before each test, keeping schema."""
     yield
+
+
+    try:
+        db_session.rollback()
+        db_session.close()
+    except Exception:
+        pass
+
+    try:
+        close_all_sessions()
+    except Exception:
+        pass
     # Clean up after each test
     with test_engine.connect() as conn:
         conn.execute(text("SET FOREIGN_KEY_CHECKS = 0"))

@@ -2,11 +2,10 @@
 Integration tests for get_user_daemons handler.
 """
 import json
-import pytest
 from datetime import datetime, UTC, timedelta
 
 from deployer.application.handlers.daemon_handlers import get_user_daemons
-from deployer.infrastructure.models import DaemonStatus, OrderStatus, ClaimingPeriodStatus
+from deployer.infrastructure.models import DaemonStatus, OrderStatus
 from common.constant import StatusCode
 
 
