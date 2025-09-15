@@ -182,7 +182,7 @@ def mock_haas_client():
     NOTE: This is necessary for integration tests as we cannot call real HaaS API.
     This is acceptable as we're testing our service logic, not HaaS integration.
     """
-    with patch("deployer.infrastructure.clients.haas_client.HaasClient") as mock_client:
+    with patch("deployer.application.services.daemon_service.HaaSClient") as mock_client:
         instance = MagicMock()
         mock_client.return_value = instance
 
