@@ -80,7 +80,12 @@ class OrderRepository:
 
     @staticmethod
     def get_last_order(session: Session, daemon_id: str) -> Optional[OrderDomain]:
-        query = select(Order).where(daemon_id == Order.daemon_id).order_by(Order.id.desc()).limit(1)
+        query = (
+            select(Order)
+            .where(Order.daemon_id == daemon_id)
+            .order_by(Order.updated_at.desc())
+            .limit(1)
+        )
 
         result = session.execute(query)
 

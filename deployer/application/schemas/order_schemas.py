@@ -29,6 +29,7 @@ class InitiateOrderRequest(BaseModel):
                 for param in AUTH_PARAMETERS:
                     if param not in value.keys() or not value[param]:
                         raise InvalidServiceAuthParameters()
+        return values
 
 
 class GetOrderRequest(BaseModel):
