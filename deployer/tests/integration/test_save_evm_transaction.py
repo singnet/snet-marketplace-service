@@ -41,7 +41,7 @@ class TestSaveEVMTransactionHandler:
         db_session.commit()
 
         # Prepare event
-        event = save_evm_transaction_event.copy()
+        event = save_evm_transaction_event.copy()  # Use .copy() for shallow copy
         event["body"] = json.dumps(
             {
                 "orderId": "test-order-tx-001",
