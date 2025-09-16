@@ -150,7 +150,8 @@ def clean_data(setup_database):
         for table in tables:
             if table not in ["alembic_version"]:
                 if table == "order":
-                    conn.execute(text(f"TRUNCATE TABLE `{table}`"))
+                    # 'order' is a reserved keyword in MySQL, must be escaped
+                    conn.execute(text("TRUNCATE TABLE `order`"))
                 else:
                     conn.execute(text(f"TRUNCATE TABLE {table}"))
         conn.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
@@ -190,6 +191,9 @@ def mock_haas_client():
         instance.create_daemon.return_value = {"status": "success", "daemon_id": "test-daemon-id"}
         instance.delete_daemon.return_value = {"status": "success"}
         instance.get_daemon_status.return_value = {"status": "running"}
+        instance.start_daemon.return_value = {"status": "success"}
+        instance.redeploy_daemon.return_value = {"status": "success"}
+        instance.get_public_key.return_value = "test-public-key"
 
         yield instance
 
@@ -430,6 +434,28 @@ def search_daemon_event(authorized_event):
         }
     )
     return authorized_event
+
+
+@pytest.fixture
+def start_daemon_event():
+    """Create an event for start_daemon handler (internal, no auth)."""
+    return {
+        "pathParameters": {"daemonId": "test-daemon-id"},
+        "httpMethod": "POST",
+        "resource": "/internal/daemon/{daemonId}/start",
+        "path": "/internal/daemon/test-daemon-id/start",
+    }
+
+
+@pytest.fixture
+def stop_daemon_event():
+    """Create an event for stop_daemon handler (internal, no auth)."""
+    return {
+        "pathParameters": {"daemonId": "test-daemon-id"},
+        "httpMethod": "POST",
+        "resource": "/internal/daemon/{daemonId}/stop",
+        "path": "/internal/daemon/test-daemon-id/stop",
+    }
 
 
 # ========================= Test Data Factories =========================
