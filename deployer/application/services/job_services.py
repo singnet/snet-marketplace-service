@@ -21,6 +21,7 @@ from deployer.config import (
     TOKEN_JSON_FILE_NAME,
     DAEMON_STARTING_TTL_IN_MINUTES,
     DAEMON_RESTARTING_TTL_IN_MINUTES,
+    HAAS_FIX_PRICE_IN_COGS
 )
 from deployer.constant import AllowedEventNames
 from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
@@ -270,6 +271,10 @@ class JobService:
         events = transaction_filter.get_all_entries()
         result = []
         for event in events:
+            if event["args"]["value"] != HAAS_FIX_PRICE_IN_COGS:
+                logger.warning(f"Skipping transaction {event['transactionHash'].hex()}. Expected value: {HAAS_FIX_PRICE_IN_COGS}. Actual value: {event['args']['value']}")
+                continue
+
             tx_hash = event["transactionHash"].hex()
             order_id = JobService._get_order_id_from_transaction(tx_hash, w3)
             result.append(
