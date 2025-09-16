@@ -16,7 +16,7 @@ def initiate_order(event, context):
 
     request = InitiateOrderRequest.validate_event(event)
 
-    response = OrderService().initiate_order(request, req_ctx.account_id)
+    response = OrderService().create_order(request, req_ctx.account_id)
 
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True

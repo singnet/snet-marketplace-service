@@ -17,7 +17,7 @@ class OrderService:
     def __init__(self):
         self.session_factory = DefaultSessionFactory
 
-    def initiate_order(self, request: InitiateOrderRequest, account_id: str) -> dict:
+    def create_order(self, request: InitiateOrderRequest, account_id: str) -> dict:
         daemon_id = generate_uuid()
         order_id = generate_uuid()
 

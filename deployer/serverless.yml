@@ -134,10 +134,10 @@ resources:
 
 functions:
 
-  # ============= ORDER HANDLERS ============
+  # ============= BILLING HANDLERS ============
 
-  initiate-order:
-    handler: deployer.application.handlers.order_handlers.initiate_order
+  create-order:
+    handler: deployer.application.handlers.billing_handlers.create_order
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -166,40 +166,8 @@ functions:
               - X-Amz-User-Agent
               - x-requested-wit
 
-  get-order:
-    handler: deployer.application.handlers.order_handlers.get_order
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: GET
-          path: /order/{orderId}
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-wit
-
-  # ============= TRANSACTION HANDLERS ============
-
   save-evm-transaction:
-    handler: deployer.application.handlers.transaction_handlers.save_evm_transaction
+    handler: deployer.application.handlers.billing_handlers.save_evm_transaction
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -228,40 +196,8 @@ functions:
               - X-Amz-User-Agent
               - x-requested-wit
 
-#  get-transactions:
-#    handler: deployer.application.handlers.transaction_handlers.get_transactions
-#    role: ${file(./config.${self:provider.stage}.json):ROLE}
-#    vpc:
-#      securityGroupIds:
-#        - ${file(./config.${self:provider.stage}.json):SG1}
-#        - ${file(./config.${self:provider.stage}.json):SG2}
-#      subnetIds:
-#        - ${file(./config.${self:provider.stage}.json):VPC1}
-#        - ${file(./config.${self:provider.stage}.json):VPC2}
-#    events:
-#      - http:
-#          method: GET
-#          path: /transactions
-#          authorizer:
-#            name: user-authorizer
-#            type: COGNITO_USER_POOLS
-#            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-#            identitySource: method.request.header.Authorization
-#          cors:
-#            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-#            headers:
-#              - Content-Type
-#              - X-Amz-Date
-#              - Authorization
-#              - X-Api-Key
-#              - X-Amz-Security-Token
-#              - X-Amz-User-Agent
-#              - x-requested-wit
-
-  # ============= DAEMON HANDLERS ============
-
-  get-user-daemons:
-    handler: deployer.application.handlers.daemon_handlers.get_user_daemons
+  get-balance:
+    handler: deployer.application.handlers.billing_handlers.get_balance
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -273,7 +209,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /daemons
+          path: /balance
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -290,8 +226,242 @@ functions:
               - X-Amz-User-Agent
               - x-requested-wit
 
-  get-service-daemon:
-    handler: deployer.application.handlers.daemon_handlers.get_service_daemon
+  get-balance-history:
+    handler: deployer.application.handlers.billing_handlers.get_balance_history
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /balance/history
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-wit
+
+  get-metrics:
+    handler: deployer.application.handlers.billing_handlers.get_metrics
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /hosted-service/{hostedServiceId}/metrics
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-wit
+
+  update-transaction-status:
+    handler: deployer.application.handlers.billing_handlers.update_transaction_status
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - schedule:
+          rate: rate(1 minute)
+
+  call-event-consumer:
+    handler: deployer.application.handlers.billing_handlers.call_event_consumer
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - callEventConsumerQueue
+              - Arn
+          batchSize: 1
+
+  # ============= DEPLOYMENTS HANDLERS ============
+
+  initiate-deployment:
+    handler: deployer.application.handlers.deployments_handlers.initiate_deployment
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: POST
+          path: /deployment
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-wit
+
+  get-user-deployments:
+    handler: deployer.application.handlers.deployments_handlers.get_user_deployments
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /deployments
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-wit
+
+  search-deployments:
+    handler: deployer.application.handlers.deployments_handlers.search_deployments
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /deployment/search
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-wit
+
+  get-public-key:
+    handler: deployer.application.handlers.daemon_handlers.get_public_key
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /auth/public-key
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-wit
+
+  registry-event-consumer:
+    handler: deployer.application.handlers.job_handlers.registry_event_consumer
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - registryEventConsumerQueue
+              - Arn
+          batchSize: 1
+
+  # ============= DAEMON HANDLERS ============
+
+  get-daemon:
+    handler: deployer.application.handlers.daemon_handlers.get_daemon
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -320,8 +490,8 @@ functions:
               - X-Amz-User-Agent
               - x-requested-wit
 
-  start-daemon-for-claiming:
-    handler: deployer.application.handlers.daemon_handlers.start_daemon_for_claiming
+  get-daemon-logs:
+    handler: deployer.application.handlers.daemon_handlers.get_daemon_logs
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -333,130 +503,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /daemon/{daemonId}/start
-          authorizer:
-            name: user-authorizer
-            type: COGNITO_USER_POOLS
-            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-            identitySource: method.request.header.Authorization
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-wit
-
-#  pause-daemon:
-#    handler: deployer.application.handlers.daemon_handlers.pause_daemon
-#    role: ${file(./config.${self:provider.stage}.json):ROLE}
-#    vpc:
-#      securityGroupIds:
-#        - ${file(./config.${self:provider.stage}.json):SG1}
-#        - ${file(./config.${self:provider.stage}.json):SG2}
-#      subnetIds:
-#        - ${file(./config.${self:provider.stage}.json):VPC1}
-#        - ${file(./config.${self:provider.stage}.json):VPC2}
-#    events:
-#      - http:
-#          method: GET
-#          path: /daemon/{daemonId}/pause
-#          authorizer:
-#            name: user-authorizer
-#            type: COGNITO_USER_POOLS
-#            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-#            identitySource: method.request.header.Authorization
-#          cors:
-#            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-#            headers:
-#              - Content-Type
-#              - X-Amz-Date
-#              - Authorization
-#              - X-Api-Key
-#              - X-Amz-Security-Token
-#              - X-Amz-User-Agent
-#              - x-requested-wit
-
-#  unpause-daemon:
-#    handler: deployer.application.handlers.daemon_handlers.unpause_daemon
-#    role: ${file(./config.${self:provider.stage}.json):ROLE}
-#    vpc:
-#      securityGroupIds:
-#        - ${file(./config.${self:provider.stage}.json):SG1}
-#        - ${file(./config.${self:provider.stage}.json):SG2}
-#      subnetIds:
-#        - ${file(./config.${self:provider.stage}.json):VPC1}
-#        - ${file(./config.${self:provider.stage}.json):VPC2}
-#    events:
-#      - http:
-#          method: GET
-#          path: /daemon/{daemonId}/unpause
-#          authorizer:
-#            name: user-authorizer
-#            type: COGNITO_USER_POOLS
-#            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
-#            identitySource: method.request.header.Authorization
-#          cors:
-#            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-#            headers:
-#              - Content-Type
-#              - X-Amz-Date
-#              - Authorization
-#              - X-Api-Key
-#              - X-Amz-Security-Token
-#              - X-Amz-User-Agent
-#              - x-requested-wit
-
-  redeploy-daemon:
-    handler: deployer.application.handlers.daemon_handlers.redeploy_daemon
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-
-  start-daemon:
-    handler: deployer.application.handlers.daemon_handlers.start_daemon
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-
-  stop-daemon:
-    handler: deployer.application.handlers.daemon_handlers.stop_daemon
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-
-  get-public-key:
-    handler: deployer.application.handlers.daemon_handlers.get_public_key
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          method: GET
-          path: /auth/public-key
+          path: /daemon/{daemonId}/logs
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -503,8 +550,86 @@ functions:
               - X-Amz-User-Agent
               - x-requested-wit
 
-  search-daemon:
-    handler: deployer.application.handlers.daemon_handlers.search_daemon
+  redeploy-daemon:
+    handler: deployer.application.handlers.daemon_handlers.redeploy_daemon
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+
+  update-daemon-status:
+    handler: deployer.application.handlers.daemon_handlers.update_daemon_status
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - updateDaemonStatusQueue
+              - Arn
+          batchSize: 1
+
+  redeploy-all-daemons:
+    handler: deployer.application.handlers.daemon_handlers.redeploy_all_daemons
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+
+#  start-daemon:
+#    handler: deployer.application.handlers.daemon_handlers.start_daemon
+#    role: ${file(./config.${self:provider.stage}.json):ROLE}
+#    vpc:
+#      securityGroupIds:
+#        - ${file(./config.${self:provider.stage}.json):SG1}
+#        - ${file(./config.${self:provider.stage}.json):SG2}
+#      subnetIds:
+#        - ${file(./config.${self:provider.stage}.json):VPC1}
+#        - ${file(./config.${self:provider.stage}.json):VPC2}
+
+#  stop-daemon:
+#    handler: deployer.application.handlers.daemon_handlers.stop_daemon
+#    role: ${file(./config.${self:provider.stage}.json):ROLE}
+#    vpc:
+#      securityGroupIds:
+#        - ${file(./config.${self:provider.stage}.json):SG1}
+#        - ${file(./config.${self:provider.stage}.json):SG2}
+#      subnetIds:
+#        - ${file(./config.${self:provider.stage}.json):VPC1}
+#        - ${file(./config.${self:provider.stage}.json):VPC2}
+
+#  check-daemons:
+#    handler: deployer.application.handlers.daemon_handlers.check_daemons
+#    role: ${file(./config.${self:provider.stage}.json):ROLE}
+#    vpc:
+#      securityGroupIds:
+#        - ${file(./config.${self:provider.stage}.json):SG1}
+#        - ${file(./config.${self:provider.stage}.json):SG2}
+#      subnetIds:
+#        - ${file(./config.${self:provider.stage}.json):VPC1}
+#        - ${file(./config.${self:provider.stage}.json):VPC2}
+#    events:
+#      - schedule:
+#          rate: rate(5 minutes)
+
+  # ============= HOSTED SERVICE HANDLERS ============
+
+  get-hosted-service:
+    handler: deployer.application.handlers.hosted_services_handlers.get_hosted_service
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -516,7 +641,7 @@ functions:
     events:
       - http:
           method: GET
-          path: /daemon/search
+          path: /hosted-service/{hostedServiceId}
           authorizer:
             name: user-authorizer
             type: COGNITO_USER_POOLS
@@ -533,10 +658,38 @@ functions:
               - X-Amz-User-Agent
               - x-requested-wit
 
-  # ============= JOB HANDLERS ============
+  get-hosted-service-logs:
+    handler: deployer.application.handlers.hosted_services_handlers.get_hosted_service_logs
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /hosted-service/{hostedServiceId}/logs
+          authorizer:
+            name: user-authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${file(./config.${self:provider.stage}.json):AUTHORIZER}
+            identitySource: method.request.header.Authorization
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-wit
 
-  registry-event-consumer:
-    handler: deployer.application.handlers.job_handlers.registry_event_consumer
+  update-hosted-service-status:
+    handler: deployer.application.handlers.hosted_services_handlers.update_hosted_service_status
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -549,45 +702,30 @@ functions:
       - sqs:
           arn:
             Fn::GetAtt:
-              - registryEventConsumerQueue
+              - updateHostedServiceStatusQueue
               - Arn
           batchSize: 1
 
-  update-transaction-status:
-    handler: deployer.application.handlers.job_handlers.update_transaction_status
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-#    events:
-#      - schedule:
-#          rate: rate(1 minute)
+#  deploy-service:
+#    handler: deployer.application.handlers.hosted_services_handlers.deploy_service
+#    role: ${file(./config.${self:provider.stage}.json):ROLE}
+#    vpc:
+#      securityGroupIds:
+#        - ${file(./config.${self:provider.stage}.json):SG1}
+#        - ${file(./config.${self:provider.stage}.json):SG2}
+#      subnetIds:
+#        - ${file(./config.${self:provider.stage}.json):VPC1}
+#        - ${file(./config.${self:provider.stage}.json):VPC2}
 
-  check-daemons:
-    handler: deployer.application.handlers.job_handlers.check_daemons
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - schedule:
-          rate: rate(1 minute)
+#  delete-service:
+#    handler: deployer.application.handlers.hosted_services_handlers.delete_service
+#    role: ${file(./config.${self:provider.stage}.json):ROLE}
+#    vpc:
+#      securityGroupIds:
+#        - ${file(./config.${self:provider.stage}.json):SG1}
+#        - ${file(./config.${self:provider.stage}.json):SG2}
+#      subnetIds:
+#        - ${file(./config.${self:provider.stage}.json):VPC1}
+#        - ${file(./config.${self:provider.stage}.json):VPC2}
 
-  update-daemon-status:
-    handler: deployer.application.handlers.job_handlers.update_daemon_status
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
+
