@@ -457,6 +457,15 @@ def stop_daemon_event():
         "path": "/internal/daemon/test-daemon-id/stop",
     }
 
+@pytest.fixture
+def redeploy_daemon_event():
+    """Create an event for redeploy_daemon handler (internal, no auth)."""
+    return {
+        "pathParameters": {"daemonId": "test-daemon-id"},
+        "httpMethod": "POST",
+        "resource": "/internal/daemon/{daemonId}/redeploy",
+        "path": "/internal/daemon/test-daemon-id/redeploy",
+    }
 
 # ========================= Test Data Factories =========================
 
