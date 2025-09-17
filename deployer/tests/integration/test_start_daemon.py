@@ -6,6 +6,7 @@ It does not require authentication.
 """
 import json
 import copy
+from sqlalchemy import text
 from unittest.mock import patch, MagicMock
 
 from deployer.application.handlers.daemon_handlers import start_daemon
@@ -42,6 +43,11 @@ class TestStartDaemonHandler:
         daemon_repo.create_daemon(db_session, daemon)
         db_session.commit()
 
+        db_session.execute(
+            text("UPDATE daemon SET service_published=1 WHERE id=:id"),
+            {"id": "test-daemon-start-001"},
+        )
+        db_session.commit()
         # Update event with correct daemon ID
         event = copy.deepcopy(start_daemon_event)
         event["pathParameters"]["daemonId"] = "test-daemon-start-001"
