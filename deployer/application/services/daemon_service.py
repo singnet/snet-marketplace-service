@@ -57,7 +57,7 @@ class DaemonService:
 
         return result
 
-    def get_service_daemon(self, request: DaemonRequest) -> dict:
+    def get_daemon(self, request: DaemonRequest) -> dict:
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.get_daemon(session, request.daemon_id)
             if daemon is None:
@@ -68,6 +68,15 @@ class DaemonService:
         result["orders"] = [order.to_response() for order in orders]
 
         return result
+
+    def get_daemon_logs(self, request: DaemonRequest) -> dict:
+        pass
+
+    def redeploy_all_daemons(self) -> dict:
+        pass
+
+    def update_daemon_status(self, request: DaemonRequest) -> dict:
+        pass
 
     def start_daemon_for_claiming(self, request: DaemonRequest):
         current_time = datetime.now(UTC)

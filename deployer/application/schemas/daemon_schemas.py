@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from common.constant import RequestPayloadType
 from common.validation_handler import validation_handler
+from deployer.application.schemas.queue_schema import QueueEventRequest
 from deployer.constant import AUTH_PARAMETERS
 from deployer.exceptions import InvalidServiceAuthParameters
 
@@ -39,6 +40,7 @@ class UpdateConfigRequest(BaseModel):
                 for param in AUTH_PARAMETERS:
                     if param not in value.keys() or not value[param]:
                         raise InvalidServiceAuthParameters()
+        return values
 
 
 class SearchDaemonRequest(BaseModel):
@@ -49,4 +51,14 @@ class SearchDaemonRequest(BaseModel):
     @validation_handler([RequestPayloadType.QUERY_STRING])
     def validate_event(cls, event: dict) -> "SearchDaemonRequest":
         data = {**event[RequestPayloadType.QUERY_STRING]}
+        return cls.model_validate(data)
+
+
+class UpdateDaemonStatusRequest(DaemonRequest, QueueEventRequest):
+    pass
+
+    @classmethod
+    @validation_handler([RequestPayloadType.PATH_PARAMS])
+    def validate_event(cls, event: dict) -> "UpdateDaemonStatusRequest":
+        data = {**event[RequestPayloadType.PATH_PARAMS]}
         return cls.model_validate(data)

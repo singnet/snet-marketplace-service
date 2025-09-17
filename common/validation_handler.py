@@ -1,5 +1,5 @@
 from functools import wraps
-from typing import Callable
+from typing import Callable, List
 from pydantic import ValidationError
 
 from common.constant import RequestPayloadType, PayloadAssertionError
@@ -13,7 +13,7 @@ PAYLOAD_TYPES_ERRORS_RELATIONSHIP = {
 }
 
 
-def validation_handler(payload_types: list[RequestPayloadType] | None = None):
+def validation_handler(payload_types: List[RequestPayloadType] | None = None):
     if payload_types is None:
         payload_types = []
     def decorator(func: Callable) -> Callable:

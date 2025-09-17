@@ -1,30 +1,52 @@
-from pydantic import BaseModel
+import json
 
+from pydantic import BaseModel, Field, field_validator
 
-class CreateOrderRequest(BaseModel):
-    pass
+from common.constant import RequestPayloadType
+from common.validation_handler import validation_handler
+from deployer.application.schemas.queue_schema import QueueEventRequest
+from deployer.constant import PeriodType
+from deployer.exceptions import InvalidPeriodParameter
 
 
 class SaveEVMTransactionRequest(BaseModel):
-    pass
+    sender: str
+    recipient: str
+    order_id: str = Field(alias="orderId")
+    transaction_hash: str = Field(alias="transactionHash")
 
-
-class GetBalanceRequest(BaseModel):
-    pass
-
-
-class GetBalanceHistoryRequest(BaseModel):
-    pass
+    @classmethod
+    @validation_handler([RequestPayloadType.BODY])
+    def validate_event(cls, event: dict) -> "SaveEVMTransactionRequest":
+        body = json.loads(event[RequestPayloadType.BODY])
+        return cls.model_validate(body)
 
 
 class GetMetricsRequest(BaseModel):
-    pass
+    hosted_service_id: str = Field(alias="hostedServiceId")
+    period: str
 
+    @classmethod
+    @validation_handler([RequestPayloadType.PATH_PARAMS, RequestPayloadType.QUERY_STRING])
+    def validate_event(cls, event: dict) -> "GetMetricsRequest":
+        data = {**event[RequestPayloadType.PATH_PARAMS], **event[RequestPayloadType.QUERY_STRING]}
+        return cls.model_validate(data)
 
-class UpdateTransactionStatusRequest(BaseModel):
-    pass
+    @field_validator("period")
+    @classmethod
+    def validate_period(cls, value: str):
+        if value not in PeriodType:
+            raise InvalidPeriodParameter(actual_value = value)
+        return value
 
+class CallEventConsumerRequest(BaseModel, QueueEventRequest):
+    org_id: str = Field(alias="orgId")
+    service_id: str | None = Field(alias="serviceId")
+    duration: int
 
-class CallEventConsumerRequest(BaseModel):
-    pass
+    @classmethod
+    @validation_handler([RequestPayloadType.BODY])
+    def validate_event(cls, event: dict) -> "CallEventConsumerRequest":
+        body = json.loads(event[RequestPayloadType.BODY])
+        return cls.model_validate(body)
 

@@ -3,12 +3,10 @@ from common.exception_handler import exception_handler
 from common.logger import get_logger
 from common.request_context import RequestContext
 from common.utils import generate_lambda_response
-from deployer.application.schemas.billing_schemas import CreateOrderRequest
-from deployer.application.schemas.order_schemas import InitiateOrderRequest
+from deployer.application.schemas.billing_schemas import GetMetricsRequest, CallEventConsumerRequest
 from deployer.application.schemas.transaction_schemas import SaveEVMTransactionRequest
 from deployer.application.services.authorization_service import AuthorizationService
 from deployer.application.services.billing_service import BillingService
-from deployer.application.services.order_service import OrderService
 from deployer.application.services.transaction_service import TransactionService
 
 
@@ -19,9 +17,7 @@ logger = get_logger(__name__)
 def create_order(event, context):
     req_ctx = RequestContext(event)
 
-    request = CreateOrderRequest.validate_event(event)
-
-    response = BillingService().create_order(request, req_ctx.account_id)
+    response = BillingService().create_order(req_ctx.account_id)
 
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
@@ -34,7 +30,7 @@ def save_evm_transaction(event, context):
 
     request = SaveEVMTransactionRequest.validate_event(event)
 
-    AuthorizationService().check_access(req_ctx.account_id, order_id=request.order_id)
+    AuthorizationService().check_local_access(req_ctx.account_id, order_id=request.order_id)
 
     response = TransactionService().save_evm_transaction(request)
 
@@ -69,9 +65,11 @@ def get_balance_history(event, context):
 def get_metrics(event, context):
     req_ctx = RequestContext(event)
 
+    request = GetMetricsRequest.validate_event(event)
 
+    AuthorizationService().check_local_access(req_ctx.account_id, hosted_service_id = request.hosted_service_id)
 
-    response = BillingService().get_metrics()
+    response = BillingService().get_metrics(request)
 
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
@@ -84,5 +82,11 @@ def update_transaction_status(event, context):
 
 
 def call_event_consumer(event, context):
-    BillingService().process_call_event()
+    events = CallEventConsumerRequest.get_events_from_queue(event)
+
+    for e in events:
+        # TODO: we probably have to unpack the event
+        request = CallEventConsumerRequest.validate_event(e)
+        BillingService().process_call_event(request)
+
     return {}
