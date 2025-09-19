@@ -27,7 +27,7 @@ from deployer.constant import AllowedEventNames
 from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
 from deployer.domain.models.transactions_metadata import TransactionsMetadataDomain
 from deployer.exceptions import DaemonNotFoundException
-from deployer.infrastructure.clients.deployer_cleint import DeployerClient
+from deployer.infrastructure.clients.deployer_client import DeployerClient
 from deployer.infrastructure.clients.haas_client import HaaSClient, HaaSDaemonStatus
 from deployer.infrastructure.db import session_scope, DefaultSessionFactory
 from deployer.infrastructure.models import (

@@ -12,7 +12,7 @@ from deployer.exceptions import (
     ClaimingNotAvailableException,
     UpdateConfigNotAvailableException,
 )
-from deployer.infrastructure.clients.deployer_cleint import DeployerClient
+from deployer.infrastructure.clients.deployer_client import DeployerClient
 from deployer.infrastructure.clients.haas_client import HaaSClient
 from deployer.infrastructure.db import DefaultSessionFactory, session_scope
 from deployer.infrastructure.models import DaemonStatus, ClaimingPeriodStatus
