@@ -1,9 +1,11 @@
 from common.utils import generate_uuid
-from deployer.application.schemas.billing_schemas import CreateOrderRequest
+from deployer.application.schemas.billing_schemas import CreateOrderRequest, SaveEVMTransactionRequest
+from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
 from deployer.domain.models.order import NewOrderDomain
 from deployer.infrastructure.db import DefaultSessionFactory, session_scope
-from deployer.infrastructure.models import OrderStatus
+from deployer.infrastructure.models import OrderStatus, EVMTransactionStatus
 from deployer.infrastructure.repositories.order_repository import OrderRepository
+from deployer.infrastructure.repositories.transaction_repository import TransactionRepository
 
 
 class BillingService:
@@ -40,9 +42,20 @@ class BillingService:
 
         return {"orderId": order_id}
 
+    def save_evm_transaction(self, request: SaveEVMTransactionRequest):
+        with session_scope(self.session_factory) as session:
+            TransactionRepository.upsert_transaction(
+                session,
+                NewEVMTransactionDomain(
+                    hash = request.transaction_hash,
+                    order_id = request.order_id,
+                    status = EVMTransactionStatus.PENDING,
+                    sender = request.sender,
+                    recipient = request.recipient,
+                ),
+            )
 
-    def save_evm_transaction(self):
-        pass
+        return {}
 
     def get_balance(self):
         pass

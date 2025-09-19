@@ -13,18 +13,12 @@ class NewDaemonDomain:
     service_id: str
     status: DeploymentStatus
     daemon_config: dict
-    service_published: bool
     daemon_endpoint: str
-    start_at: datetime
-    end_at: datetime
 
 
 @dataclass
 class DaemonDomain(NewDaemonDomain, BaseDomain):
-    def to_short_response(self):
-        return {"id": self.id, "status": self.status.value, "endOn": self.end_at.isoformat()}
-
-    def to_response(self) -> dict:
+    def to_response(self, remove_created_updated: bool = False) -> dict:
         result = super().to_response()
         del result["accountId"]
         return result

@@ -9,15 +9,16 @@ from deployer.infrastructure.models import OrderStatus
 @dataclass
 class NewOrderDomain:
     id: str
-    daemon_id: str
+    account_id: str
     status: OrderStatus
+    amount: int
 
 
 @dataclass
 class OrderDomain(NewOrderDomain, BaseDomain):
     evm_transactions: List[EVMTransactionDomain] | None = None
 
-    def to_response(self):
+    def to_response(self, remove_timestamps: bool = False):
         result = super().to_response()
         result["evmTransactions"] = [
             transaction.to_response() for transaction in self.evm_transactions

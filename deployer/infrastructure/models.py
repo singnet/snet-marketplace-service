@@ -124,7 +124,7 @@ class Order(Base):
         index = True,
     )
     status: Mapped[OrderStatus] = mapped_column(
-        "status", Enum(OrderStatus), nullable=False, default=OrderStatus.PROCESSING
+        "status", Enum(OrderStatus), nullable=False, default=OrderStatus.INIT
     )
     amount: Mapped[int] = mapped_column("amount", DECIMAL(38, 0), nullable=False)
 

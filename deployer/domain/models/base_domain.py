@@ -10,16 +10,17 @@ class BaseDomain:
     created_at: datetime
     updated_at: datetime
 
-    def to_response(self, ) -> dict:
+    def to_response(self, remove_timestamps: bool = False) -> dict:
         """
         Returns an entity as a dictionary with camelCase keys including dictionary keys that are entity
         fields. Additionally, converts datetime and Enum fields to strings so that the dictionary can
-        be converted to a JSON string.
+        be converted to a JSON string. Also, optionally removes the created_at and updated_at fields.
         """
         result = asdict(self)
 
-        del result["created_at"]
-        del result["updated_at"]
+        if remove_timestamps:
+            del result["created_at"]
+            del result["updated_at"]
 
         for k, v in result.items():
             if isinstance(v, Enum):
