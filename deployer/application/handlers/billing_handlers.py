@@ -3,11 +3,10 @@ from common.exception_handler import exception_handler
 from common.logger import get_logger
 from common.request_context import RequestContext
 from common.utils import generate_lambda_response
-from deployer.application.schemas.billing_schemas import GetMetricsRequest, CallEventConsumerRequest
-from deployer.application.schemas.transaction_schemas import SaveEVMTransactionRequest
+from deployer.application.schemas.billing_schemas import GetMetricsRequest, CallEventConsumerRequest, \
+    SaveEVMTransactionRequest, CreateOrderRequest
 from deployer.application.services.authorization_service import AuthorizationService
 from deployer.application.services.billing_service import BillingService
-from deployer.application.services.transaction_service import TransactionService
 
 
 logger = get_logger(__name__)
@@ -17,7 +16,9 @@ logger = get_logger(__name__)
 def create_order(event, context):
     req_ctx = RequestContext(event)
 
-    response = BillingService().create_order(req_ctx.account_id)
+    request = CreateOrderRequest.validate_event(event)
+
+    response = BillingService().create_order(request, req_ctx.account_id)
 
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
@@ -32,7 +33,7 @@ def save_evm_transaction(event, context):
 
     AuthorizationService().check_local_access(req_ctx.account_id, order_id=request.order_id)
 
-    response = TransactionService().save_evm_transaction(request)
+    response = BillingService().save_evm_transaction(request)
 
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True

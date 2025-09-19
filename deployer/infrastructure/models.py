@@ -10,8 +10,8 @@ from sqlalchemy import (
     ForeignKey,
     Enum,
     Integer,
-    BOOLEAN,
     UniqueConstraint,
+    DECIMAL,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -24,23 +24,20 @@ class Base(DeclarativeBase):
     pass
 
 
-class DaemonStatus(PythonEnum):
-    INIT = "INIT"  # only the entity is created, before payment
-    READY_TO_START = "READY_TO_START"  # paid but not deployed
-    STARTING = "STARTING"  # deploying
-    RESTARTING = "RESTARTING"  # redeploying
-    DELETING = "DELETING"  # deleting
+class DeploymentStatus(PythonEnum):
+    INIT = "INIT"  # only the entity is created during the onboarding
+    STARTING = "STARTING"  # deploying is in progress
     UP = "UP"  # deployed and working
-    # CLAIMING = "claiming"
-    DOWN = "DOWN"  # not paid
+    DOWN = "DOWN"  # the service is deleted from blockchain
     ERROR = "ERROR"  # error during deployment
-    # DELETED = "deleted"
 
 
 class OrderStatus(PythonEnum):
-    PROCESSING = "PROCESSING"  # waiting for payment
+    INIT = "INIT"  # only the entity is created, waiting for payment
+    PROCESSING = "PROCESSING"  # waiting for confirmation
     SUCCESS = "SUCCESS"  # payment successful
     FAILED = "FAILED"  # payment failed
+    CANCELLED = "CANCELLED"
 
 
 class EVMTransactionStatus(PythonEnum):
@@ -49,29 +46,35 @@ class EVMTransactionStatus(PythonEnum):
     FAILED = "FAILED"  # transaction failed
 
 
-class ClaimingPeriodStatus(PythonEnum):
-    ACTIVE = "ACTIVE"  # daemon is deploying and working for the period
-    INACTIVE = "INACTIVE"  # daemon is deleted and not working
-    FAILED = "FAILED"  # error during deployment, illegitimate period
+class AccountBalance(Base):
+    __tablename__ = "account_balance"
+    account_id: Mapped[str] = mapped_column("account_id", VARCHAR(128), primary_key=True)
+    balance_in_cogs: Mapped[int] = mapped_column("balance", DECIMAL(38, 0), nullable=False)
+
+    created_at: Mapped[datetime] = mapped_column(
+        "created_at", TIMESTAMP(timezone = False), nullable = False, server_default = CreateTimestamp
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        "updated_at", TIMESTAMP(timezone = False), nullable = False, server_default = UpdateTimestamp
+    )
 
 
 class Daemon(Base):
     __tablename__ = "daemon"
     id: Mapped[str] = mapped_column("id", VARCHAR(128), primary_key=True)
-    account_id: Mapped[str] = mapped_column("account_id", VARCHAR(128), nullable=False)
+    account_id: Mapped[str] = mapped_column(
+        "account_id",
+        VARCHAR(128),
+        ForeignKey("account_balance.account_id", ondelete = "CASCADE", onupdate = "CASCADE"),
+        nullable = False,
+        index = True,
+    )
     org_id: Mapped[str] = mapped_column("org_id", VARCHAR(256), nullable=False)
     service_id: Mapped[str] = mapped_column("service_id", VARCHAR(256), nullable=False)
     status: Mapped[str] = mapped_column(
-        "status", Enum(DaemonStatus), nullable=False, default=DaemonStatus.INIT
+        "status", Enum(DeploymentStatus), nullable=False, default=DeploymentStatus.INIT
     )
-    start_at: Mapped[datetime] = mapped_column(
-        "start_at", TIMESTAMP(timezone=False), nullable=False
-    )
-    end_at: Mapped[datetime] = mapped_column("end_at", TIMESTAMP(timezone=False), nullable=False)
     daemon_config: Mapped[dict] = mapped_column("daemon_config", JSON, nullable=False, default={})
-    service_published: Mapped[bool] = mapped_column(
-        "service_published", BOOLEAN, nullable=False, default=False
-    )
     daemon_endpoint: Mapped[str] = mapped_column("daemon_endpoint", VARCHAR(256), nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(
@@ -84,19 +87,46 @@ class Daemon(Base):
     __table_args__ = (UniqueConstraint(org_id, service_id, name="uq_org_srvc"),)
 
 
-class Order(Base):
-    __tablename__ = "order"
-    id: Mapped[str] = mapped_column("id", VARCHAR(128), primary_key=True)
+class HostedService(Base):
+    __tablename__ = "hosted_service"
+    id: Mapped[str] = mapped_column("id", VARCHAR(128), primary_key = True)
     daemon_id: Mapped[str] = mapped_column(
         "daemon_id",
         VARCHAR(128),
-        ForeignKey("daemon.id", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False,
-        index=True,
+        ForeignKey("daemon.id", ondelete = "CASCADE", onupdate = "CASCADE"),
+        nullable = False,
+        index = True,
+    )
+    status: Mapped[str] = mapped_column(
+        "status", Enum(DeploymentStatus), nullable = False, default = DeploymentStatus.INIT
+    )
+    github_url: Mapped[str] = mapped_column("github_url", VARCHAR(256), nullable = False)
+    last_commit_url: Mapped[str] = mapped_column("last_commit_url", VARCHAR(256), nullable = False)
+
+    created_at: Mapped[datetime] = mapped_column(
+        "created_at", TIMESTAMP(timezone = False), nullable = False, server_default = CreateTimestamp
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        "updated_at", TIMESTAMP(timezone = False), nullable = False, server_default = UpdateTimestamp
+    )
+
+    __table_args__ = (UniqueConstraint(daemon_id, name = "uq_daemon"),)
+
+
+class Order(Base):
+    __tablename__ = "order"
+    id: Mapped[str] = mapped_column("id", VARCHAR(128), primary_key=True)
+    account_id: Mapped[str] = mapped_column(
+        "account_id",
+        VARCHAR(128),
+        ForeignKey("account_balance.account_id", ondelete = "CASCADE", onupdate = "CASCADE"),
+        nullable = False,
+        index = True,
     )
     status: Mapped[OrderStatus] = mapped_column(
         "status", Enum(OrderStatus), nullable=False, default=OrderStatus.PROCESSING
     )
+    amount: Mapped[int] = mapped_column("amount", DECIMAL(38, 0), nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(
         "created_at", TIMESTAMP(timezone=False), nullable=False, server_default=CreateTimestamp

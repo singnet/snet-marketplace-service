@@ -92,6 +92,7 @@ def stop_daemon(event, context):
         StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
 
+
 @exception_handler(logger=logger)
 def redeploy_daemon(event, context):
     request = DaemonRequest.validate_event(event)
@@ -112,3 +113,11 @@ def redeploy_all_daemons(event, context):
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
+
+
+@exception_handler(logger=logger)
+def check_daemons(event, context):
+    response = DaemonService().check_daemons()
+
+    return {}
+

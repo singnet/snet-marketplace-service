@@ -7,7 +7,7 @@ from deployer.domain.models.daemon import NewDaemonDomain
 from deployer.domain.models.order import NewOrderDomain
 from deployer.exceptions import MissingServiceEndpointException, TopUpNotAvailableException
 from deployer.infrastructure.db import session_scope, DefaultSessionFactory
-from deployer.infrastructure.models import DaemonStatus, OrderStatus
+from deployer.infrastructure.models import DeploymentStatus, OrderStatus
 from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
 from deployer.infrastructure.repositories.order_repository import OrderRepository
 from deployer.utils import get_daemon_endpoint
@@ -41,7 +41,7 @@ class OrderService:
                         account_id=account_id,
                         org_id=request.org_id,
                         service_id=request.service_id,
-                        status=DaemonStatus.INIT,
+                        status=DeploymentStatus.INIT,
                         daemon_config=daemon_config,
                         service_published=False,
                         daemon_endpoint=get_daemon_endpoint(request.org_id, request.service_id),
@@ -52,9 +52,9 @@ class OrderService:
             else:
                 daemon_id = daemon.id
                 if daemon.status not in [
-                    DaemonStatus.UP,
-                    DaemonStatus.DOWN,
-                    DaemonStatus.READY_TO_START,
+                    DeploymentStatus.UP,
+                    DeploymentStatus.DOWN,
+                    DeploymentStatus.READY_TO_START,
                 ]:
                     raise TopUpNotAvailableException()
                 if len(daemon_config.keys()) != 1:

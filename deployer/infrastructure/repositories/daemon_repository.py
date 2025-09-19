@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from deployer.domain.factory.daemon_factory import DaemonFactory
 from deployer.domain.models.daemon import NewDaemonDomain, DaemonDomain
-from deployer.infrastructure.models import Daemon, DaemonStatus, Order
+from deployer.infrastructure.models import Daemon, DeploymentStatus, Order
 
 
 class DaemonRepository:
@@ -28,7 +28,7 @@ class DaemonRepository:
         session.add(daemon_model)
 
     @staticmethod
-    def update_daemon_status(session: Session, daemon_id: str, status: DaemonStatus) -> None:
+    def update_daemon_status(session: Session, daemon_id: str, status: DeploymentStatus) -> None:
         update_query = update(Daemon).where(Daemon.id == daemon_id).values(status=status)
 
         session.execute(update_query)
@@ -94,7 +94,7 @@ class DaemonRepository:
 
     @staticmethod
     def get_daemons_without_statuses(
-        session: Session, statuses: List[DaemonStatus]
+        session: Session, statuses: List[DeploymentStatus]
     ) -> List[DaemonDomain]:
         query = select(Daemon).where(Daemon.status.notin_(statuses))
 

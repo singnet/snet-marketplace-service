@@ -9,6 +9,16 @@ from deployer.constant import PeriodType
 from deployer.exceptions import InvalidPeriodParameter
 
 
+class CreateOrderRequest(BaseModel):
+    amount: int
+
+    @classmethod
+    @validation_handler([RequestPayloadType.BODY])
+    def validate_event(cls, event: dict) -> "CreateOrderRequest":
+        body = json.loads(event[RequestPayloadType.BODY])
+        return cls.model_validate(body)
+
+
 class SaveEVMTransactionRequest(BaseModel):
     sender: str
     recipient: str

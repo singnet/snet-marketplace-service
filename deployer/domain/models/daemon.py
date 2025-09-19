@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from deployer.domain.models.base_domain import BaseDomain
-from deployer.infrastructure.models import DaemonStatus
+from deployer.infrastructure.models import DeploymentStatus
 
 
 @dataclass
@@ -11,7 +11,7 @@ class NewDaemonDomain:
     account_id: str
     org_id: str
     service_id: str
-    status: DaemonStatus
+    status: DeploymentStatus
     daemon_config: dict
     service_published: bool
     daemon_endpoint: str

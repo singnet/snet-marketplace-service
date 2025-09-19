@@ -12,6 +12,33 @@ from deployer.infrastructure.models import Order, OrderStatus
 
 class OrderRepository:
     @staticmethod
+    def get_order(
+            session: Session,
+            order_id: Optional[str] = None,
+            account_id: Optional[str] = None,
+            status: Optional[OrderStatus] = None
+    ) -> Optional[OrderDomain]:
+        query = select(Order)
+
+        if order_id is not None:
+            query = query.where(Order.id == order_id)
+        if account_id is not None:
+            query = query.where(Order.account_id == account_id)
+        if status is not None:
+            query = query.where(Order.status == status)
+
+        query = query.order_by(Order.updated_at.desc()).limit(1)
+
+        result = session.execute(query)
+
+        order_db = result.scalar_one_or_none()
+        if order_db is None:
+            return None
+
+        return OrderFactory.order_from_db_model(order_db)
+
+
+    @staticmethod
     def create_order(session: Session, order: NewOrderDomain) -> None:
         order_model = Order(
             id=order.id,

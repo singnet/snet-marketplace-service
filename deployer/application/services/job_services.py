@@ -30,7 +30,7 @@ from deployer.infrastructure.clients.deployer_cleint import DeployerClient
 from deployer.infrastructure.clients.haas_client import HaaSClient, HaaSDaemonStatus
 from deployer.infrastructure.db import session_scope, DefaultSessionFactory
 from deployer.infrastructure.models import (
-    DaemonStatus,
+    DeploymentStatus,
     OrderStatus,
     EVMTransactionStatus,
     ClaimingPeriodStatus,
@@ -82,7 +82,7 @@ class JobService:
 
             if daemon.daemon_endpoint != daemon_endpoint:
                 logger.info(f"Service (org_id {org_id}, service_id {service_id}) doesn't use HaaS")
-                if daemon.status == DaemonStatus.UP:
+                if daemon.status == DeploymentStatus.UP:
                     logger.info(f"Stopping daemon {daemon_id}")
                     self._deployer_client.stop_daemon(daemon_id)
                 return
@@ -95,12 +95,12 @@ class JobService:
 
             if event_name == AllowedEventNames.SERVICE_DELETED:
                 DaemonRepository.update_daemon_service_published(session, daemon_id, False)
-                if daemon.status == DaemonStatus.UP:
+                if daemon.status == DeploymentStatus.UP:
                     self._deployer_client.stop_daemon(daemon_id)
             elif event_name == AllowedEventNames.SERVICE_CREATED:
                 DaemonRepository.update_daemon_service_published(session, daemon_id, True)
             elif event_name == AllowedEventNames.SERVICE_METADATA_MODIFIED:
-                if daemon.status == DaemonStatus.UP:
+                if daemon.status == DeploymentStatus.UP:
                     self._deployer_client.redeploy_daemon(daemon_id)
 
     def update_transaction_status(self):
@@ -129,17 +129,17 @@ class JobService:
                     )
 
                     daemon = DaemonRepository.get_daemon(session, order.daemon_id)
-                    # TODO: find a way to handle the first order with not published service
+                    # TODO: find the way to handle the first order with not published service
                     if (
-                        daemon.service_published and daemon.status == DaemonStatus.DOWN
+                            daemon.service_published and daemon.status == DeploymentStatus.DOWN
                     ) or not daemon.service_published:
                         DaemonRepository.update_daemon_status(
-                            session, order.daemon_id, DaemonStatus.READY_TO_START
+                            session, order.daemon_id, DeploymentStatus.READY_TO_START
                         )
                         DaemonRepository.update_daemon_end_on(
                             session, order.daemon_id, datetime.now(UTC) + relativedelta(months=+1)
                         )
-                    elif daemon.status in [DaemonStatus.UP, DaemonStatus.READY_TO_START]:
+                    elif daemon.status in [DeploymentStatus.UP, DeploymentStatus.READY_TO_START]:
                         DaemonRepository.update_daemon_end_on(
                             session, order.daemon_id, daemon.end_at + relativedelta(months=+1)
                         )
@@ -154,11 +154,11 @@ class JobService:
     def check_daemons(self):
         with session_scope(self.session_factory) as session:
             daemons = DaemonRepository.get_daemons_without_statuses(
-                session, [DaemonStatus.INIT, DaemonStatus.ERROR, DaemonStatus.DOWN]
+                session, [DeploymentStatus.INIT, DeploymentStatus.ERROR, DeploymentStatus.DOWN]
             )
             logger.info(f"Found {len(daemons)} daemons to check")
         for daemon in daemons:
-            if daemon.status == DaemonStatus.READY_TO_START and not daemon.service_published:
+            if daemon.status == DeploymentStatus.READY_TO_START and not daemon.service_published:
                 continue
 
             self._deployer_client.update_daemon_status(daemon.id, asynchronous=True)
@@ -199,15 +199,15 @@ class JobService:
 
             if service_published:
                 if haas_daemon_status == HaaSDaemonStatus.DOWN:
-                    if daemon_status == DaemonStatus.READY_TO_START:
+                    if daemon_status == DeploymentStatus.READY_TO_START:
                         self._deployer_client.start_daemon(daemon_id)
-                    elif daemon_status == DaemonStatus.STARTING:
+                    elif daemon_status == DeploymentStatus.STARTING:
                         if (
                             daemon.updated_at.replace(tzinfo = UTC) + timedelta(minutes=DAEMON_STARTING_TTL_IN_MINUTES)
                             < current_time
                         ):
                             DaemonRepository.update_daemon_status(
-                                session, daemon_id, DaemonStatus.ERROR
+                                session, daemon_id, DeploymentStatus.ERROR
                             )
                             if (
                                 last_claiming_period
@@ -216,15 +216,15 @@ class JobService:
                                 ClaimingPeriodRepository.update_claiming_period_status(
                                     session, last_claiming_period.id, ClaimingPeriodStatus.FAILED
                                 )
-                    elif daemon_status == DaemonStatus.UP or DaemonStatus.DELETING:
-                        DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.DOWN)
-                    elif daemon_status == DaemonStatus.RESTARTING:
+                    elif daemon_status == DeploymentStatus.UP or DeploymentStatus.DELETING:
+                        DaemonRepository.update_daemon_status(session, daemon_id, DeploymentStatus.DOWN)
+                    elif daemon_status == DeploymentStatus.RESTARTING:
                         if (
                             daemon.updated_at.replace(tzinfo = UTC) + timedelta(minutes=DAEMON_RESTARTING_TTL_IN_MINUTES)
                             < current_time
                         ):
                             DaemonRepository.update_daemon_status(
-                                session, daemon_id, DaemonStatus.ERROR
+                                session, daemon_id, DeploymentStatus.ERROR
                             )
                             if (
                                 last_claiming_period
@@ -235,11 +235,11 @@ class JobService:
                                 )
                 elif haas_daemon_status == HaaSDaemonStatus.UP:
                     if (
-                        daemon_status == DaemonStatus.STARTING
-                        or daemon_status == DaemonStatus.RESTARTING
+                        daemon_status == DeploymentStatus.STARTING
+                        or daemon_status == DeploymentStatus.RESTARTING
                     ):
-                        DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.UP)
-                    elif daemon_status == DaemonStatus.UP:
+                        DaemonRepository.update_daemon_status(session, daemon_id, DeploymentStatus.UP)
+                    elif daemon_status == DeploymentStatus.UP:
                         if daemon.end_at < current_time:
                             if (
                                 last_claiming_period

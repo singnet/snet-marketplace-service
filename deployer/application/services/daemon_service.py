@@ -15,7 +15,7 @@ from deployer.exceptions import (
 from deployer.infrastructure.clients.deployer_cleint import DeployerClient
 from deployer.infrastructure.clients.haas_client import HaaSClient
 from deployer.infrastructure.db import DefaultSessionFactory, session_scope
-from deployer.infrastructure.models import DaemonStatus, ClaimingPeriodStatus
+from deployer.infrastructure.models import DeploymentStatus, ClaimingPeriodStatus
 from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
 from deployer.infrastructure.repositories.claiming_period_repository import ClaimingPeriodRepository
 from deployer.infrastructure.repositories.order_repository import OrderRepository
@@ -84,7 +84,7 @@ class DaemonService:
             daemon = DaemonRepository.get_daemon(session, request.daemon_id)
             if daemon is None:
                 raise DaemonNotFoundException(request.daemon_id)
-            if daemon.status != DaemonStatus.DOWN:
+            if daemon.status != DeploymentStatus.DOWN:
                 raise ClaimingNotAvailableException(reason="status")
             last_claiming_period = ClaimingPeriodRepository.get_last_claiming_period(
                 session, request.daemon_id
@@ -111,7 +111,7 @@ class DaemonService:
             if daemon is None:
                 raise DaemonNotFoundException(daemon_id)
 
-            if daemon.status != DaemonStatus.READY_TO_START or not daemon.service_published:
+            if daemon.status != DeploymentStatus.READY_TO_START or not daemon.service_published:
                 return {}
 
             self._haas_client.start_daemon(
@@ -120,7 +120,7 @@ class DaemonService:
                 daemon_config=daemon.daemon_config,
             )
 
-            DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.STARTING)
+            DaemonRepository.update_daemon_status(session, daemon_id, DeploymentStatus.STARTING)
 
         return {}
 
@@ -136,11 +136,11 @@ class DaemonService:
             org_id = daemon.org_id
             service_id = daemon.service_id
 
-            if daemon.status != DaemonStatus.UP:
+            if daemon.status != DeploymentStatus.UP:
                 return {}
 
             self._haas_client.delete_daemon(org_id, service_id)
-            DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.DELETING)
+            DaemonRepository.update_daemon_status(session, daemon_id, DeploymentStatus.DELETING)
 
         return {}
 
@@ -153,7 +153,7 @@ class DaemonService:
             if daemon is None:
                 raise DaemonNotFoundException(daemon_id)
 
-            if daemon.status != DaemonStatus.UP:
+            if daemon.status != DeploymentStatus.UP:
                 return {}
 
             self._haas_client.redeploy_daemon(
@@ -162,7 +162,7 @@ class DaemonService:
                 daemon_config=daemon.daemon_config,
             )
 
-            DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.RESTARTING)
+            DaemonRepository.update_daemon_status(session, daemon_id, DeploymentStatus.RESTARTING)
 
         return {}
 
@@ -178,7 +178,7 @@ class DaemonService:
             if daemon is None:
                 raise DaemonNotFoundException(request.daemon_id)
 
-            if daemon.status in [DaemonStatus.STARTING, DaemonStatus.RESTARTING]:
+            if daemon.status in [DeploymentStatus.STARTING, DeploymentStatus.RESTARTING]:
                 raise UpdateConfigNotAvailableException()
 
             daemon_config = daemon.daemon_config
@@ -189,7 +189,7 @@ class DaemonService:
 
             DaemonRepository.update_daemon_config(session, request.daemon_id, daemon_config)
 
-            if daemon.status == DaemonStatus.UP:
+            if daemon.status == DeploymentStatus.UP:
                 self._deployer_client.redeploy_daemon(request.daemon_id)
 
         return {}
@@ -206,8 +206,6 @@ class DaemonService:
         del daemon_response["daemonConfig"]
         return {"daemon": daemon_response, "order": order.to_short_response()}
 
-    def pause_daemon(self, request: DaemonRequest):
+    def check_daemons(self):
         pass
 
-    def unpause_daemon(self, request: DaemonRequest):
-        pass
