@@ -183,9 +183,11 @@ def mock_haas_client():
     NOTE: This is necessary for integration tests as we cannot call real HaaS API.
     This is acceptable as we're testing our service logic, not HaaS integration.
     """
-    with patch("deployer.application.services.daemon_service.HaaSClient") as mock_client:
+    with patch("deployer.application.services.daemon_service.HaaSClient") as mock_daemon_client, \
+         patch("deployer.application.services.job_services.HaaSClient") as mock_job_client:
         instance = MagicMock()
-        mock_client.return_value = instance
+        mock_daemon_client.return_value = instance
+        mock_job_client.return_value = instance
 
         # Mock successful responses
         instance.create_daemon.return_value = {"status": "success", "daemon_id": "test-daemon-id"}
@@ -194,23 +196,26 @@ def mock_haas_client():
         instance.start_daemon.return_value = {"status": "success"}
         instance.redeploy_daemon.return_value = {"status": "success"}
         instance.get_public_key.return_value = "test-public-key"
+        
+        # Mock check_daemon for update_daemon_status tests
+        from deployer.infrastructure.clients.haas_client import HaaSDaemonStatus
+        instance.check_daemon.return_value = (HaaSDaemonStatus.UP, None)
 
         yield instance
 
 
 @pytest.fixture(scope="function")
 def mock_deployer_client():
-    """Mock Deployer client for blockchain operations."""
-    with patch("deployer.infrastructure.clients.deployer_client.DeployerClient") as mock_client:
+    """Mock Deployer client for internal daemon operations."""
+    with patch("deployer.application.services.job_services.DeployerClient") as mock_client:
         instance = MagicMock()
         mock_client.return_value = instance
 
         # Mock successful responses
-        instance.get_service_info.return_value = {
-            "service_endpoint": "https://test-service.example.com",
-            "published": True,
-        }
-        instance.get_transaction_status.return_value = "success"
+        instance.start_daemon.return_value = {"status": "success"}
+        instance.stop_daemon.return_value = {"status": "success"}
+        instance.redeploy_daemon.return_value = {"status": "success"}
+        instance.update_daemon_status.return_value = {"status": "success"}
 
         yield instance
 
