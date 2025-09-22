@@ -49,6 +49,18 @@ def _be(name, org, service=None, meta=None):
         },
     }
 
+import io, tarfile
+
+# helper: build a valid in-memory tar with a .proto file
+def _make_proto_tar_bytes(filename: str = "test.proto", text: str = "package test.service;\n") -> bytes:
+    """Return a valid tar archive (as bytes) that contains a .proto file with given content."""
+    content = text.encode("utf-8")
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w") as tar:
+        info = tarfile.TarInfo(name=filename)
+        info.size = len(content)
+        tar.addfile(tarinfo=info, fileobj=io.BytesIO(content))
+    return buf.getvalue()
 
 class TestRegistryEventConsumerHandler:
     """Test cases for registry_event_consumer handler."""
@@ -61,8 +73,10 @@ class TestRegistryEventConsumerHandler:
         daemon_repo
     ):
         """Test processing ServiceCreated event updates daemon configuration."""
-        # Arrange
-        # Create existing daemon for the service
+
+        proto_tar_bytes = _make_proto_tar_bytes(text="package test.service;\n")
+
+        # Arrange: existing daemon for the service
         daemon = test_data_factory.create_daemon(
             daemon_id="daemon-registry-001",
             org_id="org1",
@@ -77,40 +91,49 @@ class TestRegistryEventConsumerHandler:
         )
         daemon_repo.create_daemon(db_session, daemon)
         db_session.commit()
-        
-        # Create ServiceCreated event
+
+        # Event: ServiceCreated
         event = _make_sns_sqs_event([
             _be("ServiceCreated", org="org1", service="svc1", meta="ipfs://meta1")
         ])
-        
-        # Mock storage provider to return metadata
+
+        # Mock storage provider to return metadata and a valid tar for service_api_source
         with patch("deployer.application.services.job_services.StorageProvider") as mock_storage_class:
             mock_storage = MagicMock()
             mock_storage_class.return_value = mock_storage
-            
-            # Return metadata with daemon configuration
-            mock_storage.get.side_effect = lambda uri, to_decode=True: {
-                "groups": [{
-                    "group_name": "default-group",
-                    "endpoints": ["https://haas.singularitynet.io/org1/svc1"]
-                }],
-                "service_api_source": "ipfs://service-api-tar"
-            } if uri == "ipfs://meta1" else b"package test.service;\n"
-            
+
+            def _mock_get(uri, to_decode=True):
+                if uri == "ipfs://meta1":
+                    return {
+                        "groups": [{
+                            "group_name": "default-group",
+                            "endpoints": ["https://haas.singularitynet.io/org1/svc1"]
+                        }],
+                        "service_api_source": "ipfs://service-api-tar"
+                    }
+                # return a valid tar archive with a .proto containing `package ...;`
+                return proto_tar_bytes
+
+            mock_storage.get.side_effect = _mock_get
+
             # Act
             response = registry_event_consumer(event, lambda_context)
-            
+
             # Assert
             assert response == {}  # Handler returns empty dict on success
-            
+
             # Verify daemon was updated
             updated_daemon = daemon_repo.get_daemon(db_session, "daemon-registry-001")
             assert updated_daemon.service_published is True  # ServiceCreated sets this to True
             assert updated_daemon.daemon_config["daemon_group"] == "default-group"
-            # service_class would be set from tar file parsing
-            
-            # Verify storage provider was called
+
+            assert "service_class" in updated_daemon.daemon_config
+            assert updated_daemon.daemon_config["service_class"] == "test.service"
+
+            # Verify storage provider calls
             mock_storage.get.assert_any_call("ipfs://meta1")
+            mock_storage.get.assert_any_call("ipfs://service-api-tar", to_decode=False)
+
 
     def test_processes_service_metadata_modified_triggers_redeploy(
         self,
@@ -120,7 +143,11 @@ class TestRegistryEventConsumerHandler:
         daemon_repo
     ):
         """Test ServiceMetadataModified event triggers daemon redeploy when daemon is UP."""
-        # Arrange
+
+
+        proto_tar_bytes_v2 = _make_proto_tar_bytes(text="package test.service.v2;\n")
+
+        # Arrange: existing daemon in UP status
         daemon = test_data_factory.create_daemon(
             daemon_id="daemon-registry-002",
             org_id="org2",
@@ -135,43 +162,52 @@ class TestRegistryEventConsumerHandler:
         )
         daemon_repo.create_daemon(db_session, daemon)
         db_session.commit()
-        
-        # Create ServiceMetadataModified event
+
+        # Event: ServiceMetadataModified
         event = _make_sns_sqs_event([
             _be("ServiceMetadataModified", org="org2", service="svc2", meta="ipfs://meta2")
         ])
-        
+
         # Mock storage provider and deployer client
         with patch("deployer.application.services.job_services.StorageProvider") as mock_storage_class, \
-             patch("deployer.application.services.job_services.DeployerClient") as mock_deployer_class:
-            
+            patch("deployer.application.services.job_services.DeployerClient") as mock_deployer_class:
+
             mock_storage = MagicMock()
             mock_storage_class.return_value = mock_storage
-            
+
             mock_deployer = MagicMock()
             mock_deployer_class.return_value = mock_deployer
-            
-            # Return updated metadata
-            mock_storage.get.side_effect = lambda uri, to_decode=True: {
-                "groups": [{
-                    "group_name": "new-group",
-                    "endpoints": ["https://haas.singularitynet.io/org2/svc2"]
-                }],
-                "service_api_source": "ipfs://service-api-tar-v2"
-            } if uri == "ipfs://meta2" else b"package test.service.v2;\n"
-            
+
+            # Return updated metadata and a valid tar for service_api_source
+            def _mock_get(uri, to_decode=True):
+                if uri == "ipfs://meta2":
+                    return {
+                        "groups": [{
+                            "group_name": "new-group",
+                            "endpoints": ["https://haas.singularitynet.io/org2/svc2"]
+                        }],
+                        "service_api_source": "ipfs://service-api-tar-v2"
+                    }
+                # Return a valid tar archive (bytes) for the service API
+                return proto_tar_bytes_v2
+
+            mock_storage.get.side_effect = _mock_get
+
             # Act
             response = registry_event_consumer(event, lambda_context)
-            
+
             # Assert
             assert response == {}
-            
-            # Verify daemon config was updated
+
             updated_daemon = daemon_repo.get_daemon(db_session, "daemon-registry-002")
             assert updated_daemon.daemon_config["daemon_group"] == "new-group"
-            
-            # Verify redeploy was triggered (because daemon was UP)
+            assert "service_class" in updated_daemon.daemon_config
+            assert updated_daemon.daemon_config["service_class"] == "test.service.v2"
+
             mock_deployer.redeploy_daemon.assert_called_once_with("daemon-registry-002")
+            mock_storage.get.assert_any_call("ipfs://meta2")
+            mock_storage.get.assert_any_call("ipfs://service-api-tar-v2", to_decode=False)
+
 
     def test_processes_service_deleted_stops_daemon(
         self,
@@ -181,6 +217,9 @@ class TestRegistryEventConsumerHandler:
         daemon_repo
     ):
         """Test ServiceDeleted event sets service_published to False and stops daemon if UP."""
+        # Build a valid tar for service_api_source
+        proto_tar_bytes = _make_proto_tar_bytes(text="package test.service;\n")
+
         # Arrange
         daemon = test_data_factory.create_daemon(
             daemon_id="daemon-registry-003",
@@ -193,43 +232,55 @@ class TestRegistryEventConsumerHandler:
         )
         daemon_repo.create_daemon(db_session, daemon)
         db_session.commit()
-        
+
         # Create ServiceDeleted event
         event = _make_sns_sqs_event([
             _be("ServiceDeleted", org="org3", service="svc3", meta="ipfs://meta3")
         ])
-        
+
         # Mock storage provider and deployer client
         with patch("deployer.application.services.job_services.StorageProvider") as mock_storage_class, \
-             patch("deployer.application.services.job_services.DeployerClient") as mock_deployer_class:
-            
+            patch("deployer.application.services.job_services.DeployerClient") as mock_deployer_class:
+
             mock_storage = MagicMock()
             mock_storage_class.return_value = mock_storage
-            
+
             mock_deployer = MagicMock()
             mock_deployer_class.return_value = mock_deployer
-            
-            # Return metadata (still needed for processing)
-            mock_storage.get.side_effect = lambda uri, to_decode=True: {
-                "groups": [{
-                    "group_name": "default-group",
-                    "endpoints": ["https://haas.singularitynet.io/org3/svc3"]
-                }],
-                "service_api_source": "ipfs://service-api-tar"
-            } if uri == "ipfs://meta3" else b"package test.service;\n"
-            
+
+            # Return metadata and a valid tar for service_api_source
+            def _mock_get(uri, to_decode=True):
+                if uri == "ipfs://meta3":
+                    return {
+                        "groups": [{
+                            "group_name": "default-group",
+                            "endpoints": ["https://haas.singularitynet.io/org3/svc3"]
+                        }],
+                        "service_api_source": "ipfs://service-api-tar"
+                    }
+                # Return a valid tar archive (bytes) for the service API
+                return proto_tar_bytes
+
+            mock_storage.get.side_effect = _mock_get
+
             # Act
             response = registry_event_consumer(event, lambda_context)
-            
+
             # Assert
             assert response == {}
-            
-            # Verify service_published was set to False
+
             updated_daemon = daemon_repo.get_daemon(db_session, "daemon-registry-003")
+            # ServiceDeleted should unpublish service
             assert updated_daemon.service_published is False
-            
-            # Verify stop_daemon was called (because daemon was UP)
+            # Redeploy must not be called for delete
+            mock_deployer.redeploy_daemon.assert_not_called()
+            # Stop must be called because daemon was UP
             mock_deployer.stop_daemon.assert_called_once_with("daemon-registry-003")
+
+            # Optional: verify storage calls (including tar fetch with to_decode=False)
+            mock_storage.get.assert_any_call("ipfs://meta3")
+            mock_storage.get.assert_any_call("ipfs://service-api-tar", to_decode=False)
+
 
     def test_ignores_events_for_non_haas_services(
         self,
@@ -264,6 +315,9 @@ class TestRegistryEventConsumerHandler:
         daemon_repo
     ):
         """Test that daemon is stopped when service endpoint changes (no longer using HaaS)."""
+        # build a valid tar for service_api_source
+        proto_tar_bytes = _make_proto_tar_bytes(text="package test.service;\n")
+
         # Arrange
         daemon = test_data_factory.create_daemon(
             daemon_id="daemon-registry-004",
@@ -275,39 +329,46 @@ class TestRegistryEventConsumerHandler:
         )
         daemon_repo.create_daemon(db_session, daemon)
         db_session.commit()
-        
-        # Create event with changed endpoint
+
+        # Event with changed endpoint
         event = _make_sns_sqs_event([
             _be("ServiceMetadataModified", org="org4", service="svc4", meta="ipfs://meta4")
         ])
-        
+
         # Mock storage provider and deployer client
         with patch("deployer.application.services.job_services.StorageProvider") as mock_storage_class, \
-             patch("deployer.application.services.job_services.DeployerClient") as mock_deployer_class:
-            
+            patch("deployer.application.services.job_services.DeployerClient") as mock_deployer_class:
+
             mock_storage = MagicMock()
             mock_storage_class.return_value = mock_storage
-            
+
             mock_deployer = MagicMock()
             mock_deployer_class.return_value = mock_deployer
-            
-            # Return metadata with different endpoint (not HaaS)
-            mock_storage.get.side_effect = lambda uri, to_decode=True: {
-                "groups": [{
-                    "group_name": "default-group",
-                    "endpoints": ["https://custom-endpoint.com"]  # Changed from HaaS
-                }],
-                "service_api_source": "ipfs://service-api-tar"
-            } if uri == "ipfs://meta4" else b"package test.service;\n"
-            
+
+            # Return metadata with non-HaaS endpoint and a valid tar for service_api_source
+            def _mock_get(uri, to_decode=True):
+                if uri == "ipfs://meta4":
+                    return {
+                        "groups": [{
+                            "group_name": "default-group",
+                            "endpoints": ["https://custom-endpoint.com"]  # not HaaS
+                        }],
+                        "service_api_source": "ipfs://service-api-tar"
+                    }
+                return proto_tar_bytes  # valid tar bytes
+
+            mock_storage.get.side_effect = _mock_get
+
             # Act
             response = registry_event_consumer(event, lambda_context)
-            
+
             # Assert
             assert response == {}
-            
-            # Verify stop_daemon was called (service no longer uses HaaS)
             mock_deployer.stop_daemon.assert_called_once_with("daemon-registry-004")
+            mock_deployer.redeploy_daemon.assert_not_called()
+            mock_storage.get.assert_any_call("ipfs://meta4")
+            mock_storage.get.assert_any_call("ipfs://service-api-tar", to_decode=False)
+
 
     def test_invalid_event_raises_bad_request(
         self,
