@@ -7,7 +7,6 @@ It does not require authentication.
 import json
 import copy
 from sqlalchemy import text
-from unittest.mock import patch, MagicMock
 
 from deployer.application.handlers.daemon_handlers import start_daemon
 from deployer.infrastructure.models import DaemonStatus
@@ -24,6 +23,7 @@ class TestStartDaemonHandler:
         db_session,
         test_data_factory,
         daemon_repo,
+        mock_haas_client
     ):
         """Test successful daemon start when daemon is READY_TO_START and service is published."""
         # Arrange
@@ -48,30 +48,29 @@ class TestStartDaemonHandler:
             {"id": "test-daemon-start-001"},
         )
         db_session.commit()
+        
         # Update event with correct daemon ID
         event = copy.deepcopy(start_daemon_event)
         event["pathParameters"]["daemonId"] = "test-daemon-start-001"
 
-        # Act - Mock HaaSClient at the class level before handler execution
-        with patch("deployer.application.services.daemon_service.HaaSClient") as mock_haas_class:
-            mock_haas_instance = MagicMock()
-            mock_haas_class.return_value = mock_haas_instance
-            mock_haas_instance.start_daemon.return_value = {"status": "success"}
+        # Configure mock response
+        mock_haas_client.start_daemon.return_value = {"status": "success"}
 
-            response = start_daemon(event, lambda_context)
+        # Act
+        response = start_daemon(event, lambda_context)
 
-            # Assert
-            assert response["statusCode"] == StatusCode.OK
-            body = json.loads(response["body"])
-            assert body["status"] == "success"
-            assert body["data"] == {}
+        # Assert
+        assert response["statusCode"] == StatusCode.OK
+        body = json.loads(response["body"])
+        assert body["status"] == "success"
+        assert body["data"] == {}
 
-            # Verify HaaS client was called with correct parameters
-            mock_haas_instance.start_daemon.assert_called_once_with(
-                org_id="test-org-1",
-                service_id="test-service-1",
-                daemon_config=daemon.daemon_config,
-            )
+        # Verify HaaS client was called with correct parameters
+        mock_haas_client.start_daemon.assert_called_once_with(
+            org_id="test-org-1",
+            service_id="test-service-1",
+            daemon_config=daemon.daemon_config,
+        )
 
         # Verify daemon status was updated to STARTING
         updated_daemon = daemon_repo.get_daemon(db_session, "test-daemon-start-001")
@@ -84,6 +83,7 @@ class TestStartDaemonHandler:
         db_session,
         test_data_factory,
         daemon_repo,
+        mock_haas_client
     ):
         """Test start_daemon returns empty when daemon is not in READY_TO_START status."""
         # Arrange - Create daemon with UP status (already running)
@@ -103,20 +103,16 @@ class TestStartDaemonHandler:
         event["pathParameters"]["daemonId"] = "test-daemon-start-002"
 
         # Act
-        with patch("deployer.application.services.daemon_service.HaaSClient") as mock_haas_class:
-            mock_haas_instance = MagicMock()
-            mock_haas_class.return_value = mock_haas_instance
+        response = start_daemon(event, lambda_context)
 
-            response = start_daemon(event, lambda_context)
+        # Assert
+        assert response["statusCode"] == StatusCode.OK
+        body = json.loads(response["body"])
+        assert body["status"] == "success"
+        assert body["data"] == {}  # Empty response, no action taken
 
-            # Assert
-            assert response["statusCode"] == StatusCode.OK
-            body = json.loads(response["body"])
-            assert body["status"] == "success"
-            assert body["data"] == {}  # Empty response, no action taken
-
-            # Verify HaaS client was NOT called
-            mock_haas_instance.start_daemon.assert_not_called()
+        # Verify HaaS client was NOT called
+        mock_haas_client.start_daemon.assert_not_called()
 
         # Verify daemon status remained unchanged
         updated_daemon = daemon_repo.get_daemon(db_session, "test-daemon-start-002")
@@ -129,6 +125,7 @@ class TestStartDaemonHandler:
         db_session,
         test_data_factory,
         daemon_repo,
+        mock_haas_client
     ):
         """Test start_daemon returns empty when service is not published."""
         # Arrange - Create daemon with READY_TO_START but service not published
@@ -148,20 +145,16 @@ class TestStartDaemonHandler:
         event["pathParameters"]["daemonId"] = "test-daemon-start-003"
 
         # Act
-        with patch("deployer.application.services.daemon_service.HaaSClient") as mock_haas_class:
-            mock_haas_instance = MagicMock()
-            mock_haas_class.return_value = mock_haas_instance
+        response = start_daemon(event, lambda_context)
 
-            response = start_daemon(event, lambda_context)
+        # Assert
+        assert response["statusCode"] == StatusCode.OK
+        body = json.loads(response["body"])
+        assert body["status"] == "success"
+        assert body["data"] == {}  # Empty response, no action taken
 
-            # Assert
-            assert response["statusCode"] == StatusCode.OK
-            body = json.loads(response["body"])
-            assert body["status"] == "success"
-            assert body["data"] == {}  # Empty response, no action taken
-
-            # Verify HaaS client was NOT called
-            mock_haas_instance.start_daemon.assert_not_called()
+        # Verify HaaS client was NOT called
+        mock_haas_client.start_daemon.assert_not_called()
 
         # Verify daemon status remained unchanged
         updated_daemon = daemon_repo.get_daemon(db_session, "test-daemon-start-003")

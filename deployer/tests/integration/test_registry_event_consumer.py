@@ -1,20 +1,17 @@
 """
-Tests for registry_event_consumer handler.
+Integration tests for registry_event_consumer handler.
 
-We mock JobService at the import site of the handler to verify:
-- allowed events trigger process_registry_event()
-- unknown events are ignored
-- no records -> nothing is called, handler returns {}
-- invalid allowed event (missing required fields) is wrapped into BadRequestException by validation_handler
+This handler processes blockchain events related to service registration changes.
 """
-
 import json
 from unittest.mock import patch, MagicMock
-import pytest
 from web3 import Web3
 
 from deployer.application.handlers.job_handlers import registry_event_consumer
+from deployer.infrastructure.models import DaemonStatus
+from deployer.constant import AllowedEventNames
 from common.exceptions import BadRequestException
+import pytest
 
 
 def _make_sns_sqs_event(blockchain_events):
@@ -54,65 +51,274 @@ def _be(name, org, service=None, meta=None):
 
 
 class TestRegistryEventConsumerHandler:
-    def test_processes_allowed_events_and_skips_others(self):
-        """
-        Arrange: Created, MetadataModified, and an unknown RandomEvent.
-        Assert: JobService.process_registry_event called exactly for the first two,
-        with already-validated Pydantic models (decoded back from hex).
-        """
-        event = _make_sns_sqs_event(
-            [
-                _be("ServiceCreated", org="org1", service="svc1", meta="ipfs://meta1"),
-                _be("ServiceMetadataModified", org="org2", service="svc2", meta="ipfs://meta2"),
-                _be("RandomEvent", org="orgX"),  # unknown -> ignored by handler
-            ]
+    """Test cases for registry_event_consumer handler."""
+
+    def test_processes_service_created_event(
+        self,
+        lambda_context,
+        db_session,
+        test_data_factory,
+        daemon_repo
+    ):
+        """Test processing ServiceCreated event updates daemon configuration."""
+        # Arrange
+        # Create existing daemon for the service
+        daemon = test_data_factory.create_daemon(
+            daemon_id="daemon-registry-001",
+            org_id="org1",
+            service_id="svc1",
+            status=DaemonStatus.DOWN,
+            service_published=False,  # Will be set to True by ServiceCreated
+            daemon_endpoint="https://haas.singularitynet.io/org1/svc1",
+            daemon_config={
+                "payment_channel_storage_type": "etcd",
+                "service_endpoint": "https://old-endpoint.com"
+            }
         )
+        daemon_repo.create_daemon(db_session, daemon)
+        db_session.commit()
+        
+        # Create ServiceCreated event
+        event = _make_sns_sqs_event([
+            _be("ServiceCreated", org="org1", service="svc1", meta="ipfs://meta1")
+        ])
+        
+        # Mock storage provider to return metadata
+        with patch("deployer.application.services.job_services.StorageProvider") as mock_storage_class:
+            mock_storage = MagicMock()
+            mock_storage_class.return_value = mock_storage
+            
+            # Return metadata with daemon configuration
+            mock_storage.get.side_effect = lambda uri, to_decode=True: {
+                "groups": [{
+                    "group_name": "default-group",
+                    "endpoints": ["https://haas.singularitynet.io/org1/svc1"]
+                }],
+                "service_api_source": "ipfs://service-api-tar"
+            } if uri == "ipfs://meta1" else b"package test.service;\n"
+            
+            # Act
+            response = registry_event_consumer(event, lambda_context)
+            
+            # Assert
+            assert response == {}  # Handler returns empty dict on success
+            
+            # Verify daemon was updated
+            updated_daemon = daemon_repo.get_daemon(db_session, "daemon-registry-001")
+            assert updated_daemon.service_published is True  # ServiceCreated sets this to True
+            assert updated_daemon.daemon_config["daemon_group"] == "default-group"
+            # service_class would be set from tar file parsing
+            
+            # Verify storage provider was called
+            mock_storage.get.assert_any_call("ipfs://meta1")
 
-        with patch("deployer.application.handlers.job_handlers.JobService") as JobServiceMock:
-            svc = MagicMock()
-            JobServiceMock.return_value = svc
+    def test_processes_service_metadata_modified_triggers_redeploy(
+        self,
+        lambda_context,
+        db_session,
+        test_data_factory,
+        daemon_repo
+    ):
+        """Test ServiceMetadataModified event triggers daemon redeploy when daemon is UP."""
+        # Arrange
+        daemon = test_data_factory.create_daemon(
+            daemon_id="daemon-registry-002",
+            org_id="org2",
+            service_id="svc2",
+            status=DaemonStatus.UP,  # Daemon is running
+            service_published=True,
+            daemon_endpoint="https://haas.singularitynet.io/org2/svc2",
+            daemon_config={
+                "payment_channel_storage_type": "etcd",
+                "daemon_group": "old-group"
+            }
+        )
+        daemon_repo.create_daemon(db_session, daemon)
+        db_session.commit()
+        
+        # Create ServiceMetadataModified event
+        event = _make_sns_sqs_event([
+            _be("ServiceMetadataModified", org="org2", service="svc2", meta="ipfs://meta2")
+        ])
+        
+        # Mock storage provider and deployer client
+        with patch("deployer.application.services.job_services.StorageProvider") as mock_storage_class, \
+             patch("deployer.application.services.job_services.DeployerClient") as mock_deployer_class:
+            
+            mock_storage = MagicMock()
+            mock_storage_class.return_value = mock_storage
+            
+            mock_deployer = MagicMock()
+            mock_deployer_class.return_value = mock_deployer
+            
+            # Return updated metadata
+            mock_storage.get.side_effect = lambda uri, to_decode=True: {
+                "groups": [{
+                    "group_name": "new-group",
+                    "endpoints": ["https://haas.singularitynet.io/org2/svc2"]
+                }],
+                "service_api_source": "ipfs://service-api-tar-v2"
+            } if uri == "ipfs://meta2" else b"package test.service.v2;\n"
+            
+            # Act
+            response = registry_event_consumer(event, lambda_context)
+            
+            # Assert
+            assert response == {}
+            
+            # Verify daemon config was updated
+            updated_daemon = daemon_repo.get_daemon(db_session, "daemon-registry-002")
+            assert updated_daemon.daemon_config["daemon_group"] == "new-group"
+            
+            # Verify redeploy was triggered (because daemon was UP)
+            mock_deployer.redeploy_daemon.assert_called_once_with("daemon-registry-002")
 
-            resp = registry_event_consumer(event, context=None)
+    def test_processes_service_deleted_stops_daemon(
+        self,
+        lambda_context,
+        db_session,
+        test_data_factory,
+        daemon_repo
+    ):
+        """Test ServiceDeleted event sets service_published to False and stops daemon if UP."""
+        # Arrange
+        daemon = test_data_factory.create_daemon(
+            daemon_id="daemon-registry-003",
+            org_id="org3",
+            service_id="svc3",
+            status=DaemonStatus.UP,  # Daemon is running
+            service_published=True,
+            daemon_endpoint="https://haas.singularitynet.io/org3/svc3",
+            daemon_config={"payment_channel_storage_type": "etcd"}
+        )
+        daemon_repo.create_daemon(db_session, daemon)
+        db_session.commit()
+        
+        # Create ServiceDeleted event
+        event = _make_sns_sqs_event([
+            _be("ServiceDeleted", org="org3", service="svc3", meta="ipfs://meta3")
+        ])
+        
+        # Mock storage provider and deployer client
+        with patch("deployer.application.services.job_services.StorageProvider") as mock_storage_class, \
+             patch("deployer.application.services.job_services.DeployerClient") as mock_deployer_class:
+            
+            mock_storage = MagicMock()
+            mock_storage_class.return_value = mock_storage
+            
+            mock_deployer = MagicMock()
+            mock_deployer_class.return_value = mock_deployer
+            
+            # Return metadata (still needed for processing)
+            mock_storage.get.side_effect = lambda uri, to_decode=True: {
+                "groups": [{
+                    "group_name": "default-group",
+                    "endpoints": ["https://haas.singularitynet.io/org3/svc3"]
+                }],
+                "service_api_source": "ipfs://service-api-tar"
+            } if uri == "ipfs://meta3" else b"package test.service;\n"
+            
+            # Act
+            response = registry_event_consumer(event, lambda_context)
+            
+            # Assert
+            assert response == {}
+            
+            # Verify service_published was set to False
+            updated_daemon = daemon_repo.get_daemon(db_session, "daemon-registry-003")
+            assert updated_daemon.service_published is False
+            
+            # Verify stop_daemon was called (because daemon was UP)
+            mock_deployer.stop_daemon.assert_called_once_with("daemon-registry-003")
 
-            # Handler returns {} (no lambda response envelope here)
-            assert resp == {}
+    def test_ignores_events_for_non_haas_services(
+        self,
+        lambda_context,
+        db_session
+    ):
+        """Test that events for services not using HaaS are ignored."""
+        # Arrange - No daemon exists for this org/service
+        event = _make_sns_sqs_event([
+            _be("ServiceCreated", org="non-haas-org", service="non-haas-svc", meta="ipfs://meta")
+        ])
+        
+        # Mock storage provider (should not be called)
+        with patch("deployer.application.services.job_services.StorageProvider") as mock_storage_class:
+            mock_storage = MagicMock()
+            mock_storage_class.return_value = mock_storage
+            
+            # Act
+            response = registry_event_consumer(event, lambda_context)
+            
+            # Assert
+            assert response == {}
+            
+            # Verify storage provider was NOT called (service doesn't use HaaS)
+            mock_storage.get.assert_not_called()
 
-            # Only allowed events should trigger processing
-            assert svc.process_registry_event.call_count == 2
+    def test_stops_daemon_when_endpoint_changes(
+        self,
+        lambda_context,
+        db_session,
+        test_data_factory,
+        daemon_repo
+    ):
+        """Test that daemon is stopped when service endpoint changes (no longer using HaaS)."""
+        # Arrange
+        daemon = test_data_factory.create_daemon(
+            daemon_id="daemon-registry-004",
+            org_id="org4",
+            service_id="svc4",
+            status=DaemonStatus.UP,
+            service_published=True,
+            daemon_endpoint="https://haas.singularitynet.io/org4/svc4"
+        )
+        daemon_repo.create_daemon(db_session, daemon)
+        db_session.commit()
+        
+        # Create event with changed endpoint
+        event = _make_sns_sqs_event([
+            _be("ServiceMetadataModified", org="org4", service="svc4", meta="ipfs://meta4")
+        ])
+        
+        # Mock storage provider and deployer client
+        with patch("deployer.application.services.job_services.StorageProvider") as mock_storage_class, \
+             patch("deployer.application.services.job_services.DeployerClient") as mock_deployer_class:
+            
+            mock_storage = MagicMock()
+            mock_storage_class.return_value = mock_storage
+            
+            mock_deployer = MagicMock()
+            mock_deployer_class.return_value = mock_deployer
+            
+            # Return metadata with different endpoint (not HaaS)
+            mock_storage.get.side_effect = lambda uri, to_decode=True: {
+                "groups": [{
+                    "group_name": "default-group",
+                    "endpoints": ["https://custom-endpoint.com"]  # Changed from HaaS
+                }],
+                "service_api_source": "ipfs://service-api-tar"
+            } if uri == "ipfs://meta4" else b"package test.service;\n"
+            
+            # Act
+            response = registry_event_consumer(event, lambda_context)
+            
+            # Assert
+            assert response == {}
+            
+            # Verify stop_daemon was called (service no longer uses HaaS)
+            mock_deployer.stop_daemon.assert_called_once_with("daemon-registry-004")
 
-            first_req = svc.process_registry_event.call_args_list[0].args[0]
-            assert first_req.event_name == "ServiceCreated"
-            assert first_req.org_id == "org1"
-            assert first_req.service_id == "svc1"
-            assert first_req.metadata_uri == "ipfs://meta1"
-
-            second_req = svc.process_registry_event.call_args_list[1].args[0]
-            assert second_req.event_name == "ServiceMetadataModified"
-            assert second_req.org_id == "org2"
-            assert second_req.service_id == "svc2"
-            assert second_req.metadata_uri == "ipfs://meta2"
-
-    def test_no_records_returns_empty_and_no_calls(self):
-        """Empty Records array -> nothing to do, returns {} and does not call JobService."""
-        event = {"Records": []}
-
-        with patch("deployer.application.handlers.job_handlers.JobService") as JobServiceMock:
-            svc = MagicMock()
-            JobServiceMock.return_value = svc
-
-            resp = registry_event_consumer(event, context=None)
-
-            assert resp == {}
-            svc.process_registry_event.assert_not_called()
-
-    def test_invalid_allowed_event_raises(self):
-        """
-        Allowed event without required fields (serviceId/metadataURI) -> model validator fails.
-        Because validate_event is wrapped in @validation_handler, the error is surfaced as BadRequestException.
-        """
-        event = _make_sns_sqs_event([_be("ServiceCreated", org="org1")])  # missing fields
-
-        with patch("deployer.application.handlers.job_handlers.JobService") as JobServiceMock:
-            JobServiceMock.return_value = MagicMock()
-            with pytest.raises(BadRequestException):
-                registry_event_consumer(event, context=None)
+    def test_invalid_event_raises_bad_request(
+        self,
+        lambda_context
+    ):
+        """Test that invalid event structure raises BadRequestException."""
+        # Arrange - ServiceCreated without required fields
+        event = _make_sns_sqs_event([
+            _be("ServiceCreated", org="org1")  # Missing service and metadata
+        ])
+        
+        # Act & Assert
+        with pytest.raises(BadRequestException):
+            registry_event_consumer(event, lambda_context)

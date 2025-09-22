@@ -10,9 +10,6 @@ Preconditions from business logic:
 
 import copy
 import json
-from unittest.mock import patch, MagicMock
-
-from sqlalchemy import text
 
 from deployer.application.handlers.daemon_handlers import redeploy_daemon
 from deployer.infrastructure.models import DaemonStatus
@@ -20,6 +17,8 @@ from common.constant import StatusCode
 
 
 class TestRedeployDaemonHandler:
+    """Test cases for redeploy_daemon handler."""
+
     def test_redeploy_daemon_success_when_up(
         self,
         redeploy_daemon_event,
@@ -27,6 +26,7 @@ class TestRedeployDaemonHandler:
         db_session,
         test_data_factory,
         daemon_repo,
+        mock_haas_client
     ):
         """Happy path: daemon exists, status=UP -> HaaS is called, status -> RESTARTING."""
         # Arrange: create a daemon in UP state with full config required by HaaS
@@ -52,27 +52,25 @@ class TestRedeployDaemonHandler:
         event = copy.deepcopy(redeploy_daemon_event)
         event["pathParameters"]["daemonId"] = "daemon-up-001"
 
-        # Act: patch the HaaS client where it is used
-        with patch("deployer.application.services.daemon_service.HaaSClient") as mock_cls:
-            mock = MagicMock()
-            mock_cls.return_value = mock
-            mock.redeploy_daemon.return_value = {"status": "success"}
+        # Configure mock response
+        mock_haas_client.redeploy_daemon.return_value = {"status": "success"}
 
-            response = redeploy_daemon(event, lambda_context)
+        # Act
+        response = redeploy_daemon(event, lambda_context)
 
-            # Assert HTTP contract
-            assert response["statusCode"] == StatusCode.OK
-            body = json.loads(response["body"])
-            assert body["status"] == "success"
-            assert body["data"] == {}
-            assert "error" in body
+        # Assert HTTP contract
+        assert response["statusCode"] == StatusCode.OK
+        body = json.loads(response["body"])
+        assert body["status"] == "success"
+        assert body["data"] == {}
+        assert "error" in body
 
-            # Assert HaaS call args
-            mock.redeploy_daemon.assert_called_once()
-            call_kwargs = mock.redeploy_daemon.call_args.kwargs
-            assert call_kwargs["org_id"] == "org-x"
-            assert call_kwargs["service_id"] == "svc-x"
-            assert call_kwargs["daemon_config"] == daemon_cfg
+        # Assert HaaS call args
+        mock_haas_client.redeploy_daemon.assert_called_once()
+        call_kwargs = mock_haas_client.redeploy_daemon.call_args.kwargs
+        assert call_kwargs["org_id"] == "org-x"
+        assert call_kwargs["service_id"] == "svc-x"
+        assert call_kwargs["daemon_config"] == daemon_cfg
 
         # Assert status transition to RESTARTING
         updated = daemon_repo.get_daemon(db_session, "daemon-up-001")
@@ -85,6 +83,7 @@ class TestRedeployDaemonHandler:
         db_session,
         test_data_factory,
         daemon_repo,
+        mock_haas_client
     ):
         """If daemon is not UP -> do nothing (return {}), do not call HaaS, keep status."""
         daemon = test_data_factory.create_daemon(
@@ -100,19 +99,17 @@ class TestRedeployDaemonHandler:
         event = copy.deepcopy(redeploy_daemon_event)
         event["pathParameters"]["daemonId"] = "daemon-down-001"
 
-        # Patch HaaS to verify it is NOT called
-        with patch("deployer.application.services.daemon_service.HaaSClient") as mock_cls:
-            mock = MagicMock()
-            mock_cls.return_value = mock
+        # Act
+        response = redeploy_daemon(event, lambda_context)
 
-            response = redeploy_daemon(event, lambda_context)
+        # Assert
+        assert response["statusCode"] == StatusCode.OK
+        body = json.loads(response["body"])
+        assert body["status"] == "success"
+        assert body["data"] == {}
 
-            assert response["statusCode"] == StatusCode.OK
-            body = json.loads(response["body"])
-            assert body["status"] == "success"
-            assert body["data"] == {}
-
-            mock.redeploy_daemon.assert_not_called()
+        # Verify HaaS was not called
+        mock_haas_client.redeploy_daemon.assert_not_called()
 
         # Status should be unchanged
         current = daemon_repo.get_daemon(db_session, "daemon-down-001")
@@ -122,20 +119,19 @@ class TestRedeployDaemonHandler:
         self,
         redeploy_daemon_event,
         lambda_context,
+        mock_haas_client
     ):
         """If daemon does not exist -> exception -> error response from handler."""
         event = copy.deepcopy(redeploy_daemon_event)
         event["pathParameters"]["daemonId"] = "non-existent-id"
 
-        with patch("deployer.application.services.daemon_service.HaaSClient") as mock_cls:
-            mock = MagicMock()
-            mock_cls.return_value = mock
+        # Act
+        response = redeploy_daemon(event, lambda_context)
 
-            response = redeploy_daemon(event, lambda_context)
+        # Assert - expect error status code
+        assert response["statusCode"] >= 400
+        body = json.loads(response["body"])
+        assert body.get("status") in {"error", "failed", "failure"}
 
-            # Expect error status code (depends on your exception_handler mapping)
-            assert response["statusCode"] >= 400
-            body = json.loads(response["body"])
-            assert body.get("status") in {"error", "failed", "failure"}
-
-            mock.redeploy_daemon.assert_not_called()
+        # Verify HaaS was not called
+        mock_haas_client.redeploy_daemon.assert_not_called()

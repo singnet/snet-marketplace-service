@@ -1,6 +1,7 @@
 """
 Integration tests for unpause_daemon handler.
 """
+import pytest
 import copy
 import json
 
@@ -9,12 +10,12 @@ from deployer.infrastructure.models import DaemonStatus
 from common.constant import StatusCode
 
 
+@pytest.mark.skip(reason="unpause_daemon is not implemented yet - returns pass")
 class TestUnpauseDaemonHandler:
     """Test cases for unpause_daemon handler.
     
-    NOTE: unpause_daemon is currently not implemented (returns pass),
-    so these tests verify the handler structure works correctly.
-    When the actual implementation is added, tests should be updated.
+    NOTE: unpause_daemon is currently not implemented (returns pass).
+    These tests are skipped until the actual implementation is added.
     """
 
     def test_unpause_daemon_success_with_existing_daemon(

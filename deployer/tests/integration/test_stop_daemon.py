@@ -6,7 +6,6 @@ It does not require authentication.
 """
 import json
 import copy
-from unittest.mock import patch, MagicMock
 
 from deployer.application.handlers.daemon_handlers import stop_daemon
 from deployer.infrastructure.models import DaemonStatus
@@ -23,6 +22,7 @@ class TestStopDaemonHandler:
         db_session,
         test_data_factory,
         daemon_repo,
+        mock_haas_client
     ):
         """Test successful daemon stop when daemon is UP."""
         # Arrange
@@ -46,25 +46,23 @@ class TestStopDaemonHandler:
         event = copy.deepcopy(stop_daemon_event)
         event["pathParameters"]["daemonId"] = "test-daemon-stop-001"
 
-        # Act - Mock HaaSClient at the class level before handler execution
-        with patch("deployer.application.services.daemon_service.HaaSClient") as mock_haas_class:
-            mock_haas_instance = MagicMock()
-            mock_haas_class.return_value = mock_haas_instance
-            mock_haas_instance.delete_daemon.return_value = {"status": "success"}
+        # Configure mock response
+        mock_haas_client.delete_daemon.return_value = {"status": "success"}
 
-            response = stop_daemon(event, lambda_context)
+        # Act
+        response = stop_daemon(event, lambda_context)
 
-            # Assert
-            assert response["statusCode"] == StatusCode.OK
-            body = json.loads(response["body"])
-            assert body["status"] == "success"
-            assert body["data"] == {}
+        # Assert
+        assert response["statusCode"] == StatusCode.OK
+        body = json.loads(response["body"])
+        assert body["status"] == "success"
+        assert body["data"] == {}
 
-            # Verify HaaS client was called with correct parameters
-            mock_haas_instance.delete_daemon.assert_called_once_with(
-                "test-org-1",
-                "test-service-1",
-            )
+        # Verify HaaS client was called with correct parameters
+        mock_haas_client.delete_daemon.assert_called_once_with(
+            "test-org-1",
+            "test-service-1",
+        )
 
         # Verify daemon status was updated to DELETING
         updated_daemon = daemon_repo.get_daemon(db_session, "test-daemon-stop-001")
@@ -77,6 +75,7 @@ class TestStopDaemonHandler:
         db_session,
         test_data_factory,
         daemon_repo,
+        mock_haas_client
     ):
         """Test stop_daemon returns empty when daemon is not in UP status."""
         # Arrange - Create daemon with DOWN status (already stopped)
@@ -96,20 +95,16 @@ class TestStopDaemonHandler:
         event["pathParameters"]["daemonId"] = "test-daemon-stop-002"
 
         # Act
-        with patch("deployer.application.services.daemon_service.HaaSClient") as mock_haas_class:
-            mock_haas_instance = MagicMock()
-            mock_haas_class.return_value = mock_haas_instance
+        response = stop_daemon(event, lambda_context)
 
-            response = stop_daemon(event, lambda_context)
+        # Assert
+        assert response["statusCode"] == StatusCode.OK
+        body = json.loads(response["body"])
+        assert body["status"] == "success"
+        assert body["data"] == {}  # Empty response, no action taken
 
-            # Assert
-            assert response["statusCode"] == StatusCode.OK
-            body = json.loads(response["body"])
-            assert body["status"] == "success"
-            assert body["data"] == {}  # Empty response, no action taken
-
-            # Verify HaaS client was NOT called
-            mock_haas_instance.delete_daemon.assert_not_called()
+        # Verify HaaS client was NOT called
+        mock_haas_client.delete_daemon.assert_not_called()
 
         # Verify daemon status remained unchanged
         updated_daemon = daemon_repo.get_daemon(db_session, "test-daemon-stop-002")
@@ -122,6 +117,7 @@ class TestStopDaemonHandler:
         db_session,
         test_data_factory,
         daemon_repo,
+        mock_haas_client
     ):
         """Test stop_daemon with various daemon statuses (only UP should trigger stop)."""
         # Arrange - Create daemons with different statuses
@@ -152,31 +148,30 @@ class TestStopDaemonHandler:
             event = copy.deepcopy(stop_daemon_event)
             event["pathParameters"]["daemonId"] = daemon_id
 
-            # Act - Mock HaaSClient for each iteration
-            with patch("deployer.application.services.daemon_service.HaaSClient") as mock_haas_class:
-                mock_haas_instance = MagicMock()
-                mock_haas_class.return_value = mock_haas_instance
-                mock_haas_instance.delete_daemon.return_value = {"status": "success"}
+            # Reset mock for each iteration
+            mock_haas_client.reset_mock()
+            mock_haas_client.delete_daemon.return_value = {"status": "success"}
 
-                response = stop_daemon(event, lambda_context)
+            # Act
+            response = stop_daemon(event, lambda_context)
 
-                # Assert
-                assert response["statusCode"] == StatusCode.OK
-                body = json.loads(response["body"])
-                assert body["status"] == "success"
-                assert body["data"] == {}
+            # Assert
+            assert response["statusCode"] == StatusCode.OK
+            body = json.loads(response["body"])
+            assert body["status"] == "success"
+            assert body["data"] == {}
 
-                # Verify HaaS client was called only for UP status
-                if should_stop:
-                    mock_haas_instance.delete_daemon.assert_called_once_with(
-                        f"test-org-{idx}",
-                        f"test-service-{idx}",
-                    )
-                    # Verify status change to DELETING
-                    updated_daemon = daemon_repo.get_daemon(db_session, daemon_id)
-                    assert updated_daemon.status == DaemonStatus.DELETING
-                else:
-                    mock_haas_instance.delete_daemon.assert_not_called()
-                    # Verify status remained unchanged
-                    updated_daemon = daemon_repo.get_daemon(db_session, daemon_id)
-                    assert updated_daemon.status == status
+            # Verify HaaS client was called only for UP status
+            if should_stop:
+                mock_haas_client.delete_daemon.assert_called_once_with(
+                    f"test-org-{idx}",
+                    f"test-service-{idx}",
+                )
+                # Verify status change to DELETING
+                updated_daemon = daemon_repo.get_daemon(db_session, daemon_id)
+                assert updated_daemon.status == DaemonStatus.DELETING
+            else:
+                mock_haas_client.delete_daemon.assert_not_called()
+                # Verify status remained unchanged
+                updated_daemon = daemon_repo.get_daemon(db_session, daemon_id)
+                assert updated_daemon.status == status

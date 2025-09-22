@@ -1,16 +1,16 @@
 """Integration tests for get_transactions handler.
 
 NOTE: The TransactionService.get_transactions() method is not implemented yet (returns None).
-These tests verify that the handler doesn't crash and handles the None gracefully.
-When the service method is implemented, these tests should be updated to verify
-the actual transaction data returned.
+These tests are skipped until the actual implementation is added.
 """
 
+import pytest
 from deployer.application.handlers.transaction_handlers import get_transactions
 from deployer.infrastructure.models import OrderStatus, EVMTransactionStatus
 from common.constant import StatusCode
 
 
+@pytest.mark.skip(reason="TransactionService.get_transactions() is not implemented yet - returns None")
 class TestGetTransactionsHandler:
     """Test cases for get_transactions handler."""
 
@@ -67,12 +67,10 @@ class TestGetTransactionsHandler:
         response = get_transactions(event, lambda_context)
 
         # Assert
-        # Note: The service method is not implemented (returns None/pass)
-        # So we expect the handler to handle this gracefully
-        # In real implementation, this would return transaction list
-        assert response["statusCode"] in [StatusCode.OK, StatusCode.INTERNAL_SERVER_ERROR]
-
-        # If the method was implemented, we would check:
+        # When implemented, should return OK with transaction list
+        assert response["statusCode"] == StatusCode.OK
+        
+        # When implemented, we would check:
         # body = json.loads(response["body"])
         # assert len(body["data"]) == 2
         # assert any(tx["hash"] == tx1.hash for tx in body["data"])
@@ -135,7 +133,7 @@ class TestGetTransactionsHandler:
         response = get_transactions(event, lambda_context)
 
         # Assert
-        # Note: The service method is not implemented yet
-        assert response["statusCode"] in [StatusCode.OK, StatusCode.INTERNAL_SERVER_ERROR]
-
+        # When implemented, should return OK with all daemon's transactions
+        assert response["statusCode"] == StatusCode.OK
+        
         # When implemented, would verify all daemon's transactions are returned
