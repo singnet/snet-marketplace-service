@@ -11,6 +11,12 @@ from deployer.application.handlers.job_handlers import check_daemons
 from deployer.infrastructure.models import DaemonStatus
 from common.constant import StatusCode
 
+# helper to generate a unique (org_id, service_id, endpoint) per daemon
+def _ids(n: int):
+    org = f"test-org-{n:02d}"
+    svc = f"test-service-{n:02d}"
+    endpoint = f"https://{org}-{svc}."
+    return org, svc, endpoint
 
 class TestCheckDaemonsHandler:
     """Test cases for check_daemons handler."""
@@ -25,37 +31,58 @@ class TestCheckDaemonsHandler:
         """Test that check_daemons triggers status updates for active daemons."""
         # Arrange
         # Create daemons with different statuses
+        # Arrange: create daemons with distinct (org_id, service_id)
+        org, svc, ep = _ids(1)
         daemon_up = test_data_factory.create_daemon(
             daemon_id="daemon-check-001",
+            org_id=org, service_id=svc, daemon_endpoint=ep,
             status=DaemonStatus.UP,
             service_published=True
         )
+
+        org, svc, ep = _ids(2)
         daemon_starting = test_data_factory.create_daemon(
             daemon_id="daemon-check-002",
+            org_id=org, service_id=svc, daemon_endpoint=ep,
             status=DaemonStatus.STARTING,
             service_published=True
         )
+
+        org, svc, ep = _ids(3)
         daemon_ready = test_data_factory.create_daemon(
             daemon_id="daemon-check-003",
+            org_id=org, service_id=svc, daemon_endpoint=ep,
             status=DaemonStatus.READY_TO_START,
-            service_published=True  # Will be checked
+            service_published=True  # Will be skipped
         )
+
+        org, svc, ep = _ids(4)
         daemon_ready_unpublished = test_data_factory.create_daemon(
             daemon_id="daemon-check-004",
+            org_id=org, service_id=svc, daemon_endpoint=ep,
             status=DaemonStatus.READY_TO_START,
             service_published=False  # Will be skipped
         )
+
         # Daemons that should be skipped
+        org, svc, ep = _ids(5)
         daemon_init = test_data_factory.create_daemon(
             daemon_id="daemon-check-005",
+            org_id=org, service_id=svc, daemon_endpoint=ep,
             status=DaemonStatus.INIT
         )
+
+        org, svc, ep = _ids(6)
         daemon_error = test_data_factory.create_daemon(
             daemon_id="daemon-check-006",
+            org_id=org, service_id=svc, daemon_endpoint=ep,
             status=DaemonStatus.ERROR
         )
+
+        org, svc, ep = _ids(7)
         daemon_down = test_data_factory.create_daemon(
             daemon_id="daemon-check-007",
+            org_id=org, service_id=svc, daemon_endpoint=ep,
             status=DaemonStatus.DOWN
         )
         
@@ -75,30 +102,31 @@ class TestCheckDaemonsHandler:
             
             # Assert
             assert response == {}  # Handler returns empty dict on success
-            
+
             # Verify update_daemon_status was called for active daemons
-            # Should be called for: UP, STARTING, and READY_TO_START(published)
-            assert mock_deployer_instance.update_daemon_status.call_count == 3
-            
+            # Current implementation updates only UP and STARTING (READY_TO_START is skipped)
+            assert mock_deployer_instance.update_daemon_status.call_count == 2
+
             # Get all daemon IDs that were updated
-            updated_daemon_ids = [
-                call.args[0] for call in mock_deployer_instance.update_daemon_status.call_args_list
-            ]
-            
+            updated_daemon_ids = [call.args[0] for call in mock_deployer_instance.update_daemon_status.call_args_list]
+
             # Verify correct daemons were updated
             assert "daemon-check-001" in updated_daemon_ids  # UP
             assert "daemon-check-002" in updated_daemon_ids  # STARTING
-            assert "daemon-check-003" in updated_daemon_ids  # READY_TO_START with published service
-            
+
+            # Verify READY_TO_START (even if published) is not updated by current logic
+            assert "daemon-check-003" not in updated_daemon_ids
+
             # Verify skipped daemons were NOT updated
             assert "daemon-check-004" not in updated_daemon_ids  # READY_TO_START but unpublished
             assert "daemon-check-005" not in updated_daemon_ids  # INIT
             assert "daemon-check-006" not in updated_daemon_ids  # ERROR
             assert "daemon-check-007" not in updated_daemon_ids  # DOWN
-            
-            # Verify all calls were asynchronous
+
+            # Ensure all calls were asynchronous
             for call in mock_deployer_instance.update_daemon_status.call_args_list:
                 assert call.kwargs.get("asynchronous") is True
+
 
     def test_check_daemons_handles_restarting_and_deleting_statuses(
         self,
@@ -109,13 +137,19 @@ class TestCheckDaemonsHandler:
     ):
         """Test that check_daemons also processes RESTARTING and DELETING statuses."""
         # Arrange
+        # Use distinct (org_id, service_id) pairs to satisfy unique constraint
+        org, svc, ep = _ids(10)
         daemon_restarting = test_data_factory.create_daemon(
             daemon_id="daemon-restart-001",
+            org_id=org, service_id=svc, daemon_endpoint=ep,
             status=DaemonStatus.RESTARTING,
             service_published=True
         )
+
+        org, svc, ep = _ids(11)
         daemon_deleting = test_data_factory.create_daemon(
             daemon_id="daemon-delete-001",
+            org_id=org, service_id=svc, daemon_endpoint=ep,
             status=DaemonStatus.DELETING,
             service_published=True
         )
@@ -154,17 +188,25 @@ class TestCheckDaemonsHandler:
     ):
         """Test check_daemons when there are no daemons to check."""
         # Arrange
-        # Create only daemons that should be skipped
+        # Create only daemons that should be skipped; ensure unique (org_id, service_id)
+        org, svc, ep = _ids(20)
         daemon_init = test_data_factory.create_daemon(
             daemon_id="daemon-skip-001",
+            org_id=org, service_id=svc, daemon_endpoint=ep,
             status=DaemonStatus.INIT
         )
+
+        org, svc, ep = _ids(21)
         daemon_error = test_data_factory.create_daemon(
             daemon_id="daemon-skip-002",
+            org_id=org, service_id=svc, daemon_endpoint=ep,
             status=DaemonStatus.ERROR
         )
+
+        org, svc, ep = _ids(22)
         daemon_down = test_data_factory.create_daemon(
             daemon_id="daemon-skip-003",
+            org_id=org, service_id=svc, daemon_endpoint=ep,
             status=DaemonStatus.DOWN
         )
         

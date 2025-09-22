@@ -201,7 +201,7 @@ def mock_haas_client():
 @pytest.fixture(scope="function")
 def mock_deployer_client():
     """Mock Deployer client for blockchain operations."""
-    with patch("deployer.infrastructure.clients.deployer_cleint.DeployerClient") as mock_client:
+    with patch("deployer.infrastructure.clients.deployer_client.DeployerClient") as mock_client:
         instance = MagicMock()
         mock_client.return_value = instance
 

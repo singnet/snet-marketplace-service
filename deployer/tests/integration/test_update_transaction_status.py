@@ -54,7 +54,9 @@ class TestUpdateTransactionStatusHandler:
             recipient="0xRecipientAddress",
             last_block_no=1000,
             block_adjustment=1,
-            fetch_limit=100
+            fetch_limit=100,
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
         transaction_repo.create_transactions_metadata(db_session, tx_metadata)
         db_session.commit()
@@ -155,7 +157,9 @@ class TestUpdateTransactionStatusHandler:
             recipient="0xRecipientAddress2",
             last_block_no=2000,
             block_adjustment=1,
-            fetch_limit=100
+            fetch_limit=100,
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
         transaction_repo.create_transactions_metadata(db_session, tx_metadata)
         db_session.commit()
