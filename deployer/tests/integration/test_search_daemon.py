@@ -3,7 +3,6 @@ Integration tests for search_daemon handler.
 """
 import copy
 import json
-import time
 from datetime import datetime, UTC, timedelta
 from sqlalchemy import text
 

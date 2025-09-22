@@ -9,10 +9,10 @@ from web3 import Web3
 
 from deployer.application.handlers.job_handlers import registry_event_consumer
 from deployer.infrastructure.models import DaemonStatus
-from deployer.constant import AllowedEventNames
 from common.exceptions import BadRequestException
 import pytest
-
+import io
+import tarfile
 
 def _make_sns_sqs_event(blockchain_events):
     """
@@ -48,8 +48,6 @@ def _be(name, org, service=None, meta=None):
             "json_str": str(payload)
         },
     }
-
-import io, tarfile
 
 # helper: build a valid in-memory tar with a .proto file
 def _make_proto_tar_bytes(filename: str = "test.proto", text: str = "package test.service;\n") -> bytes:

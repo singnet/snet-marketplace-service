@@ -5,7 +5,6 @@ This handler checks the status of all active daemons and triggers status updates
 """
 import json
 from unittest.mock import patch, MagicMock
-from datetime import datetime, UTC, timedelta
 
 from deployer.application.handlers.job_handlers import check_daemons
 from deployer.infrastructure.models import DaemonStatus
