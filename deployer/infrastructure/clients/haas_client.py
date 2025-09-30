@@ -133,3 +133,6 @@ class HaaSClient:
                 raise HaaSClientError(result.text)
         except Exception as e:
             raise HaaSClientError(str(e))
+
+    def get_call_events(self, limit: int, page: int, order: str, period: str) -> dict:
+        pass

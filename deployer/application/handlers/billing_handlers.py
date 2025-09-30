@@ -4,7 +4,7 @@ from common.logger import get_logger
 from common.request_context import RequestContext
 from common.utils import generate_lambda_response
 from deployer.application.schemas.billing_schemas import GetMetricsRequest, CallEventConsumerRequest, \
-    SaveEVMTransactionRequest, CreateOrderRequest
+    SaveEVMTransactionRequest, CreateOrderRequest, GetBalanceHistoryRequest
 from deployer.application.services.authorization_service import AuthorizationService
 from deployer.application.services.billing_service import BillingService
 
@@ -55,7 +55,9 @@ def get_balance(event, context):
 def get_balance_history(event, context):
     req_ctx = RequestContext(event)
 
-    response = BillingService().get_balance_history(req_ctx.account_id)
+    request = GetBalanceHistoryRequest.validate_event(event)
+
+    response = BillingService().get_balance_history(request, req_ctx.account_id)
 
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True

@@ -21,6 +21,17 @@ class PeriodType(str, Enum):
     WEEK = "week"
     MONTH = "month"
     YEAR = "year"
+    ALL = "all"
+
+
+class SortOrder(str, Enum):
+    ASC = "asc"
+    DESC = "desc"
+
+
+class TypeOfMovementOfFunds(str, Enum):
+    INCOME = "income"
+    EXPENSE = "expense"
 
 
 class HaaSServiceStatus(str, Enum):

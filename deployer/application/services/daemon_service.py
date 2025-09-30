@@ -91,7 +91,7 @@ class DaemonService:
             )
             if (
                 last_claiming_period is not None
-                and last_claiming_period.status != ClaimingPeriodStatus.FAILED
+                and last_claiming_period.status != ClaimingPeriodStatus.PAYMENT_FAILED
                 and last_claiming_period.end_at + timedelta(hours=BREAK_PERIOD_IN_HOURS)
                 > current_time
             ):

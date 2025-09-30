@@ -33,16 +33,17 @@ class DeploymentStatus(PythonEnum):
 
 
 class OrderStatus(PythonEnum):
-    INIT = "INIT"  # only the entity is created, waiting for payment
+    CREATED = "CREATED"  # only the entity is created, waiting for payment
     PROCESSING = "PROCESSING"  # waiting for confirmation
-    SUCCESS = "SUCCESS"  # payment successful
-    FAILED = "FAILED"  # payment failed
-    CANCELLED = "CANCELLED"
+    PAID = "PAID"  # payment successful
+    PAYMENT_FAILED = "PAYMENT_FAILED"  # payment failed
+    CANCELLED = "CANCELLED"  # order is cancelled by the system
+    EXPIRED = "EXPIRED"  # order is expired
 
 
 class EVMTransactionStatus(PythonEnum):
     PENDING = "PENDING"  # transaction pending
-    SUCCESS = "SUCCESS"  # transaction successful
+    CONFIRMED = "CONFIRMED"  # transaction successful
     FAILED = "FAILED"  # transaction failed
 
 
@@ -124,7 +125,7 @@ class Order(Base):
         index = True,
     )
     status: Mapped[OrderStatus] = mapped_column(
-        "status", Enum(OrderStatus), nullable=False, default=OrderStatus.INIT
+        "status", Enum(OrderStatus), nullable=False, default=OrderStatus.CREATED
     )
     amount: Mapped[int] = mapped_column("amount", DECIMAL(38, 0), nullable=False)
 

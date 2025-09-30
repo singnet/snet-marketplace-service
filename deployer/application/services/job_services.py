@@ -125,7 +125,7 @@ class JobService:
 
                     order = OrderRepository.get_order(session, new_transaction.order_id)
                     OrderRepository.update_order_status(
-                        session, new_transaction.order_id, OrderStatus.SUCCESS
+                        session, new_transaction.order_id, OrderStatus.PAID
                     )
 
                     daemon = DaemonRepository.get_daemon(session, order.daemon_id)
@@ -214,7 +214,7 @@ class JobService:
                                 and last_claiming_period.status == ClaimingPeriodStatus.ACTIVE
                             ):
                                 ClaimingPeriodRepository.update_claiming_period_status(
-                                    session, last_claiming_period.id, ClaimingPeriodStatus.FAILED
+                                    session, last_claiming_period.id, ClaimingPeriodStatus.PAYMENT_FAILED
                                 )
                     elif daemon_status == DeploymentStatus.UP or DeploymentStatus.DELETING:
                         DaemonRepository.update_daemon_status(session, daemon_id, DeploymentStatus.DOWN)
@@ -231,7 +231,7 @@ class JobService:
                                 and last_claiming_period.status == ClaimingPeriodStatus.ACTIVE
                             ):
                                 ClaimingPeriodRepository.update_claiming_period_status(
-                                    session, last_claiming_period.id, ClaimingPeriodStatus.FAILED
+                                    session, last_claiming_period.id, ClaimingPeriodStatus.PAYMENT_FAILED
                                 )
                 elif haas_daemon_status == HaaSDaemonStatus.UP:
                     if (
@@ -274,7 +274,7 @@ class JobService:
                 NewEVMTransactionDomain(
                     hash=tx_hash,
                     order_id=order_id,
-                    status=EVMTransactionStatus.SUCCESS,
+                    status=EVMTransactionStatus.CONFIRMED,
                     sender=event["args"]["from"],
                     recipient=event["args"]["to"],
                 )

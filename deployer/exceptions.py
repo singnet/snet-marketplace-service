@@ -66,3 +66,13 @@ class InvalidHaasServiceStatusParameter(BadRequestException):
 class MissingCommitHashParameter(BadRequestException):
     def __init__(self):
         super().__init__(message="Missing commit hash parameter")
+
+
+class InvalidOrderParameter(BadRequestException):
+    def __init__(self):
+        super().__init__(message="Invalid order parameter")
+
+
+class InvalidTypeOfMovementParameter(BadRequestException):
+    def __init__(self):
+        super().__init__(message="Invalid type of movement parameter")

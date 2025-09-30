@@ -82,7 +82,7 @@ class OrderRepository:
 
         subquery = (
             select(Order.daemon_id, func.max(Order.updated_at).label("max_updated_at"))
-            .where(Order.daemon_id.in_(daemon_ids), Order.status == OrderStatus.SUCCESS)
+            .where(Order.daemon_id.in_(daemon_ids), Order.status == OrderStatus.PAID)
             .group_by(Order.daemon_id)
             .subquery()
         )
@@ -126,7 +126,7 @@ class OrderRepository:
                 Order.status == OrderStatus.PROCESSING,
                 Order.updated_at < current_time - timedelta(minutes=TRANSACTION_TTL_IN_MINUTES),
             )
-            .values(status=OrderStatus.FAILED)
+            .values(status=OrderStatus.PAYMENT_FAILED)
         )
 
         session.execute(query)
