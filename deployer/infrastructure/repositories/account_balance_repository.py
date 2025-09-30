@@ -44,3 +44,18 @@ class AccountBalanceRepository:
             )
 
             session.add(account_balance_db)
+
+    @staticmethod
+    def increase_account_balance(session: Session, account_id: str, amount: int) -> None:
+        query = update(AccountBalance).where(AccountBalance.account_id == account_id).values(balance_in_cogs = AccountBalance.balance_in_cogs + amount)
+
+        session.execute(query)
+
+    @staticmethod
+    def decrease_account_balance(session: Session, account_id: str, amount: int) -> None:
+        query = update(AccountBalance).where(AccountBalance.account_id == account_id).values(
+            balance_in_cogs = AccountBalance.balance_in_cogs - amount)
+
+        session.execute(query)
+
+

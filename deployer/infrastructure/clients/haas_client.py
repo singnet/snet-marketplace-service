@@ -134,5 +134,5 @@ class HaaSClient:
         except Exception as e:
             raise HaaSClientError(str(e))
 
-    def get_call_events(self, limit: int, page: int, order: str, period: str) -> dict:
+    def get_call_events(self, limit: int, page: int, order: str, period: str) -> Tuple[list, int]:
         pass

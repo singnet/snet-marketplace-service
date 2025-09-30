@@ -247,77 +247,7 @@ class JobService:
                             ):
                                 self._deployer_client.stop_daemon(daemon_id)
 
-    @staticmethod
-    def _get_transactions_from_blockchain(
-        tx_metadata: TransactionsMetadataDomain,
-    ) -> Tuple[List[NewEVMTransactionDomain], int]:
-        blockchain_util = BlockChainUtil("HTTP_PROVIDER", NETWORKS[NETWORK_ID]["http_provider"])
-        w3 = blockchain_util.web3_object
-        current_block = blockchain_util.get_current_block_no()
-        contract = JobService._get_token_contract(blockchain_util)
 
-        from_block = tx_metadata.last_block_no + 1
-        to_block = min(
-            current_block - tx_metadata.block_adjustment, from_block + tx_metadata.fetch_limit
-        )
-
-        transaction_filter = contract.events.Transfer.createFilter(
-            fromBlock=from_block, toBlock=to_block, argument_filters={"to": tx_metadata.recipient}
-        )
-
-        events = transaction_filter.get_all_entries()
-        result = []
-        for event in events:
-            tx_hash = event["transactionHash"].hex()
-            order_id = JobService._get_order_id_from_transaction(tx_hash, w3)
-            result.append(
-                NewEVMTransactionDomain(
-                    hash=tx_hash,
-                    order_id=order_id,
-                    status=EVMTransactionStatus.CONFIRMED,
-                    sender=event["args"]["from"],
-                    recipient=event["args"]["to"],
-                )
-            )
-
-        return result, to_block
-
-    @staticmethod
-    def _get_token_contract(bc_util: BlockChainUtil):
-        base_path = os.path.abspath(
-            os.path.join(CONTRACT_BASE_PATH, "node_modules", "singularitynet-token-contracts")
-        )
-
-        abi_path = base_path + "/{}/{}".format("abi", TOKEN_JSON_FILE_NAME)
-        contract_abi = bc_util.load_contract(abi_path)
-
-        contract_network_path = base_path + "/{}/{}".format("networks", TOKEN_JSON_FILE_NAME)
-        contract_network = bc_util.load_contract(contract_network_path)
-        contract_address = contract_network[str(NETWORK_ID)]["address"]
-
-        contract_instance = bc_util.contract_instance(
-            contract_abi=contract_abi, address=contract_address
-        )
-
-        return contract_instance
-
-    @staticmethod
-    def _get_order_id_from_transaction(tx_hash: HexStr, w3: Web3) -> str:
-        try:
-            transaction = w3.eth.get_transaction(tx_hash)
-            input_data = transaction["input"]
-            input_data_hex = input_data.hex()
-            extra_data_hex = input_data_hex[
-                136:
-            ]  # 8 function signature + 128 transfer tx standard parameters = 136
-            if len(extra_data_hex) == 0:
-                return ""
-            extra_data_bytes = bytes.fromhex(extra_data_hex)
-            order_id = extra_data_bytes.decode("utf-8").rstrip("\x00")
-            return order_id
-        except Exception as e:
-            logger.exception(f"Failed to get order id from transaction {tx_hash}: {e}")
-            raise e
 
     def _get_service_class(self, service_api_source: str) -> str:
         tar_bytes = self._storage_provider.get(service_api_source, to_decode=False)

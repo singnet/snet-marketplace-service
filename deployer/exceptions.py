@@ -76,3 +76,13 @@ class InvalidOrderParameter(BadRequestException):
 class InvalidTypeOfMovementParameter(BadRequestException):
     def __init__(self):
         super().__init__(message="Invalid type of movement parameter")
+
+
+class OrderNotFoundException(BadRequestException):
+    def __init__(self, order_id: str):
+        super().__init__(message=f"Order with id {order_id} not found")
+
+
+class UnacceptableOrderStatusException(BadRequestException):
+    def __init__(self, status: str):
+        super().__init__(message=f"Order status {status} is not acceptable for this operation")

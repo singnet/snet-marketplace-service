@@ -1,3 +1,4 @@
+from datetime import timedelta
 from enum import Enum
 
 
@@ -22,6 +23,15 @@ class PeriodType(str, Enum):
     MONTH = "month"
     YEAR = "year"
     ALL = "all"
+
+
+PERIOD_TYPE_TIMEDELTA = {
+    PeriodType.HOUR: timedelta(hours=1),
+    PeriodType.DAY: timedelta(days=1),
+    PeriodType.WEEK: timedelta(days=7),
+    PeriodType.MONTH: timedelta(days=30),
+    PeriodType.YEAR: timedelta(days=365),
+}
 
 
 class SortOrder(str, Enum):
