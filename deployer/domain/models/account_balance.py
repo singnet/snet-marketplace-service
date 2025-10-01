@@ -11,5 +11,5 @@ class NewAccountBalanceDomain:
 
 @dataclass
 class AccountBalanceDomain(NewAccountBalanceDomain, BaseDomain):
-    def to_response(self, remove_timestamps: bool = False):
+    def to_response(self, remove_created_updated: bool = True) -> dict:
         return {"balanceInCogs": self.balance_in_cogs}

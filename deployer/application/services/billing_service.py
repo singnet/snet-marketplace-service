@@ -7,11 +7,14 @@ from web3 import Web3
 from common.blockchain_util import BlockChainUtil
 from common.logger import get_logger
 from common.utils import generate_uuid
-from deployer.application.schemas.billing_schemas import CreateOrderRequest, SaveEVMTransactionRequest, \
-    GetBalanceHistoryRequest, GetMetricsRequest
+from deployer.application.schemas.billing_schemas import (
+    CreateOrderRequest,
+    SaveEVMTransactionRequest,
+    GetBalanceHistoryRequest,
+    GetMetricsRequest
+)
 from deployer.config import NETWORKS, NETWORK_ID, CONTRACT_BASE_PATH, TOKEN_JSON_FILE_NAME
 from deployer.constant import TypeOfMovementOfFunds, SortOrder
-from deployer.domain.models.account_balance import NewAccountBalanceDomain
 from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
 from deployer.domain.models.order import NewOrderDomain
 from deployer.domain.models.transactions_metadata import TransactionsMetadataDomain

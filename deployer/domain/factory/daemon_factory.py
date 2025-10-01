@@ -1,5 +1,6 @@
 from typing import Iterable, List
 
+from deployer.domain.factory.hosted_service_factory import HostedServiceFactory
 from deployer.domain.models.daemon import DaemonDomain
 from deployer.infrastructure.models import Daemon
 
@@ -14,12 +15,12 @@ class DaemonFactory:
             service_id=daemon_db_model.service_id,
             status=daemon_db_model.status,
             daemon_config=daemon_db_model.daemon_config,
-            start_at=daemon_db_model.start_at,
-            end_at=daemon_db_model.end_at,
-            service_published=daemon_db_model.service_published,
             daemon_endpoint=daemon_db_model.daemon_endpoint,
             created_at=daemon_db_model.created_at,
             updated_at=daemon_db_model.updated_at,
+            hosted_service=HostedServiceFactory.hosted_service_from_db_model(
+                daemon_db_model.hosted_service
+            ),
         )
 
     @staticmethod

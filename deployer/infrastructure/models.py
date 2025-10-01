@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum as PythonEnum
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy import (
     text,
@@ -83,6 +83,10 @@ class Daemon(Base):
     )
     updated_at: Mapped[datetime] = mapped_column(
         "updated_at", TIMESTAMP(timezone=False), nullable=False, server_default=UpdateTimestamp
+    )
+
+    hosted_service: Mapped[Optional["HostedService"]] = relationship(
+        "HostedService", backref = "daemon", lazy = "select", uselist = False
     )
 
     __table_args__ = (UniqueConstraint(org_id, service_id, name="uq_org_srvc"),)

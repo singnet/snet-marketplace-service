@@ -10,7 +10,7 @@ class BaseDomain:
     created_at: datetime
     updated_at: datetime
 
-    def to_response(self, remove_timestamps: bool = False) -> dict:
+    def to_response(self, remove_created_updated: bool = True) -> dict:
         """
         Returns an entity as a dictionary with camelCase keys including dictionary keys that are entity
         fields. Additionally, converts datetime and Enum fields to strings so that the dictionary can
@@ -18,7 +18,7 @@ class BaseDomain:
         """
         result = asdict(self)
 
-        if remove_timestamps:
+        if remove_created_updated:
             del result["created_at"]
             del result["updated_at"]
 

@@ -64,7 +64,7 @@ class DaemonService:
                 raise DaemonNotFoundException(request.daemon_id)
             orders = OrderRepository.get_daemon_orders(session, request.daemon_id)
 
-        result = daemon.to_response()
+        result = daemon.to_response(with_hosted_service = False)
         result["orders"] = [order.to_response() for order in orders]
 
         return result
@@ -165,10 +165,6 @@ class DaemonService:
             DaemonRepository.update_daemon_status(session, daemon_id, DeploymentStatus.RESTARTING)
 
         return {}
-
-    def get_public_key(self) -> dict:
-        public_key = self._haas_client.get_public_key()
-        return {"publicKey": public_key}
 
     def update_config(self, request: UpdateConfigRequest) -> dict:
         service_endpoint = request.service_endpoint
