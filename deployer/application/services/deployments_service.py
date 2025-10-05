@@ -1,9 +1,14 @@
+import io
+import tarfile
 from typing import List
 
 from common.logger import get_logger
+from common.storage_provider import StorageProvider
 from common.utils import generate_uuid
-from deployer.application.schemas.deployments_schemas import InitiateDeploymentRequest, SearchDeploymentsRequest
+from deployer.application.schemas.deployments_schemas import InitiateDeploymentRequest, SearchDeploymentsRequest, \
+    RegistryEventConsumerRequest
 from deployer.config import DEFAULT_DAEMON_STORAGE_TYPE
+from deployer.constant import AllowedEventNames
 from deployer.domain.models.daemon import NewDaemonDomain
 from deployer.domain.models.hosted_service import NewHostedServiceDomain
 from deployer.exceptions import DaemonAlreadyExistsException
@@ -22,6 +27,7 @@ class DeploymentsService:
     def __init__(self):
         self.session_factory = DefaultSessionFactory
         self._haas_client = HaaSClient()
+        self._storage_provider = StorageProvider()
 
     def initiate_deployment(self, request: InitiateDeploymentRequest, account_id: str) -> dict:
         with session_scope(self.session_factory) as session:
@@ -85,5 +91,83 @@ class DeploymentsService:
         public_key = self._haas_client.get_public_key()
         return {"publicKey": public_key}
 
-    def process_registry_event(self):
-        pass
+    def process_registry_event(self, request: RegistryEventConsumerRequest) -> None:
+        event_name = request.event_name
+        org_id = request.org_id
+        service_id = request.service_id
+        with session_scope(self.session_factory) as session:
+            daemon = DaemonRepository.search_daemon(session, org_id, service_id)
+            if daemon is None:
+                logger.info(f"Service (org_id {org_id}, service_id {service_id}) doesn't use HaaS")
+                return
+            daemon_id = daemon.id
+
+            if event_name == AllowedEventNames.SERVICE_DELETED:
+                if daemon.status == DeploymentStatus.UP:
+                    self._haas_client.delete_daemon(org_id, service_id)
+                    DaemonRepository.update_daemon_status(session, daemon_id, DeploymentStatus.DOWN)
+                if daemon.hosted_service is not None and daemon.hosted_service.status == DeploymentStatus.UP:
+                    self._haas_client.delete_hosted_service(org_id, service_id)
+                    HostedServiceRepository.update_hosted_service_status(session, daemon.hosted_service.id, DeploymentStatus.DOWN)
+                return
+
+            metadata: dict = self._storage_provider.get(request.metadata_uri)
+            try:
+                daemon_group = metadata["groups"][0]
+                group_name = daemon_group["group_name"]
+                service_api_source = metadata["service_api_source"]
+            except KeyError or IndexError as e:
+                logger.exception(
+                    f"Failed to get daemon group, endpoint or service api source from metadata: {metadata}. Exception: {e}",
+                    exc_info = True,
+                )
+                raise Exception(
+                    f"Failed to get daemon group, endpoint or service api source from metadata: {metadata}"
+                )
+
+            service_class = self._get_service_class(service_api_source)
+
+            new_config = daemon.daemon_config
+            new_config["daemon_group"] = group_name
+            new_config["service_class"] = service_class
+
+            DaemonRepository.update_daemon_config(session, daemon_id, new_config)
+
+            if event_name == AllowedEventNames.SERVICE_CREATED:
+                self._haas_client.start_daemon(org_id, service_id, daemon_config = new_config)
+                DaemonRepository.update_daemon_status(session, daemon_id, DeploymentStatus.STARTING)
+                if daemon.hosted_service is not None:
+                    self._haas_client.start_hosted_service(org_id, service_id)
+                    HostedServiceRepository.update_hosted_service_status(session, daemon.hosted_service.id, DeploymentStatus.STARTING)
+            elif event_name == AllowedEventNames.SERVICE_METADATA_MODIFIED:
+                if daemon.status == DeploymentStatus.UP:
+                    self._haas_client.redeploy_daemon(org_id, service_id, daemon_config = new_config)
+
+    def _get_service_class(self, service_api_source: str) -> str:
+        tar_bytes = self._storage_provider.get(service_api_source, to_decode=False)
+        tar_stream = io.BytesIO(tar_bytes)
+
+        try:
+            with tarfile.open(fileobj=tar_stream, mode="r:*") as tar:
+                members = [m for m in tar.getmembers() if m.isfile()]
+
+                if not members:
+                    raise Exception("No files found in tar archive")
+
+                first_member = members[0]
+                file_content = tar.extractfile(first_member)
+
+                if file_content is None:
+                    raise Exception("Failed to extract file from tar archive")
+
+                content_text = file_content.read().decode("utf-8")
+
+                for line in content_text.splitlines():
+                    line = line.strip()
+                    if line.startswith("package ") and line.endswith(";"):
+                        package_line = line
+                        package_name = package_line.replace("package ", "").replace(";", "").strip()
+                        return package_name
+
+        except (tarfile.TarError, IOError, UnicodeDecodeError, Exception) as e:
+            raise Exception(f"Error processing tar file: {e}")

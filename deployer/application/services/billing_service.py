@@ -136,7 +136,7 @@ class BillingService:
             total_count += top_up_events_total_count
 
         if request.type_of_movement is None:
-            balance_events.sort(key=lambda x: x["timestamp"], reverse=request.order == SortOrder.DESC)
+            balance_events.sort(key=lambda x: x["timestamp"], reverse=(request.order == SortOrder.DESC))
 
             if len(balance_events) > request.limit:
                 balance_events = balance_events[:request.limit]

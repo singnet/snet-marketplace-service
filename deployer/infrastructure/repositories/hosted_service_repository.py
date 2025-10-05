@@ -1,7 +1,8 @@
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from deployer.domain.models.hosted_service import NewHostedServiceDomain
-from deployer.infrastructure.models import HostedService
+from deployer.infrastructure.models import HostedService, DeploymentStatus
 
 
 class HostedServiceRepository:
@@ -16,3 +17,9 @@ class HostedServiceRepository:
         )
 
         session.add(hosted_service_db)
+
+    @staticmethod
+    def update_hosted_service_status(session: Session, hosted_service_id: str, status: DeploymentStatus):
+        update_query = update(HostedService).where(HostedService.id == hosted_service_id).values(status=status)
+
+        session.execute(update_query)
