@@ -7,7 +7,11 @@ from common.constant import RequestPayloadType
 from common.validation_handler import validation_handler
 from deployer.application.schemas.queue_schema import QueueEventRequest
 from deployer.constant import PeriodType, SortOrder, TypeOfMovementOfFunds
-from deployer.exceptions import InvalidPeriodParameter, InvalidOrderParameter, InvalidTypeOfMovementParameter
+from deployer.exceptions import (
+    InvalidPeriodParameter,
+    InvalidOrderParameter,
+    InvalidTypeOfMovementParameter,
+)
 
 
 class CreateOrderRequest(BaseModel):
@@ -38,7 +42,7 @@ class GetBalanceHistoryRequest(BaseModel):
     page: int
     order: str
     period: str
-    type_of_movement: Optional[str] = Field(alias="type", default = None)
+    type_of_movement: Optional[str] = Field(alias="type", default=None)
 
     @classmethod
     @validation_handler([RequestPayloadType.QUERY_STRING])
@@ -50,7 +54,7 @@ class GetBalanceHistoryRequest(BaseModel):
     @classmethod
     def validate_period(cls, value: str):
         if value not in PeriodType:
-            raise InvalidPeriodParameter(actual_value = value)
+            raise InvalidPeriodParameter(actual_value=value)
         return value
 
     @field_validator("order")
@@ -82,8 +86,9 @@ class GetMetricsRequest(BaseModel):
     @classmethod
     def validate_period(cls, value: str):
         if value not in PeriodType:
-            raise InvalidPeriodParameter(actual_value = value)
+            raise InvalidPeriodParameter(actual_value=value)
         return value
+
 
 class CallEventConsumerRequest(BaseModel, QueueEventRequest):
     org_id: str = Field(alias="orgId")
@@ -97,4 +102,3 @@ class CallEventConsumerRequest(BaseModel, QueueEventRequest):
     def validate_event(cls, event: dict) -> "CallEventConsumerRequest":
         body = json.loads(event[RequestPayloadType.BODY])
         return cls.model_validate(body)
-

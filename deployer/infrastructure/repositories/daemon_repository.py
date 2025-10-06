@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Optional, List, Union
 
 from sqlalchemy import update, select
@@ -6,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from deployer.domain.factory.daemon_factory import DaemonFactory
 from deployer.domain.models.daemon import NewDaemonDomain, DaemonDomain
-from deployer.infrastructure.models import Daemon, DeploymentStatus, Order
+from deployer.infrastructure.models import Daemon, DeploymentStatus
 
 
 class DaemonRepository:
@@ -19,9 +18,6 @@ class DaemonRepository:
             service_id=daemon.service_id,
             status=daemon.status,
             daemon_config=daemon.daemon_config,
-            start_at=daemon.start_at,
-            end_at=daemon.end_at,
-            service_published=False,
             daemon_endpoint=daemon.daemon_endpoint,
         )
 
@@ -93,7 +89,9 @@ class DaemonRepository:
         return DaemonFactory.daemon_from_db_model(daemon_db)
 
     @staticmethod
-    def get_all_daemon_ids(session: Session, status: Union[DeploymentStatus, List[DeploymentStatus], None] = None) -> List[str]:
+    def get_all_daemon_ids(
+        session: Session, status: Union[DeploymentStatus, List[DeploymentStatus], None] = None
+    ) -> List[str]:
         query = select(Daemon.id)
         if status is not None:
             if isinstance(status, list):

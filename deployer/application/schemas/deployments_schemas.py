@@ -13,7 +13,7 @@ from deployer.exceptions import (
     InvalidServiceAuthParameters,
     MissingServiceEndpointException,
     MissingGithubUrlException,
-    MissingServiceEventParameters
+    MissingServiceEventParameters,
 )
 
 
@@ -52,8 +52,8 @@ class InitiateDeploymentRequest(BaseModel):
 
 
 class SearchDeploymentsRequest(BaseModel):
-    org_id: str = Field(alias = "orgId")
-    service_id: str = Field(alias = "serviceId")
+    org_id: str = Field(alias="orgId")
+    service_id: str = Field(alias="serviceId")
 
     @classmethod
     @validation_handler([RequestPayloadType.QUERY_STRING])
@@ -63,17 +63,17 @@ class SearchDeploymentsRequest(BaseModel):
 
 
 class RegistryEventConsumerRequest(BaseModel, QueueEventRequest):
-    event_name: str = Field(alias = "name")
-    org_id: str = Field(alias = "orgId")
-    service_id: str | None = Field(alias = "serviceId", default = None)
-    metadata_uri: str | None = Field(alias = "metadataURI", default = None)
+    event_name: str = Field(alias="name")
+    org_id: str = Field(alias="orgId")
+    service_id: str | None = Field(alias="serviceId", default=None)
+    metadata_uri: str | None = Field(alias="metadataURI", default=None)
 
     @classmethod
     @validation_handler()
     def validate_event(cls, event: dict) -> "RegistryEventConsumerRequest":
         return cls.model_validate(event)
 
-    @model_validator(mode = "before")
+    @model_validator(mode="before")
     @classmethod
     def convert_data_types(cls, data: dict) -> dict:
         data = cls.convert_data(data)
@@ -85,7 +85,7 @@ class RegistryEventConsumerRequest(BaseModel, QueueEventRequest):
             converted_data[key] = new_value
         return converted_data
 
-    @model_validator(mode = "after")
+    @model_validator(mode="after")
     def validate_service_event(self):
         if self.event_name in AllowedEventNames:
             if not self.service_id or not self.metadata_uri:

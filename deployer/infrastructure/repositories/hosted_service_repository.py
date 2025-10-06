@@ -1,7 +1,10 @@
-from sqlalchemy import update
+from typing import Optional
+
+from sqlalchemy import update, select
 from sqlalchemy.orm import Session
 
-from deployer.domain.models.hosted_service import NewHostedServiceDomain
+from deployer.domain.factory.hosted_service_factory import HostedServiceFactory
+from deployer.domain.models.hosted_service import NewHostedServiceDomain, HostedServiceDomain
 from deployer.infrastructure.models import HostedService, DeploymentStatus
 
 
@@ -19,7 +22,36 @@ class HostedServiceRepository:
         session.add(hosted_service_db)
 
     @staticmethod
-    def update_hosted_service_status(session: Session, hosted_service_id: str, status: DeploymentStatus):
-        update_query = update(HostedService).where(HostedService.id == hosted_service_id).values(status=status)
+    def update_hosted_service_status(
+        session: Session,
+        hosted_service_id: str,
+        status: DeploymentStatus,
+        last_commit_url: str = None,
+    ) -> None:
+        update_values = {
+            "status": status,
+        }
+        if last_commit_url is not None:
+            update_values["last_commit_url"] = last_commit_url
+
+        update_query = (
+            update(HostedService)
+            .where(HostedService.id == hosted_service_id)
+            .values(**update_values)
+        )
 
         session.execute(update_query)
+
+    @staticmethod
+    def get_hosted_service(
+        session: Session, hosted_service_id: str
+    ) -> Optional[HostedServiceDomain]:
+        query = select(HostedService).where(HostedService.id == hosted_service_id)
+
+        result = session.execute(query)
+
+        hosted_service_db = result.scalar_one_or_none()
+        if hosted_service_db is None:
+            return None
+
+        return HostedServiceFactory.hosted_service_from_db_model(hosted_service_db)

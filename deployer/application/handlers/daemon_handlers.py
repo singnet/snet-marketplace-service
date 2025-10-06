@@ -7,7 +7,7 @@ from deployer.application.services.authorization_service import AuthorizationSer
 from deployer.application.schemas.daemon_schemas import (
     DaemonRequest,
     UpdateConfigRequest,
-    SearchDaemonRequest, UpdateDaemonStatusRequest,
+    UpdateDaemonStatusRequest,
 )
 from deployer.application.services.daemon_service import DaemonService
 
@@ -110,4 +110,3 @@ def redeploy_all_daemons(event, context):
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
-

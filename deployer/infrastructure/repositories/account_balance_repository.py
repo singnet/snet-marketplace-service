@@ -24,7 +24,11 @@ class AccountBalanceRepository:
 
     @staticmethod
     def upsert_account_balance(session: Session, account_balance: NewAccountBalanceDomain) -> None:
-        query = select(AccountBalance).where(AccountBalance.account_id == account_balance.account_id).limit(1)
+        query = (
+            select(AccountBalance)
+            .where(AccountBalance.account_id == account_balance.account_id)
+            .limit(1)
+        )
 
         result = session.execute(query)
         account_balance_db = result.scalar_one_or_none()
@@ -40,22 +44,27 @@ class AccountBalanceRepository:
         else:
             account_balance_db = AccountBalance(
                 account_id=account_balance.account_id,
-                balance_in_cogs=account_balance.balance_in_cogs
+                balance_in_cogs=account_balance.balance_in_cogs,
             )
 
             session.add(account_balance_db)
 
     @staticmethod
     def increase_account_balance(session: Session, account_id: str, amount: int) -> None:
-        query = update(AccountBalance).where(AccountBalance.account_id == account_id).values(balance_in_cogs = AccountBalance.balance_in_cogs + amount)
+        query = (
+            update(AccountBalance)
+            .where(AccountBalance.account_id == account_id)
+            .values(balance_in_cogs=AccountBalance.balance_in_cogs + amount)
+        )
 
         session.execute(query)
 
     @staticmethod
     def decrease_account_balance(session: Session, account_id: str, amount: int) -> None:
-        query = update(AccountBalance).where(AccountBalance.account_id == account_id).values(
-            balance_in_cogs = AccountBalance.balance_in_cogs - amount)
+        query = (
+            update(AccountBalance)
+            .where(AccountBalance.account_id == account_id)
+            .values(balance_in_cogs=AccountBalance.balance_in_cogs - amount)
+        )
 
         session.execute(query)
-
-

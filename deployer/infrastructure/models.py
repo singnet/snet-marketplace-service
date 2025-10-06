@@ -53,10 +53,10 @@ class AccountBalance(Base):
     balance_in_cogs: Mapped[int] = mapped_column("balance", DECIMAL(38, 0), nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(
-        "created_at", TIMESTAMP(timezone = False), nullable = False, server_default = CreateTimestamp
+        "created_at", TIMESTAMP(timezone=False), nullable=False, server_default=CreateTimestamp
     )
     updated_at: Mapped[datetime] = mapped_column(
-        "updated_at", TIMESTAMP(timezone = False), nullable = False, server_default = UpdateTimestamp
+        "updated_at", TIMESTAMP(timezone=False), nullable=False, server_default=UpdateTimestamp
     )
 
 
@@ -66,9 +66,9 @@ class Daemon(Base):
     account_id: Mapped[str] = mapped_column(
         "account_id",
         VARCHAR(128),
-        ForeignKey("account_balance.account_id", ondelete = "CASCADE", onupdate = "CASCADE"),
-        nullable = False,
-        index = True,
+        ForeignKey("account_balance.account_id", ondelete="CASCADE", onupdate="CASCADE"),
+        nullable=False,
+        index=True,
     )
     org_id: Mapped[str] = mapped_column("org_id", VARCHAR(256), nullable=False)
     service_id: Mapped[str] = mapped_column("service_id", VARCHAR(256), nullable=False)
@@ -86,7 +86,7 @@ class Daemon(Base):
     )
 
     hosted_service: Mapped[Optional["HostedService"]] = relationship(
-        "HostedService", backref = "daemon", lazy = "select", uselist = False
+        "HostedService", backref="daemon", lazy="select", uselist=False
     )
 
     __table_args__ = (UniqueConstraint(org_id, service_id, name="uq_org_srvc"),)
@@ -94,28 +94,28 @@ class Daemon(Base):
 
 class HostedService(Base):
     __tablename__ = "hosted_service"
-    id: Mapped[str] = mapped_column("id", VARCHAR(128), primary_key = True)
+    id: Mapped[str] = mapped_column("id", VARCHAR(128), primary_key=True)
     daemon_id: Mapped[str] = mapped_column(
         "daemon_id",
         VARCHAR(128),
-        ForeignKey("daemon.id", ondelete = "CASCADE", onupdate = "CASCADE"),
-        nullable = False,
-        index = True,
+        ForeignKey("daemon.id", ondelete="CASCADE", onupdate="CASCADE"),
+        nullable=False,
+        index=True,
     )
     status: Mapped[str] = mapped_column(
-        "status", Enum(DeploymentStatus), nullable = False, default = DeploymentStatus.INIT
+        "status", Enum(DeploymentStatus), nullable=False, default=DeploymentStatus.INIT
     )
-    github_url: Mapped[str] = mapped_column("github_url", VARCHAR(256), nullable = False)
-    last_commit_url: Mapped[str] = mapped_column("last_commit_url", VARCHAR(256), nullable = False)
+    github_url: Mapped[str] = mapped_column("github_url", VARCHAR(256), nullable=False)
+    last_commit_url: Mapped[str] = mapped_column("last_commit_url", VARCHAR(256), nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(
-        "created_at", TIMESTAMP(timezone = False), nullable = False, server_default = CreateTimestamp
+        "created_at", TIMESTAMP(timezone=False), nullable=False, server_default=CreateTimestamp
     )
     updated_at: Mapped[datetime] = mapped_column(
-        "updated_at", TIMESTAMP(timezone = False), nullable = False, server_default = UpdateTimestamp
+        "updated_at", TIMESTAMP(timezone=False), nullable=False, server_default=UpdateTimestamp
     )
 
-    __table_args__ = (UniqueConstraint(daemon_id, name = "uq_daemon"),)
+    __table_args__ = (UniqueConstraint(daemon_id, name="uq_daemon"),)
 
 
 class Order(Base):
@@ -124,9 +124,9 @@ class Order(Base):
     account_id: Mapped[str] = mapped_column(
         "account_id",
         VARCHAR(128),
-        ForeignKey("account_balance.account_id", ondelete = "CASCADE", onupdate = "CASCADE"),
-        nullable = False,
-        index = True,
+        ForeignKey("account_balance.account_id", ondelete="CASCADE", onupdate="CASCADE"),
+        nullable=False,
+        index=True,
     )
     status: Mapped[OrderStatus] = mapped_column(
         "status", Enum(OrderStatus), nullable=False, default=OrderStatus.CREATED

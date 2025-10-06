@@ -11,14 +11,19 @@ from deployer.application.schemas.billing_schemas import (
     CreateOrderRequest,
     SaveEVMTransactionRequest,
     GetBalanceHistoryRequest,
-    GetMetricsRequest, CallEventConsumerRequest
+    GetMetricsRequest,
+    CallEventConsumerRequest,
 )
 from deployer.config import NETWORKS, NETWORK_ID, CONTRACT_BASE_PATH, TOKEN_JSON_FILE_NAME
 from deployer.constant import TypeOfMovementOfFunds, SortOrder
 from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
 from deployer.domain.models.order import NewOrderDomain
 from deployer.domain.models.transactions_metadata import TransactionsMetadataDomain
-from deployer.exceptions import OrderNotFoundException, UnacceptableOrderStatusException, DaemonNotFoundException
+from deployer.exceptions import (
+    OrderNotFoundException,
+    UnacceptableOrderStatusException,
+    DaemonNotFoundException,
+)
 from deployer.infrastructure.clients.haas_client import HaaSClient
 from deployer.infrastructure.db import DefaultSessionFactory, session_scope
 from deployer.infrastructure.models import OrderStatus, EVMTransactionStatus
@@ -39,7 +44,7 @@ class BillingService:
     def create_order(self, request: CreateOrderRequest, account_id: str) -> dict:
         with session_scope(self.session_factory) as session:
             order = OrderRepository.get_order(
-                session=session, account_id=account_id, status = OrderStatus.CREATED
+                session=session, account_id=account_id, status=OrderStatus.CREATED
             )
 
             if order is not None and order.amount == request.amount:
@@ -71,22 +76,26 @@ class BillingService:
             TransactionRepository.upsert_transaction(
                 session,
                 NewEVMTransactionDomain(
-                    hash = request.transaction_hash,
-                    order_id = request.order_id,
-                    status = EVMTransactionStatus.PENDING,
-                    sender = request.sender,
-                    recipient = request.recipient,
+                    hash=request.transaction_hash,
+                    order_id=request.order_id,
+                    status=EVMTransactionStatus.PENDING,
+                    sender=request.sender,
+                    recipient=request.recipient,
                 ),
             )
 
             order = OrderRepository.get_order(session, request.order_id)
 
             if order is None:
-                logger.exception(f"Order with id {request.order_id} for transaction {request.transaction_hash} not found")
+                logger.exception(
+                    f"Order with id {request.order_id} for transaction {request.transaction_hash} not found"
+                )
                 raise OrderNotFoundException(request.order_id)
 
             if order.status not in [OrderStatus.CREATED, OrderStatus.PAYMENT_FAILED]:
-                logger.exception(f"Order with id {request.order_id} must have the status CREATED or PAYMENT_FAILED for correct saving of transaction {request.transaction_hash}")
+                logger.exception(
+                    f"Order with id {request.order_id} must have the status CREATED or PAYMENT_FAILED for correct saving of transaction {request.transaction_hash}"
+                )
                 raise UnacceptableOrderStatusException(order.status.value)
 
             OrderRepository.update_order_status(
@@ -112,40 +121,55 @@ class BillingService:
         total_count = 0
 
         if request.type_of_movement != TypeOfMovementOfFunds.INCOME:
-            call_events, call_events_total_count = self._haas_client.get_call_events(request.limit, request.page, request.order, request.period)
+            call_events, call_events_total_count = self._haas_client.get_call_events(
+                request.limit, request.page, request.order, request.period
+            )
             for call_event in call_events:
-                balance_events.append({
-                    "type": TypeOfMovementOfFunds.EXPENSE.value,
-                    "eventName": "Service Call",
-                    "amount": call_event["amount"],
-                    "timestamp": call_event["timestamp"],
-                })
+                balance_events.append(
+                    {
+                        "type": TypeOfMovementOfFunds.EXPENSE.value,
+                        "eventName": "Service Call",
+                        "amount": call_event["amount"],
+                        "timestamp": call_event["timestamp"],
+                    }
+                )
             total_count += call_events_total_count
 
         if request.type_of_movement != TypeOfMovementOfFunds.EXPENSE:
             with session_scope(self.session_factory) as session:
-                top_up_events = OrderRepository.get_orders(session, account_id, request.limit, request.page, request.order, request.period, OrderStatus.PAID)
-                top_up_events_total_count = OrderRepository.get_orders_total_count(session, account_id, request.period, OrderStatus.PAID)
+                top_up_events = OrderRepository.get_orders(
+                    session,
+                    account_id,
+                    request.limit,
+                    request.page,
+                    request.order,
+                    request.period,
+                    OrderStatus.PAID,
+                )
+                top_up_events_total_count = OrderRepository.get_orders_total_count(
+                    session, account_id, request.period, OrderStatus.PAID
+                )
             for top_up_event in top_up_events:
-                balance_events.append({
-                    "type": TypeOfMovementOfFunds.INCOME.value,
-                    "eventName": "Top Up",
-                    "amount": top_up_event.amount,
-                    "timestamp": top_up_event.updated_at.isoformat(),
-                    "evmTransactions": top_up_event.to_response()["evmTransactions"],
-                })
+                balance_events.append(
+                    {
+                        "type": TypeOfMovementOfFunds.INCOME.value,
+                        "eventName": "Top Up",
+                        "amount": top_up_event.amount,
+                        "timestamp": top_up_event.updated_at.isoformat(),
+                        "evmTransactions": top_up_event.to_response()["evmTransactions"],
+                    }
+                )
             total_count += top_up_events_total_count
 
         if request.type_of_movement is None:
-            balance_events.sort(key=lambda x: x["timestamp"], reverse=(request.order == SortOrder.DESC))
+            balance_events.sort(
+                key=lambda x: x["timestamp"], reverse=(request.order == SortOrder.DESC)
+            )
 
             if len(balance_events) > request.limit:
-                balance_events = balance_events[:request.limit]
+                balance_events = balance_events[: request.limit]
 
-        return {
-            "events": balance_events,
-            "totalCount": total_count
-        }
+        return {"events": balance_events, "totalCount": total_count}
 
     def get_metrics(self, request: GetMetricsRequest) -> dict:
         # TODO: implement aggregation
@@ -175,15 +199,24 @@ class BillingService:
                     order = OrderRepository.get_order(session, new_transaction.order_id)
 
                     if order.amount != amount:
-                        logger.exception(f"Transaction {new_transaction.hash} has different amount {amount} than order {order.amount}")
+                        logger.exception(
+                            f"Transaction {new_transaction.hash} has different amount {amount} than order {order.amount}"
+                        )
                         raise Exception()
 
                     if order.status != OrderStatus.PROCESSING:
-                        logger.exception(f"Order with id {new_transaction.order_id} must have the status PROCESSING for correct processing of transaction {new_transaction.hash}")
+                        logger.exception(
+                            f"Order with id {new_transaction.order_id} must have the status PROCESSING for correct processing of transaction {new_transaction.hash}"
+                        )
                         raise Exception()
 
                     OrderRepository.update_order_status(session, order.id, OrderStatus.PAID)
-                    AccountBalanceRepository.increase_account_balance(session, order.account_id, order.amount)
+                    AccountBalanceRepository.increase_account_balance(
+                        session, order.account_id, order.amount
+                    )
+                TransactionRepository.update_transactions_metadata(
+                    session, transactions_metadata.id, last_block
+                )
 
             TransactionRepository.fail_old_transactions(session)
             OrderRepository.fail_old_orders(session)
@@ -196,11 +229,13 @@ class BillingService:
             if daemon is None:
                 raise DaemonNotFoundException(request.service_id)
 
-            AccountBalanceRepository.decrease_account_balance(session, daemon.account_id, request.amount)
+            AccountBalanceRepository.decrease_account_balance(
+                session, daemon.account_id, request.amount
+            )
 
     @staticmethod
     def _get_transactions_from_blockchain(
-            tx_metadata: TransactionsMetadataDomain,
+        tx_metadata: TransactionsMetadataDomain,
     ) -> Tuple[List[Tuple[NewEVMTransactionDomain, int]], int]:
         blockchain_util = BlockChainUtil("HTTP_PROVIDER", NETWORKS[NETWORK_ID]["http_provider"])
         w3 = blockchain_util.web3_object
@@ -213,7 +248,7 @@ class BillingService:
         )
 
         transaction_filter = contract.events.Transfer.createFilter(
-            fromBlock = from_block, toBlock = to_block, argument_filters = {"to": tx_metadata.recipient}
+            fromBlock=from_block, toBlock=to_block, argument_filters={"to": tx_metadata.recipient}
         )
 
         events = transaction_filter.get_all_entries()
@@ -224,13 +259,13 @@ class BillingService:
             result.append(
                 (
                     NewEVMTransactionDomain(
-                        hash = tx_hash,
-                        order_id = order_id,
-                        status = EVMTransactionStatus.CONFIRMED,
-                        sender = event["args"]["from"],
-                        recipient = event["args"]["to"],
+                        hash=tx_hash,
+                        order_id=order_id,
+                        status=EVMTransactionStatus.CONFIRMED,
+                        sender=event["args"]["from"],
+                        recipient=event["args"]["to"],
                     ),
-                    event["args"]["value"]
+                    event["args"]["value"],
                 )
             )
 
@@ -250,7 +285,7 @@ class BillingService:
         contract_address = contract_network[str(NETWORK_ID)]["address"]
 
         contract_instance = bc_util.contract_instance(
-            contract_abi = contract_abi, address = contract_address
+            contract_abi=contract_abi, address=contract_address
         )
 
         return contract_instance
@@ -262,8 +297,8 @@ class BillingService:
             input_data = transaction["input"]
             input_data_hex = input_data.hex()
             extra_data_hex = input_data_hex[
-                             136:
-                             ]  # 8 function signature + 128 transfer tx standard parameters = 136
+                136:
+            ]  # 8 function signature + 128 transfer tx standard parameters = 136
             if len(extra_data_hex) == 0:
                 return ""
             extra_data_bytes = bytes.fromhex(extra_data_hex)

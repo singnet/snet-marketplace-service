@@ -1,6 +1,3 @@
-
-
-
 class RegistryClient:
     def __init__(self):
         pass

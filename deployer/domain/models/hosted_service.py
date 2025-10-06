@@ -16,7 +16,7 @@ class NewHostedServiceDomain:
 @dataclass
 class HostedServiceDomain(NewHostedServiceDomain, BaseDomain):
     def to_response(self, remove_created_updated: bool = True) -> dict:
-        result = super().to_response()
+        result = super().to_response(remove_created_updated)
         del result["daemonId"]
         return result
 
@@ -24,5 +24,5 @@ class HostedServiceDomain(NewHostedServiceDomain, BaseDomain):
         return {
             "id": self.id,
             "status": self.status.value,
-            "updatedAt": self.updated_at.isoformat()
+            "updatedAt": self.updated_at.isoformat(),
         }

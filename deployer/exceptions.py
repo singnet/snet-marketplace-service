@@ -50,7 +50,9 @@ class TopUpNotAvailableException(BadRequestException):
 
 class InvalidPeriodParameter(BadRequestException):
     def __init__(self, actual_value: str):
-        super().__init__(message=f"Invalid period parameter! Actual value: {actual_value}. Expected one of {", ".join(PeriodType)}.")
+        super().__init__(
+            message=f"Invalid period parameter! Actual value: {actual_value}. Expected one of {', '.join(PeriodType)}."
+        )
 
 
 class MissingGithubUrlException(BadRequestException):
@@ -90,4 +92,11 @@ class UnacceptableOrderStatusException(BadRequestException):
 
 class DaemonAlreadyExistsException(BadRequestException):
     def __init__(self, org_id: str, service_id: str):
-        super().__init__(message=f"Daemon for service with org_id={org_id} and service_id={service_id} already exists!")
+        super().__init__(
+            message=f"Daemon for service with org_id={org_id} and service_id={service_id} already exists!"
+        )
+
+
+class HostedServiceNotFoundException(BadRequestException):
+    def __init__(self, hosted_service_id: str):
+        super().__init__(message=f"Hosted service with id {hosted_service_id} not found!")

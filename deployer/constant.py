@@ -46,7 +46,7 @@ class TypeOfMovementOfFunds(str, Enum):
 
 class HaaSServiceStatus(str, Enum):
     # statuses from HaaS
-    ACTIVE = "active"
-    INACTIVE = "inactive"
-    RESTARTING = "restarting"
-    # TODO: Add more statuses
+    STARTING = "starting"
+    UP = "up"
+    ERROR = "error"
+    # TODO: add more statuses if needed

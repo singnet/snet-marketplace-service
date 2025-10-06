@@ -145,3 +145,6 @@ class HaaSClient:
 
     def get_daemon_logs(self, org_id: str, service_id: str) -> list:
         pass
+
+    def get_hosted_service_logs(self, org_id: str, service_id: str) -> list:
+        pass

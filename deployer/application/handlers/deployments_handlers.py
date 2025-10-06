@@ -6,7 +6,7 @@ from common.utils import generate_lambda_response
 from deployer.application.schemas.deployments_schemas import (
     InitiateDeploymentRequest,
     SearchDeploymentsRequest,
-    RegistryEventConsumerRequest
+    RegistryEventConsumerRequest,
 )
 from deployer.application.services.authorization_service import AuthorizationService
 from deployer.application.services.deployments_service import DeploymentsService

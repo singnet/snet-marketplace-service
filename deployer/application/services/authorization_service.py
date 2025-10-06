@@ -32,9 +32,7 @@ class AuthorizationService:
 
     def check_service_access(self, request_context: RequestContext, org_id: str):
         orgs = self._registry_client.get_all_orgs(
-            request_context.username,
-            request_context.account_id,
-            request_context.origin
+            request_context.username, request_context.account_id, request_context.origin
         )
 
         is_accessed = False

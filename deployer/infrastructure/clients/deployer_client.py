@@ -6,9 +6,6 @@ from common.logger import get_logger
 from deployer.config import (
     REGION_NAME,
     START_DAEMON_ARN,
-    DELETE_DAEMON_ARN,
-    UPDATE_DAEMON_STATUS_ARN,
-    REDEPLOY_DAEMON_ARN,
 )
 
 

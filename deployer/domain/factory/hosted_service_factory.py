@@ -14,11 +14,13 @@ class HostedServiceFactory:
             github_url=hosted_service_db_model.github_url,
             last_commit_url=hosted_service_db_model.last_commit_url,
             created_at=hosted_service_db_model.created_at,
-            updated_at=hosted_service_db_model.updated_at
+            updated_at=hosted_service_db_model.updated_at,
         )
 
     @staticmethod
-    def hosted_services_from_db_model(hosted_services_db_model: Iterable[HostedService]) -> List[HostedServiceDomain]:
+    def hosted_services_from_db_model(
+        hosted_services_db_model: Iterable[HostedService],
+    ) -> List[HostedServiceDomain]:
         return [
             HostedServiceFactory.hosted_service_from_db_model(hosted_service_db_model)
             for hosted_service_db_model in hosted_services_db_model

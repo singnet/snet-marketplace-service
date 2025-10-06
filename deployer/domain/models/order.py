@@ -19,7 +19,7 @@ class OrderDomain(NewOrderDomain, BaseDomain):
     evm_transactions: Optional[List[EVMTransactionDomain]] = None
 
     def to_response(self, remove_created_updated: bool = True) -> dict:
-        result = super().to_response()
+        result = super().to_response(remove_created_updated)
         result["evmTransactions"] = [
             transaction.to_response() for transaction in self.evm_transactions
         ]

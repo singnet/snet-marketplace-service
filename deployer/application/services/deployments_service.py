@@ -9,7 +9,7 @@ from common.utils import generate_uuid
 from deployer.application.schemas.deployments_schemas import (
     InitiateDeploymentRequest,
     SearchDeploymentsRequest,
-    RegistryEventConsumerRequest
+    RegistryEventConsumerRequest,
 )
 from deployer.config import DEFAULT_DAEMON_STORAGE_TYPE, REGION_NAME, DEPLOY_SERVICE_TOPIC_ARN
 from deployer.constant import AllowedEventNames
@@ -65,7 +65,7 @@ class DeploymentsService:
                     status=DeploymentStatus.INIT,
                     daemon_config=daemon_config,
                     daemon_endpoint=get_daemon_endpoint(request.org_id, request.service_id),
-                )
+                ),
             )
 
             if not request.only_daemon:
@@ -77,7 +77,7 @@ class DeploymentsService:
                         status=DeploymentStatus.INIT,
                         github_url=request.github_url,
                         last_commit_url="",
-                    )
+                    ),
                 )
 
         return {}
@@ -126,7 +126,7 @@ class DeploymentsService:
             except KeyError or IndexError as e:
                 logger.exception(
                     f"Failed to get daemon group, endpoint or service api source from metadata: {metadata}. Exception: {e}",
-                    exc_info = True,
+                    exc_info=True,
                 )
                 raise Exception()
 
@@ -140,10 +140,14 @@ class DeploymentsService:
 
             self._deployer_client.deploy_daemon(daemon_id, asynchronous=True)
 
-            if event_name == AllowedEventNames.SERVICE_CREATED and daemon.hosted_service is not None:
+            if (
+                event_name == AllowedEventNames.SERVICE_CREATED
+                and daemon.hosted_service is not None
+            ):
                 self._haas_client.deploy_hosted_service(org_id, service_id)
-                HostedServiceRepository.update_hosted_service_status(session, daemon.hosted_service.id,
-                                                                     DeploymentStatus.STARTING)
+                HostedServiceRepository.update_hosted_service_status(
+                    session, daemon.hosted_service.id, DeploymentStatus.STARTING
+                )
 
     def _get_service_class(self, service_api_source: str) -> str:
         tar_bytes = self._storage_provider.get(service_api_source, to_decode=False)
@@ -178,20 +182,25 @@ class DeploymentsService:
         if daemon.status == DeploymentStatus.UP:
             self._haas_client.delete_daemon(daemon.org_id, daemon.service_id)
             DaemonRepository.update_daemon_status(session, daemon.id, DeploymentStatus.DOWN)
-        if daemon.hosted_service is not None and daemon.hosted_service.status == DeploymentStatus.UP:
+        if (
+            daemon.hosted_service is not None
+            and daemon.hosted_service.status == DeploymentStatus.UP
+        ):
             self._haas_client.delete_hosted_service(daemon.org_id, daemon.service_id)
-            HostedServiceRepository.update_hosted_service_status(session, daemon.hosted_service.id,
-                                                                 DeploymentStatus.DOWN)
+            HostedServiceRepository.update_hosted_service_status(
+                session, daemon.hosted_service.id, DeploymentStatus.DOWN
+            )
 
-    def _push_deploy_service_event(self, org_id: str, service_id: str, hosted_service: HostedServiceDomain) -> None:
+    def _push_deploy_service_event(
+        self, org_id: str, service_id: str, hosted_service: HostedServiceDomain
+    ) -> None:
         # TODO: rewrite payload if needed
         self._boto_utils.publish_data_to_sns_topic(
             topic_arn=DEPLOY_SERVICE_TOPIC_ARN,
-            payload = {
+            payload={
                 "org_id": org_id,
                 "service_id": service_id,
                 "github_url": hosted_service.github_url,
-                "last_commit_url": hosted_service.last_commit_url
-            }
+                "last_commit_url": hosted_service.last_commit_url,
+            },
         )
-
