@@ -88,7 +88,6 @@ def call_event_consumer(event, context):
     events = CallEventConsumerRequest.get_events_from_queue(event)
 
     for e in events:
-        # TODO: we probably have to unpack the event
         request = CallEventConsumerRequest.validate_event(e)
         BillingService().process_call_event(request)
 

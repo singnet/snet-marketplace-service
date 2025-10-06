@@ -33,7 +33,7 @@ class HaaSClient:
     def __init__(self):
         self.auth = HTTPBasicAuth(HAAS_LOGIN, HAAS_PASSWORD)
 
-    def start_daemon(
+    def deploy_daemon(
         self,
         org_id: str,
         service_id: str,
@@ -137,8 +137,11 @@ class HaaSClient:
     def get_call_events(self, limit: int, page: int, order: str, period: str) -> Tuple[list, int]:
         pass
 
-    def start_hosted_service(self, org_id: str, service_id: str):
+    def deploy_hosted_service(self, org_id: str, service_id: str):
         pass
 
     def delete_hosted_service(self, org_id: str, service_id: str):
+        pass
+
+    def get_daemon_logs(self, org_id: str, service_id: str) -> list:
         pass

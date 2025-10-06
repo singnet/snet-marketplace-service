@@ -2,16 +2,21 @@ import io
 import tarfile
 from typing import List
 
+from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from common.storage_provider import StorageProvider
 from common.utils import generate_uuid
-from deployer.application.schemas.deployments_schemas import InitiateDeploymentRequest, SearchDeploymentsRequest, \
+from deployer.application.schemas.deployments_schemas import (
+    InitiateDeploymentRequest,
+    SearchDeploymentsRequest,
     RegistryEventConsumerRequest
-from deployer.config import DEFAULT_DAEMON_STORAGE_TYPE
+)
+from deployer.config import DEFAULT_DAEMON_STORAGE_TYPE, REGION_NAME, DEPLOY_SERVICE_TOPIC_ARN
 from deployer.constant import AllowedEventNames
-from deployer.domain.models.daemon import NewDaemonDomain
-from deployer.domain.models.hosted_service import NewHostedServiceDomain
+from deployer.domain.models.daemon import NewDaemonDomain, DaemonDomain
+from deployer.domain.models.hosted_service import NewHostedServiceDomain, HostedServiceDomain
 from deployer.exceptions import DaemonAlreadyExistsException
+from deployer.infrastructure.clients.deployer_client import DeployerClient
 from deployer.infrastructure.clients.haas_client import HaaSClient
 from deployer.infrastructure.db import DefaultSessionFactory, session_scope
 from deployer.infrastructure.models import DeploymentStatus
@@ -28,6 +33,8 @@ class DeploymentsService:
         self.session_factory = DefaultSessionFactory
         self._haas_client = HaaSClient()
         self._storage_provider = StorageProvider()
+        self._deployer_client = DeployerClient()
+        self._boto_utils = BotoUtils(REGION_NAME)
 
     def initiate_deployment(self, request: InitiateDeploymentRequest, account_id: str) -> dict:
         with session_scope(self.session_factory) as session:
@@ -95,6 +102,11 @@ class DeploymentsService:
         event_name = request.event_name
         org_id = request.org_id
         service_id = request.service_id
+
+        if event_name not in AllowedEventNames:
+            logger.info(f"Event {event_name} doesn't need to be processed")
+            return
+
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.search_daemon(session, org_id, service_id)
             if daemon is None:
@@ -103,12 +115,7 @@ class DeploymentsService:
             daemon_id = daemon.id
 
             if event_name == AllowedEventNames.SERVICE_DELETED:
-                if daemon.status == DeploymentStatus.UP:
-                    self._haas_client.delete_daemon(org_id, service_id)
-                    DaemonRepository.update_daemon_status(session, daemon_id, DeploymentStatus.DOWN)
-                if daemon.hosted_service is not None and daemon.hosted_service.status == DeploymentStatus.UP:
-                    self._haas_client.delete_hosted_service(org_id, service_id)
-                    HostedServiceRepository.update_hosted_service_status(session, daemon.hosted_service.id, DeploymentStatus.DOWN)
+                self._delete_deployments(daemon, session)
                 return
 
             metadata: dict = self._storage_provider.get(request.metadata_uri)
@@ -121,9 +128,7 @@ class DeploymentsService:
                     f"Failed to get daemon group, endpoint or service api source from metadata: {metadata}. Exception: {e}",
                     exc_info = True,
                 )
-                raise Exception(
-                    f"Failed to get daemon group, endpoint or service api source from metadata: {metadata}"
-                )
+                raise Exception()
 
             service_class = self._get_service_class(service_api_source)
 
@@ -133,15 +138,12 @@ class DeploymentsService:
 
             DaemonRepository.update_daemon_config(session, daemon_id, new_config)
 
-            if event_name == AllowedEventNames.SERVICE_CREATED:
-                self._haas_client.start_daemon(org_id, service_id, daemon_config = new_config)
-                DaemonRepository.update_daemon_status(session, daemon_id, DeploymentStatus.STARTING)
-                if daemon.hosted_service is not None:
-                    self._haas_client.start_hosted_service(org_id, service_id)
-                    HostedServiceRepository.update_hosted_service_status(session, daemon.hosted_service.id, DeploymentStatus.STARTING)
-            elif event_name == AllowedEventNames.SERVICE_METADATA_MODIFIED:
-                if daemon.status == DeploymentStatus.UP:
-                    self._haas_client.redeploy_daemon(org_id, service_id, daemon_config = new_config)
+            self._deployer_client.deploy_daemon(daemon_id, asynchronous=True)
+
+            if event_name == AllowedEventNames.SERVICE_CREATED and daemon.hosted_service is not None:
+                self._haas_client.deploy_hosted_service(org_id, service_id)
+                HostedServiceRepository.update_hosted_service_status(session, daemon.hosted_service.id,
+                                                                     DeploymentStatus.STARTING)
 
     def _get_service_class(self, service_api_source: str) -> str:
         tar_bytes = self._storage_provider.get(service_api_source, to_decode=False)
@@ -171,3 +173,25 @@ class DeploymentsService:
 
         except (tarfile.TarError, IOError, UnicodeDecodeError, Exception) as e:
             raise Exception(f"Error processing tar file: {e}")
+
+    def _delete_deployments(self, daemon: DaemonDomain, session) -> None:
+        if daemon.status == DeploymentStatus.UP:
+            self._haas_client.delete_daemon(daemon.org_id, daemon.service_id)
+            DaemonRepository.update_daemon_status(session, daemon.id, DeploymentStatus.DOWN)
+        if daemon.hosted_service is not None and daemon.hosted_service.status == DeploymentStatus.UP:
+            self._haas_client.delete_hosted_service(daemon.org_id, daemon.service_id)
+            HostedServiceRepository.update_hosted_service_status(session, daemon.hosted_service.id,
+                                                                 DeploymentStatus.DOWN)
+
+    def _push_deploy_service_event(self, org_id: str, service_id: str, hosted_service: HostedServiceDomain) -> None:
+        # TODO: rewrite payload if needed
+        self._boto_utils.publish_data_to_sns_topic(
+            topic_arn=DEPLOY_SERVICE_TOPIC_ARN,
+            payload = {
+                "org_id": org_id,
+                "service_id": service_id,
+                "github_url": hosted_service.github_url,
+                "last_commit_url": hosted_service.last_commit_url
+            }
+        )
+

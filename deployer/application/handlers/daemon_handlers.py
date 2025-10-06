@@ -60,22 +60,21 @@ def update_config(event, context):
     )
 
 
-def update_daemon_status(event, context):
+def check_daemon_status(event, context):
     events = UpdateDaemonStatusRequest.get_events_from_queue(event)
 
     for e in events:
-        # TODO: we probably have to unpack the event
         request = UpdateDaemonStatusRequest.validate_event(e)
-        DaemonService().update_daemon_status(request)
+        DaemonService().check_daemon_status(request)
 
     return {}
 
 
 @exception_handler(logger=logger)
-def start_daemon(event, context):
+def deploy_daemon(event, context):
     request = DaemonRequest.validate_event(event)
 
-    response = DaemonService().start_daemon(request)
+    response = DaemonService().deploy_daemon(request)
 
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
@@ -83,10 +82,10 @@ def start_daemon(event, context):
 
 
 @exception_handler(logger=logger)
-def stop_daemon(event, context):
+def delete_daemon(event, context):
     request = DaemonRequest.validate_event(event)
 
-    response = DaemonService().stop_daemon(request)
+    response = DaemonService().delete_daemon(request)
 
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
@@ -106,18 +105,9 @@ def redeploy_daemon(event, context):
 
 @exception_handler(logger=logger)
 def redeploy_all_daemons(event, context):
-    request = DaemonRequest.validate_event(event)
-
-    response = DaemonService().redeploy_all_daemons(request)
+    response = DaemonService().redeploy_all_daemons()
 
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
-
-
-@exception_handler(logger=logger)
-def check_daemons(event, context):
-    response = DaemonService().check_daemons()
-
-    return {}
 

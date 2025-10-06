@@ -89,6 +89,8 @@ class CallEventConsumerRequest(BaseModel, QueueEventRequest):
     org_id: str = Field(alias="orgId")
     service_id: str | None = Field(alias="serviceId")
     duration: int
+    amount: int
+    timestamp: str
 
     @classmethod
     @validation_handler([RequestPayloadType.BODY])

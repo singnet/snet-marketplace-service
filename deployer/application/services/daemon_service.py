@@ -1,24 +1,26 @@
-from datetime import UTC, datetime, timedelta
-from typing import List
+from datetime import datetime, UTC, timedelta
 
+from common.boto_utils import BotoUtils
+from common.logger import get_logger
 from deployer.application.schemas.daemon_schemas import (
     DaemonRequest,
     UpdateConfigRequest,
-    SearchDaemonRequest,
+    UpdateDaemonStatusRequest,
 )
-from deployer.config import BREAK_PERIOD_IN_HOURS
+from deployer.config import MAX_SERVICE_STARTING_TIME_IN_SECONDS, DAEMON_CHECK_INTERVAL_IN_SECONDS, REGION_NAME, \
+    CHECK_DAEMON_STATUS_TOPIC_ARN
 from deployer.exceptions import (
     DaemonNotFoundException,
-    ClaimingNotAvailableException,
     UpdateConfigNotAvailableException,
 )
 from deployer.infrastructure.clients.deployer_client import DeployerClient
-from deployer.infrastructure.clients.haas_client import HaaSClient
+from deployer.infrastructure.clients.haas_client import HaaSClient, HaaSDaemonStatus
 from deployer.infrastructure.db import DefaultSessionFactory, session_scope
-from deployer.infrastructure.models import DeploymentStatus, ClaimingPeriodStatus
+from deployer.infrastructure.models import DeploymentStatus
 from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
-from deployer.infrastructure.repositories.claiming_period_repository import ClaimingPeriodRepository
-from deployer.infrastructure.repositories.order_repository import OrderRepository
+
+
+logger = get_logger(__name__)
 
 
 class DaemonService:
@@ -26,145 +28,109 @@ class DaemonService:
         self.session_factory = DefaultSessionFactory
         self._deployer_client = DeployerClient()
         self._haas_client = HaaSClient()
-
-    def get_user_daemons(self, account_id: str) -> List[dict]:
-        result = []
-
-        with session_scope(self.session_factory) as session:
-            user_daemons = DaemonRepository.get_user_daemons(session, account_id)
-            daemon_ids = [daemon.id for daemon in user_daemons]
-
-            claiming_periods = ClaimingPeriodRepository.get_last_claiming_periods_batch(
-                session, daemon_ids
-            )
-            orders = OrderRepository.get_last_successful_orders_batch(session, daemon_ids)
-
-        for daemon in user_daemons:
-            daemon_response = daemon.to_short_response()
-
-            last_claiming_period = claiming_periods.get(daemon.id, None)
-            if last_claiming_period is not None:
-                daemon_response.update(last_claiming_period.to_daemon_response())
-            else:
-                daemon_response["lastClaimedAt"] = ""
-
-            order = orders.get(daemon.id, None)
-            daemon_response["lastPayment"] = (
-                order.updated_at.isoformat() if order is not None else ""
-            )
-
-            result.append(daemon_response)
-
-        return result
+        self._boto_utils = BotoUtils(REGION_NAME)
 
     def get_daemon(self, request: DaemonRequest) -> dict:
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.get_daemon(session, request.daemon_id)
             if daemon is None:
                 raise DaemonNotFoundException(request.daemon_id)
-            orders = OrderRepository.get_daemon_orders(session, request.daemon_id)
 
         result = daemon.to_response(with_hosted_service = False)
-        result["orders"] = [order.to_response() for order in orders]
 
         return result
 
-    def get_daemon_logs(self, request: DaemonRequest) -> dict:
-        pass
-
-    def redeploy_all_daemons(self) -> dict:
-        pass
-
-    def update_daemon_status(self, request: DaemonRequest) -> dict:
-        pass
-
-    def start_daemon_for_claiming(self, request: DaemonRequest):
-        current_time = datetime.now(UTC)
+    def get_daemon_logs(self, request: DaemonRequest) -> list:
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.get_daemon(session, request.daemon_id)
+        if daemon is None:
+            raise DaemonNotFoundException(request.daemon_id)
+
+        daemon_logs = self._haas_client.get_daemon_logs(daemon.org_id, daemon.service_id)
+
+        return daemon_logs
+
+    def redeploy_all_daemons(self) -> dict:
+        with session_scope(self.session_factory) as session:
+            daemon_ids = DaemonRepository.get_all_daemon_ids(session, status = DeploymentStatus.UP)
+            for daemon_id in daemon_ids:
+                self._deployer_client.deploy_daemon(daemon_id, asynchronous=True)
+        return {}
+
+    def check_daemon_status(self, request: UpdateDaemonStatusRequest):
+        daemon_id = request.daemon_id
+        generate_event = request.generate_event
+
+        with session_scope(self.session_factory) as session:
+            daemon = DaemonRepository.get_daemon(session, daemon_id)
+
             if daemon is None:
-                raise DaemonNotFoundException(request.daemon_id)
-            if daemon.status != DeploymentStatus.DOWN:
-                raise ClaimingNotAvailableException(reason="status")
-            last_claiming_period = ClaimingPeriodRepository.get_last_claiming_period(
-                session, request.daemon_id
+                raise DaemonNotFoundException(daemon_id)
+
+            status = daemon.status
+
+            if status not in [DeploymentStatus.STARTING, DeploymentStatus.UP]:
+                logger.info(f"Daemon {daemon_id} is not in STARTING or UP status")
+                if generate_event:
+                    self._push_check_status_event(daemon_id, generate_event = True,
+                                                  seconds = DAEMON_CHECK_INTERVAL_IN_SECONDS)
+                return
+
+            haas_daemon_status, started_at = self._haas_client.check_daemon(
+                daemon.org_id, daemon.service_id
             )
-            if (
-                last_claiming_period is not None
-                and last_claiming_period.status != ClaimingPeriodStatus.PAYMENT_FAILED
-                and last_claiming_period.end_at + timedelta(hours=BREAK_PERIOD_IN_HOURS)
-                > current_time
-            ):
-                raise ClaimingNotAvailableException(
-                    reason="time", last_claimed_at=last_claiming_period.end_at.isoformat()
+
+            current_time = datetime.now(UTC)
+            if status == DeploymentStatus.STARTING and generate_event and daemon.updated_at + timedelta(seconds=MAX_SERVICE_STARTING_TIME_IN_SECONDS) >= current_time:
+                logger.info(f"Daemon {daemon_id} is still starting")
+                if generate_event:
+                    self._push_check_status_event(daemon_id, generate_event = True,
+                                                  seconds = DAEMON_CHECK_INTERVAL_IN_SECONDS)
+                return
+
+            if haas_daemon_status == HaaSDaemonStatus.DOWN:
+                DaemonRepository.update_daemon_status(session, daemon_id, DeploymentStatus.ERROR)
+            elif status == DeploymentStatus.STARTING:
+                DaemonRepository.update_daemon_status(session, daemon_id, DeploymentStatus.UP)
+
+        if generate_event:
+            self._push_check_status_event(daemon_id, generate_event=True, seconds=DAEMON_CHECK_INTERVAL_IN_SECONDS)
+
+    def deploy_daemon(self, request: DaemonRequest):
+        daemon_id = request.daemon_id
+
+        with session_scope(self.session_factory) as session:
+            daemon = DaemonRepository.get_daemon(session, daemon_id)
+
+            if daemon is None:
+                raise DaemonNotFoundException(daemon_id)
+
+            if daemon.status not in [DeploymentStatus.INIT, DeploymentStatus.UP]:
+                logger.exception(f"Daemon {daemon_id} is not in INIT or UP status")
+                return {}
+
+            if daemon.status == DeploymentStatus.INIT:
+                self._haas_client.deploy_daemon(
+                    org_id=daemon.org_id,
+                    service_id=daemon.service_id,
+                    daemon_config=daemon.daemon_config,
                 )
-            ClaimingPeriodRepository.create_claiming_period(session, request.daemon_id)
-            self._deployer_client.start_daemon(request.daemon_id)
-        return {}
-
-    def start_daemon(self, request: DaemonRequest):
-        daemon_id = request.daemon_id
-
-        with session_scope(self.session_factory) as session:
-            daemon = DaemonRepository.get_daemon(session, daemon_id)
-
-            if daemon is None:
-                raise DaemonNotFoundException(daemon_id)
-
-            if daemon.status != DeploymentStatus.READY_TO_START or not daemon.service_published:
-                return {}
-
-            self._haas_client.start_daemon(
-                org_id=daemon.org_id,
-                service_id=daemon.service_id,
-                daemon_config=daemon.daemon_config,
-            )
-
+            else:
+                self._haas_client.redeploy_daemon(
+                    org_id=daemon.org_id,
+                    service_id=daemon.service_id,
+                    daemon_config=daemon.daemon_config,
+                )
             DaemonRepository.update_daemon_status(session, daemon_id, DeploymentStatus.STARTING)
+            self._push_check_status_event(daemon_id, generate_event=False, seconds=MAX_SERVICE_STARTING_TIME_IN_SECONDS)
 
         return {}
 
-    def stop_daemon(self, request: DaemonRequest):
-        daemon_id = request.daemon_id
-
-        with session_scope(self.session_factory) as session:
-            daemon = DaemonRepository.get_daemon(session, daemon_id)
-
-            if daemon is None:
-                raise DaemonNotFoundException(daemon_id)
-
-            org_id = daemon.org_id
-            service_id = daemon.service_id
-
-            if daemon.status != DeploymentStatus.UP:
-                return {}
-
-            self._haas_client.delete_daemon(org_id, service_id)
-            DaemonRepository.update_daemon_status(session, daemon_id, DeploymentStatus.DELETING)
-
-        return {}
+    def delete_daemon(self, request: DaemonRequest):
+        pass
 
     def redeploy_daemon(self, request: DaemonRequest):
-        daemon_id = request.daemon_id
-
-        with session_scope(self.session_factory) as session:
-            daemon = DaemonRepository.get_daemon(session, daemon_id)
-
-            if daemon is None:
-                raise DaemonNotFoundException(daemon_id)
-
-            if daemon.status != DeploymentStatus.UP:
-                return {}
-
-            self._haas_client.redeploy_daemon(
-                org_id=daemon.org_id,
-                service_id=daemon.service_id,
-                daemon_config=daemon.daemon_config,
-            )
-
-            DaemonRepository.update_daemon_status(session, daemon_id, DeploymentStatus.RESTARTING)
-
-        return {}
+        pass
 
     def update_config(self, request: UpdateConfigRequest) -> dict:
         service_endpoint = request.service_endpoint
@@ -173,8 +139,7 @@ class DaemonService:
             daemon = DaemonRepository.get_daemon(session, request.daemon_id)
             if daemon is None:
                 raise DaemonNotFoundException(request.daemon_id)
-
-            if daemon.status in [DeploymentStatus.STARTING, DeploymentStatus.RESTARTING]:
+            if daemon.hosted_service is not None or daemon.status != DeploymentStatus.UP:
                 raise UpdateConfigNotAvailableException()
 
             daemon_config = daemon.daemon_config
@@ -186,22 +151,17 @@ class DaemonService:
             DaemonRepository.update_daemon_config(session, request.daemon_id, daemon_config)
 
             if daemon.status == DeploymentStatus.UP:
-                self._deployer_client.redeploy_daemon(request.daemon_id)
+                self._deployer_client.deploy_daemon(request.daemon_id, asynchronous=True)
 
         return {}
 
-    def search_daemon(self, request: SearchDaemonRequest) -> dict:
-        org_id = request.org_id
-        service_id = request.service_id
-        with session_scope(self.session_factory) as session:
-            daemon = DaemonRepository.search_daemon(session, org_id, service_id)
-            if daemon is None:
-                return {}
-            order = OrderRepository.get_last_order(session, daemon.id)
-        daemon_response = daemon.to_response()
-        del daemon_response["daemonConfig"]
-        return {"daemon": daemon_response, "order": order.to_short_response()}
-
-    def check_daemons(self):
-        pass
+    def _push_check_status_event(self, daemon_id: str, generate_event: bool = True, seconds: int = 0):
+        self._boto_utils.publish_data_to_sns_topic(
+            topic_arn=CHECK_DAEMON_STATUS_TOPIC_ARN,
+            payload = {
+                "daemon_id": daemon_id,
+                "generate_event": generate_event
+            },
+            delay_seconds = seconds
+        )
 

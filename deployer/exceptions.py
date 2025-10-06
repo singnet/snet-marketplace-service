@@ -38,7 +38,7 @@ class ClaimingNotAvailableException(BadRequestException):
 
 class UpdateConfigNotAvailableException(BadRequestException):
     def __init__(self):
-        super().__init__(message="Config update is unavailable during deploying the daemon!")
+        super().__init__(message="Config update is not available!")
 
 
 class TopUpNotAvailableException(BadRequestException):

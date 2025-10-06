@@ -561,8 +561,8 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
-  update-daemon-status:
-    handler: deployer.application.handlers.daemon_handlers.update_daemon_status
+  check-daemon-status:
+    handler: deployer.application.handlers.daemon_handlers.check_daemon_status
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -575,7 +575,7 @@ functions:
       - sqs:
           arn:
             Fn::GetAtt:
-              - updateDaemonStatusQueue
+              - checkDaemonStatusQueue
               - Arn
           batchSize: 1
 
@@ -590,19 +590,19 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
-#  start-daemon:
-#    handler: deployer.application.handlers.daemon_handlers.start_daemon
-#    role: ${file(./config.${self:provider.stage}.json):ROLE}
-#    vpc:
-#      securityGroupIds:
-#        - ${file(./config.${self:provider.stage}.json):SG1}
-#        - ${file(./config.${self:provider.stage}.json):SG2}
-#      subnetIds:
-#        - ${file(./config.${self:provider.stage}.json):VPC1}
-#        - ${file(./config.${self:provider.stage}.json):VPC2}
+  deploy-daemon:
+    handler: deployer.application.handlers.daemon_handlers.deploy_daemon
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
 
-#  stop-daemon:
-#    handler: deployer.application.handlers.daemon_handlers.stop_daemon
+#  delete-daemon:
+#    handler: deployer.application.handlers.daemon_handlers.delete_daemon
 #    role: ${file(./config.${self:provider.stage}.json):ROLE}
 #    vpc:
 #      securityGroupIds:

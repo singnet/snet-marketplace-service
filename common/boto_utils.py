@@ -1,5 +1,6 @@
 import json
 import os
+from http import HTTPStatus
 from urllib.parse import urlparse
 
 import boto3
@@ -152,3 +153,18 @@ class BotoUtils:
             msg = f"Error in deleting stub files :: {repr(e)}"
             logger.info(msg)
             raise Exception(msg)
+
+    def publish_data_to_sns_topic(self, topic_arn: str, payload: dict, delay_seconds: int = 0):
+        sns_client = boto3.client('sns', region_name = self.region_name)
+        response = sns_client.publish(TargetArn = topic_arn,
+                                      Message = json.dumps({'default': json.dumps(payload)}),
+                                      MessageStructure = 'json',
+                                      MessageAttributes = {
+                                          'DelaySeconds': {
+                                              'DataType': 'Number',
+                                              'StringValue': str(delay_seconds)
+                                          }
+                                      })
+        if response['ResponseMetadata']['HTTPStatusCode'] != HTTPStatus.OK:
+            logger.error(f"Failed to publish data to SNS topic. Response: {response}")
+            raise Exception()

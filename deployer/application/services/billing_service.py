@@ -11,18 +11,19 @@ from deployer.application.schemas.billing_schemas import (
     CreateOrderRequest,
     SaveEVMTransactionRequest,
     GetBalanceHistoryRequest,
-    GetMetricsRequest
+    GetMetricsRequest, CallEventConsumerRequest
 )
 from deployer.config import NETWORKS, NETWORK_ID, CONTRACT_BASE_PATH, TOKEN_JSON_FILE_NAME
 from deployer.constant import TypeOfMovementOfFunds, SortOrder
 from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
 from deployer.domain.models.order import NewOrderDomain
 from deployer.domain.models.transactions_metadata import TransactionsMetadataDomain
-from deployer.exceptions import OrderNotFoundException, UnacceptableOrderStatusException
+from deployer.exceptions import OrderNotFoundException, UnacceptableOrderStatusException, DaemonNotFoundException
 from deployer.infrastructure.clients.haas_client import HaaSClient
 from deployer.infrastructure.db import DefaultSessionFactory, session_scope
 from deployer.infrastructure.models import OrderStatus, EVMTransactionStatus
 from deployer.infrastructure.repositories.account_balance_repository import AccountBalanceRepository
+from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
 from deployer.infrastructure.repositories.order_repository import OrderRepository
 from deployer.infrastructure.repositories.transaction_repository import TransactionRepository
 
@@ -188,8 +189,14 @@ class BillingService:
             OrderRepository.fail_old_orders(session)
             OrderRepository.expire_old_orders(session)
 
-    def process_call_event(self):
-        pass
+    def process_call_event(self, request: CallEventConsumerRequest):
+        with session_scope(self.session_factory) as session:
+            daemon = DaemonRepository.search_daemon(session, request.org_id, request.service_id)
+
+            if daemon is None:
+                raise DaemonNotFoundException(request.service_id)
+
+            AccountBalanceRepository.decrease_account_balance(session, daemon.account_id, request.amount)
 
     @staticmethod
     def _get_transactions_from_blockchain(

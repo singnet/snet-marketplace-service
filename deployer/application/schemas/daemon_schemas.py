@@ -54,11 +54,12 @@ class SearchDaemonRequest(BaseModel):
         return cls.model_validate(data)
 
 
-class UpdateDaemonStatusRequest(DaemonRequest, QueueEventRequest):
-    pass
+class UpdateDaemonStatusRequest(BaseModel, QueueEventRequest):
+    daemon_id: str
+    generate_event: bool
 
     @classmethod
-    @validation_handler([RequestPayloadType.PATH_PARAMS])
+    @validation_handler([RequestPayloadType.BODY])
     def validate_event(cls, event: dict) -> "UpdateDaemonStatusRequest":
-        data = {**event[RequestPayloadType.PATH_PARAMS]}
-        return cls.model_validate(data)
+        body = json.loads(event[RequestPayloadType.BODY])
+        return cls.model_validate(body)

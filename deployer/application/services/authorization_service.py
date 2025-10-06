@@ -15,6 +15,7 @@ class AuthorizationService:
     def check_local_access(
         self, account_id: str, daemon_id: Optional[str] = None, order_id: Optional[str] = None
     ):
+        # TODO: add hosted_service_id check, update other places
         account_id = account_id
         with session_scope(self.session_factory) as session:
             if daemon_id is not None:

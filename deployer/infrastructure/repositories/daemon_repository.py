@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Union
 
 from sqlalchemy import update, select
 from sqlalchemy.orm import Session
@@ -34,25 +34,9 @@ class DaemonRepository:
         session.execute(update_query)
 
     @staticmethod
-    def update_daemon_end_on(session: Session, daemon_id: str, end_on: datetime) -> None:
-        update_query = update(Daemon).where(Daemon.id == daemon_id).values(end_on=end_on)
-
-        session.execute(update_query)
-
-    @staticmethod
     def update_daemon_config(session: Session, daemon_id: str, daemon_config: dict) -> None:
         update_query = (
             update(Daemon).where(Daemon.id == daemon_id).values(daemon_config=daemon_config)
-        )
-
-        session.execute(update_query)
-
-    @staticmethod
-    def update_daemon_service_published(
-        session: Session, daemon_id: str, service_published: bool
-    ) -> None:
-        update_query = (
-            update(Daemon).where(Daemon.id == daemon_id).values(service_published=service_published)
         )
 
         session.execute(update_query)
@@ -93,36 +77,6 @@ class DaemonRepository:
         return DaemonFactory.daemon_from_db_model(daemon_db)
 
     @staticmethod
-    def get_daemons_without_statuses(
-        session: Session, statuses: List[DeploymentStatus]
-    ) -> List[DaemonDomain]:
-        query = select(Daemon).where(Daemon.status.notin_(statuses))
-
-        result = session.execute(query)
-        daemons_db = result.scalars().all()
-
-        return DaemonFactory.daemons_from_db_model(daemons_db)
-
-    @staticmethod
-    def get_daemon_by_account_and_order(
-        session: Session, account_id: str, order_id: str
-    ) -> Optional[DaemonDomain]:
-        query = (
-            select(Daemon)
-            .join(Order, Daemon.id == Order.daemon_id)
-            .where(Order.id == order_id, Daemon.account_id == account_id)
-            .limit(1)
-        )
-
-        result = session.execute(query)
-
-        daemon_db = result.scalar_one_or_none()
-        if daemon_db is None:
-            return None
-
-        return DaemonFactory.daemon_from_db_model(daemon_db)
-
-    @staticmethod
     def get_daemon_by_account_and_daemon(
         session: Session, account_id: str, daemon_id: str
     ) -> Optional[DaemonDomain]:
@@ -137,3 +91,16 @@ class DaemonRepository:
             return None
 
         return DaemonFactory.daemon_from_db_model(daemon_db)
+
+    @staticmethod
+    def get_all_daemon_ids(session: Session, status: Union[DeploymentStatus, List[DeploymentStatus], None] = None) -> List[str]:
+        query = select(Daemon.id)
+        if status is not None:
+            if isinstance(status, list):
+                query = query.where(Daemon.status.in_(status))
+            else:
+                query = query.where(Daemon.status == status)
+
+        result = session.scalars(query).all()
+
+        return list(result)
