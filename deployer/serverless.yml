@@ -645,7 +645,7 @@ functions:
       - sqs:
           arn:
             Fn::GetAtt:
-              - callEventConsumerQueue
+              - serviceCallEventConsumerQueue
               - Arn
           batchSize: 1
 
@@ -906,7 +906,7 @@ functions:
       - sqs:
           arn:
             Fn::GetAtt:
-              - checkDaemonStatusQueue
+              - checkDaemonStatusEventConsumerQueue
               - Arn
           batchSize: 1
 
@@ -1033,7 +1033,7 @@ functions:
       - sqs:
           arn:
             Fn::GetAtt:
-              - updateHostedServiceStatusQueue
+              - updateHostedServiceStatusEventConsumerQueue
               - Arn
           batchSize: 1
 
