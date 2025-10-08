@@ -70,6 +70,9 @@ package:
 
 resources:
   Resources:
+
+    # ==================== REGISTRY EVENTS ====================
+
     registryEventConsumerQueue:
       Type: AWS::SQS::Queue
       Properties:
@@ -131,6 +134,70 @@ resources:
                   aws:SourceArn: !GetAtt registryEventConsumerQueue.Arn
         Queues:
           - !Ref registryEventConsumerDLQ
+
+    # ==================== DEPLOY SERVICE EVENTS (for v2) ====================
+
+    deployServiceEventConsumerQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${file(./config.${self:provider.stage}.json):REGISTRY_QUEUE}
+        VisibilityTimeout: ${self:custom.queue.messageVisibilityTimeout}
+        ReceiveMessageWaitTimeSeconds: ${self:custom.queue.receiveMessageWaitTimeSeconds}
+        MessageRetentionPeriod: ${self:custom.queue.queueMessageRetention}
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt deployServiceEventConsumerDLQ.Arn
+          maxReceiveCount: ${self:custom.queue.queueMaxReceiveCount}
+
+    deployServiceEventConsumerQueuePolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        PolicyDocument:
+          Id: deployServiceEventConsumerQueue
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action:
+                - sqs:SendMessage
+              Resource: !GetAtt deployServiceEventConsumerQueue.Arn
+              Condition:
+                ArnEquals:
+                  aws:SourceArn: ${file(./config.${self:provider.stage}.json):REGISTRY_TOPIC_ARN}
+        Queues:
+          - !Ref deployServiceEventConsumerQueue
+
+    deployServiceEventConsumerTopicSubscriptionForSQS:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Protocol: sqs
+        Endpoint: !GetAtt deployServiceEventConsumerQueue.Arn
+        TopicArn: ${file(./config.${self:provider.stage}.json):REGISTRY_TOPIC_ARN}
+
+    deployServiceEventConsumerDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${file(./config.${self:provider.stage}.json):REGISTRY_QUEUE}-dlq
+        VisibilityTimeout: ${self:custom.queue.messageVisibilityTimeout}
+        ReceiveMessageWaitTimeSeconds: ${self:custom.queue.receiveMessageWaitTimeSeconds}
+        MessageRetentionPeriod: ${self:custom.queue.dlqMessageRetention}
+
+    deployServiceEventConsumerDLQPolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        PolicyDocument:
+          Id: deployServiceEventConsumerDLQ
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action:
+                - sqs:SendMessage
+              Resource: !GetAtt deployServiceEventConsumerDLQ.Arn
+              Condition:
+                ArnEquals:
+                  aws:SourceArn: !GetAtt deployServiceEventConsumerQueue.Arn
+        Queues:
+          - !Ref deployServiceEventConsumerDLQ
 
 functions:
 
