@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from deployer.domain.factory.hosted_service_factory import HostedServiceFactory
 from deployer.domain.models.hosted_service import NewHostedServiceDomain, HostedServiceDomain
-from deployer.infrastructure.models import HostedService, DeploymentStatus
+from deployer.infrastructure.models import HostedService, DeploymentStatus, Daemon
 
 
 class HostedServiceRepository:
@@ -47,6 +47,25 @@ class HostedServiceRepository:
         session: Session, hosted_service_id: str
     ) -> Optional[HostedServiceDomain]:
         query = select(HostedService).where(HostedService.id == hosted_service_id)
+
+        result = session.execute(query)
+
+        hosted_service_db = result.scalar_one_or_none()
+        if hosted_service_db is None:
+            return None
+
+        return HostedServiceFactory.hosted_service_from_db_model(hosted_service_db)
+
+    @staticmethod
+    def get_hosted_service_by_account_and_service(
+        session: Session, account_id: str, hosted_service_id: str
+    ) -> Optional[HostedServiceDomain]:
+        query = (
+            select(HostedService)
+            .join(Daemon, Daemon.id == HostedService.daemon_id)
+            .where(Daemon.account_id == account_id, HostedService.id == hosted_service_id)
+            .limit(1)
+        )
 
         result = session.execute(query)
 

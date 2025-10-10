@@ -5,6 +5,8 @@ from common.request_context import RequestContext
 from deployer.infrastructure.clients.registry_client import RegistryClient
 from deployer.infrastructure.db import session_scope, DefaultSessionFactory
 from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
+from deployer.infrastructure.repositories.hosted_service_repository import HostedServiceRepository
+from deployer.infrastructure.repositories.order_repository import OrderRepository
 
 
 class AuthorizationService:
@@ -13,21 +15,36 @@ class AuthorizationService:
         self._registry_client = RegistryClient()
 
     def check_local_access(
-        self, account_id: str, daemon_id: Optional[str] = None, order_id: Optional[str] = None
+        self,
+        account_id: str,
+        daemon_id: Optional[str] = None,
+        order_id: Optional[str] = None,
+        hosted_service_id: Optional[str] = None,
     ):
-        # TODO: add hosted_service_id check, update other places
-        account_id = account_id
+        optional_params = [daemon_id, order_id, hosted_service_id]
+        optional_params_count = sum(1 for param in optional_params if param is not None)
+
+        if optional_params_count != 1:
+            raise ValueError(
+                "Exactly one of daemon_id, order_id or hosted_service_id must be provided"
+            )
+
+        entity = None
         with session_scope(self.session_factory) as session:
             if daemon_id is not None:
-                daemon = DaemonRepository().get_daemon_by_account_and_daemon(
+                entity = DaemonRepository.get_daemon_by_account_and_daemon(
                     session, account_id, daemon_id
                 )
+            elif order_id is not None:
+                entity = OrderRepository.get_order(
+                    session, account_id=account_id, order_id=order_id
+                )
             else:
-                daemon = DaemonRepository().get_daemon_by_account_and_order(
-                    session, account_id, order_id
+                entity = HostedServiceRepository.get_hosted_service_by_account_and_service(
+                    session, account_id, hosted_service_id
                 )
 
-        if daemon is None:
+        if entity is None:
             raise ForbiddenException()
 
     def check_service_access(self, request_context: RequestContext, org_id: str):

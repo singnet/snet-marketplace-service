@@ -73,6 +73,21 @@ class DaemonRepository:
         return DaemonFactory.daemon_from_db_model(daemon_db)
 
     @staticmethod
+    def get_all_daemon_ids(
+        session: Session, status: Union[DeploymentStatus, List[DeploymentStatus], None] = None
+    ) -> List[str]:
+        query = select(Daemon.id)
+        if status is not None:
+            if isinstance(status, list):
+                query = query.where(Daemon.status.in_(status))
+            else:
+                query = query.where(Daemon.status == status)
+
+        result = session.scalars(query).all()
+
+        return list(result)
+
+    @staticmethod
     def get_daemon_by_account_and_daemon(
         session: Session, account_id: str, daemon_id: str
     ) -> Optional[DaemonDomain]:
@@ -87,18 +102,3 @@ class DaemonRepository:
             return None
 
         return DaemonFactory.daemon_from_db_model(daemon_db)
-
-    @staticmethod
-    def get_all_daemon_ids(
-        session: Session, status: Union[DeploymentStatus, List[DeploymentStatus], None] = None
-    ) -> List[str]:
-        query = select(Daemon.id)
-        if status is not None:
-            if isinstance(status, list):
-                query = query.where(Daemon.status.in_(status))
-            else:
-                query = query.where(Daemon.status == status)
-
-        result = session.scalars(query).all()
-
-        return list(result)

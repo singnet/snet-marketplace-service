@@ -183,3 +183,17 @@ class TransactionsMetadata(Base):
     updated_at: Mapped[datetime] = mapped_column(
         "updated_at", TIMESTAMP(timezone=False), nullable=False, server_default=UpdateTimestamp
     )
+
+
+class TokenRate(Base):
+    __tablename__ = "token_rate"
+    id: Mapped[int] = mapped_column("id", Integer, autoincrement=True, primary_key=True)
+    token: Mapped[str] = mapped_column("token", VARCHAR(128), nullable=False)
+    rate: Mapped[int] = mapped_column("rate", DECIMAL(38, 0), nullable=False)
+
+    created_at: Mapped[datetime] = mapped_column(
+        "created_at", TIMESTAMP(timezone=False), nullable=False, server_default=CreateTimestamp
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        "updated_at", TIMESTAMP(timezone=False), nullable=False, server_default=UpdateTimestamp
+    )

@@ -50,6 +50,7 @@ class HaaSClient:
             "service_endpoint": daemon_config["service_endpoint"],
             "base_image": HAAS_BASE_IMAGE,
             "payment_channel_storage_type": daemon_config["payment_channel_storage_type"],
+            "is_service_hosted": daemon_config["is_service_hosted"],
         }
         if "service_credentials" in daemon_config:
             request_data["service_credentials"] = daemon_config["service_credentials"]
@@ -96,6 +97,7 @@ class HaaSClient:
             "service_endpoint": daemon_config["service_endpoint"],
             "base_image": HAAS_BASE_IMAGE,
             "payment_channel_storage_type": daemon_config["payment_channel_storage_type"],
+            "is_service_hosted": daemon_config["is_service_hosted"],
         }
         if "service_credentials" in daemon_config:
             request_data["service_credentials"] = daemon_config["service_credentials"]
@@ -137,8 +139,8 @@ class HaaSClient:
     def get_call_events(self, limit: int, page: int, order: str, period: str) -> Tuple[list, int]:
         pass
 
-    def deploy_hosted_service(self, org_id: str, service_id: str):
-        pass
+    # def deploy_hosted_service(self, org_id: str, service_id: str):
+    #     pass
 
     def delete_hosted_service(self, org_id: str, service_id: str):
         pass

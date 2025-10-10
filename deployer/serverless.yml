@@ -404,7 +404,7 @@ resources:
     deployServiceEventConsumerQueue:
       Type: AWS::SQS::Queue
       Properties:
-        QueueName: ${file(./config.${self:provider.stage}.json):REGISTRY_QUEUE}
+        QueueName: ${file(./config.${self:provider.stage}.json):DEPLOY_SERVICE_QUEUE}
         VisibilityTimeout: ${self:custom.queue.messageVisibilityTimeout}
         ReceiveMessageWaitTimeSeconds: ${self:custom.queue.receiveMessageWaitTimeSeconds}
         MessageRetentionPeriod: ${self:custom.queue.queueMessageRetention}
@@ -426,7 +426,7 @@ resources:
               Resource: !GetAtt deployServiceEventConsumerQueue.Arn
               Condition:
                 ArnEquals:
-                  aws:SourceArn: ${file(./config.${self:provider.stage}.json):REGISTRY_TOPIC_ARN}
+                  aws:SourceArn: ${file(./config.${self:provider.stage}.json):DEPLOY_SERVICE_TOPIC_ARN}
         Queues:
           - !Ref deployServiceEventConsumerQueue
 
@@ -435,12 +435,12 @@ resources:
       Properties:
         Protocol: sqs
         Endpoint: !GetAtt deployServiceEventConsumerQueue.Arn
-        TopicArn: ${file(./config.${self:provider.stage}.json):REGISTRY_TOPIC_ARN}
+        TopicArn: ${file(./config.${self:provider.stage}.json):DEPLOY_SERVICE_TOPIC_ARN}
 
     deployServiceEventConsumerDLQ:
       Type: AWS::SQS::Queue
       Properties:
-        QueueName: ${file(./config.${self:provider.stage}.json):REGISTRY_QUEUE}-dlq
+        QueueName: ${file(./config.${self:provider.stage}.json):DEPLOY_SERVICE_QUEUE}-dlq
         VisibilityTimeout: ${self:custom.queue.messageVisibilityTimeout}
         ReceiveMessageWaitTimeSeconds: ${self:custom.queue.receiveMessageWaitTimeSeconds}
         MessageRetentionPeriod: ${self:custom.queue.dlqMessageRetention}

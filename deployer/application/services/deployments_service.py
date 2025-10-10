@@ -144,10 +144,7 @@ class DeploymentsService:
                 event_name == AllowedEventNames.SERVICE_CREATED
                 and daemon.hosted_service is not None
             ):
-                self._haas_client.deploy_hosted_service(org_id, service_id)
-                HostedServiceRepository.update_hosted_service_status(
-                    session, daemon.hosted_service.id, DeploymentStatus.STARTING
-                )
+                self._push_deploy_service_event(org_id, service_id, daemon.hosted_service)
 
     def _get_service_class(self, service_api_source: str) -> str:
         tar_bytes = self._storage_provider.get(service_api_source, to_decode=False)
