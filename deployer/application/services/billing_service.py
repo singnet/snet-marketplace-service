@@ -1,6 +1,7 @@
 import os
 from typing import Tuple, List
 
+import requests
 from eth_typing import HexStr
 from web3 import Web3
 
@@ -13,11 +14,20 @@ from deployer.application.schemas.billing_schemas import (
     GetBalanceHistoryRequest,
     GetMetricsRequest,
     CallEventConsumerRequest,
+    GetBalanceAndRateRequest,
 )
-from deployer.config import NETWORKS, NETWORK_ID, CONTRACT_BASE_PATH, TOKEN_JSON_FILE_NAME
+from deployer.config import (
+    NETWORKS,
+    NETWORK_ID,
+    CONTRACT_BASE_PATH,
+    TOKEN_JSON_FILE_NAME,
+    TOKEN_NAME,
+    TOKEN_DECIMALS,
+)
 from deployer.constant import TypeOfMovementOfFunds, SortOrder
 from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
 from deployer.domain.models.order import NewOrderDomain
+from deployer.domain.models.token_rate import NewTokenRateDomain
 from deployer.domain.models.transactions_metadata import TransactionsMetadataDomain
 from deployer.exceptions import (
     OrderNotFoundException,
@@ -30,6 +40,7 @@ from deployer.infrastructure.models import OrderStatus, EVMTransactionStatus
 from deployer.infrastructure.repositories.account_balance_repository import AccountBalanceRepository
 from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
 from deployer.infrastructure.repositories.order_repository import OrderRepository
+from deployer.infrastructure.repositories.token_rate_repository import TokenRateRepository
 from deployer.infrastructure.repositories.transaction_repository import TransactionRepository
 
 
@@ -94,7 +105,8 @@ class BillingService:
 
             if order.status not in [OrderStatus.CREATED, OrderStatus.PAYMENT_FAILED]:
                 logger.exception(
-                    f"Order with id {request.order_id} must have the status CREATED or PAYMENT_FAILED for correct saving of transaction {request.transaction_hash}"
+                    f"Order with id {request.order_id} must have the status CREATED or PAYMENT_FAILED for "
+                    f"correct saving of transaction {request.transaction_hash}"
                 )
                 raise UnacceptableOrderStatusException(order.status.value)
 
@@ -115,6 +127,20 @@ class BillingService:
                 balance = account_balance.balance_in_cogs
 
         return {"balanceInCogs": balance}
+
+    def get_balance_and_rate(self, request: GetBalanceAndRateRequest) -> dict:
+        balance = 0
+        with session_scope(self.session_factory) as session:
+            account_balance = AccountBalanceRepository.get_account_balance_by_service(
+                session, request.org_id, request.service_id
+            )
+
+            if account_balance is not None:
+                balance = account_balance.balance_in_cogs
+
+            average_cogs_per_usd = TokenRateRepository.get_average_cogs_per_usd(session, TOKEN_NAME)
+
+        return {"balanceInCogs": balance, "cogsPerUsd": average_cogs_per_usd}
 
     def get_balance_history(self, request: GetBalanceHistoryRequest, account_id: str) -> dict:
         balance_events = []
@@ -200,13 +226,15 @@ class BillingService:
 
                     if order.amount != amount:
                         logger.exception(
-                            f"Transaction {new_transaction.hash} has different amount {amount} than order {order.amount}"
+                            f"Transaction {new_transaction.hash} has different amount {amount} than "
+                            f"order {order.amount}"
                         )
                         raise Exception()
 
                     if order.status != OrderStatus.PROCESSING:
                         logger.exception(
-                            f"Order with id {new_transaction.order_id} must have the status PROCESSING for correct processing of transaction {new_transaction.hash}"
+                            f"Order with id {new_transaction.order_id} must have the status PROCESSING for "
+                            f"correct processing of transaction {new_transaction.hash}"
                         )
                         raise Exception()
 
@@ -232,6 +260,26 @@ class BillingService:
             AccountBalanceRepository.decrease_account_balance(
                 session, daemon.account_id, request.amount
             )
+
+    def update_token_rate(self) -> None:
+        url = "https://api.coingecko.com/api/v3/simple/price"
+        token_symbol = TOKEN_NAME.lower()
+
+        query_params = {"symbols": token_symbol, "vs_currencies": "usd"}
+
+        response = requests.get(url, params=query_params)
+
+        token_rate = float(response.json()[token_symbol]["usd"])
+        cogs_per_usd = round(10**TOKEN_DECIMALS / token_rate)
+
+        with session_scope(self.session_factory) as session:
+            TokenRateRepository.add_token_rate(
+                session,
+                NewTokenRateDomain(
+                    token_symbol=token_symbol, usd_per_token=token_rate, cogs_per_usd=cogs_per_usd
+                ),
+            )
+            TokenRateRepository.delete_old_token_rates(session)
 
     @staticmethod
     def _get_transactions_from_blockchain(

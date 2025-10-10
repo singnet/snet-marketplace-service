@@ -102,3 +102,14 @@ class CallEventConsumerRequest(BaseModel, QueueEventRequest):
     def validate_event(cls, event: dict) -> "CallEventConsumerRequest":
         body = json.loads(event[RequestPayloadType.BODY])
         return cls.model_validate(body)
+
+
+class GetBalanceAndRateRequest(BaseModel):
+    org_id: str = Field(alias="orgId")
+    service_id: str = Field(alias="serviceId")
+
+    @classmethod
+    @validation_handler([RequestPayloadType.BODY])
+    def validate_event(cls, event: dict) -> "GetBalanceAndRateRequest":
+        body = json.loads(event[RequestPayloadType.BODY])
+        return cls.model_validate(body)

@@ -557,6 +557,21 @@ functions:
               - X-Amz-User-Agent
               - x-requested-wit
 
+  get-balance-and-rate:
+    handler: deployer.application.handlers.billing_handlers.get_balance_and_rate
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /balance-and-rate
+
   get-balance-history:
     handler: deployer.application.handlers.billing_handlers.get_balance_history
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -648,6 +663,20 @@ functions:
               - serviceCallEventConsumerQueue
               - Arn
           batchSize: 1
+
+  update-token-rate:
+    handler: deployer.application.handlers.billing_handlers.update_token_rate
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - schedule:
+          rate: rate(30 minutes)
 
   # ============= DEPLOYMENTS HANDLERS ============
 

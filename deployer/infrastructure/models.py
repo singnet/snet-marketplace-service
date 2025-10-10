@@ -13,6 +13,7 @@ from sqlalchemy import (
     UniqueConstraint,
     DECIMAL,
 )
+from sqlalchemy.dialects.mysql import FLOAT
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -188,8 +189,9 @@ class TransactionsMetadata(Base):
 class TokenRate(Base):
     __tablename__ = "token_rate"
     id: Mapped[int] = mapped_column("id", Integer, autoincrement=True, primary_key=True)
-    token: Mapped[str] = mapped_column("token", VARCHAR(128), nullable=False)
-    rate: Mapped[int] = mapped_column("rate", DECIMAL(38, 0), nullable=False)
+    token_symbol: Mapped[str] = mapped_column("token_symbol", VARCHAR(128), nullable=False)
+    usd_per_token: Mapped[int] = mapped_column("usd_per_token", FLOAT, nullable=False)
+    cogs_per_usd: Mapped[int] = mapped_column("cogs_per_usd", DECIMAL(38, 0), nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(
         "created_at", TIMESTAMP(timezone=False), nullable=False, server_default=CreateTimestamp

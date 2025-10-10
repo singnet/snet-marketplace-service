@@ -18,6 +18,7 @@ NETWORKS = {
 NETWORK_ID = 11155111
 TOKEN_NAME = "FET"
 STAGE = "dev"
+TOKEN_DECIMALS = 18
 
 IPFS_URL = {
     "url": "ipfs.singularitynet.io",

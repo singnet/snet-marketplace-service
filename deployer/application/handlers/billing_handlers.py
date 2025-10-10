@@ -9,6 +9,7 @@ from deployer.application.schemas.billing_schemas import (
     SaveEVMTransactionRequest,
     CreateOrderRequest,
     GetBalanceHistoryRequest,
+    GetBalanceAndRateRequest,
 )
 from deployer.application.services.authorization_service import AuthorizationService
 from deployer.application.services.billing_service import BillingService
@@ -86,6 +87,17 @@ def get_metrics(event, context):
     )
 
 
+@exception_handler(logger=logger)
+def get_balance_and_rate(event, context):
+    request = GetBalanceAndRateRequest.validate_event(event)
+
+    response = BillingService().get_balance_and_rate(request)
+
+    return generate_lambda_response(
+        StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
 def update_transaction_status(event, context):
     BillingService().update_transaction_status()
     return {}
@@ -98,4 +110,9 @@ def call_event_consumer(event, context):
         request = CallEventConsumerRequest.validate_event(e)
         BillingService().process_call_event(request)
 
+    return {}
+
+
+def update_token_rate(event, context):
+    BillingService().update_token_rate()
     return {}

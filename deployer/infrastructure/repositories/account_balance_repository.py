@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from deployer.domain.factory.account_balance_factory import AccountBalanceFactory
 from deployer.domain.models.account_balance import AccountBalanceDomain, NewAccountBalanceDomain
-from deployer.infrastructure.models import AccountBalance
+from deployer.infrastructure.models import AccountBalance, Daemon
 
 
 class AccountBalanceRepository:
@@ -68,3 +68,22 @@ class AccountBalanceRepository:
         )
 
         session.execute(query)
+
+    @staticmethod
+    def get_account_balance_by_service(
+        session: Session, org_id: str, service_id: str
+    ) -> Optional[AccountBalanceDomain]:
+        query = (
+            select(AccountBalance)
+            .join(Daemon, AccountBalance.account_id == Daemon.account_id)
+            .where(Daemon.org_id == org_id, Daemon.service_id == service_id)
+            .limit(1)
+        )
+
+        result = session.execute(query)
+
+        account_balance_db = result.scalar_one_or_none()
+        if account_balance_db is None:
+            return None
+
+        return AccountBalanceFactory.account_balance_from_db_model(account_balance_db)
