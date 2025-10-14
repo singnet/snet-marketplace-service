@@ -264,7 +264,7 @@ class JobService:
             current_block - tx_metadata.block_adjustment, from_block + tx_metadata.fetch_limit
         )
 
-        transaction_filter = contract.events.Transfer.createFilter(
+        transaction_filter = contract.events.Transfer.create_filter(
             fromBlock=from_block, toBlock=to_block, argument_filters={"to": tx_metadata.recipient}
         )
 
