@@ -111,6 +111,7 @@ class JobService:
                 transactions, last_block = self._get_transactions_from_blockchain(
                     transactions_metadata
                 )
+                logger.info(f"Found {len(transactions)} new transactions for recipient {transactions_metadata.recipient}")
 
                 for new_transaction in transactions:
                     existing_transaction = TransactionRepository.get_transaction(
@@ -145,9 +146,9 @@ class JobService:
                             session, order.daemon_id, daemon.end_at + relativedelta(months=+1)
                         )
 
-                    TransactionRepository.update_transactions_metadata(
-                        session, transactions_metadata.id, last_block
-                    )
+                TransactionRepository.update_transactions_metadata(
+                    session, transactions_metadata.id, last_block
+                )
 
             TransactionRepository.fail_old_transactions(session)
             OrderRepository.fail_old_orders(session)
@@ -254,15 +255,18 @@ class JobService:
     def _get_transactions_from_blockchain(
         tx_metadata: TransactionsMetadataDomain,
     ) -> Tuple[List[NewEVMTransactionDomain], int]:
+        logger.info(f"Transactions metadata: {tx_metadata.to_response()}")
         blockchain_util = BlockChainUtil("HTTP_PROVIDER", NETWORKS[NETWORK_ID]["http_provider"])
         w3 = blockchain_util.web3_object
         current_block = blockchain_util.get_current_block_no()
+        logger.info(f"Current block: {current_block}")
         contract = JobService._get_token_contract(blockchain_util)
 
         from_block = tx_metadata.last_block_no + 1
         to_block = min(
             current_block - tx_metadata.block_adjustment, from_block + tx_metadata.fetch_limit
         )
+        logger.info(f"Fetching transactions from {from_block} to {to_block}")
 
         transaction_filter = contract.events.Transfer.create_filter(
             from_block=from_block, to_block=to_block, argument_filters={"to": tx_metadata.recipient}
@@ -271,15 +275,16 @@ class JobService:
         events = transaction_filter.get_all_entries()
         result = []
         for event in events:
+            logger.info(f"Processing transaction {event['transactionHash'].hex()}")
             if event["args"]["value"] != HAAS_FIX_PRICE_IN_COGS:
                 logger.warning(f"Skipping transaction {event['transactionHash'].hex()}. Expected value: {HAAS_FIX_PRICE_IN_COGS}. Actual value: {event['args']['value']}")
                 continue
-
             tx_hash = event["transactionHash"].hex()
             order_id = JobService._get_order_id_from_transaction(tx_hash, w3)
+            logger.info(f"Order id: {order_id}")
             result.append(
                 NewEVMTransactionDomain(
-                    hash=tx_hash,
+                    hash=tx_hash if tx_hash.startswith("0x") else "0x" + tx_hash,
                     order_id=order_id,
                     status=EVMTransactionStatus.SUCCESS,
                     sender=event["args"]["from"],
