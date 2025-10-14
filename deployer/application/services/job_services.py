@@ -265,7 +265,7 @@ class JobService:
         )
 
         transaction_filter = contract.events.Transfer.create_filter(
-            fromBlock=from_block, toBlock=to_block, argument_filters={"to": tx_metadata.recipient}
+            from_block=from_block, to_block=to_block, argument_filters={"to": tx_metadata.recipient}
         )
 
         events = transaction_filter.get_all_entries()
