@@ -136,11 +136,9 @@ class HaaSClient:
         except Exception as e:
             raise HaaSClientError(str(e))
 
-    def get_call_events(self, limit: int, page: int, order: str, period: str) -> Tuple[list, int]:
+    # TODO: implement methods below
+    def get_call_events(self, org_id: str, service_id: str, limit: int, page: int, order: str, period: str) -> Tuple[list, int]:
         pass
-
-    # def deploy_hosted_service(self, org_id: str, service_id: str):
-    #     pass
 
     def delete_hosted_service(self, org_id: str, service_id: str):
         pass
