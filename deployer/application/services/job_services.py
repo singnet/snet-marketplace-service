@@ -56,10 +56,14 @@ class JobService:
         event_name = request.event_name
         org_id = request.org_id
         service_id = request.service_id
+        logger.info(f"Processing event {event_name} for service (org_id '{org_id}', service_id '{service_id}')")
+
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.search_daemon(session, org_id, service_id)
+            logger.info(f"Daemon: {daemon.to_response()}")
+
             if daemon is None:
-                logger.info(f"Service (org_id {org_id}, service_id {service_id}) doesn't use HaaS")
+                logger.info(f"Service (org_id '{org_id}', service_id '{service_id}') doesn't use HaaS")
                 return
             daemon_id = daemon.id
 
