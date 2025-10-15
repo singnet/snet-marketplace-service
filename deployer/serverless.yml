@@ -212,56 +212,56 @@ resources:
           deadLetterTargetArn: !GetAtt serviceCallForMetricsEventConsumerDLQ.Arn
           maxReceiveCount: ${self:custom.queue.queueMaxReceiveCount}
 
-      serviceCallForMetricsEventConsumerQueuePolicy:
-        Type: AWS::SQS::QueuePolicy
-        Properties:
-          PolicyDocument:
-            Id: serviceCallForMetricsEventConsumerQueue
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Principal: '*'
-                Action:
-                  - sqs:SendMessage
-                Resource: !GetAtt serviceCallForMetricsEventConsumerQueue.Arn
-                Condition:
-                  ArnEquals:
-                    aws:SourceArn: ${file(./config.${self:provider.stage}.json):SERVICE_CALL_TOPIC_ARN}
-          Queues:
-            - !Ref serviceCallForMetricsEventConsumerQueue
+    serviceCallForMetricsEventConsumerQueuePolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        PolicyDocument:
+          Id: serviceCallForMetricsEventConsumerQueue
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action:
+                - sqs:SendMessage
+              Resource: !GetAtt serviceCallForMetricsEventConsumerQueue.Arn
+              Condition:
+                ArnEquals:
+                  aws:SourceArn: ${file(./config.${self:provider.stage}.json):SERVICE_CALL_TOPIC_ARN}
+        Queues:
+          - !Ref serviceCallForMetricsEventConsumerQueue
 
-      serviceCallForMetricsEventConsumerTopicSubscriptionForSQS:
-        Type: AWS::SNS::Subscription
-        Properties:
-          Protocol: sqs
-          Endpoint: !GetAtt serviceCallForMetricsEventConsumerQueue.Arn
-          TopicArn: ${file(./config.${self:provider.stage}.json):SERVICE_CALL_TOPIC_ARN}
+    serviceCallForMetricsEventConsumerTopicSubscriptionForSQS:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Protocol: sqs
+        Endpoint: !GetAtt serviceCallForMetricsEventConsumerQueue.Arn
+        TopicArn: ${file(./config.${self:provider.stage}.json):SERVICE_CALL_TOPIC_ARN}
 
-      serviceCallForMetricsEventConsumerDLQ:
-        Type: AWS::SQS::Queue
-        Properties:
-          QueueName: ${file(./config.${self:provider.stage}.json):SERVICE_CALL_FOR_METRICS_QUEUE}-dlq
-          VisibilityTimeout: ${self:custom.queue.messageVisibilityTimeout}
-          ReceiveMessageWaitTimeSeconds: ${self:custom.queue.receiveMessageWaitTimeSeconds}
-          MessageRetentionPeriod: ${self:custom.queue.dlqMessageRetention}
+    serviceCallForMetricsEventConsumerDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${file(./config.${self:provider.stage}.json):SERVICE_CALL_FOR_METRICS_QUEUE}-dlq
+        VisibilityTimeout: ${self:custom.queue.messageVisibilityTimeout}
+        ReceiveMessageWaitTimeSeconds: ${self:custom.queue.receiveMessageWaitTimeSeconds}
+        MessageRetentionPeriod: ${self:custom.queue.dlqMessageRetention}
 
-      serviceCallForMetricsEventConsumerDLQPolicy:
-        Type: AWS::SQS::QueuePolicy
-        Properties:
-          PolicyDocument:
-            Id: serviceCallForMetricsEventConsumerDLQ
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Principal: '*'
-                Action:
-                  - sqs:SendMessage
-                Resource: !GetAtt serviceCallForMetricsEventConsumerDLQ.Arn
-                Condition:
-                  ArnEquals:
-                    aws:SourceArn: !GetAtt serviceCallForMetricsEventConsumerQueue.Arn
-          Queues:
-            - !Ref serviceCallForMetricsEventConsumerDLQ
+    serviceCallForMetricsEventConsumerDLQPolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        PolicyDocument:
+          Id: serviceCallForMetricsEventConsumerDLQ
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action:
+                - sqs:SendMessage
+              Resource: !GetAtt serviceCallForMetricsEventConsumerDLQ.Arn
+              Condition:
+                ArnEquals:
+                  aws:SourceArn: !GetAtt serviceCallForMetricsEventConsumerQueue.Arn
+        Queues:
+          - !Ref serviceCallForMetricsEventConsumerDLQ
 
 functions:
 
