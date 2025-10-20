@@ -113,6 +113,7 @@ class HaaSClient:
         path = HAAS_BASE_URL + "/v1/daemon/check" + f"?org={org_id}&service={service_id}"
         try:
             result = requests.get(path, auth=self.auth)
+            logger.info(f"Response from check daemon endpoint: {result.json()}")
             if result.ok:
                 started_at = datetime.fromisoformat(result.json()[0]["running"]["startedAt"])
                 return HaaSDaemonStatus.UP, started_at
@@ -121,7 +122,8 @@ class HaaSClient:
             else:
                 raise HaaSClientError(result.text)
         except Exception as e:
-            raise HaaSClientError(str(e))
+            logger.error(f"Unexpected error while checking daemon: {e}")
+            return HaaSDaemonStatus.DOWN, None
 
     def get_public_key(self) -> str:
         path = HAAS_BASE_URL + "/v1/auth/public-key"

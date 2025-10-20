@@ -162,12 +162,13 @@ class JobService:
             daemons = DaemonRepository.get_daemons_without_statuses(
                 session, [DaemonStatus.INIT, DaemonStatus.ERROR, DaemonStatus.DOWN]
             )
-            logger.info(f"Found {len(daemons)} daemons to check")
+        logger.info(f"Found {len(daemons)} daemons to check")
         for daemon in daemons:
             if daemon.status == DaemonStatus.READY_TO_START and not daemon.service_published:
                 continue
 
             self._deployer_client.update_daemon_status(daemon.id, asynchronous=True)
+            logger.info(f"Checking daemon {daemon.id} for service {daemon.org_id} {daemon.service_id}...")
 
     def update_daemon_status(self, request: DaemonRequest):
         daemon_id = request.daemon_id
@@ -176,6 +177,8 @@ class JobService:
             daemon = DaemonRepository.get_daemon(session, daemon_id)
             daemon_status = daemon.status
             service_published = daemon.service_published
+
+            logger.info(f"Updating daemon: {daemon.to_response()}")
 
             if daemon is None:
                 raise DaemonNotFoundException(daemon_id)
