@@ -262,8 +262,11 @@ class JobService:
                     elif daemon_status == DaemonStatus.UP:
                         if daemon.end_at.replace(tzinfo=UTC) < current_time:
                             if (
-                                last_claiming_period
-                                and last_claiming_period.status != ClaimingPeriodStatus.ACTIVE
+                                not last_claiming_period
+                                or (
+                                    last_claiming_period and
+                                    last_claiming_period.status != ClaimingPeriodStatus.ACTIVE
+                                )
                             ):
                                 logger.info(f"Stopping daemon")
                                 self._deployer_client.stop_daemon(daemon_id)
