@@ -8,6 +8,7 @@ from dateutil.relativedelta import relativedelta
 
 from eth_typing import HexStr
 from web3 import Web3
+from web3.contract import Contract
 
 from common.blockchain_util import BlockChainUtil
 from common.logger import get_logger
@@ -52,7 +53,7 @@ class JobService:
         self._haas_client = HaaSClient()
         self._storage_provider = StorageProvider()
 
-    def process_registry_event(self, request: RegistryEventConsumerRequest):
+    def process_registry_event(self, request: RegistryEventConsumerRequest) -> None:
         event_name = request.event_name
         org_id = request.org_id
         service_id = request.service_id
@@ -108,7 +109,7 @@ class JobService:
                 if daemon.status == DaemonStatus.UP:
                     self._deployer_client.redeploy_daemon(daemon_id)
 
-    def update_transaction_status(self):
+    def update_transaction_status(self) -> None:
         with session_scope(self.session_factory) as session:
             transactions_metadatas = TransactionRepository.get_transactions_metadata(session)
             for transactions_metadata in transactions_metadatas:
@@ -157,7 +158,7 @@ class JobService:
             TransactionRepository.fail_old_transactions(session)
             OrderRepository.fail_old_orders(session)
 
-    def check_daemons(self):
+    def check_daemons(self) -> None:
         with session_scope(self.session_factory) as session:
             daemons = DaemonRepository.get_daemons_without_statuses(
                 session, [DaemonStatus.INIT, DaemonStatus.ERROR, DaemonStatus.DOWN]
@@ -170,7 +171,7 @@ class JobService:
             self._deployer_client.update_daemon_status(daemon.id, asynchronous=True)
             logger.info(f"Checking daemon {daemon.id} for service {daemon.org_id} {daemon.service_id}...")
 
-    def update_daemon_status(self, request: DaemonRequest):
+    def update_daemon_status(self, request: DaemonRequest) -> None:
         daemon_id = request.daemon_id
 
         with session_scope(self.session_factory) as session:
@@ -194,7 +195,7 @@ class JobService:
             if (
                 last_claiming_period
                 and last_claiming_period.status == ClaimingPeriodStatus.ACTIVE
-                and last_claiming_period.end_at < current_time
+                and last_claiming_period.end_at.replace(tzinfo=UTC) < current_time
             ):
                 ClaimingPeriodRepository.update_claiming_period_status(
                     session, last_claiming_period.id, ClaimingPeriodStatus.INACTIVE
@@ -251,7 +252,7 @@ class JobService:
                     ):
                         DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.UP)
                     elif daemon_status == DaemonStatus.UP:
-                        if daemon.end_at < current_time:
+                        if daemon.end_at.replace(tzinfo=UTC) < current_time:
                             if (
                                 last_claiming_period
                                 and last_claiming_period.status != ClaimingPeriodStatus.ACTIVE
@@ -302,7 +303,7 @@ class JobService:
         return result, to_block
 
     @staticmethod
-    def _get_token_contract(bc_util: BlockChainUtil):
+    def _get_token_contract(bc_util: BlockChainUtil) -> Contract:
         base_path = os.path.abspath(
             os.path.join(CONTRACT_BASE_PATH, "node_modules", "singularitynet-token-contracts")
         )
