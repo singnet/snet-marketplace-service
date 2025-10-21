@@ -197,6 +197,7 @@ class JobService:
                 and last_claiming_period.status == ClaimingPeriodStatus.ACTIVE
                 and last_claiming_period.end_at.replace(tzinfo=UTC) < current_time
             ):
+                logger.info(f"Updating claiming period {last_claiming_period.to_response()}")
                 ClaimingPeriodRepository.update_claiming_period_status(
                     session, last_claiming_period.id, ClaimingPeriodStatus.INACTIVE
                 )
@@ -210,6 +211,7 @@ class JobService:
             if service_published:
                 if haas_daemon_status == HaaSDaemonStatus.DOWN:
                     if daemon_status == DaemonStatus.READY_TO_START:
+                        logger.info(f"Starting daemon {daemon_id}")
                         self._deployer_client.start_daemon(daemon_id)
                     elif daemon_status == DaemonStatus.STARTING:
                         if (
@@ -217,6 +219,7 @@ class JobService:
                             + timedelta(minutes=DAEMON_STARTING_TTL_IN_MINUTES)
                             < current_time
                         ):
+                            logger.info(f"Daemon {daemon_id} status is ERROR")
                             DaemonRepository.update_daemon_status(
                                 session, daemon_id, DaemonStatus.ERROR
                             )
@@ -224,10 +227,12 @@ class JobService:
                                 last_claiming_period
                                 and last_claiming_period.status == ClaimingPeriodStatus.ACTIVE
                             ):
+                                logger.info(f"Claiming period status is FAILED for daemon {daemon_id}")
                                 ClaimingPeriodRepository.update_claiming_period_status(
                                     session, last_claiming_period.id, ClaimingPeriodStatus.FAILED
                                 )
                     elif daemon_status == DaemonStatus.UP or DaemonStatus.DELETING:
+                        logger.info(f"Daemon {daemon_id} status is DOWN")
                         DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.DOWN)
                     elif daemon_status == DaemonStatus.RESTARTING:
                         if (
@@ -235,6 +240,7 @@ class JobService:
                             + timedelta(minutes=DAEMON_RESTARTING_TTL_IN_MINUTES)
                             < current_time
                         ):
+                            logger.info(f"Daemon status is ERROR")
                             DaemonRepository.update_daemon_status(
                                 session, daemon_id, DaemonStatus.ERROR
                             )
@@ -242,6 +248,7 @@ class JobService:
                                 last_claiming_period
                                 and last_claiming_period.status == ClaimingPeriodStatus.ACTIVE
                             ):
+                                logger.info(f"Claiming period status is FAILED")
                                 ClaimingPeriodRepository.update_claiming_period_status(
                                     session, last_claiming_period.id, ClaimingPeriodStatus.FAILED
                                 )
@@ -250,6 +257,7 @@ class JobService:
                         daemon_status == DaemonStatus.STARTING
                         or daemon_status == DaemonStatus.RESTARTING
                     ):
+                        logger.info(f"Daemon status is UP")
                         DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.UP)
                     elif daemon_status == DaemonStatus.UP:
                         if daemon.end_at.replace(tzinfo=UTC) < current_time:
@@ -257,6 +265,7 @@ class JobService:
                                 last_claiming_period
                                 and last_claiming_period.status != ClaimingPeriodStatus.ACTIVE
                             ):
+                                logger.info(f"Stopping daemon")
                                 self._deployer_client.stop_daemon(daemon_id)
 
     @staticmethod

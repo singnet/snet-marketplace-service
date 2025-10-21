@@ -1,6 +1,7 @@
 from datetime import UTC, datetime, timedelta
 from typing import List
 
+from common.logger import get_logger
 from deployer.application.schemas.daemon_schemas import (
     DaemonRequest,
     UpdateConfigRequest,
@@ -19,6 +20,9 @@ from deployer.infrastructure.models import DaemonStatus, ClaimingPeriodStatus
 from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
 from deployer.infrastructure.repositories.claiming_period_repository import ClaimingPeriodRepository
 from deployer.infrastructure.repositories.order_repository import OrderRepository
+
+
+logger = get_logger(__name__)
 
 
 class DaemonService:
@@ -105,6 +109,7 @@ class DaemonService:
             if daemon.status != DaemonStatus.READY_TO_START or not daemon.service_published:
                 return {}
 
+            logger.info(f"Starting daemon: {daemon.to_response()}")
             self._haas_client.start_daemon(
                 org_id=daemon.org_id,
                 service_id=daemon.service_id,
@@ -130,6 +135,7 @@ class DaemonService:
             if daemon.status != DaemonStatus.UP:
                 return {}
 
+            logger.info(f"Stopping daemon: {daemon.to_response()}")
             self._haas_client.delete_daemon(org_id, service_id)
             DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.DELETING)
 
@@ -147,6 +153,7 @@ class DaemonService:
             if daemon.status != DaemonStatus.UP:
                 return {}
 
+            logger.info(f"Redeploying daemon: {daemon.to_response()}")
             self._haas_client.redeploy_daemon(
                 org_id=daemon.org_id,
                 service_id=daemon.service_id,
