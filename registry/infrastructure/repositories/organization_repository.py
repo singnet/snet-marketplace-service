@@ -60,13 +60,25 @@ class OrganizationPublisherRepository(BaseRepository):
         
         return OrganizationFactory.org_domain_entity_from_repo_model(organization_db) if organization_db else None
 
-    def get_all_orgs_for_user(self, username) -> List[OrganizationEntity]:
-        organizations_db = self.session.query(Organization) \
-            .join(OrganizationMember, Organization.uuid == OrganizationMember.org_uuid) \
-            .filter(OrganizationMember.username == username).all()
+    def get_all_orgs_for_user(self, username) -> List[Tuple[OrganizationEntity, OrganizationMemberEntity]]:
+        owner_member = aliased(OrganizationMember)
+
+        organizations_db = (
+            self.session.query(Organization, owner_member)
+            .join(OrganizationMember, Organization.uuid == OrganizationMember.org_uuid)
+            .join(owner_member, Organization.uuid == owner_member.org_uuid)
+            .filter(
+                OrganizationMember.username == username,
+                owner_member.role == Role.OWNER.value,
+                OrganizationMember.role.in_([Role.MEMBER.value, Role.OWNER.value]),
+            )
+            .distinct()
+            .all()
+        )
         
         return [
-            OrganizationFactory.org_domain_entity_from_repo_model(organization_db) \
+            (OrganizationFactory.org_domain_entity_from_repo_model(organization_db[0]),
+             OrganizationFactory.org_member_domain_entity_from_repo_model(organization_db[1]))
             for organization_db in organizations_db
         ]
 
