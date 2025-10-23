@@ -22,7 +22,7 @@ from deployer.config import (
     TOKEN_JSON_FILE_NAME,
     DAEMON_STARTING_TTL_IN_MINUTES,
     DAEMON_RESTARTING_TTL_IN_MINUTES,
-    HAAS_FIX_PRICE_IN_COGS
+    HAAS_FIX_PRICE_IN_COGS, DAEMON_RUNNING_TIME_FOR_PRICE
 )
 from deployer.constant import AllowedEventNames
 from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
@@ -144,11 +144,11 @@ class JobService:
                             session, order.daemon_id, DaemonStatus.READY_TO_START
                         )
                         DaemonRepository.update_daemon_end_at(
-                            session, order.daemon_id, datetime.now(UTC) + relativedelta(months=+1)
+                            session, order.daemon_id, datetime.now(UTC) + relativedelta(**DAEMON_RUNNING_TIME_FOR_PRICE)
                         )
                     elif daemon.status in [DaemonStatus.UP, DaemonStatus.READY_TO_START]:
                         DaemonRepository.update_daemon_end_at(
-                            session, order.daemon_id, daemon.end_at + relativedelta(months=+1)
+                            session, order.daemon_id, daemon.end_at + relativedelta(**DAEMON_RUNNING_TIME_FOR_PRICE)
                         )
 
                 TransactionRepository.update_transactions_metadata(

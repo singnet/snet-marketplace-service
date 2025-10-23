@@ -7,7 +7,7 @@ from deployer.application.schemas.daemon_schemas import (
     UpdateConfigRequest,
     SearchDaemonRequest,
 )
-from deployer.config import BREAK_PERIOD_IN_HOURS
+from deployer.config import CLAIMING_PERIOD_IN_MINUTES
 from deployer.exceptions import (
     DaemonNotFoundException,
     ClaimingNotAvailableException,
@@ -87,11 +87,11 @@ class DaemonService:
             if (
                 last_claiming_period is not None
                 and last_claiming_period.status != ClaimingPeriodStatus.FAILED
-                and last_claiming_period.end_at + timedelta(hours=BREAK_PERIOD_IN_HOURS)
+                and last_claiming_period.end_at + timedelta(hours=24) - timedelta(minutes=CLAIMING_PERIOD_IN_MINUTES)
                 > current_time
             ):
                 raise ClaimingNotAvailableException(
-                    reason="time", last_claimed_at=last_claiming_period.end_at.isoformat()
+                    reason="time", last_claimed_at=last_claiming_period.start_at.isoformat()
                 )
             ClaimingPeriodRepository.create_claiming_period(session, request.daemon_id)
             logger.info(f"Daemon {daemon.id} status is READY_TO_START")
