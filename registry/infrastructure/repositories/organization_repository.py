@@ -1,7 +1,8 @@
 from datetime import datetime, UTC
-from typing import List
+from typing import List, Tuple
 from uuid import uuid4
 
+from sqlalchemy.orm import aliased
 from sqlalchemy.sql import text
 
 from registry.constants import Role, OrganizationMemberStatus, OrganizationStatus, VerificationStatus
@@ -375,16 +376,6 @@ class OrganizationPublisherRepository(BaseRepository):
         self.session.commit()
 
     @BaseRepository.write_ops
-    def delete_published_members(self, org_uuid, member_list):
-        member_address_list = [member.address for member in member_list]
-        self.session.query(OrganizationMember) \
-            .filter(OrganizationMember.org_uuid == org_uuid) \
-            .filter(OrganizationMember.status == OrganizationMemberStatus.PUBLISHED.value) \
-            .filter(OrganizationMember.address.in_(member_address_list)) \
-            .delete(synchronize_session='fetch')
-        self.session.commit()
-
-    @BaseRepository.write_ops
     def persist_publish_org_member_transaction_hash(self, org_member, transaction_hash, org_uuid):
         member_username_list = [member.username for member in org_member]
         org_members_db_items = self.session.query(OrganizationMember) \
@@ -411,18 +402,6 @@ class OrganizationPublisherRepository(BaseRepository):
         elif org_member.status == OrganizationMemberStatus.PENDING.value and org_member.username == username:
             org_member.address = wallet_address
             org_member.status = OrganizationMemberStatus.ACCEPTED.value
-        self.session.commit()
-
-    @BaseRepository.write_ops
-    def update_org_member_using_address(self, org_uuid, member, wallet_address):
-        org_member = self.session.query(OrganizationMember) \
-            .filter(OrganizationMember.address == wallet_address) \
-            .filter(OrganizationMember.org_uuid == org_uuid) \
-            .first()
-        if org_member is None:
-            raise Exception("No existing member found")
-
-        org_member.status = member.status
         self.session.commit()
 
     @BaseRepository.write_ops
@@ -455,3 +434,37 @@ class OrganizationPublisherRepository(BaseRepository):
             .filter(OrganizationState.state == prev_state) \
             .update({OrganizationState.state: next_state}, synchronize_session=False)
         self.session.commit()
+
+    @BaseRepository.write_ops
+    def upsert_org_member(self, org_member: OrganizationMemberEntity):
+        current_member = self.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == org_member.org_uuid, OrganizationMember.username == org_member.username, OrganizationMember.role == org_member.role).first()
+        if current_member is None:
+            self.add_item(OrganizationMember(
+                org_uuid=org_member.org_uuid,
+                username=org_member.username,
+                role=org_member.role,
+                status=org_member.status,
+                address=org_member.address,
+                invite_code=org_member.invite_code,
+                invited_on=org_member.invited_on,
+                transaction_hash=org_member.transaction_hash
+            ))
+        else:
+            current_member.status = org_member.status
+            current_member.address = org_member.address
+            current_member.invite_code = org_member.invite_code
+            current_member.invited_on = org_member.invited_on
+            current_member.transaction_hash = org_member.transaction_hash
+
+        self.session.commit()
+
+    @BaseRepository.write_ops
+    def delete_org_member(self, org_member: OrganizationMemberEntity):
+        self.session.query(OrganizationMember).filter(
+            OrganizationMember.org_uuid == org_member.org_uuid,
+            OrganizationMember.username == org_member.username,
+            OrganizationMember.role == org_member.role,
+            OrganizationMember.status == org_member.status
+        ).delete()
+
+
