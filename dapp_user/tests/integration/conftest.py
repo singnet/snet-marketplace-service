@@ -90,6 +90,7 @@ def lambda_event_authorized() -> dict:
                 "claims": {
                     "cognito:username": "integrationuser",
                     "email": TEST_USER,
+                    "sub": "acc-test-003",
                 }
             }
         },
@@ -107,6 +108,7 @@ def lambda_event_authorized_not_found() -> dict:
                 "claims": {
                     "cognito:username": "integrationuser_not_found",
                     "email": "integrationuser_not_found@example.com",
+                    "sub": "acc-test-003",
                 }
             }
         },

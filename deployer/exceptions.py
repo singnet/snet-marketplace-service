@@ -31,7 +31,7 @@ class ClaimingNotAvailableException(BadRequestException):
             super().__init__(message="Claiming is only available for DOWN status")
         elif reason == "time":
             super().__init__(
-                message=f"Claiming is only available 23 hours after the last claiming {last_claimed_at}"
+                message=f"Claiming is only available 24 hours after the last claiming {last_claimed_at}"
             )
 
 

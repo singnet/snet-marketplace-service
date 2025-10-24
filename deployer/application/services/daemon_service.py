@@ -1,12 +1,13 @@
 from datetime import UTC, datetime, timedelta
 from typing import List
 
+from common.logger import get_logger
 from deployer.application.schemas.daemon_schemas import (
     DaemonRequest,
     UpdateConfigRequest,
     SearchDaemonRequest,
 )
-from deployer.config import BREAK_PERIOD_IN_HOURS
+from deployer.config import CLAIMING_PERIOD_IN_MINUTES
 from deployer.exceptions import (
     DaemonNotFoundException,
     ClaimingNotAvailableException,
@@ -19,6 +20,9 @@ from deployer.infrastructure.models import DaemonStatus, ClaimingPeriodStatus
 from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
 from deployer.infrastructure.repositories.claiming_period_repository import ClaimingPeriodRepository
 from deployer.infrastructure.repositories.order_repository import OrderRepository
+
+
+logger = get_logger(__name__)
 
 
 class DaemonService:
@@ -83,14 +87,15 @@ class DaemonService:
             if (
                 last_claiming_period is not None
                 and last_claiming_period.status != ClaimingPeriodStatus.FAILED
-                and last_claiming_period.end_at + timedelta(hours=BREAK_PERIOD_IN_HOURS)
+                and last_claiming_period.end_at + timedelta(hours=24) - timedelta(minutes=CLAIMING_PERIOD_IN_MINUTES)
                 > current_time
             ):
                 raise ClaimingNotAvailableException(
-                    reason="time", last_claimed_at=last_claiming_period.end_at.isoformat()
+                    reason="time", last_claimed_at=last_claiming_period.start_at.isoformat()
                 )
             ClaimingPeriodRepository.create_claiming_period(session, request.daemon_id)
-            self._deployer_client.start_daemon(request.daemon_id)
+            logger.info(f"Daemon {daemon.id} status is READY_TO_START")
+            DaemonRepository.update_daemon_status(session, request.daemon_id, DaemonStatus.READY_TO_START)
         return {}
 
     def start_daemon(self, request: DaemonRequest):
@@ -103,8 +108,10 @@ class DaemonService:
                 raise DaemonNotFoundException(daemon_id)
 
             if daemon.status != DaemonStatus.READY_TO_START or not daemon.service_published:
+                logger.info(f"Daemon status is not ready to start: {daemon.status}, service_published: {daemon.service_published}")
                 return {}
 
+            logger.info(f"Starting daemon: {daemon.to_response()}")
             self._haas_client.start_daemon(
                 org_id=daemon.org_id,
                 service_id=daemon.service_id,
@@ -130,6 +137,7 @@ class DaemonService:
             if daemon.status != DaemonStatus.UP:
                 return {}
 
+            logger.info(f"Stopping daemon: {daemon.to_response()}")
             self._haas_client.delete_daemon(org_id, service_id)
             DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.DELETING)
 
@@ -147,6 +155,7 @@ class DaemonService:
             if daemon.status != DaemonStatus.UP:
                 return {}
 
+            logger.info(f"Redeploying daemon: {daemon.to_response()}")
             self._haas_client.redeploy_daemon(
                 org_id=daemon.org_id,
                 service_id=daemon.service_id,

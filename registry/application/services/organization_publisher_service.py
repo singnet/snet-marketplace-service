@@ -74,7 +74,12 @@ class OrganizationPublisherService:
     def get_all_org_for_user(self, username: str):
         logger.info(f"get organization for user: {username}")
         organizations = org_repo.get_all_orgs_for_user(username=username)
-        return [org.to_response() for org in organizations]
+        results = []
+        for org, member in organizations:
+            result = org.to_response()
+            result["owner"] = member.to_response()
+            results.append(result)
+        return results
 
     def get_all_org_id(self):
         organizations = org_repo.get_organizations()

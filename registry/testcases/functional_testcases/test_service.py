@@ -38,6 +38,7 @@ from registry.infrastructure.repositories.organization_repository import (
 from registry.infrastructure.repositories.service_publisher_repository import (
     ServicePublisherRepository,
 )
+from registry.testcases.test_variables import TEST_SUB
 
 org_repo = OrganizationPublisherRepository()
 service_repo = ServicePublisherRepository()
@@ -128,6 +129,7 @@ class TestService(TestCase):
         assert response_body["data"] == ServiceAvailabilityStatus.AVAILABLE.value
 
     def test_create_service(self):
+        username = "dummy_user1@dummy.io"
         org_repo.add_item(
             OrganizationDBModel(
                 name="test_org",
@@ -166,7 +168,7 @@ class TestService(TestCase):
         )
 
         event = {
-            "requestContext": {"authorizer": {"claims": {"email": "dummy_user1@dummy.io"}}},
+            "requestContext": {"authorizer": {"claims": {"email": username, "sub": TEST_SUB}}},
             "headers":{"origin": "testnet.marketplace"},
             "httpMethod": "POST",
             "pathParameters": {"org_uuid": "test_org_uuid"},
@@ -401,6 +403,7 @@ class TestService(TestCase):
         assert len(response_body["data"]["result"]) == 3
 
     def test_save_service(self):
+        username = "dummy_user1@dummy.io"
         org_repo.add_item(
             OrganizationDBModel(
                 name="test_org",
@@ -477,7 +480,7 @@ class TestService(TestCase):
         )
         event = {
             "path": "/org/test_org_uuid/service",
-            "requestContext": {"authorizer": {"claims": {"email": "dummy_user1@dummy.io"}}},
+            "requestContext": {"authorizer": {"claims": {"email": username, "sub": TEST_SUB}}},
             "headers": {"origin": "testnet.marketplace"},
             "httpMethod": "PUT",
             "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"},
@@ -638,6 +641,7 @@ class TestService(TestCase):
         assert (response_body["data"]["media"]) == {"demo_files": {"required": 0}}
 
     def test_save_transaction_hash_for_published_service(self):
+        username = "dummy_user1@dummy.io"
         org_repo.add_item(
             OrganizationDBModel(
                 name="test_org",
@@ -702,7 +706,7 @@ class TestService(TestCase):
         )
         event = {
             "path": "/org/test_org_uuid/service/test_service_uuid/transaction",
-            "requestContext": {"authorizer": {"claims": {"email": "dummy_user1@dummy.io"}}},
+            "requestContext": {"authorizer": {"claims": {"email": username, "sub": TEST_SUB}}},
             "headers": {"origin": "testnet.marketplace"},
             "httpMethod": "POST",
             "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"},
@@ -893,6 +897,7 @@ class TestService(TestCase):
         }
 
     def test_save_service_attributes(self):
+        username = "dummy_user1@dummy.io"
         org_repo.add_item(
             OrganizationDBModel(
                 name="test_org",
@@ -968,7 +973,7 @@ class TestService(TestCase):
         )
         event = {
             "path": "/org/test_org_uuid/service",
-            "requestContext": {"authorizer": {"claims": {"email": "dummy_user1@dummy.io"}}},
+            "requestContext": {"authorizer": {"claims": {"email": username, "sub": TEST_SUB}}},
             "headers": {"origin": "testnet.marketplace"},
             "httpMethod": "PUT",
             "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"},

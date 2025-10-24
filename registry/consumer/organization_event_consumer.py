@@ -1,11 +1,14 @@
 import ast
 import os
 import traceback
+from typing import List, Dict
 
 from web3 import Web3
 
 from common import blockchain_util
 from common.logger import get_logger
+from registry.domain.models.organization_member import OrganizationMember
+from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
 
 from registry.settings import settings
 from registry.constants import (
@@ -33,7 +36,7 @@ class OrganizationEventConsumer:
         self._blockchain_util = blockchain_util.BlockChainUtil(
             "WS_PROVIDER", ws_provider
         )
-        self._organization_repository = organization_repository
+        self._organization_repository: OrganizationPublisherRepository = organization_repository
 
     def on_event(self, event):
         pass
@@ -94,70 +97,55 @@ class OrganizationEventConsumer:
         if owner in members:
             members.remove(owner)
 
-    def _process_members(
-        self, org_uuid, received_owner, existing_members, received_members
-    ):
-
-        received_for_logs = [member.to_response() for member in received_members]
-        existing_for_logs = [member.to_response() for member in existing_members]
-        logger.info(f"Received members: {received_for_logs}\n Existing members: {existing_for_logs}")
-
-        added_member = []
-        removed_member = []
-        updated_members = []
-        received_members_map = {}
-        existing_members_map = {}
-        for received_member in received_members:
-            received_member.set_status(OrganizationMemberStatus.PUBLISHED.value)
-            received_members_map[received_member.address] = received_member
-
-        existing_owner = None
-        for existing_member in existing_members:
-            existing_member.set_status(OrganizationMemberStatus.PUBLISHED.value)
-            if existing_member.role == Role.OWNER.value:
-                existing_owner = existing_member
-            else:
-                existing_members_map[existing_member.address] = existing_member
-
-        if existing_owner is not None:
-            existing_members.remove(existing_owner)
-
-        if not existing_owner or not existing_owner.address:
-            self._organization_repository.add_member([received_owner])
+    def _process_owner(self, org_uuid: str, owner_address: str, current_members_map: Dict[str, OrganizationMember]):
+        owner = current_members_map.get(owner_address, None)
+        if owner is None:
+            owner = OrganizationMember(
+                org_uuid=org_uuid,
+                role=Role.OWNER.value,
+                status=OrganizationMemberStatus.PUBLISHED.value,
+                address=owner_address,
+                username="",
+            )
         else:
-            if existing_owner.address == received_owner.address:
-                existing_owner.set_status(OrganizationMemberStatus.PUBLISHED.value)
-                self._organization_repository.update_org_member_using_address(
-                    org_uuid, existing_owner, existing_owner.address
+            owner.set_status(OrganizationMemberStatus.PUBLISHED.value)
+            owner.set_role(Role.OWNER.value)
+
+        self._organization_repository.upsert_org_member(owner)
+
+        # delete other owners
+        current_members_map[owner_address] = owner
+        for address, member in current_members_map.items():
+            if member.role != Role.OWNER.value:
+                continue
+            if address != owner_address or member.status != OrganizationMemberStatus.PUBLISHED.value or member.username != owner.username:
+                self._organization_repository.delete_org_member()
+
+    def _process_members(self, org_uuid: str, member_addresses: List[str], current_members_map: Dict[str, OrganizationMember]):
+        for member_address in member_addresses:
+            member = current_members_map.get(member_address, None)
+            if member_address not in current_members_map:
+                member = OrganizationMember(
+                    org_uuid=org_uuid,
+                    role=Role.MEMBER.value,
+                    status=OrganizationMemberStatus.PUBLISHED.value,
+                    address=member_address,
+                    username="",
                 )
             else:
-                self._organization_repository.delete_published_members(org_uuid, [existing_owner])
-                self._organization_repository.add_member([received_owner])
+                member.set_status(OrganizationMemberStatus.PUBLISHED.value)
+                member.set_role(Role.MEMBER.value)
+            self._organization_repository.upsert_org_member(member)
 
-        for received_member in received_members:
-            if received_member.address in existing_members_map:
-                updated_members.append(existing_members_map[received_member.address])
-            else:
-                added_member.append(received_member)
+    def _update_org_members(self, org_uuid: str, owner_address: str, member_addresses: List[str]):
+        current_members = self._organization_repository.get_org_member(org_uuid=org_uuid)
+        current_members_map = {member.address: member for member in current_members if member.address is not None}
+        logger.info(f"Current members: {current_members_map}")
+        logger.info(f"Owner address: {owner_address}")
+        logger.info(f"Member addresses: {member_addresses}")
 
-        for existing_member in existing_members:
-            if existing_member.address not in received_members_map:
-                removed_member.append(existing_member)
-
-        removed_for_logs = [member.to_response() for member in removed_member]
-        added_for_logs = [member.to_response() for member in added_member]
-        updated_for_logs = [member.to_response() for member in updated_members]
-        logger.info(f"Removed members: {removed_for_logs}\n Added members: {added_for_logs}\n Updated members: {updated_for_logs}")
-
-        if len(removed_member) > 0:
-            self._organization_repository.delete_published_members(org_uuid, removed_member)
-        if len(added_member) > 0:
-            self._organization_repository.add_member(added_member)
-
-        for member in updated_members:
-            self._organization_repository.update_org_member_using_address(
-                org_uuid, member, member.address
-            )
+        self._process_owner(org_uuid, owner_address, current_members_map)
+        self._process_members(org_uuid, member_addresses, current_members_map)
 
 
 class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
@@ -221,7 +209,7 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
         org_metadata_uri,
         transaction_hash,
         owner,
-        recieved_members_list,
+        received_members_list,
     ):
         try:
             existing_publish_in_progress_organization = (
@@ -271,14 +259,14 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
             )
 
             if not existing_publish_in_progress_organization:
-                existing_members = []
+                logger.info(f"The first path has chosen")
 
                 received_organization_event.setup_id()
                 org_uuid = received_organization_event.uuid
                 self._create_event_outside_publisher_portal(
                     received_organization_event, ""
                 )
-                logger.info(f"The first path has chosen")
+
             elif (
                 existing_publish_in_progress_organization.org_state.transaction_hash
                 != transaction_hash
@@ -286,38 +274,27 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                     received_organization_event
                 )[0]
             ):
+                logger.info(f"The second path has chosen")
+
                 org_uuid = existing_publish_in_progress_organization.uuid
                 logger.info(f"Detected Major change for {org_uuid}")
-                existing_members = self._organization_repository.get_org_member(
-                    org_uuid=existing_publish_in_progress_organization.uuid
-                )
                 self._organization_repository.store_organization(
                     existing_publish_in_progress_organization,
                     BLOCKCHAIN_USER,
                     OrganizationStatus.APPROVAL_PENDING.value,
                     test_transaction_hash="",
                 )
-                logger.info(f"The second path has chosen")
+
             else:
+                logger.info(f"The third path has chosen")
+
                 org_uuid = existing_publish_in_progress_organization.uuid
-                existing_members = self._organization_repository.get_org_member(
-                    org_uuid=existing_publish_in_progress_organization.uuid
-                )
                 self._mark_existing_publish_in_progress_as_published(
                     existing_publish_in_progress_organization, ""
                 )
-                logger.info(f"The third path has chosen")
-            owner = OrganizationFactory.parser_org_owner_from_metadata(
-                org_uuid, owner, OrganizationMemberStatus.PUBLISHED.value
-            )
-            recieved_members = OrganizationFactory.parser_org_members_from_metadata(
-                org_uuid,
-                recieved_members_list,
-                OrganizationMemberStatus.PUBLISHED.value,
-            )
 
-            logger.info(f"org_uuid: {org_uuid}, owner: {owner.to_response()}")
-            self._process_members(org_uuid, owner, existing_members, recieved_members)
+            self._update_org_members(org_uuid, owner, received_members_list)
+
         except Exception as e:
             traceback.print_exc()
             logger.exception(e)

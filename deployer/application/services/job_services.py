@@ -8,6 +8,7 @@ from dateutil.relativedelta import relativedelta
 
 from eth_typing import HexStr
 from web3 import Web3
+from web3.contract import Contract
 
 from common.blockchain_util import BlockChainUtil
 from common.logger import get_logger
@@ -21,7 +22,7 @@ from deployer.config import (
     TOKEN_JSON_FILE_NAME,
     DAEMON_STARTING_TTL_IN_MINUTES,
     DAEMON_RESTARTING_TTL_IN_MINUTES,
-    HAAS_FIX_PRICE_IN_COGS
+    HAAS_FIX_PRICE_IN_COGS, DAEMON_RUNNING_TIME_FOR_PRICE
 )
 from deployer.constant import AllowedEventNames
 from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
@@ -52,14 +53,18 @@ class JobService:
         self._haas_client = HaaSClient()
         self._storage_provider = StorageProvider()
 
-    def process_registry_event(self, request: RegistryEventConsumerRequest):
+    def process_registry_event(self, request: RegistryEventConsumerRequest) -> None:
         event_name = request.event_name
         org_id = request.org_id
         service_id = request.service_id
+        logger.info(f"Processing event {event_name} for service (org_id '{org_id}', service_id '{service_id}')")
+
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.search_daemon(session, org_id, service_id)
+            logger.info(f"Daemon: {daemon.to_response()}")
+
             if daemon is None:
-                logger.info(f"Service (org_id {org_id}, service_id {service_id}) doesn't use HaaS")
+                logger.info(f"Service (org_id '{org_id}', service_id '{service_id}') doesn't use HaaS")
                 return
             daemon_id = daemon.id
 
@@ -104,13 +109,14 @@ class JobService:
                 if daemon.status == DaemonStatus.UP:
                     self._deployer_client.redeploy_daemon(daemon_id)
 
-    def update_transaction_status(self):
+    def update_transaction_status(self) -> None:
         with session_scope(self.session_factory) as session:
             transactions_metadatas = TransactionRepository.get_transactions_metadata(session)
             for transactions_metadata in transactions_metadatas:
                 transactions, last_block = self._get_transactions_from_blockchain(
                     transactions_metadata
                 )
+                logger.info(f"Found {len(transactions)} new transactions for recipient {transactions_metadata.recipient}")
 
                 for new_transaction in transactions:
                     existing_transaction = TransactionRepository.get_transaction(
@@ -138,39 +144,42 @@ class JobService:
                             session, order.daemon_id, DaemonStatus.READY_TO_START
                         )
                         DaemonRepository.update_daemon_end_at(
-                            session, order.daemon_id, datetime.now(UTC) + relativedelta(months=+1)
+                            session, order.daemon_id, datetime.now(UTC) + relativedelta(**DAEMON_RUNNING_TIME_FOR_PRICE)
                         )
                     elif daemon.status in [DaemonStatus.UP, DaemonStatus.READY_TO_START]:
                         DaemonRepository.update_daemon_end_at(
-                            session, order.daemon_id, daemon.end_at + relativedelta(months=+1)
+                            session, order.daemon_id, daemon.end_at + relativedelta(**DAEMON_RUNNING_TIME_FOR_PRICE)
                         )
 
-                    TransactionRepository.update_transactions_metadata(
-                        session, transactions_metadata.id, last_block
-                    )
+                TransactionRepository.update_transactions_metadata(
+                    session, transactions_metadata.id, last_block
+                )
 
             TransactionRepository.fail_old_transactions(session)
             OrderRepository.fail_old_orders(session)
 
-    def check_daemons(self):
+    def check_daemons(self) -> None:
         with session_scope(self.session_factory) as session:
             daemons = DaemonRepository.get_daemons_without_statuses(
                 session, [DaemonStatus.INIT, DaemonStatus.ERROR, DaemonStatus.DOWN]
             )
-            logger.info(f"Found {len(daemons)} daemons to check")
+        logger.info(f"Found {len(daemons)} daemons to check")
         for daemon in daemons:
             if daemon.status == DaemonStatus.READY_TO_START and not daemon.service_published:
                 continue
 
             self._deployer_client.update_daemon_status(daemon.id, asynchronous=True)
+            logger.info(f"Checking daemon {daemon.id} for service {daemon.org_id} {daemon.service_id}...")
 
-    def update_daemon_status(self, request: DaemonRequest):
+    def update_daemon_status(self, request: DaemonRequest) -> None:
         daemon_id = request.daemon_id
 
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.get_daemon(session, daemon_id)
             daemon_status = daemon.status
             service_published = daemon.service_published
+
+            logger.info(f"Updating daemon: {daemon.to_response()}")
 
             if daemon is None:
                 raise DaemonNotFoundException(daemon_id)
@@ -186,8 +195,9 @@ class JobService:
             if (
                 last_claiming_period
                 and last_claiming_period.status == ClaimingPeriodStatus.ACTIVE
-                and last_claiming_period.end_at < current_time
+                and last_claiming_period.end_at.replace(tzinfo=UTC) < current_time
             ):
+                logger.info(f"Updating claiming period {last_claiming_period.to_response()}")
                 ClaimingPeriodRepository.update_claiming_period_status(
                     session, last_claiming_period.id, ClaimingPeriodStatus.INACTIVE
                 )
@@ -201,6 +211,7 @@ class JobService:
             if service_published:
                 if haas_daemon_status == HaaSDaemonStatus.DOWN:
                     if daemon_status == DaemonStatus.READY_TO_START:
+                        logger.info(f"Starting daemon {daemon_id}")
                         self._deployer_client.start_daemon(daemon_id)
                     elif daemon_status == DaemonStatus.STARTING:
                         if (
@@ -208,6 +219,7 @@ class JobService:
                             + timedelta(minutes=DAEMON_STARTING_TTL_IN_MINUTES)
                             < current_time
                         ):
+                            logger.info(f"Daemon {daemon_id} status is ERROR")
                             DaemonRepository.update_daemon_status(
                                 session, daemon_id, DaemonStatus.ERROR
                             )
@@ -215,10 +227,12 @@ class JobService:
                                 last_claiming_period
                                 and last_claiming_period.status == ClaimingPeriodStatus.ACTIVE
                             ):
+                                logger.info(f"Claiming period status is FAILED for daemon {daemon_id}")
                                 ClaimingPeriodRepository.update_claiming_period_status(
                                     session, last_claiming_period.id, ClaimingPeriodStatus.FAILED
                                 )
                     elif daemon_status == DaemonStatus.UP or DaemonStatus.DELETING:
+                        logger.info(f"Daemon {daemon_id} status is DOWN")
                         DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.DOWN)
                     elif daemon_status == DaemonStatus.RESTARTING:
                         if (
@@ -226,6 +240,7 @@ class JobService:
                             + timedelta(minutes=DAEMON_RESTARTING_TTL_IN_MINUTES)
                             < current_time
                         ):
+                            logger.info(f"Daemon status is ERROR")
                             DaemonRepository.update_daemon_status(
                                 session, daemon_id, DaemonStatus.ERROR
                             )
@@ -233,6 +248,7 @@ class JobService:
                                 last_claiming_period
                                 and last_claiming_period.status == ClaimingPeriodStatus.ACTIVE
                             ):
+                                logger.info(f"Claiming period status is FAILED")
                                 ClaimingPeriodRepository.update_claiming_period_status(
                                     session, last_claiming_period.id, ClaimingPeriodStatus.FAILED
                                 )
@@ -241,45 +257,54 @@ class JobService:
                         daemon_status == DaemonStatus.STARTING
                         or daemon_status == DaemonStatus.RESTARTING
                     ):
+                        logger.info(f"Daemon status is UP")
                         DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.UP)
                     elif daemon_status == DaemonStatus.UP:
-                        if daemon.end_at < current_time:
+                        if daemon.end_at.replace(tzinfo=UTC) < current_time:
                             if (
-                                last_claiming_period
-                                and last_claiming_period.status != ClaimingPeriodStatus.ACTIVE
+                                not last_claiming_period
+                                or (
+                                    last_claiming_period and
+                                    last_claiming_period.status != ClaimingPeriodStatus.ACTIVE
+                                )
                             ):
+                                logger.info(f"Stopping daemon")
                                 self._deployer_client.stop_daemon(daemon_id)
 
     @staticmethod
     def _get_transactions_from_blockchain(
         tx_metadata: TransactionsMetadataDomain,
     ) -> Tuple[List[NewEVMTransactionDomain], int]:
+        logger.info(f"Transactions metadata: {tx_metadata.to_response()}")
         blockchain_util = BlockChainUtil("HTTP_PROVIDER", NETWORKS[NETWORK_ID]["http_provider"])
         w3 = blockchain_util.web3_object
         current_block = blockchain_util.get_current_block_no()
+        logger.info(f"Current block: {current_block}")
         contract = JobService._get_token_contract(blockchain_util)
 
         from_block = tx_metadata.last_block_no + 1
         to_block = min(
             current_block - tx_metadata.block_adjustment, from_block + tx_metadata.fetch_limit
         )
+        logger.info(f"Fetching transactions from {from_block} to {to_block}")
 
-        transaction_filter = contract.events.Transfer.createFilter(
-            fromBlock=from_block, toBlock=to_block, argument_filters={"to": tx_metadata.recipient}
+        transaction_filter = contract.events.Transfer.create_filter(
+            from_block=from_block, to_block=to_block, argument_filters={"to": tx_metadata.recipient}
         )
 
         events = transaction_filter.get_all_entries()
         result = []
         for event in events:
+            logger.info(f"Processing transaction {event['transactionHash'].hex()}")
             if event["args"]["value"] != HAAS_FIX_PRICE_IN_COGS:
                 logger.warning(f"Skipping transaction {event['transactionHash'].hex()}. Expected value: {HAAS_FIX_PRICE_IN_COGS}. Actual value: {event['args']['value']}")
                 continue
-
             tx_hash = event["transactionHash"].hex()
             order_id = JobService._get_order_id_from_transaction(tx_hash, w3)
+            logger.info(f"Order id: {order_id}")
             result.append(
                 NewEVMTransactionDomain(
-                    hash=tx_hash,
+                    hash=tx_hash if tx_hash.startswith("0x") else "0x" + tx_hash,
                     order_id=order_id,
                     status=EVMTransactionStatus.SUCCESS,
                     sender=event["args"]["from"],
@@ -290,7 +315,7 @@ class JobService:
         return result, to_block
 
     @staticmethod
-    def _get_token_contract(bc_util: BlockChainUtil):
+    def _get_token_contract(bc_util: BlockChainUtil) -> Contract:
         base_path = os.path.abspath(
             os.path.join(CONTRACT_BASE_PATH, "node_modules", "singularitynet-token-contracts")
         )

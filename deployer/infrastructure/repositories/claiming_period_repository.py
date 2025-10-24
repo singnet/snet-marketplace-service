@@ -4,7 +4,7 @@ from typing import Optional, List, Dict
 from sqlalchemy import select, update, func, and_
 from sqlalchemy.orm import Session
 
-from deployer.config import CLAIMING_PERIOD_IN_HOURS
+from deployer.config import CLAIMING_PERIOD_IN_MINUTES
 from deployer.domain.factory.claiming_period_factory import ClaimingPeriodFactory
 from deployer.domain.models.claiming_period import ClaimingPeriodDomain
 from deployer.infrastructure.models import ClaimingPeriod, ClaimingPeriodStatus
@@ -17,7 +17,7 @@ class ClaimingPeriodRepository:
         claiming_period_model = ClaimingPeriod(
             daemon_id=daemon_id,
             start_at=current_time,
-            end_at=current_time + timedelta(hours=CLAIMING_PERIOD_IN_HOURS),
+            end_at=current_time + timedelta(minutes=CLAIMING_PERIOD_IN_MINUTES),
             status=ClaimingPeriodStatus.ACTIVE,
         )
 

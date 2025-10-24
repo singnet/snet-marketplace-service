@@ -70,6 +70,9 @@ package:
 
 resources:
   Resources:
+
+    # ==================== REGISTRY EVENTS ====================
+
     registryEventConsumerQueue:
       Type: AWS::SQS::Queue
       Properties:
@@ -131,6 +134,134 @@ resources:
                   aws:SourceArn: !GetAtt registryEventConsumerQueue.Arn
         Queues:
           - !Ref registryEventConsumerDLQ
+
+    # ==================== DEPLOY SERVICE EVENTS (for v2) ====================
+
+    deployServiceEventConsumerQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${file(./config.${self:provider.stage}.json):DEPLOY_SERVICE_QUEUE}
+        VisibilityTimeout: ${self:custom.queue.messageVisibilityTimeout}
+        ReceiveMessageWaitTimeSeconds: ${self:custom.queue.receiveMessageWaitTimeSeconds}
+        MessageRetentionPeriod: ${self:custom.queue.queueMessageRetention}
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt deployServiceEventConsumerDLQ.Arn
+          maxReceiveCount: ${self:custom.queue.queueMaxReceiveCount}
+
+    deployServiceEventConsumerQueuePolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        PolicyDocument:
+          Id: deployServiceEventConsumerQueue
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action:
+                - sqs:SendMessage
+              Resource: !GetAtt deployServiceEventConsumerQueue.Arn
+              Condition:
+                ArnEquals:
+                  aws:SourceArn: ${file(./config.${self:provider.stage}.json):DEPLOY_SERVICE_TOPIC_ARN}
+        Queues:
+          - !Ref deployServiceEventConsumerQueue
+
+    deployServiceEventConsumerTopicSubscriptionForSQS:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Protocol: sqs
+        Endpoint: !GetAtt deployServiceEventConsumerQueue.Arn
+        TopicArn: ${file(./config.${self:provider.stage}.json):DEPLOY_SERVICE_TOPIC_ARN}
+
+    deployServiceEventConsumerDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${file(./config.${self:provider.stage}.json):DEPLOY_SERVICE_QUEUE}-dlq
+        VisibilityTimeout: ${self:custom.queue.messageVisibilityTimeout}
+        ReceiveMessageWaitTimeSeconds: ${self:custom.queue.receiveMessageWaitTimeSeconds}
+        MessageRetentionPeriod: ${self:custom.queue.dlqMessageRetention}
+
+    deployServiceEventConsumerDLQPolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        PolicyDocument:
+          Id: deployServiceEventConsumerDLQ
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action:
+                - sqs:SendMessage
+              Resource: !GetAtt deployServiceEventConsumerDLQ.Arn
+              Condition:
+                ArnEquals:
+                  aws:SourceArn: !GetAtt deployServiceEventConsumerQueue.Arn
+        Queues:
+          - !Ref deployServiceEventConsumerDLQ
+
+    # ==================== SERVICE CALL EVENTS (metrics) (for v2) ====================
+
+    serviceCallForMetricsEventConsumerQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${file(./config.${self:provider.stage}.json):SERVICE_CALL_FOR_METRICS_QUEUE}
+        VisibilityTimeout: ${self:custom.queue.messageVisibilityTimeout}
+        ReceiveMessageWaitTimeSeconds: ${self:custom.queue.receiveMessageWaitTimeSeconds}
+        MessageRetentionPeriod: ${self:custom.queue.queueMessageRetention}
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt serviceCallForMetricsEventConsumerDLQ.Arn
+          maxReceiveCount: ${self:custom.queue.queueMaxReceiveCount}
+
+    serviceCallForMetricsEventConsumerQueuePolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        PolicyDocument:
+          Id: serviceCallForMetricsEventConsumerQueue
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action:
+                - sqs:SendMessage
+              Resource: !GetAtt serviceCallForMetricsEventConsumerQueue.Arn
+              Condition:
+                ArnEquals:
+                  aws:SourceArn: ${file(./config.${self:provider.stage}.json):SERVICE_CALL_TOPIC_ARN}
+        Queues:
+          - !Ref serviceCallForMetricsEventConsumerQueue
+
+    serviceCallForMetricsEventConsumerTopicSubscriptionForSQS:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Protocol: sqs
+        Endpoint: !GetAtt serviceCallForMetricsEventConsumerQueue.Arn
+        TopicArn: ${file(./config.${self:provider.stage}.json):SERVICE_CALL_TOPIC_ARN}
+
+    serviceCallForMetricsEventConsumerDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${file(./config.${self:provider.stage}.json):SERVICE_CALL_FOR_METRICS_QUEUE}-dlq
+        VisibilityTimeout: ${self:custom.queue.messageVisibilityTimeout}
+        ReceiveMessageWaitTimeSeconds: ${self:custom.queue.receiveMessageWaitTimeSeconds}
+        MessageRetentionPeriod: ${self:custom.queue.dlqMessageRetention}
+
+    serviceCallForMetricsEventConsumerDLQPolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        PolicyDocument:
+          Id: serviceCallForMetricsEventConsumerDLQ
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action:
+                - sqs:SendMessage
+              Resource: !GetAtt serviceCallForMetricsEventConsumerDLQ.Arn
+              Condition:
+                ArnEquals:
+                  aws:SourceArn: !GetAtt serviceCallForMetricsEventConsumerQueue.Arn
+        Queues:
+          - !Ref serviceCallForMetricsEventConsumerDLQ
 
 functions:
 

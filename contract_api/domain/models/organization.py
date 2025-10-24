@@ -33,8 +33,6 @@ class OrganizationDomain(NewOrganizationDomain, BaseDomain):
         return {
             "orgId": self.org_id,
             "organizationName": self.organization_name,
-            "orgImageUrl": self.org_assets_url["hero_image"],
+            "orgImageUrl": self.org_assets_url.get("hero_image", ""),
             "supportContacts": support_contacts
         }
-
-

@@ -4,7 +4,8 @@ from deployer.application.schemas.transaction_schemas import (
 )
 from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
 from deployer.infrastructure.db import DefaultSessionFactory, session_scope
-from deployer.infrastructure.models import EVMTransactionStatus
+from deployer.infrastructure.models import EVMTransactionStatus, OrderStatus
+from deployer.infrastructure.repositories.order_repository import OrderRepository
 from deployer.infrastructure.repositories.transaction_repository import TransactionRepository
 
 
@@ -24,6 +25,8 @@ class TransactionService:
                     recipient=request.recipient,
                 ),
             )
+
+            OrderRepository.update_order_status(session, request.order_id, OrderStatus.PROCESSING)
 
         return {}
 
