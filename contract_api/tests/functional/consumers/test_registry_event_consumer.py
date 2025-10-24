@@ -101,7 +101,8 @@ class TestRegistryEventConsumer(TestCase):
     @patch('common.blockchain_util.BlockChainUtil.read_contract_address')
     @patch('contract_api.application.consumers.event_consumer.EventConsumer._push_asset_to_s3_using_hash')
     @patch('contract_api.application.consumers.service_event_consumers.ServiceCreatedDeploymentEventHandler.process_service_deployment')
-    def test_b_service_created(self, process_service_deployment, push_assets_to_s3, read_contract_address, storage_provider_get):
+    @patch('boto3.client')
+    def test_b_service_created(self, lambda_client, process_service_deployment, push_assets_to_s3, read_contract_address, storage_provider_get):
         event = {'Records': [
             {'body': '{\n "Message" : "{\\"blockchain_name\\": \\"Ethereum\\", \\"blockchain_event\\": {\\"name\\": \\"ServiceCreated\\", \\"data\\": {\\"block_no\\": 8640583, \\"from_address\\": \\"0xeDFb9c1e6C4ac9A2333552C5F52a0acaeB555EA8\\", \\"to_address\\": \\"0xE73aC4AC2D9Df5698710fFB2f6c3923ADf0bA055\\", \\"json_str\\": \\"{\'orgId\': b\'190625\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\', \'serviceId\': b\'190625_2\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\', \'metadataURI\': b\'ipfs://QmYVYBxjCxLWYYnz6bK5kHYVW8JBfFLwn4MGzEpMiF7LZ1\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\\\\\\\\x00\'}\\", \\"transaction_hash\\": \\"0x38fd6accd2103bd041571b6081acaf845083d4b2878599a91217f76694b6e5cb\\", \\"log_index\\": 8}}}"\n}'}
         ]}
@@ -166,6 +167,7 @@ class TestRegistryEventConsumer(TestCase):
         read_contract_address.return_value = mock_mpe_address
         push_assets_to_s3.return_value = mock_s3_url
         process_service_deployment.return_value = mock_deployment_none
+        lambda_client.return_value = None
 
         registry_event_consumer(event, context = None)
 

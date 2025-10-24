@@ -72,6 +72,7 @@ jobs:
           # export PIP_BREAK_SYSTEM_PACKAGES=1
           # socat TCP-LISTEN:3306,fork TCP:mysql:3306 &
           # mysql -h 172.17.0.1 -u root -punittest_pwd -e "create database registry_unittest_db"
+          mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "create database contract_api_unittest_db"
           mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "create database registry_unittest_db"
           mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "create database verification_unittest_db"
           mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "create database signer_unittest_db"
