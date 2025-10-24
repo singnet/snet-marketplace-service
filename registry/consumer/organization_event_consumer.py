@@ -119,7 +119,7 @@ class OrganizationEventConsumer:
             if member.role != Role.OWNER.value:
                 continue
             if address != owner_address or member.status != OrganizationMemberStatus.PUBLISHED.value or member.username != owner.username:
-                self._organization_repository.delete_org_member()
+                self._organization_repository.delete_org_member(member)
 
     def _process_members(self, org_uuid: str, member_addresses: List[str], current_members_map: Dict[str, OrganizationMember]):
         for member_address in member_addresses:
