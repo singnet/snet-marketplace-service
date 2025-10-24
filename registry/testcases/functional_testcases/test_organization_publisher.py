@@ -15,7 +15,7 @@ from registry.infrastructure.models import (
     Group,
     Organization,
 )
-from registry.testcases.test_variables import ORG_CONTACTS
+from registry.testcases.test_variables import ORG_CONTACTS, TEST_SUB
 
 ORIGIN = "PUBLISHER"
 
@@ -50,7 +50,7 @@ class TestOrganizationPublisher(TestCase):
             OrganizationStatus.PUBLISHED.value,
         )
         event = {
-            "requestContext": {"authorizer": {"claims": {"email": username}}},
+            "requestContext": {"authorizer": {"claims": {"email": username, "sub": TEST_SUB}}},
             "headers":{"origin": "testnet.marketplace"},
             "pathParameters": {"org_uuid": test_org_uuid},
             "body": json.dumps(

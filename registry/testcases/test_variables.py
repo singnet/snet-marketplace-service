@@ -24,6 +24,7 @@ ORG_ADDRESS = {
     ]
 }
 ORIGIN = "PUBLISHER"
+TEST_SUB = "test_sub"
 ORG_CONTACTS = [
     {
         "contact_type": "support",
