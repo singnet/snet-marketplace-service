@@ -88,7 +88,7 @@ class HaaSClient:
         path = HAAS_BASE_URL + "/v1/daemon/redeploy"
         request_data = {
             "registry": HAAS_REGISTRY,
-            "reg_repo": HAAS_REG_REPO,
+            "regrepo": HAAS_REG_REPO,
             "org": org_id,
             "service": service_id,
             "daemon_group": daemon_config["daemon_group"],
