@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
@@ -92,10 +93,10 @@ class GetMetricsRequest(BaseModel):
 
 class CallEventConsumerRequest(BaseModel, QueueEventRequest):
     org_id: str = Field(alias="orgId")
-    service_id: str | None = Field(alias="serviceId")
+    service_id: str = Field(alias="serviceId")
     duration: int
     amount: int
-    timestamp: str
+    timestamp: datetime
 
     @classmethod
     @validation_handler([RequestPayloadType.BODY])
