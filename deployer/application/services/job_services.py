@@ -211,20 +211,26 @@ class JobService:
             )
 
             if service_published:
+                # process daemon only if service is published
                 if haas_daemon_status == HaaSDaemonStatus.DOWN:
+                    # the first branch for DOWN daemon
                     if daemon_status == DaemonStatus.READY_TO_START:
+                        # deploy the daemon if it is published and ready to start
                         logger.info(f"Starting daemon {daemon_id}")
                         self._deployer_client.start_daemon(daemon_id)
-                    elif daemon_status == DaemonStatus.STARTING:
+                    elif daemon_status in [DaemonStatus.STARTING, DaemonStatus.RESTARTING]:
+                        # check daemon starting/restarting ttl and if it is expired, set daemon status to error
+                        ttl = DAEMON_STARTING_TTL_IN_MINUTES if daemon_status == DaemonStatus.STARTING else DAEMON_RESTARTING_TTL_IN_MINUTES
                         if (
                             daemon.updated_at.replace(tzinfo=UTC)
-                            + timedelta(minutes=DAEMON_STARTING_TTL_IN_MINUTES)
+                            + timedelta(minutes=ttl)
                             < current_time
                         ):
                             logger.info(f"Daemon {daemon_id} status is ERROR")
                             DaemonRepository.update_daemon_status(
                                 session, daemon_id, DaemonStatus.ERROR
                             )
+                            # fail the last claiming period if it is active, because the daemon didn't start
                             if (
                                 last_claiming_period
                                 and last_claiming_period.status == ClaimingPeriodStatus.ACTIVE
@@ -233,37 +239,23 @@ class JobService:
                                 ClaimingPeriodRepository.update_claiming_period_status(
                                     session, last_claiming_period.id, ClaimingPeriodStatus.FAILED
                                 )
-                    elif daemon_status == DaemonStatus.UP or daemon_status == DaemonStatus.DELETING:
-                        logger.info(f"Daemon {daemon_id} status is DOWN")
-                        DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.DOWN)
-                    elif daemon_status == DaemonStatus.RESTARTING:
-                        if (
-                            daemon.updated_at.replace(tzinfo=UTC)
-                            + timedelta(minutes=DAEMON_RESTARTING_TTL_IN_MINUTES)
-                            < current_time
-                        ):
-                            logger.info(f"Daemon {daemon_id} status is ERROR")
-                            DaemonRepository.update_daemon_status(
-                                session, daemon_id, DaemonStatus.ERROR
-                            )
-                            if (
-                                last_claiming_period
-                                and last_claiming_period.status == ClaimingPeriodStatus.ACTIVE
-                            ):
-                                logger.info(f"Claiming period status is FAILED")
-                                ClaimingPeriodRepository.update_claiming_period_status(
-                                    session, last_claiming_period.id, ClaimingPeriodStatus.FAILED
-                                )
                         else:
-                            logger.info(f"Daemon {daemon_id} status is still RESTARTING")
+                            # if ttl isn't expired, continue waiting and checking daemon status
+                            logger.info(f"Daemon {daemon_id} status is still {daemon_status.value}")
+                    elif daemon_status == DaemonStatus.UP or daemon_status == DaemonStatus.DELETING:
+                        # if daemon is UP or DELETING, set daemon status to DOWN
+                        logger.info(f"Daemon {daemon_id} status is DOWN")
                 elif haas_daemon_status == HaaSDaemonStatus.UP:
+                    # the second branch for UP daemon
                     if (
                         daemon_status == DaemonStatus.STARTING
                         or daemon_status == DaemonStatus.RESTARTING
                     ):
+                        # daemon is finally UP
                         logger.info(f"Daemon {daemon_id} status is UP")
                         DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.UP)
                     elif daemon_status == DaemonStatus.UP:
+                        # check daemon expiration
                         if daemon.end_at.replace(tzinfo=UTC) < current_time:
                             if (
                                 not last_claiming_period
