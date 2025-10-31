@@ -85,6 +85,7 @@ class JobService:
                 )
 
             service_class = self._get_service_class(service_api_source)
+            logger.info(f"Service class: {service_class}")
 
             if daemon.daemon_endpoint != daemon_endpoint:
                 logger.info(f"Service (org_id {org_id}, service_id {service_id}) doesn't use HaaS")
@@ -98,6 +99,7 @@ class JobService:
             new_config["service_class"] = service_class
 
             DaemonRepository.update_daemon_config(session, daemon_id, new_config)
+            logger.info(f"Daemon config updated for daemon {daemon_id}. New config: {new_config}")
 
             if event_name == AllowedEventNames.SERVICE_DELETED:
                 DaemonRepository.update_daemon_service_published(session, daemon_id, False)
@@ -240,7 +242,7 @@ class JobService:
                             + timedelta(minutes=DAEMON_RESTARTING_TTL_IN_MINUTES)
                             < current_time
                         ):
-                            logger.info(f"Daemon status is ERROR")
+                            logger.info(f"Daemon {daemon_id} status is ERROR")
                             DaemonRepository.update_daemon_status(
                                 session, daemon_id, DaemonStatus.ERROR
                             )
@@ -257,7 +259,7 @@ class JobService:
                         daemon_status == DaemonStatus.STARTING
                         or daemon_status == DaemonStatus.RESTARTING
                     ):
-                        logger.info(f"Daemon status is UP")
+                        logger.info(f"Daemon {daemon_id} status is UP")
                         DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.UP)
                     elif daemon_status == DaemonStatus.UP:
                         if daemon.end_at.replace(tzinfo=UTC) < current_time:
@@ -268,7 +270,7 @@ class JobService:
                                     last_claiming_period.status != ClaimingPeriodStatus.ACTIVE
                                 )
                             ):
-                                logger.info(f"Stopping daemon")
+                                logger.info(f"Stopping daemon {daemon_id}")
                                 self._deployer_client.stop_daemon(daemon_id)
 
     @staticmethod
