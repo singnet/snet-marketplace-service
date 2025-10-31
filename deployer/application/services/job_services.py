@@ -245,6 +245,7 @@ class JobService:
                     elif daemon_status == DaemonStatus.UP or daemon_status == DaemonStatus.DELETING:
                         # if daemon is UP or DELETING, set daemon status to DOWN
                         logger.info(f"Daemon {daemon_id} status is DOWN")
+                        DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.DOWN)
                 elif haas_daemon_status == HaaSDaemonStatus.UP:
                     # the second branch for UP daemon
                     if (
