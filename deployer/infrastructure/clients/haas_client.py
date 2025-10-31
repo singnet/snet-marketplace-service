@@ -122,7 +122,7 @@ class HaaSClient:
             else:
                 raise HaaSClientError(result.text)
         except Exception as e:
-            logger.error(f"Unexpected error while checking daemon: {e}")
+            logger.exception(f"Unexpected error while checking daemon: {e}", exc_info=True)
             return HaaSDaemonStatus.DOWN, None
 
     def get_public_key(self) -> str:

@@ -233,7 +233,7 @@ class JobService:
                                 ClaimingPeriodRepository.update_claiming_period_status(
                                     session, last_claiming_period.id, ClaimingPeriodStatus.FAILED
                                 )
-                    elif daemon_status == DaemonStatus.UP or DaemonStatus.DELETING:
+                    elif daemon_status == DaemonStatus.UP or daemon_status == DaemonStatus.DELETING:
                         logger.info(f"Daemon {daemon_id} status is DOWN")
                         DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.DOWN)
                     elif daemon_status == DaemonStatus.RESTARTING:
@@ -254,6 +254,8 @@ class JobService:
                                 ClaimingPeriodRepository.update_claiming_period_status(
                                     session, last_claiming_period.id, ClaimingPeriodStatus.FAILED
                                 )
+                        else:
+                            logger.info(f"Daemon {daemon_id} status is still RESTARTING")
                 elif haas_daemon_status == HaaSDaemonStatus.UP:
                     if (
                         daemon_status == DaemonStatus.STARTING
