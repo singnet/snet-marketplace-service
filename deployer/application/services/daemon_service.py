@@ -87,7 +87,9 @@ class DaemonService:
             if (
                 last_claiming_period is not None
                 and last_claiming_period.status != ClaimingPeriodStatus.FAILED
-                and last_claiming_period.end_at + timedelta(hours=24) - timedelta(minutes=CLAIMING_PERIOD_IN_MINUTES)
+                and last_claiming_period.end_at
+                + timedelta(hours=24)
+                - timedelta(minutes=CLAIMING_PERIOD_IN_MINUTES)
                 > current_time
             ):
                 raise ClaimingNotAvailableException(
@@ -95,7 +97,9 @@ class DaemonService:
                 )
             ClaimingPeriodRepository.create_claiming_period(session, request.daemon_id)
             logger.info(f"Daemon {daemon.id} status is READY_TO_START")
-            DaemonRepository.update_daemon_status(session, request.daemon_id, DaemonStatus.READY_TO_START)
+            DaemonRepository.update_daemon_status(
+                session, request.daemon_id, DaemonStatus.READY_TO_START
+            )
         return {}
 
     def start_daemon(self, request: DaemonRequest):
@@ -108,7 +112,9 @@ class DaemonService:
                 raise DaemonNotFoundException(daemon_id)
 
             if daemon.status != DaemonStatus.READY_TO_START or not daemon.service_published:
-                logger.info(f"Daemon status is not ready to start: {daemon.status}, service_published: {daemon.service_published}")
+                logger.info(
+                    f"Daemon status is not ready to start: {daemon.status}, service_published: {daemon.service_published}"
+                )
                 return {}
 
             logger.info(f"Starting daemon: {daemon.to_response()}")

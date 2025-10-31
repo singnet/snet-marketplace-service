@@ -22,7 +22,9 @@ from deployer.config import (
     TOKEN_JSON_FILE_NAME,
     DAEMON_STARTING_TTL_IN_MINUTES,
     DAEMON_RESTARTING_TTL_IN_MINUTES,
-    HAAS_FIX_PRICE_IN_COGS, DAEMON_RUNNING_TIME_FOR_PRICE
+    HAAS_FIX_PRICE_IN_COGS,
+    DAEMON_RUNNING_TIME_FOR_PRICE,
+    DAEMON_RESTARTING_TTL_LOWER_LIMIT_IN_MINUTES,
 )
 from deployer.constant import AllowedEventNames
 from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
@@ -57,14 +59,18 @@ class JobService:
         event_name = request.event_name
         org_id = request.org_id
         service_id = request.service_id
-        logger.info(f"Processing event {event_name} for service (org_id '{org_id}', service_id '{service_id}')")
+        logger.info(
+            f"Processing event {event_name} for service (org_id '{org_id}', service_id '{service_id}')"
+        )
 
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.search_daemon(session, org_id, service_id)
             logger.info(f"Daemon: {daemon.to_response()}")
 
             if daemon is None:
-                logger.info(f"Service (org_id '{org_id}', service_id '{service_id}') doesn't use HaaS")
+                logger.info(
+                    f"Service (org_id '{org_id}', service_id '{service_id}') doesn't use HaaS"
+                )
                 return
             daemon_id = daemon.id
 
@@ -118,7 +124,9 @@ class JobService:
                 transactions, last_block = self._get_transactions_from_blockchain(
                     transactions_metadata
                 )
-                logger.info(f"Found {len(transactions)} new transactions for recipient {transactions_metadata.recipient}")
+                logger.info(
+                    f"Found {len(transactions)} new transactions for recipient {transactions_metadata.recipient}"
+                )
 
                 for new_transaction in transactions:
                     existing_transaction = TransactionRepository.get_transaction(
@@ -146,11 +154,15 @@ class JobService:
                             session, order.daemon_id, DaemonStatus.READY_TO_START
                         )
                         DaemonRepository.update_daemon_end_at(
-                            session, order.daemon_id, datetime.now(UTC) + relativedelta(**DAEMON_RUNNING_TIME_FOR_PRICE)
+                            session,
+                            order.daemon_id,
+                            datetime.now(UTC) + relativedelta(**DAEMON_RUNNING_TIME_FOR_PRICE),
                         )
                     elif daemon.status in [DaemonStatus.UP, DaemonStatus.READY_TO_START]:
                         DaemonRepository.update_daemon_end_at(
-                            session, order.daemon_id, daemon.end_at + relativedelta(**DAEMON_RUNNING_TIME_FOR_PRICE)
+                            session,
+                            order.daemon_id,
+                            daemon.end_at + relativedelta(**DAEMON_RUNNING_TIME_FOR_PRICE),
                         )
 
                 TransactionRepository.update_transactions_metadata(
@@ -171,7 +183,9 @@ class JobService:
                 continue
 
             self._deployer_client.update_daemon_status(daemon.id, asynchronous=True)
-            logger.info(f"Checking daemon {daemon.id} for service {daemon.org_id} {daemon.service_id}...")
+            logger.info(
+                f"Checking daemon {daemon.id} for service {daemon.org_id} {daemon.service_id}..."
+            )
 
     def update_daemon_status(self, request: DaemonRequest) -> None:
         daemon_id = request.daemon_id
@@ -220,10 +234,13 @@ class JobService:
                         self._deployer_client.start_daemon(daemon_id)
                     elif daemon_status in [DaemonStatus.STARTING, DaemonStatus.RESTARTING]:
                         # check daemon starting/restarting ttl and if it is expired, set daemon status to error
-                        ttl = DAEMON_STARTING_TTL_IN_MINUTES if daemon_status == DaemonStatus.STARTING else DAEMON_RESTARTING_TTL_IN_MINUTES
+                        ttl = (
+                            DAEMON_STARTING_TTL_IN_MINUTES
+                            if daemon_status == DaemonStatus.STARTING
+                            else DAEMON_RESTARTING_TTL_IN_MINUTES
+                        )
                         if (
-                            daemon.updated_at.replace(tzinfo=UTC)
-                            + timedelta(minutes=ttl)
+                            daemon.updated_at.replace(tzinfo=UTC) + timedelta(minutes=ttl)
                             < current_time
                         ):
                             logger.info(f"Daemon {daemon_id} status is ERROR")
@@ -235,7 +252,9 @@ class JobService:
                                 last_claiming_period
                                 and last_claiming_period.status == ClaimingPeriodStatus.ACTIVE
                             ):
-                                logger.info(f"Claiming period status is FAILED for daemon {daemon_id}")
+                                logger.info(
+                                    f"Claiming period status is FAILED for daemon {daemon_id}"
+                                )
                                 ClaimingPeriodRepository.update_claiming_period_status(
                                     session, last_claiming_period.id, ClaimingPeriodStatus.FAILED
                                 )
@@ -252,18 +271,25 @@ class JobService:
                         daemon_status == DaemonStatus.STARTING
                         or daemon_status == DaemonStatus.RESTARTING
                     ):
+                        if (
+                            daemon_status == DaemonStatus.RESTARTING
+                            and daemon.updated_at.replace(tzinfo=UTC)
+                            + timedelta(minutes=DAEMON_RESTARTING_TTL_LOWER_LIMIT_IN_MINUTES)
+                            > current_time
+                        ):
+                            # if we check the status of the daemon almost immediately after redeployment,
+                            # and the daemon has not yet had time to delete itself
+                            logger.info(f"Daemon {daemon_id} is still RESTARTING")
+                            return
                         # daemon is finally UP
                         logger.info(f"Daemon {daemon_id} status is UP")
                         DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.UP)
                     elif daemon_status == DaemonStatus.UP:
                         # check daemon expiration
                         if daemon.end_at.replace(tzinfo=UTC) < current_time:
-                            if (
-                                not last_claiming_period
-                                or (
-                                    last_claiming_period and
-                                    last_claiming_period.status != ClaimingPeriodStatus.ACTIVE
-                                )
+                            if not last_claiming_period or (
+                                last_claiming_period
+                                and last_claiming_period.status != ClaimingPeriodStatus.ACTIVE
                             ):
                                 logger.info(f"Stopping daemon {daemon_id}")
                                 self._deployer_client.stop_daemon(daemon_id)
@@ -294,7 +320,9 @@ class JobService:
         for event in events:
             logger.info(f"Processing transaction {event['transactionHash'].hex()}")
             if event["args"]["value"] != HAAS_FIX_PRICE_IN_COGS:
-                logger.warning(f"Skipping transaction {event['transactionHash'].hex()}. Expected value: {HAAS_FIX_PRICE_IN_COGS}. Actual value: {event['args']['value']}")
+                logger.warning(
+                    f"Skipping transaction {event['transactionHash'].hex()}. Expected value: {HAAS_FIX_PRICE_IN_COGS}. Actual value: {event['args']['value']}"
+                )
                 continue
             tx_hash = event["transactionHash"].hex()
             order_id = JobService._get_order_id_from_transaction(tx_hash, w3)
