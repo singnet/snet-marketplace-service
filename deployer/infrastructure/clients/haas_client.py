@@ -137,7 +137,9 @@ class HaaSClient:
             raise HaaSClientError(str(e))
 
     # TODO: implement methods below
-    def get_call_events(self, org_id: str, service_id: str, limit: int, page: int, order: str, period: str) -> Tuple[list, int]:
+    def get_call_events(
+        self, org_id: str, service_id: str, limit: int, page: int, order: str, period: str
+    ) -> Tuple[list, int]:
         pass
 
     def delete_hosted_service(self, org_id: str, service_id: str):

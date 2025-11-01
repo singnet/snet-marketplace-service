@@ -12,7 +12,7 @@ from deployer.application.schemas.deployments_schemas import (
     RegistryEventConsumerRequest,
 )
 from deployer.config import DEFAULT_DAEMON_STORAGE_TYPE, REGION_NAME, DEPLOY_SERVICE_TOPIC_ARN
-from deployer.constant import AllowedEventNames
+from deployer.constant import AllowedRegistryEventNames
 from deployer.domain.models.daemon import NewDaemonDomain, DaemonDomain
 from deployer.domain.models.hosted_service import NewHostedServiceDomain, HostedServiceDomain
 from deployer.exceptions import DaemonAlreadyExistsException
@@ -103,7 +103,7 @@ class DeploymentsService:
         org_id = request.org_id
         service_id = request.service_id
 
-        if event_name not in AllowedEventNames:
+        if event_name not in AllowedRegistryEventNames:
             logger.info(f"Event {event_name} doesn't need to be processed")
             return
 
@@ -114,7 +114,7 @@ class DeploymentsService:
                 return
             daemon_id = daemon.id
 
-            if event_name == AllowedEventNames.SERVICE_DELETED:
+            if event_name == AllowedRegistryEventNames.SERVICE_DELETED:
                 self._delete_deployments(daemon, session)
                 return
 
@@ -141,7 +141,7 @@ class DeploymentsService:
             self._deployer_client.deploy_daemon(daemon_id, asynchronous=True)
 
             if (
-                event_name == AllowedEventNames.SERVICE_CREATED
+                event_name == AllowedRegistryEventNames.SERVICE_CREATED
                 and daemon.hosted_service is not None
             ):
                 self._push_deploy_service_event(org_id, service_id, daemon.hosted_service)

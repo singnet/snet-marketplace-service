@@ -10,7 +10,7 @@ class DaemonStorageType(str, Enum):
 AUTH_PARAMETERS = ["key", "value", "location"]
 
 
-class AllowedEventNames(str, Enum):
+class AllowedRegistryEventNames(str, Enum):
     SERVICE_CREATED = "ServiceCreated"
     SERVICE_METADATA_MODIFIED = "ServiceMetadataModified"
     SERVICE_DELETED = "ServiceDeleted"

@@ -44,3 +44,14 @@ class UpdateHostedServiceStatusRequest(BaseModel, QueueEventRequest):
         if self.status == HaaSServiceStatus.RESTARTING and self.commit_hash is None:
             raise MissingCommitHashParameter()
         return self
+
+
+class CheckGithubRepositoryRequest(BaseModel):
+    account_name: str = Field(alias="accountName")
+    repository_name: str = Field(alias="repositoryName")
+
+    @classmethod
+    @validation_handler([RequestPayloadType.QUERY_STRING])
+    def validate_event(cls, event: dict) -> "CheckGithubRepositoryRequest":
+        data = {**event[RequestPayloadType.QUERY_STRING]}
+        return cls.model_validate(data)

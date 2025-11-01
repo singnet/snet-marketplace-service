@@ -8,7 +8,7 @@ from web3 import Web3
 from common.constant import RequestPayloadType
 from common.validation_handler import validation_handler
 from deployer.application.schemas.queue_schema import QueueEventRequest
-from deployer.constant import AUTH_PARAMETERS, AllowedEventNames
+from deployer.constant import AUTH_PARAMETERS, AllowedRegistryEventNames
 from deployer.exceptions import (
     InvalidServiceAuthParameters,
     MissingServiceEndpointException,
@@ -87,7 +87,7 @@ class RegistryEventConsumerRequest(BaseModel, QueueEventRequest):
 
     @model_validator(mode="after")
     def validate_service_event(self):
-        if self.event_name in AllowedEventNames:
+        if self.event_name in AllowedRegistryEventNames:
             if not self.service_id or not self.metadata_uri:
                 raise MissingServiceEventParameters()
         return self

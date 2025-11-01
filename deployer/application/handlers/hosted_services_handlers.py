@@ -6,6 +6,7 @@ from common.utils import generate_lambda_response
 from deployer.application.schemas.hosted_services_schemas import (
     HostedServiceRequest,
     UpdateHostedServiceStatusRequest,
+    CheckGithubRepositoryRequest,
 )
 from deployer.application.services.authorization_service import AuthorizationService
 from deployer.application.services.hosted_services_service import HostedServicesService
@@ -24,6 +25,17 @@ def get_hosted_service(event, context):
     )
 
     response = HostedServicesService().get_hosted_service(request)
+
+    return generate_lambda_response(
+        StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+@exception_handler(logger=logger)
+def check_github_repository(event, context):
+    request = CheckGithubRepositoryRequest.validate_event(event)
+
+    response = HostedServicesService().check_github_repository(request)
 
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True

@@ -1,8 +1,10 @@
 from deployer.application.schemas.hosted_services_schemas import (
     HostedServiceRequest,
     UpdateHostedServiceStatusRequest,
+    CheckGithubRepositoryRequest,
 )
-from deployer.exceptions import HostedServiceNotFoundException
+from deployer.exceptions import HostedServiceNotFoundException, RepositoryInstallationNotFoundException
+from deployer.infrastructure.clients.github_api_client import GithubAPIClient
 from deployer.infrastructure.clients.haas_client import HaaSClient
 from deployer.infrastructure.db import DefaultSessionFactory, session_scope
 from deployer.infrastructure.models import DeploymentStatus
@@ -14,6 +16,7 @@ class HostedServicesService:
     def __init__(self):
         self.session_factory = DefaultSessionFactory
         self._haas_client = HaaSClient()
+        self._github_client = GithubAPIClient()
 
     def get_hosted_service(self, request: HostedServiceRequest) -> dict:
         with session_scope(self.session_factory) as session:
@@ -40,6 +43,17 @@ class HostedServicesService:
         )
 
         return hosted_service_logs
+
+    def check_github_repository(self, request: CheckGithubRepositoryRequest) -> dict:
+        result = self._github_client.check_repo_installation(
+            request.account_name, request.repository_name
+        )
+        if result:
+            return {"isInstalled": True}
+        else:
+            raise RepositoryInstallationNotFoundException(
+                request.account_name, request.repository_name
+            )
 
     def update_hosted_service_status(self, request: UpdateHostedServiceStatusRequest):
         with session_scope(self.session_factory) as session:
