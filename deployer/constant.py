@@ -34,7 +34,7 @@ PERIOD_TYPE_TIMEDELTA = {
 }
 
 
-class SortOrder(str, Enum):
+class OrderType(str, Enum):
     ASC = "asc"
     DESC = "desc"
 

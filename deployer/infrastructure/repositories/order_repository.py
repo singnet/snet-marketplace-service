@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from contract_api.constant import SortOrder
 from deployer.config import TRANSACTION_TTL_IN_MINUTES
-from deployer.constant import PeriodType, PERIOD_TYPE_TIMEDELTA
+from deployer.constant import PeriodType, PERIOD_TYPE_TIMEDELTA, OrderType
 from deployer.domain.factory.order_factory import OrderFactory
 from deployer.domain.models.order import NewOrderDomain, OrderDomain
 from deployer.infrastructure.models import Order, OrderStatus
@@ -19,8 +19,8 @@ class OrderRepository:
         account_id: str,
         limit: int,
         page: int,
-        order: str,
-        period: str,
+        order: OrderType,
+        period: PeriodType,
         status: Union[OrderStatus, List[OrderStatus], None] = None,
     ) -> List[OrderDomain]:
         query = select(Order).where(Order.account_id == account_id)
@@ -33,9 +33,7 @@ class OrderRepository:
 
         if period != PeriodType.ALL:
             current_time = datetime.now(UTC)
-            query = query.where(
-                Order.updated_at > current_time - PERIOD_TYPE_TIMEDELTA[PeriodType(period)]
-            )
+            query = query.where(Order.updated_at > current_time - PERIOD_TYPE_TIMEDELTA[period])
 
         if order == SortOrder.ASC:
             query = query.order_by(Order.updated_at.asc())
@@ -53,7 +51,7 @@ class OrderRepository:
     def get_orders_total_count(
         session: Session,
         account_id: str,
-        period: str,
+        period: PeriodType,
         status: Union[OrderStatus, List[OrderStatus], None] = None,
     ) -> int:
         query = select(func.count()).select_from(Order).where(Order.account_id == account_id)
@@ -66,9 +64,7 @@ class OrderRepository:
 
         if period != PeriodType.ALL:
             current_time = datetime.now(UTC)
-            query = query.where(
-                Order.updated_at > current_time - PERIOD_TYPE_TIMEDELTA[PeriodType(period)]
-            )
+            query = query.where(Order.updated_at > current_time - PERIOD_TYPE_TIMEDELTA[period])
 
         result = session.execute(query)
 

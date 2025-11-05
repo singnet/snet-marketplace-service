@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Tuple
+from typing import Tuple, List, Union
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -14,7 +14,8 @@ from deployer.config import (
     HAAS_REG_REPO,
     HAAS_BASE_IMAGE,
 )
-
+from deployer.constant import PeriodType, OrderType
+from deployer.domain.schemas.haas_responses import GetCallEventsResponse
 
 logger = get_logger(__name__)
 
@@ -136,12 +137,44 @@ class HaaSClient:
         except Exception as e:
             raise HaaSClientError(str(e))
 
-    # TODO: implement methods below
     def get_call_events(
-        self, org_id: str, service_id: str, limit: int, page: int, order: str, period: str
-    ) -> Tuple[list, int]:
-        pass
+        self,
+        limit: int,
+        page: int,
+        order: OrderType,
+        period: PeriodType,
+        services: Union[List[Tuple[str, str]], Tuple[str, str], None] = None,
+    ) -> GetCallEventsResponse:
+        try:
+            # TODO: configure the correct url and path
+            path = ""
 
+            if services is None:
+                services = []
+            elif isinstance(services, tuple):
+                services = [services]
+            request_services = []
+            for service in services:
+                request_services.append({"orgId": service[0], "serviceId": service[1]})
+            request_body = {
+                "services": request_services,
+                "limit": limit,
+                "page": page,
+                "order": order.value,
+                "period": period.value,
+            }
+
+            # TODO: configure the correct auth
+            response = requests.get(path, json=request_body, auth=self.auth)
+
+            if response.ok:
+                return GetCallEventsResponse(**response.json())
+            else:
+                raise HaaSClientError(response.text)
+        except Exception as e:
+            raise HaaSClientError(str(e))
+
+    # TODO: implement methods below
     def delete_hosted_service(self, org_id: str, service_id: str):
         pass
 

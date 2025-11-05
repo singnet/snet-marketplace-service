@@ -50,10 +50,12 @@ class HostedServicesService:
         )
         result = {"isInstalled": is_installed}
         if not is_installed:
-            result["message"] = (f"The application is not installed in the repository with "
-                                 f"account name {request.account_name} and repository name "
-                                 f"{request.repository_name}, or the account and/or repository "
-                                 f"name does not exist")
+            result["message"] = (
+                f"The application is not installed in the repository with "
+                f"account name {request.account_name} and repository name "
+                f"{request.repository_name}, or the account and/or repository "
+                f"name does not exist"
+            )
 
         return result
 

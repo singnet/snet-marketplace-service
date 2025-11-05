@@ -2,17 +2,13 @@ import json
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 from common.constant import RequestPayloadType
 from common.validation_handler import validation_handler
 from deployer.application.schemas.queue_schema import QueueEventRequest
-from deployer.constant import PeriodType, SortOrder, TypeOfMovementOfFunds
-from deployer.exceptions import (
-    InvalidPeriodParameter,
-    InvalidOrderParameter,
-    InvalidTypeOfMovementParameter,
-)
+from deployer.config import REQUEST_MAX_LIMIT
+from deployer.constant import PeriodType, OrderType, TypeOfMovementOfFunds
 
 
 class CreateOrderRequest(BaseModel):
@@ -39,11 +35,11 @@ class SaveEVMTransactionRequest(BaseModel):
 
 
 class GetBalanceHistoryRequest(BaseModel):
-    limit: int
-    page: int
-    order: str
-    period: str
-    type_of_movement: Optional[str] = Field(alias="type", default=None)
+    limit: int = Field(ge=1, le=REQUEST_MAX_LIMIT, default=REQUEST_MAX_LIMIT)
+    page: int = Field(ge=1, default=1)
+    order: OrderType = Field(default=OrderType.ASC)
+    period: PeriodType = Field(default=PeriodType.ALL)
+    type_of_movement: Optional[TypeOfMovementOfFunds] = Field(alias="type", default=None)
 
     @classmethod
     @validation_handler([RequestPayloadType.QUERY_STRING])
@@ -51,44 +47,16 @@ class GetBalanceHistoryRequest(BaseModel):
         data = event[RequestPayloadType.QUERY_STRING]
         return cls.model_validate(data)
 
-    @field_validator("period")
-    @classmethod
-    def validate_period(cls, value: str):
-        if value not in PeriodType:
-            raise InvalidPeriodParameter(actual_value=value)
-        return value
-
-    @field_validator("order")
-    @classmethod
-    def validate_order(cls, value: str):
-        if value not in SortOrder:
-            raise InvalidOrderParameter()
-        return value
-
-    @field_validator("type_of_movement")
-    @classmethod
-    def validate_type_of_movement(cls, value: Optional[str]):
-        if value is not None and value not in TypeOfMovementOfFunds:
-            raise InvalidTypeOfMovementParameter()
-        return value
-
 
 class GetMetricsRequest(BaseModel):
     hosted_service_id: str = Field(alias="hostedServiceId")
-    period: str
+    period: PeriodType = Field(default=PeriodType.ALL)
 
     @classmethod
     @validation_handler([RequestPayloadType.PATH_PARAMS, RequestPayloadType.QUERY_STRING])
     def validate_event(cls, event: dict) -> "GetMetricsRequest":
         data = {**event[RequestPayloadType.PATH_PARAMS], **event[RequestPayloadType.QUERY_STRING]}
         return cls.model_validate(data)
-
-    @field_validator("period")
-    @classmethod
-    def validate_period(cls, value: str):
-        if value not in PeriodType:
-            raise InvalidPeriodParameter(actual_value=value)
-        return value
 
 
 class CallEventConsumerRequest(BaseModel, QueueEventRequest):

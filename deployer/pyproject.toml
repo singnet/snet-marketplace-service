@@ -20,6 +20,7 @@ rlp = "4.1.0"
 lighthouseweb3 = "0.1.4"
 ipfshttpclient = "0.4.13"
 schema = "0.7.7"
+pyjwt = "2.10.1"
 
 
 [tool.poetry.group.dev.dependencies]

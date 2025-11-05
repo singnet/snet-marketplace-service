@@ -17,16 +17,14 @@ class GithubAPIClient:
     @classmethod
     def _generate_jwt(cls) -> str:
         private_key = serialization.load_pem_private_key(
-            GITHUB_PRIVATE_KEY.encode('utf-8'),
-            password = None,
-            backend = default_backend()
+            GITHUB_PRIVATE_KEY.encode("utf-8"), password=None, backend=default_backend()
         )
 
         current_time = int(time.time())
         payload = {
             "iat": current_time,
             "exp": current_time + (60 * JWT_EXPIRATION_IN_MINUTES),
-            "iss": GITHUB_APP_ID
+            "iss": GITHUB_APP_ID,
         }
 
         return jwt.encode(payload, private_key, algorithm="RS256")
@@ -44,6 +42,8 @@ class GithubAPIClient:
             elif response.status_code == 404:
                 return False
             else:
-                raise GithubAPIClientError(f"Error checking installation: status code - {response.status_code}, text - {response.text}")
+                raise GithubAPIClientError(
+                    f"Error checking installation: status code - {response.status_code}, text - {response.text}"
+                )
         except Exception as e:
             raise GithubAPIClientError(f"Error checking installation: {e}")

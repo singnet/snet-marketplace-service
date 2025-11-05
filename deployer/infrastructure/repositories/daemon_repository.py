@@ -1,11 +1,11 @@
 from typing import Optional, List, Union
 
 from sqlalchemy import update, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from deployer.domain.factory.daemon_factory import DaemonFactory
 from deployer.domain.models.daemon import NewDaemonDomain, DaemonDomain
-from deployer.infrastructure.models import Daemon, DeploymentStatus
+from deployer.infrastructure.models import Daemon, DeploymentStatus, HostedService
 
 
 class DaemonRepository:
@@ -93,6 +93,24 @@ class DaemonRepository:
     ) -> Optional[DaemonDomain]:
         query = (
             select(Daemon).where(Daemon.id == daemon_id, Daemon.account_id == account_id).limit(1)
+        )
+
+        result = session.execute(query)
+
+        daemon_db = result.scalar_one_or_none()
+        if daemon_db is None:
+            return None
+
+        return DaemonFactory.daemon_from_db_model(daemon_db)
+
+    @staticmethod
+    def get_daemon_by_service(session: Session, hosted_service_id: str) -> Optional[DaemonDomain]:
+        query = (
+            select(Daemon)
+            .join(HostedService, Daemon.id == HostedService.daemon_id)
+            .where(HostedService.id == hosted_service_id)
+            .options(joinedload(Daemon.hosted_service))
+            .limit(1)
         )
 
         result = session.execute(query)

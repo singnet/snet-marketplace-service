@@ -23,8 +23,9 @@ from deployer.config import (
     TOKEN_JSON_FILE_NAME,
     TOKEN_NAME,
     TOKEN_DECIMALS,
+    REQUEST_MAX_LIMIT,
 )
-from deployer.constant import TypeOfMovementOfFunds, SortOrder
+from deployer.constant import TypeOfMovementOfFunds, OrderType
 from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
 from deployer.domain.models.order import NewOrderDomain
 from deployer.domain.models.token_rate import NewTokenRateDomain
@@ -33,6 +34,7 @@ from deployer.exceptions import (
     OrderNotFoundException,
     UnacceptableOrderStatusException,
     DaemonNotFoundException,
+    HostedServiceNotFoundException,
 )
 from deployer.infrastructure.clients.haas_client import HaaSClient
 from deployer.infrastructure.db import DefaultSessionFactory, session_scope
@@ -147,19 +149,25 @@ class BillingService:
         total_count = 0
 
         if request.type_of_movement != TypeOfMovementOfFunds.INCOME:
-            call_events, call_events_total_count = self._haas_client.get_call_events(
-                request.limit, request.page, request.order, request.period
+            with session_scope(self.session_factory) as session:
+                daemons = DaemonRepository.get_user_daemons(session, account_id)
+            response = self._haas_client.get_call_events(
+                limit=request.limit,
+                page=request.page,
+                order=request.order,
+                period=request.period,
+                services=[(daemon.org_id, daemon.service_id) for daemon in daemons],
             )
-            for call_event in call_events:
+            for call_event in response.events:
                 balance_events.append(
                     {
                         "type": TypeOfMovementOfFunds.EXPENSE.value,
                         "eventName": "Service Call",
-                        "amount": call_event["amount"],
-                        "timestamp": call_event["timestamp"],
+                        "amount": call_event.amount,
+                        "timestamp": call_event.timestamp.isoformat(),
                     }
                 )
-            total_count += call_events_total_count
+            total_count += response.total_count
 
         if request.type_of_movement != TypeOfMovementOfFunds.EXPENSE:
             with session_scope(self.session_factory) as session:
@@ -189,7 +197,7 @@ class BillingService:
 
         if request.type_of_movement is None:
             balance_events.sort(
-                key=lambda x: x["timestamp"], reverse=(request.order == SortOrder.DESC)
+                key=lambda x: x["timestamp"], reverse=(request.order == OrderType.DESC)
             )
 
             if len(balance_events) > request.limit:
@@ -198,8 +206,34 @@ class BillingService:
         return {"events": balance_events, "totalCount": total_count}
 
     def get_metrics(self, request: GetMetricsRequest) -> dict:
-        # TODO: implement aggregation
-        pass
+        with session_scope(self.session_factory) as session:
+            daemon = DaemonRepository.get_daemon_by_service(session, request.hosted_service_id)
+        if daemon is None:
+            raise HostedServiceNotFoundException(request.hosted_service_id)
+
+        events = []
+        page = 1
+        response = self._haas_client.get_call_events(
+            services=(daemon.org_id, daemon.service_id),
+            limit=REQUEST_MAX_LIMIT,
+            page=page,
+            order=OrderType.ASC,
+            period=request.period,
+        )
+        events.extend(response.events)
+
+        while response.total_count > len(events):
+            page += 1
+            response = self._haas_client.get_call_events(
+                services=(daemon.org_id, daemon.service_id),
+                limit=REQUEST_MAX_LIMIT,
+                page=page,
+                order=OrderType.ASC,
+                period=request.period,
+            )
+            events.extend(response.events)
+
+        # TODO: add aggregation
 
     def update_transaction_status(self):
         with session_scope(self.session_factory) as session:
