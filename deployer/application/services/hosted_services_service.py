@@ -3,7 +3,7 @@ from deployer.application.schemas.hosted_services_schemas import (
     UpdateHostedServiceStatusRequest,
     CheckGithubRepositoryRequest,
 )
-from deployer.exceptions import HostedServiceNotFoundException, RepositoryInstallationNotFoundException
+from deployer.exceptions import HostedServiceNotFoundException
 from deployer.infrastructure.clients.github_api_client import GithubAPIClient
 from deployer.infrastructure.clients.haas_client import HaaSClient
 from deployer.infrastructure.db import DefaultSessionFactory, session_scope
@@ -45,15 +45,17 @@ class HostedServicesService:
         return hosted_service_logs
 
     def check_github_repository(self, request: CheckGithubRepositoryRequest) -> dict:
-        result = self._github_client.check_repo_installation(
+        is_installed = self._github_client.check_repo_installation(
             request.account_name, request.repository_name
         )
-        if result:
-            return {"isInstalled": True}
-        else:
-            raise RepositoryInstallationNotFoundException(
-                request.account_name, request.repository_name
-            )
+        result = {"isInstalled": is_installed}
+        if not is_installed:
+            result["message"] = (f"The application is not installed in the repository with "
+                                 f"account name {request.account_name} and repository name "
+                                 f"{request.repository_name}, or the account and/or repository "
+                                 f"name does not exist")
+
+        return result
 
     def update_hosted_service_status(self, request: UpdateHostedServiceStatusRequest):
         with session_scope(self.session_factory) as session:

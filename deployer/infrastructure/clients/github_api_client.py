@@ -14,10 +14,8 @@ class GithubAPIClientError(Exception):
 
 
 class GithubAPIClient:
-    def __init__(self):
-        pass
-
-    def _generate_jwt(self) -> str:
+    @classmethod
+    def _generate_jwt(cls) -> str:
         private_key = serialization.load_pem_private_key(
             GITHUB_PRIVATE_KEY.encode('utf-8'),
             password = None,
@@ -33,7 +31,7 @@ class GithubAPIClient:
 
         return jwt.encode(payload, private_key, algorithm="RS256")
 
-    def check_repo_installation(self, account_name: str, repository_name: str):
+    def check_repo_installation(self, account_name: str, repository_name: str) -> bool:
         try:
             token = self._generate_jwt()
 

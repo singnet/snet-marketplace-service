@@ -100,12 +100,3 @@ class DaemonAlreadyExistsException(BadRequestException):
 class HostedServiceNotFoundException(BadRequestException):
     def __init__(self, hosted_service_id: str):
         super().__init__(message=f"Hosted service with id {hosted_service_id} not found!")
-
-
-class RepositoryInstallationNotFoundException(BadRequestException):
-    def __init__(self, account_name: str, repository_name: str):
-        super().__init__(
-            message=f"The application is not installed in the repository with account name {account_name} "
-                    f"and repository name {repository_name}, or the account and/or repository name does not "
-                    f"exist or is specified incorrectly."
-        )
