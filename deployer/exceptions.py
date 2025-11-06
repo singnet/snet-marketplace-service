@@ -28,14 +28,9 @@ class UpdateConfigNotAvailableException(BadRequestException):
         super().__init__(message="Config update is not available!")
 
 
-class MissingGithubUrlException(BadRequestException):
+class MissingGithubParametersException(BadRequestException):
     def __init__(self):
-        super().__init__(message="Missing github url!")
-
-
-class InvalidHaasServiceStatusParameter(BadRequestException):
-    def __init__(self):
-        super().__init__(message="Invalid haas service status parameter!")
+        super().__init__(message="Missing github account name or repository name!")
 
 
 class MissingCommitHashParameter(BadRequestException):
@@ -61,5 +56,10 @@ class DaemonAlreadyExistsException(BadRequestException):
 
 
 class HostedServiceNotFoundException(BadRequestException):
-    def __init__(self, hosted_service_id: str):
-        super().__init__(message=f"Hosted service with id {hosted_service_id} not found!")
+    def __init__(self, hosted_service_id: str = None, org_id: str = None, service_id: str = None):
+        if org_id and service_id:
+            super().__init__(
+                message=f"Hosted service for service with org_id={org_id} and service_id={service_id} not found!"
+            )
+        elif hosted_service_id:
+            super().__init__(message=f"Hosted service with id={hosted_service_id} not found!")

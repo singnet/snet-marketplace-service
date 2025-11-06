@@ -12,7 +12,7 @@ from deployer.constant import AUTH_PARAMETERS, AllowedRegistryEventNames
 from deployer.exceptions import (
     InvalidServiceAuthParameters,
     MissingServiceEndpointException,
-    MissingGithubUrlException,
+    MissingGithubParametersException,
     MissingServiceEventParameters,
 )
 
@@ -21,9 +21,10 @@ class InitiateDeploymentRequest(BaseModel):
     org_id: str = Field(alias="orgId")
     service_id: str = Field(alias="serviceId")
     only_daemon: bool = Field(alias="onlyDaemon")
-    service_endpoint: Optional[str] = Field(alias="serviceEndpoint", default=None)
-    service_credentials: Optional[List[dict]] = Field(alias="serviceCredentials", default=None)
-    github_url: Optional[str] = Field(alias="githubUrl", default=None)
+    service_endpoint: str = Field(alias="serviceEndpoint", default="")
+    service_credentials: List[dict] = Field(alias="serviceCredentials", default=[])
+    github_account_name: str = Field(alias="githubAccountName", default="")
+    github_repository_name: str = Field(alias="githubRepositoryName", default="")
 
     @classmethod
     @validation_handler([RequestPayloadType.BODY])
@@ -34,7 +35,7 @@ class InitiateDeploymentRequest(BaseModel):
     @field_validator("service_credentials")
     @classmethod
     def validate_credentials(cls, values: Optional[List[dict]]):
-        if values is not None:  # auth parameters are optional
+        if values:  # auth parameters are optional
             for value in values:
                 for param in AUTH_PARAMETERS:
                     if param not in value.keys() or not value[param]:
@@ -44,10 +45,10 @@ class InitiateDeploymentRequest(BaseModel):
     @model_validator(mode="after")
     def validate_init_parameters(self):
         if self.only_daemon:
-            if self.service_endpoint is None:
+            if not self.service_endpoint:
                 raise MissingServiceEndpointException()
-        elif self.github_url is None:
-            raise MissingGithubUrlException()
+        elif not self.github_account_name or not self.github_repository_name:
+            raise MissingGithubParametersException()
         return self
 
 

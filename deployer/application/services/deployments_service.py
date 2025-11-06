@@ -17,6 +17,7 @@ from deployer.domain.models.daemon import NewDaemonDomain, DaemonDomain
 from deployer.domain.models.hosted_service import NewHostedServiceDomain, HostedServiceDomain
 from deployer.exceptions import DaemonAlreadyExistsException
 from deployer.infrastructure.clients.deployer_client import DeployerClient
+from deployer.infrastructure.clients.github_api_client import GithubAPIClient
 from deployer.infrastructure.clients.haas_client import HaaSClient
 from deployer.infrastructure.db import DefaultSessionFactory, session_scope
 from deployer.infrastructure.models import DeploymentStatus
@@ -75,7 +76,8 @@ class DeploymentsService:
                         id=generate_uuid(),
                         daemon_id=daemon_id,
                         status=DeploymentStatus.INIT,
-                        github_url=request.github_url,
+                        github_account_name=request.github_account_name,
+                        github_repository_name=request.github_repository_name,
                         last_commit_url="",
                     ),
                 )
@@ -191,13 +193,18 @@ class DeploymentsService:
     def _push_deploy_service_event(
         self, org_id: str, service_id: str, hosted_service: HostedServiceDomain
     ) -> None:
-        # TODO: rewrite payload if needed
+        installation_id = GithubAPIClient.get_installation_id(
+            hosted_service.github_account_name, hosted_service.github_repository_name
+        )
         self._boto_utils.publish_data_to_sns_topic(
             topic_arn=DEPLOY_SERVICE_TOPIC_ARN,
             payload={
-                "org_id": org_id,
-                "service_id": service_id,
-                "github_url": hosted_service.github_url,
-                "last_commit_url": hosted_service.last_commit_url,
+                "orgId": org_id,
+                "serviceId": service_id,
+                "gitRepoUrl": GithubAPIClient.make_repository_url(
+                    hosted_service.github_account_name, hosted_service.github_repository_name
+                ),
+                "commit": hosted_service.last_commit_url,
+                "installationId": installation_id,
             },
         )

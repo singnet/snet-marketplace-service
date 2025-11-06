@@ -1,13 +1,12 @@
 import json
-from typing import Optional
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from common.constant import RequestPayloadType
 from common.validation_handler import validation_handler
 from deployer.application.schemas.queue_schema import QueueEventRequest
 from deployer.constant import HaaSServiceStatus
-from deployer.exceptions import InvalidHaasServiceStatusParameter, MissingCommitHashParameter
+from deployer.exceptions import MissingCommitHashParameter
 
 
 class HostedServiceRequest(BaseModel):
@@ -23,8 +22,8 @@ class HostedServiceRequest(BaseModel):
 class UpdateHostedServiceStatusRequest(BaseModel, QueueEventRequest):
     org_id: str = Field(alias="orgId")
     service_id: str = Field(alias="serviceId")
-    status: str
-    commit_hash: Optional[str] = Field(alias="commitHash", default=None)
+    status: HaaSServiceStatus
+    commit_hash: str = Field(alias="commitHash", default="")
 
     @classmethod
     @validation_handler([RequestPayloadType.BODY])
@@ -32,16 +31,9 @@ class UpdateHostedServiceStatusRequest(BaseModel, QueueEventRequest):
         body = json.loads(event[RequestPayloadType.BODY])
         return cls.model_validate(body)
 
-    @field_validator("status")
-    @classmethod
-    def validate_status(cls, value: str) -> str:
-        if value not in HaaSServiceStatus:
-            raise InvalidHaasServiceStatusParameter()
-        return value
-
     @model_validator(mode="after")
     def validate_commit_hash(self):
-        if self.status == HaaSServiceStatus.RESTARTING and self.commit_hash is None:
+        if self.status == HaaSServiceStatus.STARTING and not self.commit_hash:
             raise MissingCommitHashParameter()
         return self
 

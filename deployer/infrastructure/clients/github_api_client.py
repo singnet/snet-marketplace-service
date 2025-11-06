@@ -1,4 +1,5 @@
 import time
+from typing import Tuple
 
 import requests
 from cryptography.hazmat.backends import default_backend
@@ -14,8 +15,8 @@ class GithubAPIClientError(Exception):
 
 
 class GithubAPIClient:
-    @classmethod
-    def _generate_jwt(cls) -> str:
+    @staticmethod
+    def __generate_jwt() -> str:
         private_key = serialization.load_pem_private_key(
             GITHUB_PRIVATE_KEY.encode("utf-8"), password=None, backend=default_backend()
         )
@@ -29,21 +30,48 @@ class GithubAPIClient:
 
         return jwt.encode(payload, private_key, algorithm="RS256")
 
-    def check_repo_installation(self, account_name: str, repository_name: str) -> bool:
+    @staticmethod
+    def _get_installation(account_name: str, repository_name: str) -> Tuple[int, dict]:
         try:
-            token = self._generate_jwt()
+            token = GithubAPIClient.__generate_jwt()
 
             url = f"https://api.github.com/repos/{account_name}/{repository_name}/installation"
             headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
 
             response = requests.get(url, headers=headers)
-            if response.status_code == 200:
-                return True
-            elif response.status_code == 404:
-                return False
-            else:
-                raise GithubAPIClientError(
-                    f"Error checking installation: status code - {response.status_code}, text - {response.text}"
-                )
+
+            return response.status_code, response.json()
         except Exception as e:
-            raise GithubAPIClientError(f"Error checking installation: {e}")
+            raise GithubAPIClientError(f"Error getting installation: {e}")
+
+    @staticmethod
+    def check_repo_installation(account_name: str, repository_name: str) -> bool:
+        status_code, response = GithubAPIClient._get_installation(account_name, repository_name)
+
+        if status_code == 200:
+            return True
+        elif status_code == 404:
+            return False
+        else:
+            raise GithubAPIClientError(
+                f"Error checking installation: status code - {status_code}, body - {response}"
+            )
+
+    @staticmethod
+    def get_installation_id(account_name: str, repository_name: str) -> str:
+        status_code, response = GithubAPIClient._get_installation(account_name, repository_name)
+
+        if status_code == 200:
+            return response["id"]
+        else:
+            raise GithubAPIClientError(
+                f"Error getting installation id: status code - {status_code}, body - {response}"
+            )
+
+    @staticmethod
+    def make_commit_url(account_name: str, repository_name: str, commit_hash: str) -> str:
+        return f"https://github.com/{account_name}/{repository_name}/commit/{commit_hash}"
+
+    @staticmethod
+    def make_repository_url(account_name: str, repository_name: str) -> str:
+        return f"https://github.com/{account_name}/{repository_name}"

@@ -15,7 +15,8 @@ class HostedServiceRepository:
             id=hosted_service.id,
             daemon_id=hosted_service.daemon_id,
             status=hosted_service.status,
-            github_url=hosted_service.github_url,
+            github_account_name=hosted_service.github_account_name,
+            github_repository_name=hosted_service.github_repository_name,
             last_commit_url=hosted_service.last_commit_url,
         )
 
@@ -64,6 +65,25 @@ class HostedServiceRepository:
             select(HostedService)
             .join(Daemon, Daemon.id == HostedService.daemon_id)
             .where(Daemon.account_id == account_id, HostedService.id == hosted_service_id)
+            .limit(1)
+        )
+
+        result = session.execute(query)
+
+        hosted_service_db = result.scalar_one_or_none()
+        if hosted_service_db is None:
+            return None
+
+        return HostedServiceFactory.hosted_service_from_db_model(hosted_service_db)
+
+    @staticmethod
+    def search_hosted_service(
+        session: Session, org_id: str, service_id: str
+    ) -> Optional[HostedServiceDomain]:
+        query = (
+            select(HostedService)
+            .join(Daemon, Daemon.id == HostedService.daemon_id)
+            .where(Daemon.org_id == org_id, Daemon.service_id == service_id)
             .limit(1)
         )
 

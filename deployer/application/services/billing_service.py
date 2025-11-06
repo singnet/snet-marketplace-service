@@ -33,7 +33,6 @@ from deployer.domain.models.transactions_metadata import TransactionsMetadataDom
 from deployer.exceptions import (
     OrderNotFoundException,
     UnacceptableOrderStatusException,
-    DaemonNotFoundException,
     HostedServiceNotFoundException,
 )
 from deployer.infrastructure.clients.haas_client import HaaSClient
@@ -207,9 +206,11 @@ class BillingService:
 
     def get_metrics(self, request: GetMetricsRequest) -> dict:
         with session_scope(self.session_factory) as session:
-            daemon = DaemonRepository.get_daemon_by_service(session, request.hosted_service_id)
-        if daemon is None:
-            raise HostedServiceNotFoundException(request.hosted_service_id)
+            daemon = DaemonRepository.get_daemon_by_hosted_service(
+                session, request.hosted_service_id
+            )
+        if daemon is None or daemon.hosted_service is None:
+            raise HostedServiceNotFoundException(hosted_service_id=request.hosted_service_id)
 
         events = []
         page = 1
@@ -288,8 +289,10 @@ class BillingService:
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.search_daemon(session, request.org_id, request.service_id)
 
-            if daemon is None:
-                raise DaemonNotFoundException(request.service_id)
+            if daemon is None or daemon.hosted_service is None:
+                raise HostedServiceNotFoundException(
+                    org_id=request.org_id, service_id=request.service_id
+                )
 
             AccountBalanceRepository.decrease_account_balance(
                 session, daemon.account_id, request.amount

@@ -104,7 +104,9 @@ class DaemonRepository:
         return DaemonFactory.daemon_from_db_model(daemon_db)
 
     @staticmethod
-    def get_daemon_by_service(session: Session, hosted_service_id: str) -> Optional[DaemonDomain]:
+    def get_daemon_by_hosted_service(
+        session: Session, hosted_service_id: str
+    ) -> Optional[DaemonDomain]:
         query = (
             select(Daemon)
             .join(HostedService, Daemon.id == HostedService.daemon_id)

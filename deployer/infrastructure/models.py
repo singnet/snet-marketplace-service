@@ -106,7 +106,12 @@ class HostedService(Base):
     status: Mapped[str] = mapped_column(
         "status", Enum(DeploymentStatus), nullable=False, default=DeploymentStatus.INIT
     )
-    github_url: Mapped[str] = mapped_column("github_url", VARCHAR(256), nullable=False)
+    github_account_name: Mapped[str] = mapped_column(
+        "github_account_name", VARCHAR(256), nullable=False
+    )
+    github_repository_name: Mapped[str] = mapped_column(
+        "github_repository_name", VARCHAR(256), nullable=False
+    )
     last_commit_url: Mapped[str] = mapped_column("last_commit_url", VARCHAR(256), nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(

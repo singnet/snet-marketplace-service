@@ -9,7 +9,8 @@ class NewHostedServiceDomain:
     id: str
     daemon_id: str
     status: DeploymentStatus
-    github_url: str
+    github_account_name: str
+    github_repository_name: str
     last_commit_url: str
 
 

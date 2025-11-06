@@ -16,7 +16,6 @@ class HostedServicesService:
     def __init__(self):
         self.session_factory = DefaultSessionFactory
         self._haas_client = HaaSClient()
-        self._github_client = GithubAPIClient()
 
     def get_hosted_service(self, request: HostedServiceRequest) -> dict:
         with session_scope(self.session_factory) as session:
@@ -25,7 +24,7 @@ class HostedServicesService:
             )
 
         if hosted_service is None:
-            raise HostedServiceNotFoundException(request.hosted_service_id)
+            raise HostedServiceNotFoundException(hosted_service_id=request.hosted_service_id)
 
         return hosted_service.to_response()
 
@@ -35,7 +34,7 @@ class HostedServicesService:
                 session, request.hosted_service_id
             )
             if hosted_service is None:
-                raise HostedServiceNotFoundException(request.hosted_service_id)
+                raise HostedServiceNotFoundException(hosted_service_id=request.hosted_service_id)
             daemon = DaemonRepository.get_daemon(session, hosted_service.daemon_id)
 
         hosted_service_logs = self._haas_client.get_hosted_service_logs(
@@ -45,7 +44,7 @@ class HostedServicesService:
         return hosted_service_logs
 
     def check_github_repository(self, request: CheckGithubRepositoryRequest) -> dict:
-        is_installed = self._github_client.check_repo_installation(
+        is_installed = GithubAPIClient.check_repo_installation(
             request.account_name, request.repository_name
         )
         result = {"isInstalled": is_installed}
@@ -61,18 +60,22 @@ class HostedServicesService:
 
     def update_hosted_service_status(self, request: UpdateHostedServiceStatusRequest):
         with session_scope(self.session_factory) as session:
-            hosted_service = HostedServiceRepository.get_hosted_service(
-                session, request.hosted_service_id
+            hosted_service = HostedServiceRepository.search_hosted_service(
+                session, request.org_id, request.service_id
             )
             if hosted_service is None:
-                raise HostedServiceNotFoundException(request.hosted_service_id)
+                raise HostedServiceNotFoundException(hosted_service_id=request.hosted_service_id)
 
             new_status = DeploymentStatus(request.status.upper())
             HostedServiceRepository.update_hosted_service_status(
                 session,
                 request.hosted_service_id,
                 new_status,
-                self._build_commit_url(request.github_url, request.last_commit_url),
+                GithubAPIClient.make_commit_url(
+                    hosted_service.github_account_name,
+                    hosted_service.github_repository_name,
+                    request.commit_hash,
+                ),
             )
 
     def deploy_service(self, request: HostedServiceRequest):
@@ -80,7 +83,3 @@ class HostedServicesService:
 
     def delete_service(self, request: HostedServiceRequest):
         pass
-
-    @staticmethod
-    def _build_commit_url(github_url: str, last_commit_url: str) -> str:
-        return f"{github_url}/commit/{last_commit_url}"
