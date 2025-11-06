@@ -147,7 +147,7 @@ class HaaSClient:
     ) -> GetCallEventsResponse:
         try:
             # TODO: configure the correct url and path
-            path = ""
+            path = HAAS_BASE_URL + "/events"
 
             if services is None:
                 services = []
@@ -165,7 +165,7 @@ class HaaSClient:
             }
 
             # TODO: configure the correct auth
-            response = requests.get(path, json=request_body, auth=self.auth)
+            response = requests.get(path, json=request_body)
 
             if response.ok:
                 return GetCallEventsResponse(**response.json())

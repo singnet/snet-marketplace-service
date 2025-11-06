@@ -771,7 +771,7 @@ functions:
               - x-requested-wit
 
   get-public-key:
-    handler: deployer.application.handlers.daemon_handlers.get_public_key
+    handler: deployer.application.handlers.deployments_handlers.get_public_key
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:

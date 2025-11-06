@@ -13,7 +13,7 @@ from deployer.application.schemas.billing_schemas import (
 )
 from deployer.application.services.authorization_service import AuthorizationService
 from deployer.application.services.billing_service import BillingService
-
+from deployer.application.services.metrics_service import MetricsService
 
 logger = get_logger(__name__)
 
@@ -80,7 +80,7 @@ def get_metrics(event, context):
         req_ctx.account_id, hosted_service_id=request.hosted_service_id
     )
 
-    response = BillingService().get_metrics(request)
+    response = MetricsService().get_metrics(request)
 
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True

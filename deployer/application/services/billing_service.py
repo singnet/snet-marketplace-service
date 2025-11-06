@@ -49,7 +49,7 @@ logger = get_logger(__name__)
 
 
 class BillingService:
-    def __init__(self):
+    def __init__(self, session_factory=None):
         self.session_factory = DefaultSessionFactory
         self._haas_client = HaaSClient()
 
@@ -203,38 +203,6 @@ class BillingService:
                 balance_events = balance_events[: request.limit]
 
         return {"events": balance_events, "totalCount": total_count}
-
-    def get_metrics(self, request: GetMetricsRequest) -> dict:
-        with session_scope(self.session_factory) as session:
-            daemon = DaemonRepository.get_daemon_by_hosted_service(
-                session, request.hosted_service_id
-            )
-        if daemon is None or daemon.hosted_service is None:
-            raise HostedServiceNotFoundException(hosted_service_id=request.hosted_service_id)
-
-        events = []
-        page = 1
-        response = self._haas_client.get_call_events(
-            services=(daemon.org_id, daemon.service_id),
-            limit=REQUEST_MAX_LIMIT,
-            page=page,
-            order=OrderType.ASC,
-            period=request.period,
-        )
-        events.extend(response.events)
-
-        while response.total_count > len(events):
-            page += 1
-            response = self._haas_client.get_call_events(
-                services=(daemon.org_id, daemon.service_id),
-                limit=REQUEST_MAX_LIMIT,
-                page=page,
-                order=OrderType.ASC,
-                period=request.period,
-            )
-            events.extend(response.events)
-
-        # TODO: add aggregation
 
     def update_transaction_status(self):
         with session_scope(self.session_factory) as session:
