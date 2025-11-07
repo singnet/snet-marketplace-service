@@ -31,4 +31,8 @@ class TransactionService:
         return {}
 
     def get_transactions(self, request: GetTransactionsRequest, account_id: str):
+        """
+        Get transactions for a specific order, daemon or transaction hash
+        Perhaps it will be needed in the future
+        """
         pass

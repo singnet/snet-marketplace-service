@@ -1,3 +1,5 @@
+from math import isclose
+
 import pytest
 import json
 from datetime import datetime, UTC
@@ -132,7 +134,7 @@ class TestGetService:
         assert data["demoComponentRequired"] is False
         
         # Check rating
-        assert data["rating"] == 0.0
+        assert isclose(data["rating"], 0.0)
         assert data["numberOfRatings"] == 0
         
         # Check contributors
@@ -295,7 +297,7 @@ class TestGetService:
         body = json.loads(response["body"])
         data = body["data"]
         
-        assert data["rating"] == 4.5
+        assert isclose(data["rating"], 4.5)
         assert data["numberOfRatings"] == 150
     
     def test_get_service_invalid_path_parameters(self):
@@ -798,7 +800,7 @@ class TestGetServices:
         # Check that services are sorted by rating in descending order
         ratings = [s["rating"] for s in services if s["rating"] > 0]
         assert ratings == sorted(ratings, reverse=True)
-        assert ratings[0] == 5.0
+        assert isclose(ratings[0], 5.0)
     
     def test_get_services_filter_by_org_id(self, db_session, org_repo, service_repo, test_data_factory, base_service):
         """Test filtering by organization ID."""

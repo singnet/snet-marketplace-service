@@ -31,10 +31,8 @@ class DaemonStatus(PythonEnum):
     RESTARTING = "RESTARTING"  # redeploying
     DELETING = "DELETING"  # deleting
     UP = "UP"  # deployed and working
-    # CLAIMING = "claiming"
     DOWN = "DOWN"  # not paid
     ERROR = "ERROR"  # error during deployment
-    # DELETED = "deleted"
 
 
 class OrderStatus(PythonEnum):

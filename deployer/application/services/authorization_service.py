@@ -12,7 +12,6 @@ class AuthorizationService:
     def check_access(
         self, account_id: str, daemon_id: Optional[str] = None, order_id: Optional[str] = None
     ):
-        account_id = account_id
         with session_scope(self.session_factory) as session:
             if daemon_id is not None:
                 daemon = DaemonRepository().get_daemon_by_account_and_daemon(

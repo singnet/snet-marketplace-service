@@ -259,7 +259,7 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
             )
 
             if not existing_publish_in_progress_organization:
-                logger.info(f"The first path has chosen")
+                logger.info("The first path has chosen")
 
                 received_organization_event.setup_id()
                 org_uuid = received_organization_event.uuid
@@ -274,7 +274,7 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                     received_organization_event
                 )[0]
             ):
-                logger.info(f"The second path has chosen")
+                logger.info("The second path has chosen")
 
                 org_uuid = existing_publish_in_progress_organization.uuid
                 logger.info(f"Detected Major change for {org_uuid}")
@@ -286,7 +286,7 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                 )
 
             else:
-                logger.info(f"The third path has chosen")
+                logger.info("The third path has chosen")
 
                 org_uuid = existing_publish_in_progress_organization.uuid
                 self._mark_existing_publish_in_progress_as_published(

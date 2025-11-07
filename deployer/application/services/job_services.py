@@ -81,7 +81,7 @@ class JobService:
                 daemon_endpoint = daemon_group["endpoints"][0]
                 group_name = daemon_group["group_name"]
                 service_api_source = metadata["service_api_source"]
-            except KeyError or IndexError:
+            except (KeyError, IndexError):
                 logger.exception(
                     f"Failed to get daemon group, endpoint or service api source from metadata: {metadata}",
                     exc_info=True,
@@ -146,7 +146,6 @@ class JobService:
                     )
 
                     daemon = DaemonRepository.get_daemon(session, order.daemon_id)
-                    # TODO: find a way to handle the first order with not published service
                     if (
                         daemon.service_published and daemon.status == DaemonStatus.DOWN
                     ) or not daemon.service_published:
@@ -200,7 +199,7 @@ class JobService:
             if daemon is None:
                 raise DaemonNotFoundException(daemon_id)
 
-            haas_daemon_status, started_on = self._haas_client.check_daemon(
+            haas_daemon_status, _ = self._haas_client.check_daemon(
                 daemon.org_id, daemon.service_id
             )
             last_claiming_period = ClaimingPeriodRepository.get_last_claiming_period(
@@ -402,5 +401,5 @@ class JobService:
                         package_name = package_line.replace("package ", "").replace(";", "").strip()
                         return package_name
 
-        except (tarfile.TarError, IOError, UnicodeDecodeError, Exception) as e:
+        except Exception as e:
             raise Exception(f"Error processing tar file: {e}")
