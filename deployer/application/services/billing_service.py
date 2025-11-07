@@ -12,7 +12,6 @@ from deployer.application.schemas.billing_schemas import (
     CreateOrderRequest,
     SaveEVMTransactionRequest,
     GetBalanceHistoryRequest,
-    GetMetricsRequest,
     CallEventConsumerRequest,
     GetBalanceAndRateRequest,
 )
@@ -23,7 +22,6 @@ from deployer.config import (
     TOKEN_JSON_FILE_NAME,
     TOKEN_NAME,
     TOKEN_DECIMALS,
-    REQUEST_MAX_LIMIT,
 )
 from deployer.constant import TypeOfMovementOfFunds, OrderType
 from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
