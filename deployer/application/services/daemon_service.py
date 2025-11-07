@@ -196,7 +196,7 @@ class DaemonService:
             DaemonRepository.update_daemon_config(session, request.daemon_id, daemon_config)
 
             if daemon.status == DaemonStatus.UP:
-                self._deployer_client.redeploy_daemon(request.daemon_id)
+                self._deployer_client.redeploy_daemon(request.daemon_id, asynchronous=True)
 
         return {}
 

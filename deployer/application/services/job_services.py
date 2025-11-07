@@ -97,7 +97,7 @@ class JobService:
                 logger.info(f"Service (org_id {org_id}, service_id {service_id}) doesn't use HaaS")
                 if daemon.status == DaemonStatus.UP:
                     logger.info(f"Stopping daemon {daemon_id}")
-                    self._deployer_client.stop_daemon(daemon_id)
+                    self._deployer_client.stop_daemon(daemon_id, asynchronous=True)
                 return
 
             new_config = daemon.daemon_config
@@ -110,12 +110,12 @@ class JobService:
             if event_name == AllowedEventNames.SERVICE_DELETED:
                 DaemonRepository.update_daemon_service_published(session, daemon_id, False)
                 if daemon.status == DaemonStatus.UP:
-                    self._deployer_client.stop_daemon(daemon_id)
+                    self._deployer_client.stop_daemon(daemon_id, asynchronous=True)
             elif event_name == AllowedEventNames.SERVICE_CREATED:
                 DaemonRepository.update_daemon_service_published(session, daemon_id, True)
             elif event_name == AllowedEventNames.SERVICE_METADATA_MODIFIED:
                 if daemon.status == DaemonStatus.UP:
-                    self._deployer_client.redeploy_daemon(daemon_id)
+                    self._deployer_client.redeploy_daemon(daemon_id, asynchronous=True)
 
     def update_transaction_status(self) -> None:
         with session_scope(self.session_factory) as session:
