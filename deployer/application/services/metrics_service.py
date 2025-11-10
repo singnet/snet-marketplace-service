@@ -4,7 +4,7 @@ from pandas import DataFrame, date_range, DatetimeIndex
 
 from deployer.application.schemas.billing_schemas import GetMetricsRequest
 from deployer.config import REQUEST_MAX_LIMIT
-from deployer.constant import OrderType, PeriodType
+from deployer.constant import OrderType, PeriodType, FREQUENCY_BY_PERIOD
 from deployer.domain.schemas.haas_responses import CallEventResponse
 from deployer.exceptions import HostedServiceNotFoundException
 from deployer.infrastructure.clients.haas_client import HaaSClient
@@ -54,21 +54,62 @@ class MetricsService:
         df = self._create_events_dataframe(events)
         grouped_data = self._group_events_by_timeframe(df, request.period)
 
-        metrics = {
-            "requests": self._prepare_requests_metrics(grouped_data),
-            "costs": self._prepare_costs_metrics(grouped_data),
-            "durations": self._prepare_durations_metrics(grouped_data),
-            "summary": self._prepare_summary_metrics(df),
-        }
+        metrics = self._prepare_aggregated_metrics(grouped_data)
+        metrics["summary"] = self._prepare_metrics_summary(df)
 
         return metrics
 
+    def _prepare_aggregated_metrics(self, grouped_data: dict):
+        df = grouped_data["grouped_df"]
+        time_groups = grouped_data["time_groups"]
+
+        aggregated_metrics = {
+            "requests_count": df.groupby("time_group").size(),
+            "costs_sum": df.groupby("time_group")["amount"].sum(),
+            "costs_avg": df.groupby("time_group")["amount"].mean(),
+            "durations_sum": df.groupby("time_group")["duration"].sum(),
+            "durations_avg": df.groupby("time_group")["duration"].mean()
+        }
+
+        full_series = aggregated_metrics["requests_count"].reindex(time_groups, fill_value = 0)
+        labels = full_series.index.strftime(self.datetime_format)
+
+        for name, data in aggregated_metrics.items():
+            full_series = data.reindex(time_groups, fill_value = 0)
+            aggregated_metrics[name] = full_series.values.tolist()
+
+        return {
+            "labels": labels.tolist(),
+            "values": aggregated_metrics
+        }
+
     def _get_empty_metrics_response(self) -> dict:
         return {
-            "requests": {"labels": [], "data": []},
-            "costs": {"labels": [], "data": []},
-            "durations": {"labels": [], "data": []},
-            "summary": {"total_requests": 0, "total_cost": 0, "avg_duration": 0},
+            "labels": [],
+            "values": {
+                "requestsCount": [],
+                "costsSum": [],
+                "costsAvg": [],
+                "durationsSum": [],
+                "durationsAvg": []
+            },
+            "summary": {
+                "requests": {
+                    "total": 0
+                },
+                "costs": {
+                    "total": 0,
+                    "avg": 0,
+                    "max": 0,
+                    "min": 0
+                },
+                "durations": {
+                    "total": 0,
+                    "avg": 0,
+                    "max": 0,
+                    "min": 0
+                }
+            }
         }
 
     def _create_events_dataframe(self, events: List[CallEventResponse]) -> DataFrame:
@@ -87,91 +128,38 @@ class MetricsService:
     def _group_events_by_timeframe(self, df: DataFrame, period: PeriodType) -> Dict[str, Any]:
         df = df.sort_values("timestamp")
         df = df.copy()
+        df["time_group"] = df["timestamp"].dt.floor(FREQUENCY_BY_PERIOD[period])
 
-        if period == PeriodType.HOUR:
-            df["time_group"] = df["timestamp"].dt.floor("min")
-        elif period == PeriodType.DAY:
-            df["time_group"] = df["timestamp"].dt.floor("h")
-        elif period == PeriodType.WEEK:
-            df["time_group"] = df["timestamp"].dt.floor("4h")
-        elif period == PeriodType.MONTH:
-            df["time_group"] = df["timestamp"].dt.floor("D")
-        elif period == PeriodType.YEAR:
-            df["time_group"] = df["timestamp"].dt.floor("7D")
-        else:
-            df["time_group"] = df["timestamp"].dt.floor("M")
-
-        if not df.empty:
-            time_groups = date_range(
-                start=df["time_group"].min(),
-                end=df["time_group"].max(),
-                freq=self._get_frequency_for_period(period),
-            )
-        else:
-            time_groups = DatetimeIndex([])
-
-        return {"grouped_df": df, "time_groups": time_groups, "period": period}
-
-    def _get_frequency_for_period(self, period: PeriodType) -> str:
-        frequency_map = {
-            PeriodType.HOUR: "min",
-            PeriodType.DAY: "h",
-            PeriodType.WEEK: "4h",
-            PeriodType.MONTH: "D",
-            PeriodType.YEAR: "7D",
-            PeriodType.ALL: "M",
-        }
-        return frequency_map[period]
-
-    def _prepare_requests_metrics(self, grouped_data: Dict) -> Dict:
-        df = grouped_data["grouped_df"]
-        time_groups = grouped_data["time_groups"]
-
-        if df.empty:
-            return {"labels": [], "data": []}
-
-        requests_count = df.groupby("time_group").size()
-        full_series = requests_count.reindex(time_groups, fill_value=0)
-        labels = full_series.index.strftime("%Y-%m-%d %H:%M:%S")
-
-        return {"labels": labels.tolist(), "data": full_series.values.tolist()}
-
-    def _prepare_costs_metrics(self, grouped_data: Dict) -> Dict:
-        df = grouped_data["grouped_df"]
-        time_groups = grouped_data["time_groups"]
-
-        if df.empty:
-            return {"labels": [], "data": []}
-
-        costs_sum = df.groupby("time_group")["amount"].sum()
-        full_series = costs_sum.reindex(time_groups, fill_value=0)
-        labels = full_series.index.strftime("%Y-%m-%d %H:%M:%S")
-
-        return {"labels": labels.tolist(), "data": full_series.values.tolist()}
-
-    def _prepare_durations_metrics(self, grouped_data: Dict) -> Dict:
-        df = grouped_data["grouped_df"]
-        time_groups = grouped_data["time_groups"]
-
-        if df.empty:
-            return {"labels": [], "data": []}
-
-        avg_durations = df.groupby("time_group")["duration"].mean()
-        full_series = avg_durations.reindex(time_groups, fill_value=0)
-        labels = full_series.index.strftime("%Y-%m-%d %H:%M:%S")
-
-        return {"labels": labels.tolist(), "data": full_series.values.tolist()}
-
-    def _prepare_summary_metrics(self, df: DataFrame) -> Dict:
-        if df.empty:
-            return {"total_requests": 0, "total_cost": 0, "avg_duration": 0}
-
-        total_requests = len(df)
-        total_cost = df["amount"].sum()
-        avg_duration = df["duration"].mean()
+        time_groups = date_range(
+            start=df["time_group"].min(),
+            end=df["time_group"].max(),
+            freq=FREQUENCY_BY_PERIOD[period],
+        )
 
         return {
-            "total_requests": int(total_requests),
-            "total_cost": float(total_cost),
-            "avg_duration": float(avg_duration),
+            "grouped_df": df,
+            "time_groups": time_groups,
+            "period": period
+        }
+
+    def _prepare_metrics_summary(self, df: DataFrame) -> Dict:
+        cost_stats = df["amount"].describe()
+        duration_stats = df["duration"].describe()
+
+        return {
+            "requests": {
+                "total": len(df)
+            },
+            "costs": {
+                "total": df["amount"].sum(),
+                "avg": round(cost_stats['mean'], 2),
+                "max": round(cost_stats['max'], 2),
+                "min": round(cost_stats['min'], 2)
+            },
+            "durations": {
+                "total": df["duration"].sum(),
+                "avg": round(duration_stats['mean'], 2),
+                "max": round(duration_stats['max'], 2),
+                "min": round(duration_stats['min'], 2)
+            }
         }

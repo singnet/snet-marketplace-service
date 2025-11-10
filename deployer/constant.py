@@ -34,6 +34,16 @@ PERIOD_TYPE_TIMEDELTA = {
 }
 
 
+FREQUENCY_BY_PERIOD = {
+    PeriodType.HOUR: "min",
+    PeriodType.DAY: "h",
+    PeriodType.WEEK: "4h",
+    PeriodType.MONTH: "D",
+    PeriodType.YEAR: "7D",
+    PeriodType.ALL: "30D",
+}
+
+
 class OrderType(str, Enum):
     ASC = "asc"
     DESC = "desc"
