@@ -16,7 +16,7 @@ class MetricsService:
     def __init__(self, session_factory=None):
         self.session_factory = session_factory if session_factory else DefaultSessionFactory
         self._haas_client = HaaSClient()
-        self.datetime_format = "%Y-%m-%d %H:%M:%S"
+        self.datetime_format = "%Y-%m-%dT%H:%M:%S"
 
     def get_metrics(self, request: GetMetricsRequest) -> dict:
         with session_scope(self.session_factory) as session:
