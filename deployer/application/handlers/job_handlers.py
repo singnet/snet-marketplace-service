@@ -39,10 +39,3 @@ def update_daemon_status(event, context):
     JobService().update_daemon_status(request)
 
     return {}
-
-
-@exception_handler(logger=logger)
-def test_token_auth(event, context):
-    return generate_lambda_response(
-        StatusCode.OK, {"status": "success", "data": "", "error": {}}, cors_enabled=True
-    )
