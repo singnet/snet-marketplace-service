@@ -21,6 +21,9 @@ provider:
     tags: # Tags that will be added to each of the deployment resources
       key1: deployer
   deploymentPrefix: serverless
+  apiGateway:
+    apiKeys:
+      - name: test-deployer-admin-functions-api-key
 
 custom:
   prune:
@@ -722,3 +725,19 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+
+  test-token-auth:
+    handler: deployer.application.handlers.job_handlers.test_token_auth
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /test-auth
+          private: true

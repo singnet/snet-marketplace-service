@@ -1,5 +1,7 @@
+from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.logger import get_logger
+from common.utils import generate_lambda_response
 from deployer.application.schemas.daemon_schemas import DaemonRequest
 from deployer.application.schemas.job_schemas import RegistryEventConsumerRequest
 from deployer.application.services.job_services import JobService
@@ -37,3 +39,10 @@ def update_daemon_status(event, context):
     JobService().update_daemon_status(request)
 
     return {}
+
+
+@exception_handler(logger=logger)
+def test_token_auth(event, context):
+    return generate_lambda_response(
+        StatusCode.OK, {"status": "success", "data": "", "error": {}}, cors_enabled=True
+    )
