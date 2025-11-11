@@ -78,7 +78,7 @@ class GetBalanceAndRateRequest(BaseModel):
     service_id: str = Field(alias="serviceId")
 
     @classmethod
-    @validation_handler([RequestPayloadType.BODY])
+    @validation_handler([RequestPayloadType.QUERY_STRING])
     def validate_event(cls, event: dict) -> "GetBalanceAndRateRequest":
-        body = json.loads(event[RequestPayloadType.BODY])
+        body = event[RequestPayloadType.QUERY_STRING]
         return cls.model_validate(body)
