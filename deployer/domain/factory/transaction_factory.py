@@ -7,10 +7,6 @@ from deployer.infrastructure.models import EVMTransaction, TransactionsMetadata
 
 class TransactionFactory:
     @staticmethod
-    def new_transaction_from_blockchain_event() -> NewEVMTransactionDomain:
-        pass
-
-    @staticmethod
     def transaction_from_db_model(transaction_db_model: EVMTransaction) -> EVMTransactionDomain:
         return EVMTransactionDomain(
             hash=transaction_db_model.hash,

@@ -119,7 +119,7 @@ class OrganizationEventConsumer:
             if member.role != Role.OWNER.value:
                 continue
             if address != owner_address or member.status != OrganizationMemberStatus.PUBLISHED.value or member.username != owner.username:
-                self._organization_repository.delete_org_member()
+                self._organization_repository.delete_org_member(member)
 
     def _process_members(self, org_uuid: str, member_addresses: List[str], current_members_map: Dict[str, OrganizationMember]):
         for member_address in member_addresses:
@@ -259,7 +259,7 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
             )
 
             if not existing_publish_in_progress_organization:
-                logger.info(f"The first path has chosen")
+                logger.info("The first path has chosen")
 
                 received_organization_event.setup_id()
                 org_uuid = received_organization_event.uuid
@@ -274,7 +274,7 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                     received_organization_event
                 )[0]
             ):
-                logger.info(f"The second path has chosen")
+                logger.info("The second path has chosen")
 
                 org_uuid = existing_publish_in_progress_organization.uuid
                 logger.info(f"Detected Major change for {org_uuid}")
@@ -286,7 +286,7 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
                 )
 
             else:
-                logger.info(f"The third path has chosen")
+                logger.info("The third path has chosen")
 
                 org_uuid = existing_publish_in_progress_organization.uuid
                 self._mark_existing_publish_in_progress_as_published(

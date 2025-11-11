@@ -88,7 +88,7 @@ class HaaSClient:
         path = HAAS_BASE_URL + "/v1/daemon/redeploy"
         request_data = {
             "registry": HAAS_REGISTRY,
-            "reg_repo": HAAS_REG_REPO,
+            "regrepo": HAAS_REG_REPO,
             "org": org_id,
             "service": service_id,
             "daemon_group": daemon_config["daemon_group"],
@@ -122,7 +122,7 @@ class HaaSClient:
             else:
                 raise HaaSClientError(result.text)
         except Exception as e:
-            logger.error(f"Unexpected error while checking daemon: {e}")
+            logger.exception(f"Unexpected error while checking daemon: {e}", exc_info=True)
             return HaaSDaemonStatus.DOWN, None
 
     def get_public_key(self) -> str:

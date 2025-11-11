@@ -524,7 +524,7 @@ class TestService(TestCase):
 
         event = {
             "path": "/org/test_org_uuid/service",
-            "requestContext": {"authorizer": {"claims": {"email": "dummy_user1@dummy.io"}}},
+            "requestContext": {"authorizer": {"claims": {"email": username, "sub": TEST_SUB}}},
             "headers": {"origin": "testnet.marketplace"},
             "httpMethod": "PUT",
             "pathParameters": {"org_uuid": "test_org_uuid", "service_uuid": "test_service_uuid"},

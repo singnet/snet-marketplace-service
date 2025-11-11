@@ -22,7 +22,9 @@ from deployer.config import (
     TOKEN_JSON_FILE_NAME,
     DAEMON_STARTING_TTL_IN_MINUTES,
     DAEMON_RESTARTING_TTL_IN_MINUTES,
-    HAAS_FIX_PRICE_IN_COGS, DAEMON_RUNNING_TIME_FOR_PRICE
+    HAAS_FIX_PRICE_IN_COGS,
+    DAEMON_RUNNING_TIME_FOR_PRICE,
+    DAEMON_RESTARTING_TTL_LOWER_LIMIT_IN_MINUTES,
 )
 from deployer.constant import AllowedEventNames
 from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
@@ -57,14 +59,18 @@ class JobService:
         event_name = request.event_name
         org_id = request.org_id
         service_id = request.service_id
-        logger.info(f"Processing event {event_name} for service (org_id '{org_id}', service_id '{service_id}')")
+        logger.info(
+            f"Processing event {event_name} for service (org_id '{org_id}', service_id '{service_id}')"
+        )
 
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.search_daemon(session, org_id, service_id)
             logger.info(f"Daemon: {daemon.to_response()}")
 
             if daemon is None:
-                logger.info(f"Service (org_id '{org_id}', service_id '{service_id}') doesn't use HaaS")
+                logger.info(
+                    f"Service (org_id '{org_id}', service_id '{service_id}') doesn't use HaaS"
+                )
                 return
             daemon_id = daemon.id
 
@@ -75,7 +81,7 @@ class JobService:
                 daemon_endpoint = daemon_group["endpoints"][0]
                 group_name = daemon_group["group_name"]
                 service_api_source = metadata["service_api_source"]
-            except KeyError or IndexError:
+            except (KeyError, IndexError):
                 logger.exception(
                     f"Failed to get daemon group, endpoint or service api source from metadata: {metadata}",
                     exc_info=True,
@@ -85,12 +91,13 @@ class JobService:
                 )
 
             service_class = self._get_service_class(service_api_source)
+            logger.info(f"Service class: {service_class}")
 
             if daemon.daemon_endpoint != daemon_endpoint:
                 logger.info(f"Service (org_id {org_id}, service_id {service_id}) doesn't use HaaS")
                 if daemon.status == DaemonStatus.UP:
                     logger.info(f"Stopping daemon {daemon_id}")
-                    self._deployer_client.stop_daemon(daemon_id)
+                    self._deployer_client.stop_daemon(daemon_id, asynchronous=True)
                 return
 
             new_config = daemon.daemon_config
@@ -98,16 +105,17 @@ class JobService:
             new_config["service_class"] = service_class
 
             DaemonRepository.update_daemon_config(session, daemon_id, new_config)
+            logger.info(f"Daemon config updated for daemon {daemon_id}. New config: {new_config}")
 
             if event_name == AllowedEventNames.SERVICE_DELETED:
                 DaemonRepository.update_daemon_service_published(session, daemon_id, False)
                 if daemon.status == DaemonStatus.UP:
-                    self._deployer_client.stop_daemon(daemon_id)
+                    self._deployer_client.stop_daemon(daemon_id, asynchronous=True)
             elif event_name == AllowedEventNames.SERVICE_CREATED:
                 DaemonRepository.update_daemon_service_published(session, daemon_id, True)
             elif event_name == AllowedEventNames.SERVICE_METADATA_MODIFIED:
                 if daemon.status == DaemonStatus.UP:
-                    self._deployer_client.redeploy_daemon(daemon_id)
+                    self._deployer_client.redeploy_daemon(daemon_id, asynchronous=True)
 
     def update_transaction_status(self) -> None:
         with session_scope(self.session_factory) as session:
@@ -116,7 +124,9 @@ class JobService:
                 transactions, last_block = self._get_transactions_from_blockchain(
                     transactions_metadata
                 )
-                logger.info(f"Found {len(transactions)} new transactions for recipient {transactions_metadata.recipient}")
+                logger.info(
+                    f"Found {len(transactions)} new transactions for recipient {transactions_metadata.recipient}"
+                )
 
                 for new_transaction in transactions:
                     existing_transaction = TransactionRepository.get_transaction(
@@ -136,7 +146,6 @@ class JobService:
                     )
 
                     daemon = DaemonRepository.get_daemon(session, order.daemon_id)
-                    # TODO: find a way to handle the first order with not published service
                     if (
                         daemon.service_published and daemon.status == DaemonStatus.DOWN
                     ) or not daemon.service_published:
@@ -144,11 +153,15 @@ class JobService:
                             session, order.daemon_id, DaemonStatus.READY_TO_START
                         )
                         DaemonRepository.update_daemon_end_at(
-                            session, order.daemon_id, datetime.now(UTC) + relativedelta(**DAEMON_RUNNING_TIME_FOR_PRICE)
+                            session,
+                            order.daemon_id,
+                            datetime.now(UTC) + relativedelta(**DAEMON_RUNNING_TIME_FOR_PRICE),
                         )
                     elif daemon.status in [DaemonStatus.UP, DaemonStatus.READY_TO_START]:
                         DaemonRepository.update_daemon_end_at(
-                            session, order.daemon_id, daemon.end_at + relativedelta(**DAEMON_RUNNING_TIME_FOR_PRICE)
+                            session,
+                            order.daemon_id,
+                            daemon.end_at + relativedelta(**DAEMON_RUNNING_TIME_FOR_PRICE),
                         )
 
                 TransactionRepository.update_transactions_metadata(
@@ -169,7 +182,9 @@ class JobService:
                 continue
 
             self._deployer_client.update_daemon_status(daemon.id, asynchronous=True)
-            logger.info(f"Checking daemon {daemon.id} for service {daemon.org_id} {daemon.service_id}...")
+            logger.info(
+                f"Checking daemon {daemon.id} for service {daemon.org_id} {daemon.service_id}..."
+            )
 
     def update_daemon_status(self, request: DaemonRequest) -> None:
         daemon_id = request.daemon_id
@@ -184,7 +199,7 @@ class JobService:
             if daemon is None:
                 raise DaemonNotFoundException(daemon_id)
 
-            haas_daemon_status, started_on = self._haas_client.check_daemon(
+            haas_daemon_status, _ = self._haas_client.check_daemon(
                 daemon.org_id, daemon.service_id
             )
             last_claiming_period = ClaimingPeriodRepository.get_last_claiming_period(
@@ -209,66 +224,73 @@ class JobService:
             )
 
             if service_published:
+                # process daemon only if service is published
                 if haas_daemon_status == HaaSDaemonStatus.DOWN:
+                    # the first branch for DOWN daemon
                     if daemon_status == DaemonStatus.READY_TO_START:
+                        # deploy the daemon if it is published and ready to start
                         logger.info(f"Starting daemon {daemon_id}")
                         self._deployer_client.start_daemon(daemon_id)
-                    elif daemon_status == DaemonStatus.STARTING:
+                    elif daemon_status in [DaemonStatus.STARTING, DaemonStatus.RESTARTING]:
+                        # check daemon starting/restarting ttl and if it is expired, set daemon status to error
+                        ttl = (
+                            DAEMON_STARTING_TTL_IN_MINUTES
+                            if daemon_status == DaemonStatus.STARTING
+                            else DAEMON_RESTARTING_TTL_IN_MINUTES
+                        )
                         if (
-                            daemon.updated_at.replace(tzinfo=UTC)
-                            + timedelta(minutes=DAEMON_STARTING_TTL_IN_MINUTES)
+                            daemon.updated_at.replace(tzinfo=UTC) + timedelta(minutes=ttl)
                             < current_time
                         ):
                             logger.info(f"Daemon {daemon_id} status is ERROR")
                             DaemonRepository.update_daemon_status(
                                 session, daemon_id, DaemonStatus.ERROR
                             )
+                            # fail the last claiming period if it is active, because the daemon didn't start
                             if (
                                 last_claiming_period
                                 and last_claiming_period.status == ClaimingPeriodStatus.ACTIVE
                             ):
-                                logger.info(f"Claiming period status is FAILED for daemon {daemon_id}")
+                                logger.info(
+                                    f"Claiming period status is FAILED for daemon {daemon_id}"
+                                )
                                 ClaimingPeriodRepository.update_claiming_period_status(
                                     session, last_claiming_period.id, ClaimingPeriodStatus.FAILED
                                 )
-                    elif daemon_status == DaemonStatus.UP or DaemonStatus.DELETING:
+                        else:
+                            # if ttl isn't expired, continue waiting and checking daemon status
+                            logger.info(f"Daemon {daemon_id} status is still {daemon_status.value}")
+                    elif daemon_status == DaemonStatus.UP or daemon_status == DaemonStatus.DELETING:
+                        # if daemon is UP or DELETING, set daemon status to DOWN
                         logger.info(f"Daemon {daemon_id} status is DOWN")
                         DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.DOWN)
-                    elif daemon_status == DaemonStatus.RESTARTING:
-                        if (
-                            daemon.updated_at.replace(tzinfo=UTC)
-                            + timedelta(minutes=DAEMON_RESTARTING_TTL_IN_MINUTES)
-                            < current_time
-                        ):
-                            logger.info(f"Daemon status is ERROR")
-                            DaemonRepository.update_daemon_status(
-                                session, daemon_id, DaemonStatus.ERROR
-                            )
-                            if (
-                                last_claiming_period
-                                and last_claiming_period.status == ClaimingPeriodStatus.ACTIVE
-                            ):
-                                logger.info(f"Claiming period status is FAILED")
-                                ClaimingPeriodRepository.update_claiming_period_status(
-                                    session, last_claiming_period.id, ClaimingPeriodStatus.FAILED
-                                )
                 elif haas_daemon_status == HaaSDaemonStatus.UP:
+                    # the second branch for UP daemon
                     if (
                         daemon_status == DaemonStatus.STARTING
                         or daemon_status == DaemonStatus.RESTARTING
                     ):
-                        logger.info(f"Daemon status is UP")
+                        if (
+                            daemon_status == DaemonStatus.RESTARTING
+                            and daemon.updated_at.replace(tzinfo=UTC)
+                            + timedelta(minutes=DAEMON_RESTARTING_TTL_LOWER_LIMIT_IN_MINUTES)
+                            > current_time
+                        ):
+                            # if we check the status of the daemon almost immediately after redeployment,
+                            # and the daemon has not yet had time to delete itself
+                            logger.info(f"Daemon {daemon_id} is still RESTARTING")
+                            return
+                        # daemon is finally UP
+                        logger.info(f"Daemon {daemon_id} status is UP")
                         DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.UP)
                     elif daemon_status == DaemonStatus.UP:
+                        # check daemon expiration
                         if daemon.end_at.replace(tzinfo=UTC) < current_time:
-                            if (
-                                not last_claiming_period
-                                or (
-                                    last_claiming_period and
-                                    last_claiming_period.status != ClaimingPeriodStatus.ACTIVE
-                                )
+                            if not last_claiming_period or (
+                                last_claiming_period
+                                and last_claiming_period.status != ClaimingPeriodStatus.ACTIVE
                             ):
-                                logger.info(f"Stopping daemon")
+                                logger.info(f"Stopping daemon {daemon_id}")
                                 self._deployer_client.stop_daemon(daemon_id)
 
     @staticmethod
@@ -297,7 +319,9 @@ class JobService:
         for event in events:
             logger.info(f"Processing transaction {event['transactionHash'].hex()}")
             if event["args"]["value"] != HAAS_FIX_PRICE_IN_COGS:
-                logger.warning(f"Skipping transaction {event['transactionHash'].hex()}. Expected value: {HAAS_FIX_PRICE_IN_COGS}. Actual value: {event['args']['value']}")
+                logger.warning(
+                    f"Skipping transaction {event['transactionHash'].hex()}. Expected value: {HAAS_FIX_PRICE_IN_COGS}. Actual value: {event['args']['value']}"
+                )
                 continue
             tx_hash = event["transactionHash"].hex()
             order_id = JobService._get_order_id_from_transaction(tx_hash, w3)
@@ -377,5 +401,5 @@ class JobService:
                         package_name = package_line.replace("package ", "").replace(";", "").strip()
                         return package_name
 
-        except (tarfile.TarError, IOError, UnicodeDecodeError, Exception) as e:
+        except Exception as e:
             raise Exception(f"Error processing tar file: {e}")
