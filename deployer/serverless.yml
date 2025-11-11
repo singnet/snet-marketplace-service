@@ -21,6 +21,9 @@ provider:
     tags: # Tags that will be added to each of the deployment resources
       key1: deployer
   deploymentPrefix: serverless
+  apiGateway:
+    apiKeys:
+      - ${file(./config.${self:provider.stage}.json):API_KEY_NAME}
 
 custom:
   prune:
@@ -571,6 +574,7 @@ functions:
       - http:
           method: GET
           path: /balance-and-rate
+          private: true
 
   get-balance-history:
     handler: deployer.application.handlers.billing_handlers.get_balance_history
