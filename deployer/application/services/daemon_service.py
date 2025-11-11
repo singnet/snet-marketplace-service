@@ -148,9 +148,6 @@ class DaemonService:
     def delete_daemon(self, request: DaemonRequest):
         pass
 
-    def redeploy_daemon(self, request: DaemonRequest):
-        pass
-
     def update_config(self, request: UpdateConfigRequest) -> dict:
         service_endpoint = request.service_endpoint
         service_credentials = request.service_credentials

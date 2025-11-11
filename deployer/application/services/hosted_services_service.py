@@ -78,8 +78,5 @@ class HostedServicesService:
                 ),
             )
 
-    def deploy_service(self, request: HostedServiceRequest):
-        pass
-
     def delete_service(self, request: HostedServiceRequest):
         pass

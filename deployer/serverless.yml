@@ -914,17 +914,6 @@ functions:
               - X-Amz-User-Agent
               - x-requested-wit
 
-  redeploy-daemon:
-    handler: deployer.application.handlers.daemon_handlers.redeploy_daemon
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-
   check-daemon-status:
     handler: deployer.application.handlers.daemon_handlers.check_daemon_status
     role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -975,20 +964,6 @@ functions:
 #      subnetIds:
 #        - ${file(./config.${self:provider.stage}.json):VPC1}
 #        - ${file(./config.${self:provider.stage}.json):VPC2}
-
-#  check-daemons:
-#    handler: deployer.application.handlers.daemon_handlers.check_daemons
-#    role: ${file(./config.${self:provider.stage}.json):ROLE}
-#    vpc:
-#      securityGroupIds:
-#        - ${file(./config.${self:provider.stage}.json):SG1}
-#        - ${file(./config.${self:provider.stage}.json):SG2}
-#      subnetIds:
-#        - ${file(./config.${self:provider.stage}.json):VPC1}
-#        - ${file(./config.${self:provider.stage}.json):VPC2}
-#    events:
-#      - schedule:
-#          rate: rate(5 minutes)
 
   # ============= HOSTED SERVICE HANDLERS ============
 
@@ -1100,17 +1075,6 @@ functions:
               - Arn
           batchSize: 1
 
-#  deploy-service:
-#    handler: deployer.application.handlers.hosted_services_handlers.deploy_service
-#    role: ${file(./config.${self:provider.stage}.json):ROLE}
-#    vpc:
-#      securityGroupIds:
-#        - ${file(./config.${self:provider.stage}.json):SG1}
-#        - ${file(./config.${self:provider.stage}.json):SG2}
-#      subnetIds:
-#        - ${file(./config.${self:provider.stage}.json):VPC1}
-#        - ${file(./config.${self:provider.stage}.json):VPC2}
-
 #  delete-service:
 #    handler: deployer.application.handlers.hosted_services_handlers.delete_service
 #    role: ${file(./config.${self:provider.stage}.json):ROLE}
@@ -1121,5 +1085,3 @@ functions:
 #      subnetIds:
 #        - ${file(./config.${self:provider.stage}.json):VPC1}
 #        - ${file(./config.${self:provider.stage}.json):VPC2}
-
-
