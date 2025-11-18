@@ -1,6 +1,6 @@
 from typing import Dict, List, Any
 
-from pandas import DataFrame, date_range, DatetimeIndex
+from pandas import DataFrame, date_range
 
 from deployer.application.schemas.billing_schemas import GetMetricsRequest
 from deployer.config import REQUEST_MAX_LIMIT
@@ -68,20 +68,17 @@ class MetricsService:
             "costs_sum": df.groupby("time_group")["amount"].sum(),
             "costs_avg": df.groupby("time_group")["amount"].mean(),
             "durations_sum": df.groupby("time_group")["duration"].sum(),
-            "durations_avg": df.groupby("time_group")["duration"].mean()
+            "durations_avg": df.groupby("time_group")["duration"].mean(),
         }
 
-        full_series = aggregated_metrics["requests_count"].reindex(time_groups, fill_value = 0)
+        full_series = aggregated_metrics["requests_count"].reindex(time_groups, fill_value=0)
         labels = full_series.index.strftime(self.datetime_format)
 
         for name, data in aggregated_metrics.items():
-            full_series = data.reindex(time_groups, fill_value = 0)
+            full_series = data.reindex(time_groups, fill_value=0)
             aggregated_metrics[name] = full_series.values.tolist()
 
-        return {
-            "labels": labels.tolist(),
-            "values": aggregated_metrics
-        }
+        return {"labels": labels.tolist(), "values": aggregated_metrics}
 
     def _get_empty_metrics_response(self) -> dict:
         return {
@@ -91,25 +88,13 @@ class MetricsService:
                 "costsSum": [],
                 "costsAvg": [],
                 "durationsSum": [],
-                "durationsAvg": []
+                "durationsAvg": [],
             },
             "summary": {
-                "requests": {
-                    "total": 0
-                },
-                "costs": {
-                    "total": 0,
-                    "avg": 0,
-                    "max": 0,
-                    "min": 0
-                },
-                "durations": {
-                    "total": 0,
-                    "avg": 0,
-                    "max": 0,
-                    "min": 0
-                }
-            }
+                "requests": {"total": 0},
+                "costs": {"total": 0, "avg": 0, "max": 0, "min": 0},
+                "durations": {"total": 0, "avg": 0, "max": 0, "min": 0},
+            },
         }
 
     def _create_events_dataframe(self, events: List[CallEventResponse]) -> DataFrame:
@@ -136,30 +121,24 @@ class MetricsService:
             freq=FREQUENCY_BY_PERIOD[period],
         )
 
-        return {
-            "grouped_df": df,
-            "time_groups": time_groups,
-            "period": period
-        }
+        return {"grouped_df": df, "time_groups": time_groups, "period": period}
 
     def _prepare_metrics_summary(self, df: DataFrame) -> Dict:
         cost_stats = df["amount"].describe()
         duration_stats = df["duration"].describe()
 
         return {
-            "requests": {
-                "total": len(df)
-            },
+            "requests": {"total": len(df)},
             "costs": {
                 "total": df["amount"].sum(),
-                "avg": round(cost_stats['mean'], 2),
-                "max": round(cost_stats['max'], 2),
-                "min": round(cost_stats['min'], 2)
+                "avg": round(cost_stats["mean"], 2),
+                "max": round(cost_stats["max"], 2),
+                "min": round(cost_stats["min"], 2),
             },
             "durations": {
                 "total": df["duration"].sum(),
-                "avg": round(duration_stats['mean'], 2),
-                "max": round(duration_stats['max'], 2),
-                "min": round(duration_stats['min'], 2)
-            }
+                "avg": round(duration_stats["mean"], 2),
+                "max": round(duration_stats["max"], 2),
+                "min": round(duration_stats["min"], 2),
+            },
         }

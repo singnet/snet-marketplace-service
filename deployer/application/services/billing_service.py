@@ -102,7 +102,7 @@ class BillingService:
                 )
                 raise OrderNotFoundException(request.order_id)
 
-            if order.status not in [OrderStatus.CREATED, OrderStatus.PAYMENT_FAILED]:
+            if order.status not in [OrderStatus.CREATED, OrderStatus.FAILED]:
                 logger.exception(
                     f"Order with id {request.order_id} must have the status CREATED or PAYMENT_FAILED for "
                     f"correct saving of transaction {request.transaction_hash}"
@@ -175,10 +175,10 @@ class BillingService:
                     request.page,
                     request.order,
                     request.period,
-                    OrderStatus.PAID,
+                    OrderStatus.SUCCESS,
                 )
                 top_up_events_total_count = OrderRepository.get_orders_total_count(
-                    session, account_id, request.period, OrderStatus.PAID
+                    session, account_id, request.period, OrderStatus.SUCCESS
                 )
             for top_up_event in top_up_events:
                 balance_events.append(
@@ -239,7 +239,7 @@ class BillingService:
                         )
                         raise Exception()
 
-                    OrderRepository.update_order_status(session, order.id, OrderStatus.PAID)
+                    OrderRepository.update_order_status(session, order.id, OrderStatus.SUCCESS)
                     AccountBalanceRepository.increase_account_balance(
                         session, order.account_id, order.amount
                     )
@@ -312,7 +312,7 @@ class BillingService:
                     NewEVMTransactionDomain(
                         hash=tx_hash,
                         order_id=order_id,
-                        status=EVMTransactionStatus.CONFIRMED,
+                        status=EVMTransactionStatus.SUCCESS,
                         sender=event["args"]["from"],
                         recipient=event["args"]["to"],
                     ),

@@ -121,7 +121,7 @@ class OrderRepository:
                 Order.status == OrderStatus.PROCESSING,
                 Order.updated_at < current_time - timedelta(minutes=TRANSACTION_TTL_IN_MINUTES),
             )
-            .values(status=OrderStatus.PAYMENT_FAILED)
+            .values(status=OrderStatus.FAILED)
         )
 
         session.execute(query)

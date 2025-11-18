@@ -36,15 +36,15 @@ class DeploymentStatus(PythonEnum):
 class OrderStatus(PythonEnum):
     CREATED = "CREATED"  # only the entity is created, waiting for payment
     PROCESSING = "PROCESSING"  # waiting for confirmation
-    PAID = "PAID"  # payment successful
-    PAYMENT_FAILED = "PAYMENT_FAILED"  # payment failed
+    SUCCESS = "SUCCESS"  # payment successful
+    FAILED = "FAILED"  # payment failed
     CANCELLED = "CANCELLED"  # order is cancelled by the system
     EXPIRED = "EXPIRED"  # order is expired
 
 
 class EVMTransactionStatus(PythonEnum):
     PENDING = "PENDING"  # transaction pending
-    CONFIRMED = "CONFIRMED"  # transaction successful
+    SUCCESS = "SUCCESS"  # transaction successful
     FAILED = "FAILED"  # transaction failed
 
 
