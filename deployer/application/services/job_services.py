@@ -199,9 +199,7 @@ class JobService:
             if daemon is None:
                 raise DaemonNotFoundException(daemon_id)
 
-            haas_daemon_status, _ = self._haas_client.check_daemon(
-                daemon.org_id, daemon.service_id
-            )
+            haas_daemon_status, _ = self._haas_client.check_daemon(daemon.org_id, daemon.service_id)
             last_claiming_period = ClaimingPeriodRepository.get_last_claiming_period(
                 session, daemon_id
             )
