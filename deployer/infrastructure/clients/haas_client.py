@@ -14,7 +14,7 @@ from deployer.config import (
     HAAS_REG_REPO,
     HAAS_BASE_IMAGE,
     NETWORKS,
-    NETWORK_ID
+    NETWORK_ID,
 )
 
 
@@ -52,7 +52,7 @@ class HaaSClient:
             "service_endpoint": daemon_config["service_endpoint"],
             "base_image": HAAS_BASE_IMAGE,
             "payment_channel_storage_type": daemon_config["payment_channel_storage_type"],
-            "blockchain_network_selected": NETWORKS[NETWORK_ID]["name"]
+            "blockchain_network_selected": NETWORKS[NETWORK_ID]["name"],
         }
         if "service_credentials" in daemon_config:
             request_data["service_credentials"] = daemon_config["service_credentials"]
@@ -99,7 +99,7 @@ class HaaSClient:
             "service_endpoint": daemon_config["service_endpoint"],
             "base_image": HAAS_BASE_IMAGE,
             "payment_channel_storage_type": daemon_config["payment_channel_storage_type"],
-            "blockchain_network_selected": NETWORKS[NETWORK_ID]["name"]
+            "blockchain_network_selected": NETWORKS[NETWORK_ID]["name"],
         }
         if "service_credentials" in daemon_config:
             request_data["service_credentials"] = daemon_config["service_credentials"]
