@@ -26,7 +26,7 @@ class HostedServicesService:
             if hosted_service is None:
                 raise HostedServiceNotFoundException(hosted_service_id=request.hosted_service_id)
 
-        result = hosted_service.to_response()
+        result = hosted_service.to_response(remove_created_updated=False)
         result["orgId"] = daemon.org_id
         result["serviceId"] = daemon.service_id
 
