@@ -174,11 +174,20 @@ class HaaSClient:
         except Exception as e:
             raise HaaSClientError(str(e))
 
+    def get_daemon_logs(self, org_id: str, service_id: str, tail: int = 200) -> List[str]:
+        path = HAAS_BASE_URL + f"/v1/daemon/{org_id}/{service_id}/logs?tail={tail}"
+
+        try:
+            result = requests.get(path, auth = self.auth)
+            if result.ok:
+                return result.json()["logs"]
+            else:
+                raise HaaSClientError(result.text)
+        except Exception as e:
+            raise HaaSClientError(str(e))
+
     # TODO: implement methods below
     def delete_hosted_service(self, org_id: str, service_id: str):
-        pass
-
-    def get_daemon_logs(self, org_id: str, service_id: str) -> list:
         pass
 
     def get_hosted_service_logs(self, org_id: str, service_id: str) -> list:

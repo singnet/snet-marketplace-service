@@ -1,4 +1,5 @@
 from datetime import datetime, UTC, timedelta
+from typing import List
 
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
@@ -45,7 +46,7 @@ class DaemonService:
 
         return result
 
-    def get_daemon_logs(self, request: DaemonRequest) -> list:
+    def get_daemon_logs(self, request: DaemonRequest) -> List[str]:
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.get_daemon(session, request.daemon_id)
         if daemon is None:
