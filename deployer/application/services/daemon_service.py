@@ -87,7 +87,7 @@ class DaemonService:
             if (
                 last_claiming_period is not None
                 and last_claiming_period.status != ClaimingPeriodStatus.FAILED
-                and last_claiming_period.end_at
+                and last_claiming_period.end_at.replace(tzinfo=UTC)
                 + timedelta(hours=24)
                 - timedelta(minutes=CLAIMING_PERIOD_IN_MINUTES)
                 > current_time
