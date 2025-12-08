@@ -3,16 +3,14 @@ Integration tests for update_transaction_status handler.
 
 This handler updates the status of EVM transactions by checking their blockchain status.
 """
-import json
-from datetime import datetime, UTC, timezone
+from datetime import datetime, UTC
 from dateutil.relativedelta import relativedelta
-from unittest.mock import patch, MagicMock, Mock
+from unittest.mock import patch, MagicMock
 from sqlalchemy import select, text
 
 from deployer.application.handlers.job_handlers import update_transaction_status
 from deployer.infrastructure.models import EVMTransactionStatus, OrderStatus, DaemonStatus, TransactionsMetadata, EVMTransaction
 from deployer.config import HAAS_FIX_PRICE_IN_COGS
-from common.constant import StatusCode
 
 
 class TestUpdateTransactionStatusHandler:
@@ -43,9 +41,6 @@ class TestUpdateTransactionStatusHandler:
         
         # Publish daemon
         test_data_factory.publish_daemon(db_session, "test-daemon-update-tx-001")
-        
-        # Store original end_at for comparison (convert to naive for comparison with DB)
-        original_end_at = daemon.end_at.replace(tzinfo=None) if daemon.end_at.tzinfo else daemon.end_at
         
         order = test_data_factory.create_order(
             order_id="test-order-update-tx-001",
