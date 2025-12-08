@@ -57,7 +57,7 @@ from deployer.constant import DaemonStorageType
 from deployer.utils import get_daemon_endpoint
 from common.utils import generate_uuid
 
-
+ORDER_PATH = "/order"
 # Test database configuration
 db_config = NETWORKS[NETWORK_ID]["db"]
 TEST_DB_URL = (
@@ -248,6 +248,7 @@ def lambda_context():
 @pytest.fixture
 def authorized_event():
     """Create a basic authorized Lambda event."""
+
     return {
         "headers": {
             "origin": "https://marketplace.singularitynet.io",
@@ -263,8 +264,8 @@ def authorized_event():
             }
         },
         "httpMethod": "POST",
-        "resource": "/order",
-        "path": "/order",
+        "resource": ORDER_PATH,
+        "path": ORDER_PATH,
     }
 
 
@@ -275,8 +276,8 @@ def initiate_order_event(authorized_event):
         {
             "body": '{"orgId": "test-org", "serviceId": "test-service"}',
             "httpMethod": "POST",
-            "resource": "/order",
-            "path": "/order",
+            "resource": ORDER_PATH,
+            "path": ORDER_PATH,
         }
     )
     return authorized_event
@@ -555,19 +556,19 @@ class TestDataFactory:
 
     @staticmethod
     def create_transaction(
-        hash: Optional[str] = None,
+        transaction_hash: Optional[str] = None,
         order_id: str = "test-order-id",
         status: EVMTransactionStatus = EVMTransactionStatus.PENDING,
         **kwargs,
     ) -> NewEVMTransactionDomain:
         """Create a transaction domain object."""
-        if hash is None:
-            hash = f"0x{''.join(['a' for _ in range(64)])}"
+        if transaction_hash is None:
+            transaction_hash = f"0x{''.join(['a' for _ in range(64)])}"
 
         defaults = {"sender": "0x1234567890abcdef", "recipient": "0xabcdef1234567890"}
         defaults.update(kwargs)
 
-        return NewEVMTransactionDomain(hash=hash, order_id=order_id, status=status, **defaults)
+        return NewEVMTransactionDomain(hash=transaction_hash, order_id=order_id, status=status, **defaults)
 
     @staticmethod
     def create_claiming_period(
