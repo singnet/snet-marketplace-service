@@ -1,6 +1,6 @@
 from typing import Iterable, List
 
-from deployer.domain.models.evm_transaction import EVMTransactionDomain, NewEVMTransactionDomain
+from deployer.domain.models.evm_transaction import EVMTransactionDomain
 from deployer.domain.models.transactions_metadata import TransactionsMetadataDomain
 from deployer.infrastructure.models import EVMTransaction, TransactionsMetadata
 

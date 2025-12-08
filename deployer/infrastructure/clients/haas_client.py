@@ -13,6 +13,7 @@ from deployer.config import (
     HAAS_REGISTRY,
     HAAS_REG_REPO,
     HAAS_BASE_IMAGE,
+    HAAS_DAEMON_STAGE,
 )
 
 
@@ -50,6 +51,7 @@ class HaaSClient:
             "service_endpoint": daemon_config["service_endpoint"],
             "base_image": HAAS_BASE_IMAGE,
             "payment_channel_storage_type": daemon_config["payment_channel_storage_type"],
+            "blockchain_network_selected": HAAS_DAEMON_STAGE,
         }
         if "service_credentials" in daemon_config:
             request_data["service_credentials"] = daemon_config["service_credentials"]
@@ -96,6 +98,7 @@ class HaaSClient:
             "service_endpoint": daemon_config["service_endpoint"],
             "base_image": HAAS_BASE_IMAGE,
             "payment_channel_storage_type": daemon_config["payment_channel_storage_type"],
+            "blockchain_network_selected": HAAS_DAEMON_STAGE,
         }
         if "service_credentials" in daemon_config:
             request_data["service_credentials"] = daemon_config["service_credentials"]
