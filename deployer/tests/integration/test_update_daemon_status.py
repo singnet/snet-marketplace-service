@@ -129,10 +129,10 @@ class TestUpdateDaemonStatusHandler:
         db_session.commit()  # Ensure daemon row exists for FK
 
         
-        # Manually update the updated_at to simulate old daemon
+        # Manually update the updated_at to simulate old daemon and set service_published to True
         from sqlalchemy import text
         db_session.execute(
-            text("UPDATE daemon SET updated_at = :updated_at WHERE id = :id"),
+            text("UPDATE daemon SET updated_at = :updated_at, service_published = 1 WHERE id = :id"),
             {"updated_at": old_time, "id": "test-daemon-status-003"}
         )
         
@@ -191,6 +191,9 @@ class TestUpdateDaemonStatusHandler:
         daemon_repo.create_daemon(db_session, daemon)
         db_session.commit()
         
+        # Publish daemon
+        test_data_factory.publish_daemon(db_session, "test-daemon-status-004")
+        
         # Mock HaaS reporting daemon is DOWN (not started yet)
         mock_haas_client.check_daemon.return_value = (HaaSDaemonStatus.DOWN, None)
         
@@ -204,8 +207,8 @@ class TestUpdateDaemonStatusHandler:
         # Assert
         assert response == {}
         
-        # The status handler does not start daemons; starting is triggered elsewhere (scheduler/job).
-        mock_deployer_client.start_daemon.assert_not_called()
+        # When READY_TO_START + HaaS DOWN + service_published, the handler calls start_daemon
+        mock_deployer_client.start_daemon.assert_called_once_with("test-daemon-status-004")
 
     def test_update_daemon_status_expired_daemon_stops(
         self,
@@ -228,6 +231,9 @@ class TestUpdateDaemonStatusHandler:
         daemon_repo.create_daemon(db_session, daemon)
         db_session.commit()
         
+        # Publish daemon
+        test_data_factory.publish_daemon(db_session, "test-daemon-status-005")
+        
         # Mock HaaS reporting daemon is still UP
         mock_haas_client.check_daemon.return_value = (HaaSDaemonStatus.UP, datetime.now(UTC))
         
@@ -241,8 +247,8 @@ class TestUpdateDaemonStatusHandler:
         # Assert
         assert response == {}
         
-        # The status handler does not stop daemons; stopping is handled by a separate job.
-        mock_deployer_client.stop_daemon.assert_not_called()
+        # When UP + HaaS UP + expired + no active claiming period → stop_daemon is called
+        mock_deployer_client.stop_daemon.assert_called_once_with("test-daemon-status-005")
 
 
     def test_update_daemon_status_nonexistent_daemon_returns_error(

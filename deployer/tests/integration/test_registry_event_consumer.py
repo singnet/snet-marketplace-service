@@ -160,6 +160,9 @@ class TestRegistryEventConsumerHandler:
         )
         daemon_repo.create_daemon(db_session, daemon)
         db_session.commit()
+        
+        # Publish daemon
+        test_data_factory.publish_daemon(db_session, "daemon-registry-002")
 
         # Event: ServiceMetadataModified
         event = _make_sns_sqs_event([
@@ -202,7 +205,7 @@ class TestRegistryEventConsumerHandler:
             assert "service_class" in updated_daemon.daemon_config
             assert updated_daemon.daemon_config["service_class"] == "test.service.v2"
 
-            mock_deployer.redeploy_daemon.assert_called_once_with("daemon-registry-002")
+            mock_deployer.redeploy_daemon.assert_called_once_with("daemon-registry-002", asynchronous=True)
             mock_storage.get.assert_any_call("ipfs://meta2")
             mock_storage.get.assert_any_call("ipfs://service-api-tar-v2", to_decode=False)
 
@@ -230,6 +233,9 @@ class TestRegistryEventConsumerHandler:
         )
         daemon_repo.create_daemon(db_session, daemon)
         db_session.commit()
+        
+        # Publish daemon
+        test_data_factory.publish_daemon(db_session, "daemon-registry-003")
 
         # Create ServiceDeleted event
         event = _make_sns_sqs_event([
@@ -273,7 +279,7 @@ class TestRegistryEventConsumerHandler:
             # Redeploy must not be called for delete
             mock_deployer.redeploy_daemon.assert_not_called()
             # Stop must be called because daemon was UP
-            mock_deployer.stop_daemon.assert_called_once_with("daemon-registry-003")
+            mock_deployer.stop_daemon.assert_called_once_with("daemon-registry-003", asynchronous=True)
 
             # Optional: verify storage calls (including tar fetch with to_decode=False)
             mock_storage.get.assert_any_call("ipfs://meta3")
@@ -327,6 +333,9 @@ class TestRegistryEventConsumerHandler:
         )
         daemon_repo.create_daemon(db_session, daemon)
         db_session.commit()
+        
+        # Publish daemon
+        test_data_factory.publish_daemon(db_session, "daemon-registry-004")
 
         # Event with changed endpoint
         event = _make_sns_sqs_event([
@@ -362,7 +371,7 @@ class TestRegistryEventConsumerHandler:
 
             # Assert
             assert response == {}
-            mock_deployer.stop_daemon.assert_called_once_with("daemon-registry-004")
+            mock_deployer.stop_daemon.assert_called_once_with("daemon-registry-004", asynchronous=True)
             mock_deployer.redeploy_daemon.assert_not_called()
             mock_storage.get.assert_any_call("ipfs://meta4")
             mock_storage.get.assert_any_call("ipfs://service-api-tar", to_decode=False)

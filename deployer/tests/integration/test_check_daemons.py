@@ -91,6 +91,11 @@ class TestCheckDaemonsHandler:
             daemon_repo.create_daemon(db_session, daemon)
         db_session.commit()
         
+        # Publish daemons that need service_published=True
+        test_data_factory.publish_daemon(db_session, "daemon-check-001")  # UP
+        test_data_factory.publish_daemon(db_session, "daemon-check-002")  # STARTING
+        test_data_factory.publish_daemon(db_session, "daemon-check-003")  # READY_TO_START
+        
         # Mock DeployerClient to verify update_daemon_status calls
         with patch("deployer.application.services.job_services.DeployerClient") as mock_deployer_class:
             mock_deployer_instance = MagicMock()
@@ -103,8 +108,9 @@ class TestCheckDaemonsHandler:
             assert response == {}  # Handler returns empty dict on success
 
             # Verify update_daemon_status was called for active daemons
-            # Current implementation updates only UP and STARTING (READY_TO_START is skipped)
-            assert mock_deployer_instance.update_daemon_status.call_count == 2
+            # Logic: skip only READY_TO_START with service_published=False
+            # So: UP, STARTING, READY_TO_START(published=True) are all processed = 3 calls
+            assert mock_deployer_instance.update_daemon_status.call_count == 3
 
             # Get all daemon IDs that were updated
             updated_daemon_ids = [call.args[0] for call in mock_deployer_instance.update_daemon_status.call_args_list]
@@ -112,15 +118,13 @@ class TestCheckDaemonsHandler:
             # Verify correct daemons were updated
             assert "daemon-check-001" in updated_daemon_ids  # UP
             assert "daemon-check-002" in updated_daemon_ids  # STARTING
-
-            # Verify READY_TO_START (even if published) is not updated by current logic
-            assert "daemon-check-003" not in updated_daemon_ids
+            assert "daemon-check-003" in updated_daemon_ids  # READY_TO_START with published=True
 
             # Verify skipped daemons were NOT updated
-            assert "daemon-check-004" not in updated_daemon_ids  # READY_TO_START but unpublished
-            assert "daemon-check-005" not in updated_daemon_ids  # INIT
-            assert "daemon-check-006" not in updated_daemon_ids  # ERROR
-            assert "daemon-check-007" not in updated_daemon_ids  # DOWN
+            assert "daemon-check-004" not in updated_daemon_ids  # READY_TO_START with unpublished - SKIPPED
+            assert "daemon-check-005" not in updated_daemon_ids  # INIT - excluded by query
+            assert "daemon-check-006" not in updated_daemon_ids  # ERROR - excluded by query
+            assert "daemon-check-007" not in updated_daemon_ids  # DOWN - excluded by query
 
             # Ensure all calls were asynchronous
             for call in mock_deployer_instance.update_daemon_status.call_args_list:
@@ -156,6 +160,10 @@ class TestCheckDaemonsHandler:
         daemon_repo.create_daemon(db_session, daemon_restarting)
         daemon_repo.create_daemon(db_session, daemon_deleting)
         db_session.commit()
+        
+        # Publish daemons
+        test_data_factory.publish_daemon(db_session, "daemon-restart-001")
+        test_data_factory.publish_daemon(db_session, "daemon-delete-001")
         
         # Mock DeployerClient
         with patch("deployer.application.services.job_services.DeployerClient") as mock_deployer_class:
@@ -244,6 +252,9 @@ class TestCheckDaemonsHandler:
         )
         daemon_repo.create_daemon(db_session, daemon)
         db_session.commit()
+        
+        # Publish daemon
+        test_data_factory.publish_daemon(db_session, "daemon-error-001")
         
         # Mock DeployerClient to raise an error
         with patch("deployer.application.services.job_services.DeployerClient") as mock_deployer_class:

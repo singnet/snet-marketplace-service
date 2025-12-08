@@ -41,6 +41,9 @@ class TestStopDaemonHandler:
         )
         daemon_repo.create_daemon(db_session, daemon)
         db_session.commit()
+        
+        # Publish daemon
+        test_data_factory.publish_daemon(db_session, "test-daemon-stop-001")
 
         # Update event with correct daemon ID
         event = copy.deepcopy(stop_daemon_event)
@@ -89,6 +92,9 @@ class TestStopDaemonHandler:
         )
         daemon_repo.create_daemon(db_session, daemon)
         db_session.commit()
+        
+        # Publish daemon
+        test_data_factory.publish_daemon(db_session, "test-daemon-stop-002")
 
         # Update event with correct daemon ID
         event = copy.deepcopy(stop_daemon_event)
@@ -143,6 +149,9 @@ class TestStopDaemonHandler:
             )
             daemon_repo.create_daemon(db_session, daemon)
             db_session.commit()
+            
+            # Publish daemon
+            test_data_factory.publish_daemon(db_session, daemon_id)
 
             # Update event with correct daemon ID
             event = copy.deepcopy(stop_daemon_event)

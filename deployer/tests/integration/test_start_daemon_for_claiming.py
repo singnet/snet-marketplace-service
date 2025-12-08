@@ -3,8 +3,7 @@ Integration tests for start_daemon_for_claiming handler.
 """
 import copy
 import json
-from datetime import datetime, UTC, timedelta
-from unittest.mock import patch
+from datetime import datetime, timedelta, UTC
 
 from deployer.application.handlers.daemon_handlers import start_daemon_for_claiming
 from deployer.infrastructure.models import DaemonStatus, ClaimingPeriodStatus
@@ -35,25 +34,17 @@ class TestStartDaemonForClaimingHandler:
         )
         daemon_repo.create_daemon(db_session, daemon)
         db_session.commit()
+        
+        # Publish daemon
+        test_data_factory.publish_daemon(db_session, "test-daemon-001")
 
         # Create a copy of the event to avoid side effects
         event = copy.deepcopy(start_daemon_for_claiming_event)
         event["pathParameters"]["daemonId"] = "test-daemon-001"
 
         # Act
-        # Mock datetime.now to return datetime without timezone (matching DB format)
-        # This is necessary because DB stores datetime without timezone,
-        # but service uses datetime.now(UTC) which has timezone
-        def mock_now(tz=None):
-            return datetime.now().replace(tzinfo=None)
-        
-        with patch('deployer.application.services.daemon_service.datetime') as mock_datetime:
-            mock_datetime.now = mock_now
-            mock_datetime.UTC = UTC
-            mock_datetime.timedelta = timedelta
-            
-            # Note: DeployerClient.start_daemon is handled by global mock_boto3_client fixture
-            response = start_daemon_for_claiming(event, lambda_context)
+        # Note: DeployerClient.start_daemon is handled by global mock_boto3_client fixture
+        response = start_daemon_for_claiming(event, lambda_context)
 
         # Assert
         assert response["statusCode"] == StatusCode.OK
@@ -89,10 +80,13 @@ class TestStartDaemonForClaimingHandler:
         daemon_repo.create_daemon(db_session, daemon)
         db_session.commit()  # Commit daemon before creating claiming_period (foreign key constraint)
         
-        # Create an old claiming period that ended more than BREAK_PERIOD_IN_HOURS ago
-        # Since BREAK_PERIOD_IN_HOURS is 0 in config, any past time should work
-        # IMPORTANT: Use datetime without timezone since DB stores without timezone
-        old_end_time = datetime.now() - timedelta(hours=25)  # 25 hours ago
+        # Publish daemon
+        test_data_factory.publish_daemon(db_session, "test-daemon-002")
+        
+        # Create an old claiming period that ended more than 24 hours ago
+        # IMPORTANT: Use UTC time to match service logic (datetime.now(UTC))
+        # Then remove tzinfo because DB stores naive datetime
+        old_end_time = (datetime.now(UTC) - timedelta(hours=25)).replace(tzinfo=None)
         old_start_time = old_end_time - timedelta(hours=24)
         
         # Use the repository to create the claiming period properly
@@ -111,21 +105,8 @@ class TestStartDaemonForClaimingHandler:
         event["pathParameters"]["daemonId"] = "test-daemon-002"
 
         # Act
-        # Mock datetime.now to return datetime without timezone (matching DB format)
-        # This fixes the timezone mismatch between DB (no timezone) and service (with timezone)
-        def mock_now(tz=None):
-            # Always return datetime without timezone to match DB format
-            return datetime.now().replace(tzinfo=None)
-        
-        with patch('deployer.application.services.daemon_service.datetime') as mock_datetime:
-            # Make datetime.now() return current time without timezone
-            mock_datetime.now = mock_now
-            # Keep other datetime functionality working
-            mock_datetime.UTC = UTC
-            mock_datetime.timedelta = timedelta
-            
-            # Note: DeployerClient.start_daemon is handled by global mock_boto3_client fixture
-            response = start_daemon_for_claiming(event, lambda_context)
+        # Note: DeployerClient.start_daemon is handled by global mock_boto3_client fixture
+        response = start_daemon_for_claiming(event, lambda_context)
 
         # Assert
         assert response["statusCode"] == StatusCode.OK

@@ -41,6 +41,9 @@ class TestUpdateTransactionStatusHandler:
         daemon_repo.create_daemon(db_session, daemon)
         db_session.commit()
         
+        # Publish daemon
+        test_data_factory.publish_daemon(db_session, "test-daemon-update-tx-001")
+        
         # Store original end_at for comparison (convert to naive for comparison with DB)
         original_end_at = daemon.end_at.replace(tzinfo=None) if daemon.end_at.tzinfo else daemon.end_at
         
@@ -62,9 +65,10 @@ class TestUpdateTransactionStatusHandler:
         db_session.add(tx_metadata)
         db_session.commit()
         
-        # Mock blockchain interactions
+        # Mock blockchain interactions and config for realistic test
         with patch("deployer.application.services.job_services.BlockChainUtil") as mock_bc_util_class, \
-             patch("deployer.application.services.job_services.JobService._get_token_contract") as mock_get_contract:
+             patch("deployer.application.services.job_services.JobService._get_token_contract") as mock_get_contract, \
+             patch("deployer.application.services.job_services.DAEMON_RUNNING_TIME_FOR_PRICE", {"months": 1}):
             
             # Setup blockchain mock
             mock_bc_instance = MagicMock()
@@ -98,7 +102,7 @@ class TestUpdateTransactionStatusHandler:
             
             mock_filter = MagicMock()
             mock_filter.get_all_entries.return_value = [mock_event]
-            mock_contract.events.Transfer.createFilter.return_value = mock_filter
+            mock_contract.events.Transfer.create_filter.return_value = mock_filter
             
             # Act
             response = update_transaction_status({}, lambda_context)
@@ -145,7 +149,10 @@ class TestUpdateTransactionStatusHandler:
             end_at=original_end_at
         )
         daemon_repo.create_daemon(db_session, daemon)
-    
+        
+        # Publish daemon
+        db_session.commit()
+        test_data_factory.publish_daemon(db_session, "test-daemon-update-tx-002")
         
         order = test_data_factory.create_order(
             order_id="test-order-update-tx-002",
@@ -165,9 +172,10 @@ class TestUpdateTransactionStatusHandler:
         db_session.add(tx_metadata)
         db_session.commit()
         
-        # Mock blockchain interactions
+        # Mock blockchain interactions and config for realistic test
         with patch("deployer.application.services.job_services.BlockChainUtil") as mock_bc_util_class, \
-             patch("deployer.application.services.job_services.JobService._get_token_contract") as mock_get_contract:
+             patch("deployer.application.services.job_services.JobService._get_token_contract") as mock_get_contract, \
+             patch("deployer.application.services.job_services.DAEMON_RUNNING_TIME_FOR_PRICE", {"months": 1}):
             
             # Setup blockchain mock
             mock_bc_instance = MagicMock()
@@ -201,7 +209,7 @@ class TestUpdateTransactionStatusHandler:
             
             mock_filter = MagicMock()
             mock_filter.get_all_entries.return_value = [mock_event]
-            mock_contract.events.Transfer.createFilter.return_value = mock_filter
+            mock_contract.events.Transfer.create_filter.return_value = mock_filter
             
             # Act
             response = update_transaction_status({}, lambda_context)
@@ -209,15 +217,17 @@ class TestUpdateTransactionStatusHandler:
             # Assert
             assert response == {}
             
-            # Verify daemon status remains UP (if service_published=True)
+            # Verify daemon status remains UP (daemon is already running)
             updated_daemon = daemon_repo.get_daemon(db_session, daemon.id)
 
-            # After a successful payment, the service is unpublished and waits for redeploy
-            assert updated_daemon.service_published is False
-            assert updated_daemon.status == DaemonStatus.READY_TO_START
+            # For already running daemon (UP status), service_published stays True
+            # and status stays UP - only end_at is extended
+            assert updated_daemon.service_published is True
+            assert updated_daemon.status == DaemonStatus.UP
 
-            # end_at is set to one month from now by the handler
-            expected_end_at = datetime.now(UTC).replace(tzinfo=None) + relativedelta(months=1)
+            # end_at is extended by DAEMON_RUNNING_TIME_FOR_PRICE (1 month) from original end_at
+            # Original was 5 days from now, so new should be ~5 days + 1 month from now
+            expected_end_at = original_end_at.replace(tzinfo=None) + relativedelta(months=1)
             assert updated_daemon.end_at.date() == expected_end_at.date()
 
 
@@ -282,7 +292,7 @@ class TestUpdateTransactionStatusHandler:
             
             mock_filter = MagicMock()
             mock_filter.get_all_entries.return_value = []  # No new transactions
-            mock_contract.events.Transfer.createFilter.return_value = mock_filter
+            mock_contract.events.Transfer.create_filter.return_value = mock_filter
             
             # Act
             response = update_transaction_status({}, lambda_context)

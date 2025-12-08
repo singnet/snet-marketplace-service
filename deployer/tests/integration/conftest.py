@@ -79,9 +79,13 @@ def mock_boto3_client():
         def mock_invoke(*args, **kwargs):
             payload_data = json.dumps({"body": json.dumps({"status": "success", "data": {}})})
             payload_stream = io.BytesIO(payload_data.encode())
+            # Include ResponseMetadata for asynchronous calls (InvocationType="Event")
             return {
                 "StatusCode": 200,
                 "Payload": payload_stream,
+                "ResponseMetadata": {
+                    "HTTPStatusCode": 202  # 202 Accepted for async invocations
+                }
             }
         
         mock.invoke = mock_invoke
@@ -165,6 +169,12 @@ def db_session() -> Generator[SessionType, None, None]:
     yield session
     session.rollback()
     session.close()
+
+
+@pytest.fixture(scope="function")
+def test_session_factory():
+    """Provide the TestSessionFactory for tests that need to create new sessions."""
+    return TestSessionFactory
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -481,7 +491,23 @@ class TestDataFactory:
     IMPORTANT: The default account_id="test-user-id-123" matches the 'sub' claim
     in the authorized_event fixture. This ensures authorization checks pass.
     If you change one, you must change the other!
+    
+    NOTE: Daemons are always created with service_published=False (by design).
+    Use publish_daemon() to set service_published=True after creation.
     """
+
+    @staticmethod
+    def publish_daemon(session: SessionType, daemon_id: str) -> None:
+        """Publish a daemon by setting service_published=True.
+        
+        This simulates the registry event that publishes a service.
+        Must be called after create_daemon() and commit().
+        """
+        session.execute(
+            text("UPDATE daemon SET service_published = 1 WHERE id = :id"),
+            {"id": daemon_id}
+        )
+        session.commit()
 
     @staticmethod
     def create_daemon(

@@ -48,6 +48,9 @@ class TestRedeployDaemonHandler:
         )
         daemon_repo.create_daemon(db_session, daemon)
         db_session.commit()
+        
+        # Publish daemon
+        test_data_factory.publish_daemon(db_session, "daemon-up-001")
 
         event = copy.deepcopy(redeploy_daemon_event)
         event["pathParameters"]["daemonId"] = "daemon-up-001"

@@ -6,7 +6,6 @@ It does not require authentication.
 """
 import json
 import copy
-from sqlalchemy import text
 
 from deployer.application.handlers.daemon_handlers import start_daemon
 from deployer.infrastructure.models import DaemonStatus
@@ -43,11 +42,8 @@ class TestStartDaemonHandler:
         daemon_repo.create_daemon(db_session, daemon)
         db_session.commit()
 
-        db_session.execute(
-            text("UPDATE daemon SET service_published=1 WHERE id=:id"),
-            {"id": "test-daemon-start-001"},
-        )
-        db_session.commit()
+        # Publish daemon
+        test_data_factory.publish_daemon(db_session, "test-daemon-start-001")
         
         # Update event with correct daemon ID
         event = copy.deepcopy(start_daemon_event)
@@ -97,6 +93,9 @@ class TestStartDaemonHandler:
         )
         daemon_repo.create_daemon(db_session, daemon)
         db_session.commit()
+        
+        # Publish daemon
+        test_data_factory.publish_daemon(db_session, "test-daemon-start-002")
 
         # Update event with correct daemon ID
         event = copy.deepcopy(start_daemon_event)

@@ -8,9 +8,6 @@ from deployer.application.handlers.daemon_handlers import update_config
 from deployer.infrastructure.models import DaemonStatus
 from common.constant import StatusCode
 
-# Import TestSessionFactory from conftest
-from conftest import TestSessionFactory
-
 
 class TestUpdateConfigHandler:
     """Test cases for update_config handler."""
@@ -22,7 +19,8 @@ class TestUpdateConfigHandler:
         lambda_context,
         db_session,
         test_data_factory,
-        daemon_repo
+        daemon_repo,
+        test_session_factory
     ):
         """Test successful config update for daemon with DOWN status (no redeploy needed)."""
         # Arrange
@@ -45,6 +43,9 @@ class TestUpdateConfigHandler:
         )
         daemon_repo.create_daemon(db_session, daemon)
         db_session.commit()
+        
+        # Publish daemon
+        test_data_factory.publish_daemon(db_session, "test-daemon-001")
 
         # Create a copy of the event to avoid side effects
         event = copy.deepcopy(update_config_event)
@@ -74,7 +75,7 @@ class TestUpdateConfigHandler:
         db_session.rollback()
         db_session.close()
         
-        new_session = TestSessionFactory()
+        new_session = test_session_factory()
         try:
             updated_daemon = daemon_repo.get_daemon(new_session, "test-daemon-001")
             
@@ -94,7 +95,8 @@ class TestUpdateConfigHandler:
         lambda_context,
         db_session,
         test_data_factory,
-        daemon_repo
+        daemon_repo,
+        test_session_factory
     ):
         """Test successful config update for daemon with UP status (triggers redeploy)."""
         # Arrange
@@ -114,6 +116,9 @@ class TestUpdateConfigHandler:
         )
         daemon_repo.create_daemon(db_session, daemon)
         db_session.commit()
+        
+        # Publish daemon
+        test_data_factory.publish_daemon(db_session, "test-daemon-002")
 
         # Create event with only endpoint update (no credentials)
         event = copy.deepcopy(update_config_event)
@@ -137,7 +142,7 @@ class TestUpdateConfigHandler:
         db_session.rollback()
         db_session.close()
         
-        new_session = TestSessionFactory()
+        new_session = test_session_factory()
         try:
             updated_daemon = daemon_repo.get_daemon(new_session, "test-daemon-002")
             assert updated_daemon.daemon_config["service_endpoint"] == "https://production-endpoint.example.com"
@@ -154,7 +159,8 @@ class TestUpdateConfigHandler:
         lambda_context,
         db_session,
         test_data_factory,
-        daemon_repo
+        daemon_repo,
+        test_session_factory
     ):
         """Test that config update is blocked when daemon is in STARTING status."""
         # Arrange
@@ -168,6 +174,9 @@ class TestUpdateConfigHandler:
         )
         daemon_repo.create_daemon(db_session, daemon)
         db_session.commit()
+        
+        # Publish daemon
+        test_data_factory.publish_daemon(db_session, "test-daemon-003")
 
         event = copy.deepcopy(update_config_event)
         event["pathParameters"]["daemonId"] = "test-daemon-003"
@@ -185,7 +194,7 @@ class TestUpdateConfigHandler:
         db_session.rollback()
         db_session.close()
         
-        new_session = TestSessionFactory()
+        new_session = test_session_factory()
         try:
             unchanged_daemon = daemon_repo.get_daemon(new_session, "test-daemon-003")
             assert unchanged_daemon.daemon_config.get("service_endpoint") != "https://new-endpoint.example.com"
