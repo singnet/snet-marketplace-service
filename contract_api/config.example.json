@@ -12,5 +12,6 @@
   "DOMAIN_NAME": "test",
   "SnetContract" : "",
   "GeneralPythonLibsMP": "",
+  "OptionalPythonLibsMP": "",
   "GrpcPythonLibsMP": ""
 }

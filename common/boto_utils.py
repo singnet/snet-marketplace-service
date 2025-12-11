@@ -7,11 +7,21 @@ from botocore.config import Config
 from botocore.exceptions import ClientError
 from common.logger import get_logger
 
+
 logger = get_logger(__name__)
+
 
 class BotoUtils:
     def __init__(self, region_name):
         self.region_name = region_name
+
+    def get_lambda_client(self):
+        if os.environ.get("IS_SERVERLESS_OFFLINE") == "true":
+            return boto3.client("lambda", region_name = self.region_name,
+                                               endpoint_url = "http://localhost:3000", aws_access_key_id = "mock",
+                                               aws_secret_access_key = "mock")
+        else:
+            return boto3.client('lambda', region_name=self.region_name)
 
     def get_ssm_parameter(self, parameter, config=Config(retries={'max_attempts': 1})):
         """ Format config=Config(connect_timeout=1, read_timeout=0.1, retries={'max_attempts': 1}) """

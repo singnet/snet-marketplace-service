@@ -8,6 +8,8 @@ from common.validation_handler import validation_handler
 
 
 class SaveEVMTransactionRequest(BaseModel):
+    sender: str
+    recipient: str
     order_id: str = Field(alias="orderId")
     transaction_hash: str = Field(alias="transactionHash")
 

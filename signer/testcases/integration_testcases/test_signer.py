@@ -19,7 +19,7 @@ class TestSignUPAPI(unittest.TestCase):
             "body": '{"channel_id": 1}',
             "requestContext": {
                 "stage": "ropsten",
-                "authorizer": {"claims": {"email": "dummy@dummy.com"}},
+                "authorizer": {"claims": {"email": "dummy@dummy.com", "sub": "123"}},
             },
             "headers": {"origin": "testnet.marketplace-api"}
         }
@@ -49,7 +49,7 @@ class TestSignUPAPI(unittest.TestCase):
             "body": '{"channel_id": 1, "nonce": 6487832, "amount": 1}',
             "requestContext": {
                 "stage": "ropsten",
-                "authorizer": {"claims": {"email": "dummy@dummy.com"}},
+                "authorizer": {"claims": {"email": "dummy@dummy.com", "sub": "123"}},
             },
             "headers": {"origin": "testnet.marketplace"},
         }
@@ -83,7 +83,7 @@ class TestSignUPAPI(unittest.TestCase):
             "body": '{"recipient": "0x9c302750c50307D3Ad88eaA9a6506874a15cE4Cb", "group_id" : "0x0d2d8ea0a49f184ffb8403bfd36de9b25e10763d0c26f62cade25b0a80075527", "amount_in_cogs" : 10, "expiration": 7487832, "message_nonce": 6487832, "signer_key": "7df9964a4f39bb035ea1c1474283348582150e363f78330de7b941577caaafa3", "executor_wallet_address": "0x3Bb9b2499c283cec176e7C707Ecb495B7a961ebf"}',
             "requestContext": {
                 "stage": "ropsten",
-                "authorizer": {"claims": {"email": "dummy@dummy.com"}},
+                "authorizer": {"claims": {"email": "dummy@dummy.com", "sub": "123"}},
             },
             "headers": {"origin": "testnet.marketplace-api"}
         }
