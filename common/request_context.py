@@ -1,3 +1,5 @@
+import os
+
 from common.exceptions import BadRequestException
 
 
@@ -6,23 +8,37 @@ class RequestContext:
         self,
         event: dict,
         username: str | None = None,
-        origin: str | None = None
+        origin: str | None = None,
+        account_id: str | None = None,
     ):
         self.event = event
         self.username = username or self._extract_username()
         self.origin = origin or self._extract_origin()
+        self.account_id = account_id or self._extract_account_id()
 
     def _extract_username(self):
+        if os.environ.get("IS_SERVERLESS_OFFLINE") == "true":
+            return "SERVERLESS_OFFLINE_USER"
         try:
             return self.event["requestContext"]["authorizer"]["claims"]["email"]
         except KeyError:
             raise BadRequestException()
 
     def _extract_origin(self):
+        if os.environ.get("IS_SERVERLESS_OFFLINE") == "true":
+            return "SERVERLESS_OFFLINE_ORIGIN"
         try:
             origin = self.event["headers"].get("origin") or self.event["headers"].get("Origin")
             if not origin:
                 raise BadRequestException()
             return origin
+        except KeyError:
+            raise BadRequestException()
+
+    def _extract_account_id(self):
+        if os.environ.get("IS_SERVERLESS_OFFLINE") == "true":
+            return "SERVERLESS_OFFLINE_ACCOUNT_ID"
+        try:
+            return self.event["requestContext"]["authorizer"]["claims"]["sub"]
         except KeyError:
             raise BadRequestException()

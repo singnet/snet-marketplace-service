@@ -6,6 +6,7 @@ import os.path
 import re
 import shutil
 import tarfile
+import uuid
 from typing import Generator, Iterable, TypeVar
 import zipfile
 from urllib.parse import urlparse
@@ -256,3 +257,21 @@ def chunked(items: Iterable[T], size: int) -> Generator[list[T], None, None]:
     items = list(items)  # support generators/iterables too
     for i in range(0, len(items), size):
         yield items[i:i + size]
+
+
+def generate_uuid() -> str:
+    return str(uuid.uuid4())
+
+
+def dict_keys_to_camel_case(snake_keys_dict: dict, recursively: bool = False) -> dict:
+    result = {}
+    for key, value in snake_keys_dict.items():
+        if isinstance(value, dict) and recursively:
+            value = dict_keys_to_camel_case(value, recursively)
+        result[snake_to_camel(key)] = value
+    return result
+
+
+def snake_to_camel(snake_str: str) -> str:
+    parts = snake_str.split('_')
+    return parts[0] + ''.join(word.capitalize() for word in parts[1:])

@@ -36,7 +36,7 @@ from registry.testcases.test_variables import (
     ORG_PAYLOAD_MODEL,
     ORG_RESPONSE_MODEL,
     ORG_ADDRESS,
-    ORIGIN,
+    ORIGIN, TEST_SUB,
 )
 
 ORG_PAYLOAD_REQUIRED_KEYS = [
@@ -347,7 +347,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
         event = {
             "pathParameters": {"org_uuid": test_org_uuid},
             "headers": {"origin": "testnet.marketplace"},
-            "requestContext": {"authorizer": {"claims": {"email": username}}},
+            "requestContext": {"authorizer": {"claims": {"email": username, "sub": TEST_SUB}}},
             "queryStringParameters": {"action": "DRAFT"},
             "body": json.dumps(
                 {

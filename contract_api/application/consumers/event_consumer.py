@@ -6,7 +6,7 @@ from web3.contract import Contract
 from common.blockchain_util import BlockChainUtil
 from common.logger import get_logger
 from common.s3_util import S3Util
-from contract_api.infrastructure.storage_provider import StorageProvider
+from common.storage_provider import StorageProvider
 from contract_api.config import ASSETS_BUCKET_NAME, ASSETS_PREFIX, S3_BUCKET_ACCESS_KEY, S3_BUCKET_SECRET_KEY, NETWORKS, \
     NETWORK_ID, CONTRACT_BASE_PATH, TOKEN_NAME, STAGE
 

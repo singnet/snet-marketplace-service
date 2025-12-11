@@ -2,7 +2,7 @@
 name = "contract-api"
 version = "0.1.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
+authors = ["snet"]
 readme = "README.md"
 package-mode = false
 
@@ -29,6 +29,7 @@ schema = "0.7.7"
 [tool.poetry.group.dev.dependencies]
 ruff = "0.11.4"
 pytest = "8.3.5"
+pytest-cov = "^6.2.1"
 
 [tool.black]
 line-length = 100

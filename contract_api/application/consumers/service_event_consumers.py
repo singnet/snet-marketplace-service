@@ -271,6 +271,7 @@ class ServiceCreatedEventConsumer(EventConsumer):
 
 class ServiceDeletedEventConsumer(EventConsumer):
     def __init__(self):
+        super().__init__()
         self._service_repository = NewServiceRepository()
         self._session_factory = DefaultSessionFactory
 

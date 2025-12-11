@@ -2,7 +2,12 @@ import json
 from typing import Tuple
 
 import boto3
+
+from common.logger import get_logger
 from signer.settings import settings
+
+
+logger = get_logger(__name__)
 
 
 class ContractAPIClientError(Exception):
@@ -30,11 +35,15 @@ class ContractAPIClient:
         # TODO: add pydantic model for this response body
         response_body_raw = json.loads(response.get("Payload").read())["body"]
         get_service_response = json.loads(response_body_raw)
+        logger.info(f"get_service_response: {get_service_response}")
         if get_service_response["status"] == "success":
             groups_data = get_service_response["data"].get("groups", [])
+            logger.info(f"Found {len(groups_data)} groups")
             for group_data in groups_data:
                 if group_data["groupId"] == group_id:
                     return group_data["endpoints"][0]["endpoint"], group_data.get("freeCalls", 0)
+                else:
+                    logger.info(f"Group with id {groups_data["groupId"]} does not match {group_id}")
         raise ContractAPIClientError(
             message=f"Unable to fetch daemon Endpoint information for service {service_id} under organization {org_id} for {group_id} group."
         )
