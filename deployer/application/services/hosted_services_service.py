@@ -67,7 +67,7 @@ class HostedServicesService:
             if hosted_service is None:
                 raise HostedServiceNotFoundException(hosted_service_id=request.hosted_service_id)
 
-            new_status = DeploymentStatus(request.status.upper())
+            new_status = DeploymentStatus(request.status)
             HostedServiceRepository.update_hosted_service_status(
                 session,
                 request.hosted_service_id,

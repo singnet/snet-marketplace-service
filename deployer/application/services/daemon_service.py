@@ -63,53 +63,14 @@ class DaemonService:
                 self._deployer_client.deploy_daemon(daemon_id, asynchronous=True)
         return {}
 
-    def check_daemon_status(self, request: UpdateDaemonStatusRequest):
-        daemon_id = request.daemon_id
-        generate_event = request.generate_event
-
+    def update_daemon_status(self, request: UpdateDaemonStatusRequest):
         with session_scope(self.session_factory) as session:
-            daemon = DaemonRepository.get_daemon(session, daemon_id)
-
+            daemon = DaemonRepository.search_daemon(session, org_id = request.org_id, service_id = request.service_id)
             if daemon is None:
-                raise DaemonNotFoundException(daemon_id)
+                raise DaemonNotFoundException(request.daemon_id)
 
-            status = daemon.status
-
-            if status not in [DeploymentStatus.STARTING, DeploymentStatus.UP]:
-                logger.info(f"Daemon {daemon_id} is not in STARTING or UP status")
-                if generate_event:
-                    self._push_check_status_event(
-                        daemon_id, generate_event=True, seconds=DAEMON_CHECK_INTERVAL_IN_SECONDS
-                    )
-                return
-
-            haas_daemon_status, started_at = self._haas_client.check_daemon(
-                daemon.org_id, daemon.service_id
-            )
-
-            current_time = datetime.now(UTC)
-            if (
-                status == DeploymentStatus.STARTING
-                and generate_event
-                and daemon.updated_at + timedelta(seconds=MAX_DAEMON_RESTARTING_TIME_IN_SECONDS)
-                >= current_time
-            ):
-                logger.info(f"Daemon {daemon_id} is still starting")
-                if generate_event:
-                    self._push_check_status_event(
-                        daemon_id, generate_event=True, seconds=DAEMON_CHECK_INTERVAL_IN_SECONDS
-                    )
-                return
-
-            if haas_daemon_status == HaaSDaemonStatus.DOWN:
-                DaemonRepository.update_daemon_status(session, daemon_id, DeploymentStatus.ERROR)
-            elif status == DeploymentStatus.STARTING:
-                DaemonRepository.update_daemon_status(session, daemon_id, DeploymentStatus.UP)
-
-        if generate_event:
-            self._push_check_status_event(
-                daemon_id, generate_event=True, seconds=DAEMON_CHECK_INTERVAL_IN_SECONDS
-            )
+            new_status = DeploymentStatus(request.status)
+            DaemonRepository.update_daemon_status(session, daemon.id, new_status)
 
     def deploy_daemon(self, request: DaemonRequest):
         daemon_id = request.daemon_id
@@ -130,17 +91,11 @@ class DaemonService:
                     service_id=daemon.service_id,
                     daemon_config=daemon.daemon_config,
                 )
-                self._push_check_status_event(
-                    daemon_id, generate_event=False, seconds=MAX_DAEMON_STARTING_TIME_IN_SECONDS
-                )
             else:
                 self._haas_client.redeploy_daemon(
                     org_id=daemon.org_id,
                     service_id=daemon.service_id,
                     daemon_config=daemon.daemon_config,
-                )
-                self._push_check_status_event(
-                    daemon_id, generate_event=False, seconds=MAX_DAEMON_RESTARTING_TIME_IN_SECONDS
                 )
             DaemonRepository.update_daemon_status(session, daemon_id, DeploymentStatus.STARTING)
 

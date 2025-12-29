@@ -54,11 +54,9 @@ class TypeOfMovementOfFunds(str, Enum):
     EXPENSE = "expense"
 
 
-class HaaSServiceStatus(str, Enum):
+class HaaSDeploymentStatus(str, Enum):
     # statuses from HaaS
-    INIT = "INIT"
     STARTING = "STARTING"
     UP = "UP"
     DOWN = "DOWN"
     ERROR = "ERROR"
-    # TODO: add more statuses if needed

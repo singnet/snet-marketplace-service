@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, model_validator
 from common.constant import RequestPayloadType
 from common.validation_handler import validation_handler
 from deployer.application.schemas.queue_schema import QueueEventRequest
-from deployer.constant import HaaSServiceStatus
+from deployer.constant import HaaSDeploymentStatus
 from deployer.exceptions import MissingCommitHashParameter
 
 
@@ -22,7 +22,7 @@ class HostedServiceRequest(BaseModel):
 class UpdateHostedServiceStatusRequest(BaseModel, QueueEventRequest):
     org_id: str = Field(alias="orgId")
     service_id: str = Field(alias="serviceId")
-    status: HaaSServiceStatus
+    status: HaaSDeploymentStatus
     commit_hash: str = Field(alias="commitHash", default="")
 
     @classmethod
@@ -33,7 +33,7 @@ class UpdateHostedServiceStatusRequest(BaseModel, QueueEventRequest):
 
     @model_validator(mode="after")
     def validate_commit_hash(self):
-        if self.status == HaaSServiceStatus.STARTING and not self.commit_hash:
+        if self.status == HaaSDeploymentStatus.STARTING and not self.commit_hash:
             raise MissingCommitHashParameter()
         return self
 

@@ -206,69 +206,69 @@ resources:
         Queues:
           - !Ref registryEventConsumerDLQ
 
-    # ==================== CHECK DAEMON STATUS EVENTS ====================
+    # ==================== UPDATE DAEMON STATUS EVENTS ====================
 
-    checkDaemonStatusEventConsumerQueue:
+    updateDaemonStatusEventConsumerQueue:
       Type: AWS::SQS::Queue
       Properties:
-        QueueName: ${file(./config.${self:provider.stage}.json):CHECK_DAEMON_STATUS_QUEUE}
+        QueueName: ${file(./config.${self:provider.stage}.json):UPDATE_DAEMON_STATUS_QUEUE}
         VisibilityTimeout: ${self:custom.queue.messageVisibilityTimeout}
         ReceiveMessageWaitTimeSeconds: ${self:custom.queue.receiveMessageWaitTimeSeconds}
         MessageRetentionPeriod: ${self:custom.queue.queueMessageRetention}
         RedrivePolicy:
-          deadLetterTargetArn: !GetAtt checkDaemonStatusEventConsumerDLQ.Arn
+          deadLetterTargetArn: !GetAtt updateDaemonStatusEventConsumerDLQ.Arn
           maxReceiveCount: ${self:custom.queue.queueMaxReceiveCount}
 
-    checkDaemonStatusEventConsumerQueuePolicy:
+    updateDaemonStatusEventConsumerQueuePolicy:
       Type: AWS::SQS::QueuePolicy
       Properties:
         PolicyDocument:
-          Id: checkDaemonStatusEventConsumerQueue
+          Id: updateDaemonStatusEventConsumerQueue
           Version: '2012-10-17'
           Statement:
             - Effect: Allow
               Principal: '*'
               Action:
                 - sqs:SendMessage
-              Resource: !GetAtt checkDaemonStatusEventConsumerQueue.Arn
+              Resource: !GetAtt updateDaemonStatusEventConsumerQueue.Arn
               Condition:
                 ArnEquals:
-                  aws:SourceArn: ${file(./config.${self:provider.stage}.json):CHECK_DAEMON_STATUS_TOPIC_ARN}
+                  aws:SourceArn: ${file(./config.${self:provider.stage}.json):UPDATE_DAEMON_STATUS_TOPIC_ARN}
         Queues:
-          - !Ref checkDaemonStatusEventConsumerQueue
+          - !Ref updateDaemonStatusEventConsumerQueue
 
-    checkDaemonStatusEventConsumerTopicSubscriptionForSQS:
+    updateDaemonStatusEventConsumerTopicSubscriptionForSQS:
       Type: AWS::SNS::Subscription
       Properties:
         Protocol: sqs
-        Endpoint: !GetAtt checkDaemonStatusEventConsumerQueue.Arn
-        TopicArn: ${file(./config.${self:provider.stage}.json):CHECK_DAEMON_STATUS_TOPIC_ARN}
+        Endpoint: !GetAtt updateDaemonStatusEventConsumerQueue.Arn
+        TopicArn: ${file(./config.${self:provider.stage}.json):UPDATE_DAEMON_STATUS_TOPIC_ARN}
 
-    checkDaemonStatusEventConsumerDLQ:
+    updateDaemonStatusEventConsumerDLQ:
       Type: AWS::SQS::Queue
       Properties:
-        QueueName: ${file(./config.${self:provider.stage}.json):CHECK_DAEMON_STATUS_QUEUE}-dlq
+        QueueName: ${file(./config.${self:provider.stage}.json):UPDATE_DAEMON_STATUS_QUEUE}-dlq
         VisibilityTimeout: ${self:custom.queue.messageVisibilityTimeout}
         ReceiveMessageWaitTimeSeconds: ${self:custom.queue.receiveMessageWaitTimeSeconds}
         MessageRetentionPeriod: ${self:custom.queue.dlqMessageRetention}
 
-    checkDaemonStatusEventConsumerDLQPolicy:
+    updateDaemonStatusEventConsumerDLQPolicy:
       Type: AWS::SQS::QueuePolicy
       Properties:
         PolicyDocument:
-          Id: checkDaemonStatusEventConsumerDLQ
+          Id: updateDaemonStatusEventConsumerDLQ
           Version: '2012-10-17'
           Statement:
             - Effect: Allow
               Principal: '*'
               Action:
                 - sqs:SendMessage
-              Resource: !GetAtt checkDaemonStatusEventConsumerDLQ.Arn
+              Resource: !GetAtt updateDaemonStatusEventConsumerDLQ.Arn
               Condition:
                 ArnEquals:
-                  aws:SourceArn: !GetAtt checkDaemonStatusEventConsumerQueue.Arn
+                  aws:SourceArn: !GetAtt updateDaemonStatusEventConsumerQueue.Arn
         Queues:
-          - !Ref checkDaemonStatusEventConsumerDLQ
+          - !Ref updateDaemonStatusEventConsumerDLQ
 
     # ==================== UPDATE HOSTED SERVICE STATUS EVENTS ====================
 
@@ -914,8 +914,8 @@ functions:
               - X-Amz-User-Agent
               - x-requested-wit
 
-  check-daemon-status:
-    handler: deployer.application.handlers.daemon_handlers.check_daemon_status
+  update-daemon-status:
+    handler: deployer.application.handlers.daemon_handlers.update_daemon_status
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -928,7 +928,7 @@ functions:
       - sqs:
           arn:
             Fn::GetAtt:
-              - checkDaemonStatusEventConsumerQueue
+              - updateDaemonStatusEventConsumerQueue
               - Arn
           batchSize: 1
 

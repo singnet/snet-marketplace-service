@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field, field_validator
 from common.constant import RequestPayloadType
 from common.validation_handler import validation_handler
 from deployer.application.schemas.queue_schema import QueueEventRequest
-from deployer.constant import AUTH_PARAMETERS
+from deployer.constant import AUTH_PARAMETERS, HaaSDeploymentStatus
 from deployer.exceptions import InvalidServiceAuthParameters
 
 
@@ -55,8 +55,9 @@ class SearchDaemonRequest(BaseModel):
 
 
 class UpdateDaemonStatusRequest(BaseModel, QueueEventRequest):
-    daemon_id: str
-    generate_event: bool
+    org_id: str = Field(alias = "orgId")
+    service_id: str = Field(alias = "serviceId")
+    status: HaaSDeploymentStatus
 
     @classmethod
     @validation_handler([RequestPayloadType.BODY])

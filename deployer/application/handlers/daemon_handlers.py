@@ -60,12 +60,12 @@ def update_config(event, context):
     )
 
 
-def check_daemon_status(event, context):
+def update_daemon_status(event, context):
     events = UpdateDaemonStatusRequest.get_events_from_queue(event)
 
     for e in events:
         request = UpdateDaemonStatusRequest.validate_event(e)
-        DaemonService().check_daemon_status(request)
+        DaemonService().update_daemon_status(request)
 
     return {}
 

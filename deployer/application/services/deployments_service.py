@@ -1,3 +1,4 @@
+import hashlib
 import io
 import tarfile
 from typing import List
@@ -11,7 +12,7 @@ from deployer.application.schemas.deployments_schemas import (
     SearchDeploymentsRequest,
     RegistryEventConsumerRequest,
 )
-from deployer.config import DEFAULT_DAEMON_STORAGE_TYPE, REGION_NAME, DEPLOY_SERVICE_TOPIC_ARN
+from deployer.config import DEFAULT_DAEMON_STORAGE_TYPE, REGION_NAME, DEPLOY_SERVICE_TOPIC_ARN, HAAS_DAEMON_BASE_URL
 from deployer.constant import AllowedRegistryEventNames
 from deployer.domain.models.daemon import NewDaemonDomain, DaemonDomain
 from deployer.domain.models.hosted_service import NewHostedServiceDomain, HostedServiceDomain
@@ -65,7 +66,7 @@ class DeploymentsService:
                     service_id=request.service_id,
                     status=DeploymentStatus.INIT,
                     daemon_config=daemon_config,
-                    daemon_endpoint=get_daemon_endpoint(request.org_id, request.service_id),
+                    daemon_endpoint=self._get_daemon_endpoint(request.org_id, request.service_id),
                 ),
             )
 
@@ -208,3 +209,10 @@ class DeploymentsService:
                 "installationId": installation_id,
             },
         )
+
+    @staticmethod
+    def _get_daemon_endpoint(org_id: str, service_id: str) -> str:
+        org_service = f"{org_id}-{service_id}"
+        hash_org_service = hashlib.sha224(org_service.encode()).hexdigest()
+
+        return f"https://{hash_org_service}.{HAAS_DAEMON_BASE_URL}"
