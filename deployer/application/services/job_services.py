@@ -138,6 +138,7 @@ class JobService:
                                 f"Transaction {new_transaction.hash} not found in database and has no order id",
                                 exc_info=True,
                             )
+                            continue
                         new_transaction.order_id = existing_transaction.order_id
                     TransactionRepository.upsert_transaction(session, new_transaction)
 
