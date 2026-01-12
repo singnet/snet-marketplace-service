@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from deployer.domain.factory.daemon_factory import DaemonFactory
 from deployer.domain.models.daemon import NewDaemonDomain, DaemonDomain
-from deployer.infrastructure.models import Daemon, DeploymentStatus, HostedService
+from deployer.infrastructure.models import Daemon, DaemonStatus, HostedService
 
 
 class DaemonRepository:
@@ -24,7 +24,7 @@ class DaemonRepository:
         session.add(daemon_model)
 
     @staticmethod
-    def update_daemon_status(session: Session, daemon_id: str, status: DeploymentStatus) -> None:
+    def update_daemon_status(session: Session, daemon_id: str, status: DaemonStatus) -> None:
         update_query = update(Daemon).where(Daemon.id == daemon_id).values(status=status)
 
         session.execute(update_query)
@@ -74,7 +74,7 @@ class DaemonRepository:
 
     @staticmethod
     def get_all_daemon_ids(
-        session: Session, status: Union[DeploymentStatus, List[DeploymentStatus], None] = None
+        session: Session, status: Union[DaemonStatus, List[DaemonStatus], None] = None
     ) -> List[str]:
         query = select(Daemon.id)
         if status is not None:

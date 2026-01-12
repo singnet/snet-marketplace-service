@@ -54,9 +54,19 @@ class TypeOfMovementOfFunds(str, Enum):
     EXPENSE = "expense"
 
 
-class HaaSDeploymentStatus(str, Enum):
-    # statuses from HaaS
+class HaaSDaemonStatus(str, Enum):
     STARTING = "STARTING"
+    UP = "UP"
+    DOWN = "DOWN"
+    ERROR = "ERROR"
+
+
+class HaaSHostedServiceStatus(str, Enum):
+    VALIDATING = "VALIDATING"
+    REGISTERING = "REGISTERING"
+    PUSHING_NEW_VERSION = "PUSHING_NEW_VERSION"
+    DEPLOYING = "DEPLOYING"
+    PROFILING = "PROFILING"
     UP = "UP"
     DOWN = "DOWN"
     ERROR = "ERROR"

@@ -25,12 +25,24 @@ class Base(DeclarativeBase):
     pass
 
 
-class DeploymentStatus(PythonEnum):
+class DaemonStatus(PythonEnum):
     INIT = "INIT"  # only the entity is created during the onboarding
     STARTING = "STARTING"  # deploying is in progress
     UP = "UP"  # deployed and working
     DOWN = "DOWN"  # the service is deleted from blockchain
     ERROR = "ERROR"  # error during deployment
+
+
+class HostedServiceStatus(PythonEnum):
+    INIT = "INIT"
+    VALIDATING = "VALIDATING"
+    REGISTERING = "REGISTERING"
+    PUSHING_NEW_VERSION = "PUSHING_NEW_VERSION"
+    DEPLOYING = "DEPLOYING"
+    PROFILING = "PROFILING"
+    UP = "UP"
+    DOWN = "DOWN"
+    ERROR = "ERROR"
 
 
 class OrderStatus(PythonEnum):
@@ -74,7 +86,7 @@ class Daemon(Base):
     org_id: Mapped[str] = mapped_column("org_id", VARCHAR(256), nullable=False)
     service_id: Mapped[str] = mapped_column("service_id", VARCHAR(256), nullable=False)
     status: Mapped[str] = mapped_column(
-        "status", Enum(DeploymentStatus), nullable=False, default=DeploymentStatus.INIT
+        "status", Enum(DaemonStatus), nullable=False, default=DaemonStatus.INIT
     )
     daemon_config: Mapped[dict] = mapped_column("daemon_config", JSON, nullable=False, default={})
     daemon_endpoint: Mapped[str] = mapped_column("daemon_endpoint", VARCHAR(256), nullable=False)
@@ -104,7 +116,7 @@ class HostedService(Base):
         index=True,
     )
     status: Mapped[str] = mapped_column(
-        "status", Enum(DeploymentStatus), nullable=False, default=DeploymentStatus.INIT
+        "status", Enum(HostedServiceStatus), nullable=False, default=HostedServiceStatus.INIT
     )
     github_account_name: Mapped[str] = mapped_column(
         "github_account_name", VARCHAR(256), nullable=False

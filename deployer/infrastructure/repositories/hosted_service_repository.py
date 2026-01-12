@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from deployer.domain.factory.hosted_service_factory import HostedServiceFactory
 from deployer.domain.models.hosted_service import NewHostedServiceDomain, HostedServiceDomain
-from deployer.infrastructure.models import HostedService, DeploymentStatus, Daemon
+from deployer.infrastructure.models import HostedService, Daemon, HostedServiceStatus
 
 
 class HostedServiceRepository:
@@ -26,7 +26,7 @@ class HostedServiceRepository:
     def update_hosted_service_status(
         session: Session,
         hosted_service_id: str,
-        status: DeploymentStatus,
+        status: HostedServiceStatus,
         last_commit_url: str = None,
     ) -> None:
         update_values = {

@@ -3,7 +3,7 @@ from typing import Optional
 
 from deployer.domain.models.base_domain import BaseDomain
 from deployer.domain.models.hosted_service import HostedServiceDomain
-from deployer.infrastructure.models import DeploymentStatus
+from deployer.infrastructure.models import DaemonStatus
 
 
 @dataclass
@@ -12,7 +12,7 @@ class NewDaemonDomain:
     account_id: str
     org_id: str
     service_id: str
-    status: DeploymentStatus
+    status: DaemonStatus
     daemon_config: dict
     daemon_endpoint: str
 

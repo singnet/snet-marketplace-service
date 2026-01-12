@@ -20,9 +20,9 @@ from deployer.exceptions import (
     UpdateConfigNotAvailableException,
 )
 from deployer.infrastructure.clients.deployer_client import DeployerClient
-from deployer.infrastructure.clients.haas_client import HaaSClient, HaaSDaemonStatus
+from deployer.infrastructure.clients.haas_client import HaaSClient
 from deployer.infrastructure.db import DefaultSessionFactory, session_scope
-from deployer.infrastructure.models import DeploymentStatus
+from deployer.infrastructure.models import DaemonStatus
 from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
 
 
@@ -58,7 +58,7 @@ class DaemonService:
 
     def redeploy_all_daemons(self) -> dict:
         with session_scope(self.session_factory) as session:
-            daemon_ids = DaemonRepository.get_all_daemon_ids(session, status=DeploymentStatus.UP)
+            daemon_ids = DaemonRepository.get_all_daemon_ids(session, status=DaemonStatus.UP)
             for daemon_id in daemon_ids:
                 self._deployer_client.deploy_daemon(daemon_id, asynchronous=True)
         return {}
@@ -69,7 +69,7 @@ class DaemonService:
             if daemon is None:
                 raise DaemonNotFoundException(request.daemon_id)
 
-            new_status = DeploymentStatus(request.status)
+            new_status = DaemonStatus(request.status)
             DaemonRepository.update_daemon_status(session, daemon.id, new_status)
 
     def deploy_daemon(self, request: DaemonRequest):
@@ -78,26 +78,18 @@ class DaemonService:
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.get_daemon(session, daemon_id)
 
-            if daemon is None:
-                raise DaemonNotFoundException(daemon_id)
+        if daemon is None:
+            raise DaemonNotFoundException(daemon_id)
 
-            if daemon.status not in [DeploymentStatus.INIT, DeploymentStatus.UP]:
-                logger.exception(f"Daemon {daemon_id} is not in INIT or UP status")
-                return {}
+        if daemon.status not in [DaemonStatus.INIT, DaemonStatus.UP]:
+            logger.exception(f"Daemon {daemon_id} is not in INIT or UP status")
+            return {}
 
-            if daemon.status == DeploymentStatus.INIT:
-                self._haas_client.deploy_daemon(
-                    org_id=daemon.org_id,
-                    service_id=daemon.service_id,
-                    daemon_config=daemon.daemon_config,
-                )
-            else:
-                self._haas_client.redeploy_daemon(
-                    org_id=daemon.org_id,
-                    service_id=daemon.service_id,
-                    daemon_config=daemon.daemon_config,
-                )
-            DaemonRepository.update_daemon_status(session, daemon_id, DeploymentStatus.STARTING)
+        self._haas_client.deploy_daemon(
+            org_id = daemon.org_id,
+            service_id = daemon.service_id,
+            daemon_config = daemon.daemon_config,
+        )
 
         return {}
 
@@ -111,7 +103,7 @@ class DaemonService:
             daemon = DaemonRepository.get_daemon(session, request.daemon_id)
             if daemon is None:
                 raise DaemonNotFoundException(request.daemon_id)
-            if daemon.hosted_service is not None or daemon.status != DeploymentStatus.UP:
+            if daemon.hosted_service is not None or daemon.status != DaemonStatus.UP:
                 raise UpdateConfigNotAvailableException()
 
             daemon_config = daemon.daemon_config
@@ -122,16 +114,7 @@ class DaemonService:
 
             DaemonRepository.update_daemon_config(session, request.daemon_id, daemon_config)
 
-            if daemon.status == DeploymentStatus.UP:
+            if daemon.status == DaemonStatus.UP:
                 self._deployer_client.deploy_daemon(request.daemon_id, asynchronous=True)
 
         return {}
-
-    def _push_check_status_event(
-        self, daemon_id: str, generate_event: bool = True, seconds: int = 0
-    ):
-        self._boto_utils.publish_data_to_sns_topic(
-            topic_arn=CHECK_DAEMON_STATUS_TOPIC_ARN,
-            payload={"daemon_id": daemon_id, "generate_event": generate_event},
-            delay_seconds=seconds,
-        )

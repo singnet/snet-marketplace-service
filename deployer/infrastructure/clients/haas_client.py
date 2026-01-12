@@ -81,35 +81,6 @@ class HaaSClient:
         except Exception as e:
             raise HaaSClientError(str(e))
 
-    def redeploy_daemon(
-        self,
-        org_id: str,
-        service_id: str,
-        daemon_config: dict,
-    ):
-        path = HAAS_BASE_URL + "/v1/daemon/redeploy"
-        request_data = {
-            "registry": HAAS_REGISTRY,
-            "reg_repo": HAAS_REG_REPO,
-            "org": org_id,
-            "service": service_id,
-            "daemon_group": daemon_config["daemon_group"],
-            "service_class": daemon_config["service_class"],
-            "service_endpoint": daemon_config["service_endpoint"],
-            "base_image": HAAS_BASE_IMAGE,
-            "payment_channel_storage_type": daemon_config["payment_channel_storage_type"],
-            "is_service_hosted": daemon_config["is_service_hosted"],
-        }
-        if "service_credentials" in daemon_config:
-            request_data["service_credentials"] = daemon_config["service_credentials"]
-
-        try:
-            result = requests.post(path, json=request_data, auth=self.auth)
-            if not result.ok:
-                raise HaaSClientError(result.text)
-        except Exception as e:
-            raise HaaSClientError(str(e))
-
     def check_daemon(
         self, org_id: str, service_id: str
     ) -> Tuple[HaaSDaemonStatus, datetime | None]:

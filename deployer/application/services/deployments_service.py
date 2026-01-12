@@ -21,10 +21,9 @@ from deployer.infrastructure.clients.deployer_client import DeployerClient
 from deployer.infrastructure.clients.github_api_client import GithubAPIClient
 from deployer.infrastructure.clients.haas_client import HaaSClient
 from deployer.infrastructure.db import DefaultSessionFactory, session_scope
-from deployer.infrastructure.models import DeploymentStatus
+from deployer.infrastructure.models import DaemonStatus, HostedServiceStatus
 from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
 from deployer.infrastructure.repositories.hosted_service_repository import HostedServiceRepository
-from deployer.utils import get_daemon_endpoint
 
 
 logger = get_logger(__name__)
@@ -64,7 +63,7 @@ class DeploymentsService:
                     account_id=account_id,
                     org_id=request.org_id,
                     service_id=request.service_id,
-                    status=DeploymentStatus.INIT,
+                    status=DaemonStatus.INIT,
                     daemon_config=daemon_config,
                     daemon_endpoint=self._get_daemon_endpoint(request.org_id, request.service_id),
                 ),
@@ -76,7 +75,7 @@ class DeploymentsService:
                     NewHostedServiceDomain(
                         id=generate_uuid(),
                         daemon_id=daemon_id,
-                        status=DeploymentStatus.INIT,
+                        status=HostedServiceStatus.INIT,
                         github_account_name=request.github_account_name,
                         github_repository_name=request.github_repository_name,
                         last_commit_url="",
@@ -179,16 +178,16 @@ class DeploymentsService:
             raise Exception(f"Error processing tar file: {e}")
 
     def _delete_deployments(self, daemon: DaemonDomain, session) -> None:
-        if daemon.status == DeploymentStatus.UP:
+        if daemon.status == DaemonStatus.UP:
             self._haas_client.delete_daemon(daemon.org_id, daemon.service_id)
-            DaemonRepository.update_daemon_status(session, daemon.id, DeploymentStatus.DOWN)
+            DaemonRepository.update_daemon_status(session, daemon.id, DaemonStatus.DOWN)
         if (
             daemon.hosted_service is not None
-            and daemon.hosted_service.status == DeploymentStatus.UP
+            and daemon.hosted_service.status == HostedServiceStatus.UP
         ):
             self._haas_client.delete_hosted_service(daemon.org_id, daemon.service_id)
             HostedServiceRepository.update_hosted_service_status(
-                session, daemon.hosted_service.id, DeploymentStatus.DOWN
+                session, daemon.hosted_service.id, HostedServiceStatus.DOWN
             )
 
     def _push_deploy_service_event(

@@ -7,7 +7,7 @@ from deployer.exceptions import HostedServiceNotFoundException
 from deployer.infrastructure.clients.github_api_client import GithubAPIClient
 from deployer.infrastructure.clients.haas_client import HaaSClient
 from deployer.infrastructure.db import DefaultSessionFactory, session_scope
-from deployer.infrastructure.models import DeploymentStatus
+from deployer.infrastructure.models import HostedServiceStatus
 from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
 from deployer.infrastructure.repositories.hosted_service_repository import HostedServiceRepository
 
@@ -67,7 +67,7 @@ class HostedServicesService:
             if hosted_service is None:
                 raise HostedServiceNotFoundException(hosted_service_id=request.hosted_service_id)
 
-            new_status = DeploymentStatus(request.status)
+            new_status = HostedServiceStatus(request.status)
             HostedServiceRepository.update_hosted_service_status(
                 session,
                 request.hosted_service_id,
@@ -75,7 +75,7 @@ class HostedServicesService:
                 GithubAPIClient.make_commit_url(
                     hosted_service.github_account_name,
                     hosted_service.github_repository_name,
-                    request.commit_hash,
+                    request.commit,
                 ),
             )
 
