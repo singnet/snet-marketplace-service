@@ -46,6 +46,21 @@ def get_daemon_logs(event, context):
 
 
 @exception_handler(logger=logger)
+def download_daemon_logs(event, context):
+    req_ctx = RequestContext(event)
+
+    request = DaemonRequest.validate_event(event)
+
+    AuthorizationService().check_local_access(req_ctx.account_id, daemon_id=request.daemon_id)
+
+    response = DaemonService().download_daemon_logs(request)
+
+    return generate_lambda_response(
+        StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
+@exception_handler(logger=logger)
 def update_config(event, context):
     req_ctx = RequestContext(event)
 

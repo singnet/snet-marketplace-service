@@ -51,6 +51,9 @@ class DaemonService:
 
         return daemon_logs
 
+    def download_daemon_logs(self, request: DaemonRequest):
+        pass
+
     def redeploy_all_daemons(self) -> dict:
         with session_scope(self.session_factory) as session:
             daemon_ids = DaemonRepository.get_all_daemon_ids(session, status=DaemonStatus.UP)

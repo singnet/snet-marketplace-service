@@ -59,6 +59,23 @@ def get_hosted_service_logs(event, context):
     )
 
 
+@exception_handler(logger=logger)
+def download_hosted_service_logs(event, context):
+    req_ctx = RequestContext(event)
+
+    request = HostedServiceRequest.validate_event(event)
+
+    AuthorizationService().check_local_access(
+        req_ctx.account_id, hosted_service_id=request.hosted_service_id
+    )
+
+    response = HostedServicesService().download_hosted_service_logs(request)
+
+    return generate_lambda_response(
+        StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )
+
+
 def update_hosted_service_status(event, context):
     events = UpdateHostedServiceStatusRequest.get_events_from_queue(event)
 

@@ -48,6 +48,9 @@ class HostedServicesService:
 
         return hosted_service_logs
 
+    def download_hosted_service_logs(self, request: HostedServiceRequest):
+        pass
+
     def check_github_repository(self, request: CheckGithubRepositoryRequest) -> dict:
         is_installed = GithubAPIClient.check_repo_installation(
             request.account_name, request.repository_name
