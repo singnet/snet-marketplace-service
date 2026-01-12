@@ -66,7 +66,7 @@ def upgrade() -> None:
         sa.Column("daemon_id", sa.VARCHAR(length=128), nullable=False),
         sa.Column(
             "status",
-            sa.Enum("INIT", "STARTING", "UP", "DOWN", "ERROR", name="deploymentstatus"),
+            sa.Enum("INIT", "VALIDATING", "REGISTERING", "PUSHING_NEW_VERSION", "DEPLOYING", "PROFILING", "UP", "DOWN", "ERROR", name="hostedservicestatus"),
             nullable=False,
         ),
         sa.Column("github_account_name", sa.VARCHAR(length=256), nullable=False),
