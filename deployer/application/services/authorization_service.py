@@ -29,7 +29,6 @@ class AuthorizationService:
                 "Exactly one of daemon_id, order_id or hosted_service_id must be provided"
             )
 
-        entity = None
         with session_scope(self.session_factory) as session:
             if daemon_id is not None:
                 entity = DaemonRepository.get_daemon_by_account_and_daemon(

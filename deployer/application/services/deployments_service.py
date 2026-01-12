@@ -12,7 +12,12 @@ from deployer.application.schemas.deployments_schemas import (
     SearchDeploymentsRequest,
     RegistryEventConsumerRequest,
 )
-from deployer.config import DEFAULT_DAEMON_STORAGE_TYPE, REGION_NAME, DEPLOY_SERVICE_TOPIC_ARN, HAAS_DAEMON_BASE_URL
+from deployer.config import (
+    DEFAULT_DAEMON_STORAGE_TYPE,
+    REGION_NAME,
+    DEPLOY_SERVICE_TOPIC_ARN,
+    HAAS_DAEMON_BASE_URL,
+)
 from deployer.constant import AllowedRegistryEventNames
 from deployer.domain.models.daemon import NewDaemonDomain, DaemonDomain
 from deployer.domain.models.hosted_service import NewHostedServiceDomain, HostedServiceDomain

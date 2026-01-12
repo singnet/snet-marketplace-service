@@ -1,5 +1,3 @@
-from datetime import datetime
-from enum import Enum
 from typing import Tuple, List, Union
 
 import requests
@@ -10,19 +8,19 @@ from deployer.config import (
     HAAS_BASE_URL,
     HAAS_LOGIN,
     HAAS_PASSWORD,
-    HAAS_REGISTRY,
-    HAAS_REG_REPO,
-    HAAS_BASE_IMAGE,
+    HAAS_DAEMON_IMAGE,
+    HAAS_DEPLOY_DAEMON_PATH,
+    HAAS_DELETE_DAEMON_PATH,
+    HAAS_GET_DAEMON_LOGS_PATH,
+    HAAS_GET_PUBLIC_KEY_PATH,
+    HAAS_DELETE_HOSTED_SERVICE_PATH,
+    HAAS_GET_HOSTED_SERVICE_LOGS_PATH,
+    HAAS_GET_CALL_EVENTS_PATH,
 )
 from deployer.constant import PeriodType, OrderType
 from deployer.domain.schemas.haas_responses import GetCallEventsResponse
 
 logger = get_logger(__name__)
-
-
-class HaaSDaemonStatus(Enum):
-    UP = "UP"
-    DOWN = "DOWN"
 
 
 class HaaSClientError(Exception):
@@ -34,79 +32,95 @@ class HaaSClient:
     def __init__(self):
         self.auth = HTTPBasicAuth(HAAS_LOGIN, HAAS_PASSWORD)
 
+    # ========== DAEMON ==========
+
     def deploy_daemon(
         self,
         org_id: str,
         service_id: str,
         daemon_config: dict,
     ):
-        path = HAAS_BASE_URL + "/v1/daemon/create"
+        url = HAAS_BASE_URL + HAAS_DEPLOY_DAEMON_PATH.format(org_id, service_id)
+
         request_data = {
-            "registry": HAAS_REGISTRY,
-            "regrepo": HAAS_REG_REPO,
-            "org": org_id,
-            "service": service_id,
-            "daemon_group": daemon_config["daemon_group"],
-            "service_class": daemon_config["service_class"],
-            "service_endpoint": daemon_config["service_endpoint"],
-            "base_image": HAAS_BASE_IMAGE,
-            "payment_channel_storage_type": daemon_config["payment_channel_storage_type"],
-            "is_service_hosted": daemon_config["is_service_hosted"],
+            "daemonGroup": daemon_config["daemon_group"],
+            "serviceClass": daemon_config["service_class"],
+            "serviceEndpoint": daemon_config["service_endpoint"],
+            "daemonImage": HAAS_DAEMON_IMAGE,
+            "paymentChannelStorageType": daemon_config["payment_channel_storage_type"],
+            "isServiceHosted": daemon_config["is_service_hosted"],
         }
-        if "service_credentials" in daemon_config:
+        if "serviceCredentials" in daemon_config:
             request_data["service_credentials"] = daemon_config["service_credentials"]
 
         try:
-            result = requests.post(path, json=request_data, auth=self.auth)
+            result = requests.post(url, json=request_data, auth=self.auth)
             if not result.ok:
                 raise HaaSClientError(result.text)
         except Exception as e:
             raise HaaSClientError(str(e))
 
     def delete_daemon(self, org_id: str, service_id: str):
-        path = HAAS_BASE_URL + "/v1/daemon/delete"
+        url = HAAS_BASE_URL + HAAS_DELETE_DAEMON_PATH.format(org_id, service_id)
+
         try:
-            result = requests.post(
-                path,
-                json={
-                    "registry": HAAS_REGISTRY,
-                    "regrepo": HAAS_REG_REPO,
-                    "org": org_id,
-                    "service": service_id,
-                },
-                auth=self.auth,
-            )
+            result = requests.delete(url, auth=self.auth)
             if not result.ok:
                 raise HaaSClientError(result.text)
         except Exception as e:
             raise HaaSClientError(str(e))
 
-    def check_daemon(
-        self, org_id: str, service_id: str
-    ) -> Tuple[HaaSDaemonStatus, datetime | None]:
-        path = HAAS_BASE_URL + "/v1/daemon/check" + f"?org={org_id}&service={service_id}"
+    def get_daemon_logs(self, org_id: str, service_id: str, tail: int = 200) -> List[str]:
+        url = HAAS_BASE_URL + HAAS_GET_DAEMON_LOGS_PATH.format(org_id, service_id)
+        url += f"tail={tail}"
+
         try:
-            result = requests.get(path, auth=self.auth)
+            result = requests.get(url, auth=self.auth)
             if result.ok:
-                started_at = datetime.fromisoformat(result.json()[0]["running"]["startedAt"])
-                return HaaSDaemonStatus.UP, started_at
-            elif result.status_code == 400:
-                return HaaSDaemonStatus.DOWN, None
+                return result.json()["data"]["logs"]
             else:
                 raise HaaSClientError(result.text)
         except Exception as e:
             raise HaaSClientError(str(e))
 
     def get_public_key(self) -> str:
-        path = HAAS_BASE_URL + "/v1/auth/public-key"
+        url = HAAS_BASE_URL + HAAS_GET_PUBLIC_KEY_PATH
+
         try:
-            result = requests.get(path, auth=self.auth)
+            result = requests.get(url, auth=self.auth)
             if result.ok:
-                return result.json()["public_key"]
+                return result.json()["data"]["publicKey"]
             else:
                 raise HaaSClientError(result.text)
         except Exception as e:
             raise HaaSClientError(str(e))
+
+    # ========== HOSTED SERVICE ==========
+
+    def delete_hosted_service(self, org_id: str, service_id: str):
+        url = HAAS_BASE_URL + HAAS_DELETE_HOSTED_SERVICE_PATH.format(org_id, service_id)
+
+        try:
+            result = requests.delete(url, auth=self.auth)
+            if not result.ok:
+                raise HaaSClientError(result.text)
+        except Exception as e:
+            raise HaaSClientError(str(e))
+
+    def get_hosted_service_logs(self, org_id: str, service_id: str, tail: int = 400) -> list:
+        url = HAAS_BASE_URL + HAAS_GET_HOSTED_SERVICE_LOGS_PATH.format(org_id, service_id)
+        url += f"tail={tail}"
+
+        try:
+            result = requests.get(url, auth=self.auth)
+            if result.ok:
+                return result.json()["data"]["logs"]
+            else:
+                raise HaaSClientError(result.text)
+        except Exception as e:
+            raise HaaSClientError(str(e))
+
+    # ========== METRICS ==========
 
     def get_call_events(
         self,
@@ -116,50 +130,29 @@ class HaaSClient:
         period: PeriodType,
         services: Union[List[Tuple[str, str]], Tuple[str, str], None] = None,
     ) -> GetCallEventsResponse:
+        url = HAAS_BASE_URL + HAAS_GET_CALL_EVENTS_PATH
+
+        if services is None:
+            services = []
+        elif isinstance(services, tuple):
+            services = [services]
+        request_services = []
+        for service in services:
+            request_services.append({"orgId": service[0], "serviceId": service[1]})
+        request_body = {
+            "services": request_services,
+            "limit": limit,
+            "page": page,
+            "order": order.value,
+            "period": period.value,
+        }
+
         try:
-            # TODO: configure the correct url and path
-            path = HAAS_BASE_URL + "/events"
-
-            if services is None:
-                services = []
-            elif isinstance(services, tuple):
-                services = [services]
-            request_services = []
-            for service in services:
-                request_services.append({"orgId": service[0], "serviceId": service[1]})
-            request_body = {
-                "services": request_services,
-                "limit": limit,
-                "page": page,
-                "order": order.value,
-                "period": period.value,
-            }
-
             # TODO: configure the correct auth
-            response = requests.get(path, json=request_body)
-
+            response = requests.post(url, json=request_body)
             if response.ok:
                 return GetCallEventsResponse(**response.json())
             else:
                 raise HaaSClientError(response.text)
         except Exception as e:
             raise HaaSClientError(str(e))
-
-    def get_daemon_logs(self, org_id: str, service_id: str, tail: int = 200) -> List[str]:
-        path = HAAS_BASE_URL + f"/v1/daemon/{org_id}/{service_id}/logs?tail={tail}"
-
-        try:
-            result = requests.get(path, auth = self.auth)
-            if result.ok:
-                return result.json()["logs"]
-            else:
-                raise HaaSClientError(result.text)
-        except Exception as e:
-            raise HaaSClientError(str(e))
-
-    # TODO: implement methods below
-    def delete_hosted_service(self, org_id: str, service_id: str):
-        pass
-
-    def get_hosted_service_logs(self, org_id: str, service_id: str) -> list:
-        pass

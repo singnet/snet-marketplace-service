@@ -19,7 +19,9 @@ class HostedServicesService:
 
     def get_hosted_service(self, request: HostedServiceRequest) -> dict:
         with session_scope(self.session_factory) as session:
-            daemon = DaemonRepository.get_daemon_by_hosted_service(session, request.hosted_service_id)
+            daemon = DaemonRepository.get_daemon_by_hosted_service(
+                session, request.hosted_service_id
+            )
             if daemon is None:
                 raise HostedServiceNotFoundException(hosted_service_id=request.hosted_service_id)
             hosted_service = daemon.hosted_service
@@ -34,9 +36,11 @@ class HostedServicesService:
 
     def get_hosted_service_logs(self, request: HostedServiceRequest) -> list:
         with session_scope(self.session_factory) as session:
-            daemon = DaemonRepository.get_daemon_by_hosted_service(session, request.hosted_service_id)
+            daemon = DaemonRepository.get_daemon_by_hosted_service(
+                session, request.hosted_service_id
+            )
             if daemon is None or daemon.hosted_service is None:
-                raise HostedServiceNotFoundException(hosted_service_id = request.hosted_service_id)
+                raise HostedServiceNotFoundException(hosted_service_id=request.hosted_service_id)
 
         hosted_service_logs = self._haas_client.get_hosted_service_logs(
             daemon.org_id, daemon.service_id

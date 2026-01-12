@@ -55,8 +55,8 @@ class SearchDaemonRequest(BaseModel):
 
 
 class UpdateDaemonStatusRequest(BaseModel, QueueEventRequest):
-    org_id: str = Field(alias = "orgId")
-    service_id: str = Field(alias = "serviceId")
+    org_id: str = Field(alias="orgId")
+    service_id: str = Field(alias="serviceId")
     status: HaaSDaemonStatus
 
     @classmethod

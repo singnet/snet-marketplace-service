@@ -1,4 +1,3 @@
-from datetime import datetime, UTC, timedelta
 from typing import List
 
 from common.boto_utils import BotoUtils
@@ -9,11 +8,7 @@ from deployer.application.schemas.daemon_schemas import (
     UpdateDaemonStatusRequest,
 )
 from deployer.config import (
-    MAX_DAEMON_STARTING_TIME_IN_SECONDS,
-    DAEMON_CHECK_INTERVAL_IN_SECONDS,
     REGION_NAME,
-    CHECK_DAEMON_STATUS_TOPIC_ARN,
-    MAX_DAEMON_RESTARTING_TIME_IN_SECONDS,
 )
 from deployer.exceptions import (
     DaemonNotFoundException,
@@ -65,7 +60,9 @@ class DaemonService:
 
     def update_daemon_status(self, request: UpdateDaemonStatusRequest):
         with session_scope(self.session_factory) as session:
-            daemon = DaemonRepository.search_daemon(session, org_id = request.org_id, service_id = request.service_id)
+            daemon = DaemonRepository.search_daemon(
+                session, org_id=request.org_id, service_id=request.service_id
+            )
             if daemon is None:
                 raise DaemonNotFoundException(request.daemon_id)
 
@@ -86,9 +83,9 @@ class DaemonService:
             return {}
 
         self._haas_client.deploy_daemon(
-            org_id = daemon.org_id,
-            service_id = daemon.service_id,
-            daemon_config = daemon.daemon_config,
+            org_id=daemon.org_id,
+            service_id=daemon.service_id,
+            daemon_config=daemon.daemon_config,
         )
 
         return {}

@@ -23,7 +23,7 @@ class UpdateHostedServiceStatusRequest(BaseModel, QueueEventRequest):
     org_id: str = Field(alias="orgId")
     service_id: str = Field(alias="serviceId")
     status: Status
-    commit: str = Field(default= "")
+    commit: str = Field(default="")
 
     @classmethod
     @validation_handler([RequestPayloadType.BODY])
