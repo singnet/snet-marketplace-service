@@ -1,3 +1,4 @@
+import base64
 import datetime as dt
 import decimal
 import json
@@ -13,7 +14,7 @@ from urllib.parse import urlparse
 
 import requests
 
-from common.constant import COGS_TO_AGI, ResponseStatus
+from common.constant import COGS_TO_AGI, ResponseStatus, StatusCode
 from common.logger import get_logger
 
 IGNORED_LIST = ['row_id', 'row_created', 'row_updated']
@@ -107,6 +108,31 @@ def generate_lambda_response(status_code, message, headers=None, cors_enabled=Fa
         })
     if headers is not None:
         response["headers"].update(headers)
+    return response
+
+
+def generate_lambda_text_file_response(content: str, filename: str, cors_enabled: bool = False):
+    encoded_content = base64.b64encode(content.encode('utf-8')).decode('utf-8')
+
+    response = {
+        'statusCode': StatusCode.OK,
+        'headers': {
+            'Content-Type': 'text/plain; charset=utf-8',
+            'Content-Disposition': f'attachment; filename="{filename}"'
+        },
+        'body': encoded_content,
+        'isBase64Encoded': True
+    }
+
+    if cors_enabled:
+        response['headers'].update({
+            "X-Requested-With": '*',
+            "Access-Control-Allow-Headers": 'Access-Control-Allow-Origin, Content-Type, X-Amz-Date, Authorization,'
+                                            'X-Api-Key,x-requested-with',
+            "Access-Control-Allow-Origin": '*',
+            "Access-Control-Allow-Methods": 'GET,OPTIONS'
+        })
+
     return response
 
 

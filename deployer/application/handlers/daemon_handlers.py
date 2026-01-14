@@ -2,7 +2,7 @@ from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.logger import get_logger
 from common.request_context import RequestContext
-from common.utils import generate_lambda_response
+from common.utils import generate_lambda_response, generate_lambda_text_file_response
 from deployer.application.services.authorization_service import AuthorizationService
 from deployer.application.schemas.daemon_schemas import (
     DaemonRequest,
@@ -53,11 +53,9 @@ def download_daemon_logs(event, context):
 
     AuthorizationService().check_local_access(req_ctx.account_id, daemon_id=request.daemon_id)
 
-    response = DaemonService().download_daemon_logs(request)
+    file_content, filename = DaemonService().download_daemon_logs(request)
 
-    return generate_lambda_response(
-        StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
-    )
+    return generate_lambda_text_file_response(file_content, filename, cors_enabled=True)
 
 
 @exception_handler(logger=logger)

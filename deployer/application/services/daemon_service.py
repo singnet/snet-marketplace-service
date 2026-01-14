@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
@@ -7,9 +7,7 @@ from deployer.application.schemas.daemon_schemas import (
     UpdateConfigRequest,
     UpdateDaemonStatusRequest,
 )
-from deployer.config import (
-    REGION_NAME,
-)
+from deployer.config import REGION_NAME
 from deployer.exceptions import (
     DaemonNotFoundException,
     UpdateConfigNotAvailableException,
@@ -51,8 +49,10 @@ class DaemonService:
 
         return daemon_logs
 
-    def download_daemon_logs(self, request: DaemonRequest):
-        pass
+    def download_daemon_logs(self, request: DaemonRequest) -> Tuple[str, str]:
+        daemon_logs = self.get_daemon_logs(request)
+
+        return "\n".join(daemon_logs), f"daemon_{request.daemon_id}_logs.txt"
 
     def redeploy_all_daemons(self) -> dict:
         with session_scope(self.session_factory) as session:

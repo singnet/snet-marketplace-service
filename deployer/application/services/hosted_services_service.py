@@ -1,3 +1,5 @@
+from typing import Tuple, List
+
 from deployer.application.schemas.hosted_services_schemas import (
     HostedServiceRequest,
     UpdateHostedServiceStatusRequest,
@@ -34,7 +36,7 @@ class HostedServicesService:
 
         return result
 
-    def get_hosted_service_logs(self, request: HostedServiceRequest) -> list:
+    def get_hosted_service_logs(self, request: HostedServiceRequest) -> List[str]:
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.get_daemon_by_hosted_service(
                 session, request.hosted_service_id
@@ -48,8 +50,12 @@ class HostedServicesService:
 
         return hosted_service_logs
 
-    def download_hosted_service_logs(self, request: HostedServiceRequest):
-        pass
+    def download_hosted_service_logs(self, request: HostedServiceRequest) -> Tuple[str, str]:
+        hosted_service_logs = self.get_hosted_service_logs(request)
+
+        return "\n".join(
+            hosted_service_logs
+        ), f"hosted_service_{request.hosted_service_id}_logs.txt"
 
     def check_github_repository(self, request: CheckGithubRepositoryRequest) -> dict:
         is_installed = GithubAPIClient.check_repo_installation(

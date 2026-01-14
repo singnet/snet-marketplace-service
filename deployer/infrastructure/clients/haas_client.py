@@ -72,7 +72,7 @@ class HaaSClient:
 
     def get_daemon_logs(self, org_id: str, service_id: str, tail: int = 200) -> List[str]:
         url = HAAS_BASE_URL + HAAS_GET_DAEMON_LOGS_PATH.format(org_id, service_id)
-        url += f"tail={tail}"
+        url += f"?tail={tail}"
 
         try:
             result = requests.get(url, auth=self.auth)
@@ -107,9 +107,9 @@ class HaaSClient:
         except Exception as e:
             raise HaaSClientError(str(e))
 
-    def get_hosted_service_logs(self, org_id: str, service_id: str, tail: int = 400) -> list:
+    def get_hosted_service_logs(self, org_id: str, service_id: str, tail: int = 400) -> List[str]:
         url = HAAS_BASE_URL + HAAS_GET_HOSTED_SERVICE_LOGS_PATH.format(org_id, service_id)
-        url += f"tail={tail}"
+        url += f"?tail={tail}"
 
         try:
             result = requests.get(url, auth=self.auth)

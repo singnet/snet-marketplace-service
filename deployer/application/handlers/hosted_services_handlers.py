@@ -2,7 +2,7 @@ from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.logger import get_logger
 from common.request_context import RequestContext
-from common.utils import generate_lambda_response
+from common.utils import generate_lambda_response, generate_lambda_text_file_response
 from deployer.application.schemas.hosted_services_schemas import (
     HostedServiceRequest,
     UpdateHostedServiceStatusRequest,
@@ -69,11 +69,9 @@ def download_hosted_service_logs(event, context):
         req_ctx.account_id, hosted_service_id=request.hosted_service_id
     )
 
-    response = HostedServicesService().download_hosted_service_logs(request)
+    file_content, filename = HostedServicesService().download_hosted_service_logs(request)
 
-    return generate_lambda_response(
-        StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
-    )
+    return generate_lambda_text_file_response(file_content, filename, cors_enabled=True)
 
 
 def update_hosted_service_status(event, context):
