@@ -82,20 +82,3 @@ def update_hosted_service_status(event, context):
         HostedServicesService().update_hosted_service_status(request)
 
     return {}
-
-
-@exception_handler(logger=logger)
-def delete_service(event, context):
-    req_ctx = RequestContext(event)
-
-    request = HostedServiceRequest.validate_event(event)
-
-    AuthorizationService().check_local_access(
-        req_ctx.account_id, hosted_service_id=request.hosted_service_id
-    )
-
-    response = HostedServicesService().delete_service(request)
-
-    return generate_lambda_response(
-        StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
-    )

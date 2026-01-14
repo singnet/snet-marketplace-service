@@ -984,17 +984,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
-#  delete-daemon:
-#    handler: deployer.application.handlers.daemon_handlers.delete_daemon
-#    role: ${file(./config.${self:provider.stage}.json):ROLE}
-#    vpc:
-#      securityGroupIds:
-#        - ${file(./config.${self:provider.stage}.json):SG1}
-#        - ${file(./config.${self:provider.stage}.json):SG2}
-#      subnetIds:
-#        - ${file(./config.${self:provider.stage}.json):VPC1}
-#        - ${file(./config.${self:provider.stage}.json):VPC2}
-
   # ============= HOSTED SERVICE HANDLERS ============
 
   get-hosted-service:
@@ -1134,14 +1123,3 @@ functions:
               - updateHostedServiceStatusEventConsumerQueue
               - Arn
           batchSize: 1
-
-#  delete-service:
-#    handler: deployer.application.handlers.hosted_services_handlers.delete_service
-#    role: ${file(./config.${self:provider.stage}.json):ROLE}
-#    vpc:
-#      securityGroupIds:
-#        - ${file(./config.${self:provider.stage}.json):SG1}
-#        - ${file(./config.${self:provider.stage}.json):SG2}
-#      subnetIds:
-#        - ${file(./config.${self:provider.stage}.json):VPC1}
-#        - ${file(./config.${self:provider.stage}.json):VPC2}

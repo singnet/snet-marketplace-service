@@ -91,6 +91,3 @@ class HostedServicesService:
                     request.commit,
                 ),
             )
-
-    def delete_service(self, request: HostedServiceRequest):
-        pass

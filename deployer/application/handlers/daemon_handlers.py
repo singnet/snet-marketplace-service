@@ -95,17 +95,6 @@ def deploy_daemon(event, context):
 
 
 @exception_handler(logger=logger)
-def delete_daemon(event, context):
-    request = DaemonRequest.validate_event(event)
-
-    response = DaemonService().delete_daemon(request)
-
-    return generate_lambda_response(
-        StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
-    )
-
-
-@exception_handler(logger=logger)
 def redeploy_all_daemons(event, context):
     response = DaemonService().redeploy_all_daemons()
 
