@@ -134,9 +134,11 @@ class JobService:
                     )
                     if not new_transaction.order_id:
                         if existing_transaction is None:
-                            raise Exception(
-                                f"Transaction {new_transaction.hash} not found in database and has no order id"
+                            logger.exception(
+                                f"Transaction {new_transaction.hash} not found in database and has no order id",
+                                exc_info=True,
                             )
+                            continue
                         new_transaction.order_id = existing_transaction.order_id
                     TransactionRepository.upsert_transaction(session, new_transaction)
 
