@@ -24,6 +24,7 @@ from deployer.config import (
     TOKEN_DECIMALS,
 )
 from deployer.constant import TypeOfMovementOfFunds, OrderType
+from deployer.domain.models.account_balance import NewAccountBalanceDomain
 from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
 from deployer.domain.models.order import NewOrderDomain
 from deployer.domain.models.token_rate import NewTokenRateDomain
@@ -66,6 +67,17 @@ class BillingService:
                         session=session,
                         order_id=order.id,
                         status=OrderStatus.CANCELLED,
+                    )
+
+                account_balance = AccountBalanceRepository.get_account_balance(
+                    session=session, account_id=account_id
+                )
+                if account_balance is None:
+                    AccountBalanceRepository.upsert_account_balance(
+                        session=session,
+                        account_balance=NewAccountBalanceDomain(
+                            account_id=account_id, balance_in_cogs=0
+                        ),
                     )
 
                 order_id = generate_uuid()
@@ -123,7 +135,7 @@ class BillingService:
             account_balance = AccountBalanceRepository.get_account_balance(session, account_id)
 
             if account_balance is not None:
-                balance = account_balance.balance_in_cogs
+                balance = int(account_balance.balance_in_cogs)
 
         return {"balanceInCogs": balance}
 
@@ -135,7 +147,7 @@ class BillingService:
             )
 
             if account_balance is not None:
-                balance = account_balance.balance_in_cogs
+                balance = int(account_balance.balance_in_cogs)
 
             average_cogs_per_usd = TokenRateRepository.get_average_cogs_per_usd(session, TOKEN_NAME)
 
@@ -209,6 +221,9 @@ class BillingService:
                 transactions, last_block = self._get_transactions_from_blockchain(
                     transactions_metadata
                 )
+                logger.info(
+                    f"Found {len(transactions)} new transactions for recipient {transactions_metadata.recipient}"
+                )
 
                 for new_transaction, amount in transactions:
                     existing_transaction = TransactionRepository.get_transaction(
@@ -216,9 +231,11 @@ class BillingService:
                     )
                     if not new_transaction.order_id:
                         if existing_transaction is None:
-                            raise Exception(
-                                f"Transaction {new_transaction.hash} not found in database and has no order id"
+                            logger.exception(
+                                f"Transaction {new_transaction.hash} not found in database and has no order id",
+                                exc_info=True,
                             )
+                            continue
                         new_transaction.order_id = existing_transaction.order_id
 
                     TransactionRepository.upsert_transaction(session, new_transaction)
@@ -230,14 +247,14 @@ class BillingService:
                             f"Transaction {new_transaction.hash} has different amount {amount} than "
                             f"order {order.amount}"
                         )
-                        raise Exception()
+                        continue
 
                     if order.status != OrderStatus.PROCESSING:
                         logger.exception(
                             f"Order with id {new_transaction.order_id} must have the status PROCESSING for "
                             f"correct processing of transaction {new_transaction.hash}"
                         )
-                        raise Exception()
+                        continue
 
                     OrderRepository.update_order_status(session, order.id, OrderStatus.SUCCESS)
                     AccountBalanceRepository.increase_account_balance(
@@ -288,29 +305,34 @@ class BillingService:
     def _get_transactions_from_blockchain(
         tx_metadata: TransactionsMetadataDomain,
     ) -> Tuple[List[Tuple[NewEVMTransactionDomain, int]], int]:
+        logger.info(f"Transactions metadata: {tx_metadata.to_response()}")
         blockchain_util = BlockChainUtil("HTTP_PROVIDER", NETWORKS[NETWORK_ID]["http_provider"])
         w3 = blockchain_util.web3_object
         current_block = blockchain_util.get_current_block_no()
+        logger.info(f"Current block: {current_block}")
         contract = BillingService._get_token_contract(blockchain_util)
 
         from_block = tx_metadata.last_block_no + 1
         to_block = min(
             current_block - tx_metadata.block_adjustment, from_block + tx_metadata.fetch_limit
         )
+        logger.info(f"Fetching transactions from {from_block} to {to_block}")
 
-        transaction_filter = contract.events.Transfer.createFilter(
-            fromBlock=from_block, toBlock=to_block, argument_filters={"to": tx_metadata.recipient}
+        transaction_filter = contract.events.Transfer.create_filter(
+            from_block=from_block, to_block=to_block, argument_filters={"to": tx_metadata.recipient}
         )
 
         events = transaction_filter.get_all_entries()
         result = []
         for event in events:
+            logger.info(f"Processing transaction {event['transactionHash'].hex()}")
             tx_hash = event["transactionHash"].hex()
             order_id = BillingService._get_order_id_from_transaction(tx_hash, w3)
+            logger.info(f"Order id: {order_id}")
             result.append(
                 (
                     NewEVMTransactionDomain(
-                        hash=tx_hash,
+                        hash=tx_hash if tx_hash.startswith("0x") else "0x" + tx_hash,
                         order_id=order_id,
                         status=EVMTransactionStatus.SUCCESS,
                         sender=event["args"]["from"],

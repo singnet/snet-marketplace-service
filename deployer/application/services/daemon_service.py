@@ -11,6 +11,7 @@ from deployer.config import REGION_NAME
 from deployer.exceptions import (
     DaemonNotFoundException,
     UpdateConfigNotAvailableException,
+    DaemonNotFoundForServiceException,
 )
 from deployer.infrastructure.clients.deployer_client import DeployerClient
 from deployer.infrastructure.clients.haas_client import HaaSClient
@@ -67,10 +68,12 @@ class DaemonService:
                 session, org_id=request.org_id, service_id=request.service_id
             )
             if daemon is None:
-                raise DaemonNotFoundException(request.daemon_id)
+                raise DaemonNotFoundForServiceException(request.org_id, request.service_id)
 
             new_status = DaemonStatus(request.status)
             DaemonRepository.update_daemon_status(session, daemon.id, new_status)
+
+        logger.info(f"Status for daemon {daemon.id} updated to {request.status}")
 
     def deploy_daemon(self, request: DaemonRequest):
         daemon_id = request.daemon_id
@@ -84,6 +87,8 @@ class DaemonService:
         if daemon.status not in [DaemonStatus.INIT, DaemonStatus.UP]:
             logger.exception(f"Daemon {daemon_id} is not in INIT or UP status")
             return {}
+
+        logger.info(f"(Re)Starting daemon {daemon.id}")
 
         self._haas_client.deploy_daemon(
             org_id=daemon.org_id,
@@ -100,7 +105,7 @@ class DaemonService:
             daemon = DaemonRepository.get_daemon(session, request.daemon_id)
             if daemon is None:
                 raise DaemonNotFoundException(request.daemon_id)
-            if daemon.hosted_service is not None or daemon.status != DaemonStatus.UP:
+            if daemon.hosted_service is not None or daemon.status == DaemonStatus.STARTING:
                 raise UpdateConfigNotAvailableException()
 
             daemon_config = daemon.daemon_config

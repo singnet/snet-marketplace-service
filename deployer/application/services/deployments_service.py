@@ -116,6 +116,7 @@ class DeploymentsService:
 
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.search_daemon(session, org_id, service_id)
+            logger.info(f"Daemon: {None if daemon is None else daemon.to_response()}")
             if daemon is None:
                 logger.info(f"Service (org_id {org_id}, service_id {service_id}) doesn't use HaaS")
                 return

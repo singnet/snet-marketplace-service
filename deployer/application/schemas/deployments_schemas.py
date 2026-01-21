@@ -66,8 +66,8 @@ class SearchDeploymentsRequest(BaseModel):
 class RegistryEventConsumerRequest(BaseModel, QueueEventRequest):
     event_name: str = Field(alias="name")
     org_id: str = Field(alias="orgId")
-    service_id: str | None = Field(alias="serviceId", default=None)
-    metadata_uri: str | None = Field(alias="metadataURI", default=None)
+    service_id: Optional[str] = Field(alias="serviceId", default=None)
+    metadata_uri: Optional[str] = Field(alias="metadataURI", default=None)
 
     @classmethod
     @validation_handler()

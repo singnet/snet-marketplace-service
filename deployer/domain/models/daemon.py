@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
+from common.utils import dict_keys_to_camel_case
 from deployer.domain.models.base_domain import BaseDomain
 from deployer.domain.models.hosted_service import HostedServiceDomain
 from deployer.infrastructure.models import DaemonStatus
@@ -30,8 +31,9 @@ class DaemonDomain(NewDaemonDomain, BaseDomain):
             "daemon": {
                 "id": self.id,
                 "status": self.status.value,
-                "daemonConfig": self.daemon_config,
+                "daemonConfig": dict_keys_to_camel_case(self.daemon_config, recursively=True),
                 "daemonEndpoint": self.daemon_endpoint,
+                "updatedAt": self.updated_at.isoformat(),
             },
         }
 

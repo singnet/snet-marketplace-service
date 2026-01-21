@@ -130,15 +130,15 @@ class MetricsService:
         return {
             "requests": {"total": len(df)},
             "costs": {
-                "total": df["amount"].sum(),
-                "avg": round(cost_stats["mean"], 2),
-                "max": round(cost_stats["max"], 2),
-                "min": round(cost_stats["min"], 2),
+                "total": int(df["amount"].sum()),
+                "avg": round(float(cost_stats["mean"]), 2),
+                "max": round(float(cost_stats["max"]), 2),
+                "min": round(float(cost_stats["min"]), 2),
             },
             "durations": {
-                "total": df["duration"].sum(),
-                "avg": round(duration_stats["mean"], 2),
-                "max": round(duration_stats["max"], 2),
-                "min": round(duration_stats["min"], 2),
+                "total": int(df["duration"].sum()),
+                "avg": round(float(duration_stats["mean"]), 2),
+                "max": round(float(duration_stats["max"]), 2),
+                "min": round(float(duration_stats["min"]), 2),
             },
         }

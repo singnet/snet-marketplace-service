@@ -18,6 +18,13 @@ class DaemonNotFoundException(BadRequestException):
         super().__init__(message=f"Daemon with id {daemon_id} not found!")
 
 
+class DaemonNotFoundForServiceException(BadRequestException):
+    def __init__(self, org_id: str, service_id: str):
+        super().__init__(
+            message=f"Daemon for service with org_id={org_id} and service_id={service_id} not found!"
+        )
+
+
 class MissingServiceEndpointException(BadRequestException):
     def __init__(self):
         super().__init__(message="Missing service endpoint!")

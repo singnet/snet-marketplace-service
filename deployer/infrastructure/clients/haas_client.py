@@ -148,7 +148,6 @@ class HaaSClient:
         }
 
         try:
-            # TODO: configure the correct auth
             response = requests.post(url, json=request_body)
             if response.ok:
                 return GetCallEventsResponse(**response.json())
