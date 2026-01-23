@@ -21,7 +21,10 @@ from deployer.config import (
 from deployer.constant import AllowedRegistryEventNames
 from deployer.domain.models.daemon import NewDaemonDomain, DaemonDomain
 from deployer.domain.models.hosted_service import NewHostedServiceDomain, HostedServiceDomain
-from deployer.exceptions import DaemonAlreadyExistsException
+from deployer.exceptions import (
+    DaemonAlreadyExistsException,
+    DaemonAndHostedServiceAlreadyExistException,
+)
 from deployer.infrastructure.clients.deployer_client import DeployerClient
 from deployer.infrastructure.clients.github_api_client import GithubAPIClient
 from deployer.infrastructure.clients.haas_client import HaaSClient
@@ -47,7 +50,12 @@ class DeploymentsService:
             daemon = DaemonRepository.search_daemon(session, request.org_id, request.service_id)
 
             if daemon is not None:
-                raise DaemonAlreadyExistsException(request.org_id, request.service_id)
+                if daemon.hosted_service is not None and not request.only_daemon:
+                    raise DaemonAndHostedServiceAlreadyExistException(
+                        request.org_id, request.service_id
+                    )
+                elif request.only_daemon:
+                    raise DaemonAlreadyExistsException(request.org_id, request.service_id)
 
             daemon_id = generate_uuid()
 
@@ -149,8 +157,9 @@ class DeploymentsService:
             self._deployer_client.deploy_daemon(daemon_id, asynchronous=True)
 
             if (
-                event_name == AllowedRegistryEventNames.SERVICE_CREATED
+                event_name != AllowedRegistryEventNames.SERVICE_DELETED
                 and daemon.hosted_service is not None
+                and daemon.hosted_service.status == HostedServiceStatus.INIT
             ):
                 self._push_deploy_service_event(org_id, service_id, daemon.hosted_service)
 

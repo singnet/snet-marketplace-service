@@ -62,6 +62,13 @@ class DaemonAlreadyExistsException(BadRequestException):
         )
 
 
+class DaemonAndHostedServiceAlreadyExistException(BadRequestException):
+    def __init__(self, org_id: str, service_id: str):
+        super().__init__(
+            message=f"Daemon and hosted service for service with org_id={org_id} and service_id={service_id} already exist!"
+        )
+
+
 class HostedServiceNotFoundException(BadRequestException):
     def __init__(self, hosted_service_id: str = None, org_id: str = None, service_id: str = None):
         if org_id and service_id:
