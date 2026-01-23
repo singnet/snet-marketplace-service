@@ -1,4 +1,4 @@
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Tuple
 
 from pandas import DataFrame, date_range
 
@@ -19,6 +19,31 @@ class MetricsService:
         self.datetime_format = "%Y-%m-%dT%H:%M:%S"
 
     def get_metrics(self, request: GetMetricsRequest) -> dict:
+        events = self._get_all_events(request)
+
+        if not events:
+            return self._get_empty_metrics_response()
+
+        df = self._create_events_dataframe(events)
+        grouped_data = self._group_events_by_timeframe(df, request.period)
+
+        metrics = self._prepare_aggregated_metrics(grouped_data)
+        metrics["summary"] = self._prepare_metrics_summary(df)
+
+        return metrics
+
+    def download_metrics(self, request: GetMetricsRequest) -> Tuple[str, str]:
+        file_content = "orgId,serviceId,duration,amount,timestamp"
+        filename = f"hosted_service_{request.hosted_service_id}_metrics.csv"
+
+        events = self._get_all_events(request)
+
+        for event in events:
+            file_content += f"\n{event.org_id},{event.service_id},{event.duration},{event.amount},{event.timestamp}"
+
+        return file_content, filename
+
+    def _get_all_events(self, request: GetMetricsRequest) -> List[CallEventResponse]:
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.get_daemon_by_hosted_service(
                 session, request.hosted_service_id
@@ -48,16 +73,7 @@ class MetricsService:
             )
             events.extend(response.events)
 
-        if not events:
-            return self._get_empty_metrics_response()
-
-        df = self._create_events_dataframe(events)
-        grouped_data = self._group_events_by_timeframe(df, request.period)
-
-        metrics = self._prepare_aggregated_metrics(grouped_data)
-        metrics["summary"] = self._prepare_metrics_summary(df)
-
-        return metrics
+        return events
 
     def _prepare_aggregated_metrics(self, grouped_data: dict):
         df = grouped_data["grouped_df"]
