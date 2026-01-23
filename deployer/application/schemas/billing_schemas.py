@@ -2,13 +2,14 @@ import json
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from common.constant import RequestPayloadType
 from common.validation_handler import validation_handler
 from deployer.application.schemas.queue_schema import QueueEventRequest
 from deployer.config import REQUEST_MAX_LIMIT
-from deployer.constant import PeriodType, OrderType, TypeOfMovementOfFunds
+from deployer.constant import PeriodType, OrderType, TypeOfMovementOfFunds, IncomeStatus
+from deployer.exceptions import WrongIncomeStatusForTypeException
 
 
 class CreateOrderRequest(BaseModel):
@@ -39,13 +40,24 @@ class GetBalanceHistoryRequest(BaseModel):
     page: int = Field(ge=1, default=1)
     order: OrderType = Field(default=OrderType.ASC)
     period: PeriodType = Field(default=PeriodType.ALL)
-    type_of_movement: Optional[TypeOfMovementOfFunds] = Field(alias="type", default=None)
+    income_status: IncomeStatus = Field(alias="status", default=IncomeStatus.ALL)
+    type_of_movement: Optional[TypeOfMovementOfFunds] = Field(
+        alias="type", default=TypeOfMovementOfFunds.ALL
+    )
 
     @classmethod
     @validation_handler([RequestPayloadType.QUERY_STRING])
     def validate_event(cls, event: dict) -> "GetBalanceHistoryRequest":
         data = event[RequestPayloadType.QUERY_STRING]
         return cls.model_validate(data)
+
+    @model_validator(mode="after")
+    def validate_type_and_status(self):
+        if (
+            self.type_of_movement == TypeOfMovementOfFunds.EXPENSE
+            and self.income_status != IncomeStatus.ALL
+        ):
+            raise WrongIncomeStatusForTypeException()
 
 
 class GetMetricsRequest(BaseModel):

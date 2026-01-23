@@ -77,3 +77,8 @@ class HostedServiceNotFoundException(BadRequestException):
             )
         elif hosted_service_id:
             super().__init__(message=f"Hosted service with id={hosted_service_id} not found!")
+
+
+class WrongIncomeStatusForTypeException(BadRequestException):
+    def __init__(self):
+        super().__init__(message="There must be only 'all' status parameter for 'expense' type!")

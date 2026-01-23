@@ -52,6 +52,14 @@ class OrderType(str, Enum):
 class TypeOfMovementOfFunds(str, Enum):
     INCOME = "income"
     EXPENSE = "expense"
+    ALL = "all"
+
+
+class IncomeStatus(str, Enum):
+    PENDING = "pending"
+    SUCCESS = "success"
+    FAILED = "failed"
+    ALL = "all"
 
 
 class HaaSDaemonStatus(str, Enum):
