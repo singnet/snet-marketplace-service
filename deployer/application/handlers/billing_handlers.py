@@ -2,7 +2,7 @@ from common.constant import StatusCode
 from common.exception_handler import exception_handler
 from common.logger import get_logger
 from common.request_context import RequestContext
-from common.utils import generate_lambda_response
+from common.utils import generate_lambda_response, generate_lambda_text_file_response
 from deployer.application.schemas.billing_schemas import (
     GetMetricsRequest,
     CallEventConsumerRequest,
@@ -86,6 +86,21 @@ def get_metrics(event, context):
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
+
+
+@exception_handler(logger=logger)
+def download_metrics(event, context):
+    req_ctx = RequestContext(event)
+
+    request = GetMetricsRequest.validate_event(event)
+
+    AuthorizationService().check_local_access(
+        req_ctx.account_id, hosted_service_id=request.hosted_service_id
+    )
+
+    file_content, filename = MetricsService().download_metrics(request)
+
+    return generate_lambda_text_file_response(file_content, filename, cors_enabled=True)
 
 
 @exception_handler(logger=logger)
