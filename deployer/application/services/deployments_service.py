@@ -57,7 +57,10 @@ class DeploymentsService:
                 elif request.only_daemon:
                     raise DaemonAlreadyExistsException(request.org_id, request.service_id)
 
-            daemon_id = generate_uuid()
+            if daemon is not None:
+                daemon_id = daemon.id
+            else:
+                daemon_id = generate_uuid()
 
             daemon_config = {"payment_channel_storage_type": DEFAULT_DAEMON_STORAGE_TYPE.value}
             if request.only_daemon:
@@ -69,18 +72,19 @@ class DeploymentsService:
                 daemon_config["is_service_hosted"] = True
                 daemon_config["service_endpoint"] = ""
 
-            DaemonRepository.create_daemon(
-                session,
-                NewDaemonDomain(
-                    id=daemon_id,
-                    account_id=account_id,
-                    org_id=request.org_id,
-                    service_id=request.service_id,
-                    status=DaemonStatus.INIT,
-                    daemon_config=daemon_config,
-                    daemon_endpoint=self._get_daemon_endpoint(request.org_id, request.service_id),
-                ),
-            )
+            if daemon is None:
+                DaemonRepository.create_daemon(
+                    session,
+                    NewDaemonDomain(
+                        id=daemon_id,
+                        account_id=account_id,
+                        org_id=request.org_id,
+                        service_id=request.service_id,
+                        status=DaemonStatus.INIT,
+                        daemon_config=daemon_config,
+                        daemon_endpoint=self._get_daemon_endpoint(request.org_id, request.service_id),
+                    ),
+                )
 
             if not request.only_daemon:
                 HostedServiceRepository.create_hosted_service(
@@ -95,19 +99,28 @@ class DeploymentsService:
                     ),
                 )
 
-        return {}
+            daemon = DaemonRepository.search_daemon(session, request.org_id, request.service_id)
+            response = daemon.to_response()
+            response["accountsMatch"] = account_id == daemon.account_id
+
+            return response
 
     def get_user_deployments(self, account_id: str) -> List[dict]:
         with session_scope(self.session_factory) as session:
             daemons = DaemonRepository.get_user_daemons(session, account_id)
         return [daemon.to_short_response() for daemon in daemons]
 
-    def search_deployments(self, request: SearchDeploymentsRequest):
+    def search_deployments(self, request: SearchDeploymentsRequest, account_id: str) -> dict:
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.search_daemon(session, request.org_id, request.service_id)
+
         if daemon is None:
             return {"daemon": {}, "hostedService": {}}
-        return daemon.to_response()
+
+        response = daemon.to_response()
+        response["accountsMatch"] = account_id == daemon.account_id
+
+        return response
 
     def get_public_key(self) -> dict:
         public_key = self._haas_client.get_public_key()

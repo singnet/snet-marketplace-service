@@ -49,7 +49,7 @@ def search_deployments(event, context):
 
     AuthorizationService().check_service_access(req_ctx, request.org_id)
 
-    response = DeploymentsService().search_deployments(request)
+    response = DeploymentsService().search_deployments(request, req_ctx.account_id)
 
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
