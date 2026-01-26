@@ -95,19 +95,28 @@ class DeploymentsService:
                     ),
                 )
 
-        return {}
+            daemon = DaemonRepository.search_daemon(session, request.org_id, request.service_id)
+            response = daemon.to_response()
+            response["accountsMatch"] = account_id == daemon.account_id
+
+            return response
 
     def get_user_deployments(self, account_id: str) -> List[dict]:
         with session_scope(self.session_factory) as session:
             daemons = DaemonRepository.get_user_daemons(session, account_id)
         return [daemon.to_short_response() for daemon in daemons]
 
-    def search_deployments(self, request: SearchDeploymentsRequest):
+    def search_deployments(self, request: SearchDeploymentsRequest, account_id: str) -> dict:
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.search_daemon(session, request.org_id, request.service_id)
+
         if daemon is None:
             return {"daemon": {}, "hostedService": {}}
-        return daemon.to_response()
+
+        response = daemon.to_response()
+        response["accountsMatch"] = account_id == daemon.account_id
+
+        return response
 
     def get_public_key(self) -> dict:
         public_key = self._haas_client.get_public_key()
