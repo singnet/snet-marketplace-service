@@ -59,6 +59,8 @@ class GetBalanceHistoryRequest(BaseModel):
         ):
             raise WrongIncomeStatusForTypeException()
 
+        return self
+
 
 class GetMetricsRequest(BaseModel):
     hosted_service_id: str = Field(alias="hostedServiceId")

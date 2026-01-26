@@ -203,7 +203,7 @@ class BillingService:
                     {
                         "type": TypeOfMovementOfFunds.INCOME.value,
                         "eventName": "Top Up",
-                        "amount": top_up_event.amount,
+                        "amount": int(top_up_event.amount),
                         "timestamp": top_up_event.updated_at.isoformat(),
                         "evmTransactions": top_up_event.to_response()["evmTransactions"],
                     }
