@@ -23,7 +23,7 @@ from deployer.config import (
     TOKEN_NAME,
     TOKEN_DECIMALS,
 )
-from deployer.constant import TypeOfMovementOfFunds, OrderType
+from deployer.constant import TypeOfMovementOfFunds, OrderType, IncomeStatus
 from deployer.domain.models.account_balance import NewAccountBalanceDomain
 from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
 from deployer.domain.models.order import NewOrderDomain
@@ -178,6 +178,12 @@ class BillingService:
                 )
             total_count += response.total_count
 
+        status_filter = request.income_status.value
+        if status_filter == IncomeStatus.ALL.value:
+            status_filter = None
+        elif status_filter == IncomeStatus.PENDING.value:
+            status_filter = OrderStatus.PROCESSING.value
+
         if request.type_of_movement != TypeOfMovementOfFunds.EXPENSE:
             with session_scope(self.session_factory) as session:
                 top_up_events = OrderRepository.get_orders(
@@ -187,7 +193,7 @@ class BillingService:
                     request.page,
                     request.order,
                     request.period,
-                    OrderStatus.SUCCESS,
+                    status_filter,
                 )
                 top_up_events_total_count = OrderRepository.get_orders_total_count(
                     session, account_id, request.period, OrderStatus.SUCCESS
@@ -204,7 +210,7 @@ class BillingService:
                 )
             total_count += top_up_events_total_count
 
-        if request.type_of_movement is None:
+        if request.type_of_movement == TypeOfMovementOfFunds.ALL:
             balance_events.sort(
                 key=lambda x: x["timestamp"], reverse=(request.order == OrderType.DESC)
             )
