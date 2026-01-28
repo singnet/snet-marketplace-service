@@ -635,6 +635,7 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - x-requested-wit
+
   download-metrics:
     handler: deployer.application.handlers.billing_handlers.download_metrics
     role: ${file(./config.${self:provider.stage}.json):ROLE}
