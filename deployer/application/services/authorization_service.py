@@ -10,9 +10,9 @@ from deployer.infrastructure.repositories.order_repository import OrderRepositor
 
 
 class AuthorizationService:
-    def __init__(self):
-        self.session_factory = DefaultSessionFactory
-        self._registry_client = RegistryClient()
+    def __init__(self, session_factory=None, registry_client=None):
+        self.session_factory = DefaultSessionFactory if session_factory is None else session_factory
+        self._registry_client = RegistryClient() if registry_client is None else registry_client
 
     def check_local_access(
         self,

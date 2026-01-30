@@ -38,12 +38,12 @@ logger = get_logger(__name__)
 
 
 class DeploymentsService:
-    def __init__(self):
-        self.session_factory = DefaultSessionFactory
-        self._haas_client = HaaSClient()
-        self._storage_provider = StorageProvider()
-        self._deployer_client = DeployerClient()
-        self._boto_utils = BotoUtils(REGION_NAME)
+    def __init__(self, session_factory=None, deployer_client=None, haas_client=None, storage_provider=None, boto_utils=None):
+        self.session_factory = DefaultSessionFactory if session_factory is None else session_factory
+        self._deployer_client = DeployerClient() if deployer_client is None else deployer_client
+        self._haas_client = HaaSClient() if haas_client is None else haas_client
+        self._storage_provider = StorageProvider() if storage_provider is None else storage_provider
+        self._boto_utils = BotoUtils(REGION_NAME) if boto_utils is None else boto_utils
 
     def initiate_deployment(self, request: InitiateDeploymentRequest, account_id: str) -> dict:
         with session_scope(self.session_factory) as session:

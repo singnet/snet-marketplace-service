@@ -15,9 +15,9 @@ from deployer.infrastructure.repositories.hosted_service_repository import Hoste
 
 
 class HostedServicesService:
-    def __init__(self):
-        self.session_factory = DefaultSessionFactory
-        self._haas_client = HaaSClient()
+    def __init__(self, session_factory=None, haas_client=None):
+        self.session_factory = DefaultSessionFactory if session_factory is None else session_factory
+        self._haas_client = HaaSClient() if haas_client is None else haas_client
 
     def get_hosted_service(self, request: HostedServiceRequest) -> dict:
         with session_scope(self.session_factory) as session:
