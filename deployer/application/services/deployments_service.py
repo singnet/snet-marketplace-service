@@ -38,7 +38,14 @@ logger = get_logger(__name__)
 
 
 class DeploymentsService:
-    def __init__(self, session_factory=None, deployer_client=None, haas_client=None, storage_provider=None, boto_utils=None):
+    def __init__(
+        self,
+        session_factory=None,
+        deployer_client=None,
+        haas_client=None,
+        storage_provider=None,
+        boto_utils=None,
+    ):
         self.session_factory = DefaultSessionFactory if session_factory is None else session_factory
         self._deployer_client = DeployerClient() if deployer_client is None else deployer_client
         self._haas_client = HaaSClient() if haas_client is None else haas_client
@@ -82,7 +89,9 @@ class DeploymentsService:
                         service_id=request.service_id,
                         status=DaemonStatus.INIT,
                         daemon_config=daemon_config,
-                        daemon_endpoint=self._get_daemon_endpoint(request.org_id, request.service_id),
+                        daemon_endpoint=self._get_daemon_endpoint(
+                            request.org_id, request.service_id
+                        ),
                     ),
                 )
 

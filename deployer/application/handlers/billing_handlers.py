@@ -89,9 +89,7 @@ def get_metrics(event, context, metrics_service=None, auth_service=None):
 
     if auth_service is None:
         auth_service = AuthorizationService()
-    auth_service.check_local_access(
-        req_ctx.account_id, hosted_service_id=request.hosted_service_id
-    )
+    auth_service.check_local_access(req_ctx.account_id, hosted_service_id=request.hosted_service_id)
 
     if metrics_service is None:
         metrics_service = MetricsService()
@@ -110,9 +108,7 @@ def download_metrics(event, context, metrics_service=None, auth_service=None):
 
     if auth_service is None:
         auth_service = AuthorizationService()
-    auth_service.check_local_access(
-        req_ctx.account_id, hosted_service_id=request.hosted_service_id
-    )
+    auth_service.check_local_access(req_ctx.account_id, hosted_service_id=request.hosted_service_id)
 
     if metrics_service is None:
         metrics_service = MetricsService()

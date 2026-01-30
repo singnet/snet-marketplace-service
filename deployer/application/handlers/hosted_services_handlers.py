@@ -22,9 +22,7 @@ def get_hosted_service(event, context, hosted_services_service=None, auth_servic
 
     if auth_service is None:
         auth_service = AuthorizationService()
-    auth_service.check_local_access(
-        req_ctx.account_id, hosted_service_id=request.hosted_service_id
-    )
+    auth_service.check_local_access(req_ctx.account_id, hosted_service_id=request.hosted_service_id)
 
     if hosted_services_service is None:
         hosted_services_service = HostedServicesService()
@@ -56,9 +54,7 @@ def get_hosted_service_logs(event, context, hosted_services_service=None, auth_s
 
     if auth_service is None:
         auth_service = AuthorizationService()
-    auth_service.check_local_access(
-        req_ctx.account_id, hosted_service_id=request.hosted_service_id
-    )
+    auth_service.check_local_access(req_ctx.account_id, hosted_service_id=request.hosted_service_id)
 
     if hosted_services_service is None:
         hosted_services_service = HostedServicesService()
@@ -77,9 +73,7 @@ def download_hosted_service_logs(event, context, hosted_services_service=None, a
 
     if auth_service is None:
         auth_service = AuthorizationService()
-    auth_service.check_local_access(
-        req_ctx.account_id, hosted_service_id=request.hosted_service_id
-    )
+    auth_service.check_local_access(req_ctx.account_id, hosted_service_id=request.hosted_service_id)
 
     if hosted_services_service is None:
         hosted_services_service = HostedServicesService()

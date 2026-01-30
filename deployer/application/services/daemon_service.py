@@ -24,9 +24,11 @@ logger = get_logger(__name__)
 
 
 class DaemonService:
-    def __init__(self, session_factory=None, deployer_client=None, haas_client=None, boto_utils=None):
+    def __init__(
+        self, session_factory=None, deployer_client=None, haas_client=None, boto_utils=None
+    ):
         self.session_factory = DefaultSessionFactory if session_factory is None else session_factory
-        self._deployer_client = DeployerClient()  if deployer_client is None else deployer_client
+        self._deployer_client = DeployerClient() if deployer_client is None else deployer_client
         self._haas_client = HaaSClient() if haas_client is None else haas_client
         self._boto_utils = BotoUtils(REGION_NAME) if boto_utils is None else boto_utils
 
