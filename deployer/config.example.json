@@ -13,7 +13,7 @@
   "SnetContract" : "",
   "GeneralPythonLibsMP": "",
   "OptionalPythonLibsMP": "",
-  "GrpcPythonLibsMP": "",
+  "PandasPythonLibsMP": "",
   "SERVICE_CALL_QUEUE": "",
   "SERVICE_CALL_TOPIC_ARN": "",
   "REGISTRY_QUEUE": "",
