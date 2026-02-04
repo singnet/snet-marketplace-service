@@ -1,9 +1,16 @@
+import os
+
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, delete
 from sqlalchemy.orm import sessionmaker
 from testcontainers.mysql import MySqlContainer
 
+from deployer.domain.schemas.haas_responses import GetCallEventsResponse
+from deployer.infrastructure.db import session_scope
 from deployer.infrastructure.models import Base
+
+
+os.environ["TESTCONTAINERS_RYUK_DISABLED"] = "true"
 
 
 @pytest.fixture(scope="session")
@@ -27,4 +34,67 @@ def test_engine(test_container):
 
 @pytest.fixture(scope="function")
 def test_session_factory(test_engine):
-    return sessionmaker(test_engine, expire_on_commit=False)
+    session_factory = sessionmaker(test_engine, expire_on_commit=False)
+
+    yield session_factory
+
+    with session_scope(session_factory) as session:
+        metadata = Base.metadata
+        for table in reversed(metadata.sorted_tables):
+            session.execute(delete(table))
+
+
+@pytest.fixture(scope="function")
+def test_haas_client():
+    class TestHaaSClient:
+        def __init__(self):
+            self.daemon_logs = []
+            self.service_logs = []
+            self.public_key = ""
+            self.call_events = GetCallEventsResponse(events=[], totalCount=0)
+
+        def deploy_daemon(self, *args, **kwargs):
+            return None
+
+        def delete_daemon(self, *args, **kwargs):
+            return None
+
+        def get_daemon_logs(self, *args, **kwargs):
+            return self.daemon_logs
+
+        def get_public_key(self, *args, **kwargs):
+            return self.public_key
+
+        def delete_hosted_service(self, *args, **kwargs):
+            return None
+
+        def get_hosted_service_logs(self, *args, **kwargs):
+            return self.service_logs
+
+        def get_call_events(self, *args, **kwargs):
+            return self.call_events
+
+    return TestHaaSClient()
+
+
+@pytest.fixture(scope="function")
+def test_deployer_client():
+    class TestDeployerClient:
+        def deploy_daemon(self, *args, **kwargs):
+            return None
+
+    return TestDeployerClient()
+
+
+@pytest.fixture(scope="function")
+def test_registry_client():
+    class TestRegistryClient:
+        def get_all_orgs(self, *args, **kwargs):
+            return []
+
+    return TestRegistryClient()
+
+
+@pytest.fixture(scope="function")
+def test_account_id():
+    return "SERVERLESS_OFFLINE_ACCOUNT_ID"

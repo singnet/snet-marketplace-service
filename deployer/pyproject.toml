@@ -39,6 +39,12 @@ skip_gitignore = true
 [tool.ruff]
 line-length = 100
 
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::DeprecationWarning:testcontainers.*",
+    "ignore::DeprecationWarning:websockets.*"
+]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
