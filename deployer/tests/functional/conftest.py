@@ -1,3 +1,6 @@
+import datetime
+from datetime import timedelta
+
 import pytest
 
 from deployer.application.services.authorization_service import AuthorizationService
@@ -7,8 +10,18 @@ from deployer.application.services.deployments_service import DeploymentsService
 from deployer.application.services.hosted_services_service import HostedServicesService
 from deployer.application.services.metrics_service import MetricsService
 from deployer.domain.models.account_balance import NewAccountBalanceDomain
+from deployer.domain.models.daemon import NewDaemonDomain
+from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
+from deployer.domain.models.hosted_service import NewHostedServiceDomain
+from deployer.domain.models.order import NewOrderDomain
+from deployer.domain.schemas.haas_responses import CallEventResponse, GetCallEventsResponse
 from deployer.infrastructure.db import session_scope
+from deployer.infrastructure.models import OrderStatus, EVMTransactionStatus, DaemonStatus, HostedServiceStatus
 from deployer.infrastructure.repositories.account_balance_repository import AccountBalanceRepository
+from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
+from deployer.infrastructure.repositories.hosted_service_repository import HostedServiceRepository
+from deployer.infrastructure.repositories.order_repository import OrderRepository
+from deployer.infrastructure.repositories.transaction_repository import TransactionRepository
 
 
 @pytest.fixture(scope="function")
@@ -49,3 +62,76 @@ def add_test_account_balance(test_session_factory, test_account_id):
             session, NewAccountBalanceDomain(account_id=test_account_id, balance_in_cogs=balance)
         )
     return balance
+
+
+@pytest.fixture(scope = "function")
+def test_haas_client_with_events(test_haas_client, test_org_id, test_service_id):
+    events = []
+    total_count = 20
+    current_time = datetime.datetime.now(datetime.UTC)
+
+    for i in range(total_count):
+        duration = 10 + i
+        amount = 100 + i
+        timestamp = current_time - timedelta(minutes = i, hours = i)
+        event = CallEventResponse(orgId = test_org_id, serviceId = test_service_id, duration = duration, amount = amount, timestamp = timestamp)
+        events.append(event)
+
+    test_haas_client.call_events = GetCallEventsResponse(events = events, totalCount = total_count)
+
+    return test_haas_client
+
+
+@pytest.fixture(scope = "function")
+def add_test_orders(test_session_factory, add_test_account_balance, test_account_id):
+    total_count = 3
+    with session_scope(test_session_factory) as session:
+        for i in range(total_count):
+            order_id = f"order_{i}"
+            OrderRepository.create_order(
+                session,
+                NewOrderDomain(
+                    id = order_id,
+                    account_id = test_account_id,
+                    amount = 1000 + i,
+                    status = OrderStatus.SUCCESS,
+                ),
+            )
+            TransactionRepository.upsert_transaction(
+                session,
+                NewEVMTransactionDomain(
+                    hash = f"0xhash{i}",
+                    order_id = order_id,
+                    status = EVMTransactionStatus.SUCCESS,
+                    sender = f"0xsender{i}",
+                    recipient = "recipient"
+                )
+            )
+
+
+@pytest.fixture(scope = "function")
+def add_test_daemon_and_service(test_session_factory, add_test_account_balance, test_account_id, test_org_id, test_service_id, test_daemon_id, test_hosted_service_id):
+    with session_scope(test_session_factory) as session:
+        DaemonRepository.create_daemon(
+            session,
+            NewDaemonDomain(
+                id = test_daemon_id,
+                account_id = test_account_id,
+                org_id = test_org_id,
+                service_id = test_service_id,
+                status = DaemonStatus.UP,
+                daemon_config = {},
+                daemon_endpoint = ""
+            )
+        )
+        HostedServiceRepository.create_hosted_service(
+            session,
+            NewHostedServiceDomain(
+                id = test_hosted_service_id,
+                daemon_id = test_daemon_id,
+                status = HostedServiceStatus.UP,
+                github_account_name = "",
+                github_repository_name = "",
+                last_commit_url = ""
+            )
+        )

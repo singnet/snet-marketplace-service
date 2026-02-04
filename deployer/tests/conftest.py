@@ -98,3 +98,24 @@ def test_registry_client():
 @pytest.fixture(scope="function")
 def test_account_id():
     return "SERVERLESS_OFFLINE_ACCOUNT_ID"
+
+
+@pytest.fixture(scope="function")
+def test_org_id():
+    return "TEST_ORG_ID"
+
+
+@pytest.fixture(scope="function")
+def test_service_id():
+    return "TEST_SERVICE_ID"
+
+
+@pytest.fixture(scope="function")
+def test_daemon_id():
+    return "TEST_DAEMON_ID"
+
+
+@pytest.fixture(scope="function")
+def test_hosted_service_id():
+    return "TEST_HOSTED_SERVICE_ID"
+
