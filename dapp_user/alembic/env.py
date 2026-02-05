@@ -9,11 +9,14 @@ from alembic import context
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-MYSQL_CONNECTION_STRING = (
-    f"mysql+pymysql://{settings.db.user}:{settings.db.password}"
-    f"@{settings.db.host}:{settings.db.port}/{settings.db.name}"
-)
-config.set_main_option("sqlalchemy.url", MYSQL_CONNECTION_STRING)
+
+_existing_url = config.get_main_option("sqlalchemy.url")
+if not _existing_url or _existing_url == "driver://user:pass@localhost/dbname":
+    MYSQL_CONNECTION_STRING = (
+        f"mysql+pymysql://{settings.db.user}:{settings.db.password}"
+        f"@{settings.db.host}:{settings.db.port}/{settings.db.name}"
+    )
+    config.set_main_option("sqlalchemy.url", MYSQL_CONNECTION_STRING)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

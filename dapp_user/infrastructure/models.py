@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 
 from sqlalchemy import (
     BOOLEAN,
@@ -92,7 +93,7 @@ class UserServiceVote(Base):
     )
     org_id: Mapped[str] = mapped_column(VARCHAR(128), nullable=False)
     service_id: Mapped[str] = mapped_column(VARCHAR(128), nullable=False)
-    rating: Mapped[float] = mapped_column(DECIMAL(2, 1), nullable=True)
+    rating: Mapped[Decimal] = mapped_column(DECIMAL(2, 1), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP, server_default=CreateTimestamp, nullable=True
