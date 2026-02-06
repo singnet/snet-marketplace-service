@@ -68,8 +68,8 @@ def apply_migrations(mysql_container) -> Generator[None, None, None]:
 def db_session(db_engine: Engine, apply_migrations) -> Generator[Session, None, None]:
     """Provide a transactional scope around a series of operations."""
     connection = db_engine.connect()
-    _TestSession = sessionmaker(bind=db_engine)
-    session = _TestSession(bind=connection)
+    session_maker = sessionmaker(bind=db_engine)
+    session = session_maker(bind=connection)
     try:
         yield session
     finally:

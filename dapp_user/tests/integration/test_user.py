@@ -1,4 +1,5 @@
 import json
+import math
 from http import HTTPStatus
 from typing import List, Tuple
 from unittest.mock import MagicMock
@@ -358,7 +359,7 @@ def test_get_user_review(
 
     assert result["statusCode"] == HTTPStatus.OK
     body = json.loads(result["body"])
-    assert body["data"]["rating"] == 5.0
+    assert math.isclose(body["data"]["rating"], 5.0)
     assert body["data"]["comment"] == "test"
 
 

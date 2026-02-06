@@ -183,14 +183,14 @@ def extract_zip_file(zip_file_path, extracted_path):
 
 
 def zip_file(source_path, zipped_path):
-    outZipFile = zipfile.ZipFile(zipped_path, "w", zipfile.ZIP_DEFLATED)
+    out_zip_file = zipfile.ZipFile(zipped_path, "w", zipfile.ZIP_DEFLATED)
     for dir_path, dir_names, filenames in os.walk(source_path):
         for filename in filenames:
             filepath = os.path.join(dir_path, filename)
             parent_path = os.path.relpath(filepath, source_path)
             arc_name = parent_path
-            outZipFile.write(filepath, arc_name)
-    outZipFile.close()
+            out_zip_file.write(filepath, arc_name)
+    out_zip_file.close()
     return zipped_path
 
 
