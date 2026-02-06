@@ -15,7 +15,7 @@ os.environ["TESTCONTAINERS_RYUK_DISABLED"] = "true"
 
 @pytest.fixture(scope="session")
 def test_container():
-    with MySqlContainer("mysql:8", dialect="pymysql") as container:
+    with MySqlContainer("mysql:8.0", dialect="pymysql") as container:
         yield container
 
 
@@ -42,6 +42,12 @@ def test_session_factory(test_engine):
         metadata = Base.metadata
         for table in reversed(metadata.sorted_tables):
             session.execute(delete(table))
+
+
+@pytest.fixture(scope="function")
+def db_session(test_session_factory):
+    with session_scope(test_session_factory) as session:
+        yield session
 
 
 @pytest.fixture(scope="function")
@@ -118,4 +124,3 @@ def test_daemon_id():
 @pytest.fixture(scope="function")
 def test_hosted_service_id():
     return "TEST_HOSTED_SERVICE_ID"
-

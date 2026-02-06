@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from typing import Optional
 
 from sqlalchemy import select, func, delete
 from sqlalchemy.orm import Session
@@ -9,14 +10,16 @@ from deployer.infrastructure.models import TokenRate
 
 class TokenRateRepository:
     @staticmethod
-    def get_average_cogs_per_usd(session: Session, token_symbol: str) -> int:
+    def get_average_cogs_per_usd(session: Session, token_symbol: str) -> Optional[int]:
         query = select(
             func.avg(TokenRate.cogs_per_usd).label("avg_cogs_per_usd"),
         ).where(TokenRate.token_symbol == token_symbol)
 
-        result = session.execute(query).scalar_one()
+        result = session.execute(query).scalar_one_or_none()
+        if result is None:
+            return None
 
-        return int(result)
+        return round(result)
 
     @staticmethod
     def add_token_rate(session: Session, token_rate: NewTokenRateDomain) -> None:

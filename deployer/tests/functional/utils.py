@@ -1,7 +1,15 @@
 import json
 from typing import Tuple, Union, Any, Optional
 
+from sqlalchemy.orm import Session
+
 from common.constant import RequestPayloadType
+from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
+from deployer.domain.models.order import NewOrderDomain
+from deployer.domain.models.transactions_metadata import NewTransactionsMetadataDomain
+from deployer.infrastructure.models import OrderStatus, EVMTransactionStatus, TransactionsMetadata
+from deployer.infrastructure.repositories.order_repository import OrderRepository
+from deployer.infrastructure.repositories.transaction_repository import TransactionRepository
 
 
 def validate_response_ok(response) -> Tuple[int, Union[dict, list]]:
@@ -44,3 +52,64 @@ def generate_request_event(
         event[RequestPayloadType.BODY] = json.dumps(body)
 
     return event
+
+
+def create_order_and_transaction(
+    session: Session,
+    order_id: str = "test_order_id",
+    account_id: str = "test_account_id",
+    amount: int = 123,
+    order_status: OrderStatus = OrderStatus.PROCESSING,
+    tx_hash: str = "0x123",
+    tx_status: EVMTransactionStatus = EVMTransactionStatus.PENDING,
+    sender: str = "0xsender",
+    recipient: str = "0xrecipient",
+) -> Tuple[NewOrderDomain, NewEVMTransactionDomain]:
+    order = NewOrderDomain(
+        id=order_id,
+        account_id=account_id,
+        amount=amount,
+        status=order_status,
+    )
+    transaction = NewEVMTransactionDomain(
+        hash=tx_hash, order_id=order_id, status=tx_status, sender=sender, recipient=recipient
+    )
+
+    OrderRepository.create_order(session, order)
+    TransactionRepository.upsert_transaction(session, transaction)
+
+    return order, transaction
+
+
+def add_transactions_metadata(
+    session: Session,
+    last_block_no: int = 900,
+    transactions_metadata: Optional[NewTransactionsMetadataDomain] = None,
+) -> NewTransactionsMetadataDomain:
+    if transactions_metadata is None:
+        transactions_metadata = NewTransactionsMetadataDomain(
+            id=123,
+            recipient="recipient",
+            last_block_no=last_block_no,
+            fetch_limit=50,
+            block_adjustment=5,
+        )
+
+    session.add(
+        TransactionsMetadata(
+            id=transactions_metadata.id,
+            recipient=transactions_metadata.recipient,
+            last_block_no=transactions_metadata.last_block_no,
+            fetch_limit=transactions_metadata.fetch_limit,
+            block_adjustment=transactions_metadata.block_adjustment,
+        )
+    )
+    return transactions_metadata
+
+
+def create_common_queue_event(events: list) -> dict:
+    return {
+        "Records": [
+            {"body": json.dumps({"Message": json.dumps(event_data)})} for event_data in events
+        ]
+    }

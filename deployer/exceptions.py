@@ -82,3 +82,8 @@ class HostedServiceNotFoundException(BadRequestException):
 class WrongIncomeStatusForTypeException(BadRequestException):
     def __init__(self):
         super().__init__(message="There must be only 'all' status parameter for 'expense' type!")
+
+
+class TokenRateUnavailableException(BadRequestException):
+    def __init__(self):
+        super().__init__(message="There is no data about token rate for now!")

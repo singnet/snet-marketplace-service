@@ -33,6 +33,7 @@ from deployer.exceptions import (
     OrderNotFoundException,
     UnacceptableOrderStatusException,
     HostedServiceNotFoundException,
+    TokenRateUnavailableException,
 )
 from deployer.infrastructure.clients.haas_client import HaaSClient
 from deployer.infrastructure.db import DefaultSessionFactory, session_scope
@@ -150,6 +151,8 @@ class BillingService:
                 balance = int(account_balance.balance_in_cogs)
 
             average_cogs_per_usd = TokenRateRepository.get_average_cogs_per_usd(session, TOKEN_NAME)
+            if average_cogs_per_usd is None:
+                raise TokenRateUnavailableException()
 
         return {"balanceInCogs": balance, "cogsPerUsd": average_cogs_per_usd}
 
@@ -224,7 +227,7 @@ class BillingService:
         with session_scope(self.session_factory) as session:
             transactions_metadata_list = TransactionRepository.get_transactions_metadata(session)
             for transactions_metadata in transactions_metadata_list:
-                transactions, last_block = self._get_transactions_from_blockchain(
+                transactions, last_block = BillingService._get_transactions_from_blockchain(
                     transactions_metadata
                 )
                 logger.info(
@@ -232,9 +235,11 @@ class BillingService:
                 )
 
                 for new_transaction, amount in transactions:
+                    logger.debug(f"NEW TX: {new_transaction}")
                     existing_transaction = TransactionRepository.get_transaction(
                         session, new_transaction.hash
                     )
+                    logger.debug(f"EXISTING TX: {existing_transaction}")
                     if not new_transaction.order_id:
                         if existing_transaction is None:
                             logger.exception(
@@ -320,7 +325,7 @@ class BillingService:
 
         from_block = tx_metadata.last_block_no + 1
         to_block = min(
-            current_block - tx_metadata.block_adjustment, from_block + tx_metadata.fetch_limit
+            current_block - tx_metadata.block_adjustment, from_block + tx_metadata.fetch_limit - 1
         )
         logger.info(f"Fetching transactions from {from_block} to {to_block}")
 
