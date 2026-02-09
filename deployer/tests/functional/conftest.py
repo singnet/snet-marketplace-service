@@ -164,3 +164,27 @@ def add_token_rate_records(test_session_factory):
                 ),
             )
     return round(Decimal(cogs_sum) / Decimal(total_count))
+
+
+@pytest.fixture(scope="function")
+def add_test_daemon(
+    test_session_factory,
+    add_test_account_balance,
+    test_account_id,
+    test_org_id,
+    test_service_id,
+    test_daemon_id,
+):
+    with session_scope(test_session_factory) as session:
+        DaemonRepository.create_daemon(
+            session,
+            NewDaemonDomain(
+                id=test_daemon_id,
+                account_id=test_account_id,
+                org_id=test_org_id,
+                service_id=test_service_id,
+                status=DaemonStatus.UP,
+                daemon_config={},
+                daemon_endpoint="",
+            ),
+        )

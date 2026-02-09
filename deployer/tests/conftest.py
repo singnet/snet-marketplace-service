@@ -54,7 +54,7 @@ def db_session(test_session_factory):
 def test_haas_client():
     class TestHaaSClient:
         def __init__(self):
-            self.daemon_logs = []
+            self.daemon_logs = ["log1", "log2", "log3"]
             self.service_logs = []
             self.public_key = ""
             self.call_events = GetCallEventsResponse(events=[], totalCount=0)
@@ -101,7 +101,7 @@ def test_registry_client():
     return TestRegistryClient()
 
 
-@pytest.fixture(scope = "function")
+@pytest.fixture(scope="function")
 def test_crypto_exchange_client():
     class TestCryptoExchangeClient:
         def __init__(self):
