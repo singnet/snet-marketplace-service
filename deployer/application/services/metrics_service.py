@@ -13,9 +13,9 @@ from deployer.infrastructure.repositories.daemon_repository import DaemonReposit
 
 
 class MetricsService:
-    def __init__(self, session_factory=None):
-        self.session_factory = session_factory if session_factory else DefaultSessionFactory
-        self._haas_client = HaaSClient()
+    def __init__(self, session_factory=None, haas_client=None):
+        self.session_factory = DefaultSessionFactory if session_factory is None else session_factory
+        self._haas_client = HaaSClient() if haas_client is None else haas_client
         self.datetime_format = "%Y-%m-%dT%H:%M:%S"
 
     def get_metrics(self, request: GetMetricsRequest) -> dict:

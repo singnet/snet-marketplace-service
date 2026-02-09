@@ -9,7 +9,7 @@ class AccountBalanceFactory:
     ) -> AccountBalanceDomain:
         return AccountBalanceDomain(
             account_id=account_balance_db_model.account_id,
-            balance_in_cogs=account_balance_db_model.balance_in_cogs,
+            balance_in_cogs=int(account_balance_db_model.balance_in_cogs),
             created_at=account_balance_db_model.created_at,
             updated_at=account_balance_db_model.updated_at,
         )
