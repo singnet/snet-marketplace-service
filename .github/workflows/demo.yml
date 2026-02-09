@@ -43,6 +43,7 @@ jobs:
           sudo apt install default-mysql-client -y
           # pip3 install coverage coveralls pytest alembic
           pip3 install pytest setuptools
+          pip3 install testcontainers
 
       - name: clone repo
         uses: actions/checkout@v3
@@ -62,7 +63,6 @@ jobs:
           pip3 install -r lambda_layers/GeneralPythonLibsMP/requirements.txt
           pip3 install -r lambda_layers/GrpcPythonLibsMP/requirements.txt
           pip3 install -r lambda_layers/OptionalPythonLibsMP/requirements.txt
-          pip3 install testcontainers
 
       - name: install npm packages
         run: |
