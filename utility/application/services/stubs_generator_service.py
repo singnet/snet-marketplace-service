@@ -4,7 +4,8 @@ import tempfile
 import uuid
 import re
 from pathlib import Path
-import pkg_resources
+from importlib.resources import files
+
 from grpc_tools.protoc import main as protoc
 
 from common import utils
@@ -207,7 +208,7 @@ class StubsGeneratorService:
 
     @staticmethod
     def _compile_proto(entry_path, codegen_dir, proto_file_path):
-        proto_include = pkg_resources.resource_filename("grpc_tools", "_proto")
+        proto_include = str(files("grpc_tools").joinpath("_proto"))
         compiler_args = ["-I{}".format(entry_path), "-I{}".format(proto_include)]
         if not os.path.exists(codegen_dir):
             os.makedirs(codegen_dir, exist_ok=True)
