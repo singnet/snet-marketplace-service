@@ -6,7 +6,7 @@ from deployer.application.handlers.billing_handlers import (
     get_metrics,
     get_balance_and_rate,
     update_transaction_status,
-    call_event_consumer,
+    call_event_consumer, update_token_rate,
 )
 from deployer.application.services.billing_service import BillingService
 from deployer.application.services.metrics_service import MetricsService
@@ -216,7 +216,8 @@ class TestBillingEndpoints:
         test_service_id,
         test_account_id,
     ):
-        amount = 123
+        amount = 10
+        balance = add_test_account_balance
 
         event = generate_request_event(
             body={
@@ -233,7 +234,10 @@ class TestBillingEndpoints:
         with session_scope(test_session_factory) as session:
             account_balance = AccountBalanceRepository.get_account_balance(session, test_account_id)
 
-        assert account_balance.balance_in_cogs == add_test_account_balance + amount
+        assert account_balance.balance_in_cogs == balance - amount
 
-    def update_token_rate(self):
+    def test_update_token_rate(self, test_billing_service, add_token_rate_records):
         pass
+        avg_rate = add_token_rate_records
+
+        update_token_rate(None, None, billing_service = test_billing_service)

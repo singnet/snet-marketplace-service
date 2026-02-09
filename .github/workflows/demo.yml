@@ -67,6 +67,7 @@ jobs:
             pip3 install -r lambda_layers/GeneralPythonLibsMP/requirements.txt
             pip3 install -r lambda_layers/GrpcPythonLibsMP/requirements.txt
             pip3 install -r lambda_layers/OptionalPythonLibsMP/requirements.txt
+            pip3 install -r lambda_layers/PandasPythonLibsMP/requirements.txt
             pip3 install testcontainers
 
         - name: install npm packages
