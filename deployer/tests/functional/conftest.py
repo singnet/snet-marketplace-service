@@ -37,8 +37,8 @@ def test_auth_service(test_session_factory, test_registry_client):
 
 
 @pytest.fixture(scope="function")
-def test_billing_service(test_session_factory, test_haas_client):
-    return BillingService(test_session_factory, test_haas_client)
+def test_billing_service(test_session_factory, test_haas_client, test_crypto_exchange_client):
+    return BillingService(test_session_factory, test_haas_client, test_crypto_exchange_client)
 
 
 @pytest.fixture(scope="function")

@@ -49,10 +49,10 @@ logger = get_logger(__name__)
 
 
 class BillingService:
-    def __init__(self, session_factory=None):
-        self.session_factory = DefaultSessionFactory
-        self._haas_client = HaaSClient()
-        self._crypto_exchange_client = CryptoExchangeClient()
+    def __init__(self, session_factory=None, haas_client=None, crypto_exchange_client=None):
+        self.session_factory = DefaultSessionFactory if session_factory is None else session_factory
+        self._haas_client = HaaSClient() if haas_client is None else haas_client
+        self._crypto_exchange_client = CryptoExchangeClient() if crypto_exchange_client is None else crypto_exchange_client
 
     def create_order(self, request: CreateOrderRequest, account_id: str) -> dict:
         with session_scope(self.session_factory) as session:

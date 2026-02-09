@@ -101,6 +101,18 @@ def test_registry_client():
     return TestRegistryClient()
 
 
+@pytest.fixture(scope = "function")
+def test_crypto_exchange_client():
+    class TestCryptoExchangeClient:
+        def __init__(self):
+            self.token_rate = 0.5
+
+        def get_token_rate(self, *args, **kwargs) -> float:
+            return self.token_rate
+
+    return TestCryptoExchangeClient()
+
+
 @pytest.fixture(scope="function")
 def test_account_id():
     return "SERVERLESS_OFFLINE_ACCOUNT_ID"

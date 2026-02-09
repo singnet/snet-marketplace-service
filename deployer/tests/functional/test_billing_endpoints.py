@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from deployer.application.handlers.billing_handlers import (
     create_order,
     save_evm_transaction,
@@ -10,11 +12,13 @@ from deployer.application.handlers.billing_handlers import (
 )
 from deployer.application.services.billing_service import BillingService
 from deployer.application.services.metrics_service import MetricsService
+from deployer.config import TOKEN_DECIMALS, TOKEN_NAME
 from deployer.domain.models.order import NewOrderDomain
 from deployer.infrastructure.db import session_scope
 from deployer.infrastructure.models import OrderStatus, EVMTransactionStatus
 from deployer.infrastructure.repositories.account_balance_repository import AccountBalanceRepository
 from deployer.infrastructure.repositories.order_repository import OrderRepository
+from deployer.infrastructure.repositories.token_rate_repository import TokenRateRepository
 from deployer.tests.functional.utils import (
     validate_response_ok,
     generate_request_event,
@@ -236,8 +240,16 @@ class TestBillingEndpoints:
 
         assert account_balance.balance_in_cogs == balance - amount
 
-    def test_update_token_rate(self, test_billing_service, add_token_rate_records):
-        pass
-        avg_rate = add_token_rate_records
+    def test_update_token_rate(self, test_billing_service, test_session_factory, add_token_rate_records):
+        test_token_rate = 0.5
+        test_cogs_per_usd = round(10**TOKEN_DECIMALS / test_token_rate)
+        current_cogs_per_usd = add_token_rate_records
 
+        test_billing_service._crypto_exchange_client.token_rate = test_token_rate
         update_token_rate(None, None, billing_service = test_billing_service)
+
+        with session_scope(test_session_factory) as session:
+            token_rate = TokenRateRepository.get_average_cogs_per_usd(session, TOKEN_NAME)
+
+        new_cogs_per_usd = round(Decimal(current_cogs_per_usd * 10 + test_cogs_per_usd) / Decimal(11))
+        assert token_rate == new_cogs_per_usd
