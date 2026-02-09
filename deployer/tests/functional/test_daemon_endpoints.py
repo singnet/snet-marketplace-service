@@ -75,7 +75,7 @@ class TestDaemonEndpoints:
         assert daemon.daemon_config["service_endpoint"] == test_endpoint
         assert daemon.daemon_config["service_credentials"] == test_credentials
 
-    def test_update_daemon_status(
+    def test_update_daemon_status_ok(
         self,
         test_daemon_service,
         test_session_factory,

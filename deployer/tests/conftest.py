@@ -9,7 +9,6 @@ from deployer.domain.schemas.haas_responses import GetCallEventsResponse
 from deployer.infrastructure.db import session_scope
 from deployer.infrastructure.models import Base
 
-
 os.environ["TESTCONTAINERS_RYUK_DISABLED"] = "true"
 
 
@@ -51,12 +50,37 @@ def db_session(test_session_factory):
 
 
 @pytest.fixture(scope="function")
+def test_account_id():
+    return "SERVERLESS_OFFLINE_ACCOUNT_ID"
+
+
+@pytest.fixture(scope="function")
+def test_org_id():
+    return "TEST_ORG_ID"
+
+
+@pytest.fixture(scope="function")
+def test_service_id():
+    return "TEST_SERVICE_ID"
+
+
+@pytest.fixture(scope="function")
+def test_daemon_id():
+    return "TEST_DAEMON_ID"
+
+
+@pytest.fixture(scope="function")
+def test_hosted_service_id():
+    return "TEST_HOSTED_SERVICE_ID"
+
+
+@pytest.fixture(scope="function")
 def test_haas_client():
     class TestHaaSClient:
         def __init__(self):
             self.daemon_logs = ["log1", "log2", "log3"]
             self.service_logs = []
-            self.public_key = ""
+            self.public_key = "PUBLIC_KEY"
             self.call_events = GetCallEventsResponse(events=[], totalCount=0)
 
         def deploy_daemon(self, *args, **kwargs):
@@ -93,10 +117,10 @@ def test_deployer_client():
 
 
 @pytest.fixture(scope="function")
-def test_registry_client():
+def test_registry_client(test_org_id):
     class TestRegistryClient:
         def get_all_orgs(self, *args, **kwargs):
-            return []
+            return [{"org_id": test_org_id}]
 
     return TestRegistryClient()
 
@@ -111,28 +135,3 @@ def test_crypto_exchange_client():
             return self.token_rate
 
     return TestCryptoExchangeClient()
-
-
-@pytest.fixture(scope="function")
-def test_account_id():
-    return "SERVERLESS_OFFLINE_ACCOUNT_ID"
-
-
-@pytest.fixture(scope="function")
-def test_org_id():
-    return "TEST_ORG_ID"
-
-
-@pytest.fixture(scope="function")
-def test_service_id():
-    return "TEST_SERVICE_ID"
-
-
-@pytest.fixture(scope="function")
-def test_daemon_id():
-    return "TEST_DAEMON_ID"
-
-
-@pytest.fixture(scope="function")
-def test_hosted_service_id():
-    return "TEST_HOSTED_SERVICE_ID"

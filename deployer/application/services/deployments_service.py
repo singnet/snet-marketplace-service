@@ -19,6 +19,7 @@ from deployer.config import (
     HAAS_DAEMON_BASE_URL,
 )
 from deployer.constant import AllowedRegistryEventNames
+from deployer.domain.models.account_balance import NewAccountBalanceDomain
 from deployer.domain.models.daemon import NewDaemonDomain, DaemonDomain
 from deployer.domain.models.hosted_service import NewHostedServiceDomain, HostedServiceDomain
 from deployer.exceptions import (
@@ -30,6 +31,7 @@ from deployer.infrastructure.clients.github_api_client import GithubAPIClient
 from deployer.infrastructure.clients.haas_client import HaaSClient
 from deployer.infrastructure.db import DefaultSessionFactory, session_scope
 from deployer.infrastructure.models import DaemonStatus, HostedServiceStatus
+from deployer.infrastructure.repositories.account_balance_repository import AccountBalanceRepository
 from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
 from deployer.infrastructure.repositories.hosted_service_repository import HostedServiceRepository
 
@@ -63,6 +65,12 @@ class DeploymentsService:
                     )
                 elif request.only_daemon:
                     raise DaemonAlreadyExistsException(request.org_id, request.service_id)
+
+            account_balance = AccountBalanceRepository.get_account_balance(session, account_id)
+            if account_balance is None:
+                AccountBalanceRepository.upsert_account_balance(
+                    session, NewAccountBalanceDomain(account_id=account_id, balance_in_cogs=0)
+                )
 
             if daemon is not None:
                 daemon_id = daemon.id

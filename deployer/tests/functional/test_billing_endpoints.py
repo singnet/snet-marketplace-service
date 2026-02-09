@@ -165,7 +165,7 @@ class TestBillingEndpoints:
         test_org_id,
         test_service_id,
     ):
-        token_rate = add_token_rate_records
+        token_rate = round(add_token_rate_records)
         balance = add_test_account_balance
 
         event = generate_request_event(
@@ -247,7 +247,6 @@ class TestBillingEndpoints:
     ):
         test_token_rate = 0.5
         test_cogs_per_usd = round(10**TOKEN_DECIMALS / test_token_rate)
-        current_cogs_per_usd = add_token_rate_records
 
         test_billing_service._crypto_exchange_client.token_rate = test_token_rate
         update_token_rate(None, None, billing_service=test_billing_service)
@@ -256,6 +255,6 @@ class TestBillingEndpoints:
             token_rate = TokenRateRepository.get_average_cogs_per_usd(session, TOKEN_NAME)
 
         new_cogs_per_usd = round(
-            Decimal(current_cogs_per_usd * 10 + test_cogs_per_usd) / Decimal(11)
+            Decimal(add_token_rate_records * 10 + test_cogs_per_usd) / Decimal(11)
         )
         assert token_rate == new_cogs_per_usd
