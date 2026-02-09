@@ -1,7 +1,6 @@
 import os
 from typing import Tuple, List
 
-import requests
 from eth_typing import HexStr
 from web3 import Web3
 
@@ -34,6 +33,7 @@ from deployer.exceptions import (
     UnacceptableOrderStatusException,
     HostedServiceNotFoundException,
 )
+from deployer.infrastructure.clients.crypto_exchange_client import CryptoExchangeClient
 from deployer.infrastructure.clients.haas_client import HaaSClient
 from deployer.infrastructure.db import DefaultSessionFactory, session_scope
 from deployer.infrastructure.models import OrderStatus, EVMTransactionStatus
@@ -51,6 +51,7 @@ class BillingService:
     def __init__(self, session_factory=None):
         self.session_factory = DefaultSessionFactory
         self._haas_client = HaaSClient()
+        self._crypto_exchange_client = CryptoExchangeClient()
 
     def create_order(self, request: CreateOrderRequest, account_id: str) -> dict:
         with session_scope(self.session_factory) as session:
@@ -288,14 +289,9 @@ class BillingService:
             )
 
     def update_token_rate(self) -> None:
-        url = "https://api.coingecko.com/api/v3/simple/price"
         token_symbol = TOKEN_NAME.lower()
+        token_rate = self._crypto_exchange_client.get_token_rate(token_symbol)
 
-        query_params = {"symbols": token_symbol, "vs_currencies": "usd"}
-
-        response = requests.get(url, params=query_params)
-
-        token_rate = float(response.json()[token_symbol]["usd"])
         cogs_per_usd = round(10**TOKEN_DECIMALS / token_rate)
 
         with session_scope(self.session_factory) as session:
