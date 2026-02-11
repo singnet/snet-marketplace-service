@@ -21,17 +21,27 @@ class DaemonRepository:
             daemon_config=daemon.daemon_config,
             daemon_endpoint=daemon.daemon_endpoint,
             status_observed_at=daemon.status_observed_at,
-            status_resource_version=daemon.status_resource_version
+            status_resource_version=daemon.status_resource_version,
         )
 
         session.add(daemon_model)
 
     @staticmethod
-    def update_daemon_status(session: Session, daemon_id: str, status: DaemonStatus, status_observed_at: Optional[datetime] = None, status_resource_version: Optional[str] = None) -> None:
-        update_query = update(Daemon).where(Daemon.id == daemon_id).values(
-            status = status,
-            status_observed_at = status_observed_at,
-            status_resource_version = status_resource_version
+    def update_daemon_status(
+        session: Session,
+        daemon_id: str,
+        status: DaemonStatus,
+        status_observed_at: Optional[datetime] = None,
+        status_resource_version: Optional[str] = None,
+    ) -> None:
+        update_query = (
+            update(Daemon)
+            .where(Daemon.id == daemon_id)
+            .values(
+                status=status,
+                status_observed_at=status_observed_at,
+                status_resource_version=status_resource_version,
+            )
         )
 
         session.execute(update_query)

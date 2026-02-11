@@ -95,7 +95,13 @@ class TestDaemonEndpoints:
         test_resource_version = "123"
 
         event = generate_request_event(
-            body={"orgId": test_org_id, "serviceId": test_service_id, "status": test_status, "observedAt": test_observed_at, "resourceVersion": test_resource_version}
+            body={
+                "orgId": test_org_id,
+                "serviceId": test_service_id,
+                "status": test_status,
+                "observedAt": test_observed_at,
+                "resourceVersion": test_resource_version,
+            }
         )
         queue_event = create_common_queue_event([event])
         update_daemon_status(queue_event, None, test_daemon_service)
@@ -104,7 +110,9 @@ class TestDaemonEndpoints:
             daemon = DaemonRepository.get_daemon(session, test_daemon_id)
 
         assert daemon.status.value == test_status
-        assert daemon.status_observed_at == datetime.fromisoformat(test_observed_at).replace(microsecond = 0, tzinfo = None)
+        assert daemon.status_observed_at == datetime.fromisoformat(test_observed_at).replace(
+            microsecond=0, tzinfo=None
+        )
         assert daemon.status_resource_version == test_resource_version
 
         # update status with not null status_observed_at and status_resource_version fields
@@ -113,8 +121,13 @@ class TestDaemonEndpoints:
         test_resource_version = "234"
 
         event = generate_request_event(
-            body = {"orgId": test_org_id, "serviceId": test_service_id, "status": test_status,
-                    "observedAt": test_observed_at, "resourceVersion": test_resource_version}
+            body={
+                "orgId": test_org_id,
+                "serviceId": test_service_id,
+                "status": test_status,
+                "observedAt": test_observed_at,
+                "resourceVersion": test_resource_version,
+            }
         )
         queue_event = create_common_queue_event([event])
         update_daemon_status(queue_event, None, test_daemon_service)
@@ -123,7 +136,9 @@ class TestDaemonEndpoints:
             daemon = DaemonRepository.get_daemon(session, test_daemon_id)
 
         assert daemon.status.value == test_status
-        assert daemon.status_observed_at == datetime.fromisoformat(test_observed_at).replace(microsecond = 0, tzinfo = None)
+        assert daemon.status_observed_at == datetime.fromisoformat(test_observed_at).replace(
+            microsecond=0, tzinfo=None
+        )
         assert daemon.status_resource_version == test_resource_version
 
     # def test_deploy_daemon_ok(self, test_daemon_service):

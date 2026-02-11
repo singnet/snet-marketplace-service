@@ -90,8 +90,12 @@ class Daemon(Base):
     )
     daemon_config: Mapped[dict] = mapped_column("daemon_config", JSON, nullable=False, default={})
     daemon_endpoint: Mapped[str] = mapped_column("daemon_endpoint", VARCHAR(256), nullable=False)
-    status_observed_at: Mapped[Optional[datetime]] = mapped_column("status_observed_at", TIMESTAMP(timezone=False), nullable=True)
-    status_resource_version: Mapped[Optional[str]] = mapped_column("status_resource_version", VARCHAR(256), nullable=True)
+    status_observed_at: Mapped[Optional[datetime]] = mapped_column(
+        "status_observed_at", TIMESTAMP(timezone=False), nullable=True
+    )
+    status_resource_version: Mapped[Optional[str]] = mapped_column(
+        "status_resource_version", VARCHAR(256), nullable=True
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         "created_at", TIMESTAMP(timezone=False), nullable=False, server_default=CreateTimestamp

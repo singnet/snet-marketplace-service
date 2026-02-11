@@ -59,8 +59,8 @@ class UpdateDaemonStatusRequest(BaseModel, QueueEventRequest):
     org_id: str = Field(alias="orgId")
     service_id: str = Field(alias="serviceId")
     status: HaaSDaemonStatus
-    status_observed_at: datetime = Field(alias = "observedAt")
-    status_resource_version: str = Field(alias = "resourceVersion")
+    status_observed_at: datetime = Field(alias="observedAt")
+    status_resource_version: str = Field(alias="resourceVersion")
 
     @classmethod
     @validation_handler([RequestPayloadType.BODY])

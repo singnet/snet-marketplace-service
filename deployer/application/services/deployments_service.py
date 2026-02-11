@@ -100,8 +100,8 @@ class DeploymentsService:
                         daemon_endpoint=self._get_daemon_endpoint(
                             request.org_id, request.service_id
                         ),
-                        status_observed_at = None,
-                        status_resource_version = None
+                        status_observed_at=None,
+                        status_resource_version=None,
                     ),
                 )
 
