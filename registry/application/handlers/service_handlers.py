@@ -67,7 +67,7 @@ def save_service(event, context):
     req_ctx = RequestContext(event)
 
     request = SaveServiceRequest.validate_event(event)
-        
+
     response = ServicePublisherService().save_service(req_ctx.username, request)
 
     return generate_lambda_response(
@@ -125,9 +125,8 @@ def get_services_for_organization(event, context):
 @secured(action=Action.CREATE, org_uuid_path=("pathParameters", "org_uuid"),
          username_path=("requestContext", "authorizer", "claims", "email"))
 def get_service_for_service_uuid(event, context):
-    
     request = GetServiceRequest.validate_event(event)
-    
+
     response = ServicePublisherService().get_service_for_given_service_uuid(
         request.org_uuid, request.service_uuid
     )
@@ -172,7 +171,7 @@ def service_deployment_status_notification_handler(event, context):
     req_ctx = RequestContext(event)
 
     request = ServiceDeploymentStatusRequest.validate_event(event)
-    
+
     ServicePublisherService().service_build_status_notifier(req_ctx.username, request)
 
     return generate_lambda_response(
@@ -234,7 +233,7 @@ def update_demo_component_build_status(event, context):
          username_path=("requestContext", "authorizer", "claims", "email"))
 def publish_service(event, context):
     req_ctx = RequestContext(event)
-    
+
     request = PublishServiceRequest.validate_event(event)
 
     response = ServicePublisherService(request.lighthouse_token).publish_service(

@@ -118,13 +118,13 @@ class OrganizationPublisherService:
     #TODO: Review this method with frontend calls
     def update_organization(self, username: str, request: UpdateOrganizationRequest):
         updated_organization = OrganizationFactory.create_organization_entity_from_request(request)
-        
+
         current_organization = org_repo.get_organization(org_uuid=request.uuid)
         self._archive_current_organization(current_organization)
-        
+
         updated_state = Organization.next_state(current_organization, updated_organization, request.action)
         org_repo.update_organization(updated_organization, username, updated_state)
-        
+
         return "OK"
 
     def notify_user_on_start_of_onboarding_process(self, org_id, recipients):

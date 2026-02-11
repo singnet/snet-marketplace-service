@@ -168,7 +168,7 @@ def get_member(event, context):
 
     request = GetMemberRequest.validate_event(event)
 
-    response = OrganizationPublisherService().get_member(req_ctx.username, request)
+    response = OrganizationPublisherService().get_member(request)
 
     return generate_lambda_response(
         StatusCode.OK,

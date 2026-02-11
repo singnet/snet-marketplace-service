@@ -118,7 +118,7 @@ class ServicePublisherRepository(BaseRepository):
 
             for incoming_group in service.groups:
                 key = (incoming_group.org_uuid, incoming_group.service_uuid, incoming_group.group_id)
-                
+
                 if key in existing_groups_by_key:
                     existing_group = existing_groups_by_key[key]
                     existing_group.group_name = incoming_group.group_name
