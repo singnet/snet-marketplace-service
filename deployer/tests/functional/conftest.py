@@ -52,8 +52,8 @@ def test_deployments_service(test_session_factory, test_deployer_client, test_ha
 
 
 @pytest.fixture(scope="function")
-def test_hosted_services_service(test_session_factory, test_haas_client):
-    return HostedServicesService(test_session_factory, test_haas_client)
+def test_hosted_services_service(test_session_factory, test_haas_client, test_github_api_client):
+    return HostedServicesService(test_session_factory, test_haas_client, test_github_api_client)
 
 
 @pytest.fixture(scope="function")

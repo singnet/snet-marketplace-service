@@ -6,6 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from testcontainers.mysql import MySqlContainer
 
 from deployer.domain.schemas.haas_responses import GetCallEventsResponse
+from deployer.infrastructure.clients.github_api_client import GithubAPIClient
 from deployer.infrastructure.db import session_scope
 from deployer.infrastructure.models import Base
 
@@ -79,7 +80,7 @@ def test_haas_client():
     class TestHaaSClient:
         def __init__(self):
             self.daemon_logs = ["log1", "log2", "log3"]
-            self.service_logs = []
+            self.service_logs = ["log1", "log2", "log3"]
             self.public_key = "PUBLIC_KEY"
             self.call_events = GetCallEventsResponse(events=[], totalCount=0)
 
@@ -135,3 +136,15 @@ def test_crypto_exchange_client():
             return self.token_rate
 
     return TestCryptoExchangeClient()
+
+
+@pytest.fixture(scope = "function")
+def test_github_api_client():
+    class TestGithubAPIClient(GithubAPIClient):
+        def __init__(self):
+            self.is_installed = True
+
+        def check_repo_installation(self, *args, **kwargs) -> bool:
+            return self.is_installed
+
+    return TestGithubAPIClient()
