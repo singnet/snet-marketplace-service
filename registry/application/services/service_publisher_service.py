@@ -165,7 +165,7 @@ class ServicePublisherService:
 
     def save_offline_service_configs(self, request: SaveServiceRequest):
         demo_component_required = request.assets.get("demo_files", {}).get("required", -1)
-        
+
         if demo_component_required == -1:
             return
 
@@ -182,10 +182,10 @@ class ServicePublisherService:
         service = ServicePublisherRepository().get_service_for_given_service_uuid(
             request.org_uuid, request.service_uuid
         )
-        
+
         if service is None:
             raise Exception()
-        
+
         service.service_id = request.service_id
         service.proto = request.proto
         service.storage_provider = request.storage_provider
@@ -211,9 +211,9 @@ class ServicePublisherService:
             groups.append(service_group)
         logger.info(f"New Service Groups: {groups}")
         service.groups = groups
-        
+
         ServicePublisherRepository().save_service(username, service, ServiceStatus.APPROVED.value)
-        
+
         comment = request.comments.get(UserType.SERVICE_PROVIDER.value, "")
         if len(comment) > 0:
             self._save_service_comment(
@@ -224,11 +224,11 @@ class ServicePublisherService:
                 username=username,
                 comment=comment
             )
-        
+
         self.save_offline_service_configs(request)
-        
+
         service = self.get_service_for_given_service_uuid(request.org_uuid, request.service_uuid)
-        
+
         return service
 
     def save_service_groups(self, username: str, request: SaveServiceGroupsRequest):
@@ -260,10 +260,10 @@ class ServicePublisherService:
         service = ServicePublisherRepository().get_service_for_given_service_uuid(
             request.org_uuid, request.service_uuid
         )
-        
+
         if service is None:
             raise BadRequestException()
-        
+
         if service.service_state.state == ServiceStatus.APPROVED.value:
             service.service_state = ServiceFactory().create_service_state_entity_model(
                 request.org_uuid,
@@ -507,7 +507,7 @@ class ServicePublisherService:
         )
         if not service:
             raise ServiceNotFoundException()
-    
+
         organization_members = OrganizationPublisherRepository().get_org_member(org_uuid=request.org_uuid)
 
         network_name = settings.network.networks[NETWORK_ID].name
