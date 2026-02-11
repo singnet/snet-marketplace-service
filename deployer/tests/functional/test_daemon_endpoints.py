@@ -31,10 +31,10 @@ class TestDaemonEndpoints:
 
         assert data["orgId"] == test_org_id
         assert data["serviceId"] == test_service_id
-        assert data["daemon"]["id"] == test_daemon_id
-        assert data["daemon"]["status"] == DaemonStatus.UP.value
-        assert data["daemon"]["daemonConfig"] == {}
-        assert data["daemon"]["daemonEndpoint"] == ""
+        assert data["id"] == test_daemon_id
+        assert data["status"] == DaemonStatus.UP.value
+        assert data["daemonConfig"] == {}
+        assert data["daemonEndpoint"] == ""
 
     def test_get_daemon_logs_ok(
         self, test_daemon_service, test_auth_service, add_test_daemon_and_service, test_daemon_id

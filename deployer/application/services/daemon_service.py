@@ -39,6 +39,8 @@ class DaemonService:
                 raise DaemonNotFoundException(request.daemon_id)
 
         result = daemon.to_response(with_hosted_service=False)
+        result.update(result["daemon"])
+        del result["daemon"]
 
         return result
 
