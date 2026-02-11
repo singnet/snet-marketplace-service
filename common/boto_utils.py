@@ -1,5 +1,6 @@
 import json
 import os
+from http import HTTPStatus
 from urllib.parse import urlparse
 
 import boto3
@@ -14,14 +15,6 @@ logger = get_logger(__name__)
 class BotoUtils:
     def __init__(self, region_name):
         self.region_name = region_name
-
-    def get_lambda_client(self):
-        if os.environ.get("IS_SERVERLESS_OFFLINE") == "true":
-            return boto3.client("lambda", region_name = self.region_name,
-                                               endpoint_url = "http://localhost:3000", aws_access_key_id = "mock",
-                                               aws_secret_access_key = "mock")
-        else:
-            return boto3.client('lambda', region_name=self.region_name)
 
     def get_ssm_parameter(self, parameter, config=Config(retries={'max_attempts': 1})):
         """ Format config=Config(connect_timeout=1, read_timeout=0.1, retries={'max_attempts': 1}) """
@@ -152,3 +145,18 @@ class BotoUtils:
             msg = f"Error in deleting stub files :: {repr(e)}"
             logger.info(msg)
             raise Exception(msg)
+
+    def publish_data_to_sns_topic(self, topic_arn: str, payload: dict, delay_seconds: int = 0):
+        sns_client = boto3.client('sns', region_name = self.region_name)
+        response = sns_client.publish(TargetArn = topic_arn,
+                                      Message = json.dumps({'default': json.dumps(payload)}),
+                                      MessageStructure = 'json',
+                                      MessageAttributes = {
+                                          'DelaySeconds': {
+                                              'DataType': 'Number',
+                                              'StringValue': str(delay_seconds)
+                                          }
+                                      })
+        if response['ResponseMetadata']['HTTPStatusCode'] != HTTPStatus.OK:
+            logger.error(f"Failed to publish data to SNS topic. Response: {response}")
+            raise Exception()

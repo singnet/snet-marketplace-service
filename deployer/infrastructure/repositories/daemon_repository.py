@@ -1,12 +1,12 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Union
 
 from sqlalchemy import update, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from deployer.domain.factory.daemon_factory import DaemonFactory
 from deployer.domain.models.daemon import NewDaemonDomain, DaemonDomain
-from deployer.infrastructure.models import Daemon, DaemonStatus, Order
+from deployer.infrastructure.models import Daemon, DaemonStatus, HostedService
 
 
 class DaemonRepository:
@@ -19,23 +19,30 @@ class DaemonRepository:
             service_id=daemon.service_id,
             status=daemon.status,
             daemon_config=daemon.daemon_config,
-            start_at=daemon.start_at,
-            end_at=daemon.end_at,
-            service_published=False,
             daemon_endpoint=daemon.daemon_endpoint,
+            status_observed_at=daemon.status_observed_at,
+            status_resource_version=daemon.status_resource_version,
         )
 
         session.add(daemon_model)
 
     @staticmethod
-    def update_daemon_status(session: Session, daemon_id: str, status: DaemonStatus) -> None:
-        update_query = update(Daemon).where(Daemon.id == daemon_id).values(status=status)
-
-        session.execute(update_query)
-
-    @staticmethod
-    def update_daemon_end_at(session: Session, daemon_id: str, end_at: datetime) -> None:
-        update_query = update(Daemon).where(Daemon.id == daemon_id).values(end_at=end_at)
+    def update_daemon_status(
+        session: Session,
+        daemon_id: str,
+        status: DaemonStatus,
+        status_observed_at: Optional[datetime] = None,
+        status_resource_version: Optional[str] = None,
+    ) -> None:
+        update_query = (
+            update(Daemon)
+            .where(Daemon.id == daemon_id)
+            .values(
+                status=status,
+                status_observed_at=status_observed_at,
+                status_resource_version=status_resource_version,
+            )
+        )
 
         session.execute(update_query)
 
@@ -43,16 +50,6 @@ class DaemonRepository:
     def update_daemon_config(session: Session, daemon_id: str, daemon_config: dict) -> None:
         update_query = (
             update(Daemon).where(Daemon.id == daemon_id).values(daemon_config=daemon_config)
-        )
-
-        session.execute(update_query)
-
-    @staticmethod
-    def update_daemon_service_published(
-        session: Session, daemon_id: str, service_published: bool
-    ) -> None:
-        update_query = (
-            update(Daemon).where(Daemon.id == daemon_id).values(service_published=service_published)
         )
 
         session.execute(update_query)
@@ -93,25 +90,26 @@ class DaemonRepository:
         return DaemonFactory.daemon_from_db_model(daemon_db)
 
     @staticmethod
-    def get_daemons_without_statuses(
-        session: Session, statuses: List[DaemonStatus]
-    ) -> List[DaemonDomain]:
-        query = select(Daemon).where(Daemon.status.notin_(statuses))
+    def get_all_daemon_ids(
+        session: Session, status: Union[DaemonStatus, List[DaemonStatus], None] = None
+    ) -> List[str]:
+        query = select(Daemon.id)
+        if status is not None:
+            if isinstance(status, list):
+                query = query.where(Daemon.status.in_(status))
+            else:
+                query = query.where(Daemon.status == status)
 
-        result = session.execute(query)
-        daemons_db = result.scalars().all()
+        result = session.scalars(query).all()
 
-        return DaemonFactory.daemons_from_db_model(daemons_db)
+        return list(result)
 
     @staticmethod
-    def get_daemon_by_account_and_order(
-        session: Session, account_id: str, order_id: str
+    def get_daemon_by_account_and_daemon(
+        session: Session, account_id: str, daemon_id: str
     ) -> Optional[DaemonDomain]:
         query = (
-            select(Daemon)
-            .join(Order, Daemon.id == Order.daemon_id)
-            .where(Order.id == order_id, Daemon.account_id == account_id)
-            .limit(1)
+            select(Daemon).where(Daemon.id == daemon_id, Daemon.account_id == account_id).limit(1)
         )
 
         result = session.execute(query)
@@ -123,11 +121,15 @@ class DaemonRepository:
         return DaemonFactory.daemon_from_db_model(daemon_db)
 
     @staticmethod
-    def get_daemon_by_account_and_daemon(
-        session: Session, account_id: str, daemon_id: str
+    def get_daemon_by_hosted_service(
+        session: Session, hosted_service_id: str
     ) -> Optional[DaemonDomain]:
         query = (
-            select(Daemon).where(Daemon.id == daemon_id, Daemon.account_id == account_id).limit(1)
+            select(Daemon)
+            .join(HostedService, Daemon.id == HostedService.daemon_id)
+            .where(HostedService.id == hosted_service_id)
+            .options(joinedload(Daemon.hosted_service))
+            .limit(1)
         )
 
         result = session.execute(query)
