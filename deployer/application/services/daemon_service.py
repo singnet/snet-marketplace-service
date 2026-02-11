@@ -73,9 +73,14 @@ class DaemonService:
             )
             if daemon is None:
                 raise DaemonNotFoundForServiceException(request.org_id, request.service_id)
+            if daemon.status_resource_version is not None and daemon.status_resource_version == request.status_resource_version:
+                logger.exception(f"The received event has the same resource version: {request.status_resource_version}. Skip.")
+                return
+            if daemon.status_observed_at is not None and daemon.status_observed_at > request.status_observed_at.replace(tzinfo = None):
+                logger.exception(f"The received event is out of date: existing - {daemon.status_observed_at}, received - {request.status_observed_at}. Skip.")
+                return
 
-            new_status = DaemonStatus(request.status)
-            DaemonRepository.update_daemon_status(session, daemon.id, new_status)
+            DaemonRepository.update_daemon_status(session, daemon.id, DaemonStatus(request.status), request.status_observed_at, request.status_resource_version)
 
         logger.info(f"Status for daemon {daemon.id} updated to {request.status}")
 

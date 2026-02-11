@@ -1,3 +1,6 @@
+from datetime import datetime
+
+from common.logger import get_logger
 from deployer.application.handlers.daemon_handlers import (
     get_daemon,
     get_daemon_logs,
@@ -12,6 +15,8 @@ from deployer.tests.functional.utils import (
     validate_response_ok,
     create_common_queue_event,
 )
+
+logger = get_logger(__name__)
 
 
 class TestDaemonEndpoints:
@@ -84,10 +89,13 @@ class TestDaemonEndpoints:
         test_org_id,
         test_service_id,
     ):
+        # update status the first time
         test_status = "DOWN"
+        test_observed_at = "2025-01-15T10:30:00.123456789Z"
+        test_resource_version = "123"
 
         event = generate_request_event(
-            body={"orgId": test_org_id, "serviceId": test_service_id, "status": test_status}
+            body={"orgId": test_org_id, "serviceId": test_service_id, "status": test_status, "observedAt": test_observed_at, "resourceVersion": test_resource_version}
         )
         queue_event = create_common_queue_event([event])
         update_daemon_status(queue_event, None, test_daemon_service)
@@ -96,6 +104,27 @@ class TestDaemonEndpoints:
             daemon = DaemonRepository.get_daemon(session, test_daemon_id)
 
         assert daemon.status.value == test_status
+        assert daemon.status_observed_at == datetime.fromisoformat(test_observed_at).replace(microsecond = 0, tzinfo = None)
+        assert daemon.status_resource_version == test_resource_version
+
+        # update status with not null status_observed_at and status_resource_version fields
+        test_status = "STARTING"
+        test_observed_at = "2026-01-15T10:30:00.123456789Z"
+        test_resource_version = "234"
+
+        event = generate_request_event(
+            body = {"orgId": test_org_id, "serviceId": test_service_id, "status": test_status,
+                    "observedAt": test_observed_at, "resourceVersion": test_resource_version}
+        )
+        queue_event = create_common_queue_event([event])
+        update_daemon_status(queue_event, None, test_daemon_service)
+
+        with session_scope(test_session_factory) as session:
+            daemon = DaemonRepository.get_daemon(session, test_daemon_id)
+
+        assert daemon.status.value == test_status
+        assert daemon.status_observed_at == datetime.fromisoformat(test_observed_at).replace(microsecond = 0, tzinfo = None)
+        assert daemon.status_resource_version == test_resource_version
 
     # def test_deploy_daemon_ok(self, test_daemon_service):
     #     pass

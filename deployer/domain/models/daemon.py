@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Optional
 
 from common.utils import dict_keys_to_camel_case
@@ -16,6 +17,8 @@ class NewDaemonDomain:
     status: DaemonStatus
     daemon_config: dict
     daemon_endpoint: str
+    status_observed_at: Optional[datetime]
+    status_resource_version: Optional[str]
 
 
 @dataclass

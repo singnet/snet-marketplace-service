@@ -18,6 +18,8 @@ class DaemonFactory:
             status=daemon_db_model.status,
             daemon_config=daemon_db_model.daemon_config,
             daemon_endpoint=daemon_db_model.daemon_endpoint,
+            status_observed_at = daemon_db_model.status_observed_at,
+            status_resource_version = daemon_db_model.status_resource_version,
             created_at=daemon_db_model.created_at,
             updated_at=daemon_db_model.updated_at,
             hosted_service=HostedServiceFactory.hosted_service_from_db_model(hosted_service)
