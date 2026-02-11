@@ -24,7 +24,8 @@ from deployer.domain.models.daemon import NewDaemonDomain, DaemonDomain
 from deployer.domain.models.hosted_service import NewHostedServiceDomain, HostedServiceDomain
 from deployer.exceptions import (
     DaemonAlreadyExistsException,
-    DaemonAndHostedServiceAlreadyExistException, ArchiveError,
+    DaemonAndHostedServiceAlreadyExistException,
+    ArchiveError,
 )
 from deployer.infrastructure.clients.deployer_client import DeployerClient
 from deployer.infrastructure.clients.github_api_client import GithubAPIClient
