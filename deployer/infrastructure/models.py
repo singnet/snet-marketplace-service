@@ -85,11 +85,13 @@ class Daemon(Base):
     )
     org_id: Mapped[str] = mapped_column("org_id", VARCHAR(256), nullable=False)
     service_id: Mapped[str] = mapped_column("service_id", VARCHAR(256), nullable=False)
-    status: Mapped[str] = mapped_column(
+    status: Mapped[DaemonStatus] = mapped_column(
         "status", Enum(DaemonStatus), nullable=False, default=DaemonStatus.INIT
     )
     daemon_config: Mapped[dict] = mapped_column("daemon_config", JSON, nullable=False, default={})
     daemon_endpoint: Mapped[str] = mapped_column("daemon_endpoint", VARCHAR(256), nullable=False)
+    status_observed_at: Mapped[Optional[datetime]] = mapped_column("status_observed_at", TIMESTAMP(timezone=False), nullable=True)
+    status_resource_version: Mapped[Optional[str]] = mapped_column("status_resource_version", VARCHAR(256), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         "created_at", TIMESTAMP(timezone=False), nullable=False, server_default=CreateTimestamp
@@ -115,7 +117,7 @@ class HostedService(Base):
         nullable=False,
         index=True,
     )
-    status: Mapped[str] = mapped_column(
+    status: Mapped[HostedServiceStatus] = mapped_column(
         "status", Enum(HostedServiceStatus), nullable=False, default=HostedServiceStatus.INIT
     )
     github_account_name: Mapped[str] = mapped_column(

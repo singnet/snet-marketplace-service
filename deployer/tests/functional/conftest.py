@@ -133,6 +133,8 @@ def add_test_daemon_and_service(
                 status=DaemonStatus.UP,
                 daemon_config={},
                 daemon_endpoint="",
+                status_observed_at = None,
+                status_resource_version = None
             ),
         )
         HostedServiceRepository.create_hosted_service(
@@ -188,5 +190,7 @@ def add_test_daemon(
                 status=DaemonStatus.UP,
                 daemon_config={},
                 daemon_endpoint="",
+                status_observed_at = None,
+                status_resource_version = None
             ),
         )

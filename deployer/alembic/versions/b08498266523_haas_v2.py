@@ -147,6 +147,8 @@ def upgrade() -> None:
         type_=sa.Enum("INIT", "STARTING", "UP", "DOWN", "ERROR", name="daemonstatus"),
         existing_nullable=False,
     )
+    op.add_column("daemon", sa.Column("status_observed_at", sa.TIMESTAMP(), nullable = True))
+    op.add_column("daemon", sa.Column("status_resource_version", sa.VARCHAR(length=256), nullable = True))
 
     op.add_column("order", sa.Column("account_id", sa.VARCHAR(length=128), nullable=False))
     op.execute("""
