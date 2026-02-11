@@ -67,7 +67,7 @@ class TestDaemonEndpoints:
         )
 
         response = update_config(event, None, test_daemon_service, test_auth_service)
-        _, data = validate_response_ok(response)
+        _, _ = validate_response_ok(response)
 
         with session_scope(test_session_factory) as session:
             daemon = DaemonRepository.get_daemon(session, test_daemon_id)
