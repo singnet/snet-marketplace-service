@@ -138,7 +138,7 @@ def test_crypto_exchange_client():
     return TestCryptoExchangeClient()
 
 
-@pytest.fixture(scope = "function")
+@pytest.fixture(scope="function")
 def test_github_api_client():
     class TestGithubAPIClient(GithubAPIClient):
         def __init__(self):

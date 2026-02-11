@@ -82,7 +82,9 @@ class HostedServicesService:
                 session, request.org_id, request.service_id
             )
             if hosted_service is None:
-                raise HostedServiceNotFoundException(org_id = request.org_id, service_id = request.service_id)
+                raise HostedServiceNotFoundException(
+                    org_id=request.org_id, service_id=request.service_id
+                )
 
             new_status = HostedServiceStatus(request.status)
             HostedServiceRepository.update_hosted_service_status(
