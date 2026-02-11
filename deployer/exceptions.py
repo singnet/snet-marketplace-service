@@ -87,3 +87,8 @@ class WrongIncomeStatusForTypeException(BadRequestException):
 class TokenRateUnavailableException(BadRequestException):
     def __init__(self):
         super().__init__(message="There is no data about token rate for now!")
+
+
+class ArchiveError(Exception):
+    def __init__(self, message: str):
+        super().__init__(message)

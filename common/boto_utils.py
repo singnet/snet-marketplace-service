@@ -159,4 +159,4 @@ class BotoUtils:
                                       })
         if response['ResponseMetadata']['HTTPStatusCode'] != HTTPStatus.OK:
             logger.error(f"Failed to publish data to SNS topic. Response: {response}")
-            raise Exception()
+            raise

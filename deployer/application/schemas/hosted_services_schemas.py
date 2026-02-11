@@ -33,7 +33,6 @@ class UpdateHostedServiceStatusRequest(BaseModel, QueueEventRequest):
 
     @model_validator(mode="after")
     def validate_commit_hash(self):
-        # TODO: change this check if needed
         if self.status not in [Status.UP, Status.DOWN, Status.ERROR] and not self.commit:
             raise MissingCommitHashParameter()
         return self

@@ -24,7 +24,7 @@ from deployer.domain.models.daemon import NewDaemonDomain, DaemonDomain
 from deployer.domain.models.hosted_service import NewHostedServiceDomain, HostedServiceDomain
 from deployer.exceptions import (
     DaemonAlreadyExistsException,
-    DaemonAndHostedServiceAlreadyExistException,
+    DaemonAndHostedServiceAlreadyExistException, ArchiveError,
 )
 from deployer.infrastructure.clients.deployer_client import DeployerClient
 from deployer.infrastructure.clients.github_api_client import GithubAPIClient
@@ -171,12 +171,12 @@ class DeploymentsService:
                 daemon_group = metadata["groups"][0]
                 group_name = daemon_group["group_name"]
                 service_api_source = metadata["service_api_source"]
-            except KeyError or IndexError as e:
+            except (KeyError, IndexError) as e:
                 logger.exception(
                     f"Failed to get daemon group, endpoint or service api source from metadata: {metadata}. Exception: {e}",
                     exc_info=True,
                 )
-                raise Exception()
+                raise e
 
             service_class = self._get_service_class(service_api_source)
 
@@ -204,13 +204,13 @@ class DeploymentsService:
                 members = [m for m in tar.getmembers() if m.isfile()]
 
                 if not members:
-                    raise Exception("No files found in tar archive")
+                    raise ArchiveError("No files found in tar archive")
 
                 first_member = members[0]
                 file_content = tar.extractfile(first_member)
 
                 if file_content is None:
-                    raise Exception("Failed to extract file from tar archive")
+                    raise ArchiveError("Failed to extract file from tar archive")
 
                 content_text = file_content.read().decode("utf-8")
 
@@ -221,8 +221,14 @@ class DeploymentsService:
                         package_name = package_line.replace("package ", "").replace(";", "").strip()
                         return package_name
 
-        except (tarfile.TarError, IOError, UnicodeDecodeError, Exception) as e:
-            raise Exception(f"Error processing tar file: {e}")
+        except tarfile.TarError as e:
+            raise ArchiveError(f"Invalid or corrupted tar archive: {e}") from e
+        except IOError as e:
+            raise ArchiveError(f"Failed to read tar archive: {e}") from e
+        except ArchiveError:
+            raise
+        except Exception as e:
+            raise ArchiveError(f"Unexpected error processing tar file: {e}") from e
 
     def _delete_deployments(self, daemon: DaemonDomain, session) -> None:
         if daemon.status == DaemonStatus.UP:

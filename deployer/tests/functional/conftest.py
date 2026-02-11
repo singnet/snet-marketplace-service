@@ -155,7 +155,7 @@ def add_token_rate_records(test_session_factory):
     total_count = 10
     cogs_sum = 0
     with session_scope(test_session_factory) as session:
-        for i in range(total_count):
+        for _ in range(total_count):
             usd_per_token = round((random() * 0.9) + 0.1, 2)  # [0.1, 1)
             cogs_per_usd = round(10**TOKEN_DECIMALS / usd_per_token)
             cogs_sum += cogs_per_usd
