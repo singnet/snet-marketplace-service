@@ -86,7 +86,7 @@ jobs:
             mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "GRANT ALL PRIVILEGES ON *.* TO 'unittest_root'@'%';"
             mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "SET GLOBAL sql_mode = 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';"
             export PYTHONPATH=$PWD
-            for alembic_file in $(ls */alembic*.ini | grep -v '^dapp_user/' | cut -d '/' -f1); do
+            for alembic_file in $(ls */alembic*.ini | grep -vE '^(dapp_user|deployer)/' | cut -d '/' -f1); do
               cd "$alembic_file"
               echo "$alembic_file"
               alembic upgrade head

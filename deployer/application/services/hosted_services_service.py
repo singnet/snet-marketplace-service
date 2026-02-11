@@ -1,5 +1,6 @@
 from typing import Tuple, List
 
+from common.logger import get_logger
 from deployer.application.schemas.hosted_services_schemas import (
     HostedServiceRequest,
     UpdateHostedServiceStatusRequest,
@@ -13,11 +14,14 @@ from deployer.infrastructure.models import HostedServiceStatus
 from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
 from deployer.infrastructure.repositories.hosted_service_repository import HostedServiceRepository
 
+logger = get_logger(__name__)
+
 
 class HostedServicesService:
-    def __init__(self, session_factory=None, haas_client=None):
+    def __init__(self, session_factory=None, haas_client=None, github_client=None):
         self.session_factory = DefaultSessionFactory if session_factory is None else session_factory
         self._haas_client = HaaSClient() if haas_client is None else haas_client
+        self._github_api_client = GithubAPIClient() if github_client is None else github_client
 
     def get_hosted_service(self, request: HostedServiceRequest) -> dict:
         with session_scope(self.session_factory) as session:
@@ -58,7 +62,7 @@ class HostedServicesService:
         ), f"hosted_service_{request.hosted_service_id}_logs.txt"
 
     def check_github_repository(self, request: CheckGithubRepositoryRequest) -> dict:
-        is_installed = GithubAPIClient.check_repo_installation(
+        is_installed = self._github_api_client.check_repo_installation(
             request.account_name, request.repository_name
         )
         result = {"isInstalled": is_installed}
@@ -78,14 +82,14 @@ class HostedServicesService:
                 session, request.org_id, request.service_id
             )
             if hosted_service is None:
-                raise HostedServiceNotFoundException(hosted_service_id=request.hosted_service_id)
+                raise HostedServiceNotFoundException(org_id = request.org_id, service_id = request.service_id)
 
             new_status = HostedServiceStatus(request.status)
             HostedServiceRepository.update_hosted_service_status(
                 session,
-                request.hosted_service_id,
+                hosted_service.id,
                 new_status,
-                GithubAPIClient.make_commit_url(
+                self._github_api_client.make_commit_url(
                     hosted_service.github_account_name,
                     hosted_service.github_repository_name,
                     request.commit,

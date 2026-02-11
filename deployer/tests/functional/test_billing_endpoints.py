@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from deployer.application.handlers.billing_handlers import (
     create_order,
     save_evm_transaction,
@@ -6,15 +8,18 @@ from deployer.application.handlers.billing_handlers import (
     get_metrics,
     get_balance_and_rate,
     update_transaction_status,
-    call_event_consumer, update_token_rate,
+    call_event_consumer,
+    update_token_rate,
 )
 from deployer.application.services.billing_service import BillingService
 from deployer.application.services.metrics_service import MetricsService
+from deployer.config import TOKEN_DECIMALS, TOKEN_NAME
 from deployer.domain.models.order import NewOrderDomain
 from deployer.infrastructure.db import session_scope
 from deployer.infrastructure.models import OrderStatus, EVMTransactionStatus
 from deployer.infrastructure.repositories.account_balance_repository import AccountBalanceRepository
 from deployer.infrastructure.repositories.order_repository import OrderRepository
+from deployer.infrastructure.repositories.token_rate_repository import TokenRateRepository
 from deployer.tests.functional.utils import (
     validate_response_ok,
     generate_request_event,
@@ -25,19 +30,20 @@ from deployer.tests.functional.utils import (
 
 
 class TestBillingEndpoints:
-    def test_create_order_ok(self, test_billing_service, db_session):
+    def test_create_order_ok(self, test_billing_service, test_session_factory):
         order_amount = 123
         event = generate_request_event(body={"amount": order_amount})
 
         response = create_order(event, None, test_billing_service)
-
         _, data = validate_response_ok(response)
+
         response_order_id = data.get("orderId")
         assert response_order_id is not None and response_order_id != "", (
             f"No ORDER ID in the response! Response data: {data}"
         )
 
-        order = OrderRepository.get_order(db_session, response_order_id)
+        with session_scope(test_session_factory) as session:
+            order = OrderRepository.get_order(session, response_order_id)
 
         assert order is not None, "Order has not been created!"
         assert order.amount == order_amount
@@ -159,7 +165,7 @@ class TestBillingEndpoints:
         test_org_id,
         test_service_id,
     ):
-        token_rate = add_token_rate_records
+        token_rate = round(add_token_rate_records)
         balance = add_test_account_balance
 
         event = generate_request_event(
@@ -236,8 +242,19 @@ class TestBillingEndpoints:
 
         assert account_balance.balance_in_cogs == balance - amount
 
-    def test_update_token_rate(self, test_billing_service, add_token_rate_records):
-        pass
-        avg_rate = add_token_rate_records
+    def test_update_token_rate(
+        self, test_billing_service, test_session_factory, add_token_rate_records
+    ):
+        test_token_rate = 0.5
+        test_cogs_per_usd = round(10**TOKEN_DECIMALS / test_token_rate)
 
-        update_token_rate(None, None, billing_service = test_billing_service)
+        test_billing_service._crypto_exchange_client.token_rate = test_token_rate
+        update_token_rate(None, None, billing_service=test_billing_service)
+
+        with session_scope(test_session_factory) as session:
+            token_rate = TokenRateRepository.get_average_cogs_per_usd(session, TOKEN_NAME)
+
+        new_cogs_per_usd = round(
+            Decimal(add_token_rate_records * 10 + test_cogs_per_usd) / Decimal(11)
+        )
+        assert token_rate == new_cogs_per_usd

@@ -37,8 +37,8 @@ def test_auth_service(test_session_factory, test_registry_client):
 
 
 @pytest.fixture(scope="function")
-def test_billing_service(test_session_factory, test_haas_client):
-    return BillingService(test_session_factory, test_haas_client)
+def test_billing_service(test_session_factory, test_haas_client, test_crypto_exchange_client):
+    return BillingService(test_session_factory, test_haas_client, test_crypto_exchange_client)
 
 
 @pytest.fixture(scope="function")
@@ -52,8 +52,8 @@ def test_deployments_service(test_session_factory, test_deployer_client, test_ha
 
 
 @pytest.fixture(scope="function")
-def test_hosted_services_service(test_session_factory, test_haas_client):
-    return HostedServicesService(test_session_factory, test_haas_client)
+def test_hosted_services_service(test_session_factory, test_haas_client, test_github_api_client):
+    return HostedServicesService(test_session_factory, test_haas_client, test_github_api_client)
 
 
 @pytest.fixture(scope="function")
@@ -163,4 +163,30 @@ def add_token_rate_records(test_session_factory):
                     token_symbol=TOKEN_NAME, usd_per_token=usd_per_token, cogs_per_usd=cogs_per_usd
                 ),
             )
-    return round(Decimal(cogs_sum) / Decimal(total_count))
+    return Decimal(cogs_sum) / Decimal(total_count)
+
+
+@pytest.fixture(scope="function")
+def add_test_daemon(
+    test_session_factory,
+    add_test_account_balance,
+    test_account_id,
+    test_org_id,
+    test_service_id,
+    test_daemon_id,
+):
+    with session_scope(test_session_factory) as session:
+        daemon = DaemonRepository.get_daemon(session, test_daemon_id)
+        daemon_exists = daemon is not None
+        DaemonRepository.create_daemon(
+            session,
+            NewDaemonDomain(
+                id=test_daemon_id if not daemon_exists else f"{test_daemon_id}_2",
+                account_id=test_account_id,
+                org_id=test_org_id if not daemon_exists else f"{test_org_id}_2",
+                service_id=test_service_id if not daemon_exists else f"{test_service_id}_2",
+                status=DaemonStatus.UP,
+                daemon_config={},
+                daemon_endpoint="",
+            ),
+        )
