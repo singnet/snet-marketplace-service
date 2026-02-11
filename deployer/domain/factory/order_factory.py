@@ -10,8 +10,9 @@ class OrderFactory:
     def order_from_db_model(order_db_model: Order) -> OrderDomain:
         return OrderDomain(
             id=order_db_model.id,
-            daemon_id=order_db_model.daemon_id,
+            account_id=order_db_model.account_id,
             status=order_db_model.status,
+            amount=order_db_model.amount,
             evm_transactions=TransactionFactory.transactions_from_db_model(
                 order_db_model.evm_transactions
             ),
