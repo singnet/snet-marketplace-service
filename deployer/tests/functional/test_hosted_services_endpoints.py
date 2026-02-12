@@ -100,12 +100,7 @@ class TestHostedServicesEndpoints:
         test_commit = "TEST_COMMIT_HASH"
 
         event = generate_request_event(
-            body={
-                "orgId": test_org_id,
-                "serviceId": test_service_id,
-                "status": test_status,
-                "commit": test_commit,
-            }
+            orgId=test_org_id, serviceId=test_service_id, status=test_status, commit=test_commit
         )
         queue_event = create_common_queue_event([event])
         update_hosted_service_status(queue_event, None, test_hosted_services_service)

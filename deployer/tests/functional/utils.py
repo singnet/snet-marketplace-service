@@ -41,6 +41,7 @@ def generate_request_event(
     path_parameters: Optional[dict] = None,
     query_parameters: Optional[dict] = None,
     body: Optional[dict] = None,
+    **kwargs,
 ) -> dict:
     event = {}
 
@@ -50,6 +51,7 @@ def generate_request_event(
         event[RequestPayloadType.QUERY_STRING] = query_parameters
     if body is not None:
         event[RequestPayloadType.BODY] = json.dumps(body)
+    event.update(**kwargs)
 
     return event
 

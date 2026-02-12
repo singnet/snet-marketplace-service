@@ -1,5 +1,3 @@
-import json
-
 from pydantic import BaseModel, Field, model_validator
 
 from common.constant import RequestPayloadType
@@ -26,10 +24,9 @@ class UpdateHostedServiceStatusRequest(BaseModel, QueueEventRequest):
     commit: str = Field(default="")
 
     @classmethod
-    @validation_handler([RequestPayloadType.BODY])
+    @validation_handler()
     def validate_event(cls, event: dict) -> "UpdateHostedServiceStatusRequest":
-        body = json.loads(event[RequestPayloadType.BODY])
-        return cls.model_validate(body)
+        return cls.model_validate(event)
 
     @model_validator(mode="after")
     def validate_commit_hash(self):

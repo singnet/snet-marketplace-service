@@ -81,10 +81,9 @@ class CallEventConsumerRequest(BaseModel, QueueEventRequest):
     timestamp: datetime
 
     @classmethod
-    @validation_handler([RequestPayloadType.BODY])
+    @validation_handler()
     def validate_event(cls, event: dict) -> "CallEventConsumerRequest":
-        body = json.loads(event[RequestPayloadType.BODY])
-        return cls.model_validate(body)
+        return cls.model_validate(event)
 
 
 class GetBalanceAndRateRequest(BaseModel):

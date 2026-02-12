@@ -95,13 +95,11 @@ class TestDaemonEndpoints:
         test_resource_version = "123"
 
         event = generate_request_event(
-            body={
-                "orgId": test_org_id,
-                "serviceId": test_service_id,
-                "status": test_status,
-                "observedAt": test_observed_at,
-                "resourceVersion": test_resource_version,
-            }
+            orgId=test_org_id,
+            serviceId=test_service_id,
+            status=test_status,
+            observedAt=test_observed_at,
+            resourceVersion=test_resource_version,
         )
         queue_event = create_common_queue_event([event])
         update_daemon_status(queue_event, None, test_daemon_service)
@@ -121,13 +119,11 @@ class TestDaemonEndpoints:
         test_resource_version = "234"
 
         event = generate_request_event(
-            body={
-                "orgId": test_org_id,
-                "serviceId": test_service_id,
-                "status": test_status,
-                "observedAt": test_observed_at,
-                "resourceVersion": test_resource_version,
-            }
+            orgId=test_org_id,
+            serviceId=test_service_id,
+            status=test_status,
+            observedAt=test_observed_at,
+            resourceVersion=test_resource_version,
         )
         queue_event = create_common_queue_event([event])
         update_daemon_status(queue_event, None, test_daemon_service)

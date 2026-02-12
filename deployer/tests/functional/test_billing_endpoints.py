@@ -226,13 +226,11 @@ class TestBillingEndpoints:
         balance = add_test_account_balance
 
         event = generate_request_event(
-            body={
-                "orgId": test_org_id,
-                "serviceId": test_service_id,
-                "duration": 10,
-                "amount": amount,
-                "timestamp": "2025-10-16T18:08:42.782000",
-            }
+            orgId=test_org_id,
+            serviceId=test_service_id,
+            duration=10,
+            amount=amount,
+            timestamp="2025-10-16T18:08:42.782000",
         )
         queue_event = create_common_queue_event([event])
         call_event_consumer(queue_event, None, test_billing_service)

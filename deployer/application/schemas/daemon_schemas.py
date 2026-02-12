@@ -63,7 +63,6 @@ class UpdateDaemonStatusRequest(BaseModel, QueueEventRequest):
     status_resource_version: str = Field(alias="resourceVersion")
 
     @classmethod
-    @validation_handler([RequestPayloadType.BODY])
+    @validation_handler()
     def validate_event(cls, event: dict) -> "UpdateDaemonStatusRequest":
-        body = json.loads(event[RequestPayloadType.BODY])
-        return cls.model_validate(body)
+        return cls.model_validate(event)
