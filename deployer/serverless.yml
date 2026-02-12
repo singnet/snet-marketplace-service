@@ -836,7 +836,7 @@ functions:
               - x-requested-wit
 
   registry-event-consumer:
-    handler: deployer.application.handlers.job_handlers.registry_event_consumer
+    handler: deployer.application.handlers.deployments_handlers.registry_event_consumer
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
