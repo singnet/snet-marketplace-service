@@ -105,6 +105,8 @@ class DeploymentsService:
                         status_resource_version=None,
                     ),
                 )
+            else:
+                DaemonRepository.update_daemon_config(session, daemon_id, daemon_config)
 
             if not request.only_daemon:
                 HostedServiceRepository.create_hosted_service(
