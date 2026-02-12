@@ -74,4 +74,4 @@ class GithubAPIClient:
 
     @staticmethod
     def make_repository_url(account_name: str, repository_name: str) -> str:
-        return f"https://github.com/{account_name}/{repository_name}"
+        return f"{account_name}/{repository_name}"
