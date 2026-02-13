@@ -53,6 +53,8 @@ class HaaSClient:
         if "serviceCredentials" in daemon_config:
             request_data["service_credentials"] = daemon_config["service_credentials"]
 
+        logger.debug(f"Deploying daemon url: {url}")
+        logger.debug(f"Deploying daemon body: {request_data}")
         try:
             result = requests.post(url, json=request_data, auth=self.auth)
             if not result.ok:
@@ -63,6 +65,7 @@ class HaaSClient:
     def delete_daemon(self, org_id: str, service_id: str):
         url = HAAS_BASE_URL + HAAS_DELETE_DAEMON_PATH.format(org_id, service_id)
 
+        logger.debug(f"Deleting daemon url: {url}")
         try:
             result = requests.delete(url, auth=self.auth)
             if not result.ok:
@@ -74,6 +77,7 @@ class HaaSClient:
         url = HAAS_BASE_URL + HAAS_GET_DAEMON_LOGS_PATH.format(org_id, service_id)
         url += f"?tail={tail}"
 
+        logger.debug(f"Getting daemon logs url: {url}")
         try:
             result = requests.get(url, auth=self.auth)
             if result.ok:
@@ -86,6 +90,7 @@ class HaaSClient:
     def get_public_key(self) -> str:
         url = HAAS_BASE_URL + HAAS_GET_PUBLIC_KEY_PATH
 
+        logger.debug(f"Getting public key url: {url}")
         try:
             result = requests.get(url, auth=self.auth)
             if result.ok:
@@ -100,6 +105,7 @@ class HaaSClient:
     def delete_hosted_service(self, org_id: str, service_id: str):
         url = HAAS_BASE_URL + HAAS_DELETE_HOSTED_SERVICE_PATH.format(org_id, service_id)
 
+        logger.debug(f"Deleting hosted service url: {url}")
         try:
             result = requests.delete(url, auth=self.auth)
             if not result.ok:
@@ -111,6 +117,7 @@ class HaaSClient:
         url = HAAS_BASE_URL + HAAS_GET_HOSTED_SERVICE_LOGS_PATH.format(org_id, service_id)
         url += f"?tail={tail}"
 
+        logger.debug(f"Getting hosted service logs url: {url}")
         try:
             result = requests.get(url, auth=self.auth)
             if result.ok:
@@ -147,6 +154,8 @@ class HaaSClient:
             "period": period.value,
         }
 
+        logger.debug(f"Getting call events url: {url}")
+        logger.debug(f"Getting call events body: {request_body}")
         try:
             response = requests.post(url, json=request_body, auth=self.auth)
             if response.ok:
