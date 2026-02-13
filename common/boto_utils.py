@@ -148,6 +148,7 @@ class BotoUtils:
 
     def publish_data_to_sns_topic(self, topic_arn: str, payload: dict, delay_seconds: int = 0):
         sns_client = boto3.client('sns', region_name = self.region_name)
+        logger.debug(f"Publishing data to SNS topic, payload: {payload}")
         response = sns_client.publish(TargetArn = topic_arn,
                                       Message = json.dumps({'default': json.dumps(payload)}),
                                       MessageStructure = 'json',
