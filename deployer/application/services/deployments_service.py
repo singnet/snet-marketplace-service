@@ -260,7 +260,7 @@ class DeploymentsService:
                 "gitRepoUrl": GithubAPIClient.make_repository_url(
                     hosted_service.github_account_name, hosted_service.github_repository_name
                 ),
-                "commit": hosted_service.last_commit_url,
+                "commit": "",
                 "installationId": installation_id,
             },
         )
