@@ -189,6 +189,8 @@ class BillingService:
             status_filter = None
         elif status_filter == IncomeStatus.PENDING.value:
             status_filter = OrderStatus.PROCESSING.value
+        elif status_filter == IncomeStatus.FAILED.value:
+            status_filter = [OrderStatus.FAILED, OrderStatus.CANCELLED, OrderStatus.EXPIRED]
 
         if request.type_of_movement != TypeOfMovementOfFunds.EXPENSE:
             with session_scope(self.session_factory) as session:
@@ -202,7 +204,7 @@ class BillingService:
                     status_filter,
                 )
                 top_up_events_total_count = OrderRepository.get_orders_total_count(
-                    session, account_id, request.period, OrderStatus.SUCCESS
+                    session, account_id, request.period, status_filter
                 )
             for top_up_event in top_up_events:
                 balance_events.append(
