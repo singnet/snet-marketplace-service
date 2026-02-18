@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from common.logger import get_logger
 from deployer.application.handlers.billing_handlers import (
     create_order,
     save_evm_transaction,
@@ -25,11 +26,13 @@ from deployer.tests.functional.utils import (
     generate_request_event,
     create_order_and_transaction,
     add_transactions_metadata,
-    create_common_queue_event,
+    create_common_queue_event, validate_response_bad_request, add_order,
 )
 
+logger = get_logger(__name__)
 
-class TestBillingEndpoints:
+
+class TestCreateOrder:
     def test_create_order_ok(self, test_billing_service, test_session_factory):
         order_amount = 123
         event = generate_request_event(body={"amount": order_amount})
@@ -48,6 +51,69 @@ class TestBillingEndpoints:
         assert order is not None, "Order has not been created!"
         assert order.amount == order_amount
 
+    def test_create_existing_order_ok(self, test_billing_service, test_session_factory, add_test_account_balance):
+        order_amount = 123
+        order_id = "123"
+
+        with session_scope(test_session_factory) as session:
+            add_order(session, order_id = order_id, amount=order_amount, order_status=OrderStatus.CREATED)
+
+        event = generate_request_event(body={"amount": order_amount})
+
+        response = create_order(event, None, test_billing_service)
+        _, data = validate_response_ok(response)
+
+        response_order_id = data.get("orderId")
+        assert response_order_id == order_id
+
+        with session_scope(test_session_factory) as session:
+            order = OrderRepository.get_order(session, response_order_id)
+
+        assert order is not None, "Order has not been created!"
+        assert order.amount == order_amount
+
+    def test_create_order_old_cancelled_ok(self, test_billing_service, test_session_factory, add_test_account_balance):
+        first_order_id = "123"
+
+        with session_scope(test_session_factory) as session:
+            add_order(session, order_id = first_order_id, amount=12, order_status=OrderStatus.CREATED)
+
+        order_amount = 123
+        event = generate_request_event(body = {"amount": order_amount})
+
+        response = create_order(event, None, test_billing_service)
+        _, data = validate_response_ok(response)
+
+        response_order_id = data.get("orderId")
+        assert response_order_id is not None and response_order_id != "", (
+            f"No ORDER ID in the response! Response data: {data}"
+        )
+
+        with session_scope(test_session_factory) as session:
+            first_order = OrderRepository.get_order(session, first_order_id)
+            order = OrderRepository.get_order(session, response_order_id)
+
+        assert first_order.status == OrderStatus.CANCELLED
+        assert order is not None, "Order has not been created!"
+        assert order.amount == order_amount
+
+    def test_create_order_zero_amount(self):
+        order_amount = 0
+        event = generate_request_event(body={"amount": order_amount})
+
+        response = create_order(event, None)
+        _, message = validate_response_bad_request(response)
+
+        assert message == "Validation failed for request body."
+
+    def test_create_order_missing_body(self):
+        response = create_order({}, None)
+        _, message = validate_response_bad_request(response)
+
+        assert message == "Missing body"
+
+
+class TestSaveEVMTransaction:
     def test_save_evm_transaction_ok(
         self,
         test_billing_service,
@@ -56,25 +122,14 @@ class TestBillingEndpoints:
         add_test_account_balance,
         test_account_id,
     ):
-        order_amount = 123
-        order_id = "123"
-
         with session_scope(test_session_factory) as session:
-            OrderRepository.create_order(
-                session,
-                NewOrderDomain(
-                    id=order_id,
-                    account_id=test_account_id,
-                    amount=order_amount,
-                    status=OrderStatus.CREATED,
-                ),
-            )
+            new_order = add_order(session, "123", amount = 123, order_status = OrderStatus.CREATED)
 
         event = generate_request_event(
             body={
                 "sender": "0x1234",
                 "recipient": "0x5678",
-                "orderId": order_id,
+                "orderId": new_order.id,
                 "transactionHash": "0xabcde",
             }
         )
@@ -83,13 +138,54 @@ class TestBillingEndpoints:
         validate_response_ok(response)
 
         with session_scope(test_session_factory) as session:
-            order = OrderRepository.get_order(session, order_id)
+            order = OrderRepository.get_order(session, new_order.id)
 
         assert order.status == OrderStatus.PROCESSING
         assert len(order.evm_transactions) == 1
         assert order.evm_transactions[0].status == EVMTransactionStatus.PENDING
-        assert order.evm_transactions[0].order_id == order_id
+        assert order.evm_transactions[0].order_id == new_order.id
 
+    def test_save_evm_transaction_incorrect_order_status(self, test_billing_service, test_auth_service, test_session_factory, add_test_account_balance):
+        order_id = "123"
+        order_status = OrderStatus.CANCELLED
+
+        with session_scope(test_session_factory) as session:
+            add_order(session, "123", amount = 123, order_status = order_status)
+
+        event = generate_request_event(
+            body = {
+                "sender": "0x1234",
+                "recipient": "0x5678",
+                "orderId": order_id,
+                "transactionHash": "0xabcde",
+            }
+        )
+
+        response = save_evm_transaction(event, None, test_billing_service, test_auth_service)
+        _, message = validate_response_bad_request(response)
+
+        assert message == f"Order status {order_status.value} is not acceptable for this operation!"
+
+    def test_save_evm_transaction_missing_fields(self):
+        event = generate_request_event(
+            body = {
+                "transactionHash": "0xabcde"
+            }
+        )
+
+        response = save_evm_transaction(event, None)
+        _, message = validate_response_bad_request(response)
+
+        assert message == "Validation failed for request body."
+
+    def test_save_evm_transaction_missing_body(self):
+        response = save_evm_transaction({}, None)
+        _, message = validate_response_bad_request(response)
+
+        assert message == "Missing body"
+
+
+class TestGetBalance:
     def test_get_balance_ok(self, test_billing_service, add_test_account_balance):
         test_balance = add_test_account_balance
 
@@ -97,6 +193,16 @@ class TestBillingEndpoints:
         _, data = validate_response_ok(response)
 
         assert data.get("balanceInCogs") == test_balance
+
+    def test_get_balance_no_account_balance_ok(self, test_billing_service):
+
+        response = get_balance(None, None, test_billing_service)
+        _, data = validate_response_ok(response)
+
+        assert data.get("balanceInCogs") == 0
+
+
+class TestBillingEndpoints:
 
     def test_get_balance_history_ok(
         self, test_haas_client_with_events, test_session_factory, add_test_orders
@@ -190,7 +296,7 @@ class TestBillingEndpoints:
             new_order, transaction = create_order_and_transaction(
                 session, account_id=test_account_id
             )
-            _ = add_transactions_metadata(session)
+            add_transactions_metadata(session)
 
         def mock_get_transactions_from_blockchain(*args, **kwargs):
             transaction.status = EVMTransactionStatus.SUCCESS

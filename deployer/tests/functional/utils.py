@@ -4,12 +4,15 @@ from typing import Tuple, Union, Any, Optional
 from sqlalchemy.orm import Session
 
 from common.constant import RequestPayloadType
+from common.logger import get_logger
 from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
 from deployer.domain.models.order import NewOrderDomain
 from deployer.domain.models.transactions_metadata import NewTransactionsMetadataDomain
 from deployer.infrastructure.models import OrderStatus, EVMTransactionStatus, TransactionsMetadata
 from deployer.infrastructure.repositories.order_repository import OrderRepository
 from deployer.infrastructure.repositories.transaction_repository import TransactionRepository
+
+logger = get_logger(__name__)
 
 
 def validate_response_ok(response) -> Tuple[int, Union[dict, list]]:
@@ -25,7 +28,7 @@ def validate_response_bad_request(response) -> Tuple[int, str]:
     body = json.loads(response["body"])
     assert body["status"] == "failed", "Response is suddenly successful!"
 
-    return response["statusCode"], body["message"]
+    return response["statusCode"], body["error"]["message"]
 
 
 def validate_response_server_error(response) -> Union[dict, Any]:
@@ -56,6 +59,22 @@ def generate_request_event(
     return event
 
 
+def add_order(
+    session: Session,
+    order_id: str = "test_order_id",
+    account_id: str = "SERVERLESS_OFFLINE_ACCOUNT_ID",
+    amount: int = 123,
+    order_status: OrderStatus = OrderStatus.PROCESSING
+) -> NewOrderDomain:
+    order = NewOrderDomain(
+        id = order_id,
+        account_id = account_id,
+        amount = amount,
+        status = order_status,
+    )
+    OrderRepository.create_order(session, order)
+    return order
+
 def create_order_and_transaction(
     session: Session,
     order_id: str = "test_order_id",
@@ -67,19 +86,11 @@ def create_order_and_transaction(
     sender: str = "0xsender",
     recipient: str = "0xrecipient",
 ) -> Tuple[NewOrderDomain, NewEVMTransactionDomain]:
-    order = NewOrderDomain(
-        id=order_id,
-        account_id=account_id,
-        amount=amount,
-        status=order_status,
-    )
+    order = add_order(session, order_id, account_id, amount, order_status)
     transaction = NewEVMTransactionDomain(
         hash=tx_hash, order_id=order_id, status=tx_status, sender=sender, recipient=recipient
     )
-
-    OrderRepository.create_order(session, order)
     TransactionRepository.upsert_transaction(session, transaction)
-
     return order, transaction
 
 

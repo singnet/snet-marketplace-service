@@ -13,7 +13,7 @@ from deployer.exceptions import WrongIncomeStatusForTypeException
 
 
 class CreateOrderRequest(BaseModel):
-    amount: int
+    amount: int = Field(ge=1)
 
     @classmethod
     @validation_handler([RequestPayloadType.BODY])

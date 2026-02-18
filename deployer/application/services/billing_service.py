@@ -99,6 +99,17 @@ class BillingService:
 
     def save_evm_transaction(self, request: SaveEVMTransactionRequest) -> dict:
         with session_scope(self.session_factory) as session:
+            order = OrderRepository.get_order(session, request.order_id)
+
+            # In this case, the order will never be None, because otherwise the verification will not pass at the authorization stage earlier
+
+            if order.status not in [OrderStatus.CREATED, OrderStatus.FAILED]:
+                logger.exception(
+                    f"Order with id {request.order_id} must have the status CREATED or FAILED for "
+                    f"correct saving the transaction {request.transaction_hash}"
+                )
+                raise UnacceptableOrderStatusException(order.status.value)
+
             TransactionRepository.upsert_transaction(
                 session,
                 NewEVMTransactionDomain(
@@ -109,21 +120,6 @@ class BillingService:
                     recipient=request.recipient,
                 ),
             )
-
-            order = OrderRepository.get_order(session, request.order_id)
-
-            if order is None:
-                logger.exception(
-                    f"Order with id {request.order_id} for transaction {request.transaction_hash} not found"
-                )
-                raise OrderNotFoundException(request.order_id)
-
-            if order.status not in [OrderStatus.CREATED, OrderStatus.FAILED]:
-                logger.exception(
-                    f"Order with id {request.order_id} must have the status CREATED or PAYMENT_FAILED for "
-                    f"correct saving of transaction {request.transaction_hash}"
-                )
-                raise UnacceptableOrderStatusException(order.status.value)
 
             OrderRepository.update_order_status(
                 session=session,
