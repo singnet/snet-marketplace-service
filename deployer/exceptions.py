@@ -1,4 +1,4 @@
-from common.exceptions import BadRequestException
+from common.exceptions import BadRequestException, NotFoundException
 
 
 class InvalidServiceAuthParameters(BadRequestException):
@@ -13,12 +13,12 @@ class MissingServiceEventParameters(BadRequestException):
         super().__init__(message="Missing service event parameters: serviceId and/or metadataUri!")
 
 
-class DaemonNotFoundException(BadRequestException):
+class DaemonNotFoundException(NotFoundException):
     def __init__(self, daemon_id: str):
         super().__init__(message=f"Daemon with id {daemon_id} not found!")
 
 
-class DaemonNotFoundForServiceException(BadRequestException):
+class DaemonNotFoundForServiceException(NotFoundException):
     def __init__(self, org_id: str, service_id: str):
         super().__init__(
             message=f"Daemon for service with org_id={org_id} and service_id={service_id} not found!"
@@ -45,7 +45,7 @@ class MissingCommitHashParameter(BadRequestException):
         super().__init__(message="Missing commit hash parameter!")
 
 
-class OrderNotFoundException(BadRequestException):
+class OrderNotFoundException(NotFoundException):
     def __init__(self, order_id: str):
         super().__init__(message=f"Order with id {order_id} not found!")
 
@@ -69,7 +69,7 @@ class DaemonAndHostedServiceAlreadyExistException(BadRequestException):
         )
 
 
-class HostedServiceNotFoundException(BadRequestException):
+class HostedServiceNotFoundException(NotFoundException):
     def __init__(self, hosted_service_id: str = None, org_id: str = None, service_id: str = None):
         if org_id and service_id:
             super().__init__(
@@ -84,7 +84,7 @@ class WrongIncomeStatusForTypeException(BadRequestException):
         super().__init__(message="There must be only 'all' status parameter for 'expense' type!")
 
 
-class TokenRateUnavailableException(BadRequestException):
+class TokenRateUnavailableException(NotFoundException):
     def __init__(self):
         super().__init__(message="There is no data about token rate for now!")
 

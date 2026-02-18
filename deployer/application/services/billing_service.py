@@ -29,7 +29,6 @@ from deployer.domain.models.order import NewOrderDomain
 from deployer.domain.models.token_rate import NewTokenRateDomain
 from deployer.domain.models.transactions_metadata import TransactionsMetadataDomain
 from deployer.exceptions import (
-    OrderNotFoundException,
     UnacceptableOrderStatusException,
     HostedServiceNotFoundException,
     TokenRateUnavailableException,
