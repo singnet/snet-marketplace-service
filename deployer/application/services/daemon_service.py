@@ -121,6 +121,15 @@ class DaemonService:
             daemon_config=daemon.daemon_config,
         )
 
+        with session_scope(self.session_factory) as session:
+            DaemonRepository.update_daemon_status(
+                session,
+                daemon_id,
+                DaemonStatus.STARTING,
+                daemon.status_observed_at,
+                daemon.status_resource_version,
+            )
+
         return {}
 
     def update_config(self, request: UpdateConfigRequest) -> dict:
