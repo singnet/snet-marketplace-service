@@ -31,6 +31,22 @@ def validate_response_bad_request(response) -> Tuple[int, str]:
     return response["statusCode"], body["error"]["message"]
 
 
+def validate_response_forbidden(response) -> Tuple[int, str]:
+    assert response["statusCode"] == 403, "Response has no FORBIDDEN error!"
+    body = json.loads(response["body"])
+    assert body["status"] == "failed", "Response is suddenly successful!"
+
+    return response["statusCode"], body["error"]["message"]
+
+
+def validate_response_not_found(response) -> Tuple[int, str]:
+    assert response["statusCode"] == 404, "Response has no NOT FOUND error!"
+    body = json.loads(response["body"])
+    assert body["status"] == "failed", "Response is suddenly successful!"
+
+    return response["statusCode"], body["error"]["message"]
+
+
 def validate_response_server_error(response) -> Union[dict, Any]:
     assert response["statusCode"] == 500, "Response has no INTERNAL SERVER ERROR!"
     body = json.loads(response["body"])
@@ -64,16 +80,17 @@ def add_order(
     order_id: str = "test_order_id",
     account_id: str = "SERVERLESS_OFFLINE_ACCOUNT_ID",
     amount: int = 123,
-    order_status: OrderStatus = OrderStatus.PROCESSING
+    order_status: OrderStatus = OrderStatus.PROCESSING,
 ) -> NewOrderDomain:
     order = NewOrderDomain(
-        id = order_id,
-        account_id = account_id,
-        amount = amount,
-        status = order_status,
+        id=order_id,
+        account_id=account_id,
+        amount=amount,
+        status=order_status,
     )
     OrderRepository.create_order(session, order)
     return order
+
 
 def create_order_and_transaction(
     session: Session,
