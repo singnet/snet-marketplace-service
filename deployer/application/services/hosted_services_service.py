@@ -97,3 +97,6 @@ class HostedServicesService:
                     request.commit,
                 ),
             )
+
+    def redeploy_hosted_service_forcibly(self, request: HostedServiceRequest):
+        pass
