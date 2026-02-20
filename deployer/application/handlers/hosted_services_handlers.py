@@ -95,3 +95,16 @@ def update_hosted_service_status(event, context, hosted_services_service=None):
         hosted_services_service.update_hosted_service_status(request)
 
     return {}
+
+
+@exception_handler(logger=logger)
+def redeploy_hosted_service_forcibly(event, context, hosted_services_service=None):
+    request = HostedServiceRequest.validate_event(event)
+
+    if hosted_services_service is None:
+        hosted_services_service = HostedServicesService()
+    response = hosted_services_service.redeploy_hosted_service_forcibly(request)
+
+    return generate_lambda_response(
+        StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
+    )

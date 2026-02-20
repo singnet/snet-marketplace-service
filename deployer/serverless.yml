@@ -1017,6 +1017,22 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
+  redeploy-daemon-forcibly:
+    handler: deployer.application.handlers.daemon_handlers.redeploy_daemon_forcibly
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /daemon/{daemonId}/redeploy
+          private: true
+
   # ============= HOSTED SERVICE HANDLERS ============
 
   get-hosted-service:
@@ -1156,3 +1172,19 @@ functions:
               - updateHostedServiceStatusEventConsumerQueue
               - Arn
           batchSize: 1
+
+  redeploy-hosted-service-forcibly:
+    handler: deployer.application.handlers.hosted_services_handlers.redeploy_hosted_service_forcibly
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          method: GET
+          path: /hosted-service/{hostedServiceId}/redeploy
+          private: true

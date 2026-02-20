@@ -3,6 +3,7 @@ from typing import Tuple, List, Union
 import requests
 from requests.auth import HTTPBasicAuth
 
+from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from deployer.config import (
     HAAS_BASE_URL,
@@ -16,6 +17,8 @@ from deployer.config import (
     HAAS_DELETE_HOSTED_SERVICE_PATH,
     HAAS_GET_HOSTED_SERVICE_LOGS_PATH,
     HAAS_GET_CALL_EVENTS_PATH,
+    REGION_NAME,
+    DEPLOY_SERVICE_TOPIC_ARN,
 )
 from deployer.constant import PeriodType, OrderType
 from deployer.domain.schemas.haas_responses import GetCallEventsResponse
@@ -29,8 +32,9 @@ class HaaSClientError(Exception):
 
 
 class HaaSClient:
-    def __init__(self):
+    def __init__(self, boto_utils=None):
         self.auth = HTTPBasicAuth(HAAS_LOGIN, HAAS_PASSWORD)
+        self._boto_utils = BotoUtils(REGION_NAME) if boto_utils is None else boto_utils
 
     # ========== DAEMON ==========
 
@@ -126,6 +130,25 @@ class HaaSClient:
                 raise HaaSClientError(result.text)
         except Exception as e:
             raise HaaSClientError(str(e))
+
+    def push_deploy_service_event(
+        self,
+        org_id: str,
+        service_id: str,
+        github_repo_url: str,
+        installation_id: str,
+        commit: str = "",
+    ) -> None:
+        self._boto_utils.publish_data_to_sns_topic(
+            topic_arn=DEPLOY_SERVICE_TOPIC_ARN,
+            payload={
+                "orgId": org_id,
+                "serviceId": service_id,
+                "gitRepoUrl": github_repo_url,
+                "commit": commit,
+                "installationId": installation_id,
+            },
+        )
 
     # ========== METRICS ==========
 
