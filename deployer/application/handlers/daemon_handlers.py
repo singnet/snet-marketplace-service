@@ -126,3 +126,16 @@ def redeploy_all_daemons(event, context, daemon_service=None):
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )
+
+
+@exception_handler(logger=logger)
+def redeploy_daemon_forcibly(event, context, daemon_service=None):
+    request = DaemonRequest.validate_event(event)
+
+    if daemon_service is None:
+        daemon_service = DaemonService()
+    daemon_service.redeploy_daemon_forcibly(request)
+
+    return generate_lambda_response(
+        StatusCode.OK, {"status": "success", "data": {}, "error": {}}, cors_enabled=True
+    )

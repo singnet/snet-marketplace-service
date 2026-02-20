@@ -3,7 +3,6 @@ import io
 import tarfile
 from typing import List
 
-from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from common.storage_provider import StorageProvider
 from common.utils import generate_uuid
@@ -14,14 +13,12 @@ from deployer.application.schemas.deployments_schemas import (
 )
 from deployer.config import (
     DEFAULT_DAEMON_STORAGE_TYPE,
-    REGION_NAME,
-    DEPLOY_SERVICE_TOPIC_ARN,
     HAAS_DAEMON_BASE_URL,
 )
 from deployer.constant import AllowedRegistryEventNames
 from deployer.domain.models.account_balance import NewAccountBalanceDomain
 from deployer.domain.models.daemon import NewDaemonDomain, DaemonDomain
-from deployer.domain.models.hosted_service import NewHostedServiceDomain, HostedServiceDomain
+from deployer.domain.models.hosted_service import NewHostedServiceDomain
 from deployer.exceptions import (
     DaemonAlreadyExistsException,
     DaemonAndHostedServiceAlreadyExistException,
@@ -48,12 +45,13 @@ class DeploymentsService:
         haas_client=None,
         storage_provider=None,
         boto_utils=None,
+        github_client=None,
     ):
         self.session_factory = DefaultSessionFactory if session_factory is None else session_factory
         self._deployer_client = DeployerClient() if deployer_client is None else deployer_client
-        self._haas_client = HaaSClient() if haas_client is None else haas_client
+        self._haas_client = HaaSClient(boto_utils) if haas_client is None else haas_client
         self._storage_provider = StorageProvider() if storage_provider is None else storage_provider
-        self._boto_utils = BotoUtils(REGION_NAME) if boto_utils is None else boto_utils
+        self._github_api_client = GithubAPIClient() if github_client is None else github_client
 
     def initiate_deployment(self, request: InitiateDeploymentRequest, account_id: str) -> dict:
         with session_scope(self.session_factory) as session:
@@ -196,7 +194,18 @@ class DeploymentsService:
                 and daemon.hosted_service is not None
                 and daemon.hosted_service.status == HostedServiceStatus.INIT
             ):
-                self._push_deploy_service_event(org_id, service_id, daemon.hosted_service)
+                self._haas_client.push_deploy_service_event(
+                    org_id,
+                    service_id,
+                    self._github_api_client.make_repository_url(
+                        daemon.hosted_service.github_account_name,
+                        daemon.hosted_service.github_repository_name,
+                    ),
+                    self._github_api_client.get_installation_id(
+                        daemon.hosted_service.github_account_name,
+                        daemon.hosted_service.github_repository_name,
+                    ),
+                )
 
     def _get_service_class(self, service_api_source: str) -> str:
         tar_bytes = self._storage_provider.get(service_api_source, to_decode=False)
@@ -245,25 +254,6 @@ class DeploymentsService:
             HostedServiceRepository.update_hosted_service_status(
                 session, daemon.hosted_service.id, HostedServiceStatus.DOWN
             )
-
-    def _push_deploy_service_event(
-        self, org_id: str, service_id: str, hosted_service: HostedServiceDomain
-    ) -> None:
-        installation_id = GithubAPIClient.get_installation_id(
-            hosted_service.github_account_name, hosted_service.github_repository_name
-        )
-        self._boto_utils.publish_data_to_sns_topic(
-            topic_arn=DEPLOY_SERVICE_TOPIC_ARN,
-            payload={
-                "orgId": org_id,
-                "serviceId": service_id,
-                "gitRepoUrl": GithubAPIClient.make_repository_url(
-                    hosted_service.github_account_name, hosted_service.github_repository_name
-                ),
-                "commit": hosted_service.last_commit_url,
-                "installationId": installation_id,
-            },
-        )
 
     @staticmethod
     def _get_daemon_endpoint(org_id: str, service_id: str) -> str:
