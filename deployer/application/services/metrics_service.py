@@ -6,7 +6,6 @@ from deployer.application.schemas.billing_schemas import GetMetricsRequest
 from deployer.config import REQUEST_MAX_LIMIT
 from deployer.constant import OrderType, PeriodType, FREQUENCY_BY_PERIOD
 from deployer.domain.schemas.haas_responses import CallEventResponse
-from deployer.exceptions import HostedServiceNotFoundException
 from deployer.infrastructure.clients.haas_client import HaaSClient
 from deployer.infrastructure.db import DefaultSessionFactory, session_scope
 from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
@@ -48,8 +47,8 @@ class MetricsService:
             daemon = DaemonRepository.get_daemon_by_hosted_service(
                 session, request.hosted_service_id
             )
-        if daemon is None or daemon.hosted_service is None:
-            raise HostedServiceNotFoundException(hosted_service_id=request.hosted_service_id)
+
+        # In this case, the daemon and hosted_service will never be None, because otherwise the verification will not pass at the authorization stage earlier
 
         events = []
         page = 1

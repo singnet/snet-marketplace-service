@@ -505,7 +505,10 @@ class TestCallEventConsumer:
             call_event_consumer(queue_event, None, test_billing_service)
 
         assert e.type == HostedServiceNotFoundException
-        assert f"Hosted service for service with org_id={test_org_id} and service_id={test_service_id} not found!" in str(e.value)
+        assert (
+            f"Hosted service for service with org_id={test_org_id} and service_id={test_service_id} not found!"
+            in str(e.value)
+        )
 
 
 class TestUpdateTokenRate:

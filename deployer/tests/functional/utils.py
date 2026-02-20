@@ -1,14 +1,22 @@
 import json
+from datetime import datetime
 from typing import Tuple, Union, Any, Optional
 
 from sqlalchemy.orm import Session
 
 from common.constant import RequestPayloadType
 from common.logger import get_logger
+from deployer.domain.models.daemon import NewDaemonDomain
 from deployer.domain.models.evm_transaction import NewEVMTransactionDomain
 from deployer.domain.models.order import NewOrderDomain
 from deployer.domain.models.transactions_metadata import NewTransactionsMetadataDomain
-from deployer.infrastructure.models import OrderStatus, EVMTransactionStatus, TransactionsMetadata
+from deployer.infrastructure.models import (
+    OrderStatus,
+    EVMTransactionStatus,
+    TransactionsMetadata,
+    DaemonStatus,
+)
+from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
 from deployer.infrastructure.repositories.order_repository import OrderRepository
 from deployer.infrastructure.repositories.transaction_repository import TransactionRepository
 
@@ -135,6 +143,40 @@ def add_transactions_metadata(
         )
     )
     return transactions_metadata
+
+
+def add_daemon(
+    session: Session,
+    account_id,
+    org_id,
+    service_id,
+    daemon_id,
+    status=DaemonStatus.UP,
+    daemon_config=None,
+    daemon_endpoint="",
+    status_observed_at=None,
+    status_resource_version=None,
+):
+    daemon = DaemonRepository.get_daemon(session, daemon_id)
+    daemon_exists = daemon is not None
+    if isinstance(status_observed_at, str):
+        status_observed_at = datetime.fromisoformat(status_observed_at).replace(
+            microsecond=0, tzinfo=None
+        )
+    DaemonRepository.create_daemon(
+        session,
+        NewDaemonDomain(
+            id=daemon_id if not daemon_exists else f"{daemon_id}_2",
+            account_id=account_id,
+            org_id=org_id if not daemon_exists else f"{org_id}_2",
+            service_id=service_id if not daemon_exists else f"{service_id}_2",
+            status=status,
+            daemon_config=daemon_config if daemon_config is not None else {},
+            daemon_endpoint=daemon_endpoint,
+            status_observed_at=status_observed_at,
+            status_resource_version=status_resource_version,
+        ),
+    )
 
 
 def create_common_queue_event(events: list) -> dict:
