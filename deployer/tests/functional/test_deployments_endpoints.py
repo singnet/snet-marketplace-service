@@ -15,7 +15,7 @@ from deployer.tests.functional.utils import (
 )
 
 
-class TestDeploymentsEndpoints:
+class TestInitiateDeployment:
     def test_initiate_deployment_only_daemon_ok(
         self,
         test_deployments_service,
@@ -92,6 +92,8 @@ class TestDeploymentsEndpoints:
         assert data["hostedService"]["githubRepositoryName"] == test_repo
         assert data["hostedService"]["lastCommitUrl"] == ""
 
+
+class TestDeploymentsEndpoints:
     def test_get_user_deployments_ok(
         self,
         test_deployments_service,

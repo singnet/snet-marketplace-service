@@ -83,11 +83,13 @@ def download_hosted_service_logs(event, context, hosted_services_service=None, a
 
 
 def update_hosted_service_status(event, context, hosted_services_service=None):
+    logger.debug(f"Received events from queue: {event}")
     events = UpdateHostedServiceStatusRequest.get_events_from_queue(event)
 
     if hosted_services_service is None:
         hosted_services_service = HostedServicesService()
 
+    logger.debug(f"Events: {events}")
     for e in events:
         request = UpdateHostedServiceStatusRequest.validate_event(e)
         hosted_services_service.update_hosted_service_status(request)

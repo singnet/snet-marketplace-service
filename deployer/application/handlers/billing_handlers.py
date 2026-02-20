@@ -139,11 +139,13 @@ def update_transaction_status(event, context, billing_service=None):
 
 
 def call_event_consumer(event, context, billing_service=None):
+    logger.debug(f"Received events from queue: {event}")
     events = CallEventConsumerRequest.get_events_from_queue(event)
 
     if billing_service is None:
         billing_service = BillingService()
 
+    logger.debug(f"Events: {events}")
     for e in events:
         request = CallEventConsumerRequest.validate_event(e)
         billing_service.process_call_event(request)

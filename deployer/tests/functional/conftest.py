@@ -13,7 +13,6 @@ from deployer.application.services.hosted_services_service import HostedServices
 from deployer.application.services.metrics_service import MetricsService
 from deployer.config import TOKEN_NAME, TOKEN_DECIMALS
 from deployer.domain.models.account_balance import NewAccountBalanceDomain
-from deployer.domain.models.daemon import NewDaemonDomain
 from deployer.domain.models.hosted_service import NewHostedServiceDomain
 from deployer.domain.models.token_rate import NewTokenRateDomain
 from deployer.domain.schemas.haas_responses import CallEventResponse, GetCallEventsResponse
@@ -21,14 +20,12 @@ from deployer.infrastructure.db import session_scope
 from deployer.infrastructure.models import (
     OrderStatus,
     EVMTransactionStatus,
-    DaemonStatus,
     HostedServiceStatus,
 )
 from deployer.infrastructure.repositories.account_balance_repository import AccountBalanceRepository
-from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
 from deployer.infrastructure.repositories.hosted_service_repository import HostedServiceRepository
 from deployer.infrastructure.repositories.token_rate_repository import TokenRateRepository
-from deployer.tests.functional.utils import create_order_and_transaction
+from deployer.tests.functional.utils import create_order_and_transaction, add_daemon
 
 
 @pytest.fixture(scope="function")
@@ -123,20 +120,7 @@ def add_test_daemon_and_service(
     test_hosted_service_id,
 ):
     with session_scope(test_session_factory) as session:
-        DaemonRepository.create_daemon(
-            session,
-            NewDaemonDomain(
-                id=test_daemon_id,
-                account_id=test_account_id,
-                org_id=test_org_id,
-                service_id=test_service_id,
-                status=DaemonStatus.UP,
-                daemon_config={},
-                daemon_endpoint="",
-                status_observed_at=None,
-                status_resource_version=None,
-            ),
-        )
+        add_daemon(session, test_account_id, test_org_id, test_service_id, test_daemon_id)
         HostedServiceRepository.create_hosted_service(
             session,
             NewHostedServiceDomain(
@@ -178,19 +162,4 @@ def add_test_daemon(
     test_daemon_id,
 ):
     with session_scope(test_session_factory) as session:
-        daemon = DaemonRepository.get_daemon(session, test_daemon_id)
-        daemon_exists = daemon is not None
-        DaemonRepository.create_daemon(
-            session,
-            NewDaemonDomain(
-                id=test_daemon_id if not daemon_exists else f"{test_daemon_id}_2",
-                account_id=test_account_id,
-                org_id=test_org_id if not daemon_exists else f"{test_org_id}_2",
-                service_id=test_service_id if not daemon_exists else f"{test_service_id}_2",
-                status=DaemonStatus.UP,
-                daemon_config={},
-                daemon_endpoint="",
-                status_observed_at=None,
-                status_resource_version=None,
-            ),
-        )
+        add_daemon(session, test_account_id, test_org_id, test_service_id, test_daemon_id)
