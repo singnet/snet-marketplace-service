@@ -4,6 +4,7 @@ from deployer.application.handlers.hosted_services_handlers import (
     check_github_repository,
     get_hosted_service_logs,
     update_hosted_service_status,
+    redeploy_hosted_service_forcibly,
 )
 from deployer.infrastructure.db import session_scope
 from deployer.infrastructure.models import HostedServiceStatus
@@ -12,6 +13,7 @@ from deployer.tests.functional.utils import (
     generate_request_event,
     validate_response_ok,
     create_common_queue_event,
+    validate_response_not_found,
 )
 
 logger = get_logger(__name__)
@@ -119,3 +121,28 @@ class TestHostedServicesEndpoints:
                 test_commit,
             )
         )
+
+
+class TestRedeployHostedServiceForcibly:
+    def test_redeploy_hosted_service_forcibly_ok(
+        self,
+        test_hosted_services_service,
+        add_test_daemon_and_service,
+        test_hosted_service_id,
+    ):
+        event = generate_request_event(path_parameters={"hostedServiceId": test_hosted_service_id})
+
+        response = redeploy_hosted_service_forcibly(event, None, test_hosted_services_service)
+        _, data = validate_response_ok(response)
+
+    def test_redeploy_hosted_service_forcibly_no_service(
+        self,
+        test_hosted_services_service,
+        test_hosted_service_id,
+    ):
+        event = generate_request_event(path_parameters={"hostedServiceId": test_hosted_service_id})
+
+        response = redeploy_hosted_service_forcibly(event, None, test_hosted_services_service)
+        _, message = validate_response_not_found(response)
+
+        assert message == f"Hosted service with id={test_hosted_service_id} not found!"
