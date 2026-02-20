@@ -112,7 +112,9 @@ class DaemonService:
             logger.exception(f"Daemon {daemon_id} is not in INIT or UP status")
             return {}
 
-        logger.info(f"(Re)Starting daemon id={daemon.id}, org_id={daemon.org_id}, service_id={daemon.service_id}")
+        logger.info(
+            f"(Re)Starting daemon id={daemon.id}, org_id={daemon.org_id}, service_id={daemon.service_id}"
+        )
 
         self._haas_client.deploy_daemon(
             org_id=daemon.org_id,
@@ -164,9 +166,9 @@ class DaemonService:
             raise DaemonNotFoundException(daemon_id)
 
         self._haas_client.deploy_daemon(
-            org_id = daemon.org_id,
-            service_id = daemon.service_id,
-            daemon_config = daemon.daemon_config,
+            org_id=daemon.org_id,
+            service_id=daemon.service_id,
+            daemon_config=daemon.daemon_config,
         )
 
         with session_scope(self.session_factory) as session:
@@ -178,4 +180,6 @@ class DaemonService:
                 daemon.status_resource_version,
             )
 
-        logger.info(f"Restarting daemon id={daemon.id}, org_id={daemon.org_id}, service_id={daemon.service_id}")
+        logger.info(
+            f"Restarting daemon id={daemon.id}, org_id={daemon.org_id}, service_id={daemon.service_id}"
+        )
