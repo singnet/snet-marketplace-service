@@ -35,8 +35,8 @@ class DaemonService:
     def get_daemon(self, request: DaemonRequest) -> dict:
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.get_daemon(session, request.daemon_id)
-            if daemon is None:
-                raise DaemonNotFoundException(request.daemon_id)
+
+        # In this case, the daemon will never be None, because otherwise the verification will not pass at the authorization stage earlier
 
         result = daemon.to_response(with_hosted_service=False)
         result.update(result["daemon"])
@@ -47,8 +47,7 @@ class DaemonService:
     def get_daemon_logs(self, request: DaemonRequest) -> List[str]:
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.get_daemon(session, request.daemon_id)
-        if daemon is None:
-            raise DaemonNotFoundException(request.daemon_id)
+        # In this case, the daemon will never be None, because otherwise the verification will not pass at the authorization stage earlier
 
         daemon_logs = self._haas_client.get_daemon_logs(daemon.org_id, daemon.service_id)
 
@@ -121,6 +120,15 @@ class DaemonService:
             daemon_config=daemon.daemon_config,
         )
 
+        with session_scope(self.session_factory) as session:
+            DaemonRepository.update_daemon_status(
+                session,
+                daemon_id,
+                DaemonStatus.STARTING,
+                daemon.status_observed_at,
+                daemon.status_resource_version,
+            )
+
         return {}
 
     def update_config(self, request: UpdateConfigRequest) -> dict:
@@ -128,8 +136,8 @@ class DaemonService:
         service_credentials = request.service_credentials
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.get_daemon(session, request.daemon_id)
-            if daemon is None:
-                raise DaemonNotFoundException(request.daemon_id)
+            # In this case, the daemon will never be None, because otherwise the verification will not pass at the authorization stage earlier
+
             if daemon.hosted_service is not None or daemon.status == DaemonStatus.STARTING:
                 raise UpdateConfigNotAvailableException()
 

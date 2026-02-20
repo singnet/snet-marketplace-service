@@ -78,11 +78,13 @@ def get_public_key(event, context, deployments_service=None):
 
 
 def registry_event_consumer(event, context, deployments_service=None):
+    logger.debug(f"Received events from queue: {event}")
     events = RegistryEventConsumerRequest.get_events_from_queue(event)
 
     if deployments_service is None:
         deployments_service = DeploymentsService()
 
+    logger.debug(f"Events: {events}")
     for e in events:
         request = RegistryEventConsumerRequest.validate_event(e["blockchain_event"])
         if request.event_name in ["ServiceCreated", "ServiceMetadataModified", "ServiceDeleted"]:

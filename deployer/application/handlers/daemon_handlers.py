@@ -90,11 +90,13 @@ def update_config(event, context, daemon_service=None, auth_service=None):
 
 
 def update_daemon_status(event, context, daemon_service=None):
+    logger.debug(f"Received events from queue: {event}")
     events = UpdateDaemonStatusRequest.get_events_from_queue(event)
 
     if daemon_service is None:
         daemon_service = DaemonService()
 
+    logger.debug(f"Events: {events}")
     for e in events:
         request = UpdateDaemonStatusRequest.validate_event(e)
         daemon_service.update_daemon_status(request)
