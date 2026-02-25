@@ -212,7 +212,7 @@ class TestRedeployHostedServiceForcibly:
         event = generate_request_event(path_parameters={"hostedServiceId": test_hosted_service_id})
 
         response = redeploy_hosted_service_forcibly(event, None, test_hosted_services_service)
-        _, data = validate_response_ok(response)
+        validate_response_ok(response)
 
     def test_redeploy_hosted_service_forcibly_no_service(
         self,

@@ -14,7 +14,6 @@ from deployer.exceptions import DaemonNotFoundForServiceException
 from deployer.infrastructure.db import session_scope
 from deployer.infrastructure.models import DaemonStatus
 from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
-from deployer.tests.functional.conftest import test_service_credentials
 from deployer.tests.functional.utils import (
     generate_request_event,
     validate_response_ok,
@@ -96,12 +95,15 @@ class TestUpdateConfig:
         test_session_factory,
         add_test_daemon,
         test_daemon_id,
-            test_service_endpoint,
-            test_service_credentials
+        test_service_endpoint,
+        test_service_credentials,
     ):
         event = generate_request_event(
             path_parameters={"daemonId": test_daemon_id},
-            body={"serviceEndpoint": test_service_endpoint, "serviceCredentials": test_service_credentials},
+            body={
+                "serviceEndpoint": test_service_endpoint,
+                "serviceCredentials": test_service_credentials,
+            },
         )
 
         response = update_config(event, None, test_daemon_service, test_auth_service)
@@ -120,13 +122,16 @@ class TestUpdateConfig:
         add_test_daemon,
         test_daemon_id,
         test_service_endpoint,
-            test_service_credentials
+        test_service_credentials,
     ):
         del test_service_credentials[0]["location"]
 
         event = generate_request_event(
             path_parameters={"daemonId": test_daemon_id},
-            body={"serviceEndpoint": test_service_endpoint, "serviceCredentials": test_service_credentials},
+            body={
+                "serviceEndpoint": test_service_endpoint,
+                "serviceCredentials": test_service_credentials,
+            },
         )
 
         response = update_config(event, None, test_daemon_service, test_auth_service)
@@ -142,12 +147,15 @@ class TestUpdateConfig:
         test_daemon_service,
         test_auth_service,
         test_daemon_id,
-            test_service_endpoint,
-            test_service_credentials
+        test_service_endpoint,
+        test_service_credentials,
     ):
         event = generate_request_event(
             path_parameters={"daemonId": test_daemon_id},
-            body={"serviceEndpoint": test_service_endpoint, "serviceCredentials": test_service_credentials},
+            body={
+                "serviceEndpoint": test_service_endpoint,
+                "serviceCredentials": test_service_credentials,
+            },
         )
 
         response = update_config(event, None, test_daemon_service, test_auth_service)
@@ -161,12 +169,15 @@ class TestUpdateConfig:
         test_auth_service,
         add_test_daemon_and_service,
         test_daemon_id,
-            test_service_endpoint,
-            test_service_credentials
+        test_service_endpoint,
+        test_service_credentials,
     ):
         event = generate_request_event(
             path_parameters={"daemonId": test_daemon_id},
-            body={"serviceEndpoint": test_service_endpoint, "serviceCredentials": test_service_credentials},
+            body={
+                "serviceEndpoint": test_service_endpoint,
+                "serviceCredentials": test_service_credentials,
+            },
         )
 
         response = update_config(event, None, test_daemon_service, test_auth_service)
@@ -184,12 +195,15 @@ class TestUpdateConfig:
         test_org_id,
         test_service_id,
         test_daemon_id,
-            test_service_endpoint,
-            test_service_credentials
+        test_service_endpoint,
+        test_service_credentials,
     ):
         event = generate_request_event(
             path_parameters={"daemonId": test_daemon_id},
-            body={"serviceEndpoint": test_service_endpoint, "serviceCredentials": test_service_credentials},
+            body={
+                "serviceEndpoint": test_service_endpoint,
+                "serviceCredentials": test_service_credentials,
+            },
         )
 
         with session_scope(test_session_factory) as session:
@@ -422,7 +436,7 @@ class TestRedeployDaemonForcibly:
         event = generate_request_event(path_parameters={"daemonId": test_daemon_id})
 
         response = redeploy_daemon_forcibly(event, None, test_daemon_service)
-        _, data = validate_response_ok(response)
+        validate_response_ok(response)
 
         with session_scope(test_session_factory) as session:
             daemon = DaemonRepository.get_daemon(session, test_daemon_id)

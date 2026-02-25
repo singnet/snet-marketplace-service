@@ -23,8 +23,8 @@ class TestInitiateDeployment:
         test_auth_service,
         test_org_id,
         test_service_id,
-            test_service_endpoint,
-            test_service_credentials
+        test_service_endpoint,
+        test_service_credentials,
     ):
         event = generate_request_event(
             body={
@@ -135,8 +135,8 @@ class TestInitiateDeployment:
         add_test_daemon,
         test_org_id,
         test_service_id,
-            test_service_endpoint,
-            test_service_credentials
+        test_service_endpoint,
+        test_service_credentials,
     ):
         event = generate_request_event(
             body={
@@ -192,8 +192,8 @@ class TestInitiateDeployment:
         test_auth_service,
         test_org_id,
         test_service_id,
-            test_service_endpoint,
-            test_service_credentials
+        test_service_endpoint,
+        test_service_credentials,
     ):
         test_service_credentials[0]["key"] = ""
 
@@ -213,8 +213,8 @@ class TestInitiateDeployment:
         _, message = validate_response_bad_request(response)
 
         assert (
-                message
-                == "Invalid service auth parameters! Must be 'key', 'value' and 'location' and not empty."
+            message
+            == "Invalid service auth parameters! Must be 'key', 'value' and 'location' and not empty."
         )
 
     def test_initiate_deployment_missing_service_endpoint(
@@ -223,7 +223,7 @@ class TestInitiateDeployment:
         test_auth_service,
         test_org_id,
         test_service_id,
-            test_service_credentials
+        test_service_credentials,
     ):
         event = generate_request_event(
             body={
@@ -240,10 +240,7 @@ class TestInitiateDeployment:
         )
         _, message = validate_response_bad_request(response)
 
-        assert (
-                message
-                == "Missing service endpoint!"
-        )
+        assert message == "Missing service endpoint!"
 
     def test_initiate_deployment_missing_github_parameters(
         self,
@@ -253,7 +250,7 @@ class TestInitiateDeployment:
         test_service_id,
     ):
         event = generate_request_event(
-            body = {
+            body={
                 "orgId": test_org_id,
                 "serviceId": test_service_id,
                 "onlyDaemon": False,
@@ -267,10 +264,7 @@ class TestInitiateDeployment:
         )
         _, message = validate_response_bad_request(response)
 
-        assert (
-                message
-                == "Missing github account name or repository name!"
-        )
+        assert message == "Missing github account name or repository name!"
 
 
 class TestGetUserDeployments:
