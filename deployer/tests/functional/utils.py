@@ -22,6 +22,8 @@ from deployer.infrastructure.repositories.transaction_repository import Transact
 
 logger = get_logger(__name__)
 
+incorrect_successful_msg = "Response is suddenly successful!"
+
 
 def validate_response_ok(response) -> Tuple[int, Union[dict, list]]:
     assert 200 <= response["statusCode"] <= 202, "Response is not OK!"
@@ -34,7 +36,7 @@ def validate_response_ok(response) -> Tuple[int, Union[dict, list]]:
 def validate_response_bad_request(response) -> Tuple[int, str]:
     assert response["statusCode"] == 400, "Response has no BAD REQUEST error!"
     body = json.loads(response["body"])
-    assert body["status"] == "failed", "Response is suddenly successful!"
+    assert body["status"] == "failed", incorrect_successful_msg
 
     return response["statusCode"], body["error"]["message"]
 
@@ -42,7 +44,7 @@ def validate_response_bad_request(response) -> Tuple[int, str]:
 def validate_response_forbidden(response) -> Tuple[int, str]:
     assert response["statusCode"] == 403, "Response has no FORBIDDEN error!"
     body = json.loads(response["body"])
-    assert body["status"] == "failed", "Response is suddenly successful!"
+    assert body["status"] == "failed", incorrect_successful_msg
 
     return response["statusCode"], body["error"]["message"]
 
@@ -50,7 +52,7 @@ def validate_response_forbidden(response) -> Tuple[int, str]:
 def validate_response_not_found(response) -> Tuple[int, str]:
     assert response["statusCode"] == 404, "Response has no NOT FOUND error!"
     body = json.loads(response["body"])
-    assert body["status"] == "failed", "Response is suddenly successful!"
+    assert body["status"] == "failed", incorrect_successful_msg
 
     return response["statusCode"], body["error"]["message"]
 
@@ -58,7 +60,7 @@ def validate_response_not_found(response) -> Tuple[int, str]:
 def validate_response_server_error(response) -> Union[dict, Any]:
     assert response["statusCode"] == 500, "Response has no INTERNAL SERVER ERROR!"
     body = json.loads(response["body"])
-    assert body["status"] == "failed", "Response is suddenly successful!"
+    assert body["status"] == "failed", incorrect_successful_msg
     assert body["message"] == "Unexpected server error"
 
     return body["details"]
