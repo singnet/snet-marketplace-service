@@ -28,13 +28,8 @@ class HostedServicesService:
             daemon = DaemonRepository.get_daemon_by_hosted_service(
                 session, request.hosted_service_id
             )
-            if daemon is None:
-                raise HostedServiceNotFoundException(hosted_service_id=request.hosted_service_id)
-            hosted_service = daemon.hosted_service
-            if hosted_service is None:
-                raise HostedServiceNotFoundException(hosted_service_id=request.hosted_service_id)
 
-        result = hosted_service.to_response(remove_created_updated=False)
+        result = daemon.hosted_service.to_response(remove_created_updated=False)
         result["orgId"] = daemon.org_id
         result["serviceId"] = daemon.service_id
 
@@ -45,8 +40,6 @@ class HostedServicesService:
             daemon = DaemonRepository.get_daemon_by_hosted_service(
                 session, request.hosted_service_id
             )
-            if daemon is None or daemon.hosted_service is None:
-                raise HostedServiceNotFoundException(hosted_service_id=request.hosted_service_id)
 
         hosted_service_logs = self._haas_client.get_hosted_service_logs(
             daemon.org_id, daemon.service_id

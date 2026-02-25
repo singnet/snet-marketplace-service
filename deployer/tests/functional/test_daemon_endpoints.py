@@ -8,6 +8,7 @@ from deployer.application.handlers.daemon_handlers import (
     get_daemon_logs,
     update_config,
     update_daemon_status,
+    redeploy_daemon_forcibly,
 )
 from deployer.exceptions import DaemonNotFoundForServiceException
 from deployer.infrastructure.db import session_scope
@@ -20,6 +21,7 @@ from deployer.tests.functional.utils import (
     validate_response_forbidden,
     validate_response_bad_request,
     add_daemon,
+    validate_response_not_found,
 )
 
 logger = get_logger(__name__)
@@ -93,15 +95,15 @@ class TestUpdateConfig:
         test_session_factory,
         add_test_daemon,
         test_daemon_id,
+        test_service_endpoint,
+        test_service_credentials,
     ):
-        test_endpoint = "http://localhost:8080"
-        test_credentials = [
-            {"key": "Authorization", "value": "Bearer 1234567890", "location": "headers"}
-        ]
-
         event = generate_request_event(
             path_parameters={"daemonId": test_daemon_id},
-            body={"serviceEndpoint": test_endpoint, "serviceCredentials": test_credentials},
+            body={
+                "serviceEndpoint": test_service_endpoint,
+                "serviceCredentials": test_service_credentials,
+            },
         )
 
         response = update_config(event, None, test_daemon_service, test_auth_service)
@@ -110,8 +112,8 @@ class TestUpdateConfig:
         with session_scope(test_session_factory) as session:
             daemon = DaemonRepository.get_daemon(session, test_daemon_id)
 
-        assert daemon.daemon_config["service_endpoint"] == test_endpoint
-        assert daemon.daemon_config["service_credentials"] == test_credentials
+        assert daemon.daemon_config["service_endpoint"] == test_service_endpoint
+        assert daemon.daemon_config["service_credentials"] == test_service_credentials
 
     def test_update_config_incorrect_credentials_format(
         self,
@@ -119,13 +121,17 @@ class TestUpdateConfig:
         test_auth_service,
         add_test_daemon,
         test_daemon_id,
+        test_service_endpoint,
+        test_service_credentials,
     ):
-        test_endpoint = "http://localhost:8080"
-        test_credentials = [{"key": "Authorization", "value": "Bearer 1234567890"}]
+        del test_service_credentials[0]["location"]
 
         event = generate_request_event(
             path_parameters={"daemonId": test_daemon_id},
-            body={"serviceEndpoint": test_endpoint, "serviceCredentials": test_credentials},
+            body={
+                "serviceEndpoint": test_service_endpoint,
+                "serviceCredentials": test_service_credentials,
+            },
         )
 
         response = update_config(event, None, test_daemon_service, test_auth_service)
@@ -141,15 +147,15 @@ class TestUpdateConfig:
         test_daemon_service,
         test_auth_service,
         test_daemon_id,
+        test_service_endpoint,
+        test_service_credentials,
     ):
-        test_endpoint = "http://localhost:8080"
-        test_credentials = [
-            {"key": "Authorization", "value": "Bearer 1234567890", "location": "headers"}
-        ]
-
         event = generate_request_event(
             path_parameters={"daemonId": test_daemon_id},
-            body={"serviceEndpoint": test_endpoint, "serviceCredentials": test_credentials},
+            body={
+                "serviceEndpoint": test_service_endpoint,
+                "serviceCredentials": test_service_credentials,
+            },
         )
 
         response = update_config(event, None, test_daemon_service, test_auth_service)
@@ -163,15 +169,15 @@ class TestUpdateConfig:
         test_auth_service,
         add_test_daemon_and_service,
         test_daemon_id,
+        test_service_endpoint,
+        test_service_credentials,
     ):
-        test_endpoint = "http://localhost:8080"
-        test_credentials = [
-            {"key": "Authorization", "value": "Bearer 1234567890", "location": "headers"}
-        ]
-
         event = generate_request_event(
             path_parameters={"daemonId": test_daemon_id},
-            body={"serviceEndpoint": test_endpoint, "serviceCredentials": test_credentials},
+            body={
+                "serviceEndpoint": test_service_endpoint,
+                "serviceCredentials": test_service_credentials,
+            },
         )
 
         response = update_config(event, None, test_daemon_service, test_auth_service)
@@ -189,15 +195,15 @@ class TestUpdateConfig:
         test_org_id,
         test_service_id,
         test_daemon_id,
+        test_service_endpoint,
+        test_service_credentials,
     ):
-        test_endpoint = "http://localhost:8080"
-        test_credentials = [
-            {"key": "Authorization", "value": "Bearer 1234567890", "location": "headers"}
-        ]
-
         event = generate_request_event(
             path_parameters={"daemonId": test_daemon_id},
-            body={"serviceEndpoint": test_endpoint, "serviceCredentials": test_credentials},
+            body={
+                "serviceEndpoint": test_service_endpoint,
+                "serviceCredentials": test_service_credentials,
+            },
         )
 
         with session_scope(test_session_factory) as session:
@@ -417,6 +423,37 @@ class TestUpdateDaemonStatus:
             f"Daemon for service with org_id={test_org_id} and service_id={test_service_id} not found!"
             in str(e.value)
         )
+
+
+class TestRedeployDaemonForcibly:
+    def test_redeploy_daemon_forcibly_ok(
+        self,
+        test_daemon_service,
+        test_session_factory,
+        add_test_daemon,
+        test_daemon_id,
+    ):
+        event = generate_request_event(path_parameters={"daemonId": test_daemon_id})
+
+        response = redeploy_daemon_forcibly(event, None, test_daemon_service)
+        validate_response_ok(response)
+
+        with session_scope(test_session_factory) as session:
+            daemon = DaemonRepository.get_daemon(session, test_daemon_id)
+
+        assert daemon.status == DaemonStatus.STARTING
+
+    def test_redeploy_daemon_forcibly_no_daemon(
+        self,
+        test_daemon_service,
+        test_daemon_id,
+    ):
+        event = generate_request_event(path_parameters={"daemonId": test_daemon_id})
+
+        response = redeploy_daemon_forcibly(event, None, test_daemon_service)
+        _, message = validate_response_not_found(response)
+
+        assert message == f"Daemon with id {test_daemon_id} not found!"
 
 
 class TestDaemonEndpoints:

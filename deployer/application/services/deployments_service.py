@@ -3,6 +3,7 @@ import io
 import tarfile
 from typing import List
 
+
 from common.logger import get_logger
 from common.storage_provider import StorageProvider
 from common.utils import generate_uuid
@@ -85,6 +86,8 @@ class DeploymentsService:
             else:
                 daemon_config["is_service_hosted"] = True
                 daemon_config["service_endpoint"] = ""
+                if daemon_config.get("service_credentials", None) is not None:
+                    del daemon_config["service_credentials"]
 
             if daemon is None:
                 DaemonRepository.create_daemon(
@@ -135,7 +138,7 @@ class DeploymentsService:
             daemon = DaemonRepository.search_daemon(session, request.org_id, request.service_id)
 
         if daemon is None:
-            return {"daemon": {}, "hostedService": {}}
+            return {"daemon": None, "hostedService": None}
 
         response = daemon.to_response()
         response["accountsMatch"] = account_id == daemon.account_id
@@ -157,14 +160,14 @@ class DeploymentsService:
 
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.search_daemon(session, org_id, service_id)
-            logger.info(f"Daemon: {None if daemon is None else daemon.to_response()}")
+            logger.debug(f"Daemon: {None if daemon is None else daemon.to_response()}")
             if daemon is None:
-                logger.info(f"Service (org_id {org_id}, service_id {service_id}) doesn't use HaaS")
+                logger.info(f"Service (org_id={org_id}, service_id={service_id}) doesn't use HaaS")
                 return
             daemon_id = daemon.id
 
             if event_name == AllowedRegistryEventNames.SERVICE_DELETED:
-                self._delete_deployments(daemon, session)
+                self._delete_deployments(daemon)
                 return
 
             metadata: dict = self._storage_provider.get(request.metadata_uri)
@@ -190,8 +193,7 @@ class DeploymentsService:
             self._deployer_client.deploy_daemon(daemon_id, asynchronous=True)
 
             if (
-                event_name != AllowedRegistryEventNames.SERVICE_DELETED
-                and daemon.hosted_service is not None
+                daemon.hosted_service is not None
                 and daemon.hosted_service.status == HostedServiceStatus.INIT
             ):
                 self._haas_client.push_deploy_service_event(
@@ -242,18 +244,15 @@ class DeploymentsService:
         except Exception as e:
             raise ArchiveError(f"Unexpected error processing tar file: {e}") from e
 
-    def _delete_deployments(self, daemon: DaemonDomain, session) -> None:
+    def _delete_deployments(self, daemon: DaemonDomain) -> None:
         if daemon.status == DaemonStatus.UP:
             self._haas_client.delete_daemon(daemon.org_id, daemon.service_id)
-            DaemonRepository.update_daemon_status(session, daemon.id, DaemonStatus.DOWN)
+
         if (
             daemon.hosted_service is not None
             and daemon.hosted_service.status == HostedServiceStatus.UP
         ):
             self._haas_client.delete_hosted_service(daemon.org_id, daemon.service_id)
-            HostedServiceRepository.update_hosted_service_status(
-                session, daemon.hosted_service.id, HostedServiceStatus.DOWN
-            )
 
     @staticmethod
     def _get_daemon_endpoint(org_id: str, service_id: str) -> str:

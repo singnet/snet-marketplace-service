@@ -102,6 +102,9 @@ def test_haas_client():
         def get_hosted_service_logs(self, *args, **kwargs):
             return self.service_logs
 
+        def push_deploy_service_event(self, *args, **kwargs):
+            return None
+
         def get_call_events(self, *args, **kwargs):
             return self.call_events
 
@@ -143,8 +146,12 @@ def test_github_api_client():
     class TestGithubAPIClient(GithubAPIClient):
         def __init__(self):
             self.is_installed = True
+            self.installation_id = "123456"
 
         def check_repo_installation(self, *args, **kwargs) -> bool:
             return self.is_installed
+
+        def get_installation_id(self, *args, **kwargs) -> str:
+            return self.installation_id
 
     return TestGithubAPIClient()

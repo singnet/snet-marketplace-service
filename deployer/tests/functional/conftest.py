@@ -2,6 +2,7 @@ import datetime
 from datetime import timedelta
 from decimal import Decimal
 from random import random
+from typing import List
 
 import pytest
 
@@ -163,3 +164,13 @@ def add_test_daemon(
 ):
     with session_scope(test_session_factory) as session:
         add_daemon(session, test_account_id, test_org_id, test_service_id, test_daemon_id)
+
+
+@pytest.fixture(scope="function")
+def test_service_endpoint() -> str:
+    return "http://localhost:8080"
+
+
+@pytest.fixture(scope="function")
+def test_service_credentials() -> List[dict]:
+    return [{"key": "Authorization", "value": "Bearer 1234567890", "location": "headers"}]
