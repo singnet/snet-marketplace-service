@@ -4,7 +4,6 @@ from typing import Optional, List, Union
 from sqlalchemy import select, update, func
 from sqlalchemy.orm import Session
 
-from contract_api.constant import SortOrder
 from deployer.config import TRANSACTION_TTL_IN_MINUTES
 from deployer.constant import PeriodType, PERIOD_TYPE_TIMEDELTA, OrderType
 from deployer.domain.factory.order_factory import OrderFactory
@@ -35,7 +34,7 @@ class OrderRepository:
             current_time = datetime.now(UTC)
             query = query.where(Order.updated_at > current_time - PERIOD_TYPE_TIMEDELTA[period])
 
-        if order == SortOrder.ASC:
+        if order == OrderType.ASC:
             query = query.order_by(Order.updated_at.asc())
         else:
             query = query.order_by(Order.updated_at.desc())
