@@ -8,7 +8,8 @@ from web3 import Web3
 from common.constant import RequestPayloadType
 from common.validation_handler import validation_handler
 from deployer.application.schemas.queue_schema import QueueEventRequest
-from deployer.constant import AUTH_PARAMETERS, AllowedRegistryEventNames
+from deployer.config import REQUEST_MAX_LIMIT
+from deployer.constant import AUTH_PARAMETERS, AllowedRegistryEventNames, OrderType, OrderByType
 from deployer.exceptions import (
     InvalidServiceAuthParameters,
     MissingServiceEndpointException,
@@ -52,6 +53,19 @@ class InitiateDeploymentRequest(BaseModel):
         return self
 
 
+class GetUserDeploymentsRequest(BaseModel):
+    page: int = Field(ge=1, default=1)
+    limit: int = Field(ge=1, le=REQUEST_MAX_LIMIT, default=REQUEST_MAX_LIMIT)
+    order: OrderType = Field(default=OrderType.DESC)
+    order_by: OrderByType = Field(alias="orderBy", default=OrderByType.CREATED_AT)
+
+    @classmethod
+    @validation_handler([RequestPayloadType.QUERY_STRING])
+    def validate_event(cls, event: dict) -> "GetUserDeploymentsRequest":
+        data = event[RequestPayloadType.QUERY_STRING]
+        return cls.model_validate(data)
+
+
 class SearchDeploymentsRequest(BaseModel):
     org_id: str = Field(alias="orgId")
     service_id: str = Field(alias="serviceId")
@@ -59,7 +73,7 @@ class SearchDeploymentsRequest(BaseModel):
     @classmethod
     @validation_handler([RequestPayloadType.QUERY_STRING])
     def validate_event(cls, event: dict) -> "SearchDeploymentsRequest":
-        data = {**event[RequestPayloadType.QUERY_STRING]}
+        data = event[RequestPayloadType.QUERY_STRING]
         return cls.model_validate(data)
 
 

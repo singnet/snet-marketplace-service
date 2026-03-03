@@ -49,6 +49,10 @@ class OrderType(str, Enum):
     DESC = "desc"
 
 
+class OrderByType(str, Enum):
+    CREATED_AT = "created_at"
+
+
 class TypeOfMovementOfFunds(str, Enum):
     INCOME = "income"
     EXPENSE = "expense"

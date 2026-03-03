@@ -1,7 +1,6 @@
 import hashlib
 import io
 import tarfile
-from typing import List
 
 
 from common.logger import get_logger
@@ -11,6 +10,7 @@ from deployer.application.schemas.deployments_schemas import (
     InitiateDeploymentRequest,
     SearchDeploymentsRequest,
     RegistryEventConsumerRequest,
+    GetUserDeploymentsRequest,
 )
 from deployer.config import (
     DEFAULT_DAEMON_STORAGE_TYPE,
@@ -128,10 +128,17 @@ class DeploymentsService:
 
             return response
 
-    def get_user_deployments(self, account_id: str) -> List[dict]:
+    def get_user_deployments(self, request: GetUserDeploymentsRequest, account_id: str) -> dict:
         with session_scope(self.session_factory) as session:
-            daemons = DaemonRepository.get_user_daemons(session, account_id)
-        return [daemon.to_short_response() for daemon in daemons]
+            daemons = DaemonRepository.get_user_daemons(
+                session, account_id, request.page, request.limit, request.order, request.order_by
+            )
+            daemons_total_count = DaemonRepository.get_user_daemons_total_count(session, account_id)
+
+        return {
+            "deployments": [daemon.to_short_response() for daemon in daemons],
+            "totalCount": daemons_total_count,
+        }
 
     def search_deployments(self, request: SearchDeploymentsRequest, account_id: str) -> dict:
         with session_scope(self.session_factory) as session:

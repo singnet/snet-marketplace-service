@@ -5,6 +5,7 @@ from deployer.application.handlers.deployments_handlers import (
     get_public_key,
     registry_event_consumer,
 )
+from deployer.config import REQUEST_MAX_LIMIT
 from deployer.infrastructure.db import session_scope
 from deployer.infrastructure.models import DaemonStatus, HostedServiceStatus
 from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
@@ -278,16 +279,19 @@ class TestGetUserDeployments:
         test_daemon_id,
         test_hosted_service_id,
     ):
-        response = get_user_deployments(None, None, test_deployments_service)
+        event = generate_request_event(query_parameters={})
+
+        response = get_user_deployments(event, None, test_deployments_service)
         _, data = validate_response_ok(response)
 
-        assert len(data) == 2
-        if data[0]["hostedService"] is not None:
-            full_deployment = data[0]
-            short_deployment = data[1]
+        assert len(data["deployments"]) == 2
+        assert data["totalCount"] == 2
+        if data["deployments"][0]["hostedService"] is not None:
+            full_deployment = data["deployments"][0]
+            short_deployment = data["deployments"][1]
         else:
-            full_deployment = data[1]
-            short_deployment = data[0]
+            full_deployment = data["deployments"][1]
+            short_deployment = data["deployments"][0]
 
         assert full_deployment["orgId"] == test_org_id
         assert full_deployment["serviceId"] == test_service_id
@@ -303,10 +307,32 @@ class TestGetUserDeployments:
         assert short_deployment["hostedService"] is None
 
     def test_get_user_deployments_no_deployments_ok(self, test_deployments_service):
-        response = get_user_deployments(None, None, test_deployments_service)
+        event = generate_request_event(query_parameters={})
+
+        response = get_user_deployments(event, None, test_deployments_service)
         _, data = validate_response_ok(response)
 
-        assert len(data) == 0
+        assert len(data["deployments"]) == 0
+        assert data["totalCount"] == 0
+
+    def test_get_user_deployments_incorrect_filters(
+        self,
+        test_deployments_service,
+        add_test_daemon_and_service,
+        add_test_daemon,
+        test_org_id,
+        test_service_id,
+        test_daemon_id,
+        test_hosted_service_id,
+    ):
+        event = generate_request_event(
+            query_parameters={"limit": REQUEST_MAX_LIMIT + 1, "orderBy": "service_id"}
+        )
+
+        response = get_user_deployments(event, None, test_deployments_service)
+        _, message = validate_response_bad_request(response)
+
+        assert message == "Validation failed for request body."
 
 
 class TestSearchDeployments:

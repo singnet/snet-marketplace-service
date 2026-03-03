@@ -1,9 +1,10 @@
 from datetime import datetime
 from typing import Optional, List, Union
 
-from sqlalchemy import update, select
+from sqlalchemy import update, select, func
 from sqlalchemy.orm import Session, joinedload
 
+from deployer.constant import OrderType, OrderByType
 from deployer.domain.factory.daemon_factory import DaemonFactory
 from deployer.domain.models.daemon import NewDaemonDomain, DaemonDomain
 from deployer.infrastructure.models import Daemon, DaemonStatus, HostedService
@@ -67,13 +68,34 @@ class DaemonRepository:
         return DaemonFactory.daemon_from_db_model(daemon_db)
 
     @staticmethod
-    def get_user_daemons(session: Session, account_id: str) -> List[DaemonDomain]:
+    def get_user_daemons(
+        session: Session,
+        account_id: str,
+        page: Optional[int] = None,
+        limit: Optional[int] = None,
+        order: OrderType = OrderType.ASC,
+        order_by: OrderByType = OrderByType.CREATED_AT,
+    ) -> List[DaemonDomain]:
         query = select(Daemon).where(Daemon.account_id == account_id)
+
+        order_param = getattr(getattr(Daemon, order_by.value), order.value)
+        query = query.order_by(order_param())
+
+        if page is not None and limit is not None:
+            query = query.limit(limit).offset((page - 1) * limit)
 
         result = session.execute(query)
         daemons_db = result.scalars().all()
 
         return DaemonFactory.daemons_from_db_model(daemons_db)
+
+    @staticmethod
+    def get_user_daemons_total_count(session: Session, account_id: str) -> int:
+        query = select(func.count()).select_from(Daemon).where(Daemon.account_id == account_id)
+
+        result = session.execute(query)
+
+        return result.scalar()
 
     @staticmethod
     def search_daemon(session: Session, org_id: str, service_id: str) -> Optional[DaemonDomain]:

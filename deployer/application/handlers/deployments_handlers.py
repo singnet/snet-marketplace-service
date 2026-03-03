@@ -7,6 +7,7 @@ from deployer.application.schemas.deployments_schemas import (
     InitiateDeploymentRequest,
     SearchDeploymentsRequest,
     RegistryEventConsumerRequest,
+    GetUserDeploymentsRequest,
 )
 from deployer.application.services.authorization_service import AuthorizationService
 from deployer.application.services.deployments_service import DeploymentsService
@@ -38,9 +39,11 @@ def initiate_deployment(event, context, deployments_service=None, auth_service=N
 def get_user_deployments(event, context, deployments_service=None):
     req_ctx = RequestContext(event)
 
+    request = GetUserDeploymentsRequest.validate_event(event)
+
     if deployments_service is None:
         deployments_service = DeploymentsService()
-    response = deployments_service.get_user_deployments(req_ctx.account_id)
+    response = deployments_service.get_user_deployments(request, req_ctx.account_id)
 
     return generate_lambda_response(
         StatusCode.OK, {"status": "success", "data": response, "error": {}}, cors_enabled=True
