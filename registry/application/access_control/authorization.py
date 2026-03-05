@@ -1,9 +1,11 @@
 from functools import reduce
 
 from common.logger import get_logger
-from registry.exceptions import ForbiddenException
+from common.exceptions import ForbiddenException
 from registry.constants import Action, Role
-from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
+from registry.infrastructure.repositories.organization_repository import (
+    OrganizationPublisherRepository,
+)
 
 org_repository = OrganizationPublisherRepository()
 
@@ -20,8 +22,10 @@ def is_access_allowed(username, action, org_uuid):
     return False
 
 
-POLICY = {Role.OWNER: [Action.CREATE, Action.SUBMIT, Action.PUBLISH, Action.UPDATE, Action.READ],
-          Role.MEMBER: [Action.CREATE, Action.SUBMIT, Action.UPDATE, Action.READ]}
+POLICY = {
+    Role.OWNER: [Action.CREATE, Action.SUBMIT, Action.PUBLISH, Action.UPDATE, Action.READ],
+    Role.MEMBER: [Action.CREATE, Action.SUBMIT, Action.UPDATE, Action.READ],
+}
 
 
 def secured(*decorator_args, **decorator_kwargs):
@@ -31,9 +35,9 @@ def secured(*decorator_args, **decorator_kwargs):
 
     def check_access(func):
         def wrapper(*args, **kwargs):
-            if 'event' in kwargs:
-                org_uuid = reduce(dict.get, org_uuid_path, kwargs['event'])
-                username = reduce(dict.get, username_path, kwargs['event'])
+            if "event" in kwargs:
+                org_uuid = reduce(dict.get, org_uuid_path, kwargs["event"])
+                username = reduce(dict.get, username_path, kwargs["event"])
             else:
                 event, context = args
                 org_uuid = reduce(dict.get, org_uuid_path, event)

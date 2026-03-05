@@ -3,6 +3,7 @@ from enum import Enum
 
 from registry.settings import settings
 
+
 class FileType(Enum):
     ORG_ASSETS = {
         "file_type": "ORG_ASSETS",
@@ -14,7 +15,7 @@ class FileType(Enum):
         "file_type": "SERVICE_ASSETS",
         "required_query_params": ["org_uuid", "service_uuid"],
         "bucket": settings.aws.S3.UPLOAD_BUCKET.ORG_BUCKET,
-        "bucket_path": "{org_uuid}/services/{service_uuid}/assets"
+        "bucket_path": "{org_uuid}/services/{service_uuid}/assets",
     }
     SERVICE_PAGE_COMPONENTS = {
         "file_type": "SERVICE_PAGE_COMPONENTS",

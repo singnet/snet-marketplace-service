@@ -16,7 +16,7 @@ def get_org_member_invite_mail(org_name, invite_code):
                         {settings.emails.PUBLISHER_PORTAL_SUPPORT_MAIL}.</em></p>
                 <p>Warmest regards,<br/>SingularityNET Publisher Portal
                     Team</p>
-            </div>"""
+            </div>""",
     }
     return invite_member_template
 
@@ -46,7 +46,7 @@ def get_service_approval_mail_template(service_id, service_name, org_id, org_nam
     <br/>
     <p>Regards,<br/>SingularityNET Publisher Portal Team</p>
 </div> \
-"""
+""",
     }
     return service_approval_mail
 
@@ -74,12 +74,14 @@ def get_org_approval_mail(org_id, org_name):
     <br/>
     <p>Regards,<br/>SingularityNET Publisher Portal Team</p>
 </div> \
-"""
+""",
     }
     return org_approval_mail
 
 
-def get_notification_mail_template_for_service_provider_when_org_is_submitted_for_onboarding(org_id):
+def get_notification_mail_template_for_service_provider_when_org_is_submitted_for_onboarding(
+    org_id,
+):
     mail_template = {
         "subject": f"Your organization {org_id} has successfully submitted for approval",
         "body": f"""<div>Your organization {org_id} has successfully been submitted for approval. We will notify you once it 
@@ -87,7 +89,7 @@ def get_notification_mail_template_for_service_provider_when_org_is_submitted_fo
         <br/>
         <p>Regards,<br/>SingularityNET Publisher Portal Team</p>
         </div>
-        """
+        """,
     }
     return mail_template
 
@@ -103,7 +105,7 @@ following reasons,<br/>
     {comment}
     
     <p>Regards,<br/>SingularityNET Publisher Portal Team</p>
-</div>"""
+</div>""",
     }
     return mail_template
 
@@ -117,7 +119,7 @@ def get_owner_mail_for_org_approved(org_id):
     Your organization {org_id} has been reviewed, and it is approved by our approval team.<br/>
     
     <p>Regards,<br/>SingularityNET Publisher Portal Team</p>
-</div>"""
+</div>""",
     }
     return mail_template
 
@@ -133,6 +135,6 @@ team with following comment in review,<br/>
     <strong>Comment:</strong> {comment}
     
     <p>Regards,<br/>SingularityNET Publisher Portal Team</p>
-</div>"""
+</div>""",
     }
     return mail_template

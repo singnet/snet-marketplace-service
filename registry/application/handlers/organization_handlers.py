@@ -164,8 +164,6 @@ def get_all_members(event, context):
     username_path=("requestContext", "authorizer", "claims", "email"),
 )
 def get_member(event, context):
-    req_ctx = RequestContext(event)
-
     request = GetMemberRequest.validate_event(event)
 
     response = OrganizationPublisherService().get_member(request)
