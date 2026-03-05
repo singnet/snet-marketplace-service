@@ -122,9 +122,7 @@ class TestOrganizationMember(TestCase):
             username=owner_username,
         )
 
-        members = OrganizationPublisherService().get_member(
-            username=owner_username, request=request
-        )
+        members = OrganizationPublisherService().get_member(request=request)
 
         if isinstance(members, list) and len(members) == 1:
             members[0].pop("invited_on")
