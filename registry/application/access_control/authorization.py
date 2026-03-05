@@ -1,7 +1,7 @@
 from functools import reduce
 
 from common.logger import get_logger
-from registry.exceptions import ForbiddenException
+from common.exceptions import ForbiddenException
 from registry.constants import Action, Role
 from registry.infrastructure.repositories.organization_repository import (
     OrganizationPublisherRepository,

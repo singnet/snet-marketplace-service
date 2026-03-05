@@ -568,9 +568,10 @@ class ServicePublisherService:
                 build_data = [data for data in build_response["builds"] if data["id"] == build_id]
                 status = build_data[0]["buildStatus"]
             else:
-                raise Exception(
+                logger.exception(
                     f"service for org {request.org_uuid} and service {service} is not found"
                 )
+                raise ServiceNotFoundException()
             return {"build_status": status}
         except Exception as e:
             logger.info(

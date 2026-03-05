@@ -5,6 +5,7 @@ from datetime import datetime as dt
 from common import utils
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
+from registry.exceptions import ServiceNotFoundException
 from registry.settings import settings
 from registry.constants import ServiceStatus, ServiceAssetsRegex, AssetsStatus
 from registry.infrastructure.repositories.service_publisher_repository import (
@@ -41,9 +42,10 @@ class UpdateServiceAssets:
                 org_uuid=org_uuid, service_uuid=service_uuid
             )
             if not service:
-                raise Exception(
-                    f"Service with org_uuid {org_uuid} and service_uuid {service_uuid} not found"
+                logger.exception(
+                    f"service for org {org_uuid} and service {service_uuid} is not found"
                 )
+                raise ServiceNotFoundException()
             if utils.match_regex_string(
                 path=file_path, regex_pattern=ServiceAssetsRegex.PROTO_FILE_URL.value
             ):

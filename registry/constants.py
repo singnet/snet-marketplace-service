@@ -9,16 +9,17 @@ CONTRACT_BASE_PATH = settings.network.networks[network_id].contract_base_path
 COMMON_CNTRCT_PATH = os.path.abspath(
     f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-platform-contracts"
 )
-REG_CNTRCT_PATH = os.path.join(COMMON_CNTRCT_PATH, "abi", "Registry.json")
+REGISTRY_FILE_NAME = "Registry.json"
+REG_CNTRCT_PATH = os.path.join(COMMON_CNTRCT_PATH, "abi", REGISTRY_FILE_NAME)
 MPE_CNTRCT_PATH = os.path.join(COMMON_CNTRCT_PATH, "abi", "MultiPartyEscrow.json")
-REG_ADDR_PATH = os.path.join(COMMON_CNTRCT_PATH, "networks", "Registry.json")
+REG_ADDR_PATH = os.path.join(COMMON_CNTRCT_PATH, "networks", REGISTRY_FILE_NAME)
 MPE_ADDR_PATH = os.path.join(COMMON_CNTRCT_PATH, "networks", "MultiPartyEscrow.json")
 
 TEST_COMMON_CNTRCT_PATH = os.path.abspath(
     f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-platform-contracts"
 )
-TEST_REG_CNTRCT_PATH = os.path.join(TEST_COMMON_CNTRCT_PATH, "abi", "Registry.json")
-TEST_REG_ADDR_PATH = os.path.join(TEST_COMMON_CNTRCT_PATH, "networks", "Registry.json")
+TEST_REG_CNTRCT_PATH = os.path.join(TEST_COMMON_CNTRCT_PATH, "abi", REGISTRY_FILE_NAME)
+TEST_REG_ADDR_PATH = os.path.join(TEST_COMMON_CNTRCT_PATH, "networks", REGISTRY_FILE_NAME)
 
 
 class OrganizationStatus(Enum):
