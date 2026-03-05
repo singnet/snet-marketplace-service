@@ -69,7 +69,7 @@ class ServiceService:
         )
 
         total_count = self._service_repo.get_filtered_services_count(
-            filters=request.filters,
+            filters=request.filter,
             q=request.q
         )
 
