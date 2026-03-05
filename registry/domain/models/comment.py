@@ -8,7 +8,7 @@ class Comment:
         comment_dict = {
             "comment": self.__comment,
             "created_by": self.__created_by,
-            "created_on": self.__created_on
+            "created_on": self.__created_on,
         }
         return comment_dict
 

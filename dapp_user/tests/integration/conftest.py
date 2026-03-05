@@ -1,58 +1,75 @@
 import os
-from typing import Generator, List
+from typing import Callable, Generator, List, Tuple
 
 import pytest
 from dapp_user.domain.factory.user_factory import UserFactory
 from dapp_user.domain.models.user import NewUser
 from dapp_user.domain.models.user_preference import UserPreference as UserPreferenceDomain
-from dapp_user.infrastructure.models import User, UserPreference
-from dapp_user.infrastructure.repositories import base_repository
-from dapp_user.infrastructure.repositories.user_repository import UserRepository
-from dapp_user.settings import settings
+from dapp_user.domain.models.user_service_feedback import (
+    UserServiceFeedback as UserServiceFeedbackDomain,
+)
+from dapp_user.domain.models.user_service_vote import UserServiceVote as UserServiceVoteDomain
+from dapp_user.infrastructure.models import (
+    User,
+    UserPreference,
+    UserServiceFeedback,
+    UserServiceVote,
+)
 from sqlalchemy import Engine, create_engine
-from sqlalchemy.orm import Session as SessionType
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
+from testcontainers.mysql import MySqlContainer
 
 from alembic import command
 from alembic.config import Config
-
-TEST_DB_URL = (
-    f"{settings.db.driver}://{settings.db.user}:{settings.db.password}"
-    f"@{settings.db.host}:{settings.db.port}/{settings.db.name}"
-)
-
-engine = create_engine(TEST_DB_URL, pool_pre_ping=True)
-TestSession = sessionmaker(bind=engine)
-
-
-@pytest.fixture(scope="session")
-def db_engine():
-    """Provide the SQLAlchemy engine for the test DB."""
-    return engine
-
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 ALEMBIC_INI_PATH = os.path.join(ROOT_DIR, "alembic.ini")
 TEST_USER = "integration@example.com"
 
 
+@pytest.fixture(scope="session")
+def mysql_container():
+    """Start a MySQL Docker container for the test session."""
+    container = MySqlContainer(
+        image="mysql:8.0",
+        username="test_user",
+        password="test_password",
+        dbname="dapp_user_test",
+        dialect="pymysql",
+    )
+    with container as c:
+        yield c
+
+
+@pytest.fixture(scope="session")
+def db_engine(mysql_container) -> Engine:
+    """Create SQLAlchemy engine connected to the test container."""
+    url = mysql_container.get_connection_url()
+    return create_engine(url, pool_pre_ping=True)
+
+
 @pytest.fixture(scope="session", autouse=True)
-def apply_migrations():
-    """Apply Alembic migrations at the start of the test session."""
+def apply_migrations(mysql_container) -> Generator[None, None, None]:
+    """Apply Alembic migrations to the container database, then downgrade after."""
+    test_db_url = mysql_container.get_connection_url()
+
     alembic_cfg = Config(ALEMBIC_INI_PATH)
-    alembic_cfg.set_main_option("sqlalchemy.url", TEST_DB_URL)
+    alembic_cfg.set_main_option("sqlalchemy.url", test_db_url)
     command.upgrade(alembic_cfg, "head")
 
     yield
 
-    command.downgrade(alembic_cfg, "base")
+    alembic_cfg_down = Config(ALEMBIC_INI_PATH)
+    alembic_cfg_down.set_main_option("sqlalchemy.url", test_db_url)
+    command.downgrade(alembic_cfg_down, "base")
 
 
 @pytest.fixture(scope="function")
-def db_session(db_engine: Engine, apply_migrations) -> Generator[SessionType, None, None]:
-    """Create a new database session for a test, rolling back after."""
+def db_session(db_engine: Engine, apply_migrations) -> Generator[Session, None, None]:
+    """Provide a transactional scope around a series of operations."""
     connection = db_engine.connect()
-    session = TestSession(bind=connection)
+    session_maker = sessionmaker(bind=db_engine)
+    session = session_maker(bind=connection)
     try:
         yield session
     finally:
@@ -61,21 +78,9 @@ def db_session(db_engine: Engine, apply_migrations) -> Generator[SessionType, No
         connection.close()
 
 
-@pytest.fixture(scope="function", autouse=True)
-def test_session(db_session: SessionType) -> Generator[SessionType, None, None]:
-    """Monkeypatch BaseRepository to use test session."""
-    original_session = base_repository.default_session
-    base_repository.default_session = db_session
-    try:
-        yield db_session
-    finally:
-        base_repository.default_session = original_session
-
-
-@pytest.fixture
-def user_repo() -> UserRepository:
-    """Return a real UserRepository that uses the overridden session."""
-    return UserRepository()
+@pytest.fixture(scope="function")
+def test_session_factory(db_engine: Engine) -> Callable[[], Session]:
+    return sessionmaker(bind=db_engine)
 
 
 @pytest.fixture
@@ -116,8 +121,8 @@ def lambda_event_authorized_not_found() -> dict:
 
 
 @pytest.fixture
-def create_test_users(user_repo: UserRepository) -> Generator[List[User], None, None]:
-    """Create multiple users in the real DB for testing."""
+def create_test_users(db_session: Session) -> Generator[List[User], None, None]:
+    """Create multiple test users directly using session."""
     users = [
         User(
             row_id=1,
@@ -154,21 +159,22 @@ def create_test_users(user_repo: UserRepository) -> Generator[List[User], None, 
         ),
     ]
 
-    user_repo.add_all_items(users)
+    db_session.add_all(users)
+    db_session.commit()
 
     yield users
 
     for user in users:
-        user_repo.session.delete(user)
-    user_repo.session.commit()
+        db_session.delete(user)
+    db_session.commit()
 
 
 @pytest.fixture
-def create_user_for_deleting(user_repo: UserRepository) -> Generator[User, None, None]:
+def create_user_for_deleting(db_session: Session) -> Generator[User, None, None]:
     user = User(
-        row_id=3,
-        account_id="acc-test-003",
-        username=TEST_USER,  # for handler test
+        row_id=101,
+        account_id="acc-test-004",
+        username=TEST_USER,
         name="Integration User DELETE",
         email=TEST_USER,
         email_verified=True,
@@ -177,16 +183,17 @@ def create_user_for_deleting(user_repo: UserRepository) -> Generator[User, None,
         is_terms_accepted=True,
     )
 
-    user_repo.add_item(user)
+    db_session.add(user)
+    db_session.commit()
 
     yield user
 
 
 @pytest.fixture
 def create_test_user_preferences(
-    user_repo: UserRepository, create_test_users: List[User]
+    db_session: Session, create_test_users: List[User]
 ) -> Generator[List[UserPreferenceDomain], None, None]:
-    """Create test user preferences for a given user."""
+    """Create test user preferences directly."""
     user = create_test_users[2]  # integrationuser
 
     preferences_db = [
@@ -208,14 +215,43 @@ def create_test_user_preferences(
         ),
     ]
 
-    user_repo.add_all_items(preferences_db)
-    user_repo.session.commit()
+    db_session.add_all(preferences_db)
+    db_session.commit()
 
     yield UserFactory.user_preferences_from_db_model(preferences_db)
 
     for pref in preferences_db:
-        user_repo.session.delete(pref)
-    user_repo.session.commit()
+        db_session.delete(pref)
+    db_session.commit()
+
+
+@pytest.fixture
+def create_test_user_feedback_vote(
+    db_session: Session, create_test_users: List[User]
+) -> Generator[Tuple[UserServiceVoteDomain, UserServiceFeedbackDomain], None, None]:
+    user = create_test_users[2]
+    org_id = "test_org"
+    service_id = "test_service"
+
+    feedback = UserServiceFeedback(
+        user_row_id=user.row_id, org_id=org_id, service_id=service_id, comment="test"
+    )
+
+    vote = UserServiceVote(
+        user_row_id=user.row_id, org_id=org_id, service_id=service_id, rating=5.0
+    )
+
+    db_session.add_all([vote, feedback])
+    db_session.commit()
+
+    yield (
+        UserFactory.user_service_vote_from_db_model(vote),
+        UserFactory.user_service_feedback_from_db_model(feedback),
+    )
+
+    db_session.delete(vote)
+    db_session.delete(feedback)
+    db_session.commit()
 
 
 @pytest.fixture
@@ -243,7 +279,7 @@ def post_confirmation_cognito_event() -> dict:
 
 
 @pytest.fixture
-def fake_cognito_users():
+def fake_cognito_users() -> List[NewUser]:
     return [
         NewUser(
             account_id="abc123",
@@ -261,7 +297,7 @@ def fake_cognito_users():
 @pytest.fixture
 def mock_user_identity_manager(fake_cognito_users: List[NewUser]):
     class MockUserIdentityManager:
-        def get_all_users(self):
+        def get_all_users(self) -> List[NewUser]:
             return fake_cognito_users
 
     return MockUserIdentityManager()

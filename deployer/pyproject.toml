@@ -20,11 +20,16 @@ rlp = "4.1.0"
 lighthouseweb3 = "0.1.4"
 ipfshttpclient = "0.4.13"
 schema = "0.7.7"
-
+pyjwt = "2.10.1"
+pandas = "2.3.3"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "0.11.4"
 pytest = "8.3.5"
+testcontainers = "4.13.3"
+coverage = "7.13.3"
+cryptography = "46.0.4"
+deepdiff = "8.4.2"
 
 [tool.black]
 line-length = 100
@@ -35,6 +40,14 @@ skip_gitignore = true
 
 [tool.ruff]
 line-length = 100
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::DeprecationWarning:testcontainers.*",
+    "ignore::DeprecationWarning:websockets.*",
+    "ignore::DeprecationWarning:requests.*",
+    "ignore::DeprecationWarning:urllib3.*",
+]
 
 [build-system]
 requires = ["poetry-core"]

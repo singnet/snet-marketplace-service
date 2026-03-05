@@ -1,190 +1,146 @@
-from datetime import UTC, datetime, timedelta
-from typing import List
+from typing import List, Tuple
 
+from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from deployer.application.schemas.daemon_schemas import (
     DaemonRequest,
     UpdateConfigRequest,
-    SearchDaemonRequest,
+    UpdateDaemonStatusRequest,
 )
-from deployer.config import CLAIMING_PERIOD_IN_MINUTES
+from deployer.config import REGION_NAME
 from deployer.exceptions import (
     DaemonNotFoundException,
-    ClaimingNotAvailableException,
     UpdateConfigNotAvailableException,
+    DaemonNotFoundForServiceException,
 )
 from deployer.infrastructure.clients.deployer_client import DeployerClient
 from deployer.infrastructure.clients.haas_client import HaaSClient
 from deployer.infrastructure.db import DefaultSessionFactory, session_scope
-from deployer.infrastructure.models import DaemonStatus, ClaimingPeriodStatus
+from deployer.infrastructure.models import DaemonStatus
 from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
-from deployer.infrastructure.repositories.claiming_period_repository import ClaimingPeriodRepository
-from deployer.infrastructure.repositories.order_repository import OrderRepository
 
 
 logger = get_logger(__name__)
 
 
 class DaemonService:
-    def __init__(self):
-        self.session_factory = DefaultSessionFactory
-        self._deployer_client = DeployerClient()
-        self._haas_client = HaaSClient()
+    def __init__(
+        self, session_factory=None, deployer_client=None, haas_client=None, boto_utils=None
+    ):
+        self.session_factory = DefaultSessionFactory if session_factory is None else session_factory
+        self._deployer_client = DeployerClient() if deployer_client is None else deployer_client
+        self._haas_client = HaaSClient() if haas_client is None else haas_client
+        self._boto_utils = BotoUtils(REGION_NAME) if boto_utils is None else boto_utils
 
-    def get_user_daemons(self, account_id: str) -> List[dict]:
-        result = []
-
+    def get_daemon(self, request: DaemonRequest) -> dict:
         with session_scope(self.session_factory) as session:
-            user_daemons = DaemonRepository.get_user_daemons(session, account_id)
-            daemon_ids = [daemon.id for daemon in user_daemons]
+            daemon = DaemonRepository.get_daemon(session, request.daemon_id)
 
-            claiming_periods = ClaimingPeriodRepository.get_last_claiming_periods_batch(
-                session, daemon_ids
-            )
-            orders = OrderRepository.get_last_successful_orders_batch(session, daemon_ids)
+        # In this case, the daemon will never be None, because otherwise the verification will not pass at the authorization stage earlier
 
-        for daemon in user_daemons:
-            daemon_response = daemon.to_short_response()
-
-            last_claiming_period = claiming_periods.get(daemon.id, None)
-            if last_claiming_period is not None:
-                daemon_response.update(last_claiming_period.to_daemon_response())
-            else:
-                daemon_response["lastClaimedAt"] = ""
-
-            order = orders.get(daemon.id, None)
-            daemon_response["lastPayment"] = (
-                order.updated_at.isoformat() if order is not None else ""
-            )
-
-            result.append(daemon_response)
+        result = daemon.to_response(with_hosted_service=False)
+        result.update(result["daemon"])
+        del result["daemon"]
 
         return result
 
-    def get_service_daemon(self, request: DaemonRequest) -> dict:
+    def get_daemon_logs(self, request: DaemonRequest) -> List[str]:
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.get_daemon(session, request.daemon_id)
-            if daemon is None:
-                raise DaemonNotFoundException(request.daemon_id)
-            orders = OrderRepository.get_daemon_orders(session, request.daemon_id)
+        # In this case, the daemon will never be None, because otherwise the verification will not pass at the authorization stage earlier
 
-        result = daemon.to_response()
-        result["orders"] = [order.to_response() for order in orders]
+        daemon_logs = self._haas_client.get_daemon_logs(daemon.org_id, daemon.service_id)
 
-        return result
+        return daemon_logs
 
-    def start_daemon_for_claiming(self, request: DaemonRequest):
-        current_time = datetime.now(UTC)
+    def download_daemon_logs(self, request: DaemonRequest) -> Tuple[str, str]:
+        daemon_logs = self.get_daemon_logs(request)
+
+        return "\n".join(daemon_logs), f"daemon_{request.daemon_id}_logs.txt"
+
+    def redeploy_all_daemons(self) -> dict:
         with session_scope(self.session_factory) as session:
-            daemon = DaemonRepository.get_daemon(session, request.daemon_id)
-            if daemon is None:
-                raise DaemonNotFoundException(request.daemon_id)
-            if daemon.status != DaemonStatus.DOWN:
-                raise ClaimingNotAvailableException(reason="status")
-            last_claiming_period = ClaimingPeriodRepository.get_last_claiming_period(
-                session, request.daemon_id
+            daemon_ids = DaemonRepository.get_all_daemon_ids(session, status=DaemonStatus.UP)
+            for daemon_id in daemon_ids:
+                self._deployer_client.deploy_daemon(daemon_id, asynchronous=True)
+        return {}
+
+    def update_daemon_status(self, request: UpdateDaemonStatusRequest):
+        with session_scope(self.session_factory) as session:
+            daemon = DaemonRepository.search_daemon(
+                session, org_id=request.org_id, service_id=request.service_id
             )
+            if daemon is None:
+                raise DaemonNotFoundForServiceException(request.org_id, request.service_id)
             if (
-                last_claiming_period is not None
-                and last_claiming_period.status != ClaimingPeriodStatus.FAILED
-                and last_claiming_period.end_at.replace(tzinfo=UTC)
-                + timedelta(hours=24)
-                - timedelta(minutes=CLAIMING_PERIOD_IN_MINUTES)
-                > current_time
+                daemon.status_resource_version is not None
+                and daemon.status_resource_version == request.status_resource_version
             ):
-                raise ClaimingNotAvailableException(
-                    reason="time", last_claimed_at=last_claiming_period.start_at.isoformat()
+                logger.exception(
+                    f"The received event has the same resource version: {request.status_resource_version}. Skip."
                 )
-            ClaimingPeriodRepository.create_claiming_period(session, request.daemon_id)
-            logger.info(f"Daemon {daemon.id} status is READY_TO_START")
+                return
+            if (
+                daemon.status_observed_at is not None
+                and daemon.status_observed_at > request.status_observed_at.replace(tzinfo=None)
+            ):
+                logger.exception(
+                    f"The received event is out of date: existing - {daemon.status_observed_at}, received - {request.status_observed_at}. Skip."
+                )
+                return
+
             DaemonRepository.update_daemon_status(
-                session, request.daemon_id, DaemonStatus.READY_TO_START
+                session,
+                daemon.id,
+                DaemonStatus(request.status),
+                request.status_observed_at,
+                request.status_resource_version,
             )
-        return {}
 
-    def start_daemon(self, request: DaemonRequest):
+        logger.info(f"Status for daemon {daemon.id} updated to {request.status}")
+
+    def deploy_daemon(self, request: DaemonRequest):
         daemon_id = request.daemon_id
 
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.get_daemon(session, daemon_id)
 
-            if daemon is None:
-                raise DaemonNotFoundException(daemon_id)
+        if daemon is None:
+            raise DaemonNotFoundException(daemon_id)
 
-            if daemon.status != DaemonStatus.READY_TO_START or not daemon.service_published:
-                logger.info(
-                    f"Daemon status is not ready to start: {daemon.status}, service_published: {daemon.service_published}"
-                )
-                return {}
+        if daemon.status not in [DaemonStatus.INIT, DaemonStatus.UP]:
+            logger.exception(f"Daemon {daemon_id} is not in INIT or UP status")
+            return {}
 
-            logger.info(f"Starting daemon: {daemon.to_response()}")
-            self._haas_client.start_daemon(
-                org_id=daemon.org_id,
-                service_id=daemon.service_id,
-                daemon_config=daemon.daemon_config,
-            )
+        logger.info(
+            f"(Re)Starting daemon id={daemon.id}, org_id={daemon.org_id}, service_id={daemon.service_id}"
+        )
 
-            DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.STARTING)
-
-        return {}
-
-    def stop_daemon(self, request: DaemonRequest):
-        daemon_id = request.daemon_id
+        self._haas_client.deploy_daemon(
+            org_id=daemon.org_id,
+            service_id=daemon.service_id,
+            daemon_config=daemon.daemon_config,
+        )
 
         with session_scope(self.session_factory) as session:
-            daemon = DaemonRepository.get_daemon(session, daemon_id)
-
-            if daemon is None:
-                raise DaemonNotFoundException(daemon_id)
-
-            org_id = daemon.org_id
-            service_id = daemon.service_id
-
-            if daemon.status != DaemonStatus.UP:
-                return {}
-
-            logger.info(f"Stopping daemon: {daemon.to_response()}")
-            self._haas_client.delete_daemon(org_id, service_id)
-            DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.DELETING)
-
-        return {}
-
-    def redeploy_daemon(self, request: DaemonRequest):
-        daemon_id = request.daemon_id
-
-        with session_scope(self.session_factory) as session:
-            daemon = DaemonRepository.get_daemon(session, daemon_id)
-
-            if daemon is None:
-                raise DaemonNotFoundException(daemon_id)
-
-            if daemon.status != DaemonStatus.UP:
-                return {}
-
-            logger.info(f"Redeploying daemon: {daemon.to_response()}")
-            self._haas_client.redeploy_daemon(
-                org_id=daemon.org_id,
-                service_id=daemon.service_id,
-                daemon_config=daemon.daemon_config,
+            DaemonRepository.update_daemon_status(
+                session,
+                daemon_id,
+                DaemonStatus.STARTING,
+                daemon.status_observed_at,
+                daemon.status_resource_version,
             )
 
-            DaemonRepository.update_daemon_status(session, daemon_id, DaemonStatus.RESTARTING)
-
         return {}
-
-    def get_public_key(self) -> dict:
-        public_key = self._haas_client.get_public_key()
-        return {"publicKey": public_key}
 
     def update_config(self, request: UpdateConfigRequest) -> dict:
         service_endpoint = request.service_endpoint
         service_credentials = request.service_credentials
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.get_daemon(session, request.daemon_id)
-            if daemon is None:
-                raise DaemonNotFoundException(request.daemon_id)
+            # In this case, the daemon will never be None, because otherwise the verification will not pass at the authorization stage earlier
 
-            if daemon.status in [DaemonStatus.STARTING, DaemonStatus.RESTARTING]:
+            if daemon.hosted_service is not None or daemon.status == DaemonStatus.STARTING:
                 raise UpdateConfigNotAvailableException()
 
             daemon_config = daemon.daemon_config
@@ -196,24 +152,34 @@ class DaemonService:
             DaemonRepository.update_daemon_config(session, request.daemon_id, daemon_config)
 
             if daemon.status == DaemonStatus.UP:
-                self._deployer_client.redeploy_daemon(request.daemon_id, asynchronous=True)
+                self._deployer_client.deploy_daemon(request.daemon_id, asynchronous=True)
 
         return {}
 
-    def search_daemon(self, request: SearchDaemonRequest) -> dict:
-        org_id = request.org_id
-        service_id = request.service_id
+    def redeploy_daemon_forcibly(self, request: DaemonRequest) -> None:
+        daemon_id = request.daemon_id
+
         with session_scope(self.session_factory) as session:
-            daemon = DaemonRepository.search_daemon(session, org_id, service_id)
-            if daemon is None:
-                return {}
-            order = OrderRepository.get_last_order(session, daemon.id)
-        daemon_response = daemon.to_response()
-        del daemon_response["daemonConfig"]
-        return {"daemon": daemon_response, "order": order.to_short_response()}
+            daemon = DaemonRepository.get_daemon(session, daemon_id)
 
-    def pause_daemon(self, request: DaemonRequest):
-        pass
+        if daemon is None:
+            raise DaemonNotFoundException(daemon_id)
 
-    def unpause_daemon(self, request: DaemonRequest):
-        pass
+        self._haas_client.deploy_daemon(
+            org_id=daemon.org_id,
+            service_id=daemon.service_id,
+            daemon_config=daemon.daemon_config,
+        )
+
+        with session_scope(self.session_factory) as session:
+            DaemonRepository.update_daemon_status(
+                session,
+                daemon_id,
+                DaemonStatus.STARTING,
+                daemon.status_observed_at,
+                daemon.status_resource_version,
+            )
+
+        logger.info(
+            f"Restarting daemon id={daemon.id}, org_id={daemon.org_id}, service_id={daemon.service_id}"
+        )

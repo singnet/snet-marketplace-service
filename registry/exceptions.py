@@ -1,9 +1,4 @@
-from common.exceptions import (
-    BadRequestException,
-    MethodNotImplemented,
-    OperationNotAllowed,
-    ForbiddenException
-)
+from common.exceptions import BadRequestException, MethodNotImplemented, OperationNotAllowed
 
 
 class OrganizationNotFoundException(BadRequestException):
@@ -90,10 +85,26 @@ class NewMemberAddressException(BadRequestException):
     def __init__(self):
         super().__init__(message="New member address equals owner address")
 
-EXCEPTIONS = (BadRequestException, OrganizationNotFoundException, InvalidOriginException, MethodNotImplemented,
-              InvalidOrganizationStateException, InvalidMetadataException, InvalidServiceStateException,
-              ServiceProtoNotFoundException, OrganizationNotPublishedException,
-              ServiceNotFoundException, ServiceGroupNotFoundException, EnvironmentNotFoundException,
-              InvalidSlackUserException, InvalidSlackChannelException, InvalidSlackSignatureException,
-              InvalidFileTypeException, FileNotFoundException, OperationNotAllowed, InvalidOrganizationType,
-              NewMemberAddressException)
+
+EXCEPTIONS = (
+    BadRequestException,
+    OrganizationNotFoundException,
+    InvalidOriginException,
+    MethodNotImplemented,
+    InvalidOrganizationStateException,
+    InvalidMetadataException,
+    InvalidServiceStateException,
+    ServiceProtoNotFoundException,
+    OrganizationNotPublishedException,
+    ServiceNotFoundException,
+    ServiceGroupNotFoundException,
+    EnvironmentNotFoundException,
+    InvalidSlackUserException,
+    InvalidSlackChannelException,
+    InvalidSlackSignatureException,
+    InvalidFileTypeException,
+    FileNotFoundException,
+    OperationNotAllowed,
+    InvalidOrganizationType,
+    NewMemberAddressException,
+)

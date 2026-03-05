@@ -1,0 +1,114 @@
+from typing import Tuple, List
+
+from common.logger import get_logger
+from deployer.application.schemas.hosted_services_schemas import (
+    HostedServiceRequest,
+    UpdateHostedServiceStatusRequest,
+    CheckGithubRepositoryRequest,
+)
+from deployer.exceptions import HostedServiceNotFoundException
+from deployer.infrastructure.clients.github_api_client import GithubAPIClient
+from deployer.infrastructure.clients.haas_client import HaaSClient
+from deployer.infrastructure.db import DefaultSessionFactory, session_scope
+from deployer.infrastructure.models import HostedServiceStatus
+from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
+from deployer.infrastructure.repositories.hosted_service_repository import HostedServiceRepository
+
+logger = get_logger(__name__)
+
+
+class HostedServicesService:
+    def __init__(self, session_factory=None, haas_client=None, github_client=None, boto_utils=None):
+        self.session_factory = DefaultSessionFactory if session_factory is None else session_factory
+        self._haas_client = HaaSClient(boto_utils) if haas_client is None else haas_client
+        self._github_api_client = GithubAPIClient() if github_client is None else github_client
+
+    def get_hosted_service(self, request: HostedServiceRequest) -> dict:
+        with session_scope(self.session_factory) as session:
+            daemon = DaemonRepository.get_daemon_by_hosted_service(
+                session, request.hosted_service_id
+            )
+
+        result = daemon.hosted_service.to_response(remove_created_updated=False)
+        result["orgId"] = daemon.org_id
+        result["serviceId"] = daemon.service_id
+
+        return result
+
+    def get_hosted_service_logs(self, request: HostedServiceRequest) -> List[str]:
+        with session_scope(self.session_factory) as session:
+            daemon = DaemonRepository.get_daemon_by_hosted_service(
+                session, request.hosted_service_id
+            )
+
+        hosted_service_logs = self._haas_client.get_hosted_service_logs(
+            daemon.org_id, daemon.service_id
+        )
+
+        return hosted_service_logs
+
+    def download_hosted_service_logs(self, request: HostedServiceRequest) -> Tuple[str, str]:
+        hosted_service_logs = self.get_hosted_service_logs(request)
+
+        return "\n".join(
+            hosted_service_logs
+        ), f"hosted_service_{request.hosted_service_id}_logs.txt"
+
+    def check_github_repository(self, request: CheckGithubRepositoryRequest) -> dict:
+        is_installed = self._github_api_client.check_repo_installation(
+            request.account_name, request.repository_name
+        )
+        result = {"isInstalled": is_installed}
+        if not is_installed:
+            result["message"] = (
+                f"The application is not installed in the repository with "
+                f"account name {request.account_name} and repository name "
+                f"{request.repository_name}, or the account and/or repository "
+                f"name does not exist"
+            )
+
+        return result
+
+    def update_hosted_service_status(self, request: UpdateHostedServiceStatusRequest):
+        with session_scope(self.session_factory) as session:
+            hosted_service = HostedServiceRepository.search_hosted_service(
+                session, request.org_id, request.service_id
+            )
+            if hosted_service is None:
+                raise HostedServiceNotFoundException(
+                    org_id=request.org_id, service_id=request.service_id
+                )
+
+            new_status = HostedServiceStatus(request.status)
+            HostedServiceRepository.update_hosted_service_status(
+                session,
+                hosted_service.id,
+                new_status,
+                self._github_api_client.make_commit_url(
+                    hosted_service.github_account_name,
+                    hosted_service.github_repository_name,
+                    request.commit,
+                ),
+            )
+
+    def redeploy_hosted_service_forcibly(self, request: HostedServiceRequest):
+        with session_scope(self.session_factory) as session:
+            daemon = DaemonRepository.get_daemon_by_hosted_service(
+                session, request.hosted_service_id
+            )
+            if daemon is None or daemon.hosted_service is None:
+                raise HostedServiceNotFoundException(hosted_service_id=request.hosted_service_id)
+
+        self._haas_client.push_deploy_service_event(
+            daemon.org_id,
+            daemon.service_id,
+            self._github_api_client.make_repository_url(
+                daemon.hosted_service.github_account_name,
+                daemon.hosted_service.github_repository_name,
+            ),
+            self._github_api_client.get_installation_id(
+                daemon.hosted_service.github_account_name,
+                daemon.hosted_service.github_repository_name,
+            ),
+            daemon.hosted_service.last_commit_url,
+        )

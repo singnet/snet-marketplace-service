@@ -14,7 +14,7 @@ class ServiceComment:
             "support_type": self._support_type,
             "user_type": self._user_type,
             "commented_by": self._commented_by,
-            "comment": self._comment
+            "comment": self._comment,
         }
 
     @property

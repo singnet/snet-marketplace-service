@@ -213,9 +213,13 @@ class Service(Base):
         TIMESTAMP(timezone=False), nullable=False, server_default=func.now(), onupdate=func.now()
     )
 
-    groups: Mapped[List["ServiceGroup"]] = relationship("ServiceGroup", back_populates="service", cascade="all, delete-orphan")
+    groups: Mapped[List["ServiceGroup"]] = relationship(
+        "ServiceGroup", back_populates="service", cascade="all, delete-orphan"
+    )
     service_state: Mapped["ServiceState"] = relationship("ServiceState", uselist=False)
-    offchain_service_config: Mapped["OffchainServiceConfig"] = relationship("OffchainServiceConfig", uselist=True)
+    offchain_service_config: Mapped["OffchainServiceConfig"] = relationship(
+        "OffchainServiceConfig", uselist=True
+    )
 
 
 class ServiceState(Base):

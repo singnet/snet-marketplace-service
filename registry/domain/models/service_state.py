@@ -10,7 +10,7 @@ class ServiceState:
             "org_uuid": self._org_uuid,
             "service_uuid": self._service_uuid,
             "state": self._state,
-            "transaction_hash": self._transaction_hash
+            "transaction_hash": self._transaction_hash,
         }
 
     @property

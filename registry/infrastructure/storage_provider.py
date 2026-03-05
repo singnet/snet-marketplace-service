@@ -19,7 +19,7 @@ logger = get_logger(__name__)
 
 class MetaEnum(EnumMeta):
     def __contains__(cls, item):
-        return any(item == member.value for member in cls) # type: ignore
+        return any(item == member.value for member in cls)  # type: ignore
 
 
 class StorageProviderType(Enum, metaclass=MetaEnum):
@@ -69,7 +69,7 @@ class StorageProvider:
             raise Exception("Data bytes is None")
 
         return json.loads(data_bytes.decode("utf-8"))
- 
+
     def __upload_to_provider(self, file_path: str, provider_type: StorageProviderType) -> str:
         """
         Upload file to the specified storage provider.
@@ -89,8 +89,13 @@ class StorageProvider:
             raise ValueError(f"Unsupported provider type: {provider_type}")
         return self.hash_to_uri(metadata_hash, provider_type)
 
-    def publish(self, source: str, provider_type: StorageProviderType,
-                zip_archive: bool = False, exclude_files: List[str] | None = None) -> str:
+    def publish(
+        self,
+        source: str,
+        provider_type: StorageProviderType,
+        zip_archive: bool = False,
+        exclude_files: List[str] | None = None,
+    ) -> str:
         """
         Publish metadata to a specific provider storage.
 
@@ -100,7 +105,9 @@ class StorageProvider:
         :param exclude_files: list[str], list of file names to be ignored when publishing a zip archive
         :return: str, the URI of the uploaded metadata
         """
-        logger.info(f"Publishing file to storage: source = {source}, provider type = {provider_type}, zip_archive = {zip_archive}")
+        logger.info(
+            f"Publishing file to storage: source = {source}, provider type = {provider_type}, zip_archive = {zip_archive}"
+        )
 
         temp_tar_path: str | None = None
         if zip_archive:
@@ -111,7 +118,11 @@ class StorageProvider:
                 logger.info(f"hash_uri = {hash_uri}")
                 return hash_uri
             finally:
-                if temp_tar_path is not None and "temp_tar_path" in locals() and os.path.exists(temp_tar_path):
+                if (
+                    temp_tar_path is not None
+                    and "temp_tar_path" in locals()
+                    and os.path.exists(temp_tar_path)
+                ):
                     os.remove(temp_tar_path)
         else:
             hash_uri = self.__upload_to_provider(source, provider_type)
@@ -142,14 +153,13 @@ class IPFSUtil:
     def read_bytes_from_ipfs(self, ipfs_hash: str) -> bytes:
         return self.ipfs_conn.cat(ipfs_hash)
 
-    def write_file_in_ipfs(self, filepath: str, wrap_with_directory: bool=False) -> str:
+    def write_file_in_ipfs(self, filepath: str, wrap_with_directory: bool = False) -> str:
         """
         Push a file to IPFS given its path.
         """
         try:
             with open(filepath, "r+b") as file:
-                result = self.ipfs_conn.add(
-                    file, pin=True, wrap_with_directory=wrap_with_directory)
+                result = self.ipfs_conn.add(file, pin=True, wrap_with_directory=wrap_with_directory)
                 if wrap_with_directory:
                     return result[1]["Hash"] + "/" + result[0]["Name"]
                 return result["Hash"]
@@ -168,10 +178,7 @@ class IPFSUtil:
 
 class FileUtils:
     @staticmethod
-    def convert_zip_to_temp_tar(
-        zip_path: str,
-        exclude_files: List[str] | None = None
-    ) -> str:
+    def convert_zip_to_temp_tar(zip_path: str, exclude_files: List[str] | None = None) -> str:
         """
         Convert a zip archive into a tar file and save it as a temporary file.
 
@@ -199,7 +206,11 @@ class FileUtils:
                 with tarfile.open(tar_path, mode="w:gz") as tar:
                     for file_path in os.scandir(temp_dir):
                         logger.info(f"Adding file to tar: {file_path}")
-                        tar.add(file_path.path, arcname=os.path.basename(file_path), filter=FileUtils.reset)
+                        tar.add(
+                            file_path.path,
+                            arcname=os.path.basename(file_path),
+                            filter=FileUtils.reset,
+                        )
 
             return tar_path  # Return the path to the temporary tar file
         except Exception as e:
@@ -223,5 +234,5 @@ class FileUtils:
     def create_temp_json_file(data: dict) -> str:
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as temp_file:
             json.dump(data, temp_file)
-            temp_file_name = temp_file.name 
+            temp_file_name = temp_file.name
         return temp_file_name
