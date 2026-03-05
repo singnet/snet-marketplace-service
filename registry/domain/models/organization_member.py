@@ -4,8 +4,18 @@ from common.utils import datetime_to_string
 
 
 class OrganizationMember(object):
-    def __init__(self, org_uuid, username, status, role, address=None,
-                 invite_code=None, transaction_hash=None, invited_on=None, updated_on=None):
+    def __init__(
+        self,
+        org_uuid,
+        username,
+        status,
+        role,
+        address=None,
+        invite_code=None,
+        transaction_hash=None,
+        invited_on=None,
+        updated_on=None,
+    ):
         self.__role = role
         self.__org_uuid = org_uuid
         self.__username = username
@@ -60,7 +70,11 @@ class OrganizationMember(object):
 
     def __eq__(self, other):
         if isinstance(other, OrganizationMember):
-            return self.address == other.address and self.username == other.username and self.role == other.role
+            return (
+                self.address == other.address
+                and self.username == other.username
+                and self.role == other.role
+            )
         else:
             return False
 
@@ -77,7 +91,7 @@ class OrganizationMember(object):
             "status": self.status,
             "role": self.role,
             "invited_on": "",
-            "updated_on": ""
+            "updated_on": "",
         }
         if self.invited_on is not None:
             member_dict["invited_on"] = datetime_to_string(self.invited_on)

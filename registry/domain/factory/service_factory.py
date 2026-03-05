@@ -1,11 +1,10 @@
 from registry.application.schemas.service import CreateServiceRequest
-from registry.constants import DEFAULT_SERVICE_RANKING, ServiceStatus, ServiceType
+from registry.constants import DEFAULT_SERVICE_RANKING, ServiceType
 from registry.domain.models.offchain_service_config import OffchainServiceConfig
 from registry.domain.models.service import Service
 from registry.domain.models.service_comment import ServiceComment
 from registry.domain.models.service_group import ServiceGroup
 from registry.domain.models.service_state import ServiceState
-from registry.exceptions import InvalidServiceStateException
 from registry.infrastructure.models import (
     Service as ServiceDBModel,
     ServiceGroup as ServiceGroupDBModel,
@@ -15,7 +14,6 @@ from registry.infrastructure.models import (
 
 
 class ServiceFactory:
-
     @staticmethod
     def convert_service_db_model_to_entity_model(service):
         return Service(
@@ -37,12 +35,21 @@ class ServiceFactory:
             mpe_address=service.mpe_address,
             service_type=service.service_type,
             service_state=ServiceFactory.convert_service_state_from_db(service.service_state),
-            groups=[ServiceGroup(org_uuid=group.org_uuid, service_uuid=group.service_uuid, group_id=group.group_id,
-                                 group_name=group.group_name, endpoints=group.endpoints,
-                                 test_endpoints=group.test_endpoints, pricing=group.pricing,
-                                 free_calls=group.free_calls, daemon_address=group.daemon_address,
-                                 free_call_signer_address=group.free_call_signer_address)
-                    for group in service.groups]
+            groups=[
+                ServiceGroup(
+                    org_uuid=group.org_uuid,
+                    service_uuid=group.service_uuid,
+                    group_id=group.group_id,
+                    group_name=group.group_name,
+                    endpoints=group.endpoints,
+                    test_endpoints=group.test_endpoints,
+                    pricing=group.pricing,
+                    free_calls=group.free_calls,
+                    daemon_address=group.daemon_address,
+                    free_call_signer_address=group.free_call_signer_address,
+                )
+                for group in service.groups
+            ],
         )
 
     @staticmethod
@@ -51,7 +58,7 @@ class ServiceFactory:
             service_state.org_uuid,
             service_state.service_uuid,
             service_state.state,
-            service_state.transaction_hash
+            service_state.transaction_hash,
         )
 
     @staticmethod
@@ -74,10 +81,12 @@ class ServiceFactory:
             tags=service.tags,
             mpe_address=service.mpe_address,
             service_type=service.service_type,
-            groups=[ServiceFactory.convert_service_group_entity_model_to_db_model(group) for group in service.groups],
+            groups=[
+                ServiceFactory.convert_service_group_entity_model_to_db_model(group)
+                for group in service.groups
+            ],
             service_state=ServiceFactory.convert_service_state_entity_model_to_db_model(
-                username,
-                service.service_state
+                username, service.service_state
             ),
         )
 
@@ -118,23 +127,20 @@ class ServiceFactory:
             reviewed_by=service_review_history.reviewed_by,
             reviewed_on=service_review_history.reviewed_on,
             created_on=service_review_history.created_on,
-            updated_on=service_review_history.updated_on
+            updated_on=service_review_history.updated_on,
         )
 
     @staticmethod
     def create_service_entity_model_from_request(
-        request: CreateServiceRequest,
-        service_uuid: str,
-        service_state: str
+        request: CreateServiceRequest, service_uuid: str, service_state: str
     ) -> Service:
         service_state_entity_model = ServiceFactory.create_service_state_entity_model(
             request.org_uuid, service_uuid, service_state
         )
 
         service_group_entity_model_list = [
-            ServiceFactory.create_service_group_entity_model(
-                request.org_uuid, service_uuid, group
-            ) for group in request.groups
+            ServiceFactory.create_service_group_entity_model(request.org_uuid, service_uuid, group)
+            for group in request.groups
         ]
 
         contributors = []
@@ -161,22 +167,21 @@ class ServiceFactory:
             request.storage_provider,
             request.service_type,
             service_group_entity_model_list,
-            service_state_entity_model
+            service_state_entity_model,
         )
 
     @staticmethod
     def create_service_entity_model(org_uuid, service_uuid, payload, status):
-        try:
-            service_state = getattr(ServiceStatus, status).value
-        except:
-            raise InvalidServiceStateException()
+        service_state = status.value
 
         service_state_entity_model = ServiceFactory.create_service_state_entity_model(
-            org_uuid, service_uuid, service_state)
+            org_uuid, service_uuid, service_state
+        )
 
         service_group_entity_model_list = [
-            ServiceFactory.create_service_group_entity_model(org_uuid, service_uuid, group) for group in
-            payload.get("groups", [])]
+            ServiceFactory.create_service_group_entity_model(org_uuid, service_uuid, group)
+            for group in payload.get("groups", [])
+        ]
 
         service_id = payload.get("service_id", "")
         display_name = payload.get("display_name", "")
@@ -199,14 +204,32 @@ class ServiceFactory:
         metadata_uri = payload.get("metadata_uri", "")
         storage_provider = payload.get("storage_provider", "")
         return Service(
-            org_uuid, service_uuid, service_id, display_name, short_description, description, project_url, proto,
-            assets, ranking, rating, contributors, tags, mpe_address, metadata_uri, storage_provider,
-            service_type, service_group_entity_model_list, service_state_entity_model)
+            org_uuid,
+            service_uuid,
+            service_id,
+            display_name,
+            short_description,
+            description,
+            project_url,
+            proto,
+            assets,
+            ranking,
+            rating,
+            contributors,
+            tags,
+            mpe_address,
+            metadata_uri,
+            storage_provider,
+            service_type,
+            service_group_entity_model_list,
+            service_state_entity_model,
+        )
 
     @staticmethod
     def is_valid_contributor(contributor):
-        if (contributor["email_id"] is None or len(contributor["email_id"]) == 0) and \
-                (contributor["name"] is None or len(contributor["name"]) == 0):
+        if (contributor["email_id"] is None or len(contributor["email_id"]) == 0) and (
+            contributor["name"] is None or len(contributor["name"]) == 0
+        ):
             return False
         return True
 
@@ -216,21 +239,19 @@ class ServiceFactory:
             org_uuid=org_uuid,
             service_uuid=service_uuid,
             state=state,
-            transaction_hash=transaction_hash
+            transaction_hash=transaction_hash,
         )
 
     @staticmethod
-    def convert_offchain_service_config_db_model_to_entity_model(org_uuid, service_uuid, offchain_service_configs_db):
+    def convert_offchain_service_config_db_model_to_entity_model(
+        org_uuid, service_uuid, offchain_service_configs_db
+    ):
         configs = {}
         for offchain_service_config_db in offchain_service_configs_db:
             if offchain_service_config_db[3] == "demo_component_required":
                 offchain_service_config_db[4] == int(offchain_service_config_db[4])
             configs.update({offchain_service_config_db[3]: int(offchain_service_config_db[4])})
-        return OffchainServiceConfig(
-            org_uuid=org_uuid,
-            service_uuid=service_uuid,
-            configs=configs
-        )
+        return OffchainServiceConfig(org_uuid=org_uuid, service_uuid=service_uuid, configs=configs)
 
     @staticmethod
     def create_service_group_entity_model(org_uuid, service_uuid, group):
@@ -248,14 +269,16 @@ class ServiceFactory:
         )
 
     @staticmethod
-    def create_service_comment_entity_model(org_uuid, service_uuid, support_type, user_type, commented_by, comment):
+    def create_service_comment_entity_model(
+        org_uuid, service_uuid, support_type, user_type, commented_by, comment
+    ):
         return ServiceComment(
             org_uuid=org_uuid,
             service_uuid=service_uuid,
             support_type=support_type,
             user_type=user_type,
             commented_by=commented_by,
-            comment=comment
+            comment=comment,
         )
 
     @staticmethod
@@ -268,7 +291,7 @@ class ServiceFactory:
             support_type=service_comment.support_type,
             user_type=service_comment.user_type,
             commented_by=service_comment.commented_by,
-            comment=service_comment.comment
+            comment=service_comment.comment,
         )
 
     @staticmethod
@@ -280,14 +303,11 @@ class ServiceFactory:
         url = ""
         for key, value in assets.items():
             if existing_assets and key in existing_assets:
-                if existing_assets[key] and 'url' in existing_assets[key]:
-                    url = existing_assets[key]['url']
+                if existing_assets[key] and "url" in existing_assets[key]:
+                    url = existing_assets[key]["url"]
             else:
                 url = ""
 
-            assets[key] = {
-                "hash": value,
-                "url": url
-            }
+            assets[key] = {"hash": value, "url": url}
         merged = {**existing_assets, **assets}
         return merged

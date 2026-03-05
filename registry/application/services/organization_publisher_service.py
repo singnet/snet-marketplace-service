@@ -17,14 +17,10 @@ from registry.constants import (
     OrganizationIDAvailabilityStatus,
     OrganizationMemberStatus,
     OrganizationStatus,
-    OrganizationType, 
-    Role
+    OrganizationType,
+    Role,
 )
-from registry.infrastructure.storage_provider import (
-    StorageProvider,
-    StorageProviderType,
-    FileUtils
-)
+from registry.infrastructure.storage_provider import StorageProvider, StorageProviderType, FileUtils
 from registry.application.schemas.organization import (
     GetGroupByOrganizationIdRequest,
     CreateOrganizationRequest,
@@ -39,18 +35,24 @@ from registry.application.schemas.organization import (
     DeleteMembersRequest,
     RegisterMemberRequest,
     VerifyOrgRequest,
-    VerifyOrgIdRequest
+    VerifyOrgIdRequest,
 )
 from registry.domain.factory.organization_factory import OrganizationFactory
 from registry.domain.models.organization import Organization
 from registry.domain.services.registry_blockchain_util import RegistryBlockChainUtil
-from registry.exceptions import InvalidOrganizationStateException, BadRequestException, NewMemberAddressException
-from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
+from registry.exceptions import (
+    InvalidOrganizationStateException,
+    BadRequestException,
+    NewMemberAddressException,
+)
+from registry.infrastructure.repositories.organization_repository import (
+    OrganizationPublisherRepository,
+)
 from registry.mail_templates import (
     get_notification_mail_template_for_service_provider_when_org_is_submitted_for_onboarding,
     get_owner_mail_for_org_rejected,
     get_owner_mail_for_org_changes_requested,
-    get_owner_mail_for_org_approved
+    get_owner_mail_for_org_approved,
 )
 from registry.mail_templates import get_org_member_invite_mail
 
@@ -96,10 +98,7 @@ class OrganizationPublisherService:
 
     def get_groups_for_org(self, request: GetGroupByOrganizationIdRequest):
         groups = org_repo.get_groups_for_org(request.org_uuid)
-        return {
-            "org_uuid": request.org_uuid,
-            "groups": [group.to_response() for group in groups]
-        }
+        return {"org_uuid": request.org_uuid, "groups": [group.to_response() for group in groups]}
 
     def create_organization(self, username: str, request: CreateOrganizationRequest):
         organization = OrganizationFactory.create_organization_entity_from_request(request)
@@ -115,14 +114,16 @@ class OrganizationPublisherService:
 
         return organization.to_response()
 
-    #TODO: Review this method with frontend calls
+    # TODO: Review this method with frontend calls
     def update_organization(self, username: str, request: UpdateOrganizationRequest):
         updated_organization = OrganizationFactory.create_organization_entity_from_request(request)
 
         current_organization = org_repo.get_organization(org_uuid=request.uuid)
         self._archive_current_organization(current_organization)
 
-        updated_state = Organization.next_state(current_organization, updated_organization, request.action)
+        updated_state = Organization.next_state(
+            current_organization, updated_organization, request.action
+        )
         org_repo.update_organization(updated_organization, username, updated_state)
 
         return "OK"
@@ -131,25 +132,36 @@ class OrganizationPublisherService:
         if not recipients:
             logger.info(f"Unable to find recipients for organization with org_id {org_id}")
             return
-        mail_template = get_notification_mail_template_for_service_provider_when_org_is_submitted_for_onboarding(org_id)
+        mail_template = get_notification_mail_template_for_service_provider_when_org_is_submitted_for_onboarding(
+            org_id
+        )
         for recipient in recipients:
-            send_notification_payload = {"body": json.dumps({
-                "message": mail_template["body"],
-                "subject": mail_template["subject"],
-                "notification_type": "support",
-                "recipient": recipient})}
+            send_notification_payload = {
+                "body": json.dumps(
+                    {
+                        "message": mail_template["body"],
+                        "subject": mail_template["subject"],
+                        "notification_type": "support",
+                        "recipient": recipient,
+                    }
+                )
+            }
             self.boto_utils.invoke_lambda(
                 lambda_function_arn=settings.lambda_arn.NOTIFICATION_ARN,
                 invocation_type="RequestResponse",
-                payload=json.dumps(send_notification_payload)
+                payload=json.dumps(send_notification_payload),
             )
-            logger.info(f"Recipient {recipient} notified for successfully starting onboarding process.")
+            logger.info(
+                f"Recipient {recipient} notified for successfully starting onboarding process."
+            )
 
     def _archive_current_organization(self, organization):
         if organization.get_status() == OrganizationStatus.PUBLISHED.value:
             org_repo.add_organization_archive(organization)
 
-    def publish_assets_to_storage_provider(self, organization: Organization, provider_type: StorageProviderType):
+    def publish_assets_to_storage_provider(
+        self, organization: Organization, provider_type: StorageProviderType
+    ):
         for asset_type in organization.assets:
             if "url" in organization.assets[asset_type]:
                 url = organization.assets[asset_type]["url"]
@@ -158,7 +170,9 @@ class OrganizationPublisherService:
                 response = requests.get(url)
                 response.raise_for_status()
 
-                with tempfile.NamedTemporaryFile(mode='wb', suffix=f"_{filename}", delete=True) as temp_asset_file:
+                with tempfile.NamedTemporaryFile(
+                    mode="wb", suffix=f"_{filename}", delete=True
+                ) as temp_asset_file:
                     temp_asset_file.write(response.content)
                     temp_asset_file.flush()
 
@@ -166,7 +180,9 @@ class OrganizationPublisherService:
 
                     organization.assets[asset_type]["hash"] = asset_hash
 
-    def publish_metadata_to_storage_provider(self, organization: Organization, storage_type: StorageProviderType) -> str:
+    def publish_metadata_to_storage_provider(
+        self, organization: Organization, storage_type: StorageProviderType
+    ) -> str:
         self.publish_assets_to_storage_provider(organization, storage_type)
         filepath = FileUtils.create_temp_json_file(organization.to_metadata())
         return self.storage_provider.publish(filepath, storage_type)
@@ -176,22 +192,28 @@ class OrganizationPublisherService:
 
         organization = org_repo.get_organization(org_uuid=request.org_uuid)
         if organization is None:
-            raise Exception("Get organization is None") #TODO: add exception
+            raise Exception("Get organization is None")  # TODO: add exception
 
-        organization.metadata_uri = self.publish_metadata_to_storage_provider(organization, request.storage_provider)
+        organization.metadata_uri = self.publish_metadata_to_storage_provider(
+            organization, request.storage_provider
+        )
         org_repo.store_metadata_uri(organization, username)
 
         return organization.to_response()
 
-    def save_transaction_hash_for_publish_org(self, username: str, request: SaveTransactionHashForOrganizationRequest):
-        logger.info(f"save transaction hash for publish organization org_uuid: {request.org_uuid} "
-                    f"transaction_hash: {request.transaction_hash} user_address: {request.wallet_address} nonce: {request.nonce}")
+    def save_transaction_hash_for_publish_org(
+        self, username: str, request: SaveTransactionHashForOrganizationRequest
+    ):
+        logger.info(
+            f"save transaction hash for publish organization org_uuid: {request.org_uuid} "
+            f"transaction_hash: {request.transaction_hash} user_address: {request.wallet_address} nonce: {request.nonce}"
+        )
         org_repo.persist_publish_org_transaction_hash(
             org_uuid=request.org_uuid,
             transaction_hash=request.transaction_hash,
             wallet_address=request.wallet_address,
             nonce=request.nonce,
-            username=username
+            username=username,
         )
 
         return "OK"
@@ -206,10 +228,14 @@ class OrganizationPublisherService:
         )
         return [member.to_response() for member in org_members_list]
 
-    def get_member(self, username: str, request: GetMemberRequest):
-        members = org_repo.get_org_member(username=request.member_username, org_uuid=request.org_uuid)
+    def get_member(self, request: GetMemberRequest):
+        members = org_repo.get_org_member(
+            username=request.member_username, org_uuid=request.org_uuid
+        )
         if len(members) == 0:
-            logger.info(f"No member {request.member_username} for the organization {request.org_uuid}")
+            logger.info(
+                f"No member {request.member_username} for the organization {request.org_uuid}"
+            )
             return []
         return [member.to_response() for member in members]
 
@@ -220,7 +246,9 @@ class OrganizationPublisherService:
         return "NOT_FOUND"
 
     def delete_members(self, username: str, request: DeleteMembersRequest):
-        logger.info(f"user: {username} requested to delete members: {request.members} of org_uuid: {request.org_uuid}")
+        logger.info(
+            f"user: {username} requested to delete members: {request.members} of org_uuid: {request.org_uuid}"
+        )
         org_member_list = OrganizationFactory.org_member_domain_entity_from_payload_list(
             request.members, request.org_uuid
         )
@@ -228,41 +256,51 @@ class OrganizationPublisherService:
             org_member_list,
             member_status=[
                 OrganizationMemberStatus.PENDING.value,
-                OrganizationMemberStatus.ACCEPTED.value
-            ]
+                OrganizationMemberStatus.ACCEPTED.value,
+            ],
         )
         return "OK"
 
     def publish_members(self, username: str, request: PublishMembersRequest):
-        logger.info(f"user: {username} published members: {request.members} with transaction_hash: {request.transaction_hash}")
-        org_member = OrganizationFactory.org_member_domain_entity_from_payload_list(request.members, request.org_uuid)
-        org_repo.persist_publish_org_member_transaction_hash(org_member, request.transaction_hash, request.org_uuid)
+        logger.info(
+            f"user: {username} published members: {request.members} with transaction_hash: {request.transaction_hash}"
+        )
+        org_member = OrganizationFactory.org_member_domain_entity_from_payload_list(
+            request.members, request.org_uuid
+        )
+        org_repo.persist_publish_org_member_transaction_hash(
+            org_member, request.transaction_hash, request.org_uuid
+        )
         return "OK"
 
     def register_member(self, username: str, request: RegisterMemberRequest):
         logger.info(f"register user: {username} with invite_code: {request.invite_code}")
         if Web3.is_address(request.wallet_address):
-            org_uuid = org_repo.get_org_member(username = username, invite_code = request.invite_code)[0].org_uuid
-            org_owner = org_repo.get_org_member(org_uuid = org_uuid, role = Role.OWNER.value)[0]
+            org_uuid = org_repo.get_org_member(username=username, invite_code=request.invite_code)[
+                0
+            ].org_uuid
+            org_owner = org_repo.get_org_member(org_uuid=org_uuid, role=Role.OWNER.value)[0]
             if org_owner.address == request.wallet_address:
                 raise NewMemberAddressException()
-            org_repo.update_org_member(
-                username, request.wallet_address, request.invite_code
-            )
+            org_repo.update_org_member(username, request.wallet_address, request.invite_code)
         else:
             raise Exception("Invalid wallet address")
         return "OK"
 
     def invite_members(self, request: InviteMembersRequest):
         current_time = datetime.now(UTC)
-        requested_invite_member_list = OrganizationFactory.org_member_domain_entity_from_payload_list(
-            request.members,
-            request.org_uuid
+        requested_invite_member_list = (
+            OrganizationFactory.org_member_domain_entity_from_payload_list(
+                request.members, request.org_uuid
+            )
         )
         current_org_member = org_repo.get_org_member(org_uuid=request.org_uuid)
         current_org_member_username_list = [member.username for member in current_org_member]
-        eligible_invite_member_list = [member for member in requested_invite_member_list
-                                       if member.username not in current_org_member_username_list]
+        eligible_invite_member_list = [
+            member
+            for member in requested_invite_member_list
+            if member.username not in current_org_member_username_list
+        ]
         for org_member in eligible_invite_member_list:
             org_member.generate_invite_code()
             org_member.set_status(OrganizationMemberStatus.PENDING.value)
@@ -271,37 +309,47 @@ class OrganizationPublisherService:
             org_member.set_updated_on(current_time)
 
         organization = org_repo.get_organization(org_uuid=request.org_uuid)
-        
+
         if organization is None:
             raise Exception("Organization doesnt exist")
-        
+
         self._send_email_notification_for_inviting_organization_member(
             eligible_invite_member_list, organization.name
         )
         org_repo.add_member(eligible_invite_member_list)
 
-        failed_invitation = [member.username for member in requested_invite_member_list
-                             if member.username in current_org_member_username_list]
-        return {"member": [member.to_response() for member in eligible_invite_member_list],
-                "failed_invitation": failed_invitation}
+        failed_invitation = [
+            member.username
+            for member in requested_invite_member_list
+            if member.username in current_org_member_username_list
+        ]
+        return {
+            "member": [member.to_response() for member in eligible_invite_member_list],
+            "failed_invitation": failed_invitation,
+        }
 
     def _send_email_notification_for_inviting_organization_member(self, org_members_list, org_name):
         for org_member in org_members_list:
             recipient = org_member.username
             mail_template = get_org_member_invite_mail(org_name, org_member.invite_code)
-            send_notification_payload = {"body": json.dumps({
-                "message": mail_template["body"],
-                "subject": mail_template["subject"],
-                "notification_type": "support",
-                "recipient": recipient})}
+            send_notification_payload = {
+                "body": json.dumps(
+                    {
+                        "message": mail_template["body"],
+                        "subject": mail_template["subject"],
+                        "notification_type": "support",
+                        "recipient": recipient,
+                    }
+                )
+            }
             self.boto_utils.invoke_lambda(
                 lambda_function_arn=settings.lambda_arn.NOTIFICATION_ARN,
                 invocation_type="RequestResponse",
-                payload=json.dumps(send_notification_payload)
+                payload=json.dumps(send_notification_payload),
             )
             logger.info(f"Org Membership Invite sent to {recipient}")
 
-    def update_verification(self, request: VerifyOrgRequest):       
+    def update_verification(self, request: VerifyOrgRequest):
         if request.org_type == OrganizationType.INDIVIDUAL.value:
             org_repo.update_all_individual_organization_for_user(
                 request.username, request.status, request.updated_by
@@ -315,12 +363,11 @@ class OrganizationPublisherService:
             if organization is None:
                 raise BadRequestException()
 
-            owner = org_repo.get_org_member(
-                org_uuid=request.org_uuid,
-                role=Role.OWNER.value
-            )
+            owner = org_repo.get_org_member(org_uuid=request.org_uuid, role=Role.OWNER.value)
             owner_username = owner[0].username
-            self.send_mail_to_owner(owner_username, request.comment, organization.id, request.status)
+            self.send_mail_to_owner(
+                owner_username, request.comment, organization.id, request.status
+            )
 
     def send_mail_to_owner(self, owner_email_address, comment, org_id, status):
         if status == OrganizationStatus.REJECTED.value:
@@ -338,5 +385,5 @@ class OrganizationPublisherService:
             mail_template["subject"],
             mail_template["body"],
             settings.lambda_arn.NOTIFICATION_ARN,
-            self.boto_utils
+            self.boto_utils,
         )

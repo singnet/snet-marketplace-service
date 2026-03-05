@@ -8,6 +8,12 @@ from web3 import Web3
 from common import blockchain_util, boto_utils
 from common.constant import StatusCode
 from common.logger import get_logger
+from registry.infrastructure.repositories.organization_repository import (
+    OrganizationPublisherRepository,
+)
+from registry.infrastructure.repositories.service_publisher_repository import (
+    ServicePublisherRepository,
+)
 
 from registry.settings import settings
 from registry.constants import (
@@ -28,11 +34,9 @@ CONTRACT_BASE_PATH = settings.network.networks[NETWORK_ID].contract_base_path
 
 class ServiceEventConsumer:
     def __init__(self, ws_provider, service_repository, organization_repository):
-        self._blockchain_util = blockchain_util.BlockChainUtil(
-            "WS_PROVIDER", ws_provider
-        )
-        self._service_repository = service_repository
-        self._organization_repository = organization_repository
+        self._blockchain_util = blockchain_util.BlockChainUtil("WS_PROVIDER", ws_provider)
+        self._service_repository: ServicePublisherRepository = service_repository
+        self._organization_repository: OrganizationPublisherRepository = organization_repository
         self._storage_provider = StorageProvider()
 
     def on_event(self, event):
@@ -74,9 +78,7 @@ class ServiceEventConsumer:
 
     def _get_base_contract_path(self):
         return os.path.abspath(
-            os.path.join(
-                f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-platform-contracts"
-            )
+            os.path.join(f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-platform-contracts")
         )
 
     def _get_registry_contract(self):
@@ -94,13 +96,9 @@ class ServiceEventConsumer:
     def _get_service_details_from_blockchain(self, event):
         logger.info(f"processing service event {event}")
 
-        registry_contract = self._get_registry_contract()
         org_id = self._get_org_id_from_event(event)
         service_id = self._get_service_id_from_event(event)
 
-        # tags_data = self._fetch_tags(
-        #     registry_contract=registry_contract, org_id_hex=org_id.encode("utf-8"),
-        #     service_id_hex=service_id.encode("utf-8"))
         transaction_hash = self._get_transaction_hash(event)
 
         return org_id, service_id, transaction_hash
@@ -111,9 +109,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
         super().__init__(**kwargs)
 
     def on_event(self, event):
-        org_id, service_id, transaction_hash = (
-            self._get_service_details_from_blockchain(event)
-        )
+        org_id, service_id, transaction_hash = self._get_service_details_from_blockchain(event)
         metadata_uri = self._get_metadata_uri_from_event(event)
         service_data = self._storage_provider.get(metadata_uri)
         self._process_service_data(
@@ -149,9 +145,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
     def _process_service_data(
         self, org_id, service_id, service_metadata, transaction_hash, metadata_uri
     ):
-        org_uuid, existing_service = self._get_existing_service_details(
-            org_id, service_id
-        )
+        org_uuid, existing_service = self._get_existing_service_details(org_id, service_id)
 
         logger.info(f"org_id: {org_id}, service_id: {service_id}, org_uuid: {org_uuid}")
 
@@ -177,9 +171,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
 
         self._add_validation_attribute_to_endpoint(service_metadata.get("groups", []))
         groups = [
-            ServiceFactory.create_service_group_entity_model(
-                org_uuid, service_uuid, group
-            )
+            ServiceFactory.create_service_group_entity_model(org_uuid, service_uuid, group)
             for group in service_metadata.get("groups", [])
         ]
 
@@ -231,24 +223,32 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
 
         if not existing_service:
             self._service_repository.add_service(received_service, BLOCKCHAIN_USER)
-            logger.info(f"The first path has been chosen (no existing service), service_uuid: {received_service.uuid}")
+            logger.info(
+                f"The first path has been chosen (no existing service), service_uuid: {received_service.uuid}"
+            )
         elif existing_service.service_state.transaction_hash is None:
             self._service_repository.save_service(
                 BLOCKCHAIN_USER, existing_service, ServiceStatus.DRAFT.value
             )
-            logger.info(f"The second path has been chosen (existing service state tx hash is None), service_uuid: {existing_service.uuid}")
+            logger.info(
+                f"The second path has been chosen (existing service state tx hash is None), service_uuid: {existing_service.uuid}"
+            )
         elif existing_service.service_state.transaction_hash != transaction_hash:
             # TODO:  Implement major & minor changes
             self._service_repository.save_service(
                 BLOCKCHAIN_USER, existing_service, ServiceStatus.DRAFT.value
             )
-            logger.info(f"The third path has been chosen (existing service state tx hash - {existing_service.service_state.transaction_hash} doesn't equal new tx hash - {transaction_hash}), service_uuid: {existing_service.uuid}")
+            logger.info(
+                f"The third path has been chosen (existing service state tx hash - {existing_service.service_state.transaction_hash} doesn't equal new tx hash - {transaction_hash}), service_uuid: {existing_service.uuid}"
+            )
         elif existing_service.service_state.transaction_hash == transaction_hash:
             self.__curate_service_in_marketplace(service_id, org_id, curated=True)
             self._service_repository.save_service(
                 BLOCKCHAIN_USER, existing_service, ServiceStatus.PUBLISHED.value
             )
-            logger.info(f"The fourth path has been chosen (existing service state tx hash equals new tx hash - {transaction_hash}), service_uuid: {existing_service.uuid}")
+            logger.info(
+                f"The fourth path has been chosen (existing service state tx hash equals new tx hash - {transaction_hash}), service_uuid: {existing_service.uuid}"
+            )
 
     @staticmethod
     def __curate_service_in_marketplace(service_id, org_id, curated):
@@ -256,7 +256,7 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
             "queryStringParameters": {
                 "org_id": org_id,
                 "service_id": service_id,
-                "curate": str(curated)
+                "curate": str(curated),
             }
         }
 
@@ -273,3 +273,26 @@ class ServiceCreatedEventConsumer(ServiceEventConsumer):
                 f"failed to update service ({service_id}, {org_id}) curation {curate_service_response}"
             )
             raise Exception("failed to update service curation")
+
+
+class ServiceDeletedEventConsumer(ServiceEventConsumer):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def on_event(self, event):
+        org_id = self._get_org_id_from_event(event)
+        service_id = self._get_service_id_from_event(event)
+
+        service = self._service_repository.get_service_for_given_service_id_and_org_id(
+            org_id, service_id
+        )
+
+        if service is not None:
+            self._service_repository.delete_service(service.org_uuid, service.uuid)
+            logger.info(
+                f"Service with org_id={org_id}, service_id={service_id} successfully deleted from the DB."
+            )
+        else:
+            logger.info(
+                f"Service with org_id={org_id}, service_id={service_id} doesn't exist in the DB!"
+            )

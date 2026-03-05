@@ -25,7 +25,9 @@ class IPFSConfig(BaseModel):
 
 class EmailsConfig(BaseModel):
     PUBLISHER_PORTAl_DAPP_URL: str = Field(default=config.EMAILS["PUBLISHER_PORTAL_DAPP_URL"])
-    PUBLISHER_PORTAL_SUPPORT_MAIL: str = Field(default=config.EMAILS["PUBLISHER_PORTAL_SUPPORT_MAIL"])
+    PUBLISHER_PORTAL_SUPPORT_MAIL: str = Field(
+        default=config.EMAILS["PUBLISHER_PORTAL_SUPPORT_MAIL"]
+    )
     ORG_APPROVERS_DLIST: str = Field(default=config.EMAILS["ORG_APPROVERS_DLIST"])
     SERVICE_APPROVERS_DLIST: str = Field(default=config.EMAILS["SERVICE_APPROVERS_DLIST"])
 
@@ -38,8 +40,12 @@ class S3Config(BaseModel):
     ASSETS_BUCKET: str = Field(default=config.AWS["S3"]["ASSETS_BUCKET"])
     ASSET_DIR: str = Field(default=config.AWS["S3"]["ASSET_DIR"])
     UPLOAD_BUCKET: UploadBucketConfig = Field(default_factory=UploadBucketConfig)
-    ASSET_COMPONENT_BUCKET_NAME: str = Field(default=config.AWS["S3"]["ASSET_COMPONENT_BUCKET_NAME"])
-    ALLOWED_HERO_IMAGE_FORMATS: list[str] = Field(default=config.AWS["S3"]["ALLOWED_HERO_IMAGE_FORMATS"])
+    ASSET_COMPONENT_BUCKET_NAME: str = Field(
+        default=config.AWS["S3"]["ASSET_COMPONENT_BUCKET_NAME"]
+    )
+    ALLOWED_HERO_IMAGE_FORMATS: list[str] = Field(
+        default=config.AWS["S3"]["ALLOWED_HERO_IMAGE_FORMATS"]
+    )
 
 
 class AWSConfig(BaseModel):
@@ -75,10 +81,10 @@ class LambdaARNConfig(BaseModel):
     NOTIFICATION_ARN: str = Field(default=config.LAMBDA_ARN["NOTIFICATION_ARN"])
     VERIFICATION_ARN: dict = Field(default=config.LAMBDA_ARN["VERIFICATION_ARN"])
     SERVICE_CURATE_ARN: str = Field(default=config.LAMBDA_ARN["SERVICE_CURATE_ARN"])
-    DEMO_COMPONENT: DemoComponentConfig = Field(
-        default_factory=DemoComponentConfig
+    DEMO_COMPONENT: DemoComponentConfig = Field(default_factory=DemoComponentConfig)
+    MANAGE_PROTO_COMPILATION_LAMBDA_ARN: str = Field(
+        default=config.LAMBDA_ARN["MANAGE_PROTO_COMPILATION_LAMBDA_ARN"]
     )
-    MANAGE_PROTO_COMPILATION_LAMBDA_ARN: str = Field(default=config.LAMBDA_ARN["MANAGE_PROTO_COMPILATION_LAMBDA_ARN"])
     PUBLISH_OFFCHAIN_ATTRIBUTES_ARN: PublishOffchainAttributesConfig = Field(
         default_factory=PublishOffchainAttributesConfig
     )

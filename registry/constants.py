@@ -6,14 +6,18 @@ from registry.settings import settings
 network_id = settings.network.id
 CONTRACT_BASE_PATH = settings.network.networks[network_id].contract_base_path
 
-COMMON_CNTRCT_PATH = os.path.abspath(f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-platform-contracts")
+COMMON_CNTRCT_PATH = os.path.abspath(
+    f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-platform-contracts"
+)
 REG_CNTRCT_PATH = os.path.join(COMMON_CNTRCT_PATH, "abi", "Registry.json")
 MPE_CNTRCT_PATH = os.path.join(COMMON_CNTRCT_PATH, "abi", "MultiPartyEscrow.json")
 REG_ADDR_PATH = os.path.join(COMMON_CNTRCT_PATH, "networks", "Registry.json")
 MPE_ADDR_PATH = os.path.join(COMMON_CNTRCT_PATH, "networks", "MultiPartyEscrow.json")
 
-TEST_COMMON_CNTRCT_PATH = os.path.abspath(f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-platform-contracts")
-TEST_REG_CNTRCT_PATH = os.path.join(TEST_COMMON_CNTRCT_PATH, 'abi', 'Registry.json')
+TEST_COMMON_CNTRCT_PATH = os.path.abspath(
+    f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-platform-contracts"
+)
+TEST_REG_CNTRCT_PATH = os.path.join(TEST_COMMON_CNTRCT_PATH, "abi", "Registry.json")
 TEST_REG_ADDR_PATH = os.path.join(TEST_COMMON_CNTRCT_PATH, "networks", "Registry.json")
 
 
@@ -35,7 +39,7 @@ class OrganizationStatus(Enum):
 ORG_STATUS_LIST = [
     OrganizationStatus.APPROVED.value,
     OrganizationStatus.REJECTED.value,
-    OrganizationStatus.CHANGE_REQUESTED.value
+    OrganizationStatus.CHANGE_REQUESTED.value,
 ]
 
 
@@ -105,7 +109,7 @@ class OrganizationType(Enum):
 
 ORG_TYPE_VERIFICATION_TYPE_MAPPING = {
     "INDIVIDUAL": OrganizationType.INDIVIDUAL.value,
-    "DUNS": OrganizationType.ORGANIZATION.value
+    "DUNS": OrganizationType.ORGANIZATION.value,
 }
 
 
@@ -128,13 +132,21 @@ DEFAULT_SERVICE_RANKING = 1
 
 ALLOWED_HERO_IMAGE_FORMATS = settings.aws.S3.ALLOWED_HERO_IMAGE_FORMATS
 
+
 class ServiceAssetsRegex(Enum):
     ORGANIZATION_FILE_PATH = "([a-zA-Z0-9_]*(\/assets\/)[^\/.]*)"
     SERVICE_FILE_PATH = "[a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/).*"
-    DEMO_COMPONENT_URL = "([a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/component\/)[^\/.]*(_component.zip))"
-    PROTO_FILE_URL = "([a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/proto\/)[^\/.]*(_proto_files.zip))"
-    HERO_IMAGE_URL = "[a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/assets\/)[0-9]*(_asset.)(" + "|".join(
-        format[1:] for format in ALLOWED_HERO_IMAGE_FORMATS) + ")"
+    DEMO_COMPONENT_URL = (
+        "([a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/component\/)[^\/.]*(_component.zip))"
+    )
+    PROTO_FILE_URL = (
+        "([a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/proto\/)[^\/.]*(_proto_files.zip))"
+    )
+    HERO_IMAGE_URL = (
+        "[a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/assets\/)[0-9]*(_asset.)("
+        + "|".join(format[1:] for format in ALLOWED_HERO_IMAGE_FORMATS)
+        + ")"
+    )
 
 
 class ServiceType(Enum):

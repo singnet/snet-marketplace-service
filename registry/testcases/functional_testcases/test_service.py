@@ -169,7 +169,7 @@ class TestService(TestCase):
 
         event = {
             "requestContext": {"authorizer": {"claims": {"email": username, "sub": TEST_SUB}}},
-            "headers":{"origin": "testnet.marketplace"},
+            "headers": {"origin": "testnet.marketplace"},
             "httpMethod": "POST",
             "pathParameters": {"org_uuid": "test_org_uuid"},
             "body": json.dumps({"display_name": "test_display_name"}),
@@ -855,7 +855,7 @@ class TestService(TestCase):
         }
 
         service = ServiceFactory.create_service_entity_model(
-            "", "", payload, ServiceStatus.APPROVED.value
+            "", "", payload, ServiceStatus.APPROVED
         )
         service_metadata = service.to_metadata()
         assert service_metadata == {

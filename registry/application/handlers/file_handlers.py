@@ -11,8 +11,11 @@ logger = get_logger(__name__)
 
 
 @exception_handler(logger=logger, EXCEPTIONS=EXCEPTIONS)
-@secured(action=Action.UPDATE, org_uuid_path=("queryStringParameters", "org_uuid"),
-         username_path=("requestContext", "authorizer", "claims", "email"))
+@secured(
+    action=Action.UPDATE,
+    org_uuid_path=("queryStringParameters", "org_uuid"),
+    username_path=("requestContext", "authorizer", "claims", "email"),
+)
 def delete(event, context):
     query_parameters = event["queryStringParameters"]
 
@@ -20,6 +23,5 @@ def delete(event, context):
         raise BadRequestException()
     response = FileService().delete(query_parameters)
     return generate_lambda_response(
-        StatusCode.CREATED,
-        {"status": "success", "data": response, "error": {}}, cors_enabled=True
+        StatusCode.CREATED, {"status": "success", "data": response, "error": {}}, cors_enabled=True
     )

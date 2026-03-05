@@ -17,9 +17,11 @@ class VerifyServiceIdRequest(BaseModel):
     def validate_event(cls, event: dict) -> "VerifyServiceIdRequest":
         try:
             assert event.get(RequestPayloadType.PATH_PARAMS) is not None, (
-                PayloadAssertionError.MISSING_PATH_PARAMETERS.value)
+                PayloadAssertionError.MISSING_PATH_PARAMETERS.value
+            )
             assert event.get(RequestPayloadType.QUERY_STRING) is not None, (
-                PayloadAssertionError.MISSING_QUERY_STRING_PARAMETERS.value)
+                PayloadAssertionError.MISSING_QUERY_STRING_PARAMETERS.value
+            )
 
             query_string_parameters = event[RequestPayloadType.QUERY_STRING]
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
@@ -30,12 +32,13 @@ class VerifyServiceIdRequest(BaseModel):
 
         except ValidationError as e:
             missing_params = [x["loc"][0] for x in e.errors()]
-            raise BadRequestException(message = f"Missing required parameters: "
-                                                f"{', '.join(missing_params)}")
+            raise BadRequestException(
+                message=f"Missing required parameters: {', '.join(missing_params)}"
+            )
         except AssertionError as e:
-            raise BadRequestException(message = str(e))
+            raise BadRequestException(message=str(e))
         except Exception:
-            raise BadRequestException(message = "Error while parsing payload")
+            raise BadRequestException(message="Error while parsing payload")
 
 
 class SaveTransactionHashRequest(BaseModel):
@@ -47,9 +50,11 @@ class SaveTransactionHashRequest(BaseModel):
     def validate_event(cls, event: dict) -> "SaveTransactionHashRequest":
         try:
             assert event.get(RequestPayloadType.PATH_PARAMS) is not None, (
-                PayloadAssertionError.MISSING_PATH_PARAMETERS.value)
+                PayloadAssertionError.MISSING_PATH_PARAMETERS.value
+            )
             assert event.get(RequestPayloadType.BODY) is not None, (
-                PayloadAssertionError.MISSING_BODY.value)
+                PayloadAssertionError.MISSING_BODY.value
+            )
 
             body = json.loads(event[RequestPayloadType.BODY])
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
@@ -60,12 +65,13 @@ class SaveTransactionHashRequest(BaseModel):
 
         except ValidationError as e:
             missing_params = [x["loc"][0] for x in e.errors()]
-            raise BadRequestException(message = f"Missing required parameters: "
-                                                f"{', '.join(missing_params)}")
+            raise BadRequestException(
+                message=f"Missing required parameters: {', '.join(missing_params)}"
+            )
         except AssertionError as e:
-            raise BadRequestException(message = str(e))
+            raise BadRequestException(message=str(e))
         except Exception:
-            raise BadRequestException(message = "Error while parsing payload")
+            raise BadRequestException(message="Error while parsing payload")
 
 
 class SaveServiceRequest(BaseModel):
@@ -92,9 +98,11 @@ class SaveServiceRequest(BaseModel):
     def validate_event(cls, event: dict) -> "SaveServiceRequest":
         try:
             assert event.get(RequestPayloadType.PATH_PARAMS) is not None, (
-                PayloadAssertionError.MISSING_PATH_PARAMETERS.value)
+                PayloadAssertionError.MISSING_PATH_PARAMETERS.value
+            )
             assert event.get(RequestPayloadType.BODY) is not None, (
-                PayloadAssertionError.MISSING_BODY.value)
+                PayloadAssertionError.MISSING_BODY.value
+            )
 
             body = json.loads(event[RequestPayloadType.BODY])
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
@@ -105,12 +113,13 @@ class SaveServiceRequest(BaseModel):
 
         except ValidationError as e:
             missing_params = [x["loc"][0] for x in e.errors()]
-            raise BadRequestException(message = f"Missing required parameters: "
-                                                f"{', '.join(missing_params)}")
+            raise BadRequestException(
+                message=f"Missing required parameters: {', '.join(missing_params)}"
+            )
         except AssertionError as e:
-            raise BadRequestException(message = str(e))
+            raise BadRequestException(message=str(e))
         except Exception:
-            raise BadRequestException(message = "Error while parsing payload")
+            raise BadRequestException(message="Error while parsing payload")
 
 
 class SaveServiceGroupsRequest(BaseModel):
@@ -122,9 +131,11 @@ class SaveServiceGroupsRequest(BaseModel):
     def validate_event(cls, event: dict) -> "SaveServiceGroupsRequest":
         try:
             assert event.get(RequestPayloadType.PATH_PARAMS) is not None, (
-                PayloadAssertionError.MISSING_PATH_PARAMETERS.value)
+                PayloadAssertionError.MISSING_PATH_PARAMETERS.value
+            )
             assert event.get(RequestPayloadType.BODY) is not None, (
-                PayloadAssertionError.MISSING_BODY.value)
+                PayloadAssertionError.MISSING_BODY.value
+            )
 
             body = json.loads(event[RequestPayloadType.BODY])
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
@@ -135,12 +146,13 @@ class SaveServiceGroupsRequest(BaseModel):
 
         except ValidationError as e:
             missing_params = [x["loc"][0] for x in e.errors()]
-            raise BadRequestException(message = f"Missing required parameters: "
-                                                f"{', '.join(missing_params)}")
+            raise BadRequestException(
+                message=f"Missing required parameters: {', '.join(missing_params)}"
+            )
         except AssertionError as e:
-            raise BadRequestException(message = str(e))
+            raise BadRequestException(message=str(e))
         except Exception:
-            raise BadRequestException(message = "Error while parsing payload")
+            raise BadRequestException(message="Error while parsing payload")
 
 
 class CreateServiceRequest(BaseModel):
@@ -169,9 +181,11 @@ class CreateServiceRequest(BaseModel):
     def validate_event(cls, event: dict) -> "CreateServiceRequest":
         try:
             assert event.get(RequestPayloadType.PATH_PARAMS) is not None, (
-                PayloadAssertionError.MISSING_PATH_PARAMETERS.value)
+                PayloadAssertionError.MISSING_PATH_PARAMETERS.value
+            )
             assert event.get(RequestPayloadType.BODY) is not None, (
-                PayloadAssertionError.MISSING_BODY.value)
+                PayloadAssertionError.MISSING_BODY.value
+            )
 
             body = json.loads(event[RequestPayloadType.BODY])
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
@@ -182,12 +196,13 @@ class CreateServiceRequest(BaseModel):
 
         except ValidationError as e:
             missing_params = [x["loc"][0] for x in e.errors()]
-            raise BadRequestException(message = f"Missing required parameters: "
-                                                f"{', '.join(missing_params)}")
+            raise BadRequestException(
+                message=f"Missing required parameters: {', '.join(missing_params)}"
+            )
         except AssertionError as e:
-            raise BadRequestException(message = str(e))
+            raise BadRequestException(message=str(e))
         except Exception:
-            raise BadRequestException(message = "Error while parsing payload")
+            raise BadRequestException(message="Error while parsing payload")
 
 
 class GetServicesForOrganizationRequest(BaseModel):
@@ -206,9 +221,11 @@ class GetServicesForOrganizationRequest(BaseModel):
     def validate_event(cls, event: dict) -> "GetServicesForOrganizationRequest":
         try:
             assert event.get(RequestPayloadType.PATH_PARAMS) is not None, (
-                PayloadAssertionError.MISSING_PATH_PARAMETERS.value)
+                PayloadAssertionError.MISSING_PATH_PARAMETERS.value
+            )
             assert event.get(RequestPayloadType.BODY) is not None, (
-                PayloadAssertionError.MISSING_BODY.value)
+                PayloadAssertionError.MISSING_BODY.value
+            )
 
             body = json.loads(event[RequestPayloadType.BODY])
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
@@ -219,12 +236,13 @@ class GetServicesForOrganizationRequest(BaseModel):
 
         except ValidationError as e:
             missing_params = [x["loc"][0] for x in e.errors()]
-            raise BadRequestException(message = f"Missing required parameters: "
-                                                f"{', '.join(missing_params)}")
+            raise BadRequestException(
+                message=f"Missing required parameters: {', '.join(missing_params)}"
+            )
         except AssertionError as e:
-            raise BadRequestException(message = str(e))
+            raise BadRequestException(message=str(e))
         except Exception:
-            raise BadRequestException(message = "Error while parsing payload")
+            raise BadRequestException(message="Error while parsing payload")
 
 
 class GetServiceRequest(BaseModel):
@@ -235,18 +253,20 @@ class GetServiceRequest(BaseModel):
     def validate_event(cls, event: dict) -> "GetServiceRequest":
         try:
             assert event.get(RequestPayloadType.PATH_PARAMS) is not None, (
-                PayloadAssertionError.MISSING_PATH_PARAMETERS.value)
+                PayloadAssertionError.MISSING_PATH_PARAMETERS.value
+            )
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
             return cls.model_validate(path_parameters)
 
         except ValidationError as e:
             missing_params = [x["loc"][0] for x in e.errors()]
-            raise BadRequestException(message = f"Missing required parameters: "
-                                                f"{', '.join(missing_params)}")
+            raise BadRequestException(
+                message=f"Missing required parameters: {', '.join(missing_params)}"
+            )
         except AssertionError as e:
-            raise BadRequestException(message = str(e))
+            raise BadRequestException(message=str(e))
         except Exception:
-            raise BadRequestException(message = "Error while parsing payload")
+            raise BadRequestException(message="Error while parsing payload")
 
 
 class GetDaemonConfigRequest(BaseModel):
@@ -258,9 +278,11 @@ class GetDaemonConfigRequest(BaseModel):
     def validate_event(cls, event: dict) -> "GetDaemonConfigRequest":
         try:
             assert event.get(RequestPayloadType.PATH_PARAMS) is not None, (
-                PayloadAssertionError.MISSING_PATH_PARAMETERS.value)
+                PayloadAssertionError.MISSING_PATH_PARAMETERS.value
+            )
             assert event.get(RequestPayloadType.QUERY_STRING) is not None, (
-                PayloadAssertionError.MISSING_QUERY_STRING_PARAMETERS.value)
+                PayloadAssertionError.MISSING_QUERY_STRING_PARAMETERS.value
+            )
 
             query_string_parameters = event[RequestPayloadType.QUERY_STRING]
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
@@ -271,12 +293,13 @@ class GetDaemonConfigRequest(BaseModel):
 
         except ValidationError as e:
             missing_params = [x["loc"][0] for x in e.errors()]
-            raise BadRequestException(message = f"Missing required parameters: "
-                                                f"{', '.join(missing_params)}")
+            raise BadRequestException(
+                message=f"Missing required parameters: {', '.join(missing_params)}"
+            )
         except AssertionError as e:
-            raise BadRequestException(message = str(e))
+            raise BadRequestException(message=str(e))
         except Exception:
-            raise BadRequestException(message = "Error while parsing payload")
+            raise BadRequestException(message="Error while parsing payload")
 
 
 class ServiceDeploymentStatusRequest(BaseModel):
@@ -291,10 +314,11 @@ class ServiceDeploymentStatusRequest(BaseModel):
 
         except ValidationError as e:
             missing_params = [x["loc"][0] for x in e.errors()]
-            raise BadRequestException(message = f"Missing required parameters: "
-                                                f"{', '.join(missing_params)}")
+            raise BadRequestException(
+                message=f"Missing required parameters: {', '.join(missing_params)}"
+            )
         except Exception:
-            raise BadRequestException(message = "Error while parsing payload")
+            raise BadRequestException(message="Error while parsing payload")
 
 
 class GetCodeBuildStatusRequest(BaseModel):
@@ -305,7 +329,8 @@ class GetCodeBuildStatusRequest(BaseModel):
     def validate_event(cls, event: dict) -> "GetCodeBuildStatusRequest":
         try:
             assert event.get(RequestPayloadType.PATH_PARAMS) is not None, (
-                PayloadAssertionError.MISSING_PATH_PARAMETERS.value)
+                PayloadAssertionError.MISSING_PATH_PARAMETERS.value
+            )
 
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
 
@@ -313,12 +338,13 @@ class GetCodeBuildStatusRequest(BaseModel):
 
         except ValidationError as e:
             missing_params = [x["loc"][0] for x in e.errors()]
-            raise BadRequestException(message = f"Missing required parameters: "
-                                                f"{', '.join(missing_params)}")
+            raise BadRequestException(
+                message=f"Missing required parameters: {', '.join(missing_params)}"
+            )
         except AssertionError as e:
-            raise BadRequestException(message = str(e))
+            raise BadRequestException(message=str(e))
         except Exception:
-            raise BadRequestException(message = "Error while parsing payload")
+            raise BadRequestException(message="Error while parsing payload")
 
 
 class PublishServiceRequest(BaseModel):
@@ -337,9 +363,11 @@ class PublishServiceRequest(BaseModel):
     def validate_event(cls, event: dict) -> "PublishServiceRequest":
         try:
             assert event.get(RequestPayloadType.PATH_PARAMS) is not None, (
-                PayloadAssertionError.MISSING_PATH_PARAMETERS.value)
+                PayloadAssertionError.MISSING_PATH_PARAMETERS.value
+            )
             assert event.get(RequestPayloadType.BODY) is not None, (
-                PayloadAssertionError.MISSING_BODY.value)
+                PayloadAssertionError.MISSING_BODY.value
+            )
 
             body = json.loads(event[RequestPayloadType.BODY])
             path_parameters = event[RequestPayloadType.PATH_PARAMS]
@@ -350,9 +378,10 @@ class PublishServiceRequest(BaseModel):
 
         except ValidationError as e:
             missing_params = [x["loc"][0] for x in e.errors()]
-            raise BadRequestException(message = f"Missing required parameters: "
-                                                f"{', '.join(missing_params)}")
+            raise BadRequestException(
+                message=f"Missing required parameters: {', '.join(missing_params)}"
+            )
         except AssertionError as e:
-            raise BadRequestException(message = str(e))
+            raise BadRequestException(message=str(e))
         except Exception:
-            raise BadRequestException(message = "Error while parsing payload")
+            raise BadRequestException(message="Error while parsing payload")

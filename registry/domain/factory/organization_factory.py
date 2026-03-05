@@ -1,3 +1,7 @@
+from registry.application.schemas.organization import (
+    CreateOrganizationRequest,
+    UpdateOrganizationRequest,
+)
 from registry.constants import Role, OrganizationAddressType
 from registry.domain.models.comment import Comment
 from registry.domain.models.group import Group
@@ -15,7 +19,7 @@ class OrganizationFactory:
         group_name = payload["name"]
         payment_address = payload["payment_address"]
         payment_config = payload["payment_config"]
-        group = Group(group_name, group_id, payment_address, payment_config, '')
+        group = Group(group_name, group_id, payment_address, payment_config, "")
         group.setup_id()
         return group
 
@@ -29,8 +33,10 @@ class OrganizationFactory:
     @staticmethod
     def domain_address_entity_from_payload(payload):
         address_type = payload.get("address_type", None)
-        if address_type not in [OrganizationAddressType.HEAD_QUARTER_ADDRESS.value,
-                                OrganizationAddressType.MAIL_ADDRESS.value]:
+        if address_type not in [
+            OrganizationAddressType.HEAD_QUARTER_ADDRESS.value,
+            OrganizationAddressType.MAIL_ADDRESS.value,
+        ]:
             raise BadRequestException()
         street_address = payload.get("street_address", None)
         apartment = payload.get("apartment", None)
@@ -38,8 +44,15 @@ class OrganizationFactory:
         pincode = payload.get("pincode", None)
         state = payload.get("state", None)
         country = payload.get("country", None)
-        address = OrganizationAddress(address_type=address_type, street_address=street_address, apartment=apartment,
-                                      pincode=pincode, city=city, state=state, country=country)
+        address = OrganizationAddress(
+            address_type=address_type,
+            street_address=street_address,
+            apartment=apartment,
+            pincode=pincode,
+            city=city,
+            state=state,
+            country=country,
+        )
         return address
 
     @staticmethod
@@ -51,10 +64,15 @@ class OrganizationFactory:
 
     @staticmethod
     def get_comment_from_db(comments):
-        return [Comment(comment['comment'], comment['created_by'], comment['created_at']) for comment in comments]
+        return [
+            Comment(comment["comment"], comment["created_by"], comment["created_at"])
+            for comment in comments
+        ]
 
     @staticmethod
-    def create_organization_entity_from_request(request: 'CreateOrganizationRequest | UpdateOrganizationRequest') -> Organization:
+    def create_organization_entity_from_request(
+        request: CreateOrganizationRequest | UpdateOrganizationRequest,
+    ) -> Organization:
         return Organization(
             uuid=request.uuid,
             id=request.id,
@@ -69,7 +87,9 @@ class OrganizationFactory:
             metadata_uri=request.metadata_uri,
             duns_no=request.duns_no,
             groups=OrganizationFactory.group_domain_entity_from_group_list_payload(request.groups),
-            addresses=OrganizationFactory.domain_address_entity_from_address_list_payload(request.org_address["addresses"]),
+            addresses=OrganizationFactory.domain_address_entity_from_address_list_payload(
+                request.org_address["addresses"]
+            ),
             org_state=None,
             members=[],
         )
@@ -90,16 +110,24 @@ class OrganizationFactory:
             metadata_uri=organization_repo_model.metadata_uri,
             duns_no=organization_repo_model.duns_no,
             groups=OrganizationFactory.parse_group_data_model(organization_repo_model.groups),
-            addresses=OrganizationFactory.parse_organization_address_data_model(organization_repo_model.addresses),
-            org_state=OrganizationFactory.parse_organization_state_data_model(organization_repo_model.org_state),
-            members=[]
+            addresses=OrganizationFactory.parse_organization_address_data_model(
+                organization_repo_model.addresses
+            ),
+            org_state=OrganizationFactory.parse_organization_state_data_model(
+                organization_repo_model.org_state
+            ),
+            members=[],
         )
 
     @staticmethod
     def parse_group_data_model(items):
         groups = []
         for group in items:
-            groups.append(Group(group.name, group.id, group.payment_address, group.payment_config, group.status))
+            groups.append(
+                Group(
+                    group.name, group.id, group.payment_address, group.payment_config, group.status
+                )
+            )
         return groups
 
     @staticmethod
@@ -114,8 +142,9 @@ class OrganizationFactory:
                     pincode=address.pincode,
                     city=address.city,
                     state=address.state,
-                    country=address.country
-                ))
+                    country=address.country,
+                )
+            )
         return addresses
 
     @staticmethod
@@ -134,8 +163,8 @@ class OrganizationFactory:
             reviewed_by=item.reviewed_by,
             reviewed_on=item.reviewed_on,
             comments=OrganizationFactory.get_comment_from_db(item.comments),
-            created_by=item.created_by
-            )
+            created_by=item.created_by,
+        )
 
     @staticmethod
     def parse_organization_state_from_db(item):
@@ -150,19 +179,23 @@ class OrganizationFactory:
             reviewed_by=item.reviewed_by,
             reviewed_on=item.reviewed_on,
             comments=OrganizationFactory.get_comment_from_db(item.comments),
-            created_by=item.created_by
+            created_by=item.created_by,
         )
 
     @staticmethod
     def parse_organization_state_from_db_list(org_state_db_list):
-        return [OrganizationFactory.parse_organization_state_from_db(org_state) for org_state in org_state_db_list]
+        return [
+            OrganizationFactory.parse_organization_state_from_db(org_state)
+            for org_state in org_state_db_list
+        ]
 
     @staticmethod
     def org_domain_entity_from_repo_model_list(organization_repo_model_list):
         organization_domain_entity = []
         for organization_repo_model in organization_repo_model_list:
             organization_domain_entity.append(
-                OrganizationFactory.org_domain_entity_from_repo_model(organization_repo_model))
+                OrganizationFactory.org_domain_entity_from_repo_model(organization_repo_model)
+            )
         return organization_domain_entity
 
     @staticmethod
@@ -170,22 +203,32 @@ class OrganizationFactory:
         org_member_domain_entity = []
         for org_member_repo_model in org_member_repo_model_list:
             org_member_domain_entity.append(
-                OrganizationFactory.org_member_domain_entity_from_repo_model(org_member_repo_model))
+                OrganizationFactory.org_member_domain_entity_from_repo_model(org_member_repo_model)
+            )
         return org_member_domain_entity
 
     @staticmethod
     def org_member_domain_entity_from_repo_model(org_member_repo_model):
         org_member = OrganizationMember(
-            org_member_repo_model.org_uuid, org_member_repo_model.username, org_member_repo_model.status,
-            org_member_repo_model.role, org_member_repo_model.address, org_member_repo_model.invite_code,
-            org_member_repo_model.transaction_hash, org_member_repo_model.invited_on, org_member_repo_model.updated_on)
+            org_member_repo_model.org_uuid,
+            org_member_repo_model.username,
+            org_member_repo_model.status,
+            org_member_repo_model.role,
+            org_member_repo_model.address,
+            org_member_repo_model.invite_code,
+            org_member_repo_model.transaction_hash,
+            org_member_repo_model.invited_on,
+            org_member_repo_model.updated_on,
+        )
         return org_member
 
     @staticmethod
     def org_member_domain_entity_from_payload_list(payload, org_uuid):
         org_member_list = []
         for org_member in payload:
-            org_member_list.append(OrganizationFactory.org_member_domain_entity_from_payload(org_member, org_uuid))
+            org_member_list.append(
+                OrganizationFactory.org_member_domain_entity_from_payload(org_member, org_uuid)
+            )
         return org_member_list
 
     @staticmethod
@@ -196,18 +239,22 @@ class OrganizationFactory:
         address = payload.get("address", "")
         invite_code = payload.get("invite_code", "")
         transaction_hash = payload.get("transaction_hash", "")
-        org_member = OrganizationMember(org_uuid, username, status, role, address, invite_code, transaction_hash)
+        org_member = OrganizationMember(
+            org_uuid, username, status, role, address, invite_code, transaction_hash
+        )
         return org_member
 
     @staticmethod
     def parse_group_domain_entity_from_metadata(payload):
         group_id = payload["group_id"]
         group_name = payload["group_name"]
-        payment_address = payload['payment']["payment_address"]
-        payment_config = {"payment_expiration_threshold": payload['payment']["payment_expiration_threshold"],
-                          "payment_channel_storage_type": payload['payment']["payment_channel_storage_type"],
-                          "payment_channel_storage_client": payload['payment']["payment_channel_storage_client"]}
-        group = Group(group_name, group_id, payment_address, payment_config, '')
+        payment_address = payload["payment"]["payment_address"]
+        payment_config = {
+            "payment_expiration_threshold": payload["payment"]["payment_expiration_threshold"],
+            "payment_channel_storage_type": payload["payment"]["payment_channel_storage_type"],
+            "payment_channel_storage_client": payload["payment"]["payment_channel_storage_client"],
+        }
+        group = Group(group_name, group_id, payment_address, payment_config, "")
         group.setup_id()
         return group
 
@@ -215,7 +262,9 @@ class OrganizationFactory:
     def group_domain_entity_from_group_list_metadata(payload):
         domain_group_entity = []
         for group in payload:
-            domain_group_entity.append(OrganizationFactory.parse_group_domain_entity_from_metadata(group))
+            domain_group_entity.append(
+                OrganizationFactory.parse_group_domain_entity_from_metadata(group)
+            )
         return domain_group_entity
 
     @staticmethod
@@ -235,15 +284,12 @@ class OrganizationFactory:
         url = ""
         for key, value in assets.items():
             if existing_assets and key in existing_assets:
-                if existing_assets[key] and 'url' in existing_assets[key]:
-                    url = existing_assets[key]['url']
+                if existing_assets[key] and "url" in existing_assets[key]:
+                    url = existing_assets[key]["url"]
             else:
                 url = ""
 
-            assets[key] = {
-                "hash": value,
-                "url": url
-            }
+            assets[key] = {"hash": value, "url": url}
         merged = {**existing_assets, **assets}
         return merged
 
