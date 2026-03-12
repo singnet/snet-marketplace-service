@@ -92,3 +92,8 @@ class TokenRateUnavailableException(NotFoundException):
 class ArchiveError(Exception):
     def __init__(self, message: str):
         super().__init__(message)
+
+
+class LogsAreNotAvailableException(BadRequestException):
+    def __init__(self):
+        super().__init__(message="Logs are not available! Deployment must have UP status!")

@@ -6,7 +6,7 @@ from deployer.application.schemas.hosted_services_schemas import (
     UpdateHostedServiceStatusRequest,
     CheckGithubRepositoryRequest,
 )
-from deployer.exceptions import HostedServiceNotFoundException
+from deployer.exceptions import HostedServiceNotFoundException, LogsAreNotAvailableException
 from deployer.infrastructure.clients.github_api_client import GithubAPIClient
 from deployer.infrastructure.clients.haas_client import HaaSClient
 from deployer.infrastructure.db import DefaultSessionFactory, session_scope
@@ -40,6 +40,9 @@ class HostedServicesService:
             daemon = DaemonRepository.get_daemon_by_hosted_service(
                 session, request.hosted_service_id
             )
+
+        if daemon.hosted_service.status != HostedServiceStatus.UP:
+            raise LogsAreNotAvailableException()
 
         hosted_service_logs = self._haas_client.get_hosted_service_logs(
             daemon.org_id, daemon.service_id

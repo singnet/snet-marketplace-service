@@ -12,6 +12,7 @@ from deployer.exceptions import (
     DaemonNotFoundException,
     UpdateConfigNotAvailableException,
     DaemonNotFoundForServiceException,
+    LogsAreNotAvailableException,
 )
 from deployer.infrastructure.clients.deployer_client import DeployerClient
 from deployer.infrastructure.clients.haas_client import HaaSClient
@@ -48,6 +49,9 @@ class DaemonService:
         with session_scope(self.session_factory) as session:
             daemon = DaemonRepository.get_daemon(session, request.daemon_id)
         # In this case, the daemon will never be None, because otherwise the verification will not pass at the authorization stage earlier
+
+        if daemon.status != DaemonStatus.UP:
+            raise LogsAreNotAvailableException()
 
         daemon_logs = self._haas_client.get_daemon_logs(daemon.org_id, daemon.service_id)
 
