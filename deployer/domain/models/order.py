@@ -20,9 +20,14 @@ class OrderDomain(NewOrderDomain, BaseDomain):
 
     def to_response(self, remove_created_updated: bool = True) -> dict:
         result = super().to_response(remove_created_updated)
-        result["evmTransactions"] = [
-            transaction.to_response() for transaction in self.evm_transactions
-        ]
+
+        result["evmTransactions"] = []
+        for transaction in self.evm_transactions:
+            txn = transaction.to_response(remove_created_updated)
+            if not remove_created_updated:
+                del txn["createdAt"]
+            result["evmTransactions"].append(txn)
+
         return result
 
     def to_short_response(self):
