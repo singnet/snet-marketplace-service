@@ -208,7 +208,7 @@ class BillingService:
                         "eventName": "Top Up",
                         "amount": int(top_up_event.amount),
                         "timestamp": top_up_event.updated_at.isoformat(),
-                        "evmTransactions": top_up_event.to_response()["evmTransactions"],
+                        "evmTransactions": top_up_event.to_response(False)["evmTransactions"],
                     }
                 )
             total_count += top_up_events_total_count
