@@ -22,130 +22,144 @@ jobs:
           - 3306:3306
 
       steps:
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
+        - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+        - name: Pre-pull Docker images
+          run: docker pull mysql:8.0
 
-      - name: install pip
-        run: |
-          sudo apt update
-          sudo apt install -y python3-pip netcat-traditional socat iputils-ping
+        - uses: actions/setup-node@v4
+          with:
+            node-version: 22
 
-      - name: install packs
-        run: |
-          export PIP_BREAK_SYSTEM_PACKAGES=1
-          sudo apt update --allow-releaseinfo-change
-          sudo apt install unzip -y
-          wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.2.2472-linux.zip
-          unzip sonar-scanner-cli-4.6.2.2472-linux.zip
-          sudo apt install default-mysql-client -y
-          # pip3 install coverage coveralls pytest alembic
-          pip3 install pytest setuptools
-          pip3 install testcontainers
+        - uses: actions/setup-python@v5
+          with:
+            python-version: '3.12'
 
-      - name: clone repo
-        uses: actions/checkout@v3
+        - name: install pip
+          run: |
+            sudo apt update
+            sudo apt install -y python3-pip netcat-traditional socat iputils-ping
 
-      - name: check db
-        run: |
-          for i in `seq 1 30`;
-          do
-            nc -z 172.17.0.1 3306 && echo Success && exit 0
-            echo -n .
-            sleep 1
-          done
-          echo Failed waiting for MySQL && exit 1
+        - name: install packs
+          run: |
+            export PIP_BREAK_SYSTEM_PACKAGES=1
+            sudo apt update --allow-releaseinfo-change
+            sudo apt install unzip -y
+            wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.2.2472-linux.zip
+            unzip sonar-scanner-cli-4.6.2.2472-linux.zip
+            sudo apt install default-mysql-client -y
+            # pip3 install coverage coveralls pytest alembic
+            pip3 install pytest setuptools
 
-      - name: install layers packages
-        run: |
-          pip3 install -r lambda_layers/GeneralPythonLibsMP/requirements.txt
-          pip3 install -r lambda_layers/GrpcPythonLibsMP/requirements.txt
-          pip3 install -r lambda_layers/OptionalPythonLibsMP/requirements.txt
+        - name: clone repo
+          uses: actions/checkout@v3
 
-      - name: install npm packages
-        run: |
-          for package_file in `ls */package*.json | cut -d '/' -f1`;do npm install $package_file/;done
+        - name: check db
+          run: |
+            for i in `seq 1 30`;
+            do
+              nc -z 172.17.0.1 3306 && echo Success && exit 0
+              echo -n .
+              sleep 1
+            done
+            echo Failed waiting for MySQL && exit 1
 
-      - name: create db
-        run: |
-          # export PIP_BREAK_SYSTEM_PACKAGES=1
-          # socat TCP-LISTEN:3306,fork TCP:mysql:3306 &
-          # mysql -h 172.17.0.1 -u root -punittest_pwd -e "create database registry_unittest_db"
-          mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "create database contract_api_unittest_db"
-          mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "create database registry_unittest_db"
-          mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "create database verification_unittest_db"
-          mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "create database signer_unittest_db"
-          mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "create database deployer_unittest_db"
-          mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "GRANT ALL PRIVILEGES ON *.* TO 'unittest_root'@'%';"
-          mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "SET GLOBAL sql_mode = 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';"
-          export PYTHONPATH=$PWD
-          for alembic_file in $(ls */alembic*.ini | grep -v '^dapp_user/' | cut -d '/' -f1); do
-            cd "$alembic_file"
-            echo "$alembic_file"
-            alembic upgrade head
-            cd ..
-          done
-#          mysql -h 127.0.0.1 -P 3306 -u unittest_root -p unittest_pwd unittest_db < orchestrator/testcases/script.sql
+        - name: install layers packages
+          run: |
+            pip3 install -r lambda_layers/GeneralPythonLibsMP/requirements.txt
+            pip3 install -r lambda_layers/GrpcPythonLibsMP/requirements.txt
+            pip3 install -r lambda_layers/OptionalPythonLibsMP/requirements.txt
+            pip3 install -r lambda_layers/PandasPythonLibsMP/requirements.txt
+            pip3 install testcontainers
 
-      - name: service_status tests
-        run: |
-          export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-          export AWS_XRAY_SDK_ENABLED=false
-          PYTHONPATH=$PWD python3 -m coverage run -m pytest service_status/testcases/unit_testcases/*.py service_status/testcases/functional_testcases/*.py
+        - name: install npm packages
+          run: |
+            for package_file in `ls */package*.json | cut -d '/' -f1`;do npm install $package_file/;done
 
-      - name: wallets tests
-        run: |
-          export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-          export AWS_XRAY_SDK_ENABLED=false
-          PYTHONPATH=$PWD python3 -m coverage run -m pytest wallets/testcases/integration_testcases/*.py wallets/testcases/unit_testcases/*.py
+        - name: create db
+          run: |
+            # export PIP_BREAK_SYSTEM_PACKAGES=1
+            # socat TCP-LISTEN:3306,fork TCP:mysql:3306 &
+            # mysql -h 172.17.0.1 -u root -punittest_pwd -e "create database registry_unittest_db"
+            mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "create database registry_unittest_db"
+            mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "create database verification_unittest_db"
+            mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "create database signer_unittest_db"
+            mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "create database contract_api_unittest_db"
+            mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "GRANT ALL PRIVILEGES ON *.* TO 'unittest_root'@'%';"
+            mysql -h 127.0.0.1 -P 3306 -u root -punittest_pwd -e "SET GLOBAL sql_mode = 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';"
+            export PYTHONPATH=$PWD
+            for alembic_file in $(ls */alembic*.ini | grep -vE '^(dapp_user|deployer)/' | cut -d '/' -f1); do
+              cd "$alembic_file"
+              echo "$alembic_file"
+              alembic upgrade head
+              cd ..
+            done
+        #          mysql -h 127.0.0.1 -P 3306 -u unittest_root -p unittest_pwd unittest_db < orchestrator/testcases/script.sql
 
-      - name: dapp_user tests
-        working-directory: ./dapp_user
-        env:
-          PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: "python"
-          AWS_XRAY_SDK_ENABLED: "false"
-          PYTHONPATH: "./.."
-        run: |
-          python3 -m coverage run -m pytest tests/integration
+        - name: service_status tests
+          run: |
+            export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+            export AWS_XRAY_SDK_ENABLED=false
+            PYTHONPATH=$PWD python3 -m coverage run -m pytest service_status/testcases/unit_testcases/*.py service_status/testcases/functional_testcases/*.py
 
-      - name: payments tests
-        run: |
-          export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-          export AWS_XRAY_SDK_ENABLED=false
-          PYTHONPATH=$PWD python3 -m coverage run -m pytest payments/testcases/unit_testcases/*.py
+        - name: wallets tests
+          run: |
+            export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+            export AWS_XRAY_SDK_ENABLED=false
+            PYTHONPATH=$PWD python3 -m coverage run -m pytest wallets/testcases/integration_testcases/*.py wallets/testcases/unit_testcases/*.py
 
-      - name: utility tests
-        run: |
-          export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-          export AWS_XRAY_SDK_ENABLED=false
-          PYTHONPATH=$PWD python3 -m coverage run -m pytest utility/testcases/functional_testcases/*.py
+        - name: dapp_user tests
+          working-directory: ./dapp_user
+          env:
+            PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: "python"
+            AWS_XRAY_SDK_ENABLED: "false"
+            PYTHONPATH: "./.."
+          run: |
+            python3 -m coverage run -m pytest tests/integration
 
-      - name: contract_api tests
-        env:
-          PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: "python"
-          AWS_XRAY_SDK_ENABLED: "false"
-          PYTHONPATH: "./.."
-        run: |
-          python3 -m coverage run -m pytest contract_api/tests/functional
+        - name: deployer tests
+          working-directory: ./deployer
+          env:
+            PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: "python"
+            AWS_XRAY_SDK_ENABLED: "false"
+            PYTHONPATH: "./.."
+          run: |
+            make test LOG_LEVEL=INFO
 
-      - name: orchestrator tests
-        run: |
-          export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-          export AWS_XRAY_SDK_ENABLED=false
-          PYTHONPATH=$PWD python3 -m coverage run -m pytest orchestrator/testcases/integration_testcases/*.py orchestrator/testcases/unit_testcases/*.py
+        - name: payments tests
+          run: |
+            export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+            export AWS_XRAY_SDK_ENABLED=false
+            PYTHONPATH=$PWD python3 -m coverage run -m pytest payments/testcases/unit_testcases/*.py
 
-      - name: registry tests
-        run: |
-          export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-          export AWS_XRAY_SDK_ENABLED=false
-          PYTHONPATH=$PWD python3 -m coverage run -m pytest registry/testcases/unit_testcases/*.py registry/testcases/functional_testcases/*.py
+        - name: utility tests
+          run: |
+            export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+            export AWS_XRAY_SDK_ENABLED=false
+            PYTHONPATH=$PWD python3 -m coverage run -m pytest utility/testcases/functional_testcases/*.py
 
-      - name: signer tests
-        run: |
-          export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-          export AWS_XRAY_SDK_ENABLED=false
-          PYTHONPATH=$PWD python3 -m coverage run -m pytest signer/testcases/integration_testcases/*.py
+        - name: contract_api tests
+          env:
+            PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: "python"
+            AWS_XRAY_SDK_ENABLED: "false"
+            PYTHONPATH: "./.."
+          run: |
+            python3 -m coverage run -m pytest contract_api/tests/functional
+
+        - name: orchestrator tests
+          run: |
+            export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+            export AWS_XRAY_SDK_ENABLED=false
+            PYTHONPATH=$PWD python3 -m coverage run -m pytest orchestrator/testcases/integration_testcases/*.py orchestrator/testcases/unit_testcases/*.py
+
+        - name: registry tests
+          run: |
+            export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+            export AWS_XRAY_SDK_ENABLED=false
+            PYTHONPATH=$PWD python3 -m coverage run -m pytest registry/testcases/unit_testcases/*.py registry/testcases/functional_testcases/*.py
+
+        - name: signer tests
+          run: |
+            export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+            export AWS_XRAY_SDK_ENABLED=false
+            PYTHONPATH=$PWD python3 -m coverage run -m pytest signer/testcases/integration_testcases/*.py
