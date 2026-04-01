@@ -79,11 +79,11 @@ class MetricsService:
         time_groups = grouped_data["time_groups"]
 
         aggregated_metrics = {
-            "requests_count": df.groupby("time_group").size(),
-            "costs_sum": df.groupby("time_group")["amount"].sum(),
-            "costs_avg": df.groupby("time_group")["amount"].mean(),
-            "durations_sum": df.groupby("time_group")["duration"].sum(),
-            "durations_avg": df.groupby("time_group")["duration"].mean(),
+            "requestsCount": df.groupby("time_group").size(),
+            "costsSum": df.groupby("time_group")["amount"].sum(),
+            "costsAvg": df.groupby("time_group")["amount"].mean(),
+            "durationsSum": df.groupby("time_group")["duration"].sum(),
+            "durationsAvg": df.groupby("time_group")["duration"].mean(),
         }
 
         full_series = aggregated_metrics["requests_count"].reindex(time_groups, fill_value=0)
