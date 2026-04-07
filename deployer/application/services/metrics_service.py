@@ -86,7 +86,7 @@ class MetricsService:
             "durationsAvg": df.groupby("time_group")["duration"].mean(),
         }
 
-        full_series = aggregated_metrics["requests_count"].reindex(time_groups, fill_value=0)
+        full_series = aggregated_metrics["requestsCount"].reindex(time_groups, fill_value=0)
         labels = full_series.index.strftime(self.datetime_format)
 
         for name, data in aggregated_metrics.items():
