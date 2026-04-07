@@ -51,7 +51,7 @@ class TestOrganizationPublisher(TestCase):
         )
         event = {
             "requestContext": {"authorizer": {"claims": {"email": username, "sub": TEST_SUB}}},
-            "headers":{"origin": "testnet.marketplace"},
+            "headers": {"origin": "testnet.marketplace"},
             "pathParameters": {"org_uuid": test_org_uuid},
             "body": json.dumps(
                 {

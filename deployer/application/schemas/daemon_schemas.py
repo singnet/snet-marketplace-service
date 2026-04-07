@@ -1,11 +1,13 @@
 import json
+from datetime import datetime
 from typing import Optional, List
 
 from pydantic import BaseModel, Field, field_validator
 
 from common.constant import RequestPayloadType
 from common.validation_handler import validation_handler
-from deployer.constant import AUTH_PARAMETERS
+from deployer.application.schemas.queue_schema import QueueEventRequest
+from deployer.constant import AUTH_PARAMETERS, HaaSDaemonStatus
 from deployer.exceptions import InvalidServiceAuthParameters
 
 
@@ -51,3 +53,16 @@ class SearchDaemonRequest(BaseModel):
     def validate_event(cls, event: dict) -> "SearchDaemonRequest":
         data = {**event[RequestPayloadType.QUERY_STRING]}
         return cls.model_validate(data)
+
+
+class UpdateDaemonStatusRequest(BaseModel, QueueEventRequest):
+    org_id: str = Field(alias="orgId")
+    service_id: str = Field(alias="serviceId")
+    status: HaaSDaemonStatus
+    status_observed_at: datetime = Field(alias="observedAt")
+    status_resource_version: str = Field(alias="resourceVersion")
+
+    @classmethod
+    @validation_handler()
+    def validate_event(cls, event: dict) -> "UpdateDaemonStatusRequest":
+        return cls.model_validate(event)

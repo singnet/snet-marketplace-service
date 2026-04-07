@@ -3,7 +3,10 @@ from unittest import TestCase
 from unittest.mock import patch
 from uuid import uuid4
 
-from registry.application.services.organization_publisher_service import org_repo, OrganizationPublisherService
+from registry.application.services.organization_publisher_service import (
+    org_repo,
+    OrganizationPublisherService,
+)
 from registry.constants import OrganizationMemberStatus, OrganizationStatus, Role
 from registry.domain.models.organization import Organization as DomainOrganization
 from registry.infrastructure.models import (
@@ -20,7 +23,7 @@ from registry.application.schemas.organization import (
     VerifyCodeRequest,
     DeleteMembersRequest,
     PublishMembersRequest,
-    InviteMembersRequest
+    InviteMembersRequest,
 )
 from registry.testcases.test_variables import ORG_CONTACTS
 from registry.testcases.test_variables import ORIGIN
@@ -32,24 +35,31 @@ class TestOrganizationMember(TestCase):
         owner_username = "user@snet.io"
         org_repo.add_organization(
             DomainOrganization(
-                test_org_uuid, "org_id", "org_dummy",
-                "ORGANIZATION", ORIGIN, "description",
-                "short_description", "https://test.io", ORG_CONTACTS, {}, "ipfs_hash", "123456879", [], [], [], []),
-            owner_username, OrganizationStatus.PUBLISHED.value)
+                test_org_uuid,
+                "org_id",
+                "org_dummy",
+                "ORGANIZATION",
+                ORIGIN,
+                "description",
+                "short_description",
+                "https://test.io",
+                ORG_CONTACTS,
+                {},
+                "ipfs_hash",
+                "123456879",
+                [],
+                [],
+                [],
+                [],
+            ),
+            owner_username,
+            OrganizationStatus.PUBLISHED.value,
+        )
 
         new_org_members = [
-            {
-                "username": "karl@dummy.io",
-                "address": "0x123"
-            },
-            {
-                "username": "trax@dummy.io",
-                "address": "0x234"
-            },
-            {
-                "username": "nyx@dummy.io",
-                "address": "0x345"
-            }
+            {"username": "karl@dummy.io", "address": "0x123"},
+            {"username": "trax@dummy.io", "address": "0x234"},
+            {"username": "nyx@dummy.io", "address": "0x345"},
         ]
         org_repo.add_all_items(
             [
@@ -62,8 +72,9 @@ class TestOrganizationMember(TestCase):
                     transaction_hash="0x123",
                     invite_code=uuid4().hex,
                     invited_on=datetime.now(UTC),
-                    updated_on=datetime.now(UTC)
-                ) for member in new_org_members
+                    updated_on=datetime.now(UTC),
+                )
+                for member in new_org_members
             ]
         )
 
@@ -85,32 +96,40 @@ class TestOrganizationMember(TestCase):
         owner_username = "user@snet.io"
         org_repo.add_organization(
             DomainOrganization(
-                test_org_uuid, "org_id", "org_dummy",
-                "ORGANIZATION", ORIGIN, "description",
-                "short_description", "https://test.io", ORG_CONTACTS, {}, "ipfs_hash", "123456879", [], [], [], []),
-            owner_username, OrganizationStatus.PUBLISHED.value)
+                test_org_uuid,
+                "org_id",
+                "org_dummy",
+                "ORGANIZATION",
+                ORIGIN,
+                "description",
+                "short_description",
+                "https://test.io",
+                ORG_CONTACTS,
+                {},
+                "ipfs_hash",
+                "123456879",
+                [],
+                [],
+                [],
+                [],
+            ),
+            owner_username,
+            OrganizationStatus.PUBLISHED.value,
+        )
 
         request = GetMemberRequest(
             org_uuid=test_org_uuid,
             username=owner_username,
         )
 
-        members = OrganizationPublisherService().get_member(
-            username=owner_username,
-            request=request
-        )
+        members = OrganizationPublisherService().get_member(request=request)
 
         if isinstance(members, list) and len(members) == 1:
             members[0].pop("invited_on")
             members[0].pop("updated_on")
             self.assertDictEqual(
                 members[0],
-                {
-                    'username': owner_username,
-                    'address': "",
-                    'status': 'ACCEPTED',
-                    'role': 'OWNER'
-                }
+                {"username": owner_username, "address": "", "status": "ACCEPTED", "role": "OWNER"},
             )
         else:
             assert False
@@ -121,10 +140,26 @@ class TestOrganizationMember(TestCase):
         owner_username = "user@snet.io"
         org_repo.add_organization(
             DomainOrganization(
-                test_org_uuid, "org_id", "org_dummy",
-                "ORGANIZATION", ORIGIN, "description",
-                "short_description", "https://test.io", ORG_CONTACTS, {}, "ipfs_hash", "123456879", [], [], [], []),
-            owner_username, OrganizationStatus.PUBLISHED.value)
+                test_org_uuid,
+                "org_id",
+                "org_dummy",
+                "ORGANIZATION",
+                ORIGIN,
+                "description",
+                "short_description",
+                "https://test.io",
+                ORG_CONTACTS,
+                {},
+                "ipfs_hash",
+                "123456879",
+                [],
+                [],
+                [],
+                [],
+            ),
+            owner_username,
+            OrganizationStatus.PUBLISHED.value,
+        )
 
         member_username = "karl@dummy.io"
         member_invite_code = uuid4().hex
@@ -138,47 +173,54 @@ class TestOrganizationMember(TestCase):
                 transaction_hash="0x123",
                 invite_code=member_invite_code,
                 invited_on=datetime.now(UTC),
-                updated_on=datetime.now(UTC)
+                updated_on=datetime.now(UTC),
             )
         )
 
-        self.assertEqual(OrganizationPublisherService().verify_invite(
-            username=member_username,
-            request=VerifyCodeRequest(
-                invite_code=member_invite_code
+        self.assertEqual(
+            OrganizationPublisherService().verify_invite(
+                username=member_username, request=VerifyCodeRequest(invite_code=member_invite_code)
+            ),
+            "OK",
         )
-        ), "OK")
 
-        self.assertEqual(OrganizationPublisherService().verify_invite(
-            username=member_username,
-            request=VerifyCodeRequest(
-                invite_code="wrong_invite_code"
+        self.assertEqual(
+            OrganizationPublisherService().verify_invite(
+                username=member_username, request=VerifyCodeRequest(invite_code="wrong_invite_code")
+            ),
+            "NOT_FOUND",
         )
-        ), "NOT_FOUND")
 
     def test_delete_members(self):
         test_org_uuid = uuid4().hex
         owner_username = "user@snet.io"
         org_repo.add_organization(
             DomainOrganization(
-                test_org_uuid, "org_id", "org_dummy",
-                "ORGANIZATION", ORIGIN, "description",
-                "short_description", "https://test.io", ORG_CONTACTS, {}, "ipfs_hash", "123456879", [], [], [], []),
-            owner_username, OrganizationStatus.PUBLISHED.value)
+                test_org_uuid,
+                "org_id",
+                "org_dummy",
+                "ORGANIZATION",
+                ORIGIN,
+                "description",
+                "short_description",
+                "https://test.io",
+                ORG_CONTACTS,
+                {},
+                "ipfs_hash",
+                "123456879",
+                [],
+                [],
+                [],
+                [],
+            ),
+            owner_username,
+            OrganizationStatus.PUBLISHED.value,
+        )
 
         new_org_members = [
-            {
-                "username": "karl@dummy.io",
-                "address": "0x123"
-            },
-            {
-                "username": "trax@dummy.io",
-                "address": "0x234"
-            },
-            {
-                "username": "nyx@dummy.io",
-                "address": "0x345"
-            }
+            {"username": "karl@dummy.io", "address": "0x123"},
+            {"username": "trax@dummy.io", "address": "0x234"},
+            {"username": "nyx@dummy.io", "address": "0x345"},
         ]
         org_repo.add_all_items(
             [
@@ -191,18 +233,20 @@ class TestOrganizationMember(TestCase):
                     transaction_hash="0x123",
                     invite_code=uuid4().hex,
                     invited_on=datetime.now(UTC),
-                    updated_on=datetime.now(UTC)
-                ) for member in new_org_members
+                    updated_on=datetime.now(UTC),
+                )
+                for member in new_org_members
             ]
         )
 
-        request = DeleteMembersRequest(
-            org_uuid=test_org_uuid,
-            members=new_org_members
-        )
+        request = DeleteMembersRequest(org_uuid=test_org_uuid, members=new_org_members)
 
         OrganizationPublisherService().delete_members(username=owner_username, request=request)
-        org_members = org_repo.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == test_org_uuid).all()
+        org_members = (
+            org_repo.session.query(OrganizationMember)
+            .filter(OrganizationMember.org_uuid == test_org_uuid)
+            .all()
+        )
 
         if len(org_members) == 1:
             assert True
@@ -214,24 +258,31 @@ class TestOrganizationMember(TestCase):
         owner_username = "user@snet.io"
         org_repo.add_organization(
             DomainOrganization(
-                test_org_uuid, "org_id", "org_dummy",
-                "ORGANIZATION", ORIGIN, "description",
-                "short_description", "https://test.io", ORG_CONTACTS, {}, "ipfs_hash", "123456879", [], [], [], []),
-            owner_username, OrganizationStatus.PUBLISHED.value)
+                test_org_uuid,
+                "org_id",
+                "org_dummy",
+                "ORGANIZATION",
+                ORIGIN,
+                "description",
+                "short_description",
+                "https://test.io",
+                ORG_CONTACTS,
+                {},
+                "ipfs_hash",
+                "123456879",
+                [],
+                [],
+                [],
+                [],
+            ),
+            owner_username,
+            OrganizationStatus.PUBLISHED.value,
+        )
 
         new_org_members = [
-            {
-                "username": "karl@dummy.io",
-                "address": "0x123"
-            },
-            {
-                "username": "trax@dummy.io",
-                "address": "0x234"
-            },
-            {
-                "username": "nyx@dummy.io",
-                "address": "0x345"
-            }
+            {"username": "karl@dummy.io", "address": "0x123"},
+            {"username": "trax@dummy.io", "address": "0x234"},
+            {"username": "nyx@dummy.io", "address": "0x345"},
         ]
         org_repo.add_all_items(
             [
@@ -244,20 +295,23 @@ class TestOrganizationMember(TestCase):
                     transaction_hash="0x123",
                     invite_code=uuid4().hex,
                     invited_on=datetime.now(UTC),
-                    updated_on=datetime.now(UTC)
-                ) for member in new_org_members
+                    updated_on=datetime.now(UTC),
+                )
+                for member in new_org_members
             ]
         )
 
         request = PublishMembersRequest(
-            org_uuid=test_org_uuid,
-            transaction_hash="0x123",
-            members=new_org_members
+            org_uuid=test_org_uuid, transaction_hash="0x123", members=new_org_members
         )
 
         OrganizationPublisherService().publish_members(username=owner_username, request=request)
-        org_members = org_repo.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == test_org_uuid)\
-            .filter(OrganizationMember.status == OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value).all()
+        org_members = (
+            org_repo.session.query(OrganizationMember)
+            .filter(OrganizationMember.org_uuid == test_org_uuid)
+            .filter(OrganizationMember.status == OrganizationMemberStatus.PUBLISH_IN_PROGRESS.value)
+            .all()
+        )
 
         if len(org_members) == 3:
             assert True
@@ -269,10 +323,26 @@ class TestOrganizationMember(TestCase):
         owner_username = "user@snet.io"
         org_repo.add_organization(
             DomainOrganization(
-                test_org_uuid, "org_id", "org_dummy",
-                "ORGANIZATION", ORIGIN, "description",
-                "short_description", "https://test.io", ORG_CONTACTS, {}, "ipfs_hash", "123456879", [], [], [], []),
-            owner_username, OrganizationStatus.PUBLISHED.value)
+                test_org_uuid,
+                "org_id",
+                "org_dummy",
+                "ORGANIZATION",
+                ORIGIN,
+                "description",
+                "short_description",
+                "https://test.io",
+                ORG_CONTACTS,
+                {},
+                "ipfs_hash",
+                "123456879",
+                [],
+                [],
+                [],
+                [],
+            ),
+            owner_username,
+            OrganizationStatus.PUBLISHED.value,
+        )
 
         member_username = "karl@dummy.io"
         member_invite_code = uuid4().hex
@@ -286,34 +356,43 @@ class TestOrganizationMember(TestCase):
                 transaction_hash="0x123",
                 invite_code=member_invite_code,
                 invited_on=datetime.now(UTC),
-                updated_on=datetime.now(UTC)
+                updated_on=datetime.now(UTC),
             )
         )
         member_wallet_address = "0x962FD47b5afBc8D03025cE52155890667E58dEBA"
-        
-        self.assertRaises(Exception, OrganizationPublisherService().register_member, member_username, 
-                          RegisterMemberRequest(
-                            org_uuid=test_org_uuid,
-                            invite_code="wrong_invite_code",
-                            wallet_address="0x9876",
-                        ))
+
+        self.assertRaises(
+            Exception,
+            OrganizationPublisherService().register_member,
+            member_username,
+            RegisterMemberRequest(
+                org_uuid=test_org_uuid,
+                invite_code="wrong_invite_code",
+                wallet_address="0x9876",
+            ),
+        )
 
         OrganizationPublisherService().register_member(
             username=member_username,
             request=RegisterMemberRequest(
                 org_uuid=test_org_uuid,
                 invite_code=member_invite_code,
-                wallet_address=member_wallet_address
-            )
+                wallet_address=member_wallet_address,
+            ),
         )
 
-        members = org_repo.session.query(OrganizationMember).filter(OrganizationMember.org_uuid == test_org_uuid)\
-            .filter(OrganizationMember.username == member_username) \
+        members = (
+            org_repo.session.query(OrganizationMember)
+            .filter(OrganizationMember.org_uuid == test_org_uuid)
+            .filter(OrganizationMember.username == member_username)
             .all()
+        )
         if len(members) == 1:
             org_member = members[0]
-            if org_member.status == OrganizationMemberStatus.ACCEPTED.value \
-                    and org_member.address == member_wallet_address:
+            if (
+                org_member.status == OrganizationMemberStatus.ACCEPTED.value
+                and org_member.address == member_wallet_address
+            ):
                 assert True
             else:
                 assert False
@@ -327,30 +406,39 @@ class TestOrganizationMember(TestCase):
         owner_username = "user@snet.io"
         org_repo.add_organization(
             DomainOrganization(
-                test_org_uuid, "org_id", "org_dummy",
-                "ORGANIZATION", ORIGIN, "description",
-                "short_description", "https://test.io", ORG_CONTACTS, {}, "ipfs_hash", "123456879", [], [], [], []),
-            owner_username, OrganizationStatus.PUBLISHED.value)
-
-        new_org_members = [
-            {
-                "username": "karl@dummy.io"
-            },
-            {
-                "username": "trax@dummy.io"
-            },
-            {
-                "username": "nyx@dummy.io"
-            }
-        ]
-
-        request = InviteMembersRequest(
-            org_uuid=test_org_uuid,
-            members=new_org_members
+                test_org_uuid,
+                "org_id",
+                "org_dummy",
+                "ORGANIZATION",
+                ORIGIN,
+                "description",
+                "short_description",
+                "https://test.io",
+                ORG_CONTACTS,
+                {},
+                "ipfs_hash",
+                "123456879",
+                [],
+                [],
+                [],
+                [],
+            ),
+            owner_username,
+            OrganizationStatus.PUBLISHED.value,
         )
 
+        new_org_members = [
+            {"username": "karl@dummy.io"},
+            {"username": "trax@dummy.io"},
+            {"username": "nyx@dummy.io"},
+        ]
+
+        request = InviteMembersRequest(org_uuid=test_org_uuid, members=new_org_members)
+
         OrganizationPublisherService().invite_members(request)
-        invited_org_members = org_repo.get_org_member(org_uuid=test_org_uuid, status=OrganizationMemberStatus.PENDING.value)
+        invited_org_members = org_repo.get_org_member(
+            org_uuid=test_org_uuid, status=OrganizationMemberStatus.PENDING.value
+        )
         if len(invited_org_members) == 3:
             assert True
         else:

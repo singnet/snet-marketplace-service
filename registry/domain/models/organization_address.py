@@ -9,13 +9,15 @@ class OrganizationAddress:
         self.__state = state
 
     def to_response(self):
-        return {"address_type": self.__address_type,
-                "street_address": self.__street_address,
-                "apartment": self.__apartment,
-                "city": self.__city,
-                "pincode": self.__pincode,
-                "state": self.__state,
-                "country": self.__country}
+        return {
+            "address_type": self.__address_type,
+            "street_address": self.__street_address,
+            "apartment": self.__apartment,
+            "city": self.__city,
+            "pincode": self.__pincode,
+            "state": self.__state,
+            "country": self.__country,
+        }
 
     @property
     def address_type(self):
@@ -48,6 +50,11 @@ class OrganizationAddress:
     def __eq__(self, other):
         if not isinstance(other, OrganizationAddress):
             return NotImplemented
-        return self.apartment == other.apartment and self.street_address == other.street_address \
-               and self.city == other.city and self.state == other.state and self.pincode == other.pincode \
-               and self.country == other.country
+        return (
+            self.apartment == other.apartment
+            and self.street_address == other.street_address
+            and self.city == other.city
+            and self.state == other.state
+            and self.pincode == other.pincode
+            and self.country == other.country
+        )
