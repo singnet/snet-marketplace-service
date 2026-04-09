@@ -59,25 +59,18 @@ class ServiceService:
         return {"values": filters_data}
 
     def get_services(self, request: GetServicesRequest) -> dict[str, list | int]:
-        limit = request.limit
-        page = request.page
-        sort = request.sort
-        order = request.order
-        filters = request.filter
-        q = request.q
-
         services = self._service_repo.get_filtered_services(
-            limit=limit,
-            page=page,
-            sort=sort,
-            order=order,
-            filters=filters,
-            q=q
+            limit=request.limit,
+            page=request.page,
+            sort=request.sort,
+            order=request.order,
+            filters=request.filter,
+            q=request.q
         )
 
         total_count = self._service_repo.get_filtered_services_count(
-            filters=filters,
-            q=q
+            filters=request.filter,
+            q=request.q
         )
 
         return {

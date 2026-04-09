@@ -5,7 +5,7 @@ from sqlalchemy import select, delete, update
 from contract_api.domain.factory.organization_factory import OrganizationFactory
 from contract_api.domain.models.org_group import OrgGroupDomain, NewOrgGroupDomain
 from contract_api.domain.models.organization import OrganizationDomain, NewOrganizationDomain
-from contract_api.infrastructure.models import OrgGroup, Organization, Service
+from contract_api.infrastructure.models import OrgGroup, Organization, Service, ServiceEndpoint
 from contract_api.infrastructure.repositories.base_repository import BaseRepository
 
 
@@ -26,13 +26,16 @@ class OrganizationRepository(BaseRepository):
         return OrganizationFactory.org_groups_from_db_model(groups_db)
 
     def get_organizations_with_curated_services(self) -> list[OrganizationDomain]:
-        query = select(
-            Organization
-        ).join(
-            Service, Organization.org_id == Service.org_id
-        ).where(
-            Service.is_curated == True
-        ).distinct()
+        query = (
+            select(Organization)
+            .join(Service, Organization.org_id == Service.org_id)
+            .join(ServiceEndpoint, ServiceEndpoint.service_row_id == Service.row_id)
+            .where(
+                Service.is_curated == True,
+                ServiceEndpoint.is_available == True,
+            )
+            .distinct()
+        )
 
         result = self.session.execute(query)
         organizations_db = result.scalars().all()
