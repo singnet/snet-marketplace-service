@@ -1,0 +1,269 @@
+import hashlib
+import io
+import tarfile
+
+
+from common.logger import get_logger
+from common.storage_provider import StorageProvider
+from common.utils import generate_uuid
+from deployer.application.schemas.deployments_schemas import (
+    InitiateDeploymentRequest,
+    SearchDeploymentsRequest,
+    RegistryEventConsumerRequest,
+    GetUserDeploymentsRequest,
+)
+from deployer.config import (
+    DEFAULT_DAEMON_STORAGE_TYPE,
+    HAAS_DAEMON_BASE_URL,
+)
+from deployer.constant import AllowedRegistryEventNames
+from deployer.domain.models.account_balance import NewAccountBalanceDomain
+from deployer.domain.models.daemon import NewDaemonDomain, DaemonDomain
+from deployer.domain.models.hosted_service import NewHostedServiceDomain
+from deployer.exceptions import (
+    DaemonAlreadyExistsException,
+    DaemonAndHostedServiceAlreadyExistException,
+    ArchiveError,
+)
+from deployer.infrastructure.clients.deployer_client import DeployerClient
+from deployer.infrastructure.clients.github_api_client import GithubAPIClient
+from deployer.infrastructure.clients.haas_client import HaaSClient
+from deployer.infrastructure.db import DefaultSessionFactory, session_scope
+from deployer.infrastructure.models import DaemonStatus, HostedServiceStatus
+from deployer.infrastructure.repositories.account_balance_repository import AccountBalanceRepository
+from deployer.infrastructure.repositories.daemon_repository import DaemonRepository
+from deployer.infrastructure.repositories.hosted_service_repository import HostedServiceRepository
+
+
+logger = get_logger(__name__)
+
+
+class DeploymentsService:
+    def __init__(
+        self,
+        session_factory=None,
+        deployer_client=None,
+        haas_client=None,
+        storage_provider=None,
+        boto_utils=None,
+        github_client=None,
+    ):
+        self.session_factory = DefaultSessionFactory if session_factory is None else session_factory
+        self._deployer_client = DeployerClient() if deployer_client is None else deployer_client
+        self._haas_client = HaaSClient(boto_utils) if haas_client is None else haas_client
+        self._storage_provider = StorageProvider() if storage_provider is None else storage_provider
+        self._github_api_client = GithubAPIClient() if github_client is None else github_client
+
+    def initiate_deployment(self, request: InitiateDeploymentRequest, account_id: str) -> dict:
+        with session_scope(self.session_factory) as session:
+            daemon = DaemonRepository.search_daemon(session, request.org_id, request.service_id)
+
+            if daemon is not None:
+                if daemon.hosted_service is not None and not request.only_daemon:
+                    raise DaemonAndHostedServiceAlreadyExistException(
+                        request.org_id, request.service_id
+                    )
+                elif request.only_daemon:
+                    raise DaemonAlreadyExistsException(request.org_id, request.service_id)
+
+            account_balance = AccountBalanceRepository.get_account_balance(session, account_id)
+            if account_balance is None:
+                AccountBalanceRepository.upsert_account_balance(
+                    session, NewAccountBalanceDomain(account_id=account_id, balance_in_cogs=0)
+                )
+
+            if daemon is not None:
+                daemon_id = daemon.id
+            else:
+                daemon_id = generate_uuid()
+
+            daemon_config = {"payment_channel_storage_type": DEFAULT_DAEMON_STORAGE_TYPE.value}
+            if request.only_daemon:
+                daemon_config["is_service_hosted"] = False
+                daemon_config["service_endpoint"] = request.service_endpoint
+                if request.service_credentials is not None:
+                    daemon_config["service_credentials"] = request.service_credentials
+            else:
+                daemon_config["is_service_hosted"] = True
+                daemon_config["service_endpoint"] = ""
+                if daemon_config.get("service_credentials", None) is not None:
+                    del daemon_config["service_credentials"]
+
+            if daemon is None:
+                DaemonRepository.create_daemon(
+                    session,
+                    NewDaemonDomain(
+                        id=daemon_id,
+                        account_id=account_id,
+                        org_id=request.org_id,
+                        service_id=request.service_id,
+                        status=DaemonStatus.INIT,
+                        daemon_config=daemon_config,
+                        daemon_endpoint=self._get_daemon_endpoint(
+                            request.org_id, request.service_id
+                        ),
+                        status_observed_at=None,
+                        status_resource_version=None,
+                    ),
+                )
+            else:
+                DaemonRepository.update_daemon_config(session, daemon_id, daemon_config)
+
+            if not request.only_daemon:
+                HostedServiceRepository.create_hosted_service(
+                    session,
+                    NewHostedServiceDomain(
+                        id=generate_uuid(),
+                        daemon_id=daemon_id,
+                        status=HostedServiceStatus.INIT,
+                        github_account_name=request.github_account_name,
+                        github_repository_name=request.github_repository_name,
+                        last_commit_url="",
+                    ),
+                )
+
+            daemon = DaemonRepository.search_daemon(session, request.org_id, request.service_id)
+            response = daemon.to_response()
+            response["accountsMatch"] = account_id == daemon.account_id
+
+            return response
+
+    def get_user_deployments(self, request: GetUserDeploymentsRequest, account_id: str) -> dict:
+        with session_scope(self.session_factory) as session:
+            daemons = DaemonRepository.get_user_daemons(
+                session, account_id, request.page, request.limit, request.order, request.order_by
+            )
+            daemons_total_count = DaemonRepository.get_user_daemons_total_count(session, account_id)
+
+        return {
+            "deployments": [daemon.to_short_response() for daemon in daemons],
+            "totalCount": daemons_total_count,
+        }
+
+    def search_deployments(self, request: SearchDeploymentsRequest, account_id: str) -> dict:
+        with session_scope(self.session_factory) as session:
+            daemon = DaemonRepository.search_daemon(session, request.org_id, request.service_id)
+
+        if daemon is None:
+            return {"daemon": None, "hostedService": None}
+
+        response = daemon.to_response()
+        response["accountsMatch"] = account_id == daemon.account_id
+
+        return response
+
+    def get_public_key(self) -> dict:
+        public_key = self._haas_client.get_public_key()
+        return {"publicKey": public_key}
+
+    def process_registry_event(self, request: RegistryEventConsumerRequest) -> None:
+        event_name = request.event_name
+        org_id = request.org_id
+        service_id = request.service_id
+
+        if event_name not in AllowedRegistryEventNames:
+            logger.info(f"Event {event_name} doesn't need to be processed")
+            return
+
+        with session_scope(self.session_factory) as session:
+            daemon = DaemonRepository.search_daemon(session, org_id, service_id)
+            logger.debug(f"Daemon: {None if daemon is None else daemon.to_response()}")
+            if daemon is None:
+                logger.info(f"Service (org_id={org_id}, service_id={service_id}) doesn't use HaaS")
+                return
+            daemon_id = daemon.id
+
+            if event_name == AllowedRegistryEventNames.SERVICE_DELETED:
+                self._delete_deployments(daemon)
+                return
+
+            metadata: dict = self._storage_provider.get(request.metadata_uri)
+            try:
+                daemon_group = metadata["groups"][0]
+                group_name = daemon_group["group_name"]
+                service_api_source = metadata["service_api_source"]
+            except (KeyError, IndexError) as e:
+                logger.exception(
+                    f"Failed to get daemon group, endpoint or service api source from metadata: {metadata}. Exception: {e}",
+                    exc_info=True,
+                )
+                raise e
+
+            service_class = self._get_service_class(service_api_source)
+
+            new_config = daemon.daemon_config
+            new_config["daemon_group"] = group_name
+            new_config["service_class"] = service_class
+
+            DaemonRepository.update_daemon_config(session, daemon_id, new_config)
+
+            self._deployer_client.deploy_daemon(daemon_id, asynchronous=True)
+
+            if (
+                daemon.hosted_service is not None
+                and daemon.hosted_service.status == HostedServiceStatus.INIT
+            ):
+                self._haas_client.push_deploy_service_event(
+                    org_id,
+                    service_id,
+                    self._github_api_client.make_repository_url(
+                        daemon.hosted_service.github_account_name,
+                        daemon.hosted_service.github_repository_name,
+                    ),
+                    self._github_api_client.get_installation_id(
+                        daemon.hosted_service.github_account_name,
+                        daemon.hosted_service.github_repository_name,
+                    ),
+                )
+
+    def _get_service_class(self, service_api_source: str) -> str:
+        tar_bytes = self._storage_provider.get(service_api_source, to_decode=False)
+        tar_stream = io.BytesIO(tar_bytes)
+
+        try:
+            with tarfile.open(fileobj=tar_stream, mode="r:*") as tar:
+                members = [m for m in tar.getmembers() if m.isfile()]
+
+                if not members:
+                    raise ArchiveError("No files found in tar archive")
+
+                first_member = members[0]
+                file_content = tar.extractfile(first_member)
+
+                if file_content is None:
+                    raise ArchiveError("Failed to extract file from tar archive")
+
+                content_text = file_content.read().decode("utf-8")
+
+                for line in content_text.splitlines():
+                    line = line.strip()
+                    if line.startswith("package ") and line.endswith(";"):
+                        package_line = line
+                        package_name = package_line.replace("package ", "").replace(";", "").strip()
+                        return package_name
+
+        except tarfile.TarError as e:
+            raise ArchiveError(f"Invalid or corrupted tar archive: {e}") from e
+        except IOError as e:
+            raise ArchiveError(f"Failed to read tar archive: {e}") from e
+        except ArchiveError:
+            raise
+        except Exception as e:
+            raise ArchiveError(f"Unexpected error processing tar file: {e}") from e
+
+    def _delete_deployments(self, daemon: DaemonDomain) -> None:
+        if daemon.status == DaemonStatus.UP:
+            self._haas_client.delete_daemon(daemon.org_id, daemon.service_id)
+
+        if (
+            daemon.hosted_service is not None
+            and daemon.hosted_service.status == HostedServiceStatus.UP
+        ):
+            self._haas_client.delete_hosted_service(daemon.org_id, daemon.service_id)
+
+    @staticmethod
+    def _get_daemon_endpoint(org_id: str, service_id: str) -> str:
+        org_service = f"{org_id}-{service_id}"
+        hash_org_service = hashlib.sha224(org_service.encode()).hexdigest()
+
+        return f"https://{hash_org_service}.{HAAS_DAEMON_BASE_URL}"

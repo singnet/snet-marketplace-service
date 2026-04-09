@@ -36,7 +36,8 @@ from registry.testcases.test_variables import (
     ORG_PAYLOAD_MODEL,
     ORG_RESPONSE_MODEL,
     ORG_ADDRESS,
-    ORIGIN, TEST_SUB,
+    ORIGIN,
+    TEST_SUB,
 )
 
 ORG_PAYLOAD_REQUIRED_KEYS = [
@@ -77,12 +78,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
             "short_description": "",
             "url": "https://dummy.dummy",
             "contacts": [],
-            "assets": {
-                "hero_image": {
-                    "url": "",
-                    "ipfs_hash": ""
-                }
-            },
+            "assets": {"hero_image": {"url": "", "ipfs_hash": ""}},
             "org_address": ORG_ADDRESS,
             "groups": json.loads(ORG_GROUPS),
             "state": {},
@@ -200,9 +196,7 @@ class TestOrganizationPublisherService(unittest.TestCase):
 
         request = UpdateOrganizationRequest.model_validate(payload)
 
-        response = OrganizationPublisherService().update_organization(
-            username, request
-        )
+        response = OrganizationPublisherService().update_organization(username, request)
 
         self.assertEqual("OK", response)
 

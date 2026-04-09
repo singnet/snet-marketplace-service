@@ -6,135 +6,90 @@ from registry.constants import UserType
 logger = get_logger(__name__)
 
 SERVICE_METADATA_SCHEMA = {
-    "version": {
-        "type": "integer",
-        "empty": False
-    },
-    "display_name": {
-        "type": "string",
-        "empty": False
-    },
-    "encoding": {
-        "type": "string",
-        "empty": False
-    },
-    "service_type": {
-        "type": "string",
-        "empty": False
-    },
-    "service_api_source": {
-        "type": "string",
-        "empty": False
-    },
-    "mpe_address": {
-        "type": "string",
-        "empty": False
-    },
+    "version": {"type": "integer", "empty": False},
+    "display_name": {"type": "string", "empty": False},
+    "encoding": {"type": "string", "empty": False},
+    "service_type": {"type": "string", "empty": False},
+    "service_api_source": {"type": "string", "empty": False},
+    "mpe_address": {"type": "string", "empty": False},
     "groups": {
         "type": "list",
         "empty": False,
         "schema": {
             "type": "dict",
             "schema": {
-                "group_name": {
-                    "type": "string",
-                    "empty": False
-                },
-                "free_calls": {
-                    "type": "integer",
-                    "empty": False
-                },
-                "free_call_signer_address": {
-                    "type": "string",
-                    "empty": False
-                },
-                "daemon_addresses": {
-                    "type": "list",
-                    "schema": {
-                        "type": "string",
-                        "empty": True
-
-                    }
-                },
+                "group_name": {"type": "string", "empty": False},
+                "free_calls": {"type": "integer", "empty": False},
+                "free_call_signer_address": {"type": "string", "empty": False},
+                "daemon_addresses": {"type": "list", "schema": {"type": "string", "empty": True}},
                 "pricing": {
                     "type": "list",
                     "schema": {
                         "type": "dict",
                         "schema": {
-                            "price_model": {
-                                "type": "string"
-                            },
-                            "price_in_cogs": {
-                                "type": "integer"
-                            },
-                            "default": {
-                                "type": "boolean"
-                            }
-                        }
+                            "price_model": {"type": "string"},
+                            "price_in_cogs": {"type": "integer"},
+                            "default": {"type": "boolean"},
+                        },
                     },
                 },
-                "endpoints": {
-                    "type": "list",
-                    "empty": False
-                },
-                "group_id": {
-                    "type": "string",
-                    "empty": False
-                }
-            }
-        }
+                "endpoints": {"type": "list", "empty": False},
+                "group_id": {"type": "string", "empty": False},
+            },
+        },
     },
     "service_description": {
         "type": "dict",
         "schema": {
-            "url": {
-                "type": "string"
-            },
-            "short_description": {
-                "type": "string"
-            },
-            "description": {
-                "type": "string"
-            }
-        }
+            "url": {"type": "string"},
+            "short_description": {"type": "string"},
+            "description": {"type": "string"},
+        },
     },
     "media": {
         "type": "list",
         "schema": {
             "type": "dict",
             "schema": {
-                "order": {
-                    "type": ["string", "integer"]
-                },
-                "url": {
-                    "type": "string"
-                },
-                "file_type": {
-                    "type": "string"
-                },
-                "alt_text": {
-                    "type": "string"
-                },
-                "asset_type": {
-                    "type": "string"
-                },
-            }
-        }
+                "order": {"type": ["string", "integer"]},
+                "url": {"type": "string"},
+                "file_type": {"type": "string"},
+                "alt_text": {"type": "string"},
+                "asset_type": {"type": "string"},
+            },
+        },
     },
-    "contributors": {
-        "type": "list"
-    },
+    "contributors": {"type": "list"},
     "tags": {
         "type": "list",
-    }
+    },
 }
-REQUIRED_ASSETS_FOR_METADATA = ['hero_image']
+REQUIRED_ASSETS_FOR_METADATA = ["hero_image"]
 
 
 class Service:
-    def __init__(self, org_uuid, uuid, service_id, display_name, short_description, description,
-                 project_url, proto, assets, ranking, rating, contributors, tags, mpe_address,
-                 metadata_uri, storage_provider, service_type, groups, service_state):
+    def __init__(
+        self,
+        org_uuid,
+        uuid,
+        service_id,
+        display_name,
+        short_description,
+        description,
+        project_url,
+        proto,
+        assets,
+        ranking,
+        rating,
+        contributors,
+        tags,
+        mpe_address,
+        metadata_uri,
+        storage_provider,
+        service_type,
+        groups,
+        service_state,
+    ):
         self._org_uuid = org_uuid
         self._uuid = uuid
         self._service_id = service_id
@@ -177,7 +132,7 @@ class Service:
             "service_type": self._service_type,
             "groups": [group.to_dict() for group in self._groups],
             "service_state": self._service_state.to_dict(),
-            "comments": self._comments
+            "comments": self._comments,
         }
 
     def to_metadata(self):
@@ -192,11 +147,11 @@ class Service:
             "service_description": {
                 "url": self._project_url,
                 "short_description": self.short_description,
-                "description": self._description
+                "description": self._description,
             },
             "media": self.prepare_media_for_metadata(),
             "contributors": self._contributors,
-            "tags": self._tags
+            "tags": self._tags,
         }
 
     @property
@@ -325,8 +280,12 @@ class Service:
 
     @comments.setter
     def comments(self, comments):
-        self._comments[UserType.SERVICE_PROVIDER.value] = comments.get(UserType.SERVICE_PROVIDER.value, "")
-        self._comments[UserType.SERVICE_APPROVER.value] = comments.get(UserType.SERVICE_APPROVER.value, "")
+        self._comments[UserType.SERVICE_PROVIDER.value] = comments.get(
+            UserType.SERVICE_PROVIDER.value, ""
+        )
+        self._comments[UserType.SERVICE_APPROVER.value] = comments.get(
+            UserType.SERVICE_APPROVER.value, ""
+        )
 
     @property
     def service_type(self):
@@ -360,14 +319,14 @@ class Service:
         order = 1
         for asset in self.assets.keys():
             if asset in REQUIRED_ASSETS_FOR_METADATA:
-                metadata_assets.append({
-                    "order": order,
-                    "url": self.assets[asset].get("url", ""),
-                    "file_type": "image",
-                    "asset_type": "hero_image",
-                    "alt_text": self.assets[asset].get("alt_text", ""),
-                })
+                metadata_assets.append(
+                    {
+                        "order": order,
+                        "url": self.assets[asset].get("url", ""),
+                        "file_type": "image",
+                        "asset_type": "hero_image",
+                        "alt_text": self.assets[asset].get("alt_text", ""),
+                    }
+                )
                 order += 1
         return metadata_assets
-
-        

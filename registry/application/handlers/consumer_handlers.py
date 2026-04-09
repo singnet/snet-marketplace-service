@@ -2,10 +2,20 @@ import json
 
 from common.logger import get_logger
 from registry.config import NETWORKS, NETWORK_ID
-from registry.consumer.organization_event_consumer import OrganizationCreatedAndModifiedEventConsumer
-from registry.consumer.service_event_consumer import ServiceCreatedEventConsumer
-from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
-from registry.infrastructure.repositories.service_publisher_repository import ServicePublisherRepository
+from registry.consumer.organization_event_consumer import (
+    OrganizationCreatedAndModifiedEventConsumer,
+    OrganizationDeletedEventConsumer,
+)
+from registry.consumer.service_event_consumer import (
+    ServiceCreatedEventConsumer,
+    ServiceDeletedEventConsumer,
+)
+from registry.infrastructure.repositories.organization_repository import (
+    OrganizationPublisherRepository,
+)
+from registry.infrastructure.repositories.service_publisher_repository import (
+    ServicePublisherRepository,
+)
 
 logger = get_logger(__name__)
 
@@ -16,14 +26,23 @@ service_repository = ServicePublisherRepository()
 def get_registry_event_consumer(event):
     if event["name"] in ["OrganizationCreated", "OrganizationModified"]:
         return OrganizationCreatedAndModifiedEventConsumer(
-            ws_provider = NETWORKS[NETWORK_ID]["ws_provider"],
-            organization_repository = org_repository
+            ws_provider=NETWORKS[NETWORK_ID]["ws_provider"], organization_repository=org_repository
         )
     elif event["name"] in ["ServiceCreated", "ServiceMetadataModified"]:
         return ServiceCreatedEventConsumer(
-            ws_provider = NETWORKS[NETWORK_ID]["ws_provider"],
-            service_repository = service_repository,
-            organization_repository = org_repository
+            ws_provider=NETWORKS[NETWORK_ID]["ws_provider"],
+            service_repository=service_repository,
+            organization_repository=org_repository,
+        )
+    elif event["name"] == "OrganizationDeleted":
+        return OrganizationDeletedEventConsumer(
+            ws_provider=NETWORKS[NETWORK_ID]["ws_provider"], organization_repository=org_repository
+        )
+    elif event["name"] == "ServiceDeleted":
+        return ServiceDeletedEventConsumer(
+            ws_provider=NETWORKS[NETWORK_ID]["ws_provider"],
+            service_repository=service_repository,
+            organization_repository=org_repository,
         )
 
 

@@ -37,6 +37,14 @@ class ForbiddenException(CustomException):
         )
 
 
+class NotFoundException(CustomException):
+    def __init__(self, message: str = "Not found"):
+        super().__init__(
+            http_code=HTTPStatus.NOT_FOUND,
+            message=message
+        )
+
+
 class ContentTypeNotSupportedException(CustomException):
     def __init__(self):
         super().__init__(

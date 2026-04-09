@@ -33,4 +33,3 @@ class DemoComponent:
     @demo_component_status.setter
     def demo_component_status(self, demo_component_status):
         self._demo_component_status = demo_component_status
-

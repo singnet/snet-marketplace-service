@@ -117,8 +117,12 @@ class ServicePublisherRepository(BaseRepository):
             }
 
             for incoming_group in service.groups:
-                key = (incoming_group.org_uuid, incoming_group.service_uuid, incoming_group.group_id)
-                
+                key = (
+                    incoming_group.org_uuid,
+                    incoming_group.service_uuid,
+                    incoming_group.group_id,
+                )
+
                 if key in existing_groups_by_key:
                     existing_group = existing_groups_by_key[key]
                     existing_group.group_name = incoming_group.group_name
@@ -127,9 +131,13 @@ class ServicePublisherRepository(BaseRepository):
                     existing_group.test_endpoints = incoming_group.test_endpoints
                     existing_group.daemon_address = incoming_group.daemon_address
                     existing_group.free_calls = incoming_group.free_calls
-                    existing_group.free_call_signer_address = incoming_group.free_call_signer_address
+                    existing_group.free_call_signer_address = (
+                        incoming_group.free_call_signer_address
+                    )
                 else:
-                    new_group = ServiceFactory().convert_service_group_entity_model_to_db_model(incoming_group)
+                    new_group = ServiceFactory().convert_service_group_entity_model_to_db_model(
+                        incoming_group
+                    )
                     service_db.groups.append(new_group)
             self.session.commit()
         except Exception as e:
@@ -265,3 +273,10 @@ class ServicePublisherRepository(BaseRepository):
                         parameter_value=parameter_value,
                     )
                 )
+
+    @BaseRepository.write_ops
+    def delete_service(self, org_uuid: str, service_uuid: str):
+        self.session.query(Service).filter(
+            Service.org_uuid == org_uuid, Service.uuid == service_uuid
+        ).delete()
+        self.session.commit()

@@ -8,7 +8,9 @@ from web3 import Web3
 from common import blockchain_util
 from common.logger import get_logger
 from registry.domain.models.organization_member import OrganizationMember
-from registry.infrastructure.repositories.organization_repository import OrganizationPublisherRepository
+from registry.infrastructure.repositories.organization_repository import (
+    OrganizationPublisherRepository,
+)
 
 from registry.settings import settings
 from registry.constants import (
@@ -33,9 +35,7 @@ CONTRACT_BASE_PATH = settings.network.networks[NETWORK_ID].contract_base_path
 class OrganizationEventConsumer:
     def __init__(self, ws_provider, organization_repository):
         self.__storage_provider = StorageProvider()
-        self._blockchain_util = blockchain_util.BlockChainUtil(
-            "WS_PROVIDER", ws_provider
-        )
+        self._blockchain_util = blockchain_util.BlockChainUtil("WS_PROVIDER", ws_provider)
         self._organization_repository: OrganizationPublisherRepository = organization_repository
 
     def on_event(self, event):
@@ -50,9 +50,7 @@ class OrganizationEventConsumer:
     @staticmethod
     def _get_base_contract_path():
         return os.path.abspath(
-            os.path.join(
-                f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-platform-contracts"
-            )
+            os.path.join(f"{CONTRACT_BASE_PATH}/node_modules/singularitynet-platform-contracts")
         )
 
     def _get_registry_contract(self):
@@ -77,10 +75,8 @@ class OrganizationEventConsumer:
         org_id = self._get_org_id_from_event(event)
         transaction_hash = self._get_transaction_hash(event)
 
-        encoded_org_id = Web3.to_bytes(text = org_id).ljust(32, b'\0')[:32]
-        blockchain_org_data = registry_contract.functions.getOrganizationById(
-            encoded_org_id
-        ).call()
+        encoded_org_id = Web3.to_bytes(text=org_id).ljust(32, b"\0")[:32]
+        blockchain_org_data = registry_contract.functions.getOrganizationById(encoded_org_id).call()
         logger.info(f"blockchain org data {blockchain_org_data}")
 
         org_metadata_uri = Web3.to_text(blockchain_org_data[2]).rstrip("\x00")
@@ -97,7 +93,9 @@ class OrganizationEventConsumer:
         if owner in members:
             members.remove(owner)
 
-    def _process_owner(self, org_uuid: str, owner_address: str, current_members_map: Dict[str, OrganizationMember]):
+    def _process_owner(
+        self, org_uuid: str, owner_address: str, current_members_map: Dict[str, OrganizationMember]
+    ):
         owner = current_members_map.get(owner_address, None)
         if owner is None:
             owner = OrganizationMember(
@@ -118,10 +116,19 @@ class OrganizationEventConsumer:
         for address, member in current_members_map.items():
             if member.role != Role.OWNER.value:
                 continue
-            if address != owner_address or member.status != OrganizationMemberStatus.PUBLISHED.value or member.username != owner.username:
+            if (
+                address != owner_address
+                or member.status != OrganizationMemberStatus.PUBLISHED.value
+                or member.username != owner.username
+            ):
                 self._organization_repository.delete_org_member(member)
 
-    def _process_members(self, org_uuid: str, member_addresses: List[str], current_members_map: Dict[str, OrganizationMember]):
+    def _process_members(
+        self,
+        org_uuid: str,
+        member_addresses: List[str],
+        current_members_map: Dict[str, OrganizationMember],
+    ):
         for member_address in member_addresses:
             member = current_members_map.get(member_address, None)
             if member_address not in current_members_map:
@@ -139,7 +146,9 @@ class OrganizationEventConsumer:
 
     def _update_org_members(self, org_uuid: str, owner_address: str, member_addresses: List[str]):
         current_members = self._organization_repository.get_org_member(org_uuid=org_uuid)
-        current_members_map = {member.address: member for member in current_members if member.address is not None}
+        current_members_map = {
+            member.address: member for member in current_members if member.address is not None
+        }
         logger.info(f"Current members: {current_members_map}")
         logger.info(f"Owner address: {owner_address}")
         logger.info(f"Member addresses: {member_addresses}")
@@ -212,8 +221,8 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
         received_members_list,
     ):
         try:
-            existing_publish_in_progress_organization = (
-                self._get_existing_organization_records(org_id)
+            existing_publish_in_progress_organization = self._get_existing_organization_records(
+                org_id
             )
 
             org_id = org_metadata.get("org_id", None)
@@ -225,13 +234,9 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
             url = description.get("url", "")
             contacts = org_metadata.get("contacts", None)
             raw_assets = org_metadata.get("assets", {})
-            assets = OrganizationFactory.parse_organization_metadata_assets(
-                raw_assets, {}
-            )
+            assets = OrganizationFactory.parse_organization_metadata_assets(raw_assets, {})
             raw_groups = org_metadata.get("groups", [])
-            groups = OrganizationFactory.group_domain_entity_from_group_list_metadata(
-                raw_groups
-            )
+            groups = OrganizationFactory.group_domain_entity_from_group_list_metadata(raw_groups)
 
             org_uuid = ""
             origin = ""
@@ -263,9 +268,7 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
 
                 received_organization_event.setup_id()
                 org_uuid = received_organization_event.uuid
-                self._create_event_outside_publisher_portal(
-                    received_organization_event, ""
-                )
+                self._create_event_outside_publisher_portal(received_organization_event, "")
 
             elif (
                 existing_publish_in_progress_organization.org_state.transaction_hash
@@ -298,6 +301,19 @@ class OrganizationCreatedAndModifiedEventConsumer(OrganizationEventConsumer):
         except Exception as e:
             traceback.print_exc()
             logger.exception(e)
-            raise Exception(
-                f"Error while processing org created event for org_id {org_id}"
-            )
+            raise Exception(f"Error while processing org created event for org_id {org_id}")
+
+
+class OrganizationDeletedEventConsumer(OrganizationEventConsumer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def on_event(self, event):
+        org_id = self._get_org_id_from_event(event)
+        org = self._organization_repository.get_organization(org_id)
+
+        if org is not None:
+            self._organization_repository.delete_organization(org.uuid)
+            logger.info(f"Organization with org_id={org_id} successfully deleted from DB.")
+        else:
+            logger.info(f"Organization with org_id={org_id} doesn't exist in the DB!")
