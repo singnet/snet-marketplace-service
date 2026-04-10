@@ -112,8 +112,8 @@ class DaemonService:
         if daemon is None:
             raise DaemonNotFoundException(daemon_id)
 
-        if daemon.status not in [DaemonStatus.INIT, DaemonStatus.UP]:
-            logger.exception(f"Daemon {daemon_id} is not in INIT or UP status")
+        if daemon.status not in [DaemonStatus.INIT, DaemonStatus.UP, DaemonStatus.DOWN]:
+            logger.exception(f"Daemon {daemon_id} is not in INIT, UP or DOWN status")
             return {}
 
         logger.info(

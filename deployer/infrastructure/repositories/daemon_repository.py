@@ -56,6 +56,14 @@ class DaemonRepository:
         session.execute(update_query)
 
     @staticmethod
+    def update_daemon_endpoint(session: Session, daemon_id: str, daemon_endpoint: str) -> None:
+        update_query = (
+            update(Daemon).where(Daemon.id == daemon_id).values(daemon_endpoint=daemon_endpoint)
+        )
+
+        session.execute(update_query)
+
+    @staticmethod
     def get_daemon(session: Session, daemon_id: str) -> Optional[DaemonDomain]:
         query = select(Daemon).where(Daemon.id == daemon_id).limit(1)
 

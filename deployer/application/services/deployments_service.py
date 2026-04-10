@@ -108,6 +108,15 @@ class DeploymentsService:
                 )
             else:
                 DaemonRepository.update_daemon_config(session, daemon_id, daemon_config)
+                if (
+                    daemon.org_id in daemon.daemon_endpoint
+                    or daemon.service_id in daemon.daemon_endpoint
+                ):
+                    DaemonRepository.update_daemon_endpoint(
+                        session,
+                        daemon_id,
+                        self._get_daemon_endpoint(request.org_id, request.service_id),
+                    )
 
             if not request.only_daemon:
                 HostedServiceRepository.create_hosted_service(
