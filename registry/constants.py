@@ -135,16 +135,16 @@ ALLOWED_HERO_IMAGE_FORMATS = settings.aws.S3.ALLOWED_HERO_IMAGE_FORMATS
 
 
 class ServiceAssetsRegex(Enum):
-    ORGANIZATION_FILE_PATH = "([a-zA-Z0-9_]*(\/assets\/)[^\/.]*)"
-    SERVICE_FILE_PATH = "[a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/).*"
+    ORGANIZATION_FILE_PATH = r"([a-zA-Z0-9_\-]*(\/assets\/)[^\/.]*)"
+    SERVICE_FILE_PATH = r"[a-zA-Z0-9_\-]*(\/services\/)[a-zA-Z0-9_\-]*(\/).*"
     DEMO_COMPONENT_URL = (
-        "([a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/component\/)[^\/.]*(_component.zip))"
+        r"([a-zA-Z0-9_\-]*(\/services\/)[a-zA-Z0-9_\-]*(\/component\/)[^\/.]*(_component.zip))"
     )
     PROTO_FILE_URL = (
-        "([a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/proto\/)[^\/.]*(_proto_files.zip))"
+        r"([a-zA-Z0-9_\-]*(\/services\/)[a-zA-Z0-9_\-]*(\/proto\/)[^\/.]*(_proto_files.zip))"
     )
     HERO_IMAGE_URL = (
-        "[a-zA-Z0-9_]*(\/services\/)[a-zA-Z0-9_]*(\/assets\/)[0-9]*(_asset.)("
+        r"[a-zA-Z0-9_\-]*(\/services\/)[a-zA-Z0-9_\-]*(\/assets\/)[0-9]*(_asset.)("
         + "|".join(format[1:] for format in ALLOWED_HERO_IMAGE_FORMATS)
         + ")"
     )
