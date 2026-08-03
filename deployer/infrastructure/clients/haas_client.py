@@ -52,10 +52,10 @@ class HaaSClient:
             "serviceEndpoint": daemon_config["service_endpoint"],
             "daemonImage": HAAS_DAEMON_IMAGE,
             "paymentChannelStorageType": daemon_config["payment_channel_storage_type"],
-            "isServiceHosted": daemon_config["is_service_hosted"],
+            "isServiceHosted": daemon_config.get("is_service_hosted", False),
         }
-        if "serviceCredentials" in daemon_config:
-            request_data["service_credentials"] = daemon_config["service_credentials"]
+        if "service_credentials" in daemon_config:
+            request_data["serviceCredentials"] = daemon_config["service_credentials"]
 
         logger.debug(f"Deploying daemon url: {url}")
         logger.debug(f"Deploying daemon body: {request_data}")
